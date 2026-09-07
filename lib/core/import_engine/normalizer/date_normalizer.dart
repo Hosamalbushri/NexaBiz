@@ -41,7 +41,9 @@ class DateNormalizer {
 
     // Try custom Regex patterns for non-ISO formats: DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD
     // 1. YYYY/MM/DD
-    var match = RegExp(r'^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$').firstMatch(str);
+    var match = RegExp(
+      r'^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$',
+    ).firstMatch(str);
     if (match != null) {
       final y = int.parse(match.group(1)!);
       final m = int.parse(match.group(2)!);

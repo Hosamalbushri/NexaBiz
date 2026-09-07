@@ -26,7 +26,6 @@ Uint8List _encodeSheet(List<List<String>> rows) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late CustomersDatabase db;
   late CustomerRepositoryImpl repository;
   late Directory tempDir;
@@ -324,10 +323,7 @@ void main() {
     test('normalizes numeric Excel codes without trailing .0', () {
       final excel = Excel.createExcel();
       final sheet = excel['Sheet1'];
-      sheet.appendRow([
-        TextCellValue('Code'),
-        TextCellValue('Name'),
-      ]);
+      sheet.appendRow([TextCellValue('Code'), TextCellValue('Name')]);
       sheet.appendRow([
         DoubleCellValue(12210001),
         TextCellValue('Numeric Code'),

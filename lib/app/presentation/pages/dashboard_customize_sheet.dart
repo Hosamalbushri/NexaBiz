@@ -102,10 +102,7 @@ class _DashboardCustomizeSheetState extends State<DashboardCustomizeSheet> {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          l10n.dashboardPinnedCount(
-            _selectedIds.length,
-            kMaxDashboardServices,
-          ),
+          l10n.dashboardPinnedCount(_selectedIds.length, kMaxDashboardServices),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
             color: colorScheme.primary,

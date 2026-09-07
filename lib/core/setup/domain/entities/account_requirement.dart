@@ -97,4 +97,3 @@ class AccountRequirement {
       expectedAccountType.hashCode ^
       boundAccountUuid.hashCode;
 }
-

@@ -112,7 +112,8 @@ class ServerBootstrapService {
 
       final initialized = data['initialized'] == true;
       final company = (data['company'] as Map<String, dynamic>?) ?? {};
-      final initialization = (data['initialization'] as Map<String, dynamic>?) ?? {};
+      final initialization =
+          (data['initialization'] as Map<String, dynamic>?) ?? {};
       final snapshot = (data['snapshot'] as Map<String, dynamic>?) ?? {};
       final countsRaw = (data['counts'] as Map<String, dynamic>?) ?? {};
 
@@ -165,8 +166,9 @@ class ServerBootstrapService {
       queryParams['cursor'] = cursor;
     }
 
-    final uri = Uri.parse('$cleanUrl/api/v1/bootstrap/data')
-        .replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      '$cleanUrl/api/v1/bootstrap/data',
+    ).replace(queryParameters: queryParams);
     final headers = {
       'Authorization': 'Bearer $token',
       'Accept': 'application/json',
@@ -188,9 +190,9 @@ class ServerBootstrapService {
       final data = (json['data'] as Map<String, dynamic>?) ?? json;
 
       final itemsRaw = (data['items'] as List<dynamic>?) ?? [];
-      final items = itemsRaw
-          .whereType<Map<String, dynamic>>()
-          .toList(growable: false);
+      final items = itemsRaw.whereType<Map<String, dynamic>>().toList(
+        growable: false,
+      );
 
       final nextCursor = data['next_cursor'] as String?;
       final hasMore = data['has_more'] == true;

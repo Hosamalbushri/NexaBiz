@@ -50,7 +50,9 @@ class DefaultCashRegisterResolver {
   Future<DefaultCashRegisterResult> resolveDefaultCashRegister(
     String companyId,
   ) async {
-    final defaultId = await cashRegisterRepository.getDefaultCashRegisterId(companyId);
+    final defaultId = await cashRegisterRepository.getDefaultCashRegisterId(
+      companyId,
+    );
     if (defaultId == null || defaultId.isEmpty) {
       return const DefaultCashRegisterResult(
         errorCode: DefaultCashRegisterErrorCode.notConfigured,
@@ -58,7 +60,9 @@ class DefaultCashRegisterResolver {
       );
     }
 
-    final register = await cashRegisterRepository.getCashRegisterById(defaultId);
+    final register = await cashRegisterRepository.getCashRegisterById(
+      defaultId,
+    );
     if (register == null) {
       return const DefaultCashRegisterResult(
         errorCode: DefaultCashRegisterErrorCode.registerNotFound,
@@ -69,7 +73,8 @@ class DefaultCashRegisterResolver {
     if (register.companyId != companyId) {
       return const DefaultCashRegisterResult(
         errorCode: DefaultCashRegisterErrorCode.crossCompany,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Cash register belongs to another company',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Cash register belongs to another company',
       );
     }
 
@@ -85,19 +90,22 @@ class DefaultCashRegisterResolver {
       return DefaultCashRegisterResult(
         register: register,
         errorCode: DefaultCashRegisterErrorCode.registerUnlinked,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Cash register has no accounting link',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Cash register has no accounting link',
       );
     }
 
     final accountId = register.accountingAccountId!;
-    final account = await accountRepository.getByUuid(accountId) ??
+    final account =
+        await accountRepository.getByUuid(accountId) ??
         await accountRepository.getByAccountCode(accountId);
 
     if (account == null) {
       return DefaultCashRegisterResult(
         register: register,
         errorCode: DefaultCashRegisterErrorCode.accountNotFound,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Linked account not found in Chart of Accounts',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Linked account not found in Chart of Accounts',
       );
     }
 
@@ -108,7 +116,8 @@ class DefaultCashRegisterResolver {
         register: register,
         linkedAccount: account,
         errorCode: DefaultCashRegisterErrorCode.crossCompany,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Linked account belongs to another company',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Linked account belongs to another company',
       );
     }
 
@@ -117,7 +126,8 @@ class DefaultCashRegisterResolver {
         register: register,
         linkedAccount: account,
         errorCode: DefaultCashRegisterErrorCode.accountInactive,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Linked accounting account is inactive or deleted',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Linked accounting account is inactive or deleted',
       );
     }
 
@@ -126,7 +136,8 @@ class DefaultCashRegisterResolver {
         register: register,
         linkedAccount: account,
         errorCode: DefaultCashRegisterErrorCode.accountCannotPost,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Linked account cannot receive journal postings',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Linked account cannot receive journal postings',
       );
     }
 
@@ -135,7 +146,8 @@ class DefaultCashRegisterResolver {
         register: register,
         linkedAccount: account,
         errorCode: DefaultCashRegisterErrorCode.accountTypeMismatch,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Linked account type is not compatible with cash',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Linked account type is not compatible with cash',
       );
     }
 
@@ -146,7 +158,8 @@ class DefaultCashRegisterResolver {
         linkedAccount: account,
         status: status,
         errorCode: DefaultCashRegisterErrorCode.registerUnlinked,
-        message: 'DEFAULT_CASH_REGISTER_INVALID: Cash register status is not ready',
+        message:
+            'DEFAULT_CASH_REGISTER_INVALID: Cash register status is not ready',
       );
     }
 

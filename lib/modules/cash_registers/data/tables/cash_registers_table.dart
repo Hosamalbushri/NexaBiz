@@ -9,7 +9,8 @@ class CashRegisters extends Table {
   TextColumn get code => text().withLength(min: 1, max: 64)();
   TextColumn get description => text().nullable()();
   TextColumn get accountingAccountId => text().nullable()();
-  TextColumn get accountingLinkStatus => text().withDefault(const Constant('ACCOUNTING_NOT_LINKED'))();
+  TextColumn get accountingLinkStatus =>
+      text().withDefault(const Constant('ACCOUNTING_NOT_LINKED'))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();

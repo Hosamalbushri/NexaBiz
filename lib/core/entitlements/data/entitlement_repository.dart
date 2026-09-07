@@ -20,8 +20,8 @@ class EntitlementRepositoryImpl implements EntitlementRepository {
   EntitlementRepositoryImpl({
     FlutterSecureStorage? storage,
     http.Client? httpClient,
-  })  : _storage = storage ?? const FlutterSecureStorage(),
-        _httpClient = httpClient ?? http.Client();
+  }) : _storage = storage ?? const FlutterSecureStorage(),
+       _httpClient = httpClient ?? http.Client();
 
   final FlutterSecureStorage _storage;
   final http.Client _httpClient;
@@ -46,10 +46,7 @@ class EntitlementRepositoryImpl implements EntitlementRepository {
   Future<void> saveCachedEntitlement(Entitlement entitlement) async {
     try {
       final raw = jsonEncode(entitlement.toJson());
-      await _storage.write(
-        key: _storageKey(entitlement.companyId),
-        value: raw,
-      );
+      await _storage.write(key: _storageKey(entitlement.companyId), value: raw);
     } catch (_) {
       // Ignored if secure storage write fails offline
     }

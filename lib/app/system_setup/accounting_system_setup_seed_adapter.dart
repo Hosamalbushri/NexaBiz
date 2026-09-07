@@ -14,8 +14,8 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
     VoucherBookRepository? voucherBooks,
     required SyncManager syncManager,
     required SettingsRepository settings,
-  })  : _syncManager = syncManager,
-        _settings = settings;
+  }) : _syncManager = syncManager,
+       _settings = settings;
 
   final SyncManager _syncManager;
   final SettingsRepository _settings;

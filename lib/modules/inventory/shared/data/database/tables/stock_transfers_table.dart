@@ -14,6 +14,7 @@ class StockTransfers extends Table {
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get companyId => text().nullable()();
+
   /// Document posting status ('draft', 'posted', 'cancelled')
   TextColumn get status => text().withDefault(const Constant('draft'))();
 

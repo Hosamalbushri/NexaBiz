@@ -36,17 +36,22 @@ class FakeAccountRepository implements AccountRepository {
   Future<Account?> getById(int id) async => throw UnimplementedError();
 
   @override
-  Future<List<Account>> getAll({bool includeInactive = false}) async => _accounts.values.toList();
+  Future<List<Account>> getAll({bool includeInactive = false}) async =>
+      _accounts.values.toList();
 
   @override
-  Stream<List<Account>> watchAll({bool includeInactive = false}) => Stream.value(_accounts.values.toList());
+  Stream<List<Account>> watchAll({bool includeInactive = false}) =>
+      Stream.value(_accounts.values.toList());
 
   @override
   Future<List<Account>> getByUuids(Iterable<String> uuids) async =>
       uuids.map((u) => _accounts[u]).whereType<Account>().toList();
 
   @override
-  Future<List<Account>> search(String query, {bool includeInactive = false}) async => [];
+  Future<List<Account>> search(
+    String query, {
+    bool includeInactive = false,
+  }) async => [];
 
   @override
   Future<List<Account>> getChildren(String parentUuid) async => [];
@@ -58,10 +63,12 @@ class FakeAccountRepository implements AccountRepository {
   Future<bool> isUsedInTransactions(String uuid) async => false;
 
   @override
-  Future<Account> insert(AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> insert(AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
-  Future<Account> update(int id, AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> update(int id, AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
   Future<void> deactivate(int id) async {}
@@ -76,8 +83,10 @@ class FakeAccountRepository implements AccountRepository {
   Future<void> seedDefaultChart() async {}
 
   @override
-  Future<List<Account>> getByType(AccountType type, {bool includeInactive = false}) async =>
-      _accounts.values.where((a) => a.accountType == type).toList();
+  Future<List<Account>> getByType(
+    AccountType type, {
+    bool includeInactive = false,
+  }) async => _accounts.values.where((a) => a.accountType == type).toList();
 }
 
 void main() {
@@ -117,10 +126,19 @@ void main() {
     accountRepo.addAccount(validAccount);
 
     db = AccountingDatabase.memory();
-    cashRepo = CashRegisterRepositoryImpl(accountRepository: accountRepo, db: db);
+    cashRepo = CashRegisterRepositoryImpl(
+      accountRepository: accountRepo,
+      db: db,
+    );
 
-    final queueBox = await Hive.openBox<SyncOperation>('test_sync_queue_${DateTime.now().millisecondsSinceEpoch}');
-    syncQueue = SyncQueue(box: queueBox, companyId: 'company_a', deviceId: 'device_01');
+    final queueBox = await Hive.openBox<SyncOperation>(
+      'test_sync_queue_${DateTime.now().millisecondsSinceEpoch}',
+    );
+    syncQueue = SyncQueue(
+      box: queueBox,
+      companyId: 'company_a',
+      deviceId: 'device_01',
+    );
 
     remoteApi = InMemoryRemoteSyncApi();
     syncHandler = CashRegisterSyncHandler(
@@ -237,7 +255,10 @@ void main() {
       await syncQueue.enqueue(opLink);
 
       final ready = await syncQueue.peekReady();
-      expect(ready.first.payload['accountingAccountId'], equals('acc_asset_01'));
+      expect(
+        ready.first.payload['accountingAccountId'],
+        equals('acc_asset_01'),
+      );
     });
 
     test('4. App Restart Queue Recovery', () async {
@@ -293,7 +314,10 @@ void main() {
         remoteVersion: ack1.remoteVersion,
       );
 
-      final local = await cashRepo.getCashRegisterById('reg_ack_01', companyId: 'company_a');
+      final local = await cashRepo.getCashRegisterById(
+        'reg_ack_01',
+        companyId: 'company_a',
+      );
       expect(local, isNotNull);
     });
 
@@ -387,37 +411,40 @@ void main() {
       expect(opB.companyId, equals('company_b'));
     });
 
-    test('10. Financial Balance Truth Preservation (Derived from Ledgers)', () async {
-      final reg = CashRegister(
-        id: 'reg_truth_01',
-        companyId: 'company_a',
-        name: 'Truth Register',
-        code: 'TRUTH_01',
-        isActive: true,
-        accountingAccountId: 'acc_asset_01',
-        createdAt: now,
-        updatedAt: now,
-      );
-      await cashRepo.createCashRegister(reg);
+    test(
+      '10. Financial Balance Truth Preservation (Derived from Ledgers)',
+      () async {
+        final reg = CashRegister(
+          id: 'reg_truth_01',
+          companyId: 'company_a',
+          name: 'Truth Register',
+          code: 'TRUTH_01',
+          isActive: true,
+          accountingAccountId: 'acc_asset_01',
+          createdAt: now,
+          updatedAt: now,
+        );
+        await cashRepo.createCashRegister(reg);
 
-      final remoteChange = SyncRemoteChange(
-        entityId: 'reg_truth_01',
-        version: 3,
-        updatedAt: DateTime.now().toUtc(),
-        payload: {
-          'companyId': 'company_a',
-          'name': 'Truth Register Updated Name',
-          'code': 'TRUTH_01',
-          'isActive': true,
-          'accountingAccountId': 'acc_asset_01',
-          'injectedFakeBalance': 999999.00,
-        },
-      );
+        final remoteChange = SyncRemoteChange(
+          entityId: 'reg_truth_01',
+          version: 3,
+          updatedAt: DateTime.now().toUtc(),
+          payload: {
+            'companyId': 'company_a',
+            'name': 'Truth Register Updated Name',
+            'code': 'TRUTH_01',
+            'isActive': true,
+            'accountingAccountId': 'acc_asset_01',
+            'injectedFakeBalance': 999999.00,
+          },
+        );
 
-      await syncHandler.applyRemoteChange(remoteChange);
+        await syncHandler.applyRemoteChange(remoteChange);
 
-      final updated = await cashRepo.getCashRegisterById('reg_truth_01');
-      expect(updated?.name, equals('Truth Register Updated Name'));
-    });
+        final updated = await cashRepo.getCashRegisterById('reg_truth_01');
+        expect(updated?.name, equals('Truth Register Updated Name'));
+      },
+    );
   });
 }

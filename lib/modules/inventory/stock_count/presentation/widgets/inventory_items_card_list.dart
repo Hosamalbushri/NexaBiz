@@ -64,8 +64,7 @@ class InventoryItemsCardList extends ConsumerWidget {
               parent: AlwaysScrollableScrollPhysics(),
             ),
             itemCount: items.length,
-            separatorBuilder: (_, _) =>
-                const SizedBox(height: AppSpacing.sm),
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, index) {
               final item = items[index];
               return InventoryItemCard(
@@ -80,7 +79,8 @@ class InventoryItemsCardList extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final showPagination = !constraints.hasBoundedHeight ||
+        final showPagination =
+            !constraints.hasBoundedHeight ||
             constraints.maxHeight >= _minHeightForPagination;
 
         return Column(

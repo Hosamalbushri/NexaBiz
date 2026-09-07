@@ -59,7 +59,8 @@ class MockLocalAuthStore implements LocalAuthStore {
   AuthUser? systemAdmin;
 
   @override
-  Future<bool> hasConfiguredAdmin() async => configuredAdmin || systemAdmin != null;
+  Future<bool> hasConfiguredAdmin() async =>
+      configuredAdmin || systemAdmin != null;
 
   @override
   Future<AuthUser> createInitialSystemAdmin({
@@ -102,76 +103,100 @@ void main() {
         authStore: authStore,
       );
 
-      expect(coordinator.currentState, equals(SystemInitializationState.uninitialized));
-    });
-
-    test('2 & 3 & 4 & 5. Complete First-Run System Initialization Sequence', () async {
-      final coordinator = SystemInitializationCoordinator(
-        stateRepository: repo,
-        seedPort: seedPort,
-        authStore: authStore,
-      );
-
-      expect(coordinator.currentState, equals(SystemInitializationState.uninitialized));
-      expect(seedPort.seeded, isFalse);
-
-      await coordinator.initializeSystem(
-        adminName: 'Initial Admin',
-        adminEmail: 'admin@nexabiz.local',
-        adminPassword: 'Password123!',
-      );
-
-      expect(seedPort.seeded, isTrue);
-      expect(authStore.configuredAdmin, isTrue);
-      expect(authStore.systemAdmin?.systemRole, equals(SystemRole.systemAdmin));
-      expect(coordinator.currentState, equals(SystemInitializationState.initialized));
-    });
-
-    test('6. Initialization called twice is rejected (Closed-Path Security)', () async {
-      final coordinator = SystemInitializationCoordinator(
-        stateRepository: repo,
-        seedPort: seedPort,
-        authStore: authStore,
-      );
-
-      await coordinator.initializeSystem(
-        adminName: 'Admin 1',
-        adminEmail: 'admin1@nexabiz.local',
-        adminPassword: 'Password123!',
-      );
-
-      final state = await coordinator.getInitializationState();
-      expect(state, equals(SystemInitializationState.initialized));
-
       expect(
-        () => coordinator.initializeSystem(
-          adminName: 'Admin 2',
-          adminEmail: 'admin2@nexabiz.local',
-          adminPassword: 'Password123!',
-        ),
-        throwsA(isA<SystemAlreadyInitializedException>()),
+        coordinator.currentState,
+        equals(SystemInitializationState.uninitialized),
       );
     });
 
-    test('7. Initialization interruption transitions to initializationFailed', () async {
-      final failingSeedPort = MockFailingSeedPort();
-      final coordinator = SystemInitializationCoordinator(
-        stateRepository: repo,
-        seedPort: failingSeedPort,
-        authStore: authStore,
-      );
+    test(
+      '2 & 3 & 4 & 5. Complete First-Run System Initialization Sequence',
+      () async {
+        final coordinator = SystemInitializationCoordinator(
+          stateRepository: repo,
+          seedPort: seedPort,
+          authStore: authStore,
+        );
 
-      await expectLater(
-        () => coordinator.initializeSystem(
-          adminName: 'Admin',
+        expect(
+          coordinator.currentState,
+          equals(SystemInitializationState.uninitialized),
+        );
+        expect(seedPort.seeded, isFalse);
+
+        await coordinator.initializeSystem(
+          adminName: 'Initial Admin',
           adminEmail: 'admin@nexabiz.local',
           adminPassword: 'Password123!',
-        ),
-        throwsA(isA<Exception>()),
-      );
+        );
 
-      expect(coordinator.currentState, equals(SystemInitializationState.initializationFailed));
-    });
+        expect(seedPort.seeded, isTrue);
+        expect(authStore.configuredAdmin, isTrue);
+        expect(
+          authStore.systemAdmin?.systemRole,
+          equals(SystemRole.systemAdmin),
+        );
+        expect(
+          coordinator.currentState,
+          equals(SystemInitializationState.initialized),
+        );
+      },
+    );
+
+    test(
+      '6. Initialization called twice is rejected (Closed-Path Security)',
+      () async {
+        final coordinator = SystemInitializationCoordinator(
+          stateRepository: repo,
+          seedPort: seedPort,
+          authStore: authStore,
+        );
+
+        await coordinator.initializeSystem(
+          adminName: 'Admin 1',
+          adminEmail: 'admin1@nexabiz.local',
+          adminPassword: 'Password123!',
+        );
+
+        final state = await coordinator.getInitializationState();
+        expect(state, equals(SystemInitializationState.initialized));
+
+        expect(
+          () => coordinator.initializeSystem(
+            adminName: 'Admin 2',
+            adminEmail: 'admin2@nexabiz.local',
+            adminPassword: 'Password123!',
+          ),
+          throwsA(isA<SystemAlreadyInitializedException>()),
+        );
+      },
+    );
+
+    test(
+      '7. Initialization interruption transitions to initializationFailed',
+      () async {
+        final failingSeedPort = MockFailingSeedPort();
+        final coordinator = SystemInitializationCoordinator(
+          stateRepository: repo,
+          seedPort: failingSeedPort,
+          authStore: authStore,
+        );
+
+        await expectLater(
+          () => coordinator.initializeSystem(
+            adminName: 'Admin',
+            adminEmail: 'admin@nexabiz.local',
+            adminPassword: 'Password123!',
+          ),
+          throwsA(isA<Exception>()),
+        );
+
+        expect(
+          coordinator.currentState,
+          equals(SystemInitializationState.initializationFailed),
+        );
+      },
+    );
 
     test('8. Recovery after failure allows clean re-initialization', () async {
       var coordinator = SystemInitializationCoordinator(
@@ -188,7 +213,10 @@ void main() {
         );
       } catch (_) {}
 
-      expect(coordinator.currentState, equals(SystemInitializationState.initializationFailed));
+      expect(
+        coordinator.currentState,
+        equals(SystemInitializationState.initializationFailed),
+      );
 
       // Retry with working seedPort
       coordinator = SystemInitializationCoordinator(
@@ -197,7 +225,10 @@ void main() {
         authStore: authStore,
       );
 
-      expect(coordinator.currentState, equals(SystemInitializationState.uninitialized));
+      expect(
+        coordinator.currentState,
+        equals(SystemInitializationState.uninitialized),
+      );
 
       await coordinator.initializeSystem(
         adminName: 'Admin',
@@ -205,64 +236,76 @@ void main() {
         adminPassword: 'Password123!',
       );
 
-      expect(coordinator.currentState, equals(SystemInitializationState.initialized));
-    });
-
-    test('9 & 10. Existing initialized installation detected as initialized', () async {
-      authStore.configuredAdmin = true;
-      final coordinator = SystemInitializationCoordinator(
-        stateRepository: repo,
-        seedPort: seedPort,
-        authStore: authStore,
-      );
-
-      final state = await coordinator.getInitializationState();
-      expect(state, equals(SystemInitializationState.initialized));
-    });
-
-    test('11 & 14. Second-admin creation path after initialization is REJECTED', () async {
-      authStore.configuredAdmin = true;
-      final coordinator = SystemInitializationCoordinator(
-        stateRepository: repo,
-        seedPort: seedPort,
-        authStore: authStore,
-      );
-
       expect(
-        () => coordinator.initializeSystem(
-          adminName: 'Rogue Admin',
-          adminEmail: 'rogue@nexabiz.local',
-          adminPassword: 'Password123!',
-        ),
-        throwsA(isA<SystemAlreadyInitializedException>()),
+        coordinator.currentState,
+        equals(SystemInitializationState.initialized),
       );
     });
 
-    test('12 & 13. System Admin has NO automatic company & activeCompanyContext remains null', () {
-      const initialAdmin = AuthUser(
-        id: 'sys_admin_01',
-        name: 'System Admin',
-        email: 'sysadmin@nexabiz.local',
-        systemRole: SystemRole.systemAdmin,
-      );
+    test(
+      '9 & 10. Existing initialized installation detected as initialized',
+      () async {
+        authStore.configuredAdmin = true;
+        final coordinator = SystemInitializationCoordinator(
+          stateRepository: repo,
+          seedPort: seedPort,
+          authStore: authStore,
+        );
 
-      final session = AuthSessionSnapshot(
-        user: initialAdmin,
-        companies: const [],
-        roles: const [],
-        permissions: const {'system.manage'},
-        capturedAt: DateTime.now().toUtc(),
-        currentCompanyId: null,
-        activeMembership: null,
-        activeCompanyContext: null,
-      );
+        final state = await coordinator.getInitializationState();
+        expect(state, equals(SystemInitializationState.initialized));
+      },
+    );
 
-      expect(session.user.systemRole, equals(SystemRole.systemAdmin));
-      expect(session.user.isSystemAdmin, isTrue);
-      expect(session.companyContext, isNull);
-      expect(session.activeCompanyId, isNull);
-      expect(session.hasCompany, isFalse);
-      expect(session.isValidSecuritySession, isTrue);
-    });
+    test(
+      '11 & 14. Second-admin creation path after initialization is REJECTED',
+      () async {
+        authStore.configuredAdmin = true;
+        final coordinator = SystemInitializationCoordinator(
+          stateRepository: repo,
+          seedPort: seedPort,
+          authStore: authStore,
+        );
+
+        expect(
+          () => coordinator.initializeSystem(
+            adminName: 'Rogue Admin',
+            adminEmail: 'rogue@nexabiz.local',
+            adminPassword: 'Password123!',
+          ),
+          throwsA(isA<SystemAlreadyInitializedException>()),
+        );
+      },
+    );
+
+    test(
+      '12 & 13. System Admin has NO automatic company & activeCompanyContext remains null',
+      () {
+        const initialAdmin = AuthUser(
+          id: 'sys_admin_01',
+          name: 'System Admin',
+          email: 'sysadmin@nexabiz.local',
+          systemRole: SystemRole.systemAdmin,
+        );
+
+        final session = AuthSessionSnapshot(
+          user: initialAdmin,
+          companies: const [],
+          roles: const [],
+          permissions: const {'system.manage'},
+          capturedAt: DateTime.now().toUtc(),
+          currentCompanyId: null,
+          activeMembership: null,
+          activeCompanyContext: null,
+        );
+
+        expect(session.user.systemRole, equals(SystemRole.systemAdmin));
+        expect(session.user.isSystemAdmin, isTrue);
+        expect(session.companyContext, isNull);
+        expect(session.activeCompanyId, isNull);
+        expect(session.hasCompany, isFalse);
+        expect(session.isValidSecuritySession, isTrue);
+      },
+    );
   });
 }

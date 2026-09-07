@@ -98,7 +98,13 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
       timeoutTimer.cancel();
 
       if (isFirstLaunch) {
-        await completeLocalSetup();
+        state = state.copyWith(
+          status: InitializationStatus.ready,
+          stage: InitializationStage.applicationReady,
+          isFirstLaunch: true,
+          completedAt: DateTime.now(),
+          stageDetails: 'First-run setup required',
+        );
       } else {
         state = state.copyWith(
           status: InitializationStatus.ready,

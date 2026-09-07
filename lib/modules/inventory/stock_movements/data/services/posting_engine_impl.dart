@@ -22,9 +22,9 @@ class PostingEngineImpl implements PostingEngine {
     String Function()? readCompanyId,
     InitializationGuard? initializationGuard,
     StockValidationService? stockValidationService,
-  ])  : _readCompanyId = readCompanyId,
-        _initializationGuard = initializationGuard,
-        _stockValidationService = stockValidationService;
+  ]) : _readCompanyId = readCompanyId,
+       _initializationGuard = initializationGuard,
+       _stockValidationService = stockValidationService;
 
   final InventoryDatabase _db;
   final CostLayerService _costLayerService;
@@ -65,9 +65,9 @@ class PostingEngineImpl implements PostingEngine {
     await _db.transaction(() async {
       for (final line in lines) {
         // Defensive check: skip if line is already posted
-        final dbLine = await (_db.select(_db.stockMovementLines)
-              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
-            .getSingleOrNull();
+        final dbLine = await (_db.select(
+          _db.stockMovementLines,
+        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).getSingleOrNull();
 
         if (dbLine != null && dbLine.postedAt != null) {
           totalValue += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
@@ -115,9 +115,9 @@ class PostingEngineImpl implements PostingEngine {
         );
 
         // Update line posted details
-        await (_db.update(_db.stockMovementLines)
-              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
-            .write(
+        await (_db.update(
+          _db.stockMovementLines,
+        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).write(
           StockMovementLinesCompanion(
             postedCost: Value(baseUnitCost),
             postedAt: Value(nowEpoch),
@@ -128,7 +128,11 @@ class PostingEngineImpl implements PostingEngine {
       }
 
       // Mark header document as posted
-      await _setDocumentStatus(document, InventoryDocumentStatus.posted, nowEpoch);
+      await _setDocumentStatus(
+        document,
+        InventoryDocumentStatus.posted,
+        nowEpoch,
+      );
     });
 
     return totalValue;
@@ -158,9 +162,9 @@ class PostingEngineImpl implements PostingEngine {
     await _db.transaction(() async {
       for (final line in lines) {
         // Defensive check: skip if line is already posted
-        final dbLine = await (_db.select(_db.stockMovementLines)
-              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
-            .getSingleOrNull();
+        final dbLine = await (_db.select(
+          _db.stockMovementLines,
+        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).getSingleOrNull();
 
         if (dbLine != null && dbLine.postedAt != null) {
           totalCogs += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
@@ -210,9 +214,9 @@ class PostingEngineImpl implements PostingEngine {
         );
 
         // Update line posted details
-        await (_db.update(_db.stockMovementLines)
-              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
-            .write(
+        await (_db.update(
+          _db.stockMovementLines,
+        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).write(
           StockMovementLinesCompanion(
             postedCost: Value(consumptionResult.effectiveUnitCost),
             postedAt: Value(nowEpoch),
@@ -223,7 +227,11 @@ class PostingEngineImpl implements PostingEngine {
       }
 
       // Mark header document as posted
-      await _setDocumentStatus(document, InventoryDocumentStatus.posted, nowEpoch);
+      await _setDocumentStatus(
+        document,
+        InventoryDocumentStatus.posted,
+        nowEpoch,
+      );
     });
 
     return totalCogs;
@@ -240,11 +248,15 @@ class PostingEngineImpl implements PostingEngine {
     await _initializationGuard?.assertInitialized();
 
     if (fromWarehouseId.trim().isEmpty || toWarehouseId.trim().isEmpty) {
-      throw StateError('Stock transfer requires both source and destination warehouses');
+      throw StateError(
+        'Stock transfer requires both source and destination warehouses',
+      );
     }
 
     if (fromWarehouseId == toWarehouseId) {
-      throw StateError('Source and destination warehouse cannot be the same for stock transfer');
+      throw StateError(
+        'Source and destination warehouse cannot be the same for stock transfer',
+      );
     }
 
     await _effectiveStockValidation.validateWarehouseAccess(
@@ -262,9 +274,9 @@ class PostingEngineImpl implements PostingEngine {
     await _db.transaction(() async {
       for (final line in lines) {
         // Defensive check: skip if line is already posted
-        final dbLine = await (_db.select(_db.stockMovementLines)
-              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
-            .getSingleOrNull();
+        final dbLine = await (_db.select(
+          _db.stockMovementLines,
+        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).getSingleOrNull();
 
         if (dbLine != null && dbLine.postedAt != null) {
           totalTransferredValue += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
@@ -358,26 +370,34 @@ class PostingEngineImpl implements PostingEngine {
       }
 
       // Mark transfer document as posted
-      await _setDocumentStatus(document, InventoryDocumentStatus.posted, nowEpoch);
+      await _setDocumentStatus(
+        document,
+        InventoryDocumentStatus.posted,
+        nowEpoch,
+      );
     });
 
     return totalTransferredValue;
   }
 
   @override
-  Future<void> reversePosting({
-    required InventoryDocumentRef document,
-  }) async {
+  Future<void> reversePosting({required InventoryDocumentRef document}) async {
     await _initializationGuard?.assertInitialized();
     await _db.transaction(() async {
       switch (document.documentType) {
         case InventoryDocumentType.stockReceipt:
-          final lines = await (_db.select(_db.stockMovementLines)
-                ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
-              .get();
+          final lines =
+              await (_db.select(_db.stockMovementLines)..where(
+                    (tbl) => tbl.movementUuid.equals(document.documentId),
+                  ))
+                  .get();
 
           for (final line in lines) {
-            await _adjustProductQty(line.itemCode, document.warehouseId, -line.quantity);
+            await _adjustProductQty(
+              line.itemCode,
+              document.warehouseId,
+              -line.quantity,
+            );
 
             // Record reversing outbound ledger entry for receipt reversal
             await _recordLedgerEntry(
@@ -398,17 +418,27 @@ class PostingEngineImpl implements PostingEngine {
           }
 
           await _costLayerService.reverseLayer(document.documentId);
-          await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
+          await _setDocumentStatus(
+            document,
+            InventoryDocumentStatus.draft,
+            null,
+          );
           break;
 
         case InventoryDocumentType.stockIssue:
-          final lines = await (_db.select(_db.stockMovementLines)
-                ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
-              .get();
+          final lines =
+              await (_db.select(_db.stockMovementLines)..where(
+                    (tbl) => tbl.movementUuid.equals(document.documentId),
+                  ))
+                  .get();
 
           for (final line in lines) {
             await _costLayerService.reverseConsumptions(line.uuid);
-            await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
+            await _adjustProductQty(
+              line.itemCode,
+              document.warehouseId,
+              line.quantity,
+            );
 
             // Record reversing inbound ledger entry for issue reversal
             await _recordLedgerEntry(
@@ -428,27 +458,39 @@ class PostingEngineImpl implements PostingEngine {
             );
           }
 
-          await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
+          await _setDocumentStatus(
+            document,
+            InventoryDocumentStatus.draft,
+            null,
+          );
           break;
 
         case InventoryDocumentType.stockReturn:
-          final returns = await (_db.select(_db.stockReturns)
-                ..where((tbl) => tbl.uuid.equals(document.documentId)))
-              .get();
+          final returns = await (_db.select(
+            _db.stockReturns,
+          )..where((tbl) => tbl.uuid.equals(document.documentId))).get();
 
           if (returns.isNotEmpty) {
             final ret = returns.first;
-            final isPurchaseReturn = ret.returnType == 'purchase_return' || ret.returnType == 'purchaseReturn';
+            final isPurchaseReturn =
+                ret.returnType == 'purchase_return' ||
+                ret.returnType == 'purchaseReturn';
 
-            final lines = await (_db.select(_db.stockMovementLines)
-                  ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
-                .get();
+            final lines =
+                await (_db.select(_db.stockMovementLines)..where(
+                      (tbl) => tbl.movementUuid.equals(document.documentId),
+                    ))
+                    .get();
 
             for (final line in lines) {
               if (isPurchaseReturn) {
                 // Outbound return: reverse consumption, increase stock
                 await _costLayerService.reverseConsumptions(line.uuid);
-                await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
+                await _adjustProductQty(
+                  line.itemCode,
+                  document.warehouseId,
+                  line.quantity,
+                );
 
                 await _recordLedgerEntry(
                   warehouseId: document.warehouseId ?? '',
@@ -467,7 +509,11 @@ class PostingEngineImpl implements PostingEngine {
                 );
               } else {
                 // Inbound return: reverse layer, decrease stock
-                await _adjustProductQty(line.itemCode, document.warehouseId, -line.quantity);
+                await _adjustProductQty(
+                  line.itemCode,
+                  document.warehouseId,
+                  -line.quantity,
+                );
 
                 await _recordLedgerEntry(
                   warehouseId: document.warehouseId ?? '',
@@ -491,24 +537,34 @@ class PostingEngineImpl implements PostingEngine {
               await _costLayerService.reverseLayer(document.documentId);
             }
 
-            await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
+            await _setDocumentStatus(
+              document,
+              InventoryDocumentStatus.draft,
+              null,
+            );
           }
           break;
 
         case InventoryDocumentType.stockTransfer:
-          final transfers = await (_db.select(_db.stockTransfers)
-                ..where((tbl) => tbl.uuid.equals(document.documentId)))
-              .get();
+          final transfers = await (_db.select(
+            _db.stockTransfers,
+          )..where((tbl) => tbl.uuid.equals(document.documentId))).get();
 
           if (transfers.isNotEmpty) {
             final tr = transfers.first;
-            final lines = await (_db.select(_db.stockMovementLines)
-                  ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
-                .get();
+            final lines =
+                await (_db.select(_db.stockMovementLines)..where(
+                      (tbl) => tbl.movementUuid.equals(document.documentId),
+                    ))
+                    .get();
 
             for (final line in lines) {
               // Reverse inbound in destination warehouse
-              await _adjustProductQty(line.itemCode, tr.toWarehouseId, -line.quantity);
+              await _adjustProductQty(
+                line.itemCode,
+                tr.toWarehouseId,
+                -line.quantity,
+              );
               await _recordLedgerEntry(
                 warehouseId: tr.toWarehouseId,
                 itemCode: line.itemCode,
@@ -527,7 +583,11 @@ class PostingEngineImpl implements PostingEngine {
 
               // Reverse outbound consumptions in source warehouse
               await _costLayerService.reverseConsumptions(line.uuid);
-              await _adjustProductQty(line.itemCode, tr.fromWarehouseId, line.quantity);
+              await _adjustProductQty(
+                line.itemCode,
+                tr.fromWarehouseId,
+                line.quantity,
+              );
               await _recordLedgerEntry(
                 warehouseId: tr.fromWarehouseId,
                 itemCode: line.itemCode,
@@ -546,18 +606,28 @@ class PostingEngineImpl implements PostingEngine {
             }
 
             await _costLayerService.reverseLayer(document.documentId);
-            await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
+            await _setDocumentStatus(
+              document,
+              InventoryDocumentStatus.draft,
+              null,
+            );
           }
           break;
 
         case InventoryDocumentType.salesInvoice:
-          final lines = await (_db.select(_db.stockMovementLines)
-                ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
-              .get();
+          final lines =
+              await (_db.select(_db.stockMovementLines)..where(
+                    (tbl) => tbl.movementUuid.equals(document.documentId),
+                  ))
+                  .get();
 
           for (final line in lines) {
             await _costLayerService.reverseConsumptions(line.uuid);
-            await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
+            await _adjustProductQty(
+              line.itemCode,
+              document.warehouseId,
+              line.quantity,
+            );
 
             await _recordLedgerEntry(
               warehouseId: document.warehouseId ?? '',
@@ -576,9 +646,12 @@ class PostingEngineImpl implements PostingEngine {
             );
           }
 
-          await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
+          await _setDocumentStatus(
+            document,
+            InventoryDocumentStatus.draft,
+            null,
+          );
           break;
-
 
         default:
           break;
@@ -599,9 +672,11 @@ class PostingEngineImpl implements PostingEngine {
 
       // 1. Check overall product table stock
       final prodQuery = _db.select(_db.products)
-        ..where((p) =>
-            p.itemCode.equals(itemCode) &
-            p.companyId.equals(effectiveCompanyId));
+        ..where(
+          (p) =>
+              p.itemCode.equals(itemCode) &
+              p.companyId.equals(effectiveCompanyId),
+        );
       final prods = await prodQuery.get();
 
       final availProd = prods.isNotEmpty ? prods.first.onHandQty : 0.0;
@@ -614,14 +689,14 @@ class PostingEngineImpl implements PostingEngine {
 
       final p = prods.first;
       final newQty = p.onHandQty + deltaQty;
-      final updatedProdCount = await (_db.update(_db.products)
-            ..where((tbl) =>
-                tbl.id.equals(p.id) &
-                tbl.companyId.equals(effectiveCompanyId) &
-                tbl.onHandQty.isBiggerOrEqualValue(reqQty)))
-          .write(
-        ProductsCompanion(onHandQty: Value(newQty)),
-      );
+      final updatedProdCount =
+          await (_db.update(_db.products)..where(
+                (tbl) =>
+                    tbl.id.equals(p.id) &
+                    tbl.companyId.equals(effectiveCompanyId) &
+                    tbl.onHandQty.isBiggerOrEqualValue(reqQty),
+              ))
+              .write(ProductsCompanion(onHandQty: Value(newQty)));
 
       if (updatedProdCount == 0) {
         throw JournalException(
@@ -633,10 +708,12 @@ class PostingEngineImpl implements PostingEngine {
       // 2. Check warehouse-specific stock if warehouseId is provided
       if (warehouseId != null && warehouseId.isNotEmpty) {
         final whQuery = _db.select(_db.productWarehouseStocks)
-          ..where((w) =>
-              w.itemCode.equals(itemCode) &
-              w.warehouseId.equals(warehouseId) &
-              w.companyId.equals(effectiveCompanyId));
+          ..where(
+            (w) =>
+                w.itemCode.equals(itemCode) &
+                w.warehouseId.equals(warehouseId) &
+                w.companyId.equals(effectiveCompanyId),
+          );
 
         final whStocks = await whQuery.get();
         final availWh = whStocks.isNotEmpty ? whStocks.first.onHandQty : 0.0;
@@ -651,14 +728,16 @@ class PostingEngineImpl implements PostingEngine {
         final whStock = whStocks.first;
         final newWhQty = whStock.onHandQty + deltaQty;
 
-        final updatedWhCount = await (_db.update(_db.productWarehouseStocks)
-              ..where((w) =>
-                  w.uuid.equals(whStock.uuid) &
-                  w.companyId.equals(effectiveCompanyId) &
-                  w.onHandQty.isBiggerOrEqualValue(reqQty)))
-            .write(
-          ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty)),
-        );
+        final updatedWhCount =
+            await (_db.update(_db.productWarehouseStocks)..where(
+                  (w) =>
+                      w.uuid.equals(whStock.uuid) &
+                      w.companyId.equals(effectiveCompanyId) &
+                      w.onHandQty.isBiggerOrEqualValue(reqQty),
+                ))
+                .write(
+                  ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty)),
+                );
 
         if (updatedWhCount == 0) {
           throw JournalException(
@@ -670,23 +749,26 @@ class PostingEngineImpl implements PostingEngine {
     } else {
       // Inbound / Positive deltaQty: Increment stock
       final prodQuery = _db.select(_db.products)
-        ..where((p) =>
-            p.itemCode.equals(itemCode) &
-            p.companyId.equals(effectiveCompanyId));
+        ..where(
+          (p) =>
+              p.itemCode.equals(itemCode) &
+              p.companyId.equals(effectiveCompanyId),
+        );
       final prods = await prodQuery.get();
 
       if (prods.isNotEmpty) {
         final p = prods.first;
         final newQty = p.onHandQty + deltaQty;
-        await (_db.update(_db.products)
-              ..where((tbl) =>
+        await (_db.update(_db.products)..where(
+              (tbl) =>
                   tbl.id.equals(p.id) &
-                  tbl.companyId.equals(effectiveCompanyId)))
-            .write(
-          ProductsCompanion(onHandQty: Value(newQty)),
-        );
+                  tbl.companyId.equals(effectiveCompanyId),
+            ))
+            .write(ProductsCompanion(onHandQty: Value(newQty)));
       } else {
-        await _db.into(_db.products).insert(
+        await _db
+            .into(_db.products)
+            .insert(
               ProductsCompanion(
                 uuid: Value(generateUuidV4()),
                 itemCode: Value(itemCode),
@@ -703,25 +785,30 @@ class PostingEngineImpl implements PostingEngine {
 
       if (warehouseId != null && warehouseId.isNotEmpty) {
         final whQuery = _db.select(_db.productWarehouseStocks)
-          ..where((w) =>
-              w.itemCode.equals(itemCode) &
-              w.warehouseId.equals(warehouseId) &
-              w.companyId.equals(effectiveCompanyId));
+          ..where(
+            (w) =>
+                w.itemCode.equals(itemCode) &
+                w.warehouseId.equals(warehouseId) &
+                w.companyId.equals(effectiveCompanyId),
+          );
 
         final whStocks = await whQuery.get();
 
         if (whStocks.isNotEmpty) {
           final whStock = whStocks.first;
           final newWhQty = whStock.onHandQty + deltaQty;
-          await (_db.update(_db.productWarehouseStocks)
-                ..where((w) =>
+          await (_db.update(_db.productWarehouseStocks)..where(
+                (w) =>
                     w.uuid.equals(whStock.uuid) &
-                    w.companyId.equals(effectiveCompanyId)))
+                    w.companyId.equals(effectiveCompanyId),
+              ))
               .write(
-            ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty)),
-          );
+                ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty)),
+              );
         } else {
-          await _db.into(_db.productWarehouseStocks).insert(
+          await _db
+              .into(_db.productWarehouseStocks)
+              .insert(
                 ProductWarehouseStocksCompanion(
                   uuid: Value(generateUuidV4()),
                   itemCode: Value(itemCode),
@@ -746,71 +833,103 @@ class PostingEngineImpl implements PostingEngine {
 
     switch (doc.documentType) {
       case InventoryDocumentType.stockReceipt:
-        await (_db.update(_db.stockReceipts)
-              ..where((tbl) =>
+        await (_db.update(_db.stockReceipts)..where(
+              (tbl) =>
                   tbl.uuid.equals(doc.documentId) &
-                  tbl.companyId.equals(_currentCompanyId)))
+                  tbl.companyId.equals(_currentCompanyId),
+            ))
             .write(
-          StockReceiptsCompanion(
-            status: Value(statusStr),
-            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
-          ),
-        );
+              StockReceiptsCompanion(
+                status: Value(statusStr),
+                postedAt: postedAtEpoch != null
+                    ? Value(postedAtEpoch)
+                    : const Value.absent(),
+              ),
+            );
         if (postedAtEpoch == null) {
-          await (_db.update(_db.stockMovementLines)
-                ..where((tbl) => tbl.movementUuid.equals(doc.documentId)))
-              .write(const StockMovementLinesCompanion(postedAt: Value(null), postedCost: Value(null)));
+          await (_db.update(
+            _db.stockMovementLines,
+          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+            const StockMovementLinesCompanion(
+              postedAt: Value(null),
+              postedCost: Value(null),
+            ),
+          );
         }
         break;
       case InventoryDocumentType.stockIssue:
-        await (_db.update(_db.stockIssues)
-              ..where((tbl) =>
+        await (_db.update(_db.stockIssues)..where(
+              (tbl) =>
                   tbl.uuid.equals(doc.documentId) &
-                  tbl.companyId.equals(_currentCompanyId)))
+                  tbl.companyId.equals(_currentCompanyId),
+            ))
             .write(
-          StockIssuesCompanion(
-            status: Value(statusStr),
-            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
-          ),
-        );
+              StockIssuesCompanion(
+                status: Value(statusStr),
+                postedAt: postedAtEpoch != null
+                    ? Value(postedAtEpoch)
+                    : const Value.absent(),
+              ),
+            );
         if (postedAtEpoch == null) {
-          await (_db.update(_db.stockMovementLines)
-                ..where((tbl) => tbl.movementUuid.equals(doc.documentId)))
-              .write(const StockMovementLinesCompanion(postedAt: Value(null), postedCost: Value(null)));
+          await (_db.update(
+            _db.stockMovementLines,
+          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+            const StockMovementLinesCompanion(
+              postedAt: Value(null),
+              postedCost: Value(null),
+            ),
+          );
         }
         break;
       case InventoryDocumentType.stockReturn:
-        await (_db.update(_db.stockReturns)
-              ..where((tbl) =>
+        await (_db.update(_db.stockReturns)..where(
+              (tbl) =>
                   tbl.uuid.equals(doc.documentId) &
-                  tbl.companyId.equals(_currentCompanyId)))
+                  tbl.companyId.equals(_currentCompanyId),
+            ))
             .write(
-          StockReturnsCompanion(
-            status: Value(statusStr),
-            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
-          ),
-        );
+              StockReturnsCompanion(
+                status: Value(statusStr),
+                postedAt: postedAtEpoch != null
+                    ? Value(postedAtEpoch)
+                    : const Value.absent(),
+              ),
+            );
         if (postedAtEpoch == null) {
-          await (_db.update(_db.stockMovementLines)
-                ..where((tbl) => tbl.movementUuid.equals(doc.documentId)))
-              .write(const StockMovementLinesCompanion(postedAt: Value(null), postedCost: Value(null)));
+          await (_db.update(
+            _db.stockMovementLines,
+          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+            const StockMovementLinesCompanion(
+              postedAt: Value(null),
+              postedCost: Value(null),
+            ),
+          );
         }
         break;
       case InventoryDocumentType.stockTransfer:
-        await (_db.update(_db.stockTransfers)
-              ..where((tbl) =>
+        await (_db.update(_db.stockTransfers)..where(
+              (tbl) =>
                   tbl.uuid.equals(doc.documentId) &
-                  tbl.companyId.equals(_currentCompanyId)))
+                  tbl.companyId.equals(_currentCompanyId),
+            ))
             .write(
-          StockTransfersCompanion(
-            status: Value(statusStr),
-            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
-          ),
-        );
+              StockTransfersCompanion(
+                status: Value(statusStr),
+                postedAt: postedAtEpoch != null
+                    ? Value(postedAtEpoch)
+                    : const Value.absent(),
+              ),
+            );
         if (postedAtEpoch == null) {
-          await (_db.update(_db.stockMovementLines)
-                ..where((tbl) => tbl.movementUuid.equals(doc.documentId)))
-              .write(const StockMovementLinesCompanion(postedAt: Value(null), postedCost: Value(null)));
+          await (_db.update(
+            _db.stockMovementLines,
+          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+            const StockMovementLinesCompanion(
+              postedAt: Value(null),
+              postedCost: Value(null),
+            ),
+          );
         }
         break;
 
@@ -834,24 +953,26 @@ class PostingEngineImpl implements PostingEngine {
     required String costingMethodUsed,
     required String companyId,
   }) async {
-    await _db.into(_db.stockMovementLedgers).insert(
-      StockMovementLedgersCompanion(
-        uuid: Value(generateUuidV4()),
-        companyId: Value(companyId),
-        warehouseId: Value(warehouseId),
-        itemCode: Value(itemCode),
-        quantity: Value(quantity.abs()),
-        direction: Value(direction),
-        movementType: Value(movementType),
-        postingDate: Value(postingDate.millisecondsSinceEpoch),
-        sourceDocumentId: Value(sourceDocumentId),
-        sourceDocumentType: Value(sourceDocumentType),
-        sourceLineUuid: Value(sourceLineUuid),
-        unitCost: Value(unitCost),
-        totalCost: Value(totalCost),
-        costingMethodUsed: Value(costingMethodUsed),
-        createdAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-      ),
-    );
+    await _db
+        .into(_db.stockMovementLedgers)
+        .insert(
+          StockMovementLedgersCompanion(
+            uuid: Value(generateUuidV4()),
+            companyId: Value(companyId),
+            warehouseId: Value(warehouseId),
+            itemCode: Value(itemCode),
+            quantity: Value(quantity.abs()),
+            direction: Value(direction),
+            movementType: Value(movementType),
+            postingDate: Value(postingDate.millisecondsSinceEpoch),
+            sourceDocumentId: Value(sourceDocumentId),
+            sourceDocumentType: Value(sourceDocumentType),
+            sourceLineUuid: Value(sourceLineUuid),
+            unitCost: Value(unitCost),
+            totalCost: Value(totalCost),
+            costingMethodUsed: Value(costingMethodUsed),
+            createdAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+          ),
+        );
   }
 }

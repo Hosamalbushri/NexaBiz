@@ -21,7 +21,9 @@ class ImportConfiguration {
 
   /// Returns true if an assignment exists for the specified [fieldKey].
   bool hasAssignmentFor(String fieldKey) {
-    return assignments.any((assignment) => assignment.targetFieldKey == fieldKey);
+    return assignments.any(
+      (assignment) => assignment.targetFieldKey == fieldKey,
+    );
   }
 
   /// Retrieves the assignment for [fieldKey] or null if unmapped.

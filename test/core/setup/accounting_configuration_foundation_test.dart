@@ -27,7 +27,9 @@ class MockAccountRepository implements AccountRepository {
 
   @override
   Future<List<Account>> getAll({bool includeInactive = false}) async {
-    return _accounts.values.where((a) => includeInactive || a.isActive).toList();
+    return _accounts.values
+        .where((a) => includeInactive || a.isActive)
+        .toList();
   }
 
   @override
@@ -49,7 +51,10 @@ class MockAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<List<Account>> search(String query, {bool includeInactive = false}) async {
+  Future<List<Account>> search(
+    String query, {
+    bool includeInactive = false,
+  }) async {
     return _accounts.values.where((a) => a.name.contains(query)).toList();
   }
 
@@ -67,10 +72,12 @@ class MockAccountRepository implements AccountRepository {
   Future<bool> isUsedInTransactions(String uuid) async => false;
 
   @override
-  Future<Account> insert(AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> insert(AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
-  Future<Account> update(int id, AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> update(int id, AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
   Future<void> deactivate(int id) async {}
@@ -85,7 +92,10 @@ class MockAccountRepository implements AccountRepository {
   Future<void> seedDefaultChart() async {}
 
   @override
-  Future<List<Account>> getByType(AccountType type, {bool includeInactive = false}) async {
+  Future<List<Account>> getByType(
+    AccountType type, {
+    bool includeInactive = false,
+  }) async {
     return _accounts.values.where((a) => a.accountType == type).toList();
   }
 }
@@ -107,7 +117,6 @@ class DummyUsageAnalyzer implements AccountUsageAnalyzer {
   }
 }
 
-
 void main() {
   late MockAccountRepository accountRepo;
   late AccountBindingSafetyGate safetyGate;
@@ -122,135 +131,151 @@ void main() {
     );
 
     // Seed test accounts
-    accountRepo.seedAccount(Account(
-      id: 1,
-      uuid: 'acc_rev_01',
-      companyId: companyId,
-      accountCode: '4100',
-      name: 'Sales Revenue',
-      accountType: AccountType.revenue,
-      normalBalance: AccountType.revenue.normalBalance,
-      level: 1,
-      isGroup: false,
-      isActive: true,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 1,
+        uuid: 'acc_rev_01',
+        companyId: companyId,
+        accountCode: '4100',
+        name: 'Sales Revenue',
+        accountType: AccountType.revenue,
+        normalBalance: AccountType.revenue.normalBalance,
+        level: 1,
+        isGroup: false,
+        isActive: true,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
 
-    accountRepo.seedAccount(Account(
-      id: 2,
-      uuid: 'acc_cust_group',
-      companyId: companyId,
-      accountCode: '1221',
-      name: 'Customers Group',
-      accountType: AccountType.asset,
-      normalBalance: AccountType.asset.normalBalance,
-      level: 1,
-      isGroup: true,
-      isActive: true,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 2,
+        uuid: 'acc_cust_group',
+        companyId: companyId,
+        accountCode: '1221',
+        name: 'Customers Group',
+        accountType: AccountType.asset,
+        normalBalance: AccountType.asset.normalBalance,
+        level: 1,
+        isGroup: true,
+        isActive: true,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
 
-    accountRepo.seedAccount(Account(
-      id: 3,
-      uuid: 'acc_cust_child_1',
-      companyId: companyId,
-      parentId: 'acc_cust_group',
-      accountCode: '1221-0001',
-      name: 'Customer A',
-      accountType: AccountType.asset,
-      normalBalance: AccountType.asset.normalBalance,
-      level: 2,
-      isGroup: false,
-      isActive: true,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 3,
+        uuid: 'acc_cust_child_1',
+        companyId: companyId,
+        parentId: 'acc_cust_group',
+        accountCode: '1221-0001',
+        name: 'Customer A',
+        accountType: AccountType.asset,
+        normalBalance: AccountType.asset.normalBalance,
+        level: 2,
+        isGroup: false,
+        isActive: true,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
 
-    accountRepo.seedAccount(Account(
-      id: 4,
-      uuid: 'acc_cash_1',
-      companyId: companyId,
-      accountCode: '1211',
-      name: 'Main Cash Box',
-      accountType: AccountType.asset,
-      normalBalance: AccountType.asset.normalBalance,
-      level: 1,
-      isGroup: false,
-      isActive: true,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 4,
+        uuid: 'acc_cash_1',
+        companyId: companyId,
+        accountCode: '1211',
+        name: 'Main Cash Box',
+        accountType: AccountType.asset,
+        normalBalance: AccountType.asset.normalBalance,
+        level: 1,
+        isGroup: false,
+        isActive: true,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
 
-    accountRepo.seedAccount(Account(
-      id: 5,
-      uuid: 'acc_cash_2',
-      companyId: companyId,
-      accountCode: '1212',
-      name: 'Secondary Cash Box',
-      accountType: AccountType.asset,
-      normalBalance: AccountType.asset.normalBalance,
-      level: 1,
-      isGroup: false,
-      isActive: true,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 5,
+        uuid: 'acc_cash_2',
+        companyId: companyId,
+        accountCode: '1212',
+        name: 'Secondary Cash Box',
+        accountType: AccountType.asset,
+        normalBalance: AccountType.asset.normalBalance,
+        level: 1,
+        isGroup: false,
+        isActive: true,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
 
-    accountRepo.seedAccount(Account(
-      id: 6,
-      uuid: 'acc_inactive',
-      companyId: companyId,
-      accountCode: '4999',
-      name: 'Inactive Account',
-      accountType: AccountType.revenue,
-      normalBalance: AccountType.revenue.normalBalance,
-      level: 1,
-      isGroup: false,
-      isActive: false,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 6,
+        uuid: 'acc_inactive',
+        companyId: companyId,
+        accountCode: '4999',
+        name: 'Inactive Account',
+        accountType: AccountType.revenue,
+        normalBalance: AccountType.revenue.normalBalance,
+        level: 1,
+        isGroup: false,
+        isActive: false,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
 
-    accountRepo.seedAccount(Account(
-      id: 7,
-      uuid: 'acc_deleted',
-      companyId: companyId,
-      accountCode: '4998',
-      name: 'Deleted Account',
-      accountType: AccountType.revenue,
-      normalBalance: AccountType.revenue.normalBalance,
-      level: 1,
-      isGroup: false,
-      isActive: true,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-      deletedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 7,
+        uuid: 'acc_deleted',
+        companyId: companyId,
+        accountCode: '4998',
+        name: 'Deleted Account',
+        accountType: AccountType.revenue,
+        normalBalance: AccountType.revenue.normalBalance,
+        level: 1,
+        isGroup: false,
+        isActive: true,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: now,
+      ),
+    );
 
-    accountRepo.seedAccount(Account(
-      id: 8,
-      uuid: 'acc_other_company',
-      companyId: 'comp_other',
-      accountCode: '4100',
-      name: 'Other Company Revenue',
-      accountType: AccountType.revenue,
-      normalBalance: AccountType.revenue.normalBalance,
-      level: 1,
-      isGroup: false,
-      isActive: true,
-      isSystemAccount: false,
-      createdAt: now,
-      updatedAt: now,
-    ));
+    accountRepo.seedAccount(
+      Account(
+        id: 8,
+        uuid: 'acc_other_company',
+        companyId: 'comp_other',
+        accountCode: '4100',
+        name: 'Other Company Revenue',
+        accountType: AccountType.revenue,
+        normalBalance: AccountType.revenue.normalBalance,
+        level: 1,
+        isGroup: false,
+        isActive: true,
+        isSystemAccount: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
   });
 
   group('AR-C03 Accounting Configuration Foundation Tests', () {
@@ -290,17 +315,20 @@ void main() {
       );
     });
 
-    test('4. Company isolation validation (cross-company account BLOCKED)', () async {
-      final target = AccountBindingTarget.single('acc_other_company');
-      await expectLater(
-        safetyGate.validateTargetBinding(
-          companyId: companyId,
-          role: AccountRole.revenue,
-          target: target,
-        ),
-        throwsA(isA<AccountBindingValidationException>()),
-      );
-    });
+    test(
+      '4. Company isolation validation (cross-company account BLOCKED)',
+      () async {
+        final target = AccountBindingTarget.single('acc_other_company');
+        await expectLater(
+          safetyGate.validateTargetBinding(
+            companyId: companyId,
+            role: AccountRole.revenue,
+            target: target,
+          ),
+          throwsA(isA<AccountBindingValidationException>()),
+        );
+      },
+    );
 
     test('5. Missing account validation BLOCKED', () async {
       final target = AccountBindingTarget.single('non_existent_uuid');
@@ -415,8 +443,13 @@ void main() {
         accountMappings: const {AccountRole.revenue: 'acc_rev_01'},
         bindingTargets: {
           AccountRole.revenue: AccountBindingTarget.single('acc_rev_01'),
-          AccountRole.receivable: AccountBindingTarget.parentScope('acc_cust_group'),
-          AccountRole.cash: AccountBindingTarget.set(['acc_cash_1', 'acc_cash_2']),
+          AccountRole.receivable: AccountBindingTarget.parentScope(
+            'acc_cust_group',
+          ),
+          AccountRole.cash: AccountBindingTarget.set([
+            'acc_cash_1',
+            'acc_cash_2',
+          ]),
         },
       );
 
@@ -424,9 +457,18 @@ void main() {
       final restored = CompanyAccountingConfig.fromJson(json);
 
       expect(restored.companyId, equals(companyId));
-      expect(restored.bindingTargets[AccountRole.revenue]?.mode, equals(AccountBindingMode.singleAccount));
-      expect(restored.bindingTargets[AccountRole.receivable]?.mode, equals(AccountBindingMode.parentAccountWithDescendants));
-      expect(restored.bindingTargets[AccountRole.cash]?.mode, equals(AccountBindingMode.accountSet));
+      expect(
+        restored.bindingTargets[AccountRole.revenue]?.mode,
+        equals(AccountBindingMode.singleAccount),
+      );
+      expect(
+        restored.bindingTargets[AccountRole.receivable]?.mode,
+        equals(AccountBindingMode.parentAccountWithDescendants),
+      );
+      expect(
+        restored.bindingTargets[AccountRole.cash]?.mode,
+        equals(AccountBindingMode.accountSet),
+      );
     });
 
     test('15. Reload after app restart verification', () {

@@ -68,15 +68,15 @@ class ActiveCompanyContext {
   bool hasPermission(String code) => companyPermissions.contains(code);
 
   Map<String, dynamic> toJson() => {
-        'companyId': companyId,
-        'membershipId': membershipId,
-        'companyRole': companyRole,
-        'companyPermissions': companyPermissions.toList(),
-        'companyName': companyName,
-        'companyCode': companyCode,
-        'branchId': branchId,
-        'warehouseId': warehouseId,
-      };
+    'companyId': companyId,
+    'membershipId': membershipId,
+    'companyRole': companyRole,
+    'companyPermissions': companyPermissions.toList(),
+    'companyName': companyName,
+    'companyCode': companyCode,
+    'branchId': branchId,
+    'warehouseId': warehouseId,
+  };
 
   factory ActiveCompanyContext.fromJson(Map<String, dynamic> json) {
     final permsRaw = json['companyPermissions'];
@@ -85,7 +85,10 @@ class ActiveCompanyContext {
       membershipId: json['membershipId'] as String? ?? '',
       companyRole: json['companyRole'] as String? ?? 'Member',
       companyPermissions: permsRaw is List
-          ? {for (final p in permsRaw) if (p is String) p}
+          ? {
+              for (final p in permsRaw)
+                if (p is String) p,
+            }
           : const {},
       companyName: json['companyName'] as String?,
       companyCode: json['companyCode'] as String?,

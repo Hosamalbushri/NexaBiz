@@ -17,26 +17,24 @@ class TimeCheckpoint {
   final DateTime recordedAt;
 
   Map<String, dynamic> toJson() => {
-        'serverTime': serverTime.toIso8601String(),
-        'localWallClock': localWallClock.toIso8601String(),
-        'monotonicMs': monotonicMs,
-        'recordedAt': recordedAt.toIso8601String(),
-      };
+    'serverTime': serverTime.toIso8601String(),
+    'localWallClock': localWallClock.toIso8601String(),
+    'monotonicMs': monotonicMs,
+    'recordedAt': recordedAt.toIso8601String(),
+  };
 
   factory TimeCheckpoint.fromJson(Map<String, dynamic> json) => TimeCheckpoint(
-        serverTime: DateTime.parse(json['serverTime'] as String).toUtc(),
-        localWallClock: DateTime.parse(json['localWallClock'] as String).toUtc(),
-        monotonicMs: json['monotonicMs'] as int,
-        recordedAt: DateTime.parse(json['recordedAt'] as String).toUtc(),
-      );
+    serverTime: DateTime.parse(json['serverTime'] as String).toUtc(),
+    localWallClock: DateTime.parse(json['localWallClock'] as String).toUtc(),
+    monotonicMs: json['monotonicMs'] as int,
+    recordedAt: DateTime.parse(json['recordedAt'] as String).toUtc(),
+  );
 }
 
 class TrustedClock {
-  TrustedClock({
-    FlutterSecureStorage? storage,
-    Stopwatch? stopwatch,
-  })  : _storage = storage ?? const FlutterSecureStorage(),
-        _stopwatch = stopwatch ?? (Stopwatch()..start());
+  TrustedClock({FlutterSecureStorage? storage, Stopwatch? stopwatch})
+    : _storage = storage ?? const FlutterSecureStorage(),
+      _stopwatch = stopwatch ?? (Stopwatch()..start());
 
   final FlutterSecureStorage _storage;
   final Stopwatch _stopwatch;
@@ -60,7 +58,10 @@ class TrustedClock {
     } catch (_) {}
   }
 
-  Future<void> setCheckpoint({required DateTime serverTime, required DateTime localWallClock}) async {
+  Future<void> setCheckpoint({
+    required DateTime serverTime,
+    required DateTime localWallClock,
+  }) async {
     _checkpoint = TimeCheckpoint(
       serverTime: serverTime.toUtc(),
       localWallClock: localWallClock.toUtc(),
@@ -69,8 +70,14 @@ class TrustedClock {
     );
     _lastStoredWallClock = localWallClock.toUtc();
 
-    await _storage.write(key: _checkpointKey, value: jsonEncode(_checkpoint!.toJson()));
-    await _storage.write(key: _lastWallClockKey, value: _lastStoredWallClock!.toIso8601String());
+    await _storage.write(
+      key: _checkpointKey,
+      value: jsonEncode(_checkpoint!.toJson()),
+    );
+    await _storage.write(
+      key: _lastWallClockKey,
+      value: _lastStoredWallClock!.toIso8601String(),
+    );
   }
 
   DateTime now() => utcNow().toLocal();
@@ -86,7 +93,10 @@ class TrustedClock {
 
   Future<void> updateWallClock(DateTime localWallClock) async {
     _lastStoredWallClock = localWallClock.toUtc();
-    await _storage.write(key: _lastWallClockKey, value: _lastStoredWallClock!.toIso8601String());
+    await _storage.write(
+      key: _lastWallClockKey,
+      value: _lastStoredWallClock!.toIso8601String(),
+    );
   }
 
   DateTime? get lastStoredWallClock => _lastStoredWallClock;

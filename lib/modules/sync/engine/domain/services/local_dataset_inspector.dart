@@ -22,7 +22,8 @@ class LocalDatasetInspector {
   }
 }
 
-final localDatasetRecordCountersProvider = StateProvider<List<LocalDatasetRecordCounter>>((ref) => []);
+final localDatasetRecordCountersProvider =
+    StateProvider<List<LocalDatasetRecordCounter>>((ref) => []);
 
 final localDatasetInspectorProvider = Provider<LocalDatasetInspector>((ref) {
   final counters = ref.watch(localDatasetRecordCountersProvider);

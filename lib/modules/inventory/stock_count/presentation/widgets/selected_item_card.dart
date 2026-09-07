@@ -10,10 +10,7 @@ import 'status_badge.dart';
 
 /// Selected inventory item card — visual language matches barcode product view.
 class SelectedItemCard extends StatelessWidget {
-  const SelectedItemCard({
-    super.key,
-    required this.item,
-  });
+  const SelectedItemCard({super.key, required this.item});
 
   final InventoryItem item;
 
@@ -30,9 +27,7 @@ class SelectedItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -241,7 +236,8 @@ class _DetailRow extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 fontFamily: monospace ? 'monospace' : null,
-                color: valueColor ??
+                color:
+                    valueColor ??
                     (muted
                         ? colorScheme.onSurfaceVariant
                         : colorScheme.onSurface),

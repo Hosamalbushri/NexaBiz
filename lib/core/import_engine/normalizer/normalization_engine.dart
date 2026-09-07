@@ -16,7 +16,10 @@ class NormalizationEngine {
   const NormalizationEngine();
 
   /// Normalizes a [rawValue] given a target [ImportDataType].
-  NormalizedValue normalizeForDataType(dynamic rawValue, ImportDataType dataType) {
+  NormalizedValue normalizeForDataType(
+    dynamic rawValue,
+    ImportDataType dataType,
+  ) {
     switch (dataType) {
       case ImportDataType.text:
       case ImportDataType.json:
@@ -35,7 +38,6 @@ class NormalizationEngine {
         return CodeNormalizer.normalize(rawValue);
     }
   }
-
 
   /// Normalizes a [rawValue] given an [InferredPrimitiveType].
   NormalizedValue normalizeForPrimitiveType(

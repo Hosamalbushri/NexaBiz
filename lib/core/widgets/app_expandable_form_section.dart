@@ -48,13 +48,18 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
     final scheme = theme.colorScheme;
 
     return Padding(
-      padding: EdgeInsets.only(top: widget.topSpacing, bottom: widget.bottomSpacing),
+      padding: EdgeInsets.only(
+        top: widget.topSpacing,
+        bottom: widget.bottomSpacing,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: _expanded ? 0.6 : 0.35),
+            color: scheme.outlineVariant.withValues(
+              alpha: _expanded ? 0.6 : 0.35,
+            ),
             width: _expanded ? 1.2 : 1.0,
           ),
         ),
@@ -77,7 +82,9 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
                       Icon(
                         widget.icon,
                         size: 20,
-                        color: _expanded ? scheme.primary : scheme.onSurfaceVariant,
+                        color: _expanded
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: AppSpacing.xs + 4),
                     ],
@@ -93,7 +100,9 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
                                   widget.title,
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: _expanded ? scheme.primary : scheme.onSurface,
+                                    color: _expanded
+                                        ? scheme.primary
+                                        : scheme.onSurface,
                                   ),
                                 ),
                               ),
@@ -105,8 +114,12 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: scheme.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                                    color: scheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.xs,
+                                    ),
                                   ),
                                   child: Text(
                                     widget.badgeText!,

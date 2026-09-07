@@ -81,9 +81,15 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
         ref.watch(productsViewModeProvider).valueOrNull ??
         ProductsViewMode.list;
     final auth = ref.watch(authStateProvider);
-    final canCreate = auth.hasAnyPermission(InventoryPermissions.productsCreate);
-    final canUpdate = auth.hasAnyPermission(InventoryPermissions.productsUpdate);
-    final canDelete = auth.hasAnyPermission(InventoryPermissions.productsDelete);
+    final canCreate = auth.hasAnyPermission(
+      InventoryPermissions.productsCreate,
+    );
+    final canUpdate = auth.hasAnyPermission(
+      InventoryPermissions.productsUpdate,
+    );
+    final canDelete = auth.hasAnyPermission(
+      InventoryPermissions.productsDelete,
+    );
 
     return PopScope(
       canPop: !_searchExpanded,
@@ -140,7 +146,8 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                   ref.read(productsViewModeProvider.notifier).setMode(mode);
                 },
                 onScan: () => _scanAndOpenProduct(context),
-                onImport: auth.hasAnyPermission(InventoryPermissions.productsImport)
+                onImport:
+                    auth.hasAnyPermission(InventoryPermissions.productsImport)
                     ? () => InventoryRoutes.pushProductsImport(context)
                     : null,
                 onAdd: canCreate
@@ -196,7 +203,9 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                       totalPages: paged.totalPages,
                       totalCount: paged.totalCount,
                       onPageChanged: (page) {
-                        ref.read(productSearchPageIndexProvider.notifier).state =
+                        ref
+                                .read(productSearchPageIndexProvider.notifier)
+                                .state =
                             page;
                       },
                       onPageSizeChanged: (size) {
@@ -204,18 +213,19 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                           return;
                         }
                         ref.read(productPageSizeProvider.notifier).state = size;
-                        ref.read(productSearchPageIndexProvider.notifier).state =
+                        ref
+                                .read(productSearchPageIndexProvider.notifier)
+                                .state =
                             0;
                       },
                       onEdit: canUpdate
                           ? (product) => InventoryRoutes.pushProductsEdit(
-                                context,
-                                product.id,
-                              )
+                              context,
+                              product.id,
+                            )
                           : null,
                       onDelete: canDelete
-                          ? (product) =>
-                              _deleteProduct(context, ref, product)
+                          ? (product) => _deleteProduct(context, ref, product)
                           : null,
                     );
                   },
@@ -559,7 +569,6 @@ class _ProductsToolbar extends StatelessWidget {
     );
   }
 }
-
 
 String _formatPrice(double price) {
   if (price == price.roundToDouble()) {

@@ -100,9 +100,7 @@ class AppListPagePattern<T> extends StatelessWidget {
               onFilterTap: onFilterTap,
               filterCount: activeFilterCount,
             ),
-          Expanded(
-            child: _buildBody(context),
-          ),
+          Expanded(child: _buildBody(context)),
           if (onPageChanged != null && totalPages > 1) ...[
             const SizedBox(height: AppSpacing.md),
             AppPaginationBar(
@@ -124,10 +122,7 @@ class AppListPagePattern<T> extends StatelessWidget {
     }
 
     if (errorText != null && items.isEmpty) {
-      return AppErrorState(
-        message: errorText,
-        onRetry: onRetry,
-      );
+      return AppErrorState(message: errorText, onRetry: onRetry);
     }
 
     if (items.isEmpty) {

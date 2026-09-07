@@ -166,10 +166,9 @@ class _BarcodeScannerOverlayState extends State<BarcodeScannerOverlay>
                       frameRate: FrameRate.max,
                       delegates: LottieDelegates(
                         values: [
-                          ValueDelegate.strokeColor(
-                            const ['**'],
-                            value: Colors.white,
-                          ),
+                          ValueDelegate.strokeColor(const [
+                            '**',
+                          ], value: Colors.white),
                         ],
                       ),
                       errorBuilder: (context, error, stackTrace) {

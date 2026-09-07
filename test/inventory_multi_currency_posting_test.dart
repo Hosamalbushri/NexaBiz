@@ -44,7 +44,9 @@ class FakeAccountValidationService implements AccountValidationService {
   Future<bool> canPost(String accountUuid) async => true;
 
   @override
-  Future<AccountValidationResult> validateAccountUuid(String accountUuid) async {
+  Future<AccountValidationResult> validateAccountUuid(
+    String accountUuid,
+  ) async {
     return AccountValidationResult.valid;
   }
 }
@@ -74,42 +76,45 @@ void main() {
       );
     });
 
-    test('Stock Receipt in USD creates Inventory line in YER and Payable line in USD', () async {
-      final docRef = InventoryDocumentRef(
-        documentId: 'receipt-101',
-        documentNumber: 'REC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.utc(2026, 9, 6),
-        currencyCode: 'USD',
-        exchangeRate: 145.0,
-      );
+    test(
+      'Stock Receipt in USD creates Inventory line in YER and Payable line in USD',
+      () async {
+        final docRef = InventoryDocumentRef(
+          documentId: 'receipt-101',
+          documentNumber: 'REC-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.utc(2026, 9, 6),
+          currencyCode: 'USD',
+          exchangeRate: 145.0,
+        );
 
-      final draft = await builder.buildDraftFromInventoryDocument(
-        document: docRef,
-        totalAmount: 100.0, // $100 USD
-      );
+        final draft = await builder.buildDraftFromInventoryDocument(
+          document: docRef,
+          totalAmount: 100.0, // $100 USD
+        );
 
-      expect(draft.currencyCode, equals('USD'));
-      expect(draft.baseCurrencyCode, equals('YER'));
-      expect(draft.lines.length, equals(2));
+        expect(draft.currencyCode, equals('USD'));
+        expect(draft.baseCurrencyCode, equals('YER'));
+        expect(draft.lines.length, equals(2));
 
-      // 1. Inventory Line (Debit): YER 14,500 with rate 1.0
-      final inventoryLine = draft.lines.firstWhere(
-        (l) => l.accountUuid == 'acc-inventory-uuid',
-      );
-      expect(inventoryLine.currencyCode, equals('YER'));
-      expect(inventoryLine.debit, equals(14500.0)); // 100 * 145
-      expect(inventoryLine.credit, equals(0.0));
-      expect(inventoryLine.exchangeRateToBase, equals(1.0));
+        // 1. Inventory Line (Debit): YER 14,500 with rate 1.0
+        final inventoryLine = draft.lines.firstWhere(
+          (l) => l.accountUuid == 'acc-inventory-uuid',
+        );
+        expect(inventoryLine.currencyCode, equals('YER'));
+        expect(inventoryLine.debit, equals(14500.0)); // 100 * 145
+        expect(inventoryLine.credit, equals(0.0));
+        expect(inventoryLine.exchangeRateToBase, equals(1.0));
 
-      // 2. Payable / Vendor Line (Credit): USD 100 with rate 145.0
-      final payableLine = draft.lines.firstWhere(
-        (l) => l.accountUuid == 'acc-payable-uuid',
-      );
-      expect(payableLine.currencyCode, equals('USD'));
-      expect(payableLine.debit, equals(0.0));
-      expect(payableLine.credit, equals(100.0));
-      expect(payableLine.exchangeRateToBase, equals(145.0));
-    });
+        // 2. Payable / Vendor Line (Credit): USD 100 with rate 145.0
+        final payableLine = draft.lines.firstWhere(
+          (l) => l.accountUuid == 'acc-payable-uuid',
+        );
+        expect(payableLine.currencyCode, equals('USD'));
+        expect(payableLine.debit, equals(0.0));
+        expect(payableLine.credit, equals(100.0));
+        expect(payableLine.exchangeRateToBase, equals(145.0));
+      },
+    );
   });
 }

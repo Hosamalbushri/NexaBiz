@@ -27,7 +27,10 @@ class FakeSettingsRepository implements SettingsRepository {
   Future<void> saveLocale(dynamic locale) async {}
 
   @override
-  Future<void> saveCompanyProfile(CompanyProfile profile, [String? companyId]) async {}
+  Future<void> saveCompanyProfile(
+    CompanyProfile profile, [
+    String? companyId,
+  ]) async {}
 
   @override
   Future<void> saveDeviceInitialization({
@@ -95,75 +98,84 @@ void main() {
       return session!;
     }
 
-    test('1. Create Company A -> Admin A created atomically with explicit membership', () async {
-      final ownerSession = await setupPrimaryOwnerSession();
-      expect(ownerSession.isCompanyBoundSession, isTrue);
+    test(
+      '1. Create Company A -> Admin A created atomically with explicit membership',
+      () async {
+        final ownerSession = await setupPrimaryOwnerSession();
+        expect(ownerSession.isCompanyBoundSession, isTrue);
 
-      final companyA = ownerSession.currentCompany!;
-      expect(companyA.name, equals('الشركة الرئيسية A'));
+        final companyA = ownerSession.currentCompany!;
+        expect(companyA.name, equals('الشركة الرئيسية A'));
 
-      final ownerUser = await authStore.getPrimaryOwnerUser();
-      expect(ownerUser, isNotNull);
-      expect(ownerUser!.email, equals('owner@comp-a.com'));
-    });
+        final ownerUser = await authStore.getPrimaryOwnerUser();
+        expect(ownerUser, isNotNull);
+        expect(ownerUser!.email, equals('owner@comp-a.com'));
+      },
+    );
 
-    test('2. Create Company B -> Admin B created atomically with explicit membership', () async {
-      final ownerSession = await setupPrimaryOwnerSession();
+    test(
+      '2. Create Company B -> Admin B created atomically with explicit membership',
+      () async {
+        final ownerSession = await setupPrimaryOwnerSession();
 
-      final companyB = await companyCoordinator.createCompanyWithAdmin(
-        creatorSession: ownerSession,
-        companyName: 'الشركة الفرعية B',
-        companyCode: 'COMP_B',
-        adminName: 'مسؤول الشركة B',
-        adminEmail: 'admin@comp-b.com',
-        adminPassword: 'PasswordB123!',
-        adminRole: 'Admin',
-      );
+        final companyB = await companyCoordinator.createCompanyWithAdmin(
+          creatorSession: ownerSession,
+          companyName: 'الشركة الفرعية B',
+          companyCode: 'COMP_B',
+          adminName: 'مسؤول الشركة B',
+          adminEmail: 'admin@comp-b.com',
+          adminPassword: 'PasswordB123!',
+          adminRole: 'Admin',
+        );
 
-      expect(companyB.id, isNotEmpty);
-      expect(companyB.name, equals('الشركة الفرعية B'));
+        expect(companyB.id, isNotEmpty);
+        expect(companyB.name, equals('الشركة الفرعية B'));
 
-      final adminBSession = await authStore.login(
-        email: 'admin@comp-b.com',
-        password: 'PasswordB123!',
-        deviceId: 'dev_b',
-      );
+        final adminBSession = await authStore.login(
+          email: 'admin@comp-b.com',
+          password: 'PasswordB123!',
+          deviceId: 'dev_b',
+        );
 
-      expect(adminBSession, isNotNull);
-      expect(adminBSession!.currentCompanyId, equals(companyB.id));
-      expect(adminBSession.user.email, equals('admin@comp-b.com'));
-      expect(adminBSession.roles.contains('Admin'), isTrue);
-    });
+        expect(adminBSession, isNotNull);
+        expect(adminBSession!.currentCompanyId, equals(companyB.id));
+        expect(adminBSession.user.email, equals('admin@comp-b.com'));
+        expect(adminBSession.roles.contains('Admin'), isTrue);
+      },
+    );
 
-    test('3. Admin A cannot access Company B without explicit membership', () async {
-      final ownerSession = await setupPrimaryOwnerSession();
+    test(
+      '3. Admin A cannot access Company B without explicit membership',
+      () async {
+        final ownerSession = await setupPrimaryOwnerSession();
 
-      final companyB = await companyCoordinator.createCompanyWithAdmin(
-        creatorSession: ownerSession,
-        companyName: 'الشركة B',
-        companyCode: 'COMP_B',
-        adminName: 'مسؤول B',
-        adminEmail: 'admin@comp-b.com',
-        adminPassword: 'PasswordB123!',
-      );
+        final companyB = await companyCoordinator.createCompanyWithAdmin(
+          creatorSession: ownerSession,
+          companyName: 'الشركة B',
+          companyCode: 'COMP_B',
+          adminName: 'مسؤول B',
+          adminEmail: 'admin@comp-b.com',
+          adminPassword: 'PasswordB123!',
+        );
 
-      // Attempt to login as Admin B to Company B works
-      final sessionB = await authStore.login(
-        email: 'admin@comp-b.com',
-        password: 'PasswordB123!',
-        deviceId: 'dev_b',
-      );
-      expect(sessionB, isNotNull);
+        // Attempt to login as Admin B to Company B works
+        final sessionB = await authStore.login(
+          email: 'admin@comp-b.com',
+          password: 'PasswordB123!',
+          deviceId: 'dev_b',
+        );
+        expect(sessionB, isNotNull);
 
-      // Admin B tries to access Company A -> returns null (access denied)
-      final compA = await authStore.getPrimaryCompany();
-      final unauthorizedSwitch = await authStore.switchCompany(
-        current: sessionB!,
-        companyId: compA!.id,
-      );
+        // Admin B tries to access Company A -> returns null (access denied)
+        final compA = await authStore.getPrimaryCompany();
+        final unauthorizedSwitch = await authStore.switchCompany(
+          current: sessionB!,
+          companyId: compA!.id,
+        );
 
-      expect(unauthorizedSwitch, isNull);
-    });
+        expect(unauthorizedSwitch, isNull);
+      },
+    );
 
     test('4. User with A+B memberships can select A or B', () async {
       final ownerSession = await setupPrimaryOwnerSession();
@@ -301,82 +313,94 @@ void main() {
       expect(sessionB.permissions.contains('manage_users'), isFalse);
     });
 
-    test('8. Company A cached state/context cannot survive into Company B', () async {
-      final ownerSession = await setupPrimaryOwnerSession();
+    test(
+      '8. Company A cached state/context cannot survive into Company B',
+      () async {
+        final ownerSession = await setupPrimaryOwnerSession();
 
-      final companyB = await companyCoordinator.createCompanyWithAdmin(
-        creatorSession: ownerSession,
-        companyName: 'شركة B',
-        companyCode: 'COMP_B',
-        adminName: 'مسؤول B',
-        adminEmail: 'admin@comp-b.com',
-        adminPassword: 'PasswordB123!',
-      );
+        final companyB = await companyCoordinator.createCompanyWithAdmin(
+          creatorSession: ownerSession,
+          companyName: 'شركة B',
+          companyCode: 'COMP_B',
+          adminName: 'مسؤول B',
+          adminEmail: 'admin@comp-b.com',
+          adminPassword: 'PasswordB123!',
+        );
 
-      await authStore.addMembership(
-        UserCompanyMembership(
-          userId: ownerSession.user.id,
+        await authStore.addMembership(
+          UserCompanyMembership(
+            userId: ownerSession.user.id,
+            companyId: companyB.id,
+            role: 'Admin',
+            status: 'active',
+          ),
+        );
+
+        final sessionB = await authStore.switchCompany(
+          current: ownerSession,
           companyId: companyB.id,
-          role: 'Admin',
-          status: 'active',
-        ),
-      );
+        );
 
-      final sessionB = await authStore.switchCompany(
-        current: ownerSession,
-        companyId: companyB.id,
-      );
+        expect(sessionB!.currentCompanyId, equals(companyB.id));
+        expect(
+          sessionB.currentCompanyId,
+          isNot(equals(ownerSession.currentCompanyId)),
+        );
+      },
+    );
 
-      expect(sessionB!.currentCompanyId, equals(companyB.id));
-      expect(sessionB.currentCompanyId, isNot(equals(ownerSession.currentCompanyId)));
-    });
+    test(
+      '9. Pending async response from Session A cannot mutate B state',
+      () async {
+        final ownerSession = await setupPrimaryOwnerSession();
+        final sessionAId = ownerSession.sessionId!;
 
-    test('9. Pending async response from Session A cannot mutate B state', () async {
-      final ownerSession = await setupPrimaryOwnerSession();
-      final sessionAId = ownerSession.sessionId!;
+        final companyB = await companyCoordinator.createCompanyWithAdmin(
+          creatorSession: ownerSession,
+          companyName: 'شركة B',
+          companyCode: 'COMP_B',
+          adminName: 'مسؤول B',
+          adminEmail: 'admin@comp-b.com',
+          adminPassword: 'PasswordB123!',
+        );
 
-      final companyB = await companyCoordinator.createCompanyWithAdmin(
-        creatorSession: ownerSession,
-        companyName: 'شركة B',
-        companyCode: 'COMP_B',
-        adminName: 'مسؤول B',
-        adminEmail: 'admin@comp-b.com',
-        adminPassword: 'PasswordB123!',
-      );
+        await authStore.addMembership(
+          UserCompanyMembership(
+            userId: ownerSession.user.id,
+            companyId: companyB.id,
+            role: 'Admin',
+            status: 'active',
+          ),
+        );
 
-      await authStore.addMembership(
-        UserCompanyMembership(
-          userId: ownerSession.user.id,
+        // Async switch to B happens before pending request completes
+        await authStore.switchCompany(
+          current: ownerSession,
           companyId: companyB.id,
-          role: 'Admin',
-          status: 'active',
-        ),
-      );
+        );
 
-      // Async switch to B happens before pending request completes
-      await authStore.switchCompany(
-        current: ownerSession,
-        companyId: companyB.id,
-      );
+        // Validate async handler check for pending request with sessionAId
+        final isStillValidForA = authStore.isSessionActive(sessionAId);
+        expect(isStillValidForA, isFalse);
+      },
+    );
 
-      // Validate async handler check for pending request with sessionAId
-      final isStillValidForA = authStore.isSessionActive(sessionAId);
-      expect(isStillValidForA, isFalse);
-    });
+    test(
+      '10. Invalid B membership prevents B session creation (fails closed)',
+      () async {
+        final ownerSession = await setupPrimaryOwnerSession();
 
-    test('10. Invalid B membership prevents B session creation (fails closed)', () async {
-      final ownerSession = await setupPrimaryOwnerSession();
+        final result = await authStore.switchCompany(
+          current: ownerSession,
+          companyId: 'non_existent_company_xyz',
+        );
 
-      final result = await authStore.switchCompany(
-        current: ownerSession,
-        companyId: 'non_existent_company_xyz',
-      );
+        expect(result, isNull);
 
-      expect(result, isNull);
-
-      final activeSession = await authStore.loadSession();
-      expect(activeSession, isNull);
-    });
+        final activeSession = await authStore.loadSession();
+        expect(activeSession, isNull);
+      },
+    );
 
     test('11. Removed membership revokes company session', () async {
       final ownerSession = await setupPrimaryOwnerSession();
@@ -430,43 +454,49 @@ void main() {
       expect(restored!.sessionId, equals(ownerSession.sessionId));
     });
 
-    test('14. Company creation rollback works if weak password or error occurs', () async {
-      final ownerSession = await setupPrimaryOwnerSession();
+    test(
+      '14. Company creation rollback works if weak password or error occurs',
+      () async {
+        final ownerSession = await setupPrimaryOwnerSession();
 
-      expect(
-        () => companyCoordinator.createCompanyWithAdmin(
-          creatorSession: ownerSession,
-          companyName: 'شركة سيئة',
-          companyCode: 'BAD_COMP',
-          adminName: 'مسؤول',
-          adminEmail: 'bad@test.com',
-          adminPassword: 'admin123', // Weak/Forbidden password
-        ),
-        throwsA(isA<CompanyCreationException>()),
-      );
-    });
+        expect(
+          () => companyCoordinator.createCompanyWithAdmin(
+            creatorSession: ownerSession,
+            companyName: 'شركة سيئة',
+            companyCode: 'BAD_COMP',
+            adminName: 'مسؤول',
+            adminEmail: 'bad@test.com',
+            adminPassword: 'admin123', // Weak/Forbidden password
+          ),
+          throwsA(isA<CompanyCreationException>()),
+        );
+      },
+    );
 
-    test('15. Company creation fails without authorized creator session', () async {
-      final unattachedSession = AuthSessionSnapshot(
-        user: const AuthUser(id: 'u1', name: 'User 1', email: 'u1@test.com'),
-        companies: const [],
-        roles: const [],
-        permissions: const {},
-        capturedAt: DateTime.now(),
-      );
+    test(
+      '15. Company creation fails without authorized creator session',
+      () async {
+        final unattachedSession = AuthSessionSnapshot(
+          user: const AuthUser(id: 'u1', name: 'User 1', email: 'u1@test.com'),
+          companies: const [],
+          roles: const [],
+          permissions: const {},
+          capturedAt: DateTime.now(),
+        );
 
-      expect(
-        () => companyCoordinator.createCompanyWithAdmin(
-          creatorSession: unattachedSession,
-          companyName: 'شركة جديدة',
-          companyCode: 'NEW_COMP',
-          adminName: 'مسؤول',
-          adminEmail: 'admin@newcomp.com',
-          adminPassword: 'Password123!',
-        ),
-        throwsA(isA<CompanyCreationException>()),
-      );
-    });
+        expect(
+          () => companyCoordinator.createCompanyWithAdmin(
+            creatorSession: unattachedSession,
+            companyName: 'شركة جديدة',
+            companyCode: 'NEW_COMP',
+            adminName: 'مسؤول',
+            adminEmail: 'admin@newcomp.com',
+            adminPassword: 'Password123!',
+          ),
+          throwsA(isA<CompanyCreationException>()),
+        );
+      },
+    );
 
     test('16. Company A accounting operation cannot post into Company B', () {
       final adapterA = InventoryAccountingPosterAdapter(

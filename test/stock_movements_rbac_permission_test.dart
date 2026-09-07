@@ -162,10 +162,16 @@ void main() {
       final guard = CallbackPermissionGuard((codes) => false);
       final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
 
-      expect(() => useCases.watchAllReceipts(), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.watchAllReceipts(),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.watchAllReceiptsCalled, isFalse);
 
-      expect(() => useCases.getReceiptById('REC-001'), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.getReceiptById('REC-001'),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.getReceiptByIdCalled, isFalse);
     });
 
@@ -174,21 +180,33 @@ void main() {
       final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
       final receipt = buildTestReceipt(id: 'REC-001');
 
-      expect(() => useCases.saveReceipt(receipt), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.saveReceipt(receipt),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.saveReceiptCalled, isFalse);
       expect(fakeRepo.receipts.containsKey('REC-001'), isFalse);
     });
 
-    test('Unauthorized user is blocked from updating existing receipt', () async {
-      final receipt = buildTestReceipt(id: 'REC-001');
-      fakeRepo.receipts['REC-001'] = receipt;
+    test(
+      'Unauthorized user is blocked from updating existing receipt',
+      () async {
+        final receipt = buildTestReceipt(id: 'REC-001');
+        fakeRepo.receipts['REC-001'] = receipt;
 
-      final guard = CallbackPermissionGuard((codes) => false);
-      final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
+        final guard = CallbackPermissionGuard((codes) => false);
+        final useCases = StockMovementUseCases(
+          fakeRepo,
+          permissionGuard: guard,
+        );
 
-      expect(() => useCases.saveReceipt(receipt), throwsA(isA<PermissionDeniedException>()));
-      expect(fakeRepo.saveReceiptCalled, isFalse);
-    });
+        expect(
+          () => useCases.saveReceipt(receipt),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+        expect(fakeRepo.saveReceiptCalled, isFalse);
+      },
+    );
 
     test('Unauthorized user is blocked from deleting receipt', () async {
       final receipt = buildTestReceipt(id: 'REC-001');
@@ -197,45 +215,56 @@ void main() {
       final guard = CallbackPermissionGuard((codes) => false);
       final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
 
-      expect(() => useCases.deleteReceipt('REC-001'), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.deleteReceipt('REC-001'),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.deleteReceiptCalled, isFalse);
       expect(fakeRepo.receipts.containsKey('REC-001'), isTrue);
     });
 
-    test('Authorized user with receipt permissions can execute operations', () async {
-      final grantedPermissions = {
-        ...InventoryPermissions.receiptsView,
-        ...InventoryPermissions.receiptsCreate,
-        ...InventoryPermissions.receiptsUpdate,
-        ...InventoryPermissions.receiptsDelete,
-      };
-      final guard = CallbackPermissionGuard((codes) => codes.any(grantedPermissions.contains));
-      final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
+    test(
+      'Authorized user with receipt permissions can execute operations',
+      () async {
+        final grantedPermissions = {
+          ...InventoryPermissions.receiptsView,
+          ...InventoryPermissions.receiptsCreate,
+          ...InventoryPermissions.receiptsUpdate,
+          ...InventoryPermissions.receiptsDelete,
+        };
+        final guard = CallbackPermissionGuard(
+          (codes) => codes.any(grantedPermissions.contains),
+        );
+        final useCases = StockMovementUseCases(
+          fakeRepo,
+          permissionGuard: guard,
+        );
 
-      // Create
-      final receipt = buildTestReceipt(id: 'REC-001');
-      await useCases.saveReceipt(receipt);
-      expect(fakeRepo.saveReceiptCalled, isTrue);
-      expect(fakeRepo.receipts['REC-001'], equals(receipt));
+        // Create
+        final receipt = buildTestReceipt(id: 'REC-001');
+        await useCases.saveReceipt(receipt);
+        expect(fakeRepo.saveReceiptCalled, isTrue);
+        expect(fakeRepo.receipts['REC-001'], equals(receipt));
 
-      // Read
-      fakeRepo.reset();
-      fakeRepo.receipts['REC-001'] = receipt;
-      final fetched = await useCases.getReceiptById('REC-001');
-      expect(fakeRepo.getReceiptByIdCalled, isTrue);
-      expect(fetched, equals(receipt));
+        // Read
+        fakeRepo.reset();
+        fakeRepo.receipts['REC-001'] = receipt;
+        final fetched = await useCases.getReceiptById('REC-001');
+        expect(fakeRepo.getReceiptByIdCalled, isTrue);
+        expect(fetched, equals(receipt));
 
-      // Stream
-      useCases.watchAllReceipts();
-      expect(fakeRepo.watchAllReceiptsCalled, isTrue);
+        // Stream
+        useCases.watchAllReceipts();
+        expect(fakeRepo.watchAllReceiptsCalled, isTrue);
 
-      // Delete
-      fakeRepo.reset();
-      fakeRepo.receipts['REC-001'] = receipt;
-      await useCases.deleteReceipt('REC-001');
-      expect(fakeRepo.deleteReceiptCalled, isTrue);
-      expect(fakeRepo.receipts.containsKey('REC-001'), isFalse);
-    });
+        // Delete
+        fakeRepo.reset();
+        fakeRepo.receipts['REC-001'] = receipt;
+        await useCases.deleteReceipt('REC-001');
+        expect(fakeRepo.deleteReceiptCalled, isTrue);
+        expect(fakeRepo.receipts.containsKey('REC-001'), isFalse);
+      },
+    );
   });
 
   group('Stock Issues RBAC Enforcement', () {
@@ -243,10 +272,16 @@ void main() {
       final guard = CallbackPermissionGuard((codes) => false);
       final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
 
-      expect(() => useCases.watchAllIssues(), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.watchAllIssues(),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.watchAllIssuesCalled, isFalse);
 
-      expect(() => useCases.getIssueById('ISS-001'), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.getIssueById('ISS-001'),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.getIssueByIdCalled, isFalse);
     });
 
@@ -255,7 +290,10 @@ void main() {
       final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
       final issue = buildTestIssue(id: 'ISS-001');
 
-      expect(() => useCases.saveIssue(issue), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.saveIssue(issue),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.saveIssueCalled, isFalse);
       expect(fakeRepo.issues.containsKey('ISS-001'), isFalse);
     });
@@ -267,7 +305,10 @@ void main() {
       final guard = CallbackPermissionGuard((codes) => false);
       final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
 
-      expect(() => useCases.saveIssue(issue), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.saveIssue(issue),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.saveIssueCalled, isFalse);
     });
 
@@ -278,44 +319,55 @@ void main() {
       final guard = CallbackPermissionGuard((codes) => false);
       final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
 
-      expect(() => useCases.deleteIssue('ISS-001'), throwsA(isA<PermissionDeniedException>()));
+      expect(
+        () => useCases.deleteIssue('ISS-001'),
+        throwsA(isA<PermissionDeniedException>()),
+      );
       expect(fakeRepo.deleteIssueCalled, isFalse);
       expect(fakeRepo.issues.containsKey('ISS-001'), isTrue);
     });
 
-    test('Authorized user with issue permissions can execute operations', () async {
-      final grantedPermissions = {
-        ...InventoryPermissions.issuesView,
-        ...InventoryPermissions.issuesCreate,
-        ...InventoryPermissions.issuesUpdate,
-        ...InventoryPermissions.issuesDelete,
-      };
-      final guard = CallbackPermissionGuard((codes) => codes.any(grantedPermissions.contains));
-      final useCases = StockMovementUseCases(fakeRepo, permissionGuard: guard);
+    test(
+      'Authorized user with issue permissions can execute operations',
+      () async {
+        final grantedPermissions = {
+          ...InventoryPermissions.issuesView,
+          ...InventoryPermissions.issuesCreate,
+          ...InventoryPermissions.issuesUpdate,
+          ...InventoryPermissions.issuesDelete,
+        };
+        final guard = CallbackPermissionGuard(
+          (codes) => codes.any(grantedPermissions.contains),
+        );
+        final useCases = StockMovementUseCases(
+          fakeRepo,
+          permissionGuard: guard,
+        );
 
-      // Create
-      final issue = buildTestIssue(id: 'ISS-001');
-      await useCases.saveIssue(issue);
-      expect(fakeRepo.saveIssueCalled, isTrue);
-      expect(fakeRepo.issues['ISS-001'], equals(issue));
+        // Create
+        final issue = buildTestIssue(id: 'ISS-001');
+        await useCases.saveIssue(issue);
+        expect(fakeRepo.saveIssueCalled, isTrue);
+        expect(fakeRepo.issues['ISS-001'], equals(issue));
 
-      // Read
-      fakeRepo.reset();
-      fakeRepo.issues['ISS-001'] = issue;
-      final fetched = await useCases.getIssueById('ISS-001');
-      expect(fakeRepo.getIssueByIdCalled, isTrue);
-      expect(fetched, equals(issue));
+        // Read
+        fakeRepo.reset();
+        fakeRepo.issues['ISS-001'] = issue;
+        final fetched = await useCases.getIssueById('ISS-001');
+        expect(fakeRepo.getIssueByIdCalled, isTrue);
+        expect(fetched, equals(issue));
 
-      // Stream
-      useCases.watchAllIssues();
-      expect(fakeRepo.watchAllIssuesCalled, isTrue);
+        // Stream
+        useCases.watchAllIssues();
+        expect(fakeRepo.watchAllIssuesCalled, isTrue);
 
-      // Delete
-      fakeRepo.reset();
-      fakeRepo.issues['ISS-001'] = issue;
-      await useCases.deleteIssue('ISS-001');
-      expect(fakeRepo.deleteIssueCalled, isTrue);
-      expect(fakeRepo.issues.containsKey('ISS-001'), isFalse);
-    });
+        // Delete
+        fakeRepo.reset();
+        fakeRepo.issues['ISS-001'] = issue;
+        await useCases.deleteIssue('ISS-001');
+        expect(fakeRepo.deleteIssueCalled, isTrue);
+        expect(fakeRepo.issues.containsKey('ISS-001'), isFalse);
+      },
+    );
   });
 }

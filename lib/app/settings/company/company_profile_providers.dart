@@ -15,22 +15,27 @@ final companyLogoStoreProvider = Provider<CompanyLogoStore>((ref) {
 });
 
 final companyProfileProvider =
-    StateNotifierProvider.autoDispose<CompanyProfileController, AsyncValue<CompanyProfile>>(
-      (ref) {
-        return CompanyProfileController(
-          ref: ref,
-          repository: ref.watch(settingsRepositoryProvider),
-          logoStore: ref.watch(companyLogoStoreProvider),
-          syncQueue: ref.watch(syncQueueProvider),
-          companyId: ref.watch(sessionCompanyIdProvider) ?? '',
-        );
-      },
-    );
+    StateNotifierProvider.autoDispose<
+      CompanyProfileController,
+      AsyncValue<CompanyProfile>
+    >((ref) {
+      return CompanyProfileController(
+        ref: ref,
+        repository: ref.watch(settingsRepositoryProvider),
+        logoStore: ref.watch(companyLogoStoreProvider),
+        syncQueue: ref.watch(syncQueueProvider),
+        companyId: ref.watch(sessionCompanyIdProvider) ?? '',
+      );
+    });
 
 /// Whether the system base currency was locked during System Setup.
-final systemBaseCurrencyLockedProvider = FutureProvider.autoDispose<bool>((ref) {
+final systemBaseCurrencyLockedProvider = FutureProvider.autoDispose<bool>((
+  ref,
+) {
   final companyId = ref.watch(sessionCompanyIdProvider);
-  return ref.watch(settingsRepositoryProvider).loadSystemBaseCurrencyLocked(companyId);
+  return ref
+      .watch(settingsRepositoryProvider)
+      .loadSystemBaseCurrencyLocked(companyId);
 });
 
 class CompanyProfileController
@@ -154,4 +159,3 @@ class CompanyProfileController
     return updated;
   }
 }
-

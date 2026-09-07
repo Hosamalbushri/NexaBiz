@@ -10,9 +10,7 @@ abstract class ImportTransactionRunner {
 
 /// In-memory transactional runner supporting transactional rollback callbacks for testing.
 class InMemoryImportTransactionRunner implements ImportTransactionRunner {
-  InMemoryImportTransactionRunner({
-    this.onRollback,
-  });
+  InMemoryImportTransactionRunner({this.onRollback});
 
   /// Optional callback invoked when a transaction rolls back.
   final void Function()? onRollback;

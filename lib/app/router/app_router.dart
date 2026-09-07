@@ -188,6 +188,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'accessDenied',
         builder: (context, state) => const AccessDeniedPage(),
       ),
+      GoRoute(
+        path: '/module-reports/:reportPath(.*)',
+        redirect: (context, state) {
+          final reportPath = state.pathParameters['reportPath'] ?? '';
+          return reportPath.isEmpty
+              ? AppRoutes.reports
+              : '${AppRoutes.reports}/$reportPath';
+        },
+      ),
       ShellRoute(
         navigatorKey: appShellNavigatorKey,
         pageBuilder: (context, state, child) {
@@ -349,7 +358,8 @@ String? evaluateAppRouteRedirect({
   }
 
   // 2. Unauthenticated Gate
-  if (bootstrap.isUnauthenticated || auth.status == AuthStatus.unauthenticated) {
+  if (bootstrap.isUnauthenticated ||
+      auth.status == AuthStatus.unauthenticated) {
     if (isPublic) return null;
     return AppRoutes.login;
   }
@@ -381,7 +391,9 @@ String? evaluateAppRouteRedirect({
     return AppLockRoutes.root;
   }
 
-  if (lock != null && path == AppLockRoutes.root && lock.gate != AppLockGate.locked) {
+  if (lock != null &&
+      path == AppLockRoutes.root &&
+      lock.gate != AppLockGate.locked) {
     String? returnTo;
     if (lockControllerNotifier != null) {
       returnTo = lockControllerNotifier.returnToLocation;
@@ -413,8 +425,7 @@ String? evaluateAppRouteRedirect({
   if (path == AppRoutes.settingsDataSync ||
       path.startsWith('${AppRoutes.settingsDataSync}/')) {
     final currentEntitlement =
-        entitlementAsync?.valueOrNull ??
-        entitlementService?.currentEntitlement;
+        entitlementAsync?.valueOrNull ?? entitlementService?.currentEntitlement;
     if (currentEntitlement != null &&
         !currentEntitlement.hasCapability(EntitlementCapability.sync)) {
       return AppRoutes.settingsSubscription;

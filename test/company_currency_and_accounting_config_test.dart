@@ -20,7 +20,9 @@ class FakeAccountRepository implements AccountRepository {
   Future<List<Account>> getAll({bool includeInactive = false}) async {
     if (readCompanyId == null) return accounts;
     final currentCid = readCompanyId!();
-    return accounts.where((a) => a.description?.contains('tenant:$currentCid') ?? true).toList();
+    return accounts
+        .where((a) => a.description?.contains('tenant:$currentCid') ?? true)
+        .toList();
   }
 
   @override
@@ -42,15 +44,16 @@ class FakeAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<List<Account>> getByType(AccountType type, {bool includeInactive = false}) async {
+  Future<List<Account>> getByType(
+    AccountType type, {
+    bool includeInactive = false,
+  }) async {
     final all = await getAll(includeInactive: includeInactive);
     return all.where((a) => a.accountType == type).toList();
   }
 
-
   @override
   Future<Account?> getById(int id) async => null;
-
 
   @override
   Future<List<Account>> getByUuids(Iterable<String> uuids) async => [];
@@ -65,10 +68,12 @@ class FakeAccountRepository implements AccountRepository {
   Future<bool> isUsedInTransactions(String uuid) async => false;
 
   @override
-  Future<Account> insert(AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> insert(AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
-  Future<Account> update(int id, AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> update(int id, AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
   Future<void> deactivate(int id) async {}
@@ -83,10 +88,14 @@ class FakeAccountRepository implements AccountRepository {
   Future<void> seedDefaultChart() async {}
 
   @override
-  Future<List<Account>> search(String query, {bool includeInactive = false}) async => accounts;
+  Future<List<Account>> search(
+    String query, {
+    bool includeInactive = false,
+  }) async => accounts;
 
   @override
-  Stream<List<Account>> watchAll({bool includeInactive = false}) => Stream.value(accounts);
+  Stream<List<Account>> watchAll({bool includeInactive = false}) =>
+      Stream.value(accounts);
 }
 
 void main() {
@@ -154,205 +163,227 @@ void main() {
     await settingsBox.clear();
   });
 
-  group('Phase 3 — Inventory Base Currency & Accounting Configuration Tests', () {
-    test('1. YER Company Setup & Inventory Base Currency', () async {
-      currencyService = CompanyCurrencyService(initRepository: initRepository);
+  group(
+    'Phase 3 — Inventory Base Currency & Accounting Configuration Tests',
+    () {
+      test('1. YER Company Setup & Inventory Base Currency', () async {
+        currencyService = CompanyCurrencyService(
+          initRepository: initRepository,
+        );
 
-      await currencyService.configureInventoryBaseCurrency(
-        currencyCode: 'YER',
-      );
+        await currencyService.configureInventoryBaseCurrency(
+          currencyCode: 'YER',
+        );
 
-      final baseCurr = await currencyService.getInventoryBaseCurrency();
-      expect(baseCurr, equals('YER'));
-    });
+        final baseCurr = await currencyService.getInventoryBaseCurrency();
+        expect(baseCurr, equals('YER'));
+      });
 
-    test('2. SAR Company Setup & Inventory Base Currency', () async {
-      currencyService = CompanyCurrencyService(initRepository: initRepository);
+      test('2. SAR Company Setup & Inventory Base Currency', () async {
+        currencyService = CompanyCurrencyService(
+          initRepository: initRepository,
+        );
 
-      await currencyService.configureInventoryBaseCurrency(
-        currencyCode: 'SAR',
-      );
+        await currencyService.configureInventoryBaseCurrency(
+          currencyCode: 'SAR',
+        );
 
-      final baseCurr = await currencyService.getInventoryBaseCurrency();
-      expect(baseCurr, equals('SAR'));
-    });
+        final baseCurr = await currencyService.getInventoryBaseCurrency();
+        expect(baseCurr, equals('SAR'));
+      });
 
-    test('3. Document Currency Conversion (100 SAR * 145 = 14,500 YER)', () {
-      currencyService = CompanyCurrencyService(initRepository: initRepository);
+      test('3. Document Currency Conversion (100 SAR * 145 = 14,500 YER)', () {
+        currencyService = CompanyCurrencyService(
+          initRepository: initRepository,
+        );
 
-      final convertedCost = currencyService.convertToInventoryBaseCurrency(
-        documentAmount: 100.0,
-        exchangeRate: 145.0,
-      );
+        final convertedCost = currencyService.convertToInventoryBaseCurrency(
+          documentAmount: 100.0,
+          exchangeRate: 145.0,
+        );
 
-      expect(convertedCost, equals(14500.0));
-    });
+        expect(convertedCost, equals(14500.0));
+      });
 
-    test('4. Currency Conversion Rounding Accuracy', () {
-      currencyService = CompanyCurrencyService(initRepository: initRepository);
+      test('4. Currency Conversion Rounding Accuracy', () {
+        currencyService = CompanyCurrencyService(
+          initRepository: initRepository,
+        );
 
-      final convertedCost = currencyService.convertToInventoryBaseCurrency(
-        documentAmount: 33.333,
-        exchangeRate: 3.75,
-        decimalPlaces: 2,
-      );
+        final convertedCost = currencyService.convertToInventoryBaseCurrency(
+          documentAmount: 33.333,
+          exchangeRate: 3.75,
+          decimalPlaces: 2,
+        );
 
-      expect(convertedCost, equals(125.0));
-    });
+        expect(convertedCost, equals(125.0));
+      });
 
-    test('5. Currency Immutability Guard — Change Rejected After Transactions', () async {
-      bool hasTransactions = true;
+      test(
+        '5. Currency Immutability Guard — Change Rejected After Transactions',
+        () async {
+          bool hasTransactions = true;
 
-      currencyService = CompanyCurrencyService(
-        initRepository: initRepository,
-        transactionChecker: (companyId) async => hasTransactions,
-      );
+          currencyService = CompanyCurrencyService(
+            initRepository: initRepository,
+            transactionChecker: (companyId) async => hasTransactions,
+          );
 
-      await currencyService.configureInventoryBaseCurrency(
-        currencyCode: 'YER',
-      );
+          await currencyService.configureInventoryBaseCurrency(
+            currencyCode: 'YER',
+          );
 
-      // Attempting to change to USD when transactions exist
-      expect(
-        () async => await currencyService.configureInventoryBaseCurrency(
-          currencyCode: 'USD',
-        ),
-        throwsA(isA<StateError>()),
-      );
-    });
-
-    test('6. Duplicate Currency Attempt Handling (Idempotent)', () async {
-      currencyService = CompanyCurrencyService(initRepository: initRepository);
-
-      await currencyService.configureInventoryBaseCurrency(
-        currencyCode: 'YER',
-      );
-
-      // Re-configuring to exact same base currency succeeds
-      await currencyService.configureInventoryBaseCurrency(
-        currencyCode: 'YER',
-      );
-
-      final baseCurr = await currencyService.getInventoryBaseCurrency();
-      expect(baseCurr, equals('YER'));
-    });
-
-    test('7. Cross-Company Account Rejection', () async {
-      final validAccountOtherTenant = createAccount(
-        id: 1,
-        uuid: 'acc-other-001',
-        tenantCompanyId: 'company-other-tenant',
-        accountCode: '1230',
-        name: 'Inventory Stock Other',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-      );
-
-      fakeAccountRepo = FakeAccountRepository(
-        [validAccountOtherTenant],
-        readCompanyId: () => currentCompanyId,
-      );
-      accountingConfigService = CompanyAccountingConfigService(
-        accountRepository: fakeAccountRepo,
-        initRepository: initRepository,
-      );
-
-      expect(
-        () async => await accountingConfigService.saveAccountingConfig(
-          mappings: {
-            AccountRole.inventory: 'acc-other-001',
-          },
-        ),
-        throwsA(isA<InvalidCompanyAccountException>()),
-      );
-    });
-
-    test('8. Invalid / Non-Existent Account Rejection', () async {
-      fakeAccountRepo = FakeAccountRepository([]);
-      accountingConfigService = CompanyAccountingConfigService(
-        accountRepository: fakeAccountRepo,
-        initRepository: initRepository,
-      );
-
-      expect(
-        () async => await accountingConfigService.saveAccountingConfig(
-          mappings: {
-            AccountRole.inventory: 'non-existent-9999',
-          },
-        ),
-        throwsA(isA<InvalidCompanyAccountException>().having(
-          (e) => e.reason,
-          'reason',
-          contains('does not exist'),
-        )),
-      );
-    });
-
-    test('9. Disabled / Inactive Account Rejection', () async {
-      final inactiveAccount = createAccount(
-        id: 2,
-        uuid: 'acc-inactive-001',
-        accountCode: '1230',
-        name: 'Inactive Inventory',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-        isActive: false,
-      );
-
-      fakeAccountRepo = FakeAccountRepository([inactiveAccount]);
-      accountingConfigService = CompanyAccountingConfigService(
-        accountRepository: fakeAccountRepo,
-        initRepository: initRepository,
-      );
-
-      expect(
-        () async => await accountingConfigService.saveAccountingConfig(
-          mappings: {
-            AccountRole.inventory: 'acc-inactive-001',
-          },
-        ),
-        throwsA(isA<InvalidCompanyAccountException>().having(
-          (e) => e.reason,
-          'reason',
-          contains('inactive'),
-        )),
-      );
-    });
-
-    test('10. Valid Company Accounting Configuration', () async {
-      final validInventoryAcc = createAccount(
-        id: 3,
-        uuid: 'acc-inv-001',
-        accountCode: '1230',
-        name: 'Inventory Stock Main',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-      );
-
-      final validCogsAcc = createAccount(
-        id: 4,
-        uuid: 'acc-cogs-001',
-        accountCode: '5100',
-        name: 'Cost of Goods Sold',
-        accountType: AccountType.expense,
-        normalBalance: NormalBalance.debit,
-      );
-
-      fakeAccountRepo = FakeAccountRepository([validInventoryAcc, validCogsAcc]);
-      accountingConfigService = CompanyAccountingConfigService(
-        accountRepository: fakeAccountRepo,
-        initRepository: initRepository,
-      );
-
-      final savedConfig = await accountingConfigService.saveAccountingConfig(
-        mappings: {
-          AccountRole.inventory: 'acc-inv-001',
-          AccountRole.cogs: 'acc-cogs-001',
+          // Attempting to change to USD when transactions exist
+          expect(
+            () async => await currencyService.configureInventoryBaseCurrency(
+              currencyCode: 'USD',
+            ),
+            throwsA(isA<StateError>()),
+          );
         },
       );
 
-      expect(savedConfig.accountMappings[AccountRole.inventory], equals('acc-inv-001'));
-      expect(savedConfig.accountMappings[AccountRole.cogs], equals('acc-cogs-001'));
-    });
-  });
+      test('6. Duplicate Currency Attempt Handling (Idempotent)', () async {
+        currencyService = CompanyCurrencyService(
+          initRepository: initRepository,
+        );
+
+        await currencyService.configureInventoryBaseCurrency(
+          currencyCode: 'YER',
+        );
+
+        // Re-configuring to exact same base currency succeeds
+        await currencyService.configureInventoryBaseCurrency(
+          currencyCode: 'YER',
+        );
+
+        final baseCurr = await currencyService.getInventoryBaseCurrency();
+        expect(baseCurr, equals('YER'));
+      });
+
+      test('7. Cross-Company Account Rejection', () async {
+        final validAccountOtherTenant = createAccount(
+          id: 1,
+          uuid: 'acc-other-001',
+          tenantCompanyId: 'company-other-tenant',
+          accountCode: '1230',
+          name: 'Inventory Stock Other',
+          accountType: AccountType.asset,
+          normalBalance: NormalBalance.debit,
+        );
+
+        fakeAccountRepo = FakeAccountRepository([
+          validAccountOtherTenant,
+        ], readCompanyId: () => currentCompanyId);
+        accountingConfigService = CompanyAccountingConfigService(
+          accountRepository: fakeAccountRepo,
+          initRepository: initRepository,
+        );
+
+        expect(
+          () async => await accountingConfigService.saveAccountingConfig(
+            mappings: {AccountRole.inventory: 'acc-other-001'},
+          ),
+          throwsA(isA<InvalidCompanyAccountException>()),
+        );
+      });
+
+      test('8. Invalid / Non-Existent Account Rejection', () async {
+        fakeAccountRepo = FakeAccountRepository([]);
+        accountingConfigService = CompanyAccountingConfigService(
+          accountRepository: fakeAccountRepo,
+          initRepository: initRepository,
+        );
+
+        expect(
+          () async => await accountingConfigService.saveAccountingConfig(
+            mappings: {AccountRole.inventory: 'non-existent-9999'},
+          ),
+          throwsA(
+            isA<InvalidCompanyAccountException>().having(
+              (e) => e.reason,
+              'reason',
+              contains('does not exist'),
+            ),
+          ),
+        );
+      });
+
+      test('9. Disabled / Inactive Account Rejection', () async {
+        final inactiveAccount = createAccount(
+          id: 2,
+          uuid: 'acc-inactive-001',
+          accountCode: '1230',
+          name: 'Inactive Inventory',
+          accountType: AccountType.asset,
+          normalBalance: NormalBalance.debit,
+          isActive: false,
+        );
+
+        fakeAccountRepo = FakeAccountRepository([inactiveAccount]);
+        accountingConfigService = CompanyAccountingConfigService(
+          accountRepository: fakeAccountRepo,
+          initRepository: initRepository,
+        );
+
+        expect(
+          () async => await accountingConfigService.saveAccountingConfig(
+            mappings: {AccountRole.inventory: 'acc-inactive-001'},
+          ),
+          throwsA(
+            isA<InvalidCompanyAccountException>().having(
+              (e) => e.reason,
+              'reason',
+              contains('inactive'),
+            ),
+          ),
+        );
+      });
+
+      test('10. Valid Company Accounting Configuration', () async {
+        final validInventoryAcc = createAccount(
+          id: 3,
+          uuid: 'acc-inv-001',
+          accountCode: '1230',
+          name: 'Inventory Stock Main',
+          accountType: AccountType.asset,
+          normalBalance: NormalBalance.debit,
+        );
+
+        final validCogsAcc = createAccount(
+          id: 4,
+          uuid: 'acc-cogs-001',
+          accountCode: '5100',
+          name: 'Cost of Goods Sold',
+          accountType: AccountType.expense,
+          normalBalance: NormalBalance.debit,
+        );
+
+        fakeAccountRepo = FakeAccountRepository([
+          validInventoryAcc,
+          validCogsAcc,
+        ]);
+        accountingConfigService = CompanyAccountingConfigService(
+          accountRepository: fakeAccountRepo,
+          initRepository: initRepository,
+        );
+
+        final savedConfig = await accountingConfigService.saveAccountingConfig(
+          mappings: {
+            AccountRole.inventory: 'acc-inv-001',
+            AccountRole.cogs: 'acc-cogs-001',
+          },
+        );
+
+        expect(
+          savedConfig.accountMappings[AccountRole.inventory],
+          equals('acc-inv-001'),
+        );
+        expect(
+          savedConfig.accountMappings[AccountRole.cogs],
+          equals('acc-cogs-001'),
+        );
+      });
+    },
+  );
 }

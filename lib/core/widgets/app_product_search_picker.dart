@@ -126,7 +126,10 @@ class AppProductSearchPickerSheet extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    title ?? (l10n.localeName == 'ar' ? 'البحث عن صنف / منتج' : 'Search Product'),
+                    title ??
+                        (l10n.localeName == 'ar'
+                            ? 'البحث عن صنف / منتج'
+                            : 'Search Product'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.2,
@@ -246,10 +249,7 @@ class _AppProductSearchPickerState
                   hintText: isAr
                       ? 'ابحث باسم المنتج، كود الصنف، أو الباركود...'
                       : 'Search by name, code, barcode...',
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: scheme.primary,
-                  ),
+                  prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.cancel_rounded, size: 18),
@@ -258,7 +258,9 @@ class _AppProductSearchPickerState
                       : null,
                   isDense: true,
                   filled: true,
-                  fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                  fillColor: scheme.surfaceContainerHighest.withValues(
+                    alpha: 0.4,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: BorderSide.none,
@@ -362,8 +364,11 @@ class _AppProductInlineSearchFieldState
   }
 
   void _syncSelectedProductLabel() {
-    if (widget.selectedProductCode != null && widget.selectedProductCode!.isNotEmpty) {
-      final label = widget.selectedProductName != null && widget.selectedProductName!.isNotEmpty
+    if (widget.selectedProductCode != null &&
+        widget.selectedProductCode!.isNotEmpty) {
+      final label =
+          widget.selectedProductName != null &&
+              widget.selectedProductName!.isNotEmpty
           ? '${widget.selectedProductCode} - ${widget.selectedProductName}'
           : widget.selectedProductCode!;
       _searchController.text = label;
@@ -437,7 +442,9 @@ class _AppProductInlineSearchFieldState
     if (normalized.isEmpty) return;
 
     try {
-      final resolution = await ref.read(productScanResolverProvider).resolve(normalized);
+      final resolution = await ref
+          .read(productScanResolverProvider)
+          .resolve(normalized);
       if (!mounted) return;
       if (resolution != null) {
         _selectProduct(resolution.product);
@@ -462,8 +469,10 @@ class _AppProductInlineSearchFieldState
     final textDirection = Directionality.of(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
 
-    final renderBox = _fieldKey.currentContext?.findRenderObject() as RenderBox?;
-    final fieldWidth = (renderBox != null && renderBox.hasSize && renderBox.size.width > 0)
+    final renderBox =
+        _fieldKey.currentContext?.findRenderObject() as RenderBox?;
+    final fieldWidth =
+        (renderBox != null && renderBox.hasSize && renderBox.size.width > 0)
         ? renderBox.size.width
         : (screenWidth - 32);
 
@@ -477,8 +486,12 @@ class _AppProductInlineSearchFieldState
             return CompositedTransformFollower(
               link: _layerLink,
               showWhenUnlinked: false,
-              targetAnchor: AlignmentDirectional.bottomStart.resolve(textDirection),
-              followerAnchor: AlignmentDirectional.topStart.resolve(textDirection),
+              targetAnchor: AlignmentDirectional.bottomStart.resolve(
+                textDirection,
+              ),
+              followerAnchor: AlignmentDirectional.topStart.resolve(
+                textDirection,
+              ),
               offset: const Offset(0, 6),
               child: SizedBox(
                 width: fieldWidth,
@@ -535,7 +548,9 @@ class _AppProductInlineSearchFieldState
                     height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                      color: scheme.surfaceContainerHighest.withValues(
+                        alpha: 0.45,
+                      ),
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                       border: Border.all(
                         color: _focusNode.hasFocus
@@ -560,8 +575,11 @@ class _AppProductInlineSearchFieldState
                       textAlignVertical: TextAlignVertical.center,
                       decoration: InputDecoration(
                         isDense: true,
-                        hintText: widget.hintText ??
-                            (isAr ? 'ابحث بالاسم، الكود، أو الباركود...' : 'Search name, code, or barcode...'),
+                        hintText:
+                            widget.hintText ??
+                            (isAr
+                                ? 'ابحث بالاسم، الكود، أو الباركود...'
+                                : 'Search name, code, or barcode...'),
                         hintStyle: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 13,
                           height: 1.2,
@@ -585,23 +603,35 @@ class _AppProductInlineSearchFieldState
                           children: [
                             if (_searchController.text.isNotEmpty)
                               IconButton(
-                                tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                                tooltip: MaterialLocalizations.of(
+                                  context,
+                                ).deleteButtonTooltip,
                                 onPressed: _clearSelection,
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                                constraints: const BoxConstraints.tightFor(
+                                  width: 36,
+                                  height: 36,
+                                ),
                                 icon: Icon(
                                   Icons.cancel_rounded,
                                   size: 18,
-                                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                  color: scheme.onSurfaceVariant.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                               ),
                             IconButton(
-                              tooltip: isAr ? 'مسح باركود أو QR' : 'Scan Barcode or QR',
+                              tooltip: isAr
+                                  ? 'مسح باركود أو QR'
+                                  : 'Scan Barcode or QR',
                               onPressed: widget.enabled ? _scanBarcode : null,
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                              constraints: const BoxConstraints.tightFor(
+                                width: 36,
+                                height: 36,
+                              ),
                               icon: Icon(
                                 Icons.qr_code_scanner_rounded,
                                 size: 18,
@@ -610,14 +640,21 @@ class _AppProductInlineSearchFieldState
                             ),
                             IconButton(
                               tooltip: isAr ? 'فرز نطاق البحث' : 'Filter scope',
-                              onPressed: () => setState(() => _filtersVisible = !_filtersVisible),
+                              onPressed: () => setState(
+                                () => _filtersVisible = !_filtersVisible,
+                              ),
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                              constraints: const BoxConstraints.tightFor(
+                                width: 36,
+                                height: 36,
+                              ),
                               icon: Icon(
                                 Icons.tune_rounded,
                                 size: 18,
-                                color: _filtersVisible || _searchField != CatalogSearchField.all
+                                color:
+                                    _filtersVisible ||
+                                        _searchField != CatalogSearchField.all
                                     ? scheme.primary
                                     : scheme.onSurfaceVariant,
                               ),
@@ -647,7 +684,8 @@ class _AppProductInlineSearchFieldState
                     ),
                     child: CatalogSearchFieldSelector(
                       value: _searchField,
-                      onChanged: (field) => setState(() => _searchField = field),
+                      onChanged: (field) =>
+                          setState(() => _searchField = field),
                     ),
                   ),
               ],
@@ -705,7 +743,9 @@ class _ProductSearchResultsList extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                isAr ? 'ابدأ بالكتابة للبحث عن صنف' : 'Start typing to search product',
+                isAr
+                    ? 'ابدأ بالكتابة للبحث عن صنف'
+                    : 'Start typing to search product',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -742,7 +782,9 @@ class _ProductSearchResultsList extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                isAr ? 'حدث خطأ أثناء تحميل المنتجات' : 'Error loading products',
+                isAr
+                    ? 'حدث خطأ أثناء تحميل المنتجات'
+                    : 'Error loading products',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
@@ -771,7 +813,9 @@ class _ProductSearchResultsList extends ConsumerWidget {
 
         final listWidget = ListView.separated(
           controller: scrollController,
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           padding: const EdgeInsets.all(AppSpacing.xs),
           itemCount: filtered.length,
           separatorBuilder: (_, _) => const SizedBox(height: 4),
@@ -827,7 +871,8 @@ class _ProductResultCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isAr = l10n.localeName == 'ar';
-    final hasBarcode = product.barcode != null && product.barcode!.trim().isNotEmpty;
+    final hasBarcode =
+        product.barcode != null && product.barcode!.trim().isNotEmpty;
     final barcodeValue = product.barcode?.trim() ?? '';
     final priceStr = product.price == product.price.roundToDouble()
         ? product.price.toStringAsFixed(0)
@@ -968,11 +1013,12 @@ class AppProductSearchFormField extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isAr = AppLocalizations.of(context).localeName == 'ar';
 
-    final hasSelection = selectedProductCode != null && selectedProductCode!.isNotEmpty;
+    final hasSelection =
+        selectedProductCode != null && selectedProductCode!.isNotEmpty;
     final displayText = hasSelection
         ? (selectedProductName != null && selectedProductName!.isNotEmpty
-            ? '$selectedProductCode - $selectedProductName'
-            : selectedProductCode!)
+              ? '$selectedProductCode - $selectedProductName'
+              : selectedProductCode!)
         : '';
 
     return InkWell(
@@ -991,8 +1037,11 @@ class AppProductSearchFormField extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: labelText ?? (isAr ? 'اختر الصنف / المنتج' : 'Select Product'),
-          hintText: hintText ?? (isAr ? 'اضغط للبحث عن منتج...' : 'Tap to search product...'),
+          labelText:
+              labelText ?? (isAr ? 'اختر الصنف / المنتج' : 'Select Product'),
+          hintText:
+              hintText ??
+              (isAr ? 'اضغط للبحث عن منتج...' : 'Tap to search product...'),
           prefixIcon: prefixIcon,
           suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
           enabled: enabled,
@@ -1006,7 +1055,10 @@ class AppProductSearchFormField extends StatelessWidget {
         child: Text(
           displayText.isNotEmpty
               ? displayText
-              : (hintText ?? (isAr ? 'اضغط للبحث عن منتج...' : 'Tap to search product...')),
+              : (hintText ??
+                    (isAr
+                        ? 'اضغط للبحث عن منتج...'
+                        : 'Tap to search product...')),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: displayText.isNotEmpty
@@ -1054,8 +1106,8 @@ class AppProductSearchButton extends StatelessWidget {
         selectedProductCode != null && selectedProductCode!.isNotEmpty;
     final selectionLabel = hasSelection
         ? (selectedProductName != null && selectedProductName!.isNotEmpty
-            ? '$selectedProductCode - $selectedProductName'
-            : selectedProductCode!)
+              ? '$selectedProductCode - $selectedProductName'
+              : selectedProductCode!)
         : '';
 
     if (hasSelection) {

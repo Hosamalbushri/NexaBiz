@@ -21,6 +21,6 @@ class WarehouseAccountingBindings extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-        {companyId, warehouseId},
-      ];
+    {companyId, warehouseId},
+  ];
 }

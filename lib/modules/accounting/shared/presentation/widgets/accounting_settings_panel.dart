@@ -44,7 +44,9 @@ class AccountingSettingsPanel extends ConsumerWidget {
                   onPressed: accountsAsync.isLoading
                       ? null
                       : () async {
-                          final seeder = ref.read(seedDefaultChartUseCaseProvider);
+                          final seeder = ref.read(
+                            seedDefaultChartUseCaseProvider,
+                          );
                           await seeder();
                           ref.invalidate(accountsProvider);
                           if (context.mounted) {
@@ -92,7 +94,9 @@ class AccountingSettingsPanel extends ConsumerWidget {
                   onPressed: sectionsAsync.isLoading
                       ? null
                       : () async {
-                          final seeder = ref.read(seedDefaultVoucherBooksProvider);
+                          final seeder = ref.read(
+                            seedDefaultVoucherBooksProvider,
+                          );
                           await seeder();
                           ref.invalidate(voucherBookSectionsProvider);
                           if (context.mounted) {

@@ -7,7 +7,8 @@ import 'package:stock_count/modules/accounting/journals/domain/repositories/jour
 import 'package:stock_count/modules/reports/shared/domain/services/income_statement_report_data_port.dart';
 
 /// Adapter for Income Statement / Profit & Loss.
-class IncomeStatementReportDataAdapter implements IncomeStatementReportDataPort {
+class IncomeStatementReportDataAdapter
+    implements IncomeStatementReportDataPort {
   IncomeStatementReportDataAdapter({
     required this.journals,
     required this.accounts,
@@ -55,7 +56,8 @@ class IncomeStatementReportDataAdapter implements IncomeStatementReportDataPort 
       if (acc == null) continue;
 
       // Revenue (Class 4 / AccountType.revenue) -> Net credit (credit - debit)
-      if (acc.accountType == AccountType.revenue || acc.accountCode.startsWith('4')) {
+      if (acc.accountType == AccountType.revenue ||
+          acc.accountCode.startsWith('4')) {
         final netAmount = row.credit - row.debit;
         if (netAmount != 0) {
           totalRevenue += netAmount;
@@ -85,7 +87,9 @@ class IncomeStatementReportDataAdapter implements IncomeStatementReportDataPort 
         }
       }
       // Operating Expenses (Class 5/6 / AccountType.expense) -> Net debit (debit - credit)
-      else if (acc.accountType == AccountType.expense || acc.accountCode.startsWith('5') || acc.accountCode.startsWith('6')) {
+      else if (acc.accountType == AccountType.expense ||
+          acc.accountCode.startsWith('5') ||
+          acc.accountCode.startsWith('6')) {
         final netAmount = row.debit - row.credit;
         if (netAmount != 0) {
           totalExpenses += netAmount;

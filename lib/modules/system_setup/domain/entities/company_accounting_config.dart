@@ -21,17 +21,19 @@ class AccountBindingTarget {
   final bool isEnabled;
 
   factory AccountBindingTarget.single(String uuid) => AccountBindingTarget(
-        mode: AccountBindingMode.singleAccount,
-        primaryUuid: uuid,
-      );
+    mode: AccountBindingMode.singleAccount,
+    primaryUuid: uuid,
+  );
 
-  factory AccountBindingTarget.parentScope(String parentUuid) => AccountBindingTarget(
+  factory AccountBindingTarget.parentScope(String parentUuid) =>
+      AccountBindingTarget(
         mode: AccountBindingMode.parentAccountWithDescendants,
         parentUuid: parentUuid,
         primaryUuid: parentUuid,
       );
 
-  factory AccountBindingTarget.set(List<String> setUuids) => AccountBindingTarget(
+  factory AccountBindingTarget.set(List<String> setUuids) =>
+      AccountBindingTarget(
         mode: AccountBindingMode.accountSet,
         setUuids: setUuids,
       );
@@ -49,14 +51,13 @@ class AccountBindingTarget {
     }
   }
 
-
   Map<String, dynamic> toJson() => {
-        'mode': mode.storageValue,
-        'primaryUuid': primaryUuid,
-        'parentUuid': parentUuid,
-        'setUuids': setUuids,
-        'isEnabled': isEnabled,
-      };
+    'mode': mode.storageValue,
+    'primaryUuid': primaryUuid,
+    'parentUuid': parentUuid,
+    'setUuids': setUuids,
+    'isEnabled': isEnabled,
+  };
 
   factory AccountBindingTarget.fromJson(dynamic json) {
     if (json is String) {
@@ -166,7 +167,8 @@ class CompanyAccountingConfig {
       for (final entry in accountMappings.entries) entry.key.name: entry.value,
     },
     'bindingTargets': {
-      for (final entry in bindingTargets.entries) entry.key.name: entry.value.toJson(),
+      for (final entry in bindingTargets.entries)
+        entry.key.name: entry.value.toJson(),
     },
     'updatedAt': updatedAt?.toUtc().millisecondsSinceEpoch,
   };
@@ -235,4 +237,3 @@ class CompanyAccountingConfig {
       bindingTargets.hashCode ^
       updatedAt.hashCode;
 }
-

@@ -17,10 +17,8 @@ class ImportContextException extends ImportEngineException {
 
 /// Thrown when an invalid status transition is attempted on an [ImportJob] or pipeline stage.
 class ImportStatusTransitionException extends ImportEngineException {
-  const ImportStatusTransitionException(
-    String fromStatus,
-    String toStatus,
-  ) : super(
+  const ImportStatusTransitionException(String fromStatus, String toStatus)
+    : super(
         'Invalid status transition from "$fromStatus" to "$toStatus".',
         'INVALID_STATUS_TRANSITION',
       );

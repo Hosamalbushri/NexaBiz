@@ -28,29 +28,38 @@ void main() {
       credentialStore = SyncLoginCredentialStore();
     });
 
-    test('saveBiometricCredentials stores secret token and purges legacy raw password keys', () async {
-      await credentialStore.saveBiometricCredentials(
-        email: 'admin@nexabiz.com',
-        biometricToken: 'bio_secret_token_uuid_12345',
-        mode: AuthenticationMode.local,
-      );
+    test(
+      'saveBiometricCredentials stores secret token and purges legacy raw password keys',
+      () async {
+        await credentialStore.saveBiometricCredentials(
+          email: 'admin@nexabiz.com',
+          biometricToken: 'bio_secret_token_uuid_12345',
+          mode: AuthenticationMode.local,
+        );
 
-      final email = await credentialStore.readEmail(mode: AuthenticationMode.local);
-      final token = await credentialStore.readBiometricToken(mode: AuthenticationMode.local);
-      final isEnabled = await credentialStore.isBiometricLoginEnabled(mode: AuthenticationMode.local);
+        final email = await credentialStore.readEmail(
+          mode: AuthenticationMode.local,
+        );
+        final token = await credentialStore.readBiometricToken(
+          mode: AuthenticationMode.local,
+        );
+        final isEnabled = await credentialStore.isBiometricLoginEnabled(
+          mode: AuthenticationMode.local,
+        );
 
-      expect(email, equals('admin@nexabiz.com'));
-      expect(token, equals('bio_secret_token_uuid_12345'));
-      expect(isEnabled, isTrue);
+        expect(email, equals('admin@nexabiz.com'));
+        expect(token, equals('bio_secret_token_uuid_12345'));
+        expect(isEnabled, isTrue);
 
-      // Verify raw password keys are completely gone
-      const secure = FlutterSecureStorage();
-      final syncRawPwd = await secure.read(key: 'sync_login_password');
-      final localRawPwd = await secure.read(key: 'local_login_password');
+        // Verify raw password keys are completely gone
+        const secure = FlutterSecureStorage();
+        final syncRawPwd = await secure.read(key: 'sync_login_password');
+        final localRawPwd = await secure.read(key: 'local_login_password');
 
-      expect(syncRawPwd, isNull);
-      expect(localRawPwd, isNull);
-    });
+        expect(syncRawPwd, isNull);
+        expect(localRawPwd, isNull);
+      },
+    );
 
     test('clear() purges email, biometric token, and enabled flags', () async {
       await credentialStore.saveBiometricCredentials(
@@ -61,9 +70,15 @@ void main() {
 
       await credentialStore.clear(mode: AuthenticationMode.local);
 
-      final email = await credentialStore.readEmail(mode: AuthenticationMode.local);
-      final token = await credentialStore.readBiometricToken(mode: AuthenticationMode.local);
-      final hasSaved = await credentialStore.hasSavedCredentials(mode: AuthenticationMode.local);
+      final email = await credentialStore.readEmail(
+        mode: AuthenticationMode.local,
+      );
+      final token = await credentialStore.readBiometricToken(
+        mode: AuthenticationMode.local,
+      );
+      final hasSaved = await credentialStore.hasSavedCredentials(
+        mode: AuthenticationMode.local,
+      );
 
       expect(email, isNull);
       expect(token, isNull);
@@ -86,36 +101,48 @@ void main() {
       }
     });
 
-    test('getOrCreateBiometricToken issues a persistent token for active user', () async {
-      final token1 = await localStore.getOrCreateBiometricToken('admin@local.test');
-      expect(token1, isNotNull);
-      expect(token1!.isNotEmpty, isTrue);
+    test(
+      'getOrCreateBiometricToken issues a persistent token for active user',
+      () async {
+        final token1 = await localStore.getOrCreateBiometricToken(
+          'admin@local.test',
+        );
+        expect(token1, isNotNull);
+        expect(token1!.isNotEmpty, isTrue);
 
-      final token2 = await localStore.getOrCreateBiometricToken('admin@local.test');
-      expect(token2, equals(token1));
-    });
+        final token2 = await localStore.getOrCreateBiometricToken(
+          'admin@local.test',
+        );
+        expect(token2, equals(token1));
+      },
+    );
 
-    test('loginWithBiometricToken succeeds with valid token and fails with invalid token', () async {
-      final validToken = await localStore.getOrCreateBiometricToken('admin@local.test');
-      expect(validToken, isNotNull);
+    test(
+      'loginWithBiometricToken succeeds with valid token and fails with invalid token',
+      () async {
+        final validToken = await localStore.getOrCreateBiometricToken(
+          'admin@local.test',
+        );
+        expect(validToken, isNotNull);
 
-      // Valid token login
-      final session = await localStore.loginWithBiometricToken(
-        email: 'admin@local.test',
-        biometricToken: validToken!,
-        deviceId: 'device_test_123',
-      );
-      expect(session, isNotNull);
-      expect(session!.user.email, equals('admin@local.test'));
+        // Valid token login
+        final session = await localStore.loginWithBiometricToken(
+          email: 'admin@local.test',
+          biometricToken: validToken!,
+          deviceId: 'device_test_123',
+        );
+        expect(session, isNotNull);
+        expect(session!.user.email, equals('admin@local.test'));
 
-      // Invalid token login failure
-      final invalidSession = await localStore.loginWithBiometricToken(
-        email: 'admin@local.test',
-        biometricToken: 'invalid_forged_token',
-        deviceId: 'device_test_123',
-      );
-      expect(invalidSession, isNull);
-    });
+        // Invalid token login failure
+        final invalidSession = await localStore.loginWithBiometricToken(
+          email: 'admin@local.test',
+          biometricToken: 'invalid_forged_token',
+          deviceId: 'device_test_123',
+        );
+        expect(invalidSession, isNull);
+      },
+    );
   });
 
   group('SEC-02: SecureTokenStorage Dual-Storage Purge', () {

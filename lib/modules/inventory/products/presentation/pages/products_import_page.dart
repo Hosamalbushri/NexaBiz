@@ -76,8 +76,9 @@ class ProductsImportPage extends ConsumerWidget {
             if (importState.isImporting) ...[
               const SizedBox(height: 16),
               AppCard(
-                color: Theme.of(context).colorScheme.primaryContainer
-                    .withValues(alpha: 0.35),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.35),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -89,9 +90,9 @@ class ProductsImportPage extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         localization.importBackgroundHint,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.35,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(height: 1.35),
                       ),
                     ),
                   ],

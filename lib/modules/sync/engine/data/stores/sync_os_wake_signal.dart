@@ -21,10 +21,7 @@ class SyncOsWakeSignal {
 
   static Future<void> markRequested({DateTime? at}) async {
     final box = await _box();
-    await box.put(
-      _key,
-      (at ?? DateTime.now().toUtc()).millisecondsSinceEpoch,
-    );
+    await box.put(_key, (at ?? DateTime.now().toUtc()).millisecondsSinceEpoch);
   }
 
   /// Returns and clears the wake timestamp when present.

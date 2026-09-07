@@ -16,9 +16,16 @@ class StockMovementLine {
     double? totalCost,
     this.postedCost,
     this.postedAt,
-  })  : id = id ?? generateUuidV4(),
-        quantity = quantity ?? (mainQuantity + (packSize > 0 ? subQuantity / packSize : 0.0)),
-        totalCost = totalCost ?? ((quantity ?? (mainQuantity + (packSize > 0 ? subQuantity / packSize : 0.0))) * unitCost);
+  }) : id = id ?? generateUuidV4(),
+       quantity =
+           quantity ??
+           (mainQuantity + (packSize > 0 ? subQuantity / packSize : 0.0)),
+       totalCost =
+           totalCost ??
+           ((quantity ??
+                   (mainQuantity +
+                       (packSize > 0 ? subQuantity / packSize : 0.0))) *
+               unitCost);
 
   final String id;
   final String movementUuid;

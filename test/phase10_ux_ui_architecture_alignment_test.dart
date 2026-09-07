@@ -17,7 +17,9 @@ import 'package:stock_count/modules/authentication/presentation/widgets/company_
 
 void main() {
   group('Phase 10 — UX/UI Architecture Alignment Tests', () {
-    testWidgets('Free tier CapabilityGate displays styled upgrade prompt', (tester) async {
+    testWidgets('Free tier CapabilityGate displays styled upgrade prompt', (
+      tester,
+    ) async {
       final container = ProviderContainer(
         overrides: [
           currentEntitlementProvider.overrideWith(
@@ -51,7 +53,9 @@ void main() {
       expect(find.text('Upgrade Company to Premium'), findsOneWidget);
     });
 
-    testWidgets('Premium tier CapabilityGate renders child widget directly', (tester) async {
+    testWidgets('Premium tier CapabilityGate renders child widget directly', (
+      tester,
+    ) async {
       final container = ProviderContainer(
         overrides: [
           currentEntitlementProvider.overrideWith(
@@ -81,72 +85,67 @@ void main() {
       expect(find.text('PREMIUM CAPABILITY'), findsNothing);
     });
 
-    testWidgets('CompanySelectionSheet lists user companies and allows selection', (tester) async {
-      final user = const AuthUser(
-        id: 'user_1',
-        email: 'admin@nexabiz.com',
-        name: 'Admin User',
-      );
-      final companies = const [
-        AuthCompany(id: 'c1', name: 'Company Alpha', code: 'ALPHA'),
-        AuthCompany(id: 'c2', name: 'Company Beta', code: 'BETA'),
-      ];
-      final session = AuthSessionSnapshot(
-        sessionId: 's1',
-        user: user,
-        currentCompanyId: 'c1',
-        companies: companies,
-        roles: const [],
-        permissions: const {},
-        capturedAt: DateTime.now(),
-      );
+    testWidgets(
+      'CompanySelectionSheet lists user companies and allows selection',
+      (tester) async {
+        final user = const AuthUser(
+          id: 'user_1',
+          email: 'admin@nexabiz.com',
+          name: 'Admin User',
+        );
+        final companies = const [
+          AuthCompany(id: 'c1', name: 'Company Alpha', code: 'ALPHA'),
+          AuthCompany(id: 'c2', name: 'Company Beta', code: 'BETA'),
+        ];
+        final session = AuthSessionSnapshot(
+          sessionId: 's1',
+          user: user,
+          currentCompanyId: 'c1',
+          companies: companies,
+          roles: const [],
+          permissions: const {},
+          capturedAt: DateTime.now(),
+        );
 
-      final mockController = AuthControllerMock(
-        AuthState(
-          status: AuthStatus.authenticated,
-          session: session,
-        ),
-      );
+        final mockController = AuthControllerMock(
+          AuthState(status: AuthStatus.authenticated, session: session),
+        );
 
-      final container = ProviderContainer(
-        overrides: [
-          authStateProvider.overrideWith((ref) => mockController),
-        ],
-      );
+        final container = ProviderContainer(
+          overrides: [authStateProvider.overrideWith((ref) => mockController)],
+        );
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => ElevatedButton(
-                  onPressed: () => CompanySelectionSheet.show(context),
-                  child: const Text('Open Sheet'),
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Builder(
+                  builder: (context) => ElevatedButton(
+                    onPressed: () => CompanySelectionSheet.show(context),
+                    child: const Text('Open Sheet'),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('Open Sheet'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Open Sheet'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Company Alpha'), findsOneWidget);
-      expect(find.text('Company Beta'), findsOneWidget);
-    });
+        expect(find.text('Company Alpha'), findsOneWidget);
+        expect(find.text('Company Beta'), findsOneWidget);
+      },
+    );
   });
 }
 
 class AuthControllerMock extends AuthController {
   AuthControllerMock(AuthState initialState)
-      : super(
-          local: FakeLocalAuthRepo(),
-          remote: FakeAuthRepoImpl(),
-        ) {
+    : super(local: FakeLocalAuthRepo(), remote: FakeAuthRepoImpl()) {
     replaceStateForTest(initialState);
   }
 

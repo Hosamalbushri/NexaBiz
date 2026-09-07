@@ -73,15 +73,20 @@ class AuthorizationContext {
     required EntitlementCapability capability,
   }) {
     if (isExpired) return false;
-    if (userStatus != 'active' || companyMembershipStatus != 'active') return false;
+    if (userStatus != 'active' || companyMembershipStatus != 'active')
+      return false;
 
     if (capability == EntitlementCapability.sync) {
-      if (!isTimeTrusted || requiresReverification || !isOfflineGraceActive || temporalTrustState == 'tampered') {
+      if (!isTimeTrusted ||
+          requiresReverification ||
+          !isOfflineGraceActive ||
+          temporalTrustState == 'tampered') {
         return false;
       }
     }
 
-    return permissions.contains(permission) && entitlement.hasCapability(capability);
+    return permissions.contains(permission) &&
+        entitlement.hasCapability(capability);
   }
 
   /// Factory constructor to build context from a session snapshot and entitlement.
@@ -103,8 +108,8 @@ class AuthorizationContext {
     final membershipStatus = activeMembership != null
         ? activeMembership.status
         : (companyContext != null
-            ? 'active'
-            : (session.user.isSystemAdmin ? 'active' : 'inactive'));
+              ? 'active'
+              : (session.user.isSystemAdmin ? 'active' : 'inactive'));
 
     return AuthorizationContext(
       userId: session.user.id,

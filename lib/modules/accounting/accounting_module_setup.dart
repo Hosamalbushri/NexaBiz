@@ -39,7 +39,8 @@ const accountingPackageSetupDefinition = PackageSetupDefinition(
       packageId: 'accounting',
       titleAr: 'ربط الحسابات الافتراضية',
       titleEn: 'Chart of Accounts Mapping',
-      descriptionAr: 'اختيار الحسابات التلقائية لعمليات النظام من شجرة الحسابات',
+      descriptionAr:
+          'اختيار الحسابات التلقائية لعمليات النظام من شجرة الحسابات',
       descriptionEn: 'Map automatic operational accounts from CoA tree',
       sortOrder: 30,
       fields: [

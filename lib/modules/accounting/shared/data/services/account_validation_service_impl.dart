@@ -22,7 +22,9 @@ class AccountValidationServiceImpl implements AccountValidationService {
   }
 
   @override
-  Future<AccountValidationResult> validateAccountUuid(String accountUuid) async {
+  Future<AccountValidationResult> validateAccountUuid(
+    String accountUuid,
+  ) async {
     final trimmed = accountUuid.trim();
     if (trimmed.isEmpty) {
       return const AccountValidationResult(
@@ -34,7 +36,8 @@ class AccountValidationServiceImpl implements AccountValidationService {
     if (account == null) {
       return AccountValidationResult(
         isValid: false,
-        errorMessage: 'الحساب المخزن برقم ($trimmed) غير موجود في الدليل المحاسبي',
+        errorMessage:
+            'الحساب المخزن برقم ($trimmed) غير موجود في الدليل المحاسبي',
       );
     }
     if (account.isDeleted) {
@@ -46,13 +49,15 @@ class AccountValidationServiceImpl implements AccountValidationService {
     if (!account.isActive) {
       return AccountValidationResult(
         isValid: false,
-        errorMessage: 'الحساب (${account.accountCode} - ${account.name}) غير نشط',
+        errorMessage:
+            'الحساب (${account.accountCode} - ${account.name}) غير نشط',
       );
     }
     if (account.isGroup) {
       return AccountValidationResult(
         isValid: false,
-        errorMessage: 'الحساب (${account.accountCode} - ${account.name}) حساب رئيسي (مجموعة) ولا يمكن الترحيل عليه',
+        errorMessage:
+            'الحساب (${account.accountCode} - ${account.name}) حساب رئيسي (مجموعة) ولا يمكن الترحيل عليه',
       );
     }
     return AccountValidationResult.valid;
@@ -62,7 +67,9 @@ class AccountValidationServiceImpl implements AccountValidationService {
   Future<void> assertCanPost(String accountUuid) async {
     final result = await validateAccountUuid(accountUuid);
     if (!result.isValid) {
-      throw StateError(result.errorMessage ?? 'الحساب غير صالح للترحيل المحاسبي');
+      throw StateError(
+        result.errorMessage ?? 'الحساب غير صالح للترحيل المحاسبي',
+      );
     }
   }
 }

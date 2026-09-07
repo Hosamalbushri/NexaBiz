@@ -19,8 +19,9 @@ class CurrencyRates extends Table {
 
   TextColumn get notes => text().nullable()();
 
-  TextColumn get syncStatus =>
-      text().withLength(min: 1, max: 16).withDefault(const Constant('synced'))();
+  TextColumn get syncStatus => text()
+      .withLength(min: 1, max: 16)
+      .withDefault(const Constant('synced'))();
 
   IntColumn get lastSyncedAt => integer().nullable()();
 

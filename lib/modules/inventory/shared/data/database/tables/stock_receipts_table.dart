@@ -8,8 +8,7 @@ class StockReceipts extends Table {
   /// Client-generated UUID for offline-safe identity / sync.
   TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
 
-  TextColumn get receiptNumber =>
-      text().withLength(min: 1, max: 128)();
+  TextColumn get receiptNumber => text().withLength(min: 1, max: 128)();
 
   TextColumn get supplier => text().nullable()();
 
@@ -17,11 +16,9 @@ class StockReceipts extends Table {
 
   TextColumn get accountName => text().nullable()();
 
-  TextColumn get currencyCode =>
-      text().withDefault(const Constant('YER'))();
+  TextColumn get currencyCode => text().withDefault(const Constant('YER'))();
 
-  RealColumn get exchangeRate =>
-      real().withDefault(const Constant(1.0))();
+  RealColumn get exchangeRate => real().withDefault(const Constant(1.0))();
 
   TextColumn get warehouse => text().nullable()();
 
@@ -34,8 +31,7 @@ class StockReceipts extends Table {
   IntColumn get updatedAt => integer()();
 
   /// [SyncStatus.name] string.
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant('synced'))();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
 
   IntColumn get lastSyncedAt => integer().nullable()();
 

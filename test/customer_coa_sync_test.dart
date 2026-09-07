@@ -19,7 +19,6 @@ import 'package:stock_count/modules/customers/data/sync/customers_sync_handlers.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late Directory tempDir;
   late AccountingDatabase accountingDb;
   late AccountRepositoryImpl accounts;
@@ -55,124 +54,133 @@ void main() {
     }
   });
 
-  test('applyRemotePayload remounts via code prefix when parentAccountCode absent',
-      () async {
-    final localParent = await linkPort.findSystemCustomersParent();
-    expect(localParent, isNotNull);
+  test(
+    'applyRemotePayload remounts via code prefix when parentAccountCode absent',
+    () async {
+      final localParent = await linkPort.findSystemCustomersParent();
+      expect(localParent, isNotNull);
 
-    const remoteAccountUuid = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa01';
-    await accounts.applyRemotePayload({
-      'uuid': remoteAccountUuid,
-      'parentId': 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      'accountCode': '12215501',
-      'name': 'بدون parentAccountCode',
-      'accountType': 'asset',
-      'normalBalance': 'debit',
-      'level': 4,
-      'isGroup': false,
-      'isActive': true,
-      'isSystemAccount': false,
-      'version': 1,
-      'updatedAt': DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
-    });
+      const remoteAccountUuid = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa01';
+      await accounts.applyRemotePayload({
+        'uuid': remoteAccountUuid,
+        'parentId': 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        'accountCode': '12215501',
+        'name': 'بدون parentAccountCode',
+        'accountType': 'asset',
+        'normalBalance': 'debit',
+        'level': 4,
+        'isGroup': false,
+        'isActive': true,
+        'isSystemAccount': false,
+        'version': 1,
+        'updatedAt': DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
+      });
 
-    final created = await accounts.getByUuid(remoteAccountUuid);
-    expect(created!.parentId, localParent!.accountId);
-  });
+      final created = await accounts.getByUuid(remoteAccountUuid);
+      expect(created!.parentId, localParent!.accountId);
+    },
+  );
 
-  test('applyRemotePayload remounts under local parent via parentAccountCode',
-      () async {
-    final localParent = await linkPort.findSystemCustomersParent();
-    expect(localParent, isNotNull);
+  test(
+    'applyRemotePayload remounts under local parent via parentAccountCode',
+    () async {
+      final localParent = await linkPort.findSystemCustomersParent();
+      expect(localParent, isNotNull);
 
-    const remoteParentUuid = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
-    const remoteAccountUuid = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+      const remoteParentUuid = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+      const remoteAccountUuid = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
-    await accounts.applyRemotePayload({
-      'uuid': remoteAccountUuid,
-      'parentId': remoteParentUuid,
-      'parentAccountCode': localParent!.code,
-      'accountCode': '12219901',
-      'name': 'عميل من جهاز آخر',
-      'accountType': 'asset',
-      'normalBalance': 'debit',
-      'level': 4,
-      'isGroup': false,
-      'isActive': true,
-      'isSystemAccount': false,
-      'version': 1,
-      'updatedAt': DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
-    });
+      await accounts.applyRemotePayload({
+        'uuid': remoteAccountUuid,
+        'parentId': remoteParentUuid,
+        'parentAccountCode': localParent!.code,
+        'accountCode': '12219901',
+        'name': 'عميل من جهاز آخر',
+        'accountType': 'asset',
+        'normalBalance': 'debit',
+        'level': 4,
+        'isGroup': false,
+        'isActive': true,
+        'isSystemAccount': false,
+        'version': 1,
+        'updatedAt': DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
+      });
 
-    final created = await accounts.getByUuid(remoteAccountUuid);
-    expect(created, isNotNull);
-    expect(created!.parentId, localParent.accountId);
+      final created = await accounts.getByUuid(remoteAccountUuid);
+      expect(created, isNotNull);
+      expect(created!.parentId, localParent.accountId);
 
-    final forest = AccountTreeNode.buildForest(await accounts.getAll());
-    var foundUnderParent = false;
-    void walk(AccountTreeNode node) {
-      if (node.account.uuid == localParent.accountId) {
-        foundUnderParent = node.children.any(
-          (c) => c.account.uuid == remoteAccountUuid,
-        );
+      final forest = AccountTreeNode.buildForest(await accounts.getAll());
+      var foundUnderParent = false;
+      void walk(AccountTreeNode node) {
+        if (node.account.uuid == localParent.accountId) {
+          foundUnderParent = node.children.any(
+            (c) => c.account.uuid == remoteAccountUuid,
+          );
+        }
+        for (final child in node.children) {
+          walk(child);
+        }
       }
-      for (final child in node.children) {
-        walk(child);
+
+      for (final root in forest) {
+        walk(root);
       }
-    }
+      expect(foundUnderParent, isTrue);
+    },
+  );
 
-    for (final root in forest) {
-      walk(root);
-    }
-    expect(foundUnderParent, isTrue);
-  });
+  test(
+    'customer remote ensure creates missing CoA account under local parent',
+    () async {
+      final ensure = CustomerRemoteAccountEnsure(
+        accounts: accounts,
+        accountLink: linkPort,
+        settings: settings,
+      );
+      final customersDb = CustomersDatabase.memory();
+      final customers = CustomerRepositoryImpl(
+        customersDb,
+        syncQueue: syncQueue,
+      );
+      final handler = CustomerSyncHandler(
+        repository: customers,
+        remoteProvider: () => InMemoryRemoteSyncApi(),
+        ensureLinkedAccount: ensure.ensureFromCustomerPayload,
+      );
 
-  test('customer remote ensure creates missing CoA account under local parent',
-      () async {
-    final ensure = CustomerRemoteAccountEnsure(
-      accounts: accounts,
-      accountLink: linkPort,
-      settings: settings,
-    );
-    final customersDb = CustomersDatabase.memory();
-    final customers = CustomerRepositoryImpl(customersDb, syncQueue: syncQueue);
-    final handler = CustomerSyncHandler(
-      repository: customers,
-      remoteProvider: () => InMemoryRemoteSyncApi(),
-      ensureLinkedAccount: ensure.ensureFromCustomerPayload,
-    );
+      const accountUuid = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+      const customerUuid = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 
-    const accountUuid = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
-    const customerUuid = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+      await handler.applyRemoteChange(
+        SyncRemoteChange(
+          entityId: customerUuid,
+          version: 1,
+          updatedAt: DateTime.utc(2026, 8, 15),
+          deleted: false,
+          payload: {
+            'customerCode': '12218801',
+            'name': 'عميل مزامن',
+            'isActive': true,
+            'accountId': accountUuid,
+            'dataSource': 'local',
+          },
+        ),
+      );
 
-    await handler.applyRemoteChange(
-      SyncRemoteChange(
-        entityId: customerUuid,
-        version: 1,
-        updatedAt: DateTime.utc(2026, 8, 15),
-        deleted: false,
-        payload: {
-          'customerCode': '12218801',
-          'name': 'عميل مزامن',
-          'isActive': true,
-          'accountId': accountUuid,
-          'dataSource': 'local',
-        },
-      ),
-    );
+      final customer = await customers.getByUuid(customerUuid);
+      expect(customer, isNotNull);
+      expect(customer!.accountId, accountUuid);
 
-    final customer = await customers.getByUuid(customerUuid);
-    expect(customer, isNotNull);
-    expect(customer!.accountId, accountUuid);
+      final account = await accounts.getByUuid(accountUuid);
+      expect(account, isNotNull);
+      final parent = await linkPort.findSystemCustomersParent();
+      expect(account!.parentId, parent!.accountId);
+      expect(account.accountCode, '12218801');
 
-    final account = await accounts.getByUuid(accountUuid);
-    expect(account, isNotNull);
-    final parent = await linkPort.findSystemCustomersParent();
-    expect(account!.parentId, parent!.accountId);
-    expect(account.accountCode, '12218801');
-
-    await customersDb.close();
-  });
+      await customersDb.close();
+    },
+  );
 
   test('customer remote ensure remounts orphan account', () async {
     final ensure = CustomerRemoteAccountEnsure(
@@ -184,24 +192,26 @@ void main() {
 
     // Code without a local group prefix → stays orphan until customer ensure.
     const accountUuid = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
-    await accountingDb.into(accountingDb.accounts).insert(
-      AccountsCompanion.insert(
-        uuid: accountUuid,
-        parentId: const Value('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
-        accountCode: 'ORPHAN01',
-        name: 'يتيم',
-        accountType: 'asset',
-        normalBalance: 'debit',
-        level: const Value(4),
-        isGroup: const Value(false),
-        isActive: const Value(true),
-        isSystemAccount: const Value(false),
-        createdAt: DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
-        updatedAt: DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
-        syncStatus: const Value('synced'),
-        version: const Value(1),
-      ),
-    );
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
+          AccountsCompanion.insert(
+            uuid: accountUuid,
+            parentId: const Value('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+            accountCode: 'ORPHAN01',
+            name: 'يتيم',
+            accountType: 'asset',
+            normalBalance: 'debit',
+            level: const Value(4),
+            isGroup: const Value(false),
+            isActive: const Value(true),
+            isSystemAccount: const Value(false),
+            createdAt: DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
+            updatedAt: DateTime.utc(2026, 8, 15).millisecondsSinceEpoch,
+            syncStatus: const Value('synced'),
+            version: const Value(1),
+          ),
+        );
 
     var orphan = await accounts.getByUuid(accountUuid);
     expect(orphan!.parentId, isNot(parent!.accountId));

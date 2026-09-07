@@ -44,148 +44,169 @@ void main() {
       }
     });
 
-    test('1. OFFLINE CREATE: Customer stored locally, outbox operation queued, status pending', () async {
-      final draft = const CustomerDraft(
-        customerCode: '12210060',
-        name: 'عميل إنشاء أوفلاين',
-        phone: '+966501112223',
-      );
+    test(
+      '1. OFFLINE CREATE: Customer stored locally, outbox operation queued, status pending',
+      () async {
+        final draft = const CustomerDraft(
+          customerCode: '12210060',
+          name: 'عميل إنشاء أوفلاين',
+          phone: '+966501112223',
+        );
 
-      final created = await repo.insert(draft);
+        final created = await repo.insert(draft);
 
-      expect(created.id, greaterThan(0));
-      expect(created.syncStatus, equals(SyncStatus.pending));
-      expect(created.companyId, equals('comp_offline_A'));
+        expect(created.id, greaterThan(0));
+        expect(created.syncStatus, equals(SyncStatus.pending));
+        expect(created.companyId, equals('comp_offline_A'));
 
-      final pendingOps = await queue.peekAll();
-      expect(pendingOps, hasLength(1));
-      expect(pendingOps.first.type, equals(SyncOperationType.create));
-      expect(pendingOps.first.payload['uuid'], equals(created.uuid));
-      expect(pendingOps.first.payload['companyId'], equals('comp_offline_A'));
-    });
+        final pendingOps = await queue.peekAll();
+        expect(pendingOps, hasLength(1));
+        expect(pendingOps.first.type, equals(SyncOperationType.create));
+        expect(pendingOps.first.payload['uuid'], equals(created.uuid));
+        expect(pendingOps.first.payload['companyId'], equals('comp_offline_A'));
+      },
+    );
 
-    test('2. OFFLINE UPDATE: Entity updated, version incremented, outbox operation queued', () async {
-      final created = await repo.insert(
-        const CustomerDraft(
-          customerCode: '12210061',
-          name: 'عميل أوفلاين قبل التحديث',
-        ),
-      );
+    test(
+      '2. OFFLINE UPDATE: Entity updated, version incremented, outbox operation queued',
+      () async {
+        final created = await repo.insert(
+          const CustomerDraft(
+            customerCode: '12210061',
+            name: 'عميل أوفلاين قبل التحديث',
+          ),
+        );
 
-      final updated = await repo.update(
-        created.id,
-        created.toDraft().copyWith(name: 'عميل أوفلاين بعد التحديث'),
-      );
+        final updated = await repo.update(
+          created.id,
+          created.toDraft().copyWith(name: 'عميل أوفلاين بعد التحديث'),
+        );
 
-      expect(updated.name, equals('عميل أوفلاين بعد التحديث'));
-      expect(updated.version, equals(created.version + 1));
-      expect(updated.syncStatus, equals(SyncStatus.pending));
+        expect(updated.name, equals('عميل أوفلاين بعد التحديث'));
+        expect(updated.version, equals(created.version + 1));
+        expect(updated.syncStatus, equals(SyncStatus.pending));
 
-      final pendingOps = await queue.peekAll();
-      expect(pendingOps.length, greaterThanOrEqualTo(1));
-      expect(pendingOps.first.payload['name'], equals('عميل أوفلاين بعد التحديث'));
-    });
+        final pendingOps = await queue.peekAll();
+        expect(pendingOps.length, greaterThanOrEqualTo(1));
+        expect(
+          pendingOps.first.payload['name'],
+          equals('عميل أوفلاين بعد التحديث'),
+        );
+      },
+    );
 
-    test('3. OFFLINE SOFT DELETE & OUTBOX COALESCING: Coalesces un-synced creations, queues delete for synced entities', () async {
-      // Scenario 3a: Never-synced local creation + softDelete -> Outbox coalesced (queue cleared)
-      final unSynced = await repo.insert(
-        const CustomerDraft(
-          customerCode: '12210062',
-          name: 'عميل أوفلاين غير مزامن للحذف',
-        ),
-      );
-      await repo.softDelete(unSynced.id);
-      final hiddenFromGet = await repo.getById(unSynced.id);
-      expect(hiddenFromGet, isNull);
-      final opsAfterCoalesce = await queue.peekAll();
-      expect(opsAfterCoalesce, isEmpty); // Drop create + drop delete
+    test(
+      '3. OFFLINE SOFT DELETE & OUTBOX COALESCING: Coalesces un-synced creations, queues delete for synced entities',
+      () async {
+        // Scenario 3a: Never-synced local creation + softDelete -> Outbox coalesced (queue cleared)
+        final unSynced = await repo.insert(
+          const CustomerDraft(
+            customerCode: '12210062',
+            name: 'عميل أوفلاين غير مزامن للحذف',
+          ),
+        );
+        await repo.softDelete(unSynced.id);
+        final hiddenFromGet = await repo.getById(unSynced.id);
+        expect(hiddenFromGet, isNull);
+        final opsAfterCoalesce = await queue.peekAll();
+        expect(opsAfterCoalesce, isEmpty); // Drop create + drop delete
 
-      // Scenario 3b: Synced customer + softDelete -> Queues delete operation
-      const syncedUuid = '44444444-5555-6666-7777-888888888888';
-      await repo.applyRemotePayload(<String, dynamic>{
-        'uuid': syncedUuid,
-        'companyId': 'comp_offline_A',
-        'customerCode': '12210065',
-        'name': 'عميل مزامن سابقاً للحذف',
-        'status': 'active',
-        'version': 1,
-      });
+        // Scenario 3b: Synced customer + softDelete -> Queues delete operation
+        const syncedUuid = '44444444-5555-6666-7777-888888888888';
+        await repo.applyRemotePayload(<String, dynamic>{
+          'uuid': syncedUuid,
+          'companyId': 'comp_offline_A',
+          'customerCode': '12210065',
+          'name': 'عميل مزامن سابقاً للحذف',
+          'status': 'active',
+          'version': 1,
+        });
 
-      final syncedCustomer = await repo.getByUuid(syncedUuid);
-      expect(syncedCustomer, isNotNull);
+        final syncedCustomer = await repo.getByUuid(syncedUuid);
+        expect(syncedCustomer, isNotNull);
 
-      await repo.softDelete(syncedCustomer!.id);
+        await repo.softDelete(syncedCustomer!.id);
 
-      final opsAfterDelete = await queue.peekAll();
-      expect(opsAfterDelete, hasLength(1));
-      expect(opsAfterDelete.first.type, equals(SyncOperationType.delete));
-      expect(opsAfterDelete.first.payload['uuid'], equals(syncedUuid));
+        final opsAfterDelete = await queue.peekAll();
+        expect(opsAfterDelete, hasLength(1));
+        expect(opsAfterDelete.first.type, equals(SyncOperationType.delete));
+        expect(opsAfterDelete.first.payload['uuid'], equals(syncedUuid));
 
-      // Restore retrieves tombstone and clears deletedAt
-      final restored = await repo.restore(syncedCustomer.id);
-      expect(restored.deletedAt, isNull);
-      expect(restored.syncStatus, equals(SyncStatus.pending));
-    });
+        // Restore retrieves tombstone and clears deletedAt
+        final restored = await repo.restore(syncedCustomer.id);
+        expect(restored.deletedAt, isNull);
+        expect(restored.syncStatus, equals(SyncStatus.pending));
+      },
+    );
 
-    test('4. IDEMPOTENT RETRY: Applying remote payload multiple times with same UUID does not duplicate DB rows', () async {
-      const targetUuid = '22222222-3333-4444-5555-666666666666';
-      final remotePayload = <String, dynamic>{
-        'uuid': targetUuid,
-        'companyId': 'comp_offline_A',
-        'customerCode': '12210063',
-        'name': 'عميل مزامنة متكرر',
-        'status': 'active',
-        'version': 1,
-      };
+    test(
+      '4. IDEMPOTENT RETRY: Applying remote payload multiple times with same UUID does not duplicate DB rows',
+      () async {
+        const targetUuid = '22222222-3333-4444-5555-666666666666';
+        final remotePayload = <String, dynamic>{
+          'uuid': targetUuid,
+          'companyId': 'comp_offline_A',
+          'customerCode': '12210063',
+          'name': 'عميل مزامنة متكرر',
+          'status': 'active',
+          'version': 1,
+        };
 
-      // First sync application
-      await repo.applyRemotePayload(remotePayload);
-      final firstFetch = await repo.getByUuid(targetUuid);
-      expect(firstFetch, isNotNull);
+        // First sync application
+        await repo.applyRemotePayload(remotePayload);
+        final firstFetch = await repo.getByUuid(targetUuid);
+        expect(firstFetch, isNotNull);
 
-      // Retry sync application with identical payload
-      await repo.applyRemotePayload(remotePayload);
+        // Retry sync application with identical payload
+        await repo.applyRemotePayload(remotePayload);
 
-      // Verify still exactly one record with this UUID and code
-      final searchResults = await repo.search('12210063', includeInactive: true);
-      expect(searchResults, hasLength(1));
-      expect(searchResults.first.uuid, equals(targetUuid));
-    });
+        // Verify still exactly one record with this UUID and code
+        final searchResults = await repo.search(
+          '12210063',
+          includeInactive: true,
+        );
+        expect(searchResults, hasLength(1));
+        expect(searchResults.first.uuid, equals(targetUuid));
+      },
+    );
 
-    test('5. CONFLICT INTEGRITY: Remote sync on locally edited entity triggers conflict marker', () async {
-      const targetUuid = '33333333-4444-5555-6666-777777777777';
+    test(
+      '5. CONFLICT INTEGRITY: Remote sync on locally edited entity triggers conflict marker',
+      () async {
+        const targetUuid = '33333333-4444-5555-6666-777777777777';
 
-      // Insert customer locally
-      final created = await repo.insert(
-        const CustomerDraft(
-          customerCode: '12210064',
-          name: 'عميل تعديل محلي معلق',
-        ),
-      );
+        // Insert customer locally
+        final created = await repo.insert(
+          const CustomerDraft(
+            customerCode: '12210064',
+            name: 'عميل تعديل محلي معلق',
+          ),
+        );
 
-      // Simulate local un-synced edit state
-      expect(created.syncStatus, equals(SyncStatus.pending));
+        // Simulate local un-synced edit state
+        expect(created.syncStatus, equals(SyncStatus.pending));
 
-      // Incoming remote payload with higher version
-      final remotePayload = <String, dynamic>{
-        'uuid': created.uuid,
-        'companyId': 'comp_offline_A',
-        'customerCode': '12210064',
-        'name': 'عميل تعديل من السيرفر',
-        'status': 'active',
-        'version': 5,
-      };
+        // Incoming remote payload with higher version
+        final remotePayload = <String, dynamic>{
+          'uuid': created.uuid,
+          'companyId': 'comp_offline_A',
+          'customerCode': '12210064',
+          'name': 'عميل تعديل من السيرفر',
+          'status': 'active',
+          'version': 5,
+        };
 
-      await repo.applyRemotePayload(remotePayload);
+        await repo.applyRemotePayload(remotePayload);
 
-      // Must be marked as conflict to prevent silent clobbering of un-synced local data
-      final fetchedAfterSync = await repo.getByUuid(created.uuid);
-      expect(fetchedAfterSync, isNotNull);
-      expect(
-        fetchedAfterSync!.syncStatus == SyncStatus.conflict ||
-            fetchedAfterSync.syncStatus == SyncStatus.pending,
-        isTrue,
-      );
-    });
+        // Must be marked as conflict to prevent silent clobbering of un-synced local data
+        final fetchedAfterSync = await repo.getByUuid(created.uuid);
+        expect(fetchedAfterSync, isNotNull);
+        expect(
+          fetchedAfterSync!.syncStatus == SyncStatus.conflict ||
+              fetchedAfterSync.syncStatus == SyncStatus.pending,
+          isTrue,
+        );
+      },
+    );
   });
 }

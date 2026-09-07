@@ -43,8 +43,7 @@ class _FakeCurrencyRateRepository implements CurrencyRateRepository {
   Future<List<CurrencyRateHistoryEntry>> listHistory(
     String currencyCode, {
     int limit = 30,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<CurrencyRate> upsert(CurrencyRateDraft draft) async {
@@ -73,49 +72,61 @@ void main() {
       baseAmountResolver = JournalBaseAmountResolver(rateRepo);
     });
 
-    test('1. Zero exchange rate foreign currency transaction throws InvalidExchangeRateException', () {
-      expect(
-        () => ExchangeRateValidator.validate(
-          currencyCode: 'USD',
-          baseCurrencyCode: 'SAR',
-          exchangeRate: 0.0,
-        ),
-        throwsA(isA<InvalidExchangeRateException>()),
-      );
-    });
+    test(
+      '1. Zero exchange rate foreign currency transaction throws InvalidExchangeRateException',
+      () {
+        expect(
+          () => ExchangeRateValidator.validate(
+            currencyCode: 'USD',
+            baseCurrencyCode: 'SAR',
+            exchangeRate: 0.0,
+          ),
+          throwsA(isA<InvalidExchangeRateException>()),
+        );
+      },
+    );
 
-    test('2. Negative exchange rate foreign currency transaction throws InvalidExchangeRateException', () {
-      expect(
-        () => ExchangeRateValidator.validate(
-          currencyCode: 'USD',
-          baseCurrencyCode: 'SAR',
-          exchangeRate: -3.75,
-        ),
-        throwsA(isA<InvalidExchangeRateException>()),
-      );
-    });
+    test(
+      '2. Negative exchange rate foreign currency transaction throws InvalidExchangeRateException',
+      () {
+        expect(
+          () => ExchangeRateValidator.validate(
+            currencyCode: 'USD',
+            baseCurrencyCode: 'SAR',
+            exchangeRate: -3.75,
+          ),
+          throwsA(isA<InvalidExchangeRateException>()),
+        );
+      },
+    );
 
-    test('3. NaN exchange rate foreign currency transaction throws InvalidExchangeRateException', () {
-      expect(
-        () => ExchangeRateValidator.validate(
-          currencyCode: 'USD',
-          baseCurrencyCode: 'SAR',
-          exchangeRate: double.nan,
-        ),
-        throwsA(isA<InvalidExchangeRateException>()),
-      );
-    });
+    test(
+      '3. NaN exchange rate foreign currency transaction throws InvalidExchangeRateException',
+      () {
+        expect(
+          () => ExchangeRateValidator.validate(
+            currencyCode: 'USD',
+            baseCurrencyCode: 'SAR',
+            exchangeRate: double.nan,
+          ),
+          throwsA(isA<InvalidExchangeRateException>()),
+        );
+      },
+    );
 
-    test('4. Infinity exchange rate foreign currency transaction throws InvalidExchangeRateException', () {
-      expect(
-        () => ExchangeRateValidator.validate(
-          currencyCode: 'USD',
-          baseCurrencyCode: 'SAR',
-          exchangeRate: double.infinity,
-        ),
-        throwsA(isA<InvalidExchangeRateException>()),
-      );
-    });
+    test(
+      '4. Infinity exchange rate foreign currency transaction throws InvalidExchangeRateException',
+      () {
+        expect(
+          () => ExchangeRateValidator.validate(
+            currencyCode: 'USD',
+            baseCurrencyCode: 'SAR',
+            exchangeRate: double.infinity,
+          ),
+          throwsA(isA<InvalidExchangeRateException>()),
+        );
+      },
+    );
 
     test('5. Valid foreign currency exchange rate processes correctly', () {
       final rate = ExchangeRateValidator.validate(
@@ -130,21 +141,25 @@ void main() {
       final rate = ExchangeRateValidator.validate(
         currencyCode: 'SAR',
         baseCurrencyCode: 'SAR',
-        exchangeRate: 0.0, // base currency normalized to 1.0 regardless of exchangeRate input
+        exchangeRate:
+            0.0, // base currency normalized to 1.0 regardless of exchangeRate input
       );
       expect(rate, 1.0);
     });
 
-    test('7. High precision FX rate rounding preserves 6-decimal precision', () {
-      const highPrecisionRate = 3.750123;
-      final rounded = JournalMoney.roundFxRate(highPrecisionRate);
-      expect(rounded, 3.750123);
+    test(
+      '7. High precision FX rate rounding preserves 6-decimal precision',
+      () {
+        const highPrecisionRate = 3.750123;
+        final rounded = JournalMoney.roundFxRate(highPrecisionRate);
+        expect(rounded, 3.750123);
 
-      expect(
-        () => JournalMoney.roundFxRate(0.0),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
+        expect(
+          () => JournalMoney.roundFxRate(0.0),
+          throwsA(isA<ArgumentError>()),
+        );
+      },
+    );
 
     test('8. Tax rounding determinism ensures exact cent rounding', () {
       const subtotal = 100.333;
@@ -157,87 +172,97 @@ void main() {
     test('9. Discount rounding determinism ensures exact cent rounding', () {
       const originalAmount = 250.777;
       const discountPercentage = 10.0;
-      final rawDiscount = originalAmount * (discountPercentage / 100); // 25.0777
+      final rawDiscount =
+          originalAmount * (discountPercentage / 100); // 25.0777
       final roundedDiscount = JournalMoney.round(rawDiscount);
       expect(roundedDiscount, 25.08);
     });
 
-    test('10. Debit/Credit equality invariant: balancing minor unit disparity in multi-line foreign journal', () async {
-      final lines = [
-        JournalLineDraft(
-          accountUuid: 'acc-debit-1',
-          debit: 33.33,
-          credit: 0,
-          currencyCode: 'USD',
-          exchangeRateToBase: 3.75,
-        ),
-        JournalLineDraft(
-          accountUuid: 'acc-debit-2',
-          debit: 33.33,
-          credit: 0,
-          currencyCode: 'USD',
-          exchangeRateToBase: 3.75,
-        ),
-        JournalLineDraft(
-          accountUuid: 'acc-credit-1',
-          debit: 0,
-          credit: 66.66,
-          currencyCode: 'USD',
-          exchangeRateToBase: 3.75,
-        ),
-      ];
+    test(
+      '10. Debit/Credit equality invariant: balancing minor unit disparity in multi-line foreign journal',
+      () async {
+        final lines = [
+          JournalLineDraft(
+            accountUuid: 'acc-debit-1',
+            debit: 33.33,
+            credit: 0,
+            currencyCode: 'USD',
+            exchangeRateToBase: 3.75,
+          ),
+          JournalLineDraft(
+            accountUuid: 'acc-debit-2',
+            debit: 33.33,
+            credit: 0,
+            currencyCode: 'USD',
+            exchangeRateToBase: 3.75,
+          ),
+          JournalLineDraft(
+            accountUuid: 'acc-credit-1',
+            debit: 0,
+            credit: 66.66,
+            currencyCode: 'USD',
+            exchangeRateToBase: 3.75,
+          ),
+        ];
 
-      final resolved = await baseAmountResolver.resolve(
-        entryDate: DateTime.now(),
-        baseCurrencyCode: 'SAR',
-        lines: lines,
-      );
-
-      var totalBaseDebit = 0.0;
-      var totalBaseCredit = 0.0;
-      for (final line in resolved) {
-        totalBaseDebit += line.baseDebit ?? 0;
-        totalBaseCredit += line.baseCredit ?? 0;
-      }
-
-      expect(
-        JournalMoney.toCents(totalBaseDebit),
-        JournalMoney.toCents(totalBaseCredit),
-        reason: 'Base Debit sum must equal Base Credit sum exactly',
-      );
-    });
-
-    test('11. Foreign currency journal resolution fails closed when exchange rate unavailable', () async {
-      final lines = [
-        JournalLineDraft(
-          accountUuid: 'acc-1',
-          debit: 100,
-          credit: 0,
-          currencyCode: 'EUR', // Unmapped currency, no rate provided
-          exchangeRateToBase: 0.0,
-        ),
-      ];
-
-      expect(
-        () => baseAmountResolver.resolve(
+        final resolved = await baseAmountResolver.resolve(
           entryDate: DateTime.now(),
           baseCurrencyCode: 'SAR',
           lines: lines,
-        ),
-        throwsA(isA<InvalidExchangeRateException>()),
-      );
-    });
+        );
 
-    test('12. SaleCurrencyConverter rejects non-positive or invalid exchange rate', () {
-      const converter = SaleCurrencyConverter();
-      expect(
-        () => converter.baseToSale(100.0, 0.0),
-        throwsA(isA<InvalidExchangeRateException>()),
-      );
-      expect(
-        () => converter.saleToBase(100.0, -1.0),
-        throwsA(isA<InvalidExchangeRateException>()),
-      );
-    });
+        var totalBaseDebit = 0.0;
+        var totalBaseCredit = 0.0;
+        for (final line in resolved) {
+          totalBaseDebit += line.baseDebit ?? 0;
+          totalBaseCredit += line.baseCredit ?? 0;
+        }
+
+        expect(
+          JournalMoney.toCents(totalBaseDebit),
+          JournalMoney.toCents(totalBaseCredit),
+          reason: 'Base Debit sum must equal Base Credit sum exactly',
+        );
+      },
+    );
+
+    test(
+      '11. Foreign currency journal resolution fails closed when exchange rate unavailable',
+      () async {
+        final lines = [
+          JournalLineDraft(
+            accountUuid: 'acc-1',
+            debit: 100,
+            credit: 0,
+            currencyCode: 'EUR', // Unmapped currency, no rate provided
+            exchangeRateToBase: 0.0,
+          ),
+        ];
+
+        expect(
+          () => baseAmountResolver.resolve(
+            entryDate: DateTime.now(),
+            baseCurrencyCode: 'SAR',
+            lines: lines,
+          ),
+          throwsA(isA<InvalidExchangeRateException>()),
+        );
+      },
+    );
+
+    test(
+      '12. SaleCurrencyConverter rejects non-positive or invalid exchange rate',
+      () {
+        const converter = SaleCurrencyConverter();
+        expect(
+          () => converter.baseToSale(100.0, 0.0),
+          throwsA(isA<InvalidExchangeRateException>()),
+        );
+        expect(
+          () => converter.saleToBase(100.0, -1.0),
+          throwsA(isA<InvalidExchangeRateException>()),
+        );
+      },
+    );
   });
 }

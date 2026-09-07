@@ -4,10 +4,8 @@ import 'package:stock_count/modules/inventory/shared/data/database/inventory_dat
 import '../../domain/services/stock_validation_service.dart';
 
 class StockValidationServiceImpl implements StockValidationService {
-  StockValidationServiceImpl(
-    this._db, [
-    String Function()? readCompanyId,
-  ]) : _readCompanyId = readCompanyId;
+  StockValidationServiceImpl(this._db, [String Function()? readCompanyId])
+    : _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final String Function()? _readCompanyId;
@@ -21,11 +19,13 @@ class StockValidationServiceImpl implements StockValidationService {
     String? warehouseId,
   }) async {
     final query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) =>
-          tbl.itemCode.equals(itemCode) &
-          tbl.companyId.equals(_currentCompanyId) &
-          tbl.closed.equals(0) &
-          tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            tbl.itemCode.equals(itemCode) &
+            tbl.companyId.equals(_currentCompanyId) &
+            tbl.closed.equals(0) &
+            tbl.deletedAt.isNull(),
+      );
 
     if (warehouseId != null && warehouseId.isNotEmpty) {
       query.where((tbl) => tbl.warehouseId.equals(warehouseId));
@@ -88,14 +88,18 @@ class StockValidationServiceImpl implements StockValidationService {
     String? companyId,
   }) async {
     if (warehouseId == null || warehouseId.trim().isEmpty) {
-      throw StateError('Warehouse selection is mandatory for inventory transaction');
+      throw StateError(
+        'Warehouse selection is mandatory for inventory transaction',
+      );
     }
 
     final targetCompanyId = companyId ?? _currentCompanyId;
 
-    final warehouse = await (_db.select(_db.warehouses)
-          ..where((tbl) => tbl.uuid.equals(warehouseId) & tbl.deletedAt.isNull()))
-        .getSingleOrNull();
+    final warehouse =
+        await (_db.select(_db.warehouses)..where(
+              (tbl) => tbl.uuid.equals(warehouseId) & tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
 
     if (warehouse == null) {
       throw StateError('Warehouse with ID ($warehouseId) does not exist');
@@ -108,7 +112,9 @@ class StockValidationServiceImpl implements StockValidationService {
     }
 
     if (!warehouse.isActive) {
-      throw StateError('Warehouse (${warehouse.name}) is inactive and cannot be used for transactions');
+      throw StateError(
+        'Warehouse (${warehouse.name}) is inactive and cannot be used for transactions',
+      );
     }
   }
 }

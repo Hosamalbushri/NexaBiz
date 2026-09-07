@@ -18,15 +18,15 @@ class ImportResult {
   });
 
   factory ImportResult.empty(String jobId) => ImportResult(
-        jobId: jobId,
-        status: ImportStatus.draft,
-        totalRows: 0,
-        processedRows: 0,
-        successCount: 0,
-        errorCount: 0,
-        warningCount: 0,
-        skippedCount: 0,
-      );
+    jobId: jobId,
+    status: ImportStatus.draft,
+    totalRows: 0,
+    processedRows: 0,
+    successCount: 0,
+    errorCount: 0,
+    warningCount: 0,
+    skippedCount: 0,
+  );
 
   final String jobId;
   final ImportStatus status;

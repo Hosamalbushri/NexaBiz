@@ -21,8 +21,12 @@ void main() {
       final store = SyncLoginCredentialStore();
 
       // Initially disabled
-      final localInitial = await store.isBiometricLoginEnabled(mode: AuthenticationMode.local);
-      final syncInitial = await store.isBiometricLoginEnabled(mode: AuthenticationMode.sync);
+      final localInitial = await store.isBiometricLoginEnabled(
+        mode: AuthenticationMode.local,
+      );
+      final syncInitial = await store.isBiometricLoginEnabled(
+        mode: AuthenticationMode.sync,
+      );
       expect(localInitial, isFalse);
       expect(syncInitial, isFalse);
 
@@ -34,9 +38,18 @@ void main() {
       );
 
       // Local enabled, Sync untouched
-      expect(await store.isBiometricLoginEnabled(mode: AuthenticationMode.local), isTrue);
-      expect(await store.isBiometricLoginEnabled(mode: AuthenticationMode.sync), isFalse);
-      expect(await store.readEmail(mode: AuthenticationMode.local), equals('local_user@nexabiz.com'));
+      expect(
+        await store.isBiometricLoginEnabled(mode: AuthenticationMode.local),
+        isTrue,
+      );
+      expect(
+        await store.isBiometricLoginEnabled(mode: AuthenticationMode.sync),
+        isFalse,
+      );
+      expect(
+        await store.readEmail(mode: AuthenticationMode.local),
+        equals('local_user@nexabiz.com'),
+      );
       expect(await store.readEmail(mode: AuthenticationMode.sync), isNull);
 
       // Save sync credentials
@@ -48,10 +61,22 @@ void main() {
       );
 
       // Both enabled independently
-      expect(await store.isBiometricLoginEnabled(mode: AuthenticationMode.local), isTrue);
-      expect(await store.isBiometricLoginEnabled(mode: AuthenticationMode.sync), isTrue);
-      expect(await store.readEmail(mode: AuthenticationMode.local), equals('local_user@nexabiz.com'));
-      expect(await store.readEmail(mode: AuthenticationMode.sync), equals('sync_admin@company.com'));
+      expect(
+        await store.isBiometricLoginEnabled(mode: AuthenticationMode.local),
+        isTrue,
+      );
+      expect(
+        await store.isBiometricLoginEnabled(mode: AuthenticationMode.sync),
+        isTrue,
+      );
+      expect(
+        await store.readEmail(mode: AuthenticationMode.local),
+        equals('local_user@nexabiz.com'),
+      );
+      expect(
+        await store.readEmail(mode: AuthenticationMode.sync),
+        equals('sync_admin@company.com'),
+      );
 
       await store.clearAll();
     });
@@ -108,7 +133,9 @@ void main() {
     });
 
     test('19-25. InitializationState Machine Transition Invariants', () {
-      var state = const InitializationState(status: InitializationStatus.initializing);
+      var state = const InitializationState(
+        status: InitializationStatus.initializing,
+      );
 
       // Downloading stage
       state = state.copyWith(
@@ -125,7 +152,9 @@ void main() {
       expect(state.currentEntityType, equals('products'));
 
       // Atomic DB write stage
-      state = state.copyWith(status: InitializationStatus.initializingLocalDatabase);
+      state = state.copyWith(
+        status: InitializationStatus.initializingLocalDatabase,
+      );
       expect(state.isWritingDatabase, isTrue);
 
       // Bootstrap completed (before Ready)

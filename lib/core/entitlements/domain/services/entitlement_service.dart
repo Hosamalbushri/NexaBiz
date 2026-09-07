@@ -46,7 +46,9 @@ class EntitlementServiceImpl implements EntitlementService {
 
   @override
   bool hasQuotaRemaining(String meterKey, [int requested = 1]) {
-    return evaluateEffectiveEntitlement(_current).hasQuotaRemaining(meterKey, requested);
+    return evaluateEffectiveEntitlement(
+      _current,
+    ).hasQuotaRemaining(meterKey, requested);
   }
 
   @override
@@ -62,8 +64,10 @@ class EntitlementServiceImpl implements EntitlementService {
     final effective = cached != null
         ? evaluateEffectiveEntitlement(cached)
         : (companyId == 'c0000000-0000-4000-a000-000000000001'
-            ? evaluateEffectiveEntitlement(Entitlement.premiumActive(companyId))
-            : Entitlement.freeLocal(companyId));
+              ? evaluateEffectiveEntitlement(
+                  Entitlement.premiumActive(companyId),
+                )
+              : Entitlement.freeLocal(companyId));
 
     _current = effective;
     _controller.add(effective);
@@ -85,8 +89,15 @@ class EntitlementServiceImpl implements EntitlementService {
   }
 
   /// Calculates offline grace status and returns effective entitlement.
-  Entitlement evaluateEffectiveEntitlement(Entitlement raw, [DateTime? nowOverride]) {
-    return calculateEffectiveEntitlement(raw, nowOverride, _offlineGraceDuration);
+  Entitlement evaluateEffectiveEntitlement(
+    Entitlement raw, [
+    DateTime? nowOverride,
+  ]) {
+    return calculateEffectiveEntitlement(
+      raw,
+      nowOverride,
+      _offlineGraceDuration,
+    );
   }
 }
 
@@ -107,7 +118,8 @@ Entitlement calculateEffectiveEntitlement(
   }
 
   if (raw.validUntil != null && now.isAfter(raw.validUntil!)) {
-    final graceEnd = raw.graceUntil ?? raw.validUntil!.add(offlineGraceDuration);
+    final graceEnd =
+        raw.graceUntil ?? raw.validUntil!.add(offlineGraceDuration);
     if (now.isBefore(graceEnd)) {
       return raw.copyWith(
         status: EntitlementStatus.grace,

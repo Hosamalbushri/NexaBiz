@@ -82,7 +82,8 @@ class JournalBaseAmountResolver {
       }
       if (maxCreditIndex != -1 && maxCreditVal > 0) {
         final target = resolved[maxCreditIndex];
-        final newBaseCreditCents = JournalMoney.toCents(target.baseCredit ?? 0) + diffCents;
+        final newBaseCreditCents =
+            JournalMoney.toCents(target.baseCredit ?? 0) + diffCents;
         resolved[maxCreditIndex] = JournalLineDraft(
           accountUuid: target.accountUuid,
           debit: target.debit,
@@ -109,7 +110,8 @@ class JournalBaseAmountResolver {
       }
       if (maxDebitIndex != -1 && maxDebitVal > 0) {
         final target = resolved[maxDebitIndex];
-        final newBaseDebitCents = JournalMoney.toCents(target.baseDebit ?? 0) + absDiff;
+        final newBaseDebitCents =
+            JournalMoney.toCents(target.baseDebit ?? 0) + absDiff;
         resolved[maxDebitIndex] = JournalLineDraft(
           accountUuid: target.accountUuid,
           debit: target.debit,

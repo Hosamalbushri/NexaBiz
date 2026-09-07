@@ -10,10 +10,7 @@ import '../providers/stock_transfer_providers.dart';
 import '../providers/warehouse_providers.dart';
 
 class StockTransfersListPage extends ConsumerWidget {
-  const StockTransfersListPage({
-    super.key,
-    this.embedInTab = false,
-  });
+  const StockTransfersListPage({super.key, this.embedInTab = false});
 
   final bool embedInTab;
 
@@ -37,7 +34,9 @@ class StockTransfersListPage extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(
         child: Text(
-          l10n.localeName == 'ar' ? 'حدث خطأ أثناء تحميل التحويلات' : 'Error loading transfers',
+          l10n.localeName == 'ar'
+              ? 'حدث خطأ أثناء تحميل التحويلات'
+              : 'Error loading transfers',
           style: TextStyle(color: colorScheme.error),
         ),
       ),
@@ -46,13 +45,16 @@ class StockTransfersListPage extends ConsumerWidget {
           padding: AppConstants.pageInsets(context),
           children: [
             _MovementCategoryActionHeader(
-              title: l10n.localeName == 'ar' ? 'النقل المخزني' : 'Stock Transfers',
+              title: l10n.localeName == 'ar'
+                  ? 'النقل المخزني'
+                  : 'Stock Transfers',
               subtitle: l10n.localeName == 'ar'
                   ? 'تحويل الأصول والأصناف بين المستودعات'
                   : 'Transfer inventory items between warehouses',
               icon: Icons.swap_horiz_rounded,
               count: transfers.length,
-              onNewPressed: () => InventoryRoutes.pushStockTransfersNew(context),
+              onNewPressed: () =>
+                  InventoryRoutes.pushStockTransfersNew(context),
             ),
             if (transfers.isEmpty)
               Center(
@@ -61,17 +63,30 @@ class StockTransfersListPage extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.compare_arrows_outlined, size: 64, color: colorScheme.outline),
+                      Icon(
+                        Icons.compare_arrows_outlined,
+                        size: 64,
+                        color: colorScheme.outline,
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        l10n.localeName == 'ar' ? 'لا توجد عمليات تحويل مسجلة' : 'No stock transfers found',
-                        style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                        l10n.localeName == 'ar'
+                            ? 'لا توجد عمليات تحويل مسجلة'
+                            : 'No stock transfers found',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       ElevatedButton.icon(
-                        onPressed: () => InventoryRoutes.pushStockTransfersNew(context),
+                        onPressed: () =>
+                            InventoryRoutes.pushStockTransfersNew(context),
                         icon: const Icon(Icons.add),
-                        label: Text(l10n.localeName == 'ar' ? 'إنشاء أول تحويل مخزني' : 'Create First Transfer'),
+                        label: Text(
+                          l10n.localeName == 'ar'
+                              ? 'إنشاء أول تحويل مخزني'
+                              : 'Create First Transfer',
+                        ),
                       ),
                     ],
                   ),
@@ -79,8 +94,10 @@ class StockTransfersListPage extends ConsumerWidget {
               )
             else
               ...transfers.map((item) {
-                final fromName = warehouseMap[item.fromWarehouseId] ?? item.fromWarehouseId;
-                final toName = warehouseMap[item.toWarehouseId] ?? item.toWarehouseId;
+                final fromName =
+                    warehouseMap[item.fromWarehouseId] ?? item.fromWarehouseId;
+                final toName =
+                    warehouseMap[item.toWarehouseId] ?? item.toWarehouseId;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: Card(
@@ -121,28 +138,47 @@ class StockTransfersListPage extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      l10n.localeName == 'ar' ? 'من مستودع' : 'From Warehouse',
-                                      style: theme.textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                      l10n.localeName == 'ar'
+                                          ? 'من مستودع'
+                                          : 'From Warehouse',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
                                     ),
                                     Text(
                                       fromName,
-                                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                   ],
                                 ),
                               ),
-                              Icon(Icons.arrow_forward_rounded, color: colorScheme.primary),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                color: colorScheme.primary,
+                              ),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      l10n.localeName == 'ar' ? 'إلى مستودع' : 'To Warehouse',
-                                      style: theme.textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                      l10n.localeName == 'ar'
+                                          ? 'إلى مستودع'
+                                          : 'To Warehouse',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
                                     ),
                                     Text(
                                       toName,
-                                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -155,11 +191,20 @@ class StockTransfersListPage extends ConsumerWidget {
                             children: [
                               Text(
                                 '${l10n.localeName == 'ar' ? 'عدد الأصناف' : 'Items'}: ${item.lines.length}',
-                                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                onPressed: () => _confirmDeleteTransfer(context, ref, item.id),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => _confirmDeleteTransfer(
+                                  context,
+                                  ref,
+                                  item.id,
+                                ),
                               ),
                             ],
                           ),
@@ -181,7 +226,9 @@ class StockTransfersListPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: l10n.localeName == 'ar' ? 'التحويل بين المستودعات' : 'Stock Transfers',
+        title: l10n.localeName == 'ar'
+            ? 'التحويل بين المستودعات'
+            : 'Stock Transfers',
         showBackButton: true,
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -202,17 +249,31 @@ class StockTransfersListPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.localeName == 'ar' ? 'تأكيد الغاء التحويل' : 'Delete Transfer'),
-        content: Text(l10n.localeName == 'ar' ? 'هل أنت تأكد من رغبتك في إغلاق وإلغاء أمر التحويل هذا؟' : 'Are you sure you want to delete this transfer?'),
+        title: Text(
+          l10n.localeName == 'ar' ? 'تأكيد الغاء التحويل' : 'Delete Transfer',
+        ),
+        content: Text(
+          l10n.localeName == 'ar'
+              ? 'هل أنت تأكد من رغبتك في إغلاق وإلغاء أمر التحويل هذا؟'
+              : 'Are you sure you want to delete this transfer?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(l10n.localeName == 'ar' ? 'إلغاء' : 'Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.localeName == 'ar' ? 'إلغاء' : 'Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await ref.read(stockTransferControllerProvider.notifier).deleteTransfer(id);
+              await ref
+                  .read(stockTransferControllerProvider.notifier)
+                  .deleteTransfer(id);
             },
-            child: Text(l10n.localeName == 'ar' ? 'حذف' : 'Delete', style: const TextStyle(color: Colors.white)),
+            child: Text(
+              l10n.localeName == 'ar' ? 'حذف' : 'Delete',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

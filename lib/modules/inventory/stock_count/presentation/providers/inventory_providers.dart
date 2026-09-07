@@ -13,7 +13,9 @@ import '../../domain/services/counting_calculator.dart';
 import 'package:stock_count/modules/inventory/products/domain/services/pack_size_parser.dart';
 import '../../domain/usecases/inventory_usecases.dart';
 
-final inventoryRepositoryImplProvider = Provider<InventoryRepositoryImpl>((ref) {
+final inventoryRepositoryImplProvider = Provider<InventoryRepositoryImpl>((
+  ref,
+) {
   return InventoryRepositoryImpl(syncQueue: ref.watch(syncQueueProvider));
 });
 
@@ -71,9 +73,7 @@ final replaceInventoryItemsProvider = Provider<ReplaceInventoryItems>((ref) {
 
 /// Lightweight invalidation for count/search/reports pages — avoids rebuilding
 /// from a full Hive `watchAll()` stream on every mutation.
-final inventoryRevisionProvider = StateProvider.autoDispose<int>(
-  (ref) => 0,
-);
+final inventoryRevisionProvider = StateProvider.autoDispose<int>((ref) => 0);
 
 void bumpInventoryRevision(Ref ref) {
   ref.read(inventoryRevisionProvider.notifier).state++;

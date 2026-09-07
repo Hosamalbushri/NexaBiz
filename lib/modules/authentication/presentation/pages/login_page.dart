@@ -57,7 +57,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           await _localAuth.canCheckBiometrics ||
           await _localAuth.isDeviceSupported();
       final store = ref.read(syncLoginCredentialStoreProvider);
-      final hasSaved = await store.hasSavedCredentials(mode: AuthenticationMode.local);
+      final hasSaved = await store.hasSavedCredentials(
+        mode: AuthenticationMode.local,
+      );
       final isBioEnabled = await store.isBiometricLoginEnabled(
         mode: AuthenticationMode.local,
       );
@@ -71,7 +73,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           _hasSavedCredentials = hasSaved;
         });
 
-        if (_canCheckBiometrics && hasSaved && isBioEnabled && !_biometricPrompted) {
+        if (_canCheckBiometrics &&
+            hasSaved &&
+            isBioEnabled &&
+            !_biometricPrompted) {
           _biometricPrompted = true;
           await _authenticateWithBiometrics();
         }
@@ -86,7 +91,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       final store = ref.read(syncLoginCredentialStoreProvider);
       final email = await store.readEmail(mode: AuthenticationMode.local);
-      final biometricToken = await store.readBiometricToken(mode: AuthenticationMode.local);
+      final biometricToken = await store.readBiometricToken(
+        mode: AuthenticationMode.local,
+      );
 
       if (email == null ||
           biometricToken == null ||
@@ -211,7 +218,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         mode: AuthenticationMode.local,
       );
       if (isBioEnabled) {
-        final bioToken = await ref.read(localAuthStoreProvider).getOrCreateBiometricToken(email);
+        final bioToken = await ref
+            .read(localAuthStoreProvider)
+            .getOrCreateBiometricToken(email);
         if (bioToken != null) {
           await credentialStore.saveBiometricCredentials(
             email: email,
@@ -340,31 +349,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           child: Column(
                             children: [
                               Container(
-                                width: 84,
-                                height: 84,
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: colorScheme.primary.withValues(alpha: 0.3),
-                                    width: 3,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: colorScheme.primary.withValues(alpha: 0.35),
-                                      blurRadius: 30,
-                                      offset: const Offset(0, 10),
+                                    width: 84,
+                                    height: 84,
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primary,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: colorScheme.primary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        width: 3,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: colorScheme.primary.withValues(
+                                            alpha: 0.35,
+                                          ),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.shield_outlined,
-                                    size: 42,
-                                    color: colorScheme.onPrimary,
-                                  ),
-                                ),
-                              )
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.shield_outlined,
+                                        size: 42,
+                                        color: colorScheme.onPrimary,
+                                      ),
+                                    ),
+                                  )
                                   .animate()
                                   .fadeIn(duration: 500.ms)
                                   .scale(
@@ -401,196 +414,213 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                         // Glassmorphic Card Container
                         Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerLowest.withValues(
-                              alpha: isDark ? 0.90 : 0.98,
-                            ),
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(
-                              color: colorScheme.primary.withValues(
-                                alpha: isDark ? 0.25 : 0.15,
-                              ),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colorScheme.shadow.withValues(
-                                  alpha: isDark ? 0.40 : 0.08,
+                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerLowest
+                                    .withValues(alpha: isDark ? 0.90 : 0.98),
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(
+                                  color: colorScheme.primary.withValues(
+                                    alpha: isDark ? 0.25 : 0.15,
+                                  ),
+                                  width: 1.5,
                                 ),
-                                blurRadius: 40,
-                                spreadRadius: -2,
-                                offset: const Offset(0, 20),
-                              ),
-                              BoxShadow(
-                                color: colorScheme.primary.withValues(
-                                  alpha: isDark ? 0.15 : 0.06,
-                                ),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Error Banner Alert
-                                if (_error != null) ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(AppSpacing.sm + 2),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.errorContainer.withValues(
-                                        alpha: 0.7,
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(
-                                        color: colorScheme.error.withValues(alpha: 0.4),
-                                      ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: colorScheme.shadow.withValues(
+                                      alpha: isDark ? 0.40 : 0.08,
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.warning_amber_rounded,
-                                          color: colorScheme.error,
-                                          size: 22,
+                                    blurRadius: 40,
+                                    spreadRadius: -2,
+                                    offset: const Offset(0, 20),
+                                  ),
+                                  BoxShadow(
+                                    color: colorScheme.primary.withValues(
+                                      alpha: isDark ? 0.15 : 0.06,
+                                    ),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Error Banner Alert
+                                    if (_error != null) ...[
+                                      Container(
+                                        padding: const EdgeInsets.all(
+                                          AppSpacing.sm + 2,
                                         ),
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Expanded(
-                                          child: Text(
-                                            _error!,
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: colorScheme.onErrorContainer,
-                                              fontWeight: FontWeight.w600,
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.errorContainer
+                                              .withValues(alpha: 0.7),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          border: Border.all(
+                                            color: colorScheme.error.withValues(
+                                              alpha: 0.4,
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ).animate().shake(duration: 400.ms),
-                                  const SizedBox(height: AppSpacing.md),
-                                ],
-
-                                // Username / Email Field (Full Container Width)
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    decoration: InputDecoration(
-                                      labelText: l10n.authEmailLabel,
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 18,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.alternate_email_rounded,
-                                        color: colorScheme.primary,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      errorText: _emailError,
-                                    ),
-                                    onChanged: (_) {
-                                      if (_emailError != null || _error != null) {
-                                        setState(() {
-                                          _emailError = null;
-                                          _error = null;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-
-                                const SizedBox(height: AppSpacing.md),
-
-                                // Password Field (Full Container Width)
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) => _submit(),
-                                    decoration: InputDecoration(
-                                      labelText: l10n.authPasswordLabel,
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 18,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.lock_outline_rounded,
-                                        color: colorScheme.primary,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.warning_amber_rounded,
+                                              color: colorScheme.error,
+                                              size: 22,
+                                            ),
+                                            const SizedBox(
+                                              width: AppSpacing.sm,
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                _error!,
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: colorScheme
+                                                          .onErrorContainer,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscurePassword = !_obscurePassword;
-                                          });
+                                      ).animate().shake(duration: 400.ms),
+                                      const SizedBox(height: AppSpacing.md),
+                                    ],
+
+                                    // Username / Email Field (Full Container Width)
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: TextFormField(
+                                        controller: _emailController,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        textInputAction: TextInputAction.next,
+                                        decoration: InputDecoration(
+                                          labelText: l10n.authEmailLabel,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 20,
+                                                vertical: 18,
+                                              ),
+                                          prefixIcon: Icon(
+                                            Icons.alternate_email_rounded,
+                                            color: colorScheme.primary,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                          errorText: _emailError,
+                                        ),
+                                        onChanged: (_) {
+                                          if (_emailError != null ||
+                                              _error != null) {
+                                            setState(() {
+                                              _emailError = null;
+                                              _error = null;
+                                            });
+                                          }
                                         },
                                       ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      errorText: _passwordError,
                                     ),
-                                    onChanged: (_) {
-                                      if (_passwordError != null || _error != null) {
-                                        setState(() {
-                                          _passwordError = null;
-                                          _error = null;
-                                        });
-                                      }
-                                    },
-                                  ),
+
+                                    const SizedBox(height: AppSpacing.md),
+
+                                    // Password Field (Full Container Width)
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: TextFormField(
+                                        controller: _passwordController,
+                                        obscureText: _obscurePassword,
+                                        textInputAction: TextInputAction.done,
+                                        onFieldSubmitted: (_) => _submit(),
+                                        decoration: InputDecoration(
+                                          labelText: l10n.authPasswordLabel,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 20,
+                                                vertical: 18,
+                                              ),
+                                          prefixIcon: Icon(
+                                            Icons.lock_outline_rounded,
+                                            color: colorScheme.primary,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                        .visibility_off_outlined,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _obscurePassword =
+                                                    !_obscurePassword;
+                                              });
+                                            },
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                          errorText: _passwordError,
+                                        ),
+                                        onChanged: (_) {
+                                          if (_passwordError != null ||
+                                              _error != null) {
+                                            setState(() {
+                                              _passwordError = null;
+                                              _error = null;
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: AppSpacing.lg),
+
+                                    // Quick Biometric Quick Login if Saved Credentials Exist
+                                    if (_canCheckBiometrics &&
+                                        _hasSavedCredentials) ...[
+                                      AppButton(
+                                        label: isArabic
+                                            ? 'تسجيل الدخول البصمي'
+                                            : l10n.authBiometricSignIn,
+                                        icon: Icons.fingerprint_rounded,
+                                        variant: AppButtonVariant.outlined,
+                                        isLoading: _loading,
+                                        expand: true,
+                                        onPressed: _loading
+                                            ? null
+                                            : _authenticateWithBiometrics,
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
+                                    ],
+
+                                    // Login Action Button (Without Icon)
+                                    AppButton(
+                                      label: l10n.authSignIn,
+                                      isLoading: _loading,
+                                      expand: true,
+                                      onPressed: _loading ? null : _submit,
+                                    ),
+                                  ],
                                 ),
-
-                                const SizedBox(height: AppSpacing.lg),
-
-                                // Quick Biometric Quick Login if Saved Credentials Exist
-                                if (_canCheckBiometrics && _hasSavedCredentials) ...[
-                                  OutlinedButton.icon(
-                                    onPressed: _authenticateWithBiometrics,
-                                    icon: Icon(
-                                      Icons.fingerprint_rounded,
-                                      color: colorScheme.primary,
-                                    ),
-                                    label: Text(
-                                      isArabic
-                                          ? 'تسجيل الدخول البصمي'
-                                          : l10n.authBiometricSignIn,
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: AppSpacing.sm + 2,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppSpacing.md),
-                                ],
-
-                                // Login Action Button (Without Icon)
-                                AppButton(
-                                  label: l10n.authSignIn,
-                                  isLoading: _loading,
-                                  expand: true,
-                                  onPressed: _loading ? null : _submit,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ).animate().fadeIn(duration: 500.ms, delay: 100.ms).slideY(
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(duration: 500.ms, delay: 100.ms)
+                            .slideY(
                               begin: 0.1,
                               end: 0,
                               duration: 500.ms,
@@ -617,9 +647,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     ? 'NexaBiz ERP • الإصدار المحلي المباشر'
                                     : 'NexaBiz ERP • Secured Enterprise Local Edition',
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant.withValues(
-                                    alpha: 0.7,
-                                  ),
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),

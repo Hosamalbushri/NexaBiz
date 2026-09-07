@@ -11,7 +11,10 @@ abstract class ImportReportRepository {
   Future<ImportReport?> getReport(String jobId, {required String companyId});
 
   /// Retrieves an [ImportAuditRecord] by [jobId] strictly scoped to [companyId].
-  Future<ImportAuditRecord?> getAuditRecord(String jobId, {required String companyId});
+  Future<ImportAuditRecord?> getAuditRecord(
+    String jobId, {
+    required String companyId,
+  });
 
   /// Lists all audit records for a given [companyId] (tenant isolated).
   Future<List<ImportAuditRecord>> listAuditRecordsForCompany(String companyId);
@@ -37,7 +40,8 @@ class InMemoryImportReportRepository implements ImportReportRepository {
   final Map<String, ImportReport> _reports = {};
 
   /// Exports raw serialized storage (simulating disk/database backup across restarts).
-  Map<String, String> exportStorage() => Map<String, String>.unmodifiable(_storage);
+  Map<String, String> exportStorage() =>
+      Map<String, String>.unmodifiable(_storage);
 
   @override
   Future<void> saveReport(ImportReport report) async {
@@ -50,7 +54,10 @@ class InMemoryImportReportRepository implements ImportReportRepository {
   }
 
   @override
-  Future<ImportReport?> getReport(String jobId, {required String companyId}) async {
+  Future<ImportReport?> getReport(
+    String jobId, {
+    required String companyId,
+  }) async {
     if (companyId.trim().isEmpty) return null;
 
     ImportReport? report = _reports[jobId];
@@ -74,13 +81,18 @@ class InMemoryImportReportRepository implements ImportReportRepository {
   }
 
   @override
-  Future<ImportAuditRecord?> getAuditRecord(String jobId, {required String companyId}) async {
+  Future<ImportAuditRecord?> getAuditRecord(
+    String jobId, {
+    required String companyId,
+  }) async {
     final report = await getReport(jobId, companyId: companyId);
     return report?.auditRecord;
   }
 
   @override
-  Future<List<ImportAuditRecord>> listAuditRecordsForCompany(String companyId) async {
+  Future<List<ImportAuditRecord>> listAuditRecordsForCompany(
+    String companyId,
+  ) async {
     if (companyId.trim().isEmpty) return [];
 
     // Ensure all stored reports are loaded

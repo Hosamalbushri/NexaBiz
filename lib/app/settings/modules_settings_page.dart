@@ -13,10 +13,7 @@ import 'module_unit_settings_page.dart';
 
 /// Screen displaying the list/grid of registered module cards.
 class ModulesSettingsPage extends StatelessWidget {
-  const ModulesSettingsPage({
-    super.key,
-    required this.categories,
-  });
+  const ModulesSettingsPage({super.key, required this.categories});
 
   final List<ModuleSettingsCategoryDefinition> categories;
 
@@ -29,10 +26,7 @@ class ModulesSettingsPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: pageTitle,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: pageTitle, showBackButton: true),
       body: categories.isEmpty
           ? Center(
               child: AppEmptyState(
@@ -55,19 +49,21 @@ class ModulesSettingsPage extends StatelessWidget {
                 ),
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final isWide = AppBreakpoints.isTablet(constraints.maxWidth) ||
+                    final isWide =
+                        AppBreakpoints.isTablet(constraints.maxWidth) ||
                         AppBreakpoints.isDesktop(constraints.maxWidth);
 
                     if (isWide) {
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: AppSpacing.md,
-                          mainAxisSpacing: AppSpacing.md,
-                          childAspectRatio: 2.6,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: AppSpacing.md,
+                              mainAxisSpacing: AppSpacing.md,
+                              childAspectRatio: 2.6,
+                            ),
                         itemCount: categories.length,
                         itemBuilder: (context, index) {
                           return _ModuleCard(category: categories[index]);
@@ -79,7 +75,8 @@ class ModulesSettingsPage extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: categories.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.sm),
                       itemBuilder: (context, index) {
                         return _ModuleCard(category: categories[index]);
                       },
@@ -103,7 +100,8 @@ class _ModuleCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final title = category.titleBuilder(l10n);
-    final subtitle = category.subtitleBuilder?.call(l10n) ??
+    final subtitle =
+        category.subtitleBuilder?.call(l10n) ??
         (l10n.localeName == 'ar'
             ? '${category.items.length} وحدات إعدادات'
             : '${category.items.length} setting units');

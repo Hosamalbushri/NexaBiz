@@ -10,8 +10,7 @@ class SyncRequestContext {
   static const _correlationKey = #syncCorrelationId;
   static const _triggerKey = #syncPassTrigger;
 
-  static String? get correlationId =>
-      Zone.current[_correlationKey] as String?;
+  static String? get correlationId => Zone.current[_correlationKey] as String?;
 
   static SyncPassTrigger get trigger {
     final value = Zone.current[_triggerKey];
@@ -28,21 +27,13 @@ class SyncRequestContext {
   }) {
     return runZoned(
       body,
-      zoneValues: {
-        _correlationKey: correlationId,
-        _triggerKey: trigger,
-      },
+      zoneValues: {_correlationKey: correlationId, _triggerKey: trigger},
     );
   }
 }
 
 /// Why a sync pass was started (metrics / logs).
-enum SyncPassTrigger {
-  manual,
-  auto,
-  connectivity,
-  osBackground,
-}
+enum SyncPassTrigger { manual, auto, connectivity, osBackground }
 
 extension SyncPassTriggerX on SyncPassTrigger {
   String get storageValue => name;

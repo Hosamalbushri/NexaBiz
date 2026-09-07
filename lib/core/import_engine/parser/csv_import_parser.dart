@@ -13,10 +13,7 @@ import 'import_parser.dart';
 /// Production-grade CSV parser supporting UTF-8, BOM removal, auto-delimiter detection,
 /// quoted fields, escaped quotes (""), multiline quotes, and Arabic text preservation.
 class CsvImportParser extends ImportParser {
-  const CsvImportParser({
-    this.customDelimiter,
-    this.hasHeader = true,
-  });
+  const CsvImportParser({this.customDelimiter, this.hasHeader = true});
 
   final String? customDelimiter;
   final bool hasHeader;
@@ -84,26 +81,31 @@ class CsvImportParser extends ImportParser {
       if (isRowEmpty) continue;
 
       final cells = <ParsedCell>[];
-      final colCount =
-          headers.isNotEmpty ? headers.length : rawRowValues.length;
+      final colCount = headers.isNotEmpty
+          ? headers.length
+          : rawRowValues.length;
 
       for (var c = 0; c < colCount; c++) {
         final rawVal = c < rawRowValues.length ? rawRowValues[c] : '';
         final headerName = c < headers.length ? headers[c] : null;
 
-        cells.add(ParsedCell(
-          columnIndex: c,
-          headerName: headerName,
-          rawValue: rawVal,
-          formattedValue: rawVal,
-        ));
+        cells.add(
+          ParsedCell(
+            columnIndex: c,
+            headerName: headerName,
+            rawValue: rawVal,
+            formattedValue: rawVal,
+          ),
+        );
       }
 
-      rows.add(ParsedRow(
-        rowIndex: r + 1, // 1-indexed for user readability
-        cells: cells,
-        errors: rowErrors,
-      ));
+      rows.add(
+        ParsedRow(
+          rowIndex: r + 1, // 1-indexed for user readability
+          cells: cells,
+          errors: rowErrors,
+        ),
+      );
     }
 
     return ParsedSheet(

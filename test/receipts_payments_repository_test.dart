@@ -14,8 +14,7 @@ import 'package:stock_count/modules/receipts_payments/domain/services/rp_ledger_
 import 'package:stock_count/modules/receipts_payments/domain/services/rp_voucher_book_port.dart';
 import 'package:stock_count/modules/receipts_payments/domain/usecases/financial_transaction_usecases.dart';
 
-void _setupSqlite() {
-}
+void _setupSqlite() {}
 
 class _FakeVoucherBooks implements RpVoucherBookPort {
   var next = 1;
@@ -24,8 +23,7 @@ class _FakeVoucherBooks implements RpVoucherBookPort {
   Future<String> allocateNumber({
     required String bookId,
     required TransactionType type,
-  }) async =>
-      '${next++}';
+  }) async => '${next++}';
 
   @override
   Future<RpVoucherBookRef?> findById(String bookId) async => null;
@@ -119,9 +117,7 @@ void main() {
       voucherBookPort: books,
       ledgerPosting: ledger,
     );
-    final created = await create(
-      draft(status: TransactionStatus.posted),
-    );
+    final created = await create(draft(status: TransactionStatus.posted));
     expect(ledger.synced, [created.uuid]);
   });
 

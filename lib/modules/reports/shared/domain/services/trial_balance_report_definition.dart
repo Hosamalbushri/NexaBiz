@@ -52,8 +52,9 @@ class TrialBalanceReportDefinition
       3: const pw.FixedColumnWidth(80),
     };
 
-    final balanceNote =
-        payload.isBalanced ? payload.balancedLabel : payload.unbalancedLabel;
+    final balanceNote = payload.isBalanced
+        ? payload.balancedLabel
+        : payload.unbalancedLabel;
     final currencySuffix = (payload.baseCurrencyCode ?? '').trim().isEmpty
         ? ''
         : ' (${payload.baseCurrencyCode!.trim()})';

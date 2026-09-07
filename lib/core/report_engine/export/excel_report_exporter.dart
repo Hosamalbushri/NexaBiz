@@ -6,7 +6,6 @@ import 'package:share_plus/share_plus.dart';
 import '../domain/models/report_dataset.dart';
 import '../domain/models/report_definition_spec.dart';
 
-
 /// Exporter generating native Microsoft Excel (.xlsx) workbooks with metadata & styled tables.
 class ExcelReportExporter {
   const ExcelReportExporter();
@@ -30,10 +29,7 @@ class ExcelReportExporter {
       verticalAlign: VerticalAlign.Center,
     );
 
-    final CellStyle titleStyle = CellStyle(
-      bold: true,
-      fontSize: 14,
-    );
+    final CellStyle titleStyle = CellStyle(bold: true, fontSize: 14);
 
     int rowIndex = 0;
 
@@ -43,27 +39,40 @@ class ExcelReportExporter {
       ..cellStyle = titleStyle;
     rowIndex++;
 
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-      .value = TextCellValue('الشركة: ${dataset.metadata.companyName}');
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
+        .value = TextCellValue(
+      'الشركة: ${dataset.metadata.companyName}',
+    );
     rowIndex++;
 
-    sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-      .value = TextCellValue('تاريخ التوليد: ${DateFormat('yyyy/MM/dd HH:mm').format(dataset.metadata.generatedAt)}');
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
+        .value = TextCellValue(
+      'تاريخ التوليد: ${DateFormat('yyyy/MM/dd HH:mm').format(dataset.metadata.generatedAt)}',
+    );
     rowIndex++;
 
     if (dataset.metadata.activeFiltersSummary.isNotEmpty) {
-      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-        .value = TextCellValue('معايير التصفية: ${dataset.metadata.activeFiltersSummary}');
+      sheet
+          .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
+          .value = TextCellValue(
+        'معايير التصفية: ${dataset.metadata.activeFiltersSummary}',
+      );
       rowIndex++;
     }
 
     rowIndex++; // Empty space before table
 
     // Column Headers
-    final visibleColumns = definition.columns.where((c) => c.isVisible).toList();
+    final visibleColumns = definition.columns
+        .where((c) => c.isVisible)
+        .toList();
     for (int colIdx = 0; colIdx < visibleColumns.length; colIdx++) {
       final col = visibleColumns[colIdx];
-      sheet.cell(CellIndex.indexByColumnRow(columnIndex: colIdx, rowIndex: rowIndex))
+      sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: colIdx, rowIndex: rowIndex),
+        )
         ..value = TextCellValue(col.label)
         ..cellStyle = headerStyle;
     }
@@ -75,7 +84,9 @@ class ExcelReportExporter {
         final col = visibleColumns[colIdx];
         final rawVal = row[col.id];
 
-        final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: colIdx, rowIndex: rowIndex));
+        final cell = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: colIdx, rowIndex: rowIndex),
+        );
 
         if (rawVal == null) {
           cell.value = TextCellValue('');
@@ -95,15 +106,15 @@ class ExcelReportExporter {
     // Save File
     final fileBytes = excel.save();
     final tempDir = await getTemporaryDirectory();
-    final fileName = '${definition.id}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+    final fileName =
+        '${definition.id}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
     final file = File('${tempDir.path}/$fileName');
 
     if (fileBytes != null) {
       await file.writeAsBytes(fileBytes);
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: dataset.metadata.reportTitle,
-      );
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], subject: dataset.metadata.reportTitle);
     }
 
     return file;

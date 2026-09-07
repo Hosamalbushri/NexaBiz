@@ -11,10 +11,7 @@ class RpReportDataAdapter implements RpReportDataPort {
   final FinancialTransactionRepository _repository;
 
   TransactionListFilter _filter(RpReportQuery query) {
-    final base = TransactionListFilter(
-      fromDate: query.from,
-      toDate: query.to,
-    );
+    final base = TransactionListFilter(fromDate: query.from, toDate: query.to);
     switch (query.kind) {
       case RpReportKind.receipts:
         return base.copyWith(transactionType: TransactionType.receipt);

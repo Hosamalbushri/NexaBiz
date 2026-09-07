@@ -1,13 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 /// Supported types for strongly-typed setup configuration fields.
-enum SetupFieldType {
-  text,
-  boolean,
-  number,
-  select,
-  reference,
-}
+enum SetupFieldType { text, boolean, number, select, reference }
 
 /// Strongly-typed setup field specification owned by a business package.
 @immutable

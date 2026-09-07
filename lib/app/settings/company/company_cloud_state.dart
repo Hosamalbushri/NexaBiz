@@ -134,8 +134,9 @@ class CompanyCloudState {
           ? null
           : (subscriptionId ?? this.subscriptionId),
       planId: clearPlanId ? null : (planId ?? this.planId),
-      cloudLinkedAt:
-          clearCloudLinkedAt ? null : (cloudLinkedAt ?? this.cloudLinkedAt),
+      cloudLinkedAt: clearCloudLinkedAt
+          ? null
+          : (cloudLinkedAt ?? this.cloudLinkedAt),
       lastProvisioningError: clearLastProvisioningError
           ? null
           : (lastProvisioningError ?? this.lastProvisioningError),
@@ -155,20 +156,26 @@ class CompanyCloudState {
     };
   }
 
-  factory CompanyCloudState.fromMap(Map<dynamic, dynamic>? map, String fallbackLocalCompanyId) {
+  factory CompanyCloudState.fromMap(
+    Map<dynamic, dynamic>? map,
+    String fallbackLocalCompanyId,
+  ) {
     if (map == null || map.isEmpty) {
       return CompanyCloudState.localDefault(fallbackLocalCompanyId);
     }
     final statusStr = map['cloudStatus'] as String?;
     final linkedAtStr = map['cloudLinkedAt'] as String?;
     return CompanyCloudState(
-      localCompanyId: (map['localCompanyId'] as String?) ?? fallbackLocalCompanyId,
+      localCompanyId:
+          (map['localCompanyId'] as String?) ?? fallbackLocalCompanyId,
       serverCompanyId: map['serverCompanyId'] as String?,
       cloudStatus: CompanyCloudStatus.fromString(statusStr),
       cloudProvisioningId: map['cloudProvisioningId'] as String?,
       subscriptionId: map['subscriptionId'] as String?,
       planId: map['planId'] as String?,
-      cloudLinkedAt: linkedAtStr != null ? DateTime.tryParse(linkedAtStr) : null,
+      cloudLinkedAt: linkedAtStr != null
+          ? DateTime.tryParse(linkedAtStr)
+          : null,
       lastProvisioningError: map['lastProvisioningError'] as String?,
     );
   }

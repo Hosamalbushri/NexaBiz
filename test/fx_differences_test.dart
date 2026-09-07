@@ -21,7 +21,6 @@ import 'package:stock_count/modules/accounting/domain/services/period_closing_se
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late Directory tempDir;
   late Box<SyncOperation> syncBox;
   late AccountingDatabase db;
@@ -78,28 +77,30 @@ void main() {
     }
   });
 
-  test('upsert writes dated rate history and getRateOn respects as-of',
-      () async {
-    await rates.upsert(
-      CurrencyRateDraft(
-        currencyCode: 'USD',
-        rateToBase: 3.5,
-        asOfDate: DateTime.utc(2026, 1, 10),
-      ),
-    );
-    await rates.upsert(
-      CurrencyRateDraft(
-        currencyCode: 'USD',
-        rateToBase: 3.75,
-        asOfDate: DateTime.utc(2026, 2, 1),
-      ),
-    );
+  test(
+    'upsert writes dated rate history and getRateOn respects as-of',
+    () async {
+      await rates.upsert(
+        CurrencyRateDraft(
+          currencyCode: 'USD',
+          rateToBase: 3.5,
+          asOfDate: DateTime.utc(2026, 1, 10),
+        ),
+      );
+      await rates.upsert(
+        CurrencyRateDraft(
+          currencyCode: 'USD',
+          rateToBase: 3.75,
+          asOfDate: DateTime.utc(2026, 2, 1),
+        ),
+      );
 
-    expect(await rates.getRateOn('USD', DateTime.utc(2026, 1, 15)), 3.5);
-    expect(await rates.getRateOn('USD', DateTime.utc(2026, 2, 10)), 3.75);
-    final history = await rates.listHistory('USD');
-    expect(history.length, greaterThanOrEqualTo(2));
-  });
+      expect(await rates.getRateOn('USD', DateTime.utc(2026, 1, 15)), 3.5);
+      expect(await rates.getRateOn('USD', DateTime.utc(2026, 2, 10)), 3.75);
+      final history = await rates.listHistory('USD');
+      expect(history.length, greaterThanOrEqualTo(2));
+    },
+  );
 
   test('journal post stores base debit/credit from exchange rate', () async {
     await rates.upsert(
@@ -214,10 +215,7 @@ void main() {
       posting: posting,
       journals: journals,
     );
-    final result = await closer.close(
-      periodUuid: jan.uuid,
-      closedBy: 'tester',
-    );
+    final result = await closer.close(periodUuid: jan.uuid, closedBy: 'tester');
 
     expect(result.record.fxRevaluationEnabled, isTrue);
     expect(result.record.fxRevaluationExecuted, isTrue);

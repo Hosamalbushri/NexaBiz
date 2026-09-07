@@ -64,75 +64,78 @@ void main() {
     }
   });
 
-  test('admin credentials created in first run setup wizard authenticate successfully with full permissions', () async {
-    const customEmail = 'manager@mybusiness.com';
-    const customPassword = 'SecureAdminPassword2026!';
-    const customName = 'Admin Manager';
+  test(
+    'admin credentials created in first run setup wizard authenticate successfully with full permissions',
+    () async {
+      const customEmail = 'manager@mybusiness.com';
+      const customPassword = 'SecureAdminPassword2026!';
+      const customName = 'Admin Manager';
 
-    // 1. Commit First Run Setup
-    const payload = FirstRunSetupPayload(
-      language: 'ar',
-      adminName: customName,
-      adminEmail: customEmail,
-      adminPassword: customPassword,
-    );
+      // 1. Commit First Run Setup
+      const payload = FirstRunSetupPayload(
+        language: 'ar',
+        adminName: customName,
+        adminEmail: customEmail,
+        adminPassword: customPassword,
+      );
 
-    await coordinator.commitFirstRunSetup(payload);
+      await coordinator.commitFirstRunSetup(payload);
 
-    expect(await coordinator.isFirstRunCompleted(), isTrue);
+      expect(await coordinator.isFirstRunCompleted(), isTrue);
 
-    // 2. Verify getAdminEmail returns custom email
-    final savedAdminEmail = await authStore.getAdminEmail();
-    expect(savedAdminEmail, customEmail);
+      // 2. Verify getAdminEmail returns custom email
+      final savedAdminEmail = await authStore.getAdminEmail();
+      expect(savedAdminEmail, customEmail);
 
-    // 3. Login with custom credentials through LocalAuthRepository
-    final session = await localAuthRepo.login(
-      email: customEmail,
-      password: customPassword,
-      deviceId: '00000000-0000-4000-8000-000000000001',
-      deviceName: 'local_device',
-      platform: 'linux',
-    );
-
-    expect(session, isNotNull);
-    expect(session.user.email, customEmail);
-    expect(session.user.name, customName);
-    expect(session.user.isSuperAdmin, isTrue);
-    expect(session.user.isSystemAdmin, isTrue);
-    expect(session.roles, isEmpty);
-
-    // 4. Case-insensitive email login
-    final upperEmailSession = await localAuthRepo.login(
-      email: 'MANAGER@MYBUSINESS.COM',
-      password: customPassword,
-      deviceId: '00000000-0000-4000-8000-000000000001',
-      deviceName: 'local_device',
-      platform: 'linux',
-    );
-    expect(upperEmailSession.user.email, customEmail);
-
-    // 5. Rejects wrong password
-    expect(
-      () => localAuthRepo.login(
+      // 3. Login with custom credentials through LocalAuthRepository
+      final session = await localAuthRepo.login(
         email: customEmail,
-        password: 'WrongPassword123!',
+        password: customPassword,
         deviceId: '00000000-0000-4000-8000-000000000001',
         deviceName: 'local_device',
         platform: 'linux',
-      ),
-      throwsA(isA<AuthenticationFailure>()),
-    );
+      );
 
-    // 6. Rejects default unconfigured password
-    expect(
-      () => localAuthRepo.login(
-        email: customEmail,
-        password: 'UnconfiguredPassword123!',
+      expect(session, isNotNull);
+      expect(session.user.email, customEmail);
+      expect(session.user.name, customName);
+      expect(session.user.isSuperAdmin, isTrue);
+      expect(session.user.isSystemAdmin, isTrue);
+      expect(session.roles, isEmpty);
+
+      // 4. Case-insensitive email login
+      final upperEmailSession = await localAuthRepo.login(
+        email: 'MANAGER@MYBUSINESS.COM',
+        password: customPassword,
         deviceId: '00000000-0000-4000-8000-000000000001',
         deviceName: 'local_device',
         platform: 'linux',
-      ),
-      throwsA(isA<AuthenticationFailure>()),
-    );
-  });
+      );
+      expect(upperEmailSession.user.email, customEmail);
+
+      // 5. Rejects wrong password
+      expect(
+        () => localAuthRepo.login(
+          email: customEmail,
+          password: 'WrongPassword123!',
+          deviceId: '00000000-0000-4000-8000-000000000001',
+          deviceName: 'local_device',
+          platform: 'linux',
+        ),
+        throwsA(isA<AuthenticationFailure>()),
+      );
+
+      // 6. Rejects default unconfigured password
+      expect(
+        () => localAuthRepo.login(
+          email: customEmail,
+          password: 'UnconfiguredPassword123!',
+          deviceId: '00000000-0000-4000-8000-000000000001',
+          deviceName: 'local_device',
+          platform: 'linux',
+        ),
+        throwsA(isA<AuthenticationFailure>()),
+      );
+    },
+  );
 }

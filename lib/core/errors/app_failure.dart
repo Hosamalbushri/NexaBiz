@@ -35,11 +35,9 @@ final class AuthenticationFailure extends AppFailure {
 
 /// Server refused the operation due to missing/revoked permission.
 final class AuthorizationFailure extends AppFailure {
-  const AuthorizationFailure([
-    super.message = 'Permission denied',
-    super.cause,
-  ]) : permission = null,
-       code = 'permission_denied';
+  const AuthorizationFailure([super.message = 'Permission denied', super.cause])
+    : permission = null,
+      code = 'permission_denied';
 
   const AuthorizationFailure.withDetails({
     String message = 'Permission denied',
@@ -70,7 +68,6 @@ final class RateLimitFailure extends AppFailure {
 
   final int? retryAfterSeconds;
 }
-
 
 final class SyncConflictFailure extends AppFailure {
   const SyncConflictFailure([

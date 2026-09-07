@@ -44,8 +44,13 @@ class ImportPreviewEngine {
     Map<String, ResolutionStrategy> relationStrategies = const {},
     List<AssignmentRule> assignmentRules = const [],
     Map<String, dynamic> fixedAssignments = const {},
-    Future<bool> Function(ParsedRow rawRow, Map<String, dynamic> normalizedValues)? existenceChecker,
-    bool Function(ParsedRow rawRow, Map<String, dynamic> normalizedValues)? skipChecker,
+    Future<bool> Function(
+      ParsedRow rawRow,
+      Map<String, dynamic> normalizedValues,
+    )?
+    existenceChecker,
+    bool Function(ParsedRow rawRow, Map<String, dynamic> normalizedValues)?
+    skipChecker,
   }) async {
     final previewRows = <ImportPreviewRow>[];
 
@@ -58,7 +63,9 @@ class ImportPreviewEngine {
         final targetField = mapping.targetField!;
 
         final ParsedCell cell = rawRow.cells.firstWhere(
-          (c) => c.headerName == mapping.sourceColumnHeader || c.columnIndex == mapping.sourceColumnIndex,
+          (c) =>
+              c.headerName == mapping.sourceColumnHeader ||
+              c.columnIndex == mapping.sourceColumnIndex,
           orElse: () => ParsedCell.empty(mapping.sourceColumnIndex),
         );
 
@@ -144,24 +151,38 @@ class ImportPreviewEngine {
       // C. Action Determination & Explanation Generation
       ImportRowAction action;
       String explanation;
-      final isFatalOrError = rowIssues.any((issue) => issue.severity == ValidationSeverity.error || issue.severity == ValidationSeverity.fatal);
-      final hasRelationError = relationResults.values.any((res) => !res.isResolved);
+      final isFatalOrError = rowIssues.any(
+        (issue) =>
+            issue.severity == ValidationSeverity.error ||
+            issue.severity == ValidationSeverity.fatal,
+      );
+      final hasRelationError = relationResults.values.any(
+        (res) => !res.isResolved,
+      );
 
       if (isFatalOrError || hasRelationError) {
         action = ImportRowAction.error;
         if (isFatalOrError) {
           final firstError = rowIssues.firstWhere(
-            (issue) => issue.severity == ValidationSeverity.error || issue.severity == ValidationSeverity.fatal,
+            (issue) =>
+                issue.severity == ValidationSeverity.error ||
+                issue.severity == ValidationSeverity.fatal,
           );
           explanation = 'Validation failed: ${firstError.message}';
         } else {
-          final unresolvedRel = relationResults.entries.firstWhere((e) => !e.value.isResolved);
-          explanation = 'Relation resolution failed for key "${unresolvedRel.key}": ${unresolvedRel.value.errorMessage}';
+          final unresolvedRel = relationResults.entries.firstWhere(
+            (e) => !e.value.isResolved,
+          );
+          explanation =
+              'Relation resolution failed for key "${unresolvedRel.key}": ${unresolvedRel.value.errorMessage}';
         }
-      } else if (skipChecker != null && skipChecker(rawRow, normalizedValuesMap)) {
+      } else if (skipChecker != null &&
+          skipChecker(rawRow, normalizedValuesMap)) {
         action = ImportRowAction.skip;
-        explanation = 'Row flagged for skipping by filter policy or duplicate key';
-      } else if (existenceChecker != null && await existenceChecker(rawRow, normalizedValuesMap)) {
+        explanation =
+            'Row flagged for skipping by filter policy or duplicate key';
+      } else if (existenceChecker != null &&
+          await existenceChecker(rawRow, normalizedValuesMap)) {
         action = ImportRowAction.update;
         explanation = 'Existing domain record detected -> Action: UPDATE';
       } else {

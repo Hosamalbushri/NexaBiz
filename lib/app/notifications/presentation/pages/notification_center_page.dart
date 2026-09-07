@@ -75,9 +75,9 @@ class NotificationCenterPage extends ConsumerWidget {
               ),
               Expanded(
                 child: ListView.separated(
-                  padding: AppConstants.pageInsets(context).copyWith(
-                    top: AppSpacing.sm,
-                  ),
+                  padding: AppConstants.pageInsets(
+                    context,
+                  ).copyWith(top: AppSpacing.sm),
                   itemCount: items.length,
                   separatorBuilder: (_, _) =>
                       const SizedBox(height: AppSpacing.sm),

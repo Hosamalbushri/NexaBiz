@@ -7,39 +7,62 @@ import 'package:stock_count/modules/sales/invoices/domain/services/sale_money.da
 
 void main() {
   group('Financial Precision & 3-Decimal Currency Tests', () {
-    test('JournalMoney handles 3-decimal currencies (KWD / OMR / BHD) without fils loss', () {
-      const kwdAmount = 12.345; // 12 KWD 345 Fils
-      final fils = JournalMoney.toCents(kwdAmount, decimalPlaces: 3);
-      expect(fils, 12345);
+    test(
+      'JournalMoney handles 3-decimal currencies (KWD / OMR / BHD) without fils loss',
+      () {
+        const kwdAmount = 12.345; // 12 KWD 345 Fils
+        final fils = JournalMoney.toCents(kwdAmount, decimalPlaces: 3);
+        expect(fils, 12345);
 
-      final reconstructed = JournalMoney.fromCents(fils, decimalPlaces: 3);
-      expect(reconstructed, 12.345);
-    });
+        final reconstructed = JournalMoney.fromCents(fils, decimalPlaces: 3);
+        expect(reconstructed, 12.345);
+      },
+    );
 
-    test('JournalMoney debit and credit sum to exact zero without floating point delta leak', () {
-      final line1Debit = JournalMoney.round(100.125, decimalPlaces: 3); // 100.125
-      final line2Debit = JournalMoney.round(50.375, decimalPlaces: 3);  // 50.375
-      final line3Credit = JournalMoney.round(150.500, decimalPlaces: 3); // 150.500
+    test(
+      'JournalMoney debit and credit sum to exact zero without floating point delta leak',
+      () {
+        final line1Debit = JournalMoney.round(
+          100.125,
+          decimalPlaces: 3,
+        ); // 100.125
+        final line2Debit = JournalMoney.round(
+          50.375,
+          decimalPlaces: 3,
+        ); // 50.375
+        final line3Credit = JournalMoney.round(
+          150.500,
+          decimalPlaces: 3,
+        ); // 150.500
 
-      final totalDebitFils = JournalMoney.toCents(line1Debit, decimalPlaces: 3) + JournalMoney.toCents(line2Debit, decimalPlaces: 3);
-      final totalCreditFils = JournalMoney.toCents(line3Credit, decimalPlaces: 3);
+        final totalDebitFils =
+            JournalMoney.toCents(line1Debit, decimalPlaces: 3) +
+            JournalMoney.toCents(line2Debit, decimalPlaces: 3);
+        final totalCreditFils = JournalMoney.toCents(
+          line3Credit,
+          decimalPlaces: 3,
+        );
 
-      expect(totalDebitFils, totalCreditFils);
-      expect(totalDebitFils, 150500);
-    });
+        expect(totalDebitFils, totalCreditFils);
+        expect(totalDebitFils, 150500);
+      },
+    );
 
-    test('SaleMoney applies percentage and fixed discounts across 3 decimals', () {
-      const basePrice = 100.000;
-      final discountAmount = SaleMoney.applyDiscount(
-        base: basePrice,
-        isPercentage: true,
-        discountValue: 15.5, // 15.5%
-        decimalPlaces: 3,
-      );
+    test(
+      'SaleMoney applies percentage and fixed discounts across 3 decimals',
+      () {
+        const basePrice = 100.000;
+        final discountAmount = SaleMoney.applyDiscount(
+          base: basePrice,
+          isPercentage: true,
+          discountValue: 15.5, // 15.5%
+          decimalPlaces: 3,
+        );
 
-      expect(discountAmount, 15.500);
-      expect(basePrice - discountAmount, 84.500);
-    });
+        expect(discountAmount, 15.500);
+        expect(basePrice - discountAmount, 84.500);
+      },
+    );
 
     test('SaleCalculationService calculates multi-item totals accurately', () {
       const service = SaleCalculationService();

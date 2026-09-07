@@ -99,7 +99,7 @@ abstract class IncomeStatementReportDataPort {
 /// Provider for IncomeStatementReportDataPort.
 final incomeStatementReportDataPortProvider =
     Provider<IncomeStatementReportDataPort>((ref) {
-  throw UnimplementedError(
-    'incomeStatementReportDataPortProvider must be overridden in providerOverrides',
-  );
-});
+      throw UnimplementedError(
+        'incomeStatementReportDataPortProvider must be overridden in providerOverrides',
+      );
+    });

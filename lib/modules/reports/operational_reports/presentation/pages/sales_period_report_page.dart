@@ -15,7 +15,8 @@ class SalesPeriodReportPage extends ConsumerWidget {
     final currencyCode = companyAsync.valueOrNull?.defaultCurrencyCode ?? 'SAR';
     final companyName = companyAsync.valueOrNull?.name ?? 'NexaBiz ERP';
 
-    final provider = ref.watch(salesPeriodReportEngineDataProvider) ??
+    final provider =
+        ref.watch(salesPeriodReportEngineDataProvider) ??
         SalesPeriodReportDataProvider(
           salesDb: null as dynamic,
           companyName: companyName,

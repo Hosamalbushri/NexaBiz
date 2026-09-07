@@ -61,10 +61,7 @@ class CustomersRpLookupAdapter implements RpCustomerLookupPort {
     if (parent == null) return customer;
 
     final draft = await EnsureCustomerAccountLinks(_accountLinkPort).apply(
-      CustomerDraft(
-        customerCode: customer.customerCode,
-        name: customer.name,
-      ),
+      CustomerDraft(customerCode: customer.customerCode, name: customer.name),
       parentId: parent.accountId,
     );
     final accountId = draft.accountId?.trim();

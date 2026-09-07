@@ -24,7 +24,8 @@ class OpeningBalancesReviewStep extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(accountOpeningSetupProvider);
     final notifier = ref.read(accountOpeningSetupProvider.notifier);
-    final defaultCurrency = ref
+    final defaultCurrency =
+        ref
             .watch(companyProfileProvider)
             .valueOrNull
             ?.defaultCurrencyCode
@@ -45,9 +46,9 @@ class OpeningBalancesReviewStep extends ConsumerWidget {
         Text(
           l10n.accountingOpeningSetupStepReviewHint,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         AppCard(
@@ -60,15 +61,13 @@ class OpeningBalancesReviewStep extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         if (withAmounts.isEmpty)
-          AppCard(
-            child: Text(l10n.accountingOpeningSetupNoAmountsToPost),
-          )
+          AppCard(child: Text(l10n.accountingOpeningSetupNoAmountsToPost))
         else ...[
           Text(
             l10n.accountingOpeningSetupReviewSummaryTitle,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           for (final summary in summaries)
@@ -81,8 +80,8 @@ class OpeningBalancesReviewStep extends ConsumerWidget {
                     Text(
                       summary.currencyCode,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -120,8 +119,9 @@ class OpeningBalancesReviewStep extends ConsumerWidget {
         if (state.postResult == true) ...[
           const SizedBox(height: AppSpacing.md),
           AppCard(
-            color:
-                Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.08),
             child: Text(l10n.accountingOpeningSetupPostSuccess),
           ),
         ],
@@ -143,13 +143,13 @@ class OpeningBalancesReviewStep extends ConsumerWidget {
           onPressed: !state.canPostOpening
               ? null
               : () => unawaited(
-                    notifier.postOpening(
-                      voucherType: l10n.accountingImportOpeningVoucherType,
-                      journalDescription:
-                          l10n.accountingOpeningSetupJournalDescription,
-                      allowedCurrencyCodes: allowedCodes,
-                    ),
+                  notifier.postOpening(
+                    voucherType: l10n.accountingImportOpeningVoucherType,
+                    journalDescription:
+                        l10n.accountingOpeningSetupJournalDescription,
+                    allowedCurrencyCodes: allowedCodes,
                   ),
+                ),
         ),
       ],
     );

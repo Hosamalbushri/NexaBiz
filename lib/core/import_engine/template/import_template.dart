@@ -17,13 +17,15 @@ class ImportTemplate {
     this.executionPolicy = const {},
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : createdAt = createdAt ?? DateTime.now().toUtc(),
-        updatedAt = updatedAt ?? DateTime.now().toUtc() {
+  }) : createdAt = createdAt ?? DateTime.now().toUtc(),
+       updatedAt = updatedAt ?? DateTime.now().toUtc() {
     if (templateId.trim().isEmpty) {
       throw ArgumentError('ImportTemplate templateId cannot be empty.');
     }
     if (companyId.trim().isEmpty) {
-      throw ArgumentError('ImportTemplate companyId cannot be empty for multi-company isolation.');
+      throw ArgumentError(
+        'ImportTemplate companyId cannot be empty for multi-company isolation.',
+      );
     }
     if (targetProfileId.trim().isEmpty) {
       throw ArgumentError('ImportTemplate targetProfileId cannot be empty.');
@@ -32,9 +34,15 @@ class ImportTemplate {
 
   factory ImportTemplate.fromJson(Map<String, dynamic> json) {
     // Sanitize any accidental secret keys from config maps
-    final rawNorm = Map<String, dynamic>.from(json['normalizationConfig'] as Map? ?? {});
-    final rawVal = Map<String, dynamic>.from(json['validationConfig'] as Map? ?? {});
-    final rawExec = Map<String, dynamic>.from(json['executionPolicy'] as Map? ?? {});
+    final rawNorm = Map<String, dynamic>.from(
+      json['normalizationConfig'] as Map? ?? {},
+    );
+    final rawVal = Map<String, dynamic>.from(
+      json['validationConfig'] as Map? ?? {},
+    );
+    final rawExec = Map<String, dynamic>.from(
+      json['executionPolicy'] as Map? ?? {},
+    );
 
     return ImportTemplate(
       templateId: json['templateId'] as String,
@@ -44,15 +52,23 @@ class ImportTemplate {
       targetProfileId: json['targetProfileId'] as String,
       targetEntityType: json['targetEntityType'] as String,
       schemaVersion: json['schemaVersion'] as int? ?? 1,
-      fieldMappings: Map<String, String>.from(json['fieldMappings'] as Map? ?? {}),
+      fieldMappings: Map<String, String>.from(
+        json['fieldMappings'] as Map? ?? {},
+      ),
       ignoredColumns: List<String>.from(json['ignoredColumns'] as List? ?? []),
       normalizationConfig: _sanitizeSecrets(rawNorm),
       validationConfig: _sanitizeSecrets(rawVal),
-      relationStrategies: Map<String, dynamic>.from(json['relationStrategies'] as Map? ?? {}),
+      relationStrategies: Map<String, dynamic>.from(
+        json['relationStrategies'] as Map? ?? {},
+      ),
       assignments: Map<String, dynamic>.from(json['assignments'] as Map? ?? {}),
       executionPolicy: _sanitizeSecrets(rawExec),
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String).toUtc() : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String).toUtc() : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String).toUtc()
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String).toUtc()
+          : null,
     );
   }
 
@@ -185,7 +201,9 @@ class ImportTemplate {
         continue; // Strip secret
       }
       if (entry.value is Map<String, dynamic>) {
-        result[entry.key] = _sanitizeSecrets(entry.value as Map<String, dynamic>);
+        result[entry.key] = _sanitizeSecrets(
+          entry.value as Map<String, dynamic>,
+        );
       } else {
         result[entry.key] = entry.value;
       }

@@ -99,7 +99,9 @@ class _DefaultUpgradePrompt extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 12.0),
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: isDark ? 0.6 : 0.4),
+        color: colorScheme.surfaceContainerHighest.withValues(
+          alpha: isDark ? 0.6 : 0.4,
+        ),
         borderRadius: BorderRadius.circular(20.0),
         border: Border.all(
           color: colorScheme.primary.withValues(alpha: isDark ? 0.3 : 0.2),
@@ -174,11 +176,12 @@ class _DefaultUpgradePrompt extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: onUpgradeRequested ??
+            onPressed:
+                onUpgradeRequested ??
                 () => PackageStoreSheet.show(
-                      context,
-                      initialCapability: capability,
-                    ),
+                  context,
+                  initialCapability: capability,
+                ),
             icon: const Icon(Icons.star_rounded, size: 18),
             label: const Text('Upgrade Company to Premium'),
             style: FilledButton.styleFrom(

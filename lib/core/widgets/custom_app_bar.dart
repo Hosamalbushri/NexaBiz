@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/exit/app_exit_scope.dart';
 import '../../app/localization/app_localizations.dart';
-import '../../app/router/app_routes.dart';
 import 'notification_badge.dart';
 
 /// Base title scale for [CustomAppBar].
@@ -195,11 +195,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.automaticSystemOverlay = true,
     this.animateContent = true,
     this.leading,
+
     /// When set, overrides [CustomAppBarStyle.centerTitle].
     ///
     /// Use `false` on primary shell tabs so the title sits on the start edge
     /// (right in Arabic RTL).
     this.centerTitle,
+
     /// When set, overrides [CustomAppBarStyle.titleSize].
     ///
     /// Defaults to [CustomAppBarTitleSize.auto] which shrinks long titles.
@@ -302,8 +304,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize {
     final resolvedStyle = style ?? const CustomAppBarStyle();
     final bottomHeight = bottom?.preferredSize.height ?? 0;
-    final searchBottomHeight =
-        searching ? (searchBottom?.preferredSize.height ?? 0) : 0;
+    final searchBottomHeight = searching
+        ? (searchBottom?.preferredSize.height ?? 0)
+        : 0;
     return Size.fromHeight(
       resolvedStyle.height + bottomHeight + searchBottomHeight,
     );
@@ -314,20 +317,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final resolvedStyle = (style ?? CustomAppBarStyle.adaptive(context))
-        .merge(
-          searching
-              ? const CustomAppBarStyle(centerTitle: false)
-              : null,
-        )
+        .merge(searching ? const CustomAppBarStyle(centerTitle: false) : null)
         .merge(
           centerTitle != null
               ? CustomAppBarStyle(centerTitle: centerTitle!)
               : null,
         )
         .merge(
-          titleSize != null
-              ? CustomAppBarStyle(titleSize: titleSize)
-              : null,
+          titleSize != null ? CustomAppBarStyle(titleSize: titleSize) : null,
         );
     final resolvedTitleSize =
         resolvedStyle.titleSize ?? CustomAppBarTitleSize.auto;
@@ -416,10 +413,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
     return PreferredSize(
       preferredSize: Size.fromHeight(height),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: parts,
-      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: parts),
     );
   }
 
@@ -465,7 +459,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return null;
   }
 
-  /// Pops when possible; otherwise navigates to the platform home route.
+  /// Pops when possible; otherwise resolves logical parent route (Dashboard for roots, parent page for deep pages).
   ///
   /// Module roots are often opened with `context.go`, which leaves nothing to pop.
   /// Uses [Navigator.maybePop] so [PopScope] interceptors (e.g.
@@ -477,7 +471,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       return;
     }
 
-    router?.go(AppRoutes.dashboard);
+    final path = router?.routerDelegate.currentConfiguration.uri.path ?? '';
+    final parent = getLogicalParentRoute(path);
+    router?.go(parent);
   }
 
   List<Widget> _buildTrailing(
@@ -615,7 +611,9 @@ class _CustomAppBarSurface extends StatelessWidget {
     final trailingWidth = trailingCount <= 0
         ? 0.0
         : (trailingCount * actionSize) + ((trailingCount - 1) * gap);
-    final occupied = leadingWidth > trailingWidth ? leadingWidth : trailingWidth;
+    final occupied = leadingWidth > trailingWidth
+        ? leadingWidth
+        : trailingWidth;
     return occupied + 12;
   }
 
@@ -734,7 +732,9 @@ class _CustomAppBarTitle extends StatelessWidget {
 
     final content = FittedBox(
       fit: BoxFit.scaleDown,
-      alignment: centerTitle ? Alignment.center : AlignmentDirectional.centerStart,
+      alignment: centerTitle
+          ? Alignment.center
+          : AlignmentDirectional.centerStart,
       child: Text(
         title,
         maxLines: 1,

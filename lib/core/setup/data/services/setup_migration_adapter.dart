@@ -37,10 +37,22 @@ class SetupMigrationAdapter {
         AccountRole.cash: [('accounting', 'cash_account')],
         AccountRole.receivable: [('accounting', 'receivable_account')],
         AccountRole.payable: [('accounting', 'payable_account')],
-        AccountRole.revenue: [('sales', 'sales_account'), ('accounting', 'sales_account')],
-        AccountRole.cogs: [('inventory', 'cogs_account'), ('accounting', 'cogs_account')],
-        AccountRole.inventory: [('inventory', 'inventory_asset_account'), ('inventory', 'inventory_account')],
-        AccountRole.adjustment: [('inventory', 'inventory_variance_account'), ('inventory', 'adjustment_account')],
+        AccountRole.revenue: [
+          ('sales', 'sales_account'),
+          ('accounting', 'sales_account'),
+        ],
+        AccountRole.cogs: [
+          ('inventory', 'cogs_account'),
+          ('accounting', 'cogs_account'),
+        ],
+        AccountRole.inventory: [
+          ('inventory', 'inventory_asset_account'),
+          ('inventory', 'inventory_account'),
+        ],
+        AccountRole.adjustment: [
+          ('inventory', 'inventory_variance_account'),
+          ('inventory', 'adjustment_account'),
+        ],
         AccountRole.discount: [('sales', 'sales_discount_account')],
         AccountRole.tax: [('sales', 'sales_tax_account')],
       };
@@ -63,14 +75,16 @@ class SetupMigrationAdapter {
             );
 
             if (existing == null) {
-              await bindingRepo.saveBinding(AccountBinding(
-                companyId: trimmedCompanyId,
-                packageId: packageId,
-                requirementKey: requirementKey,
-                accountUuid: uuid,
-                status: AccountBindingStatus.bound,
-                boundAt: DateTime.now().toUtc(),
-              ));
+              await bindingRepo.saveBinding(
+                AccountBinding(
+                  companyId: trimmedCompanyId,
+                  packageId: packageId,
+                  requirementKey: requirementKey,
+                  accountUuid: uuid,
+                  status: AccountBindingStatus.bound,
+                  boundAt: DateTime.now().toUtc(),
+                ),
+              );
               roleMigrated = true;
             }
           }
@@ -79,29 +93,79 @@ class SetupMigrationAdapter {
           }
         }
       }
-
-
     }
 
     // 2. Discover Default Account Bindings via system metadata if lookup port provided
     if (accountLookupPort != null) {
-      final defaultSystemKeys = <AccountRole, (String packageId, String reqKey, String systemKey, String fallbackCode)>{
-        AccountRole.cash: ('accounting', 'cash_account', 'cash', '1211'),
-        AccountRole.receivable: ('accounting', 'receivable_account', 'customers', '1221'),
-        AccountRole.payable: ('accounting', 'payable_account', 'accounts_payable', '2110'),
-        AccountRole.revenue: ('sales', 'sales_account', 'sales_revenue', '4100'),
-        AccountRole.cogs: ('inventory', 'cogs_account', 'cost_of_goods_sold', '5100'),
-        AccountRole.inventory: ('inventory', 'inventory_asset_account', 'inventory', '1230'),
-        AccountRole.adjustment: ('inventory', 'inventory_variance_account', 'inventory_adjustments', '5150'),
-        AccountRole.discount: ('sales', 'sales_discount_account', 'sales_discounts', '5170'),
-        AccountRole.tax: ('sales', 'sales_tax_account', 'vat_output', '2130'),
-      };
+      final defaultSystemKeys =
+          <
+            AccountRole,
+            (
+              String packageId,
+              String reqKey,
+              String systemKey,
+              String fallbackCode,
+            )
+          >{
+            AccountRole.cash: ('accounting', 'cash_account', 'cash', '1211'),
+            AccountRole.receivable: (
+              'accounting',
+              'receivable_account',
+              'customers',
+              '1221',
+            ),
+            AccountRole.payable: (
+              'accounting',
+              'payable_account',
+              'accounts_payable',
+              '2110',
+            ),
+            AccountRole.revenue: (
+              'sales',
+              'sales_account',
+              'sales_revenue',
+              '4100',
+            ),
+            AccountRole.cogs: (
+              'inventory',
+              'cogs_account',
+              'cost_of_goods_sold',
+              '5100',
+            ),
+            AccountRole.inventory: (
+              'inventory',
+              'inventory_asset_account',
+              'inventory',
+              '1230',
+            ),
+            AccountRole.adjustment: (
+              'inventory',
+              'inventory_variance_account',
+              'inventory_adjustments',
+              '5150',
+            ),
+            AccountRole.discount: (
+              'sales',
+              'sales_discount_account',
+              'sales_discounts',
+              '5170',
+            ),
+            AccountRole.tax: (
+              'sales',
+              'sales_tax_account',
+              'vat_output',
+              '2130',
+            ),
+          };
 
-      final legacyMappings = Map<AccountRole, String>.from(accountingConfig?.accountMappings ?? {});
+      final legacyMappings = Map<AccountRole, String>.from(
+        accountingConfig?.accountMappings ?? {},
+      );
 
       for (final entry in defaultSystemKeys.entries) {
         final role = entry.key;
-        final (packageId, requirementKey, systemKey, fallbackCode) = entry.value;
+        final (packageId, requirementKey, systemKey, fallbackCode) =
+            entry.value;
 
         final existing = await bindingRepo.getBinding(
           companyId: trimmedCompanyId,
@@ -113,34 +177,38 @@ class SetupMigrationAdapter {
           continue;
         }
 
-        final account = await accountLookupPort.findAccount('system:$systemKey') ??
-                        await accountLookupPort.findAccount(systemKey) ??
-                        await accountLookupPort.findAccount(fallbackCode);
+        final account =
+            await accountLookupPort.findAccount('system:$systemKey') ??
+            await accountLookupPort.findAccount(systemKey) ??
+            await accountLookupPort.findAccount(fallbackCode);
 
         if (account != null && account.isActive && !account.isDeleted) {
-          await bindingRepo.saveBinding(AccountBinding(
-            companyId: trimmedCompanyId,
-            packageId: packageId,
-            requirementKey: requirementKey,
-            accountUuid: account.uuid,
-            status: AccountBindingStatus.bound,
-            boundAt: DateTime.now().toUtc(),
-          ));
+          await bindingRepo.saveBinding(
+            AccountBinding(
+              companyId: trimmedCompanyId,
+              packageId: packageId,
+              requirementKey: requirementKey,
+              accountUuid: account.uuid,
+              status: AccountBindingStatus.bound,
+              boundAt: DateTime.now().toUtc(),
+            ),
+          );
           legacyMappings[role] = account.uuid;
           migratedCount++;
         }
       }
 
       if (legacyMappings.isNotEmpty) {
-        await companyInitRepo.saveAccountingConfig(CompanyAccountingConfig(
-          companyId: trimmedCompanyId,
-          accountMappings: legacyMappings,
-          updatedAt: DateTime.now().toUtc(),
-        ));
+        await companyInitRepo.saveAccountingConfig(
+          CompanyAccountingConfig(
+            companyId: trimmedCompanyId,
+            accountMappings: legacyMappings,
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        );
       }
     }
 
     return migratedCount;
   }
 }
-

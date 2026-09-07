@@ -77,13 +77,22 @@ class FakeWarehouseRepository implements WarehouseRepository {
   }
 
   @override
-  Future<List<ProductWarehouseStock>> getStocksForWarehouse(String warehouseId) async => [];
+  Future<List<ProductWarehouseStock>> getStocksForWarehouse(
+    String warehouseId,
+  ) async => [];
 
   @override
-  Future<ProductWarehouseStock?> getStock(String itemCode, String warehouseId) async => null;
+  Future<ProductWarehouseStock?> getStock(
+    String itemCode,
+    String warehouseId,
+  ) async => null;
 
   @override
-  Future<void> updateWarehouseStock(String itemCode, String warehouseId, double deltaQty) async {}
+  Future<void> updateWarehouseStock(
+    String itemCode,
+    String warehouseId,
+    double deltaQty,
+  ) async {}
 }
 
 void main() {
@@ -134,7 +143,9 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([validWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
+        warehouseLookupPort: FakeWarehouseLookupPort(
+          fakeWarehouseRepo.warehouses,
+        ),
         initRepository: initRepository,
       );
 
@@ -160,7 +171,9 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([foreignWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
+        warehouseLookupPort: FakeWarehouseLookupPort(
+          fakeWarehouseRepo.warehouses,
+        ),
         initRepository: initRepository,
       );
 
@@ -168,11 +181,13 @@ void main() {
         () async => await warehouseConfigService.configureDefaultWarehouse(
           warehouseId: 'wh-foreign-002',
         ),
-        throwsA(isA<InvalidWarehouseException>().having(
-          (e) => e.reason,
-          'reason',
-          contains('Cross-company violation'),
-        )),
+        throwsA(
+          isA<InvalidWarehouseException>().having(
+            (e) => e.reason,
+            'reason',
+            contains('Cross-company violation'),
+          ),
+        ),
       );
     });
 
@@ -187,7 +202,9 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([inactiveWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
+        warehouseLookupPort: FakeWarehouseLookupPort(
+          fakeWarehouseRepo.warehouses,
+        ),
         initRepository: initRepository,
       );
 
@@ -195,18 +212,22 @@ void main() {
         () async => await warehouseConfigService.configureDefaultWarehouse(
           warehouseId: 'wh-inactive-003',
         ),
-        throwsA(isA<InvalidWarehouseException>().having(
-          (e) => e.reason,
-          'reason',
-          contains('inactive'),
-        )),
+        throwsA(
+          isA<InvalidWarehouseException>().having(
+            (e) => e.reason,
+            'reason',
+            contains('inactive'),
+          ),
+        ),
       );
     });
 
     test('4. Non-Existent Warehouse Selection Rejection', () async {
       fakeWarehouseRepo = FakeWarehouseRepository([]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
+        warehouseLookupPort: FakeWarehouseLookupPort(
+          fakeWarehouseRepo.warehouses,
+        ),
         initRepository: initRepository,
       );
 
@@ -214,11 +235,13 @@ void main() {
         () async => await warehouseConfigService.configureDefaultWarehouse(
           warehouseId: 'wh-missing-999',
         ),
-        throwsA(isA<InvalidWarehouseException>().having(
-          (e) => e.reason,
-          'reason',
-          contains('does not exist'),
-        )),
+        throwsA(
+          isA<InvalidWarehouseException>().having(
+            (e) => e.reason,
+            'reason',
+            contains('does not exist'),
+          ),
+        ),
       );
     });
 
@@ -234,7 +257,9 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([deletedWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
+        warehouseLookupPort: FakeWarehouseLookupPort(
+          fakeWarehouseRepo.warehouses,
+        ),
         initRepository: initRepository,
       );
 
@@ -242,25 +267,30 @@ void main() {
         () async => await warehouseConfigService.configureDefaultWarehouse(
           warehouseId: 'wh-deleted-004',
         ),
-        throwsA(isA<InvalidWarehouseException>().having(
-          (e) => e.reason,
-          'reason',
-          contains('soft-deleted'),
-        )),
+        throwsA(
+          isA<InvalidWarehouseException>().having(
+            (e) => e.reason,
+            'reason',
+            contains('soft-deleted'),
+          ),
+        ),
       );
     });
 
     test('6. Inventory Operational Settings Persistence', () async {
       fakeWarehouseRepo = FakeWarehouseRepository([]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
+        warehouseLookupPort: FakeWarehouseLookupPort(
+          fakeWarehouseRepo.warehouses,
+        ),
         initRepository: initRepository,
       );
 
-      final invConfig = await warehouseConfigService.configureInventoryOperationalSettings(
-        allowNegativeStock: true,
-        defaultCostingMethod: 'AVCO',
-      );
+      final invConfig = await warehouseConfigService
+          .configureInventoryOperationalSettings(
+            allowNegativeStock: true,
+            defaultCostingMethod: 'AVCO',
+          );
 
       expect(invConfig.allowNegativeStock, isTrue);
       expect(invConfig.defaultCostingMethod, equals('AVCO'));
@@ -278,7 +308,9 @@ void main() {
         readCompanyId: () => 'company-alpha',
       );
       final serviceAlpha = CompanyWarehouseConfigService(
-        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
+        warehouseLookupPort: FakeWarehouseLookupPort(
+          fakeWarehouseRepo.warehouses,
+        ),
         initRepository: repoAlpha,
       );
 

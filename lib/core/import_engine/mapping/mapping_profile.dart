@@ -18,9 +18,7 @@ class MappingProfile {
       fieldMappings: Map<String, String>.from(
         json['fieldMappings'] as Map? ?? {},
       ),
-      ignoredColumns: List<String>.from(
-        json['ignoredColumns'] as List? ?? [],
-      ),
+      ignoredColumns: List<String>.from(json['ignoredColumns'] as List? ?? []),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );

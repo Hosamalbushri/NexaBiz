@@ -154,11 +154,10 @@ class NoOpJournalBookReportDataPort implements JournalBookReportDataPort {
   Future<JournalBookReportPayload> loadFromFilter({
     required ReportQueryFilter filter,
     required JournalBookReportLabels labels,
-  }) =>
-      load(
-        fromDate: filter.fromDate,
-        toDate: filter.toDate,
-        postedOnly: filter.postingScope == PostingScope.postedOnly,
-        labels: labels,
-      );
+  }) => load(
+    fromDate: filter.fromDate,
+    toDate: filter.toDate,
+    postedOnly: filter.postingScope == PostingScope.postedOnly,
+    labels: labels,
+  );
 }

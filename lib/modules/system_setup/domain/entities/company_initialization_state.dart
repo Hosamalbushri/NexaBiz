@@ -58,15 +58,15 @@ class CompanyInitializationState {
   }
 
   Map<String, dynamic> toJson() => {
-        'companyId': companyId,
-        'companyCreated': companyCreated,
-        'inventoryCurrencyConfigured': inventoryCurrencyConfigured,
-        'accountingConfigured': accountingConfigured,
-        'warehouseConfigured': warehouseConfigured,
-        'inventorySettingsConfigured': inventorySettingsConfigured,
-        'initializationCompleted': initializationCompleted,
-        'updatedAt': updatedAt?.toUtc().millisecondsSinceEpoch,
-      };
+    'companyId': companyId,
+    'companyCreated': companyCreated,
+    'inventoryCurrencyConfigured': inventoryCurrencyConfigured,
+    'accountingConfigured': accountingConfigured,
+    'warehouseConfigured': warehouseConfigured,
+    'inventorySettingsConfigured': inventorySettingsConfigured,
+    'initializationCompleted': initializationCompleted,
+    'updatedAt': updatedAt?.toUtc().millisecondsSinceEpoch,
+  };
 
   factory CompanyInitializationState.fromJson(Map<dynamic, dynamic> json) {
     final rawUpdated = json['updatedAt'];

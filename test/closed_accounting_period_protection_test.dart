@@ -39,8 +39,7 @@ class _FakePostingEngine implements PostingEngine {
     required List<InboundLineData> lines,
     required String? warehouseId,
     required DateTime documentDate,
-  }) async =>
-      100.0;
+  }) async => 100.0;
 
   @override
   Future<double> applyOutboundPosting({
@@ -48,8 +47,7 @@ class _FakePostingEngine implements PostingEngine {
     required List<OutboundLineData> lines,
     required String? warehouseId,
     required CostValuationMethod valuationMethod,
-  }) async =>
-      100.0;
+  }) async => 100.0;
 
   @override
   Future<double> applyTransferPosting({
@@ -58,13 +56,10 @@ class _FakePostingEngine implements PostingEngine {
     required String fromWarehouseId,
     required String toWarehouseId,
     required CostValuationMethod valuationMethod,
-  }) async =>
-      100.0;
+  }) async => 100.0;
 
   @override
-  Future<void> reversePosting({
-    required InventoryDocumentRef document,
-  }) async {}
+  Future<void> reversePosting({required InventoryDocumentRef document}) async {}
 }
 
 class _FakeStockValidationService implements StockValidationService {
@@ -72,23 +67,20 @@ class _FakeStockValidationService implements StockValidationService {
   Future<double> getPostedBalance({
     required String itemCode,
     String? warehouseId,
-  }) async =>
-      1000.0;
+  }) async => 1000.0;
 
   @override
   Future<List<StockShortageItem>> validateOutboundLines({
     required List<OutboundLineRequest> lines,
     String? warehouseId,
-  }) async =>
-      [];
+  }) async => [];
 }
 
 class _FakeDependencyDetector implements InventoryDependencyDetector {
   @override
   Future<List<InventoryDocumentRef>> findDependentDocuments({
     required InventoryDocumentRef document,
-  }) async =>
-      [];
+  }) async => [];
 }
 
 void main() {
@@ -150,10 +142,7 @@ void main() {
     invDb = InventoryDatabase.memory();
     rpDb = ReceiptsPaymentsDatabase.memory();
 
-    accountRepo = AccountRepositoryImpl(
-      accDb,
-      readCompanyId: () => companyId,
-    );
+    accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => companyId);
     await accountRepo.seedDefaultChart();
     await accountRepo.ensureDefaultChartSeeded();
 
@@ -170,7 +159,8 @@ void main() {
 
     periodValidator = AccountingPeriodValidator(
       repository: fiscalYearRepo,
-      legacyPolicyReader: () => const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
+      legacyPolicyReader: () =>
+          const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
     );
 
     journalRepo = JournalRepositoryImpl(
@@ -292,100 +282,110 @@ void main() {
       );
     });
 
-    test('3. Inventory document posting in closed period MUST fail cleanly', () async {
-      final fy = await createFY2025();
-      final periods = await fiscalYearRepo.listPeriods(fy.uuid);
-      final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
+    test(
+      '3. Inventory document posting in closed period MUST fail cleanly',
+      () async {
+        final fy = await createFY2025();
+        final periods = await fiscalYearRepo.listPeriods(fy.uuid);
+        final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
 
-      await fiscalYearRepo.closePeriodAtomically(
-        periodUuid: janPeriod.uuid,
-        closedBy: 'user-1',
-        fxRevaluationEnabled: false,
-        fxRevaluationExecuted: false,
-      );
+        await fiscalYearRepo.closePeriodAtomically(
+          periodUuid: janPeriod.uuid,
+          closedBy: 'user-1',
+          fxRevaluationEnabled: false,
+          fxRevaluationExecuted: false,
+        );
 
-      const receiptUuid = '11111111-1111-4111-8111-111111111111';
-      const lineUuid = '22222222-2222-4222-8222-222222222222';
-      await invDb.into(invDb.stockReceipts).insert(
-            StockReceiptsCompanion.insert(
-              uuid: receiptUuid,
-              receiptNumber: 'REC-CLOSED-1',
-              receiptDate: DateTime.utc(2025, 1, 10).millisecondsSinceEpoch,
-              createdAt: DateTime.now().millisecondsSinceEpoch,
-              updatedAt: DateTime.now().millisecondsSinceEpoch,
-              companyId: const Value(companyId),
+        const receiptUuid = '11111111-1111-4111-8111-111111111111';
+        const lineUuid = '22222222-2222-4222-8222-222222222222';
+        await invDb
+            .into(invDb.stockReceipts)
+            .insert(
+              StockReceiptsCompanion.insert(
+                uuid: receiptUuid,
+                receiptNumber: 'REC-CLOSED-1',
+                receiptDate: DateTime.utc(2025, 1, 10).millisecondsSinceEpoch,
+                createdAt: DateTime.now().millisecondsSinceEpoch,
+                updatedAt: DateTime.now().millisecondsSinceEpoch,
+                companyId: const Value(companyId),
+              ),
+            );
+
+        await invDb
+            .into(invDb.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: lineUuid,
+                movementUuid: receiptUuid,
+                movementType: 'receipt',
+                itemCode: 'ITEM-1',
+                itemName: 'Item 1',
+                quantity: const Value(10.0),
+                unitCost: const Value(50.0),
+                totalCost: const Value(500.0),
+              ),
+            );
+
+        final docRef = InventoryDocumentRef(
+          documentId: receiptUuid,
+          documentNumber: 'REC-CLOSED-1',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.utc(2025, 1, 10),
+          warehouseId: 'WH-1',
+          status: InventoryDocumentStatus.draft,
+        );
+
+        final result = await postingCoordinator.post(document: docRef);
+        expect(result, isA<PostInvalidStatus>());
+        final invalidResult = result as PostInvalidStatus;
+        expect(invalidResult.reason, contains('الفترة المحاسبية مغلقة'));
+      },
+    );
+
+    test(
+      '4. Receipts & Payments in closed period MUST be rejected on insert',
+      () async {
+        final fy = await createFY2025();
+        final periods = await fiscalYearRepo.listPeriods(fy.uuid);
+        final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
+
+        await fiscalYearRepo.closePeriodAtomically(
+          periodUuid: janPeriod.uuid,
+          closedBy: 'user-1',
+          fxRevaluationEnabled: false,
+          fxRevaluationExecuted: false,
+        );
+
+        final draftRP = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.utc(2025, 1, 20),
+          amount: 1500,
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          exchangeRate: 1.0,
+          counterAmount: 1500,
+          counterCurrencyCode: 'YER',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1,
+          counterAccountId: acc2,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+          lines: const [],
+        );
+
+        expect(
+          () async => await rpRepo.insert(draftRP, transactionNumber: 'RP-001'),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.periodClosed,
             ),
-          );
-
-      await invDb.into(invDb.stockMovementLines).insert(
-            StockMovementLinesCompanion.insert(
-              uuid: lineUuid,
-              movementUuid: receiptUuid,
-              movementType: 'receipt',
-              itemCode: 'ITEM-1',
-              itemName: 'Item 1',
-              quantity: const Value(10.0),
-              unitCost: const Value(50.0),
-              totalCost: const Value(500.0),
-            ),
-          );
-
-      final docRef = InventoryDocumentRef(
-        documentId: receiptUuid,
-        documentNumber: 'REC-CLOSED-1',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.utc(2025, 1, 10),
-        warehouseId: 'WH-1',
-        status: InventoryDocumentStatus.draft,
-      );
-
-      final result = await postingCoordinator.post(document: docRef);
-      expect(result, isA<PostInvalidStatus>());
-      final invalidResult = result as PostInvalidStatus;
-      expect(invalidResult.reason, contains('الفترة المحاسبية مغلقة'));
-    });
-
-    test('4. Receipts & Payments in closed period MUST be rejected on insert', () async {
-      final fy = await createFY2025();
-      final periods = await fiscalYearRepo.listPeriods(fy.uuid);
-      final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
-
-      await fiscalYearRepo.closePeriodAtomically(
-        periodUuid: janPeriod.uuid,
-        closedBy: 'user-1',
-        fxRevaluationEnabled: false,
-        fxRevaluationExecuted: false,
-      );
-
-      final draftRP = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.utc(2025, 1, 20),
-        amount: 1500,
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        exchangeRate: 1.0,
-        counterAmount: 1500,
-        counterCurrencyCode: 'YER',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1,
-        counterAccountId: acc2,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-        lines: const [],
-      );
-
-      expect(
-        () async => await rpRepo.insert(draftRP, transactionNumber: 'RP-001'),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.periodClosed,
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('5. Reopening a closed period permits posting again', () async {
       final fy = await createFY2025();
@@ -492,110 +492,116 @@ void main() {
       );
     });
 
-    test('7. Editing entry date to backdate into a closed period MUST be rejected', () async {
-      final fy = await createFY2025();
-      final periods = await fiscalYearRepo.listPeriods(fy.uuid);
-      final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
+    test(
+      '7. Editing entry date to backdate into a closed period MUST be rejected',
+      () async {
+        final fy = await createFY2025();
+        final periods = await fiscalYearRepo.listPeriods(fy.uuid);
+        final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
 
-      final draftFeb = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.utc(2025, 2, 10),
-        amount: 300,
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        exchangeRate: 1.0,
-        counterAmount: 300,
-        counterCurrencyCode: 'YER',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1,
-        counterAccountId: acc2,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-        lines: const [],
-      );
+        final draftFeb = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.utc(2025, 2, 10),
+          amount: 300,
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          exchangeRate: 1.0,
+          counterAmount: 300,
+          counterCurrencyCode: 'YER',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1,
+          counterAccountId: acc2,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+          lines: const [],
+        );
 
-      final rp = await rpRepo.insert(draftFeb, transactionNumber: 'RP-FEB-1');
+        final rp = await rpRepo.insert(draftFeb, transactionNumber: 'RP-FEB-1');
 
-      await fiscalYearRepo.closePeriodAtomically(
-        periodUuid: janPeriod.uuid,
-        closedBy: 'user-1',
-        fxRevaluationEnabled: false,
-        fxRevaluationExecuted: false,
-      );
+        await fiscalYearRepo.closePeriodAtomically(
+          periodUuid: janPeriod.uuid,
+          closedBy: 'user-1',
+          fxRevaluationEnabled: false,
+          fxRevaluationExecuted: false,
+        );
 
-      final backdatedDraft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.utc(2025, 1, 15),
-        amount: 300,
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        exchangeRate: 1.0,
-        counterAmount: 300,
-        counterCurrencyCode: 'YER',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1,
-        counterAccountId: acc2,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-        lines: const [],
-      );
+        final backdatedDraft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.utc(2025, 1, 15),
+          amount: 300,
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          exchangeRate: 1.0,
+          counterAmount: 300,
+          counterCurrencyCode: 'YER',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1,
+          counterAccountId: acc2,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+          lines: const [],
+        );
 
-      expect(
-        () async => await rpRepo.update(rp.id, backdatedDraft),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.periodClosed,
+        expect(
+          () async => await rpRepo.update(rp.id, backdatedDraft),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.periodClosed,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
-    test('8. Soft deleting a record in a closed period MUST be rejected', () async {
-      final fy = await createFY2025();
-      final periods = await fiscalYearRepo.listPeriods(fy.uuid);
-      final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
+    test(
+      '8. Soft deleting a record in a closed period MUST be rejected',
+      () async {
+        final fy = await createFY2025();
+        final periods = await fiscalYearRepo.listPeriods(fy.uuid);
+        final janPeriod = periods.firstWhere((p) => p.startDate.month == 1);
 
-      final draftRP = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.utc(2025, 1, 10),
-        amount: 100,
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        exchangeRate: 1.0,
-        counterAmount: 100,
-        counterCurrencyCode: 'YER',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1,
-        counterAccountId: acc2,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-        lines: const [],
-      );
+        final draftRP = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.utc(2025, 1, 10),
+          amount: 100,
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          exchangeRate: 1.0,
+          counterAmount: 100,
+          counterCurrencyCode: 'YER',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1,
+          counterAccountId: acc2,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+          lines: const [],
+        );
 
-      final rp = await rpRepo.insert(draftRP, transactionNumber: 'RP-DEL-1');
+        final rp = await rpRepo.insert(draftRP, transactionNumber: 'RP-DEL-1');
 
-      await fiscalYearRepo.closePeriodAtomically(
-        periodUuid: janPeriod.uuid,
-        closedBy: 'user-1',
-        fxRevaluationEnabled: false,
-        fxRevaluationExecuted: false,
-      );
+        await fiscalYearRepo.closePeriodAtomically(
+          periodUuid: janPeriod.uuid,
+          closedBy: 'user-1',
+          fxRevaluationEnabled: false,
+          fxRevaluationExecuted: false,
+        );
 
-      expect(
-        () async => await rpRepo.softDelete(rp.id),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.periodClosed,
+        expect(
+          () async => await rpRepo.softDelete(rp.id),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.periodClosed,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   });
 }

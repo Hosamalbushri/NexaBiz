@@ -25,18 +25,18 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
   final FiscalYearRepository? _fiscalYears;
 
   static String sourceTypeFor(TransactionType type) => switch (type) {
-        TransactionType.receipt => 'receipt',
-        TransactionType.payment => 'payment',
-        TransactionType.transfer => 'transfer',
-        TransactionType.currencyExchange => 'currency_exchange',
-      };
+    TransactionType.receipt => 'receipt',
+    TransactionType.payment => 'payment',
+    TransactionType.transfer => 'transfer',
+    TransactionType.currencyExchange => 'currency_exchange',
+  };
 
   static String voucherTypeLabel(TransactionType type) => switch (type) {
-        TransactionType.receipt => 'قبض',
-        TransactionType.payment => 'صرف',
-        TransactionType.transfer => 'نقل',
-        TransactionType.currencyExchange => 'مصارفة',
-      };
+    TransactionType.receipt => 'قبض',
+    TransactionType.payment => 'صرف',
+    TransactionType.transfer => 'نقل',
+    TransactionType.currencyExchange => 'مصارفة',
+  };
 
   /// Cash-box journal line: `اسم الحساب - البيان`.
   static String cashBoxLineDescription({
@@ -105,7 +105,9 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       ExchangeRateValidator.validate(
         currencyCode: line.currencyCode,
         baseCurrencyCode: txn.baseCurrencyCode,
-        exchangeRate: line.exchangeRate > 0 ? line.exchangeRate : txn.exchangeRate,
+        exchangeRate: line.exchangeRate > 0
+            ? line.exchangeRate
+            : txn.exchangeRate,
       );
 
   @override
@@ -131,7 +133,8 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
     final baseCurrency = txn.baseCurrencyCode.trim().toUpperCase().isEmpty
         ? cashCurrency
         : txn.baseCurrencyCode.trim().toUpperCase();
-    final multiCurrency = txn.transactionType.isCurrencyExchange ||
+    final multiCurrency =
+        txn.transactionType.isCurrencyExchange ||
         allocations.any(
           (line) => line.currencyCode.trim().toUpperCase() != cashCurrency,
         );
@@ -368,10 +371,10 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       }
     }
 
-    final gain = await _systemAccountUuid('fx_gain') ??
-        systemAccountUuid('fx_gain');
-    final loss = await _systemAccountUuid('fx_loss') ??
-        systemAccountUuid('fx_loss');
+    final gain =
+        await _systemAccountUuid('fx_gain') ?? systemAccountUuid('fx_gain');
+    final loss =
+        await _systemAccountUuid('fx_loss') ?? systemAccountUuid('fx_loss');
     return (gainUuid: gain, lossUuid: loss);
   }
 

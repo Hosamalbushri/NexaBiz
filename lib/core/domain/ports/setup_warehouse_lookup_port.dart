@@ -20,5 +20,6 @@ class NoOpSetupWarehouseLookupPort implements SetupWarehouseLookupPort {
   const NoOpSetupWarehouseLookupPort();
 
   @override
-  Future<SetupWarehouseData?> getWarehouseById(String warehouseId) async => null;
+  Future<SetupWarehouseData?> getWarehouseById(String warehouseId) async =>
+      null;
 }

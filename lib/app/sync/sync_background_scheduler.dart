@@ -15,29 +15,24 @@ import 'sync_enabled_provider.dart';
 
 /// Persisted auto-sync preferences (toggle + interval).
 final syncAutoPreferencesProvider =
-    StateNotifierProvider<SyncAutoPreferencesController, SyncAutoPreferences>(
-  (ref) {
-    return SyncAutoPreferencesController(
-      repository: ref.watch(settingsRepositoryProvider),
-    );
-  },
-);
+    StateNotifierProvider<SyncAutoPreferencesController, SyncAutoPreferences>((
+      ref,
+    ) {
+      return SyncAutoPreferencesController(
+        repository: ref.watch(settingsRepositoryProvider),
+      );
+    });
 
-class SyncAutoPreferencesController
-    extends StateNotifier<SyncAutoPreferences> {
-  SyncAutoPreferencesController({
-    required this._repository,
-  })  : super(SyncAutoPreferences.defaults);
+class SyncAutoPreferencesController extends StateNotifier<SyncAutoPreferences> {
+  SyncAutoPreferencesController({required this._repository})
+    : super(SyncAutoPreferences.defaults);
 
   final SettingsRepository _repository;
 
   Future<void> hydrate() async {
     final enabled = await _repository.loadSyncAutoEnabled();
     final minutes = await _repository.loadSyncAutoIntervalMinutes();
-    state = SyncAutoPreferences(
-      enabled: enabled,
-      intervalMinutes: minutes,
-    );
+    state = SyncAutoPreferences(enabled: enabled, intervalMinutes: minutes);
   }
 
   Future<void> setEnabled(bool enabled) async {
@@ -64,7 +59,9 @@ class SyncAutoPreferencesController
 /// - App resumed from background
 ///
 /// Manual Sync Now also goes through [requestSync] so re-entrancy stays safe.
-final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((ref) {
+final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((
+  ref,
+) {
   final scheduler = SyncBackgroundScheduler(
     syncManager: ref.watch(syncManagerProvider),
     queue: ref.watch(syncQueueProvider),
@@ -74,8 +71,9 @@ final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((ref) 
     canRun: () {
       if (!ref.read(syncEnabledProvider)) return false;
       final entitlementService = ref.read(entitlementServiceProvider);
-      final hasCapability =
-          entitlementService.hasCapability(EntitlementCapability.sync);
+      final hasCapability = entitlementService.hasCapability(
+        EntitlementCapability.sync,
+      );
       return ref.read(authStateProvider).canUseRemoteSync && hasCapability;
     },
   );
@@ -206,10 +204,7 @@ class SyncBackgroundScheduler with WidgetsBindingObserver {
     if (wake == null) {
       return;
     }
-    await requestSync(
-      notify: false,
-      trigger: SyncPassTrigger.osBackground,
-    );
+    await requestSync(notify: false, trigger: SyncPassTrigger.osBackground);
   }
 
   void _onQueueChanged() {

@@ -14,5 +14,9 @@ abstract class WarehouseRepository {
   /// Per-Warehouse Product Stocks
   Future<List<ProductWarehouseStock>> getStocksForWarehouse(String warehouseId);
   Future<ProductWarehouseStock?> getStock(String itemCode, String warehouseId);
-  Future<void> updateWarehouseStock(String itemCode, String warehouseId, double deltaQty);
+  Future<void> updateWarehouseStock(
+    String itemCode,
+    String warehouseId,
+    double deltaQty,
+  );
 }

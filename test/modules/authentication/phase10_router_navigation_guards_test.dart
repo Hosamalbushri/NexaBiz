@@ -60,7 +60,9 @@ void main() {
 
     // 1. First-Run Required Gate
     if (bootstrapState.isFirstRunRequired) {
-      if (path != '/first-run' && path != AppRoutes.onboarding && path != AppRoutes.splash) {
+      if (path != '/first-run' &&
+          path != AppRoutes.onboarding &&
+          path != AppRoutes.splash) {
         return '/first-run';
       }
       return null;
@@ -68,7 +70,9 @@ void main() {
 
     // Block setup routes if setup is completed
     if (!bootstrapState.isFirstRunRequired &&
-        (path == '/first-run' || path == '/setup-choice' || path == '/server-setup')) {
+        (path == '/first-run' ||
+            path == '/setup-choice' ||
+            path == '/server-setup')) {
       if (isAuthenticated) {
         return (hasCompany || isSystemScope)
             ? AppRoutes.dashboard
@@ -93,7 +97,8 @@ void main() {
     }
 
     // 4. Authenticated Users on Public Auth Pages
-    if (isAuthenticated && (path == AppRoutes.login || path == AppRoutes.splash)) {
+    if (isAuthenticated &&
+        (path == AppRoutes.login || path == AppRoutes.splash)) {
       return (hasCompany || isSystemScope)
           ? AppRoutes.dashboard
           : '/company-selection';
@@ -102,7 +107,9 @@ void main() {
     // 5. Permission Requirement Check
     if (requiredPermissions != null && requiredPermissions.isNotEmpty) {
       final userPermissions = session.permissions;
-      final hasPerm = requiredPermissions.any((p) => userPermissions.contains(p));
+      final hasPerm = requiredPermissions.any(
+        (p) => userPermissions.contains(p),
+      );
       if (!hasPerm) {
         return AppRoutes.accessDenied;
       }
@@ -112,161 +119,189 @@ void main() {
   }
 
   group('Phase 10: Router & Navigation Guards Tests', () {
-    test('1. Uninitialized system -> Deep-link to /dashboard redirects to /first-run', () {
-      const bootstrap = AppBootstrapState(status: AppBootstrapStatus.firstRunRequired);
+    test(
+      '1. Uninitialized system -> Deep-link to /dashboard redirects to /first-run',
+      () {
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.firstRunRequired,
+        );
 
-      final redirect = evaluateRouteRedirect(
-        targetPath: AppRoutes.dashboard,
-        bootstrapState: bootstrap,
-        session: null,
-      );
+        final redirect = evaluateRouteRedirect(
+          targetPath: AppRoutes.dashboard,
+          bootstrapState: bootstrap,
+          session: null,
+        );
 
-      expect(redirect, equals('/first-run'));
-    });
+        expect(redirect, equals('/first-run'));
+      },
+    );
 
-    test('2. Initialized + Unauthenticated -> Deep-link to /dashboard redirects to /login', () {
-      const bootstrap = AppBootstrapState(status: AppBootstrapStatus.unauthenticated);
+    test(
+      '2. Initialized + Unauthenticated -> Deep-link to /dashboard redirects to /login',
+      () {
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.unauthenticated,
+        );
 
-      final redirect = evaluateRouteRedirect(
-        targetPath: AppRoutes.dashboard,
-        bootstrapState: bootstrap,
-        session: null,
-      );
+        final redirect = evaluateRouteRedirect(
+          targetPath: AppRoutes.dashboard,
+          bootstrapState: bootstrap,
+          session: null,
+        );
 
-      expect(redirect, equals(AppRoutes.login));
-    });
+        expect(redirect, equals(AppRoutes.login));
+      },
+    );
 
-    test('3. Public route access -> Unauthenticated access to /login or /splash allowed', () {
-      const bootstrap = AppBootstrapState(status: AppBootstrapStatus.unauthenticated);
+    test(
+      '3. Public route access -> Unauthenticated access to /login or /splash allowed',
+      () {
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.unauthenticated,
+        );
 
-      final loginRedirect = evaluateRouteRedirect(
-        targetPath: AppRoutes.login,
-        bootstrapState: bootstrap,
-        session: null,
-        isPublicRoute: true,
-      );
+        final loginRedirect = evaluateRouteRedirect(
+          targetPath: AppRoutes.login,
+          bootstrapState: bootstrap,
+          session: null,
+          isPublicRoute: true,
+        );
 
-      expect(loginRedirect, isNull);
-    });
+        expect(loginRedirect, isNull);
+      },
+    );
 
-    test('4. System Admin (0 companies) -> Allowed on /dashboard, NOT forced to company selection', () {
-      final adminSession = AuthSessionSnapshot(
-        user: systemAdmin,
-        companies: [],
-        roles: ['System Admin'],
-        permissions: kSystemLevelPermissions,
-        currentCompanyId: null,
-        capturedAt: now,
-      );
+    test(
+      '4. System Admin (0 companies) -> Allowed on /dashboard, NOT forced to company selection',
+      () {
+        final adminSession = AuthSessionSnapshot(
+          user: systemAdmin,
+          companies: [],
+          roles: ['System Admin'],
+          permissions: kSystemLevelPermissions,
+          currentCompanyId: null,
+          capturedAt: now,
+        );
 
-      const bootstrap = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        isSystemScope: true,
-        activeCompanyId: null,
-      );
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          isSystemScope: true,
+          activeCompanyId: null,
+        );
 
-      final redirect = evaluateRouteRedirect(
-        targetPath: AppRoutes.dashboard,
-        bootstrapState: bootstrap,
-        session: adminSession,
-      );
+        final redirect = evaluateRouteRedirect(
+          targetPath: AppRoutes.dashboard,
+          bootstrapState: bootstrap,
+          session: adminSession,
+        );
 
-      expect(redirect, isNull);
-    });
+        expect(redirect, isNull);
+      },
+    );
 
-    test('5. Regular User (0 companies) -> Redirected to /company-selection', () {
-      final userSession = AuthSessionSnapshot(
-        user: regularUser,
-        companies: [],
-        roles: [],
-        permissions: {},
-        currentCompanyId: null,
-        capturedAt: now,
-      );
+    test(
+      '5. Regular User (0 companies) -> Redirected to /company-selection',
+      () {
+        final userSession = AuthSessionSnapshot(
+          user: regularUser,
+          companies: [],
+          roles: [],
+          permissions: {},
+          currentCompanyId: null,
+          capturedAt: now,
+        );
 
-      const bootstrap = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        isSystemScope: false,
-        activeCompanyId: null,
-      );
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          isSystemScope: false,
+          activeCompanyId: null,
+        );
 
-      final redirect = evaluateRouteRedirect(
-        targetPath: AppRoutes.dashboard,
-        bootstrapState: bootstrap,
-        session: userSession,
-      );
+        final redirect = evaluateRouteRedirect(
+          targetPath: AppRoutes.dashboard,
+          bootstrapState: bootstrap,
+          session: userSession,
+        );
 
-      expect(redirect, equals('/company-selection'));
-    });
+        expect(redirect, equals('/company-selection'));
+      },
+    );
 
-    test('6. Authenticated + Active Company -> Allowed on authorized dashboard route', () {
-      final activeCtx = ActiveCompanyContext.fromMembership(
-        membership: membershipComp1,
-        authenticatedUserId: regularUser.id,
-        companyName: company1.name,
-        companyCode: company1.code,
-      );
+    test(
+      '6. Authenticated + Active Company -> Allowed on authorized dashboard route',
+      () {
+        final activeCtx = ActiveCompanyContext.fromMembership(
+          membership: membershipComp1,
+          authenticatedUserId: regularUser.id,
+          companyName: company1.name,
+          companyCode: company1.code,
+        );
 
-      final validSession = AuthSessionSnapshot(
-        user: regularUser,
-        companies: [company1],
-        roles: ['SalesManager'],
-        permissions: membershipComp1.permissions.toSet(),
-        currentCompanyId: company1.id,
-        activeMembership: membershipComp1,
-        activeCompanyContext: activeCtx,
-        capturedAt: now,
-      );
+        final validSession = AuthSessionSnapshot(
+          user: regularUser,
+          companies: [company1],
+          roles: ['SalesManager'],
+          permissions: membershipComp1.permissions.toSet(),
+          currentCompanyId: company1.id,
+          activeMembership: membershipComp1,
+          activeCompanyContext: activeCtx,
+          capturedAt: now,
+        );
 
-      const bootstrap = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        isSystemScope: false,
-        activeCompanyId: 'company-1',
-      );
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          isSystemScope: false,
+          activeCompanyId: 'company-1',
+        );
 
-      final redirect = evaluateRouteRedirect(
-        targetPath: AppRoutes.dashboard,
-        bootstrapState: bootstrap,
-        session: validSession,
-      );
+        final redirect = evaluateRouteRedirect(
+          targetPath: AppRoutes.dashboard,
+          bootstrapState: bootstrap,
+          session: validSession,
+        );
 
-      expect(redirect, isNull);
-    });
+        expect(redirect, isNull);
+      },
+    );
 
-    test('7. Authenticated + Missing Permission -> Redirected to /access-denied', () {
-      final activeCtx = ActiveCompanyContext.fromMembership(
-        membership: membershipComp1,
-        authenticatedUserId: regularUser.id,
-        companyName: company1.name,
-        companyCode: company1.code,
-      );
+    test(
+      '7. Authenticated + Missing Permission -> Redirected to /access-denied',
+      () {
+        final activeCtx = ActiveCompanyContext.fromMembership(
+          membership: membershipComp1,
+          authenticatedUserId: regularUser.id,
+          companyName: company1.name,
+          companyCode: company1.code,
+        );
 
-      final validSession = AuthSessionSnapshot(
-        user: regularUser,
-        companies: [company1],
-        roles: ['SalesManager'],
-        permissions: membershipComp1.permissions.toSet(), // Has salesView, lacks inventoryDelete
-        currentCompanyId: company1.id,
-        activeMembership: membershipComp1,
-        activeCompanyContext: activeCtx,
-        capturedAt: now,
-      );
+        final validSession = AuthSessionSnapshot(
+          user: regularUser,
+          companies: [company1],
+          roles: ['SalesManager'],
+          permissions: membershipComp1.permissions
+              .toSet(), // Has salesView, lacks inventoryDelete
+          currentCompanyId: company1.id,
+          activeMembership: membershipComp1,
+          activeCompanyContext: activeCtx,
+          capturedAt: now,
+        );
 
-      const bootstrap = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        isSystemScope: false,
-        activeCompanyId: 'company-1',
-      );
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          isSystemScope: false,
+          activeCompanyId: 'company-1',
+        );
 
-      final redirect = evaluateRouteRedirect(
-        targetPath: '/inventory/delete',
-        bootstrapState: bootstrap,
-        session: validSession,
-        requiredPermissions: [LocalPermissions.inventoryDelete],
-      );
+        final redirect = evaluateRouteRedirect(
+          targetPath: '/inventory/delete',
+          bootstrapState: bootstrap,
+          session: validSession,
+          requiredPermissions: [LocalPermissions.inventoryDelete],
+        );
 
-      expect(redirect, equals(AppRoutes.accessDenied));
-    });
+        expect(redirect, equals(AppRoutes.accessDenied));
+      },
+    );
 
     test('8. Authenticated user on /login -> Auto-forwarded to /dashboard', () {
       final activeCtx = ActiveCompanyContext.fromMembership(
@@ -303,29 +338,32 @@ void main() {
       expect(redirect, equals(AppRoutes.dashboard));
     });
 
-    test('9. Setup routes blocked when initialized -> Redirected to /dashboard or /login', () {
-      const bootstrap = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        isSystemScope: true,
-        activeCompanyId: null,
-      );
+    test(
+      '9. Setup routes blocked when initialized -> Redirected to /dashboard or /login',
+      () {
+        const bootstrap = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          isSystemScope: true,
+          activeCompanyId: null,
+        );
 
-      final adminSession = AuthSessionSnapshot(
-        user: systemAdmin,
-        companies: [],
-        roles: ['System Admin'],
-        permissions: kSystemLevelPermissions,
-        currentCompanyId: null,
-        capturedAt: now,
-      );
+        final adminSession = AuthSessionSnapshot(
+          user: systemAdmin,
+          companies: [],
+          roles: ['System Admin'],
+          permissions: kSystemLevelPermissions,
+          currentCompanyId: null,
+          capturedAt: now,
+        );
 
-      final redirect = evaluateRouteRedirect(
-        targetPath: '/first-run',
-        bootstrapState: bootstrap,
-        session: adminSession,
-      );
+        final redirect = evaluateRouteRedirect(
+          targetPath: '/first-run',
+          bootstrapState: bootstrap,
+          session: adminSession,
+        );
 
-      expect(redirect, equals(AppRoutes.dashboard));
-    });
+        expect(redirect, equals(AppRoutes.dashboard));
+      },
+    );
   });
 }

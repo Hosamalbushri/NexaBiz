@@ -13,9 +13,7 @@ import '../../domain/repositories/account_binding_repository.dart';
 /// 2. Multi-Tenant Scoping: Keys are strictly scoped by [companyId].
 /// 3. Idempotency: Overwrites existing bindings without duplicating keys.
 class HiveAccountBindingRepository implements AccountBindingRepository {
-  HiveAccountBindingRepository({
-    Box<dynamic>? box,
-  }) : _box = box;
+  HiveAccountBindingRepository({Box<dynamic>? box}) : _box = box;
 
   Box<dynamic>? _box;
 
@@ -77,7 +75,9 @@ class HiveAccountBindingRepository implements AccountBindingRepository {
           try {
             final decoded = jsonDecode(raw);
             if (decoded is Map) {
-              result.add(AccountBinding.fromJson(Map<String, dynamic>.from(decoded)));
+              result.add(
+                AccountBinding.fromJson(Map<String, dynamic>.from(decoded)),
+              );
             }
           } catch (_) {}
         }
@@ -89,7 +89,11 @@ class HiveAccountBindingRepository implements AccountBindingRepository {
 
   @override
   Future<void> saveBinding(AccountBinding binding) async {
-    final key = _buildKey(binding.companyId, binding.packageId, binding.requirementKey);
+    final key = _buildKey(
+      binding.companyId,
+      binding.packageId,
+      binding.requirementKey,
+    );
     final box = await _initBox;
     await box.put(key, binding.toJson());
   }

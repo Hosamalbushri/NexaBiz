@@ -60,8 +60,8 @@ class _ServerBootstrapLoginPageState
     final baseUrl = widget.initialBaseUrl.isNotEmpty
         ? widget.initialBaseUrl
         : (initState.stageDetails.startsWith('http')
-            ? initState.stageDetails
-            : '');
+              ? initState.stageDetails
+              : '');
 
     try {
       final config = ref.read(syncApiConfigProvider);
@@ -83,17 +83,23 @@ class _ServerBootstrapLoginPageState
       );
 
       try {
-        await ref.read(authStateProvider.notifier).loginForSync(
-          email: email,
-          password: password,
-          companyId: null,
-          deviceId: deviceId,
-          deviceName: 'Flutter Device',
-          platform: defaultTargetPlatform.name,
-        );
+        await ref
+            .read(authStateProvider.notifier)
+            .loginForSync(
+              email: email,
+              password: password,
+              companyId: null,
+              deviceId: deviceId,
+              deviceName: 'Flutter Device',
+              platform: defaultTargetPlatform.name,
+            );
       } catch (_) {
         final snapshot = AuthSessionSnapshot(
-          user: AuthUser(id: 'bootstrap_admin', name: 'Bootstrap Admin', email: email),
+          user: AuthUser(
+            id: 'bootstrap_admin',
+            name: 'Bootstrap Admin',
+            email: email,
+          ),
           companies: const [],
           roles: const ['admin'],
           permissions: const {'sync.execute', 'sync.view', 'settings.view'},
@@ -116,20 +122,13 @@ class _ServerBootstrapLoginPageState
       unawaited(
         ref
             .read(appInitializationControllerProvider.notifier)
-            .runServerInitialization(
-              baseUrl: baseUrl,
-              token: token,
-            ),
+            .runServerInitialization(baseUrl: baseUrl, token: token),
       );
 
       context.go(AppRoutes.serverBootstrapProgress);
     } catch (e) {
       if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: e.toString(),
-        isSuccess: false,
-      );
+      showAppSnackBar(context, message: e.toString(), isSuccess: false);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

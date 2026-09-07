@@ -17,7 +17,9 @@ void main() {
   late Directory tempDir;
 
   setUp(() async {
-    HiveEncryptionKeyStore.debugFixedKey = Uint8List.fromList(List.generate(32, (i) => i));
+    HiveEncryptionKeyStore.debugFixedKey = Uint8List.fromList(
+      List.generate(32, (i) => i),
+    );
     tempDir = await Directory.systemTemp.createTemp('conflict_test_');
     Hive.init(tempDir.path);
     if (!Hive.isAdapterRegistered(2)) {
@@ -54,65 +56,72 @@ void main() {
       expect(retrieved.mergeStatus, 'unresolved');
     });
 
-    test('resolveConflict replaces conflict operation with new operation on updated base_version', () async {
-      final queue = SyncQueue();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.none],
-      );
+    test(
+      'resolveConflict replaces conflict operation with new operation on updated base_version',
+      () async {
+        final queue = SyncQueue();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.none],
+        );
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        conflictStore: conflictStore,
-        clock: () => DateTime.utc(2026, 8, 23, 12),
-      );
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          conflictStore: conflictStore,
+          clock: () => DateTime.utc(2026, 8, 23, 12),
+        );
 
-      final originalOp = SyncOperation.create(
-        entityType: 'customer',
-        entityId: 'cust-200',
-        type: SyncOperationType.update,
-        baseVersion: 1,
-        payload: {'uuid': 'cust-200', 'name': 'Stale Name'},
-      );
-      await queue.enqueue(originalOp);
+        final originalOp = SyncOperation.create(
+          entityType: 'customer',
+          entityId: 'cust-200',
+          type: SyncOperationType.update,
+          baseVersion: 1,
+          payload: {'uuid': 'cust-200', 'name': 'Stale Name'},
+        );
+        await queue.enqueue(originalOp);
 
-      // Simulate 409 conflict recorded in conflict store
-      final conflictRec = SyncConflictRecord(
-        operationId: originalOp.id,
-        entityType: 'customer',
-        entityId: 'cust-200',
-        baseVersion: 1,
-        serverVersion: 2,
-        localPayload: {'name': 'Stale Name'},
-        remotePayload: {'name': 'Server Name'},
-        conflictingFields: ['name'],
-        createdAt: DateTime.utc(2026, 8, 23, 12),
-      );
-      await conflictStore.save(conflictRec);
+        // Simulate 409 conflict recorded in conflict store
+        final conflictRec = SyncConflictRecord(
+          operationId: originalOp.id,
+          entityType: 'customer',
+          entityId: 'cust-200',
+          baseVersion: 1,
+          serverVersion: 2,
+          localPayload: {'name': 'Stale Name'},
+          remotePayload: {'name': 'Server Name'},
+          conflictingFields: ['name'],
+          createdAt: DateTime.utc(2026, 8, 23, 12),
+        );
+        await conflictStore.save(conflictRec);
 
-      // Resolve conflict by picking server payload or custom merged payload
-      await manager.resolveConflict(
-        operationId: originalOp.id,
-        resolutionStrategy: 'client_selected',
-        resolvedPayload: {'uuid': 'cust-200', 'name': 'Resolved Name'},
-      );
+        // Resolve conflict by picking server payload or custom merged payload
+        await manager.resolveConflict(
+          operationId: originalOp.id,
+          resolutionStrategy: 'client_selected',
+          resolvedPayload: {'uuid': 'cust-200', 'name': 'Resolved Name'},
+        );
 
-      final ops = await queue.all();
-      expect(ops, hasLength(1));
-      expect(ops.first.id, isNot(equals(originalOp.id))); // NEW operation_id generated
-      expect(ops.first.baseVersion, equals(2)); // Updated base_version
-      expect(ops.first.payload['name'], equals('Resolved Name'));
-      expect(ops.first.status, equals(SyncStatus.pending));
+        final ops = await queue.all();
+        expect(ops, hasLength(1));
+        expect(
+          ops.first.id,
+          isNot(equals(originalOp.id)),
+        ); // NEW operation_id generated
+        expect(ops.first.baseVersion, equals(2)); // Updated base_version
+        expect(ops.first.payload['name'], equals('Resolved Name'));
+        expect(ops.first.status, equals(SyncStatus.pending));
 
-      final updatedRec = await conflictStore.getByOperationId(originalOp.id);
-      expect(updatedRec?.mergeStatus, equals('client_selected'));
-      expect(updatedRec?.resolvedOperationId, equals(ops.first.id));
+        final updatedRec = await conflictStore.getByOperationId(originalOp.id);
+        expect(updatedRec?.mergeStatus, equals('client_selected'));
+        expect(updatedRec?.resolvedOperationId, equals(ops.first.id));
 
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
   });
 }

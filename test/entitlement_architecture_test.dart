@@ -56,7 +56,10 @@ void main() {
       expect(free.hasCapability(EntitlementCapability.sync), isFalse);
       expect(free.hasCapability(EntitlementCapability.cloudBackup), isFalse);
       expect(free.hasCapability(EntitlementCapability.multiDevice), isFalse);
-      expect(free.hasCapability(EntitlementCapability.advancedReports), isFalse);
+      expect(
+        free.hasCapability(EntitlementCapability.advancedReports),
+        isFalse,
+      );
     });
 
     test('REQUIREMENT 2: Premium Tier grants purchased cloud capabilities', () {
@@ -67,7 +70,10 @@ void main() {
       expect(premium.hasCapability(EntitlementCapability.sync), isTrue);
       expect(premium.hasCapability(EntitlementCapability.cloudBackup), isTrue);
       expect(premium.hasCapability(EntitlementCapability.multiDevice), isTrue);
-      expect(premium.hasCapability(EntitlementCapability.advancedReports), isTrue);
+      expect(
+        premium.hasCapability(EntitlementCapability.advancedReports),
+        isTrue,
+      );
     });
 
     test('REQUIREMENT 3: Expired entitlement revokes all capabilities', () {
@@ -82,122 +88,167 @@ void main() {
       expect(expired.hasCapability(EntitlementCapability.cloudBackup), isFalse);
     });
 
-    test('REQUIREMENT 4: requireCapability throws EntitlementException on denial', () {
-      final free = Entitlement.freeLocal('company-free');
-      entitlementService.setEntitlement(free);
+    test(
+      'REQUIREMENT 4: requireCapability throws EntitlementException on denial',
+      () {
+        final free = Entitlement.freeLocal('company-free');
+        entitlementService.setEntitlement(free);
 
-      expect(
-        () => entitlementService.requireCapability(EntitlementCapability.sync),
-        throwsA(isA<EntitlementException>()),
-      );
-    });
+        expect(
+          () =>
+              entitlementService.requireCapability(EntitlementCapability.sync),
+          throwsA(isA<EntitlementException>()),
+        );
+      },
+    );
 
-    test('REQUIREMENT 5: Offline Grace Policy (Within 14 days = GRACE/ACTIVE, >14 days = EXPIRED)', () {
-      final now = DateTime.now().toUtc();
+    test(
+      'REQUIREMENT 5: Offline Grace Policy (Within 14 days = GRACE/ACTIVE, >14 days = EXPIRED)',
+      () {
+        final now = DateTime.now().toUtc();
 
-      // Case A: 5 days offline since verification (Within 14 days)
-      final validCached = Entitlement(
-        companyId: 'company-premium',
-        tier: EntitlementTier.premium,
-        status: EntitlementStatus.active,
-        capabilities: const {EntitlementCapability.sync},
-        source: EntitlementSource.cachedServer,
-        lastVerifiedAt: now.subtract(const Duration(days: 5)),
-      );
+        // Case A: 5 days offline since verification (Within 14 days)
+        final validCached = Entitlement(
+          companyId: 'company-premium',
+          tier: EntitlementTier.premium,
+          status: EntitlementStatus.active,
+          capabilities: const {EntitlementCapability.sync},
+          source: EntitlementSource.cachedServer,
+          lastVerifiedAt: now.subtract(const Duration(days: 5)),
+        );
 
-      final evaluatedValid = entitlementService.evaluateEffectiveEntitlement(validCached);
-      expect(evaluatedValid.hasCapability(EntitlementCapability.sync), isTrue);
+        final evaluatedValid = entitlementService.evaluateEffectiveEntitlement(
+          validCached,
+        );
+        expect(
+          evaluatedValid.hasCapability(EntitlementCapability.sync),
+          isTrue,
+        );
 
-      // Case B: 20 days offline since verification (Exceeds 14 days)
-      final staleCached = Entitlement(
-        companyId: 'company-premium',
-        tier: EntitlementTier.premium,
-        status: EntitlementStatus.active,
-        capabilities: const {EntitlementCapability.sync},
-        source: EntitlementSource.cachedServer,
-        lastVerifiedAt: now.subtract(const Duration(days: 20)),
-      );
+        // Case B: 20 days offline since verification (Exceeds 14 days)
+        final staleCached = Entitlement(
+          companyId: 'company-premium',
+          tier: EntitlementTier.premium,
+          status: EntitlementStatus.active,
+          capabilities: const {EntitlementCapability.sync},
+          source: EntitlementSource.cachedServer,
+          lastVerifiedAt: now.subtract(const Duration(days: 20)),
+        );
 
-      final evaluatedStale = entitlementService.evaluateEffectiveEntitlement(staleCached);
-      expect(evaluatedStale.status, equals(EntitlementStatus.expired));
-      expect(evaluatedStale.hasCapability(EntitlementCapability.sync), isFalse);
+        final evaluatedStale = entitlementService.evaluateEffectiveEntitlement(
+          staleCached,
+        );
+        expect(evaluatedStale.status, equals(EntitlementStatus.expired));
+        expect(
+          evaluatedStale.hasCapability(EntitlementCapability.sync),
+          isFalse,
+        );
 
-      // Case C: Free tier offline is always active
-      final freeOffline = Entitlement(
-        companyId: 'company-free',
-        tier: EntitlementTier.free,
-        status: EntitlementStatus.active,
-        capabilities: const {},
-        source: EntitlementSource.localDefault,
-        lastVerifiedAt: now.subtract(const Duration(days: 100)),
-      );
+        // Case C: Free tier offline is always active
+        final freeOffline = Entitlement(
+          companyId: 'company-free',
+          tier: EntitlementTier.free,
+          status: EntitlementStatus.active,
+          capabilities: const {},
+          source: EntitlementSource.localDefault,
+          lastVerifiedAt: now.subtract(const Duration(days: 100)),
+        );
 
-      final evaluatedFree = entitlementService.evaluateEffectiveEntitlement(freeOffline);
-      expect(evaluatedFree.status, equals(EntitlementStatus.active));
-    });
+        final evaluatedFree = entitlementService.evaluateEffectiveEntitlement(
+          freeOffline,
+        );
+        expect(evaluatedFree.status, equals(EntitlementStatus.active));
+      },
+    );
 
-    test('REQUIREMENT 6: Runtime transition Free -> Premium -> Expired -> Premium', () async {
-      const companyId = 'company-transition';
+    test(
+      'REQUIREMENT 6: Runtime transition Free -> Premium -> Expired -> Premium',
+      () async {
+        const companyId = 'company-transition';
 
-      // 1. Initial Free
-      await entitlementService.loadEntitlementForCompany(companyId);
-      expect(entitlementService.hasCapability(EntitlementCapability.sync), isFalse);
+        // 1. Initial Free
+        await entitlementService.loadEntitlementForCompany(companyId);
+        expect(
+          entitlementService.hasCapability(EntitlementCapability.sync),
+          isFalse,
+        );
 
-      // 2. Upgrade to Premium
-      await entitlementService.setEntitlement(Entitlement.premiumActive(companyId));
-      expect(entitlementService.hasCapability(EntitlementCapability.sync), isTrue);
+        // 2. Upgrade to Premium
+        await entitlementService.setEntitlement(
+          Entitlement.premiumActive(companyId),
+        );
+        expect(
+          entitlementService.hasCapability(EntitlementCapability.sync),
+          isTrue,
+        );
 
-      // 3. Expiration
-      await entitlementService.setEntitlement(
-        Entitlement.expired(companyId, tier: EntitlementTier.premium),
-      );
-      expect(entitlementService.hasCapability(EntitlementCapability.sync), isFalse);
+        // 3. Expiration
+        await entitlementService.setEntitlement(
+          Entitlement.expired(companyId, tier: EntitlementTier.premium),
+        );
+        expect(
+          entitlementService.hasCapability(EntitlementCapability.sync),
+          isFalse,
+        );
 
-      // 4. Renewal back to Premium
-      await entitlementService.setEntitlement(Entitlement.premiumActive(companyId));
-      expect(entitlementService.hasCapability(EntitlementCapability.sync), isTrue);
-    });
+        // 4. Renewal back to Premium
+        await entitlementService.setEntitlement(
+          Entitlement.premiumActive(companyId),
+        );
+        expect(
+          entitlementService.hasCapability(EntitlementCapability.sync),
+          isTrue,
+        );
+      },
+    );
 
-    testWidgets('REQUIREMENT 7: CapabilityGate renders child when allowed and upgrade prompt when denied', (WidgetTester tester) async {
-      final container = ProviderContainer(
-        overrides: [
-          currentCompanyIdProvider.overrideWith((ref) => 'company-ui'),
-          entitlementRepositoryProvider.overrideWithValue(repository),
-          entitlementServiceProvider.overrideWithValue(entitlementService),
-        ],
-      );
-      addTearDown(container.dispose);
+    testWidgets(
+      'REQUIREMENT 7: CapabilityGate renders child when allowed and upgrade prompt when denied',
+      (WidgetTester tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            currentCompanyIdProvider.overrideWith((ref) => 'company-ui'),
+            entitlementRepositoryProvider.overrideWithValue(repository),
+            entitlementServiceProvider.overrideWithValue(entitlementService),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      // Set Free entitlement
-      await entitlementService.setEntitlement(Entitlement.freeLocal('company-ui'));
+        // Set Free entitlement
+        await entitlementService.setEntitlement(
+          Entitlement.freeLocal('company-ui'),
+        );
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            home: Scaffold(
-              body: CapabilityGate(
-                capability: EntitlementCapability.sync,
-                child: Text('Cloud Sync Active'),
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              home: Scaffold(
+                body: CapabilityGate(
+                  capability: EntitlementCapability.sync,
+                  child: Text('Cloud Sync Active'),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Verify upgrade prompt is shown for Free mode
-      expect(find.text('Cloud Sync Active'), findsNothing);
-      expect(find.text('Premium Feature Required'), findsOneWidget);
+        // Verify upgrade prompt is shown for Free mode
+        expect(find.text('Cloud Sync Active'), findsNothing);
+        expect(find.text('Premium Feature Required'), findsOneWidget);
 
-      // Upgrade to Premium
-      await entitlementService.setEntitlement(Entitlement.premiumActive('company-ui'));
-      await tester.pumpAndSettle();
+        // Upgrade to Premium
+        await entitlementService.setEntitlement(
+          Entitlement.premiumActive('company-ui'),
+        );
+        await tester.pumpAndSettle();
 
-      // Verify child is rendered for Premium mode
-      expect(find.text('Cloud Sync Active'), findsOneWidget);
-      expect(find.text('Premium Feature Required'), findsNothing);
-    });
+        // Verify child is rendered for Premium mode
+        expect(find.text('Cloud Sync Active'), findsOneWidget);
+        expect(find.text('Premium Feature Required'), findsNothing);
+      },
+    );
   });
 }

@@ -247,30 +247,45 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             case 'purchases':
               return isArabic ? 'تهيئة وإعدادات المشتريات' : 'Purchases Setup';
             case 'receipts_payments':
-              return isArabic ? 'تهيئة المقبوضات والمصروفات والخزينة' : 'Receipts & Payments Setup';
+              return isArabic
+                  ? 'تهيئة المقبوضات والمصروفات والخزينة'
+                  : 'Receipts & Payments Setup';
             case 'cash_registers':
-              return isArabic ? 'تهيئة الحسابات النقدية وصناديق النقدية' : 'Cash Register Accounting Configuration';
+              return isArabic
+                  ? 'تهيئة الحسابات النقدية وصناديق النقدية'
+                  : 'Cash Register Accounting Configuration';
             default:
               return l10n.setupSettingsTitle;
           }
         }
 
-        return Scaffold(
-          backgroundColor: theme.colorScheme.surfaceContainerLowest,
-          appBar: CustomAppBar(
-            title: getSubPageTitle(),
-            showBackButton: true,
-            onBack: _activeSubSection != null
-                ? () => setState(() => _activeSubSection = null)
-                : null,
+        return PopScope(
+          canPop: _activeSubSection == null,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop) {
+              return;
+            }
+            setState(() => _activeSubSection = null);
+          },
+          child: Scaffold(
+            backgroundColor: theme.colorScheme.surfaceContainerLowest,
+            appBar: CustomAppBar(
+              title: getSubPageTitle(),
+              showBackButton: true,
+              onBack: _activeSubSection != null
+                  ? () => setState(() => _activeSubSection = null)
+                  : null,
+            ),
+            body: _activeSubSection == null
+                ? _buildMenuHub(context, theme, isArabic)
+                : _activeSubSection == 'company'
+                ? _buildCompanyForm(context, theme, l10n)
+                : _activeSubSection == 'cash_registers'
+                ? const CashRegisterAccountingConfigPage()
+                : PackageInitializationSettingsHub(
+                    packageId: _activeSubSection,
+                  ),
           ),
-          body: _activeSubSection == null
-              ? _buildMenuHub(context, theme, isArabic)
-              : _activeSubSection == 'company'
-                  ? _buildCompanyForm(context, theme, l10n)
-                  : _activeSubSection == 'cash_registers'
-                      ? const CashRegisterAccountingConfigPage()
-                      : PackageInitializationSettingsHub(packageId: _activeSubSection),
         );
       },
     );
@@ -282,7 +297,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         id: 'company',
         icon: Icons.apartment_outlined,
         iconColor: theme.colorScheme.primary,
-        title: isArabic ? 'بيانات وإعدادات الشركة' : 'Company Profile & Identity',
+        title: isArabic
+            ? 'بيانات وإعدادات الشركة'
+            : 'Company Profile & Identity',
         subtitle: isArabic
             ? 'الاسم التجاري، الشعار، الرقم الضريبي، العملة الأساسية، بداية السنة المالية، وسجل مسؤول النظام'
             : 'Company legal name, logo, tax ID, base currency, fiscal start month, and local admin account',
@@ -291,7 +308,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         id: 'cash_registers',
         icon: Icons.point_of_sale_outlined,
         iconColor: Colors.deepOrange,
-        title: isArabic ? 'تهيئة وإعدادات صناديق النقدية' : 'Cash Register Accounting Configuration',
+        title: isArabic
+            ? 'تهيئة وإعدادات صناديق النقدية'
+            : 'Cash Register Accounting Configuration',
         subtitle: isArabic
             ? 'ربط صناديق النقدية بالحسابات المحاسبية في دليل الحسابات وتحديد حالة الجاهزية'
             : 'Explicitly link cash registers to Chart of Accounts accounts & manage readiness status',
@@ -300,7 +319,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         id: 'accounting',
         icon: Icons.account_balance_outlined,
         iconColor: Colors.teal,
-        title: isArabic ? 'تهيئة المحاسبة والمالية' : 'Accounting & Finance Setup',
+        title: isArabic
+            ? 'تهيئة المحاسبة والمالية'
+            : 'Accounting & Finance Setup',
         subtitle: isArabic
             ? 'ربط الحسابات الافتراضية الرئيسية للصندوق، العملاء، الموردين وشجرة الحسابات'
             : 'Default system account roles, cash accounts, customer/supplier default bindings',
@@ -327,7 +348,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         id: 'purchases',
         icon: Icons.shopping_bag_outlined,
         iconColor: Colors.purple,
-        title: isArabic ? 'تهيئة وإعدادات المشتريات' : 'Purchases Package Setup',
+        title: isArabic
+            ? 'تهيئة وإعدادات المشتريات'
+            : 'Purchases Package Setup',
         subtitle: isArabic
             ? 'حساب الموردين وأوراق الدفع والخصم المكتسب'
             : 'Accounts payable, supplier accounts, and earned purchase discounts',
@@ -336,7 +359,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         id: 'receipts_payments',
         icon: Icons.account_balance_wallet_outlined,
         iconColor: Colors.green,
-        title: isArabic ? 'تهيئة المقبوضات والمصروفات والخزينة' : 'Receipts, Payments & Treasury Setup',
+        title: isArabic
+            ? 'تهيئة المقبوضات والمصروفات والخزينة'
+            : 'Receipts, Payments & Treasury Setup',
         subtitle: isArabic
             ? 'حسابات النقدية بالصندوق، البنوك، والمصروفات الإدارية العمومية'
             : 'Cash in hand, bank accounts, and general administrative expense accounts',
@@ -352,7 +377,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isArabic ? 'قائمة تهيئة وإعدادات النظام' : 'System Setup Navigation Hub',
+                isArabic
+                    ? 'قائمة تهيئة وإعدادات النظام'
+                    : 'System Setup Navigation Hub',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -413,357 +440,349 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     );
   }
 
-  Widget _buildCompanyForm(BuildContext context, ThemeData theme, AppLocalizations l10n) {
+  Widget _buildCompanyForm(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     return Form(
       key: _formKey,
       child: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
-
-
+          Text(
+            l10n.setupSettingsSubtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 Text(
-                  l10n.setupSettingsSubtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  l10n.setupCompanyIdentitySection,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Center(
+                  child: _LogoPreview(path: _logoPath, busy: _logoBusy),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: l10n.setupPickLogo,
+                        variant: AppButtonVariant.outlined,
+                        expand: true,
+                        icon: Icons.image_outlined,
+                        onPressed: _logoBusy ? null : _pickLogo,
+                        isLoading: _logoBusy,
+                      ),
+                    ),
+                    if (_logoPath != null) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: AppButton(
+                          label: l10n.setupRemoveLogo,
+                          variant: AppButtonVariant.text,
+                          expand: true,
+                          onPressed: _logoBusy ? null : _clearLogo,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(labelText: l10n.setupCompanyName),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.setupCompanyNameRequired;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _legalNameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupLegalName,
+                    helperText: l10n.setupLegalNameHelper,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.setupLocalAccountSection,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.setupLocalAccountSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.setupCompanyIdentitySection,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Center(
-                        child: _LogoPreview(path: _logoPath, busy: _logoBusy),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              label: l10n.setupPickLogo,
-                              variant: AppButtonVariant.outlined,
-                              expand: true,
-                              icon: Icons.image_outlined,
-                              onPressed: _logoBusy ? null : _pickLogo,
-                              isLoading: _logoBusy,
-                            ),
-                          ),
-                          if (_logoPath != null) ...[
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: AppButton(
-                                label: l10n.setupRemoveLogo,
-                                variant: AppButtonVariant.text,
-                                expand: true,
-                                onPressed: _logoBusy ? null : _clearLogo,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _nameController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupCompanyName,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l10n.setupCompanyNameRequired;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _legalNameController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupLegalName,
-                          helperText: l10n.setupLegalNameHelper,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.setupLocalAccountSection,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                TextFormField(
+                  controller: _adminEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupLocalEmail,
+                    prefixIcon: const Icon(Icons.email_outlined),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.setupLocalEmailRequired;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _adminPasswordController,
+                  obscureText: _obscureAdminPassword,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupLocalPassword,
+                    helperText: l10n.setupLocalPasswordHelper,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureAdminPassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.setupLocalAccountSubtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _adminEmailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupLocalEmail,
-                          prefixIcon: const Icon(Icons.email_outlined),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l10n.setupLocalEmailRequired;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _adminPasswordController,
-                        obscureText: _obscureAdminPassword,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupLocalPassword,
-                          helperText: l10n.setupLocalPasswordHelper,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureAdminPassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureAdminPassword = !_obscureAdminPassword;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                      onPressed: () {
+                        setState(() {
+                          _obscureAdminPassword = !_obscureAdminPassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.setupInvoiceHeaderSection,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.setupInvoiceHeaderSectionSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.setupInvoiceHeaderSection,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.setupInvoiceHeaderSectionSubtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _invoiceHeaderRightController,
-                        maxLines: 4,
-                        textAlign: TextAlign.start,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupInvoiceHeaderRight,
-                          helperText: l10n.setupInvoiceHeaderHelper,
-                          alignLabelWithHint: true,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _invoiceHeaderLeftController,
-                        maxLines: 4,
-                        textAlign: TextAlign.start,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupInvoiceHeaderLeft,
-                          helperText: l10n.setupInvoiceHeaderHelper,
-                          alignLabelWithHint: true,
-                        ),
-                      ),
-                    ],
+                TextFormField(
+                  controller: _invoiceHeaderRightController,
+                  maxLines: 4,
+                  textAlign: TextAlign.start,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupInvoiceHeaderRight,
+                    helperText: l10n.setupInvoiceHeaderHelper,
+                    alignLabelWithHint: true,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.setupCurrencySection,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                TextFormField(
+                  controller: _invoiceHeaderLeftController,
+                  maxLines: 4,
+                  textAlign: TextAlign.start,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupInvoiceHeaderLeft,
+                    helperText: l10n.setupInvoiceHeaderHelper,
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.setupCurrencySection,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.setupCurrencySectionSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<String>(
+                  initialValue: _currencyCode,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupDefaultCurrency,
+                    helperText: _currencyLocked
+                        ? l10n.systemSetupCurrencyLocked
+                        : null,
+                  ),
+                  items: [
+                    for (final currency in AppCurrencies.all)
+                      DropdownMenuItem(
+                        value: currency.code,
+                        child: Text(
+                          '${currency.code} — ${currency.localizedName(isArabic)} (${currency.symbol})',
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.setupCurrencySectionSubtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      DropdownButtonFormField<String>(
-                        initialValue: _currencyCode,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupDefaultCurrency,
-                          helperText: _currencyLocked
-                              ? l10n.systemSetupCurrencyLocked
-                              : null,
-                        ),
-                        items: [
-                          for (final currency in AppCurrencies.all)
-                            DropdownMenuItem(
-                              value: currency.code,
-                              child: Text(
-                                '${currency.code} — ${currency.localizedName(isArabic)} (${currency.symbol})',
-                              ),
-                            ),
-                        ],
-                        onChanged: _currencyLocked
-                            ? null
-                            : (value) {
-                                if (value == null) {
-                                  return;
-                                }
-                                setState(() => _currencyCode = value);
-                              },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      DropdownButtonFormField<int>(
-                        initialValue: _fiscalMonth,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupFiscalYearStart,
-                          helperText: l10n.setupFiscalYearStartHelper,
-                        ),
-                        items: [
-                          for (var month = 1; month <= 12; month++)
-                            DropdownMenuItem(
-                              value: month,
-                              child: Text(
-                                DateFormat.MMMM(
-                                  Localizations.localeOf(context).toString(),
-                                ).format(DateTime(2024, month)),
-                              ),
-                            ),
-                        ],
-                        onChanged: (value) {
+                  ],
+                  onChanged: _currencyLocked
+                      ? null
+                      : (value) {
                           if (value == null) {
                             return;
                           }
-                          setState(() => _fiscalMonth = value);
+                          setState(() => _currencyCode = value);
                         },
-                      ),
-                    ],
-                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.setupLegalSection,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _taxController,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupTaxNumber,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _crController,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupCommercialRegister,
-                        ),
-                      ),
-                    ],
+                DropdownButtonFormField<int>(
+                  initialValue: _fiscalMonth,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupFiscalYearStart,
+                    helperText: l10n.setupFiscalYearStartHelper,
                   ),
+                  items: [
+                    for (var month = 1; month <= 12; month++)
+                      DropdownMenuItem(
+                        value: month,
+                        child: Text(
+                          DateFormat.MMMM(
+                            Localizations.localeOf(context).toString(),
+                          ).format(DateTime(2024, month)),
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() => _fiscalMonth = value);
+                  },
                 ),
-                const SizedBox(height: AppSpacing.md),
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.setupContactSection,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(labelText: l10n.setupPhone),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(labelText: l10n.setupEmail),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _websiteController,
-                        keyboardType: TextInputType.url,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupWebsite,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _addressController,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupAddress,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _cityController,
-                        decoration: InputDecoration(labelText: l10n.setupCity),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _countryController,
-                        decoration: InputDecoration(
-                          labelText: l10n.setupCountry,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                AppButton(
-                  label: l10n.confirm,
-                  expand: true,
-                  icon: Icons.save_outlined,
-                  onPressed: _saving ? null : _save,
-                  isLoading: _saving,
-                ),
-                const SizedBox(height: AppSpacing.lg),
               ],
             ),
-          );
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.setupLegalSection,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _taxController,
+                  decoration: InputDecoration(labelText: l10n.setupTaxNumber),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _crController,
+                  decoration: InputDecoration(
+                    labelText: l10n.setupCommercialRegister,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.setupContactSection,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(labelText: l10n.setupPhone),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(labelText: l10n.setupEmail),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _websiteController,
+                  keyboardType: TextInputType.url,
+                  decoration: InputDecoration(labelText: l10n.setupWebsite),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _addressController,
+                  maxLines: 2,
+                  decoration: InputDecoration(labelText: l10n.setupAddress),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _cityController,
+                  decoration: InputDecoration(labelText: l10n.setupCity),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _countryController,
+                  decoration: InputDecoration(labelText: l10n.setupCountry),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          AppButton(
+            label: l10n.confirm,
+            expand: true,
+            icon: Icons.save_outlined,
+            onPressed: _saving ? null : _save,
+            isLoading: _saving,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+    );
   }
 }
 
@@ -782,7 +801,6 @@ class _SetupMenuItem {
   final String title;
   final String subtitle;
 }
-
 
 class _LogoPreview extends StatelessWidget {
   const _LogoPreview({required this.path, required this.busy});

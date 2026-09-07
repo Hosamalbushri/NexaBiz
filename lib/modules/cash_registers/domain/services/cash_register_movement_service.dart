@@ -43,7 +43,9 @@ class CashRegisterMovementService {
     required String registerId,
     required String companyId,
   }) async {
-    final register = await cashRegisterRepository.getCashRegisterById(registerId.trim());
+    final register = await cashRegisterRepository.getCashRegisterById(
+      registerId.trim(),
+    );
     if (register == null ||
         !register.isActive ||
         !register.isLinked ||
@@ -52,7 +54,8 @@ class CashRegisterMovementService {
     }
 
     final accountId = register.accountingAccountId!;
-    final account = await accountRepository.getByUuid(accountId) ??
+    final account =
+        await accountRepository.getByUuid(accountId) ??
         await accountRepository.getByAccountCode(accountId);
     if (account == null || !account.isActive || account.isDeleted) {
       return 0.0;
@@ -120,7 +123,9 @@ class CashRegisterMovementService {
       companyId: trimmedCompany,
       registerId: sourceRegisterId,
     );
-    if (!sourceRes.isSuccess || sourceRes.account == null || sourceRes.register == null) {
+    if (!sourceRes.isSuccess ||
+        sourceRes.account == null ||
+        sourceRes.register == null) {
       return CashMovementTransferResult(
         isSuccess: false,
         errorCode: 'SOURCE_${sourceRes.errorCode}',
@@ -133,7 +138,9 @@ class CashRegisterMovementService {
       companyId: trimmedCompany,
       registerId: destinationRegisterId,
     );
-    if (!destRes.isSuccess || destRes.account == null || destRes.register == null) {
+    if (!destRes.isSuccess ||
+        destRes.account == null ||
+        destRes.register == null) {
       return CashMovementTransferResult(
         isSuccess: false,
         errorCode: 'DEST_${destRes.errorCode}',
@@ -151,7 +158,8 @@ class CashRegisterMovementService {
         return CashMovementTransferResult(
           isSuccess: false,
           errorCode: 'INSUFFICIENT_BALANCE',
-          message: 'Insufficient balance ($currentBalance) for transfer amount $amount',
+          message:
+              'Insufficient balance ($currentBalance) for transfer amount $amount',
         );
       }
     }
@@ -194,10 +202,7 @@ class CashRegisterMovementService {
 
     try {
       final entry = await journalPostingService.post(draft);
-      return CashMovementTransferResult(
-        isSuccess: true,
-        journalEntry: entry,
-      );
+      return CashMovementTransferResult(isSuccess: true, journalEntry: entry);
     } catch (e) {
       return CashMovementTransferResult(
         isSuccess: false,

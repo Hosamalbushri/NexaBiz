@@ -7,10 +7,7 @@ import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 
 class CategoryRepositoryImpl implements CategoryRepository {
-  CategoryRepositoryImpl(
-    this._db, {
-    this._readCompanyId,
-  });
+  CategoryRepositoryImpl(this._db, {this._readCompanyId});
 
   final InventoryDatabase _db;
   final String Function()? _readCompanyId;
@@ -31,16 +28,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   @override
   Future<List<Category>> getAllCategories() async {
-    final query = _db.select(_db.categories)
-      ..where(_scoped);
+    final query = _db.select(_db.categories)..where(_scoped);
     final rows = await query.get();
     return rows.map(_mapRowToEntity).toList();
   }
 
   @override
   Stream<List<Category>> watchAllCategories() {
-    final query = _db.select(_db.categories)
-      ..where(_scoped);
+    final query = _db.select(_db.categories)..where(_scoped);
     return query.watch().map((rows) => rows.map(_mapRowToEntity).toList());
   }
 
@@ -70,28 +65,30 @@ class CategoryRepositoryImpl implements CategoryRepository {
         throw const JournalException(JournalException.notFound);
       }
 
-      final existing = await (_db.select(_db.categories)
-            ..where((tbl) => tbl.uuid.equals(category.id) & _scoped(tbl)))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.categories)
+                ..where((tbl) => tbl.uuid.equals(category.id) & _scoped(tbl)))
+              .getSingleOrNull();
 
       // Prevent cross-tenant record overwrite
       if (existing == null) {
-        final crossTenantCheck = await (_db.select(_db.categories)
-              ..where((tbl) => tbl.uuid.equals(category.id)))
-            .getSingleOrNull();
+        final crossTenantCheck = await (_db.select(
+          _db.categories,
+        )..where((tbl) => tbl.uuid.equals(category.id))).getSingleOrNull();
         if (crossTenantCheck != null) {
           throw const JournalException(JournalException.notFound);
         }
       }
 
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      final newVersion = (existing?.version ?? category.version) + (existing == null ? 0 : 1);
+      final newVersion =
+          (existing?.version ?? category.version) + (existing == null ? 0 : 1);
       final effectiveCompanyId = category.companyId ?? _currentCompanyId;
 
       if (existing != null) {
-        await (_db.update(_db.categories)
-              ..where((tbl) => tbl.uuid.equals(category.id) & _scoped(tbl)))
-            .write(
+        await (_db.update(
+          _db.categories,
+        )..where((tbl) => tbl.uuid.equals(category.id) & _scoped(tbl))).write(
           CategoriesCompanion(
             name: Value(category.name),
             code: Value(category.code),
@@ -107,23 +104,25 @@ class CategoryRepositoryImpl implements CategoryRepository {
           ),
         );
       } else {
-        await _db.into(_db.categories).insert(
-          CategoriesCompanion(
-            uuid: Value(category.id),
-            name: Value(category.name),
-            code: Value(category.code),
-            warehouseId: Value(category.warehouseId),
-            parentId: Value(category.parentId),
-            level: Value(category.level),
-            isGroup: Value(category.isGroup),
-            isActive: Value(category.isActive),
-            costValuationMethod: Value(category.costValuationMethod?.name),
-            createdAt: Value(now),
-            updatedAt: Value(now),
-            version: Value(newVersion),
-            companyId: Value(effectiveCompanyId),
-          ),
-        );
+        await _db
+            .into(_db.categories)
+            .insert(
+              CategoriesCompanion(
+                uuid: Value(category.id),
+                name: Value(category.name),
+                code: Value(category.code),
+                warehouseId: Value(category.warehouseId),
+                parentId: Value(category.parentId),
+                level: Value(category.level),
+                isGroup: Value(category.isGroup),
+                isActive: Value(category.isActive),
+                costValuationMethod: Value(category.costValuationMethod?.name),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+                version: Value(newVersion),
+                companyId: Value(effectiveCompanyId),
+              ),
+            );
       }
     });
   }
@@ -144,25 +143,33 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final subcatRow = await subcategoryCountQuery.getSingle();
       final subcatCount = subcatRow.read(_db.categories.uuid.count()) ?? 0;
       if (subcatCount > 0) {
-        throw const JournalException('category_in_use', 'Cannot delete category with subcategories');
+        throw const JournalException(
+          'category_in_use',
+          'Cannot delete category with subcategories',
+        );
       }
 
       // 3. Safeguard check: Products referencing this category
       final productCountQuery = _db.selectOnly(_db.products)
         ..addColumns([_db.products.id.count()])
-        ..where(_db.products.categoryId.equals(id) &
-            _db.products.companyId.equals(_currentCompanyId) &
-            _db.products.deletedAt.isNull());
+        ..where(
+          _db.products.categoryId.equals(id) &
+              _db.products.companyId.equals(_currentCompanyId) &
+              _db.products.deletedAt.isNull(),
+        );
       final prodRow = await productCountQuery.getSingle();
       final prodCount = prodRow.read(_db.products.id.count()) ?? 0;
       if (prodCount > 0) {
-        throw const JournalException('category_in_use', 'Cannot delete category referenced by active products');
+        throw const JournalException(
+          'category_in_use',
+          'Cannot delete category referenced by active products',
+        );
       }
 
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      await (_db.update(_db.categories)
-            ..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl)))
-          .write(
+      await (_db.update(
+        _db.categories,
+      )..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl))).write(
         CategoriesCompanion(
           deletedAt: Value(now),
           updatedAt: Value(now),
@@ -193,9 +200,17 @@ class CategoryRepositoryImpl implements CategoryRepository {
       costValuationMethod: _parseCostValuationMethod(row.costValuationMethod),
       version: row.version,
       companyId: row.companyId,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
-      deletedAt: row.deletedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
+      deletedAt: row.deletedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
     );
   }
 }

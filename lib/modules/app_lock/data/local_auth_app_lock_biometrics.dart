@@ -8,7 +8,7 @@ import '../domain/app_lock_biometrics.dart';
 /// [local_auth] backed biometrics for App Lock unlock.
 class LocalAuthAppLockBiometrics implements AppLockBiometrics {
   LocalAuthAppLockBiometrics({LocalAuthentication? auth})
-      : _auth = auth ?? LocalAuthentication();
+    : _auth = auth ?? LocalAuthentication();
 
   final LocalAuthentication _auth;
 

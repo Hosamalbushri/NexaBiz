@@ -48,7 +48,8 @@ final inventoryPackageSetupDefinition = PackageSetupDefinition(
       titleAr: 'عملة تقييم المخزون',
       titleEn: 'Inventory Valuation Currency',
       descriptionAr: 'تحديد العملة الأساسية لاحتساب تكلفة وتقييم المخزون',
-      descriptionEn: 'Select base currency for inventory cost calculation and valuation',
+      descriptionEn:
+          'Select base currency for inventory cost calculation and valuation',
       fields: [
         SetupField(
           id: 'inventoryValuationCurrencyId',
@@ -68,8 +69,10 @@ final inventoryPackageSetupDefinition = PackageSetupDefinition(
       packageId: 'inventory',
       titleAr: 'سياسات تقييم التكلفة والكميات',
       titleEn: 'Costing & Quantity Policies',
-      descriptionAr: 'طريقة احتساب التكلفة وسياسة المنع عند نفاذ الرصيد ودقة الأرقام',
-      descriptionEn: 'Costing method (FIFO / WAC), negative stock policy, and decimal precision',
+      descriptionAr:
+          'طريقة احتساب التكلفة وسياسة المنع عند نفاذ الرصيد ودقة الأرقام',
+      descriptionEn:
+          'Costing method (FIFO / WAC), negative stock policy, and decimal precision',
       fields: [
         SetupField(
           id: 'defaultCostingMethod',
@@ -117,7 +120,8 @@ final inventoryPackageSetupDefinition = PackageSetupDefinition(
       titleAr: 'ربط حسابات المخزون',
       titleEn: 'Inventory Account Bindings',
       descriptionAr: 'ربط الحسابات المطلوبة للعمليات المالية الخاصة بالمخزون',
-      descriptionEn: 'Bind required financial accounts for inventory operations',
+      descriptionEn:
+          'Bind required financial accounts for inventory operations',
       fields: [
         SetupField(
           id: 'inventory_asset_account',
@@ -164,7 +168,8 @@ final inventorySetupSteps = [
     titleAr: 'عملة المخزون والمستودع الافتراضي',
     titleEn: 'Inventory Base Currency & Warehouse',
     descriptionAr: 'تحديد عملة وحيدة لاحتساب تكلفة الأصناف والمستودع الرئيسي',
-    descriptionEn: 'Select single base currency for inventory costing and default warehouse',
+    descriptionEn:
+        'Select single base currency for inventory costing and default warehouse',
     icon: Icons.warehouse_outlined,
     sortOrder: 30,
     builder: (context, ref) {

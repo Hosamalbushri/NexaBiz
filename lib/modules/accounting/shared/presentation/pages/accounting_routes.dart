@@ -90,8 +90,7 @@ class AccountingRoutes {
     BuildContext context, {
     required VoucherBookType section,
     required VoucherBookType kind,
-  }) =>
-      context.push(voucherBookKind(section: section, kind: kind));
+  }) => context.push(voucherBookKind(section: section, kind: kind));
 
   static void pushVoucherBookCreate(
     BuildContext context, {
@@ -117,10 +116,7 @@ class AccountingRoutes {
   static void pushVoucherBookEdit(BuildContext context, int id) =>
       context.push(voucherBookEdit(id));
 
-  static void pushAccountsCreate(
-    BuildContext context, {
-    String? parentId,
-  }) {
+  static void pushAccountsCreate(BuildContext context, {String? parentId}) {
     if (parentId == null || parentId.isEmpty) {
       context.push(accountsCreate);
       return;

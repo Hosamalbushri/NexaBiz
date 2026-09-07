@@ -249,22 +249,23 @@ final customerAccountsUnderParentProvider =
 
 /// Whether customer save auto-creates a CoA posting account when none is set.
 final customersAutoLinkAccountProvider =
-    StateNotifierProvider.autoDispose<CustomersAutoLinkAccountController, AsyncValue<bool>>(
-      (ref) {
-        return CustomersAutoLinkAccountController(
-          repository: ref.watch(settingsRepositoryProvider),
-          companyId: ref.watch(sessionCompanyIdProvider),
-        );
-      },
-    );
+    StateNotifierProvider.autoDispose<
+      CustomersAutoLinkAccountController,
+      AsyncValue<bool>
+    >((ref) {
+      return CustomersAutoLinkAccountController(
+        repository: ref.watch(settingsRepositoryProvider),
+        companyId: ref.watch(sessionCompanyIdProvider),
+      );
+    });
 
 class CustomersAutoLinkAccountController
     extends StateNotifier<AsyncValue<bool>> {
   CustomersAutoLinkAccountController({
     required SettingsRepository repository,
     this.companyId,
-  })  : _repository = repository,
-        super(const AsyncValue.loading()) {
+  }) : _repository = repository,
+       super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -305,9 +306,9 @@ class CustomersParentAccountController
     required SettingsRepository repository,
     required CustomerAccountLinkPort linkPort,
     this.companyId,
-  })  : _repository = repository,
-        _linkPort = linkPort,
-        super(const AsyncValue.loading()) {
+  }) : _repository = repository,
+       _linkPort = linkPort,
+       super(const AsyncValue.loading()) {
     _load();
   }
 

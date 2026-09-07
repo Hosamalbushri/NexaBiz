@@ -21,11 +21,11 @@ class ImportValue {
   });
 
   factory ImportValue.empty(ImportDataType dataType) => ImportValue(
-        rawValue: null,
-        normalizedValue: null,
-        dataType: dataType,
-        isValid: true,
-      );
+    rawValue: null,
+    normalizedValue: null,
+    dataType: dataType,
+    isValid: true,
+  );
 
   final dynamic rawValue;
   final dynamic normalizedValue;

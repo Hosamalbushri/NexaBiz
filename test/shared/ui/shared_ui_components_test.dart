@@ -10,7 +10,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Feedback State Widgets Test Suite', () {
-    testWidgets('AppLoadingState renders message and indicator', (tester) async {
+    testWidgets('AppLoadingState renders message and indicator', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -23,7 +25,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('AppErrorState renders title, error, and triggers retry', (tester) async {
+    testWidgets('AppErrorState renders title, error, and triggers retry', (
+      tester,
+    ) async {
       bool retried = false;
 
       await tester.pumpWidget(
@@ -49,36 +53,41 @@ void main() {
       expect(retried, isTrue);
     });
 
-    testWidgets('AppEmptyState renders empty title, message, and triggers action button', (tester) async {
-      bool actionTriggered = false;
+    testWidgets(
+      'AppEmptyState renders empty title, message, and triggers action button',
+      (tester) async {
+        bool actionTriggered = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AppEmptyState(
-              title: 'لا يوجد مخزون',
-              message: 'اضغط إضافة لإنشاء عنصر جديد',
-              actionLabel: 'إضافة عنصر',
-              onAction: () {
-                actionTriggered = true;
-              },
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AppEmptyState(
+                title: 'لا يوجد مخزون',
+                message: 'اضغط إضافة لإنشاء عنصر جديد',
+                actionLabel: 'إضافة عنصر',
+                onAction: () {
+                  actionTriggered = true;
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('لا يوجد مخزون'), findsOneWidget);
-      expect(find.text('اضغط إضافة لإنشاء عنصر جديد'), findsOneWidget);
+        expect(find.text('لا يوجد مخزون'), findsOneWidget);
+        expect(find.text('اضغط إضافة لإنشاء عنصر جديد'), findsOneWidget);
 
-      await tester.tap(find.text('إضافة عنصر'));
-      await tester.pump();
+        await tester.tap(find.text('إضافة عنصر'));
+        await tester.pump();
 
-      expect(actionTriggered, isTrue);
-    });
+        expect(actionTriggered, isTrue);
+      },
+    );
   });
 
   group('SearchFilterBar Widget Test Suite', () {
-    testWidgets('SearchFilterBar handles input, clear, and filter button tap', (tester) async {
+    testWidgets('SearchFilterBar handles input, clear, and filter button tap', (
+      tester,
+    ) async {
       String searchResult = '';
       bool filterTapped = false;
 
@@ -120,43 +129,47 @@ void main() {
   });
 
   group('AppFormFields Widget Test Suite', () {
-    testWidgets('AppTextField enforces 48dp minimum touch target and validation', (tester) async {
-      final formKey = GlobalKey<FormState>();
+    testWidgets(
+      'AppTextField enforces 48dp minimum touch target and validation',
+      (tester) async {
+        final formKey = GlobalKey<FormState>();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Form(
-              key: formKey,
-              child: AppTextField(
-                label: 'اسم المستخدم',
-                validator: (val) => val == null || val.isEmpty ? 'حقل مطلوب' : null,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Form(
+                key: formKey,
+                child: AppTextField(
+                  label: 'اسم المستخدم',
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'حقل مطلوب' : null,
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      final textFieldBox = tester.getRect(find.byType(TextFormField));
-      expect(textFieldBox.height, greaterThanOrEqualTo(48.0));
+        final textFieldBox = tester.getRect(find.byType(TextFormField));
+        expect(textFieldBox.height, greaterThanOrEqualTo(48.0));
 
-      // Trigger validation
-      formKey.currentState!.validate();
-      await tester.pump();
+        // Trigger validation
+        formKey.currentState!.validate();
+        await tester.pump();
 
-      expect(find.text('حقل مطلوب'), findsOneWidget);
-    });
+        expect(find.text('حقل مطلوب'), findsOneWidget);
+      },
+    );
 
-    testWidgets('AppFormSection renders title, icon, and children', (tester) async {
+    testWidgets('AppFormSection renders title, icon, and children', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: AppFormSection(
               title: 'البيانات الأساسية',
               icon: Icons.info_outline,
-              children: [
-                Text('عنصر التابع الأول'),
-              ],
+              children: [Text('عنصر التابع الأول')],
             ),
           ),
         ),
@@ -168,50 +181,55 @@ void main() {
   });
 
   group('ModuleListScaffold Widget Test Suite', () {
-    testWidgets('ModuleListScaffold renders loading, empty, and populated items', (tester) async {
-      // 1. Loading State
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ModuleListScaffold<String>(
-            title: 'قائمة المنتجات',
-            items: const [],
-            isLoading: true,
-            itemBuilder: (ctx, item) => Text(item),
+    testWidgets(
+      'ModuleListScaffold renders loading, empty, and populated items',
+      (tester) async {
+        // 1. Loading State
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ModuleListScaffold<String>(
+              title: 'قائمة المنتجات',
+              items: const [],
+              isLoading: true,
+              itemBuilder: (ctx, item) => Text(item),
+            ),
           ),
-        ),
-      );
-      expect(find.byType(AppLoadingState), findsOneWidget);
+        );
+        expect(find.byType(AppLoadingState), findsOneWidget);
 
-      // 2. Empty State
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ModuleListScaffold<String>(
-            title: 'قائمة المنتجات',
-            items: const [],
-            isLoading: false,
-            emptyTitle: 'لا توجد منتجات',
-            itemBuilder: (ctx, item) => Text(item),
+        // 2. Empty State
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ModuleListScaffold<String>(
+              title: 'قائمة المنتجات',
+              items: const [],
+              isLoading: false,
+              emptyTitle: 'لا توجد منتجات',
+              itemBuilder: (ctx, item) => Text(item),
+            ),
           ),
-        ),
-      );
-      expect(find.text('لا توجد منتجات'), findsOneWidget);
+        );
+        expect(find.text('لا توجد منتجات'), findsOneWidget);
 
-      // 3. Populated Items List
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ModuleListScaffold<String>(
-            title: 'قائمة المنتجات',
-            items: const ['منتج A', 'منتج B'],
-            isLoading: false,
-            itemBuilder: (ctx, item) => Text(item),
+        // 3. Populated Items List
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ModuleListScaffold<String>(
+              title: 'قائمة المنتجات',
+              items: const ['منتج A', 'منتج B'],
+              isLoading: false,
+              itemBuilder: (ctx, item) => Text(item),
+            ),
           ),
-        ),
-      );
-      expect(find.text('منتج A'), findsOneWidget);
-      expect(find.text('منتج B'), findsOneWidget);
-    });
+        );
+        expect(find.text('منتج A'), findsOneWidget);
+        expect(find.text('منتج B'), findsOneWidget);
+      },
+    );
 
-    testWidgets('ModuleListScaffold renders grid delegate layout', (tester) async {
+    testWidgets('ModuleListScaffold renders grid delegate layout', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ModuleListScaffold<String>(
@@ -232,7 +250,9 @@ void main() {
   });
 
   group('ModuleFormScaffold Widget Test Suite', () {
-    testWidgets('ModuleFormScaffold validates form and triggers onSave', (tester) async {
+    testWidgets('ModuleFormScaffold validates form and triggers onSave', (
+      tester,
+    ) async {
       final formKey = GlobalKey<FormState>();
       bool saved = false;
 
@@ -246,7 +266,8 @@ void main() {
             },
             body: AppTextField(
               label: 'رمز المنتج',
-              validator: (val) => val == null || val.isEmpty ? 'الرمز مطلوب' : null,
+              validator: (val) =>
+                  val == null || val.isEmpty ? 'الرمز مطلوب' : null,
             ),
           ),
         ),

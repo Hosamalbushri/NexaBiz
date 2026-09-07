@@ -7,9 +7,21 @@ void main() {
 
     // Mock dataset simulating external entity store
     final mockEntities = [
-      const ResolvedCandidate(id: 'CAT-UUID-001', displayName: 'Electronics', code: 'ELEC'),
-      const ResolvedCandidate(id: 'CAT-UUID-002', displayName: 'Furniture', code: 'FURN'),
-      const ResolvedCandidate(id: 'CAT-UUID-003', displayName: 'Electronics', code: 'ELEC-DUPE'), // Duplicate display name
+      const ResolvedCandidate(
+        id: 'CAT-UUID-001',
+        displayName: 'Electronics',
+        code: 'ELEC',
+      ),
+      const ResolvedCandidate(
+        id: 'CAT-UUID-002',
+        displayName: 'Furniture',
+        code: 'FURN',
+      ),
+      const ResolvedCandidate(
+        id: 'CAT-UUID-003',
+        displayName: 'Electronics',
+        code: 'ELEC-DUPE',
+      ), // Duplicate display name
     ];
 
     Future<List<ResolvedCandidate>> mockLookup(
@@ -21,12 +33,18 @@ void main() {
       switch (strategy) {
         case ResolutionStrategy.id:
         case ResolutionStrategy.uuid:
-          return mockEntities.where((e) => e.id.toLowerCase() == query).toList();
+          return mockEntities
+              .where((e) => e.id.toLowerCase() == query)
+              .toList();
         case ResolutionStrategy.code:
-          return mockEntities.where((e) => e.code?.toLowerCase() == query).toList();
+          return mockEntities
+              .where((e) => e.code?.toLowerCase() == query)
+              .toList();
         case ResolutionStrategy.name:
         case ResolutionStrategy.alias:
-          return mockEntities.where((e) => e.displayName.toLowerCase() == query).toList();
+          return mockEntities
+              .where((e) => e.displayName.toLowerCase() == query)
+              .toList();
         default:
           return [];
       }
@@ -65,40 +83,47 @@ void main() {
       expect(result.resolvedId, equals('CAT-UUID-002'));
     });
 
-    test('3. Resolves entity reference successfully by NAME when unique', () async {
-      final def = RelationDefinition(
-        targetEntityKey: 'category',
-        strategy: ResolutionStrategy.name,
-        lookupFn: mockLookup,
-      );
+    test(
+      '3. Resolves entity reference successfully by NAME when unique',
+      () async {
+        final def = RelationDefinition(
+          targetEntityKey: 'category',
+          strategy: ResolutionStrategy.name,
+          lookupFn: mockLookup,
+        );
 
-      final result = await resolver.resolve(
-        rawReference: 'Furniture',
-        definition: def,
-      );
+        final result = await resolver.resolve(
+          rawReference: 'Furniture',
+          definition: def,
+        );
 
-      expect(result.status, equals(ResolutionStatus.existing));
-      expect(result.resolvedId, equals('CAT-UUID-002'));
-    });
+        expect(result.status, equals(ResolutionStatus.existing));
+        expect(result.resolvedId, equals('CAT-UUID-002'));
+      },
+    );
 
-    test('4. Detects DUPLICATE NAMES as AMBIGUOUS relation (never silently selects)', () async {
-      final def = RelationDefinition(
-        targetEntityKey: 'category',
-        strategy: ResolutionStrategy.name,
-        lookupFn: mockLookup,
-      );
+    test(
+      '4. Detects DUPLICATE NAMES as AMBIGUOUS relation (never silently selects)',
+      () async {
+        final def = RelationDefinition(
+          targetEntityKey: 'category',
+          strategy: ResolutionStrategy.name,
+          lookupFn: mockLookup,
+        );
 
-      final result = await resolver.resolve(
-        rawReference: 'Electronics', // Matches two candidates (CAT-UUID-001 & CAT-UUID-003)
-        definition: def,
-      );
+        final result = await resolver.resolve(
+          rawReference:
+              'Electronics', // Matches two candidates (CAT-UUID-001 & CAT-UUID-003)
+          definition: def,
+        );
 
-      expect(result.status, equals(ResolutionStatus.ambiguous));
-      expect(result.isAmbiguous, isTrue);
-      expect(result.resolvedId, isNull);
-      expect(result.candidates.length, equals(2));
-      expect(result.errorMessage, contains('matched 2 candidates'));
-    });
+        expect(result.status, equals(ResolutionStatus.ambiguous));
+        expect(result.isAmbiguous, isTrue);
+        expect(result.resolvedId, isNull);
+        expect(result.candidates.length, equals(2));
+        expect(result.errorMessage, contains('matched 2 candidates'));
+      },
+    );
 
     test('5. Returns NOT_FOUND for missing relations', () async {
       final def = RelationDefinition(
@@ -137,16 +162,19 @@ void main() {
       expect(emptyRes.status, equals(ResolutionStatus.invalid));
     });
 
-    test('7. Architecture remains 100% domain independent (zero hardcoded entities)', () {
-      final def = RelationDefinition(
-        targetEntityKey: 'custom_generic_entity',
-        strategy: ResolutionStrategy.custom,
-        lookupFn: (ref, strat, [companyId]) async => [
-          const ResolvedCandidate(id: 'GEN-01', displayName: 'Generic Item'),
-        ],
-      );
+    test(
+      '7. Architecture remains 100% domain independent (zero hardcoded entities)',
+      () {
+        final def = RelationDefinition(
+          targetEntityKey: 'custom_generic_entity',
+          strategy: ResolutionStrategy.custom,
+          lookupFn: (ref, strat, [companyId]) async => [
+            const ResolvedCandidate(id: 'GEN-01', displayName: 'Generic Item'),
+          ],
+        );
 
-      expect(def.targetEntityKey, equals('custom_generic_entity'));
-    });
+        expect(def.targetEntityKey, equals('custom_generic_entity'));
+      },
+    );
   });
 }

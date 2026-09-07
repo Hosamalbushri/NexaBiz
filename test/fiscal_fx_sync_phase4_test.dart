@@ -21,7 +21,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
-
   late Directory tempDir;
   late Box<SyncOperation> syncBoxA;
   late Box<SyncOperation> syncBoxB;
@@ -120,89 +119,91 @@ void main() {
     await dbB.close();
   });
 
-  test('Device A fiscal year pushes and Device B pulls same uuid+periods',
-      () async {
-    final remote = InMemoryRemoteSyncApi();
+  test(
+    'Device A fiscal year pushes and Device B pulls same uuid+periods',
+    () async {
+      final remote = InMemoryRemoteSyncApi();
 
-    final dbA = AccountingDatabase.memory();
-    final queueA = SyncQueue(box: syncBoxA);
-    final fyA = FiscalYearRepositoryImpl(dbA, syncQueue: queueA);
+      final dbA = AccountingDatabase.memory();
+      final queueA = SyncQueue(box: syncBoxA);
+      final fyA = FiscalYearRepositoryImpl(dbA, syncQueue: queueA);
 
-    final dbB = AccountingDatabase.memory();
-    final queueB = SyncQueue(box: syncBoxB);
-    final fyB = FiscalYearRepositoryImpl(dbB, syncQueue: queueB);
+      final dbB = AccountingDatabase.memory();
+      final queueB = SyncQueue(box: syncBoxB);
+      final fyB = FiscalYearRepositoryImpl(dbB, syncQueue: queueB);
 
-    const generator = AccountingPeriodGenerator();
-    final periods = generator.generateMonthly(
-      startDate: DateTime.utc(2026, 1, 1),
-      endDate: DateTime.utc(2026, 12, 31),
-      periodCount: 12,
-    );
-    final created = await fyA.createFiscalYear(
-      draft: FiscalYearDraft(
-        code: '2026',
-        name: 'FY 2026',
+      const generator = AccountingPeriodGenerator();
+      final periods = generator.generateMonthly(
         startDate: DateTime.utc(2026, 1, 1),
         endDate: DateTime.utc(2026, 12, 31),
-        baseCurrencyCode: 'SAR',
         periodCount: 12,
-        periodFrequency: PeriodFrequency.monthly,
-        fxRevaluationEnabled: false,
-      ),
-      periods: periods,
-    );
+      );
+      final created = await fyA.createFiscalYear(
+        draft: FiscalYearDraft(
+          code: '2026',
+          name: 'FY 2026',
+          startDate: DateTime.utc(2026, 1, 1),
+          endDate: DateTime.utc(2026, 12, 31),
+          baseCurrencyCode: 'SAR',
+          periodCount: 12,
+          periodFrequency: PeriodFrequency.monthly,
+          fxRevaluationEnabled: false,
+        ),
+        periods: periods,
+      );
 
-    final localPeriods = await fyA.listPeriods(created.uuid);
-    expect(localPeriods, hasLength(12));
+      final localPeriods = await fyA.listPeriods(created.uuid);
+      expect(localPeriods, hasLength(12));
 
-    final pending = await queueA.all();
-    expect(
-      pending.any(
-        (op) =>
-            op.entityType == FiscalYearRepositoryImpl.entityType &&
-            op.entityId == created.uuid,
-      ),
-      isTrue,
-    );
+      final pending = await queueA.all();
+      expect(
+        pending.any(
+          (op) =>
+              op.entityType == FiscalYearRepositoryImpl.entityType &&
+              op.entityId == created.uuid,
+        ),
+        isTrue,
+      );
 
-    final managerA = SyncManager(
-      queue: queueA,
-      connectivity: connectivity,
-      remoteProvider: () => remote,
-    );
-    managerA.registerHandler(
-      FiscalYearSyncHandler(repository: fyA, remoteProvider: () => remote),
-    );
-    await managerA.start(enabled: true);
-    final passA = await managerA.syncNow();
-    expect(passA.uploaded, greaterThan(0));
+      final managerA = SyncManager(
+        queue: queueA,
+        connectivity: connectivity,
+        remoteProvider: () => remote,
+      );
+      managerA.registerHandler(
+        FiscalYearSyncHandler(repository: fyA, remoteProvider: () => remote),
+      );
+      await managerA.start(enabled: true);
+      final passA = await managerA.syncNow();
+      expect(passA.uploaded, greaterThan(0));
 
-    final managerB = SyncManager(
-      queue: queueB,
-      connectivity: connectivity,
-      remoteProvider: () => remote,
-    );
-    managerB.registerHandler(
-      FiscalYearSyncHandler(repository: fyB, remoteProvider: () => remote),
-    );
-    await managerB.start(enabled: true);
-    final passB = await managerB.syncNow();
-    expect(passB.downloaded, greaterThan(0));
+      final managerB = SyncManager(
+        queue: queueB,
+        connectivity: connectivity,
+        remoteProvider: () => remote,
+      );
+      managerB.registerHandler(
+        FiscalYearSyncHandler(repository: fyB, remoteProvider: () => remote),
+      );
+      await managerB.start(enabled: true);
+      final passB = await managerB.syncNow();
+      expect(passB.downloaded, greaterThan(0));
 
-    final remoteFy = await fyB.getByUuid(created.uuid);
-    expect(remoteFy, isNotNull);
-    expect(remoteFy!.uuid, created.uuid);
-    expect(remoteFy.code, '2026');
-    final remotePeriods = await fyB.listPeriods(created.uuid);
-    expect(remotePeriods, hasLength(12));
-    expect(
-      remotePeriods.map((p) => p.uuid).toSet(),
-      localPeriods.map((p) => p.uuid).toSet(),
-    );
+      final remoteFy = await fyB.getByUuid(created.uuid);
+      expect(remoteFy, isNotNull);
+      expect(remoteFy!.uuid, created.uuid);
+      expect(remoteFy.code, '2026');
+      final remotePeriods = await fyB.listPeriods(created.uuid);
+      expect(remotePeriods, hasLength(12));
+      expect(
+        remotePeriods.map((p) => p.uuid).toSet(),
+        localPeriods.map((p) => p.uuid).toSet(),
+      );
 
-    await managerA.dispose();
-    await managerB.dispose();
-    await dbA.close();
-    await dbB.close();
-  });
+      await managerA.dispose();
+      await managerB.dispose();
+      await dbA.close();
+      await dbB.close();
+    },
+  );
 }

@@ -68,10 +68,7 @@ class MigrationDiagnosticReport {
 
 /// Service providing pre-migration audits, safe tenant remediation, and post-migration financial verification.
 class MigrationIntegrityValidator {
-  MigrationIntegrityValidator({
-    required this.invDb,
-    required this.accDb,
-  });
+  MigrationIntegrityValidator({required this.invDb, required this.accDb});
 
   final InventoryDatabase invDb;
   final AccountingDatabase accDb;
@@ -91,24 +88,39 @@ class MigrationIntegrityValidator {
     for (final table in invTables) {
       try {
         final res = await invDb
-            .customSelect('SELECT COUNT(*) as c FROM $table WHERE company_id IS NULL OR company_id = \'\'')
+            .customSelect(
+              'SELECT COUNT(*) as c FROM $table WHERE company_id IS NULL OR company_id = \'\'',
+            )
             .getSingle();
         nullCompanyIdCount += res.read<int>('c');
       } catch (_) {}
     }
 
-    final accTables = ['accounts', 'journal_entries', 'voucher_books', 'fiscal_years', 'currency_rates'];
+    final accTables = [
+      'accounts',
+      'journal_entries',
+      'voucher_books',
+      'fiscal_years',
+      'currency_rates',
+    ];
     for (final table in accTables) {
       try {
         final res = await accDb
-            .customSelect('SELECT COUNT(*) as c FROM $table WHERE company_id IS NULL OR company_id = \'\'')
+            .customSelect(
+              'SELECT COUNT(*) as c FROM $table WHERE company_id IS NULL OR company_id = \'\'',
+            )
             .getSingle();
         nullCompanyIdCount += res.read<int>('c');
       } catch (_) {}
     }
 
     int duplicateUuidsCount = 0;
-    final uuidTables = ['products', 'stock_receipts', 'stock_issues', 'inventory_cost_layers'];
+    final uuidTables = [
+      'products',
+      'stock_receipts',
+      'stock_issues',
+      'inventory_cost_layers',
+    ];
     for (final table in uuidTables) {
       try {
         final res = await invDb.customSelect('''
@@ -141,7 +153,12 @@ class MigrationIntegrityValidator {
     } catch (_) {}
 
     int invalidStatusCount = 0;
-    for (final table in ['stock_receipts', 'stock_issues', 'stock_transfers', 'stock_returns']) {
+    for (final table in [
+      'stock_receipts',
+      'stock_issues',
+      'stock_transfers',
+      'stock_returns',
+    ]) {
       try {
         final res = await invDb.customSelect('''
           SELECT COUNT(*) as c FROM $table 
@@ -180,32 +197,58 @@ class MigrationIntegrityValidator {
 
     int receiptCount = 0;
     try {
-      receiptCount = (await invDb.customSelect('SELECT COUNT(*) as c FROM stock_receipts').getSingle()).read<int>('c');
+      receiptCount =
+          (await invDb
+                  .customSelect('SELECT COUNT(*) as c FROM stock_receipts')
+                  .getSingle())
+              .read<int>('c');
     } catch (_) {}
 
     int issueCount = 0;
     try {
-      issueCount = (await invDb.customSelect('SELECT COUNT(*) as c FROM stock_issues').getSingle()).read<int>('c');
+      issueCount =
+          (await invDb
+                  .customSelect('SELECT COUNT(*) as c FROM stock_issues')
+                  .getSingle())
+              .read<int>('c');
     } catch (_) {}
 
     int transferCount = 0;
     try {
-      transferCount = (await invDb.customSelect('SELECT COUNT(*) as c FROM stock_transfers').getSingle()).read<int>('c');
+      transferCount =
+          (await invDb
+                  .customSelect('SELECT COUNT(*) as c FROM stock_transfers')
+                  .getSingle())
+              .read<int>('c');
     } catch (_) {}
 
     int productCount = 0;
     try {
-      productCount = (await invDb.customSelect('SELECT COUNT(*) as c FROM products').getSingle()).read<int>('c');
+      productCount =
+          (await invDb
+                  .customSelect('SELECT COUNT(*) as c FROM products')
+                  .getSingle())
+              .read<int>('c');
     } catch (_) {}
 
     int costLayerCount = 0;
     try {
-      costLayerCount = (await invDb.customSelect('SELECT COUNT(*) as c FROM inventory_cost_layers').getSingle()).read<int>('c');
+      costLayerCount =
+          (await invDb
+                  .customSelect(
+                    'SELECT COUNT(*) as c FROM inventory_cost_layers',
+                  )
+                  .getSingle())
+              .read<int>('c');
     } catch (_) {}
 
     final companyIds = <String>{};
     try {
-      final rows = await invDb.customSelect('SELECT DISTINCT company_id FROM products WHERE company_id IS NOT NULL AND company_id != \'\'').get();
+      final rows = await invDb
+          .customSelect(
+            'SELECT DISTINCT company_id FROM products WHERE company_id IS NOT NULL AND company_id != \'\'',
+          )
+          .get();
       for (final r in rows) {
         companyIds.add(r.read<String>('company_id'));
       }
@@ -235,7 +278,9 @@ class MigrationIntegrityValidator {
 
   Future<void> remediateSafeDefaults({required String targetCompanyId}) async {
     if (targetCompanyId.trim().isEmpty) {
-      throw ArgumentError('targetCompanyId must be a non-empty authorized tenant ID.');
+      throw ArgumentError(
+        'targetCompanyId must be a non-empty authorized tenant ID.',
+      );
     }
 
     final invTables = [
@@ -260,7 +305,13 @@ class MigrationIntegrityValidator {
       } catch (_) {}
     }
 
-    final accTables = ['accounts', 'journal_entries', 'voucher_books', 'fiscal_years', 'currency_rates'];
+    final accTables = [
+      'accounts',
+      'journal_entries',
+      'voucher_books',
+      'fiscal_years',
+      'currency_rates',
+    ];
     for (final table in accTables) {
       try {
         await accDb.customStatement(
@@ -284,7 +335,10 @@ class MigrationIntegrityValidator {
     final postReport = await auditPreMigration();
     final postSnapshot = postReport.snapshot;
 
-    final valuationDiff = (postSnapshot.totalInventoryValuation - preSnapshot.totalInventoryValuation).abs();
+    final valuationDiff =
+        (postSnapshot.totalInventoryValuation -
+                preSnapshot.totalInventoryValuation)
+            .abs();
     if (valuationDiff > 0.001) {
       throw StateError(
         'Migration Financial Invariant Failed: Inventory Valuation changed from '
@@ -292,7 +346,8 @@ class MigrationIntegrityValidator {
       );
     }
 
-    final glDiff = (postSnapshot.totalGLBalance - preSnapshot.totalGLBalance).abs();
+    final glDiff = (postSnapshot.totalGLBalance - preSnapshot.totalGLBalance)
+        .abs();
     if (glDiff > 0.001) {
       throw StateError(
         'Migration Financial Invariant Failed: GL Balance changed from '
@@ -310,7 +365,8 @@ class MigrationIntegrityValidator {
       );
     }
 
-    if (postReport.orphanLinesCount > 0 || postReport.orphanConsumptionsCount > 0) {
+    if (postReport.orphanLinesCount > 0 ||
+        postReport.orphanConsumptionsCount > 0) {
       throw StateError(
         'Migration Safety Failed: Orphan records exist post-migration. '
         'Orphan lines: ${postReport.orphanLinesCount}, Orphan consumptions: ${postReport.orphanConsumptionsCount}',

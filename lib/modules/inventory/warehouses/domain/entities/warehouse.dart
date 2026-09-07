@@ -16,8 +16,8 @@ class Warehouse {
     this.version = 1,
     this.companyId,
     this.deletedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   final String code;

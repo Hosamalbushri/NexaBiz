@@ -40,10 +40,7 @@ class ModuleReportsPage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: module.title(l10n),
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: module.title(l10n), showBackButton: true),
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [

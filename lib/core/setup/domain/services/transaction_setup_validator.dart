@@ -15,8 +15,8 @@ class TransactionSetupValidator {
   const TransactionSetupValidator({
     required SetupAccountLookupPort accountLookupPort,
     required AccountBindingRepository bindingRepository,
-  })  : _accountLookupPort = accountLookupPort,
-        _bindingRepository = bindingRepository;
+  }) : _accountLookupPort = accountLookupPort,
+       _bindingRepository = bindingRepository;
 
   final SetupAccountLookupPort _accountLookupPort;
   final AccountBindingRepository _bindingRepository;
@@ -46,7 +46,8 @@ class TransactionSetupValidator {
     throw TransactionSetupConfigurationException(
       packageId: requirement.packageId,
       requirementKey: requirement.requirementKey,
-      message: 'Financial transaction blocked: Required account binding is missing or invalid (${resolution.message}).',
+      message:
+          'Financial transaction blocked: Required account binding is missing or invalid (${resolution.message}).',
     );
   }
 
@@ -63,7 +64,8 @@ class TransactionSetupValidator {
       throw TransactionSetupConfigurationException(
         packageId: packageId,
         requirementKey: fieldKey,
-        message: 'Transaction blocked: Mandatory setup configuration "$fieldLabelEn" ($fieldKey) is missing.',
+        message:
+            'Transaction blocked: Mandatory setup configuration "$fieldLabelEn" ($fieldKey) is missing.',
       );
     }
   }

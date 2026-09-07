@@ -71,7 +71,11 @@ void main() {
     db = InventoryDatabase(executor: NativeDatabase.memory());
     activeCompanyId = 'company_A';
     mockBox = MockSyncBox<SyncOperation>([]);
-    syncQueue = SyncQueue(box: mockBox, companyId: activeCompanyId, deviceId: 'DEV-1');
+    syncQueue = SyncQueue(
+      box: mockBox,
+      companyId: activeCompanyId,
+      deviceId: 'DEV-1',
+    );
 
     costLayerService = CostLayerServiceImpl(
       db: db,
@@ -83,10 +87,7 @@ void main() {
       null,
       () => activeCompanyId,
     );
-    validationService = StockValidationServiceImpl(
-      db,
-      () => activeCompanyId,
-    );
+    validationService = StockValidationServiceImpl(db, () => activeCompanyId);
     dependencyDetector = InventoryDependencyDetectorImpl(
       db,
       () => activeCompanyId,
@@ -106,7 +107,9 @@ void main() {
     transferRepo = StockTransferRepositoryImpl(db: db);
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.into(db.products).insert(
+    await db
+        .into(db.products)
+        .insert(
           ProductsCompanion(
             id: const Value(1),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
@@ -122,7 +125,9 @@ void main() {
             updatedAt: Value(now),
           ),
         );
-    await db.into(db.products).insert(
+    await db
+        .into(db.products)
+        .insert(
           ProductsCompanion(
             id: const Value(2),
             uuid: const Value('00000000-0000-4000-8000-000000000002'),
@@ -214,93 +219,137 @@ void main() {
   }
 
   group('TEST GROUP 1 — POSTING SAFETY', () {
-    test('Test 1 — Normal Posting: single stock, cost, accounting & audit effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REC-G1-1', qty: 10, unitCost: 100);
-      final ref = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-        status: InventoryDocumentStatus.draft,
-      );
+    test(
+      'Test 1 — Normal Posting: single stock, cost, accounting & audit effect',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'REC-G1-1',
+          qty: 10,
+          unitCost: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      final result = await coordinator.post(document: ref);
-      expect(result, isA<PostSuccess>());
+        final result = await coordinator.post(document: ref);
+        expect(result, isA<PostSuccess>());
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.length, 1);
-      expect(layers.first.remainingQty, 10.0);
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(layers.length, 1);
+        expect(layers.first.remainingQty, 10.0);
 
-      final events = await syncQueue.peekReady();
-      expect(events.any((e) => e.entityId == receipt.id), true);
-    });
+        final events = await syncQueue.peekReady();
+        expect(events.any((e) => e.entityId == receipt.id), true);
+      },
+    );
 
-    test('Test 2 — Duplicate Posting: safe response & single economic effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REC-G1-2', qty: 5, unitCost: 100);
-      final ref = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-        status: InventoryDocumentStatus.draft,
-      );
+    test(
+      'Test 2 — Duplicate Posting: safe response & single economic effect',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'REC-G1-2',
+          qty: 5,
+          unitCost: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      final res1 = await coordinator.post(document: ref);
-      final res2 = await coordinator.post(document: ref);
+        final res1 = await coordinator.post(document: ref);
+        final res2 = await coordinator.post(document: ref);
 
-      expect(res1, isA<PostSuccess>());
-      expect(res2, isA<PostSuccess>());
+        expect(res1, isA<PostSuccess>());
+        expect(res2, isA<PostSuccess>());
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
+      },
+    );
 
-    test('Test 3 — Ten Duplicate Requests: 10 safe responses, single economic effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REC-G1-3', qty: 15, unitCost: 100);
-      final ref = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-        status: InventoryDocumentStatus.draft,
-      );
+    test(
+      'Test 3 — Ten Duplicate Requests: 10 safe responses, single economic effect',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'REC-G1-3',
+          qty: 15,
+          unitCost: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      for (int i = 0; i < 10; i++) {
-        final res = await coordinator.post(document: ref);
-        expect(res, isA<PostSuccess>());
-      }
+        for (int i = 0; i < 10; i++) {
+          final res = await coordinator.post(document: ref);
+          expect(res, isA<PostSuccess>());
+        }
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
+      },
+    );
 
-    test('Test 4 — Concurrent Duplicate Posting: 1 successful economic effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REC-G1-4', qty: 8, unitCost: 100);
-      final ref = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-        status: InventoryDocumentStatus.draft,
-      );
+    test(
+      'Test 4 — Concurrent Duplicate Posting: 1 successful economic effect',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'REC-G1-4',
+          qty: 8,
+          unitCost: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      final results = await Future.wait([
-        coordinator.post(document: ref),
-        coordinator.post(document: ref),
-        coordinator.post(document: ref),
-      ]);
+        final results = await Future.wait([
+          coordinator.post(document: ref),
+          coordinator.post(document: ref),
+          coordinator.post(document: ref),
+        ]);
 
-      for (final r in results) {
-        expect(r, isA<PostSuccess>());
-      }
+        for (final r in results) {
+          expect(r, isA<PostSuccess>());
+        }
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
+      },
+    );
   });
 
   group('TEST GROUP 2 — TRANSACTIONAL INTEGRITY', () {
@@ -319,345 +368,462 @@ void main() {
       expect(layers.isEmpty, true);
     });
 
-    test('Test 6 — Accounting Failure Rollback: inventory and document status rolled back', () async {
-      final issId = generateUuidV4();
-      final issue = await createIssue(id: issId, docNumber: 'ISS-FAIL-1', qty: 100);
-      final ref = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-      );
+    test(
+      'Test 6 — Accounting Failure Rollback: inventory and document status rolled back',
+      () async {
+        final issId = generateUuidV4();
+        final issue = await createIssue(
+          id: issId,
+          docNumber: 'ISS-FAIL-1',
+          qty: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: issue.id,
+          documentNumber: issue.issueNumber,
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: issue.issueDate,
+          warehouseId: issue.warehouse,
+        );
 
-      final res = await coordinator.post(document: ref);
-      expect(res, isA<PostStockShortage>());
+        final res = await coordinator.post(document: ref);
+        expect(res, isA<PostStockShortage>());
 
-      final reloadedIssue = await movementsRepo.getIssueById(issId);
-      expect(reloadedIssue?.status, InventoryDocumentStatus.draft);
-    });
+        final reloadedIssue = await movementsRepo.getIssueById(issId);
+        expect(reloadedIssue?.status, InventoryDocumentStatus.draft);
+      },
+    );
 
-    test('Test 7 — Cost Layer Failure Rollback: stock & accounting remain consistent', () async {
-      final issId = generateUuidV4();
-      final issue = await createIssue(id: issId, docNumber: 'ISS-FAIL-2', qty: 50);
-      final ref = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-      );
+    test(
+      'Test 7 — Cost Layer Failure Rollback: stock & accounting remain consistent',
+      () async {
+        final issId = generateUuidV4();
+        final issue = await createIssue(
+          id: issId,
+          docNumber: 'ISS-FAIL-2',
+          qty: 50,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: issue.id,
+          documentNumber: issue.issueNumber,
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: issue.issueDate,
+          warehouseId: issue.warehouse,
+        );
 
-      final res = await coordinator.post(document: ref);
-      expect(res, isA<PostStockShortage>());
-    });
+        final res = await coordinator.post(document: ref);
+        expect(res, isA<PostStockShortage>());
+      },
+    );
   });
 
   group('TEST GROUP 3 — FIFO', () {
-    test('Test 8 — FIFO Consumption: 10@100 + 10@120, Issue 12 -> COGS = 1240, Remaining = 8@120', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'FIFO-R1', qty: 10, unitCost: 100);
-      final r2 = await createReceipt(id: generateUuidV4(), docNumber: 'FIFO-R2', qty: 10, unitCost: 120);
+    test(
+      'Test 8 — FIFO Consumption: 10@100 + 10@120, Issue 12 -> COGS = 1240, Remaining = 8@120',
+      () async {
+        final r1 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'FIFO-R1',
+          qty: 10,
+          unitCost: 100,
+        );
+        final r2 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'FIFO-R2',
+          qty: 10,
+          unitCost: 120,
+        );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r2.id,
-        documentNumber: r2.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r2.receiptDate,
-        warehouseId: r2.warehouse,
-      ));
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r1.id,
+            documentNumber: r1.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r1.receiptDate,
+            warehouseId: r1.warehouse,
+          ),
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r2.id,
+            documentNumber: r2.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r2.receiptDate,
+            warehouseId: r2.warehouse,
+          ),
+        );
 
-      final issueLineUuid = generateUuidV4();
-      final result = await costLayerService.consumeLayers(
-        itemCode: 'ITEM-001',
-        quantity: 12,
-        method: CostValuationMethod.fifo,
-        issueLineUuid: issueLineUuid,
-        movementType: 'stock_issue',
-        companyId: 'company_A',
-      );
+        final issueLineUuid = generateUuidV4();
+        final result = await costLayerService.consumeLayers(
+          itemCode: 'ITEM-001',
+          quantity: 12,
+          method: CostValuationMethod.fifo,
+          issueLineUuid: issueLineUuid,
+          movementType: 'stock_issue',
+          companyId: 'company_A',
+        );
 
-      expect(result.totalCost, 1240.0);
-      final open = await costLayerService.getOpenLayers('ITEM-001');
-      expect(open.length, 1);
-      expect(open.first.remainingQty, 8.0);
-      expect(open.first.unitCost, 120.0);
-    });
+        expect(result.totalCost, 1240.0);
+        final open = await costLayerService.getOpenLayers('ITEM-001');
+        expect(open.length, 1);
+        expect(open.first.remainingQty, 8.0);
+        expect(open.first.unitCost, 120.0);
+      },
+    );
 
     test('Test 9 — FIFO Partial Restoration on Reversal', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'FIFO-R1-9', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
+      final r1 = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'FIFO-R1-9',
+        qty: 10,
+        unitCost: 100,
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: r1.id,
+          documentNumber: r1.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: r1.receiptDate,
+          warehouseId: r1.warehouse,
+        ),
+      );
 
       final openBefore = await costLayerService.getOpenLayers('ITEM-001');
       expect(openBefore.length, 1);
     });
 
-    test('Test 10 — FIFO Multi-Layer: 10@100 + 5@120 + 8@140, Issue 16 -> COGS = 1740', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'FIFO-R10-1', qty: 10, unitCost: 100);
-      final r2 = await createReceipt(id: generateUuidV4(), docNumber: 'FIFO-R10-2', qty: 5, unitCost: 120);
-      final r3 = await createReceipt(id: generateUuidV4(), docNumber: 'FIFO-R10-3', qty: 8, unitCost: 140);
-      
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r2.id,
-        documentNumber: r2.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r2.receiptDate,
-        warehouseId: r2.warehouse,
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r3.id,
-        documentNumber: r3.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r3.receiptDate,
-        warehouseId: r3.warehouse,
-      ));
+    test(
+      'Test 10 — FIFO Multi-Layer: 10@100 + 5@120 + 8@140, Issue 16 -> COGS = 1740',
+      () async {
+        final r1 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'FIFO-R10-1',
+          qty: 10,
+          unitCost: 100,
+        );
+        final r2 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'FIFO-R10-2',
+          qty: 5,
+          unitCost: 120,
+        );
+        final r3 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'FIFO-R10-3',
+          qty: 8,
+          unitCost: 140,
+        );
 
-      final result = await costLayerService.consumeLayers(
-        itemCode: 'ITEM-001',
-        quantity: 16,
-        method: CostValuationMethod.fifo,
-        issueLineUuid: generateUuidV4(),
-        movementType: 'stock_issue',
-        companyId: 'company_A',
-      );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r1.id,
+            documentNumber: r1.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r1.receiptDate,
+            warehouseId: r1.warehouse,
+          ),
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r2.id,
+            documentNumber: r2.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r2.receiptDate,
+            warehouseId: r2.warehouse,
+          ),
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r3.id,
+            documentNumber: r3.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r3.receiptDate,
+            warehouseId: r3.warehouse,
+          ),
+        );
 
-      expect(result.totalCost, 1740.0);
-    });
+        final result = await costLayerService.consumeLayers(
+          itemCode: 'ITEM-001',
+          quantity: 16,
+          method: CostValuationMethod.fifo,
+          issueLineUuid: generateUuidV4(),
+          movementType: 'stock_issue',
+          companyId: 'company_A',
+        );
+
+        expect(result.totalCost, 1740.0);
+      },
+    );
   });
 
   group('TEST GROUP 4 — LIFO', () {
-    test('Test 11 — LIFO Consumption: 10@100 + 10@120, Issue 12 -> COGS = 1400, Remaining = 8@100', () async {
-      final t1 = DateTime.utc(2026, 1, 1);
-      final t2 = DateTime.utc(2026, 1, 2);
-      final l1Id = generateUuidV4();
-      final l2Id = generateUuidV4();
-      final r1Id = generateUuidV4();
-      final r2Id = generateUuidV4();
+    test(
+      'Test 11 — LIFO Consumption: 10@100 + 10@120, Issue 12 -> COGS = 1400, Remaining = 8@100',
+      () async {
+        final t1 = DateTime.utc(2026, 1, 1);
+        final t2 = DateTime.utc(2026, 1, 2);
+        final l1Id = generateUuidV4();
+        final l2Id = generateUuidV4();
+        final r1Id = generateUuidV4();
+        final r2Id = generateUuidV4();
 
-      await costLayerService.createLayer(CostLayer(
-        id: l1Id,
-        itemCode: 'ITEM-LIFO',
-        movementUuid: r1Id,
-        movementType: 'stock_receipt',
-        receivedDate: t1,
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 100,
-        totalCost: 1000,
-        companyId: 'company_A',
-      ));
+        await costLayerService.createLayer(
+          CostLayer(
+            id: l1Id,
+            itemCode: 'ITEM-LIFO',
+            movementUuid: r1Id,
+            movementType: 'stock_receipt',
+            receivedDate: t1,
+            receivedQty: 10,
+            remainingQty: 10,
+            unitCost: 100,
+            totalCost: 1000,
+            companyId: 'company_A',
+          ),
+        );
 
-      await costLayerService.createLayer(CostLayer(
-        id: l2Id,
-        itemCode: 'ITEM-LIFO',
-        movementUuid: r2Id,
-        movementType: 'stock_receipt',
-        receivedDate: t2,
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 120,
-        totalCost: 1200,
-        companyId: 'company_A',
-      ));
+        await costLayerService.createLayer(
+          CostLayer(
+            id: l2Id,
+            itemCode: 'ITEM-LIFO',
+            movementUuid: r2Id,
+            movementType: 'stock_receipt',
+            receivedDate: t2,
+            receivedQty: 10,
+            remainingQty: 10,
+            unitCost: 120,
+            totalCost: 1200,
+            companyId: 'company_A',
+          ),
+        );
 
-      final res = await costLayerService.consumeLayers(
-        itemCode: 'ITEM-LIFO',
-        quantity: 12,
-        method: CostValuationMethod.lifo,
-        issueLineUuid: generateUuidV4(),
-        movementType: 'stock_issue',
-        companyId: 'company_A',
-      );
+        final res = await costLayerService.consumeLayers(
+          itemCode: 'ITEM-LIFO',
+          quantity: 12,
+          method: CostValuationMethod.lifo,
+          issueLineUuid: generateUuidV4(),
+          movementType: 'stock_issue',
+          companyId: 'company_A',
+        );
 
-      expect(res.totalCost, 1400.0);
-      final open = await costLayerService.getOpenLayers('ITEM-LIFO');
-      expect(open.length, 1);
-      expect(open.first.id, l1Id);
-      expect(open.first.remainingQty, 8.0);
-    });
+        expect(res.totalCost, 1400.0);
+        final open = await costLayerService.getOpenLayers('ITEM-LIFO');
+        expect(open.length, 1);
+        expect(open.first.id, l1Id);
+        expect(open.first.remainingQty, 8.0);
+      },
+    );
 
-    test('Test 12 — LIFO Reversal: original quantities & costs restored', () async {
-      final l1Id = generateUuidV4();
-      await costLayerService.createLayer(CostLayer(
-        id: l1Id,
-        itemCode: 'ITEM-LIFO',
-        movementUuid: generateUuidV4(),
-        movementType: 'stock_receipt',
-        receivedDate: DateTime.now(),
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 100,
-        totalCost: 1000,
-        companyId: 'company_A',
-      ));
+    test(
+      'Test 12 — LIFO Reversal: original quantities & costs restored',
+      () async {
+        final l1Id = generateUuidV4();
+        await costLayerService.createLayer(
+          CostLayer(
+            id: l1Id,
+            itemCode: 'ITEM-LIFO',
+            movementUuid: generateUuidV4(),
+            movementType: 'stock_receipt',
+            receivedDate: DateTime.now(),
+            receivedQty: 10,
+            remainingQty: 10,
+            unitCost: 100,
+            totalCost: 1000,
+            companyId: 'company_A',
+          ),
+        );
 
-      final open = await costLayerService.getOpenLayers('ITEM-LIFO');
-      expect(open.isNotEmpty, true);
-    });
+        final open = await costLayerService.getOpenLayers('ITEM-LIFO');
+        expect(open.isNotEmpty, true);
+      },
+    );
   });
 
   group('TEST GROUP 5 — MOVING WEIGHTED AVERAGE', () {
-    test('Test 13 — Moving Average Issue: 10@100 + 10@120 = Avg 110. Issue 5 -> COGS = 550', () async {
-      await costLayerService.createLayer(CostLayer(
-        id: generateUuidV4(),
-        itemCode: 'ITEM-WA',
-        movementUuid: generateUuidV4(),
-        movementType: 'stock_receipt',
-        receivedDate: DateTime.utc(2026, 1, 1),
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 100,
-        totalCost: 1000,
-        companyId: 'company_A',
-      ));
+    test(
+      'Test 13 — Moving Average Issue: 10@100 + 10@120 = Avg 110. Issue 5 -> COGS = 550',
+      () async {
+        await costLayerService.createLayer(
+          CostLayer(
+            id: generateUuidV4(),
+            itemCode: 'ITEM-WA',
+            movementUuid: generateUuidV4(),
+            movementType: 'stock_receipt',
+            receivedDate: DateTime.utc(2026, 1, 1),
+            receivedQty: 10,
+            remainingQty: 10,
+            unitCost: 100,
+            totalCost: 1000,
+            companyId: 'company_A',
+          ),
+        );
 
-      await costLayerService.createLayer(CostLayer(
-        id: generateUuidV4(),
-        itemCode: 'ITEM-WA',
-        movementUuid: generateUuidV4(),
-        movementType: 'stock_receipt',
-        receivedDate: DateTime.utc(2026, 1, 2),
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 120,
-        totalCost: 1200,
-        companyId: 'company_A',
-      ));
+        await costLayerService.createLayer(
+          CostLayer(
+            id: generateUuidV4(),
+            itemCode: 'ITEM-WA',
+            movementUuid: generateUuidV4(),
+            movementType: 'stock_receipt',
+            receivedDate: DateTime.utc(2026, 1, 2),
+            receivedQty: 10,
+            remainingQty: 10,
+            unitCost: 120,
+            totalCost: 1200,
+            companyId: 'company_A',
+          ),
+        );
 
-      final avg = await costLayerService.getWeightedAverageCost('ITEM-WA');
-      expect(avg, 110.0);
+        final avg = await costLayerService.getWeightedAverageCost('ITEM-WA');
+        expect(avg, 110.0);
 
-      final res = await costLayerService.consumeLayers(
-        itemCode: 'ITEM-WA',
-        quantity: 5,
-        method: CostValuationMethod.weightedAverage,
-        issueLineUuid: generateUuidV4(),
-        movementType: 'stock_issue',
-        companyId: 'company_A',
-      );
+        final res = await costLayerService.consumeLayers(
+          itemCode: 'ITEM-WA',
+          quantity: 5,
+          method: CostValuationMethod.weightedAverage,
+          issueLineUuid: generateUuidV4(),
+          movementType: 'stock_issue',
+          companyId: 'company_A',
+        );
 
-      expect(res.totalCost, 550.0);
-    });
+        expect(res.totalCost, 550.0);
+      },
+    );
 
     test('Test 14 — Repeated Average Issues: average remains stable', () async {
-      await costLayerService.createLayer(CostLayer(
-        id: generateUuidV4(),
-        itemCode: 'ITEM-WA',
-        movementUuid: generateUuidV4(),
-        movementType: 'stock_receipt',
-        receivedDate: DateTime.utc(2026, 1, 1),
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 110,
-        totalCost: 1100,
-        companyId: 'company_A',
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: generateUuidV4(),
+          itemCode: 'ITEM-WA',
+          movementUuid: generateUuidV4(),
+          movementType: 'stock_receipt',
+          receivedDate: DateTime.utc(2026, 1, 1),
+          receivedQty: 10,
+          remainingQty: 10,
+          unitCost: 110,
+          totalCost: 1100,
+          companyId: 'company_A',
+        ),
+      );
 
       final avgAfter = await costLayerService.getWeightedAverageCost('ITEM-WA');
       expect(avgAfter, 110.0);
     });
 
-    test('Test 15 — Weighted Average Reversal: exact economic restoration', () async {
-      await costLayerService.createLayer(CostLayer(
-        id: generateUuidV4(),
-        itemCode: 'ITEM-WA',
-        movementUuid: generateUuidV4(),
-        movementType: 'stock_receipt',
-        receivedDate: DateTime.utc(2026, 1, 1),
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 110,
-        totalCost: 1100,
-        companyId: 'company_A',
-      ));
+    test(
+      'Test 15 — Weighted Average Reversal: exact economic restoration',
+      () async {
+        await costLayerService.createLayer(
+          CostLayer(
+            id: generateUuidV4(),
+            itemCode: 'ITEM-WA',
+            movementUuid: generateUuidV4(),
+            movementType: 'stock_receipt',
+            receivedDate: DateTime.utc(2026, 1, 1),
+            receivedQty: 10,
+            remainingQty: 10,
+            unitCost: 110,
+            totalCost: 1100,
+            companyId: 'company_A',
+          ),
+        );
 
-      final avgRestored = await costLayerService.getWeightedAverageCost('ITEM-WA');
-      expect(avgRestored, 110.0);
-    });
+        final avgRestored = await costLayerService.getWeightedAverageCost(
+          'ITEM-WA',
+        );
+        expect(avgRestored, 110.0);
+      },
+    );
   });
 
   group('TEST GROUP 6 — TRANSFERS', () {
-    test('Test 16 — Transfer WH-A -> WH-B: balance & cost preservation', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'TR-R1', qty: 10, unitCost: 100, warehouse: 'WH-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: 'WH-A',
-      ));
-
-      final trId = generateUuidV4();
-      final transferDoc = StockTransfer(
-        id: trId,
-        transferNumber: 'STR-001',
-        transferDate: DateTime.now(),
-        fromWarehouseId: 'WH-A',
-        toWarehouseId: 'WH-B',
-        notes: 'Transfer WH-A to WH-B',
-        status: InventoryDocumentStatus.draft,
-        companyId: 'company_A',
-        lines: [
-          StockTransferLine(
-            id: generateUuidV4(),
-            transferUuid: trId,
-            itemCode: 'ITEM-001',
-            itemName: 'Item 1',
-            quantity: 4,
-            unitCost: 100,
-            totalCost: 400,
+    test(
+      'Test 16 — Transfer WH-A -> WH-B: balance & cost preservation',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'TR-R1',
+          qty: 10,
+          unitCost: 100,
+          warehouse: 'WH-A',
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: 'WH-A',
           ),
-        ],
-      );
-      await transferRepo.saveTransfer(transferDoc);
+        );
 
-      final res = await coordinator.post(document: InventoryDocumentRef(
-        documentId: transferDoc.id,
-        documentNumber: transferDoc.transferNumber,
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transferDoc.transferDate,
-        warehouseId: 'WH-A',
-      ));
+        final trId = generateUuidV4();
+        final transferDoc = StockTransfer(
+          id: trId,
+          transferNumber: 'STR-001',
+          transferDate: DateTime.now(),
+          fromWarehouseId: 'WH-A',
+          toWarehouseId: 'WH-B',
+          notes: 'Transfer WH-A to WH-B',
+          status: InventoryDocumentStatus.draft,
+          companyId: 'company_A',
+          lines: [
+            StockTransferLine(
+              id: generateUuidV4(),
+              transferUuid: trId,
+              itemCode: 'ITEM-001',
+              itemName: 'Item 1',
+              quantity: 4,
+              unitCost: 100,
+              totalCost: 400,
+            ),
+          ],
+        );
+        await transferRepo.saveTransfer(transferDoc);
 
-      expect(res, isA<PostSuccess>());
+        final res = await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: transferDoc.id,
+            documentNumber: transferDoc.transferNumber,
+            documentType: InventoryDocumentType.stockTransfer,
+            documentDate: transferDoc.transferDate,
+            warehouseId: 'WH-A',
+          ),
+        );
 
-      final srcLayers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-A');
-      expect(srcLayers.first.remainingQty, 6.0);
+        expect(res, isA<PostSuccess>());
 
-      final destLayers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-B');
-      expect(destLayers.length, 1);
-      expect(destLayers.first.remainingQty, 4.0);
-      expect(destLayers.first.unitCost, 100.0);
-    });
+        final srcLayers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-A',
+        );
+        expect(srcLayers.first.remainingQty, 6.0);
+
+        final destLayers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-B',
+        );
+        expect(destLayers.length, 1);
+        expect(destLayers.first.remainingQty, 4.0);
+        expect(destLayers.first.unitCost, 100.0);
+      },
+    );
 
     test('Test 17 — Transfer Duplicate: idempotent response', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'TR-R17', qty: 10, unitCost: 100, warehouse: 'WH-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: 'WH-A',
-      ));
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'TR-R17',
+        qty: 10,
+        unitCost: 100,
+        warehouse: 'WH-A',
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: 'WH-A',
+        ),
+      );
 
       final trId = generateUuidV4();
       final transferDoc = StockTransfer(
@@ -697,95 +863,146 @@ void main() {
       expect(res2, isA<PostSuccess>());
     });
 
-    test('Test 18 — Transfer Reversal: WH-A, WH-B & cost layers restored', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'TR-R18', qty: 10, unitCost: 100, warehouse: 'WH-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: 'WH-A',
-      ));
-
-      final trId = generateUuidV4();
-      final transferDoc = StockTransfer(
-        id: trId,
-        transferNumber: 'STR-018',
-        transferDate: DateTime.now(),
-        fromWarehouseId: 'WH-A',
-        toWarehouseId: 'WH-B',
-        notes: 'Transfer WH-A to WH-B',
-        status: InventoryDocumentStatus.draft,
-        companyId: 'company_A',
-        lines: [
-          StockTransferLine(
-            id: generateUuidV4(),
-            transferUuid: trId,
-            itemCode: 'ITEM-001',
-            itemName: 'Item 1',
-            quantity: 4,
-            unitCost: 100,
-            totalCost: 400,
+    test(
+      'Test 18 — Transfer Reversal: WH-A, WH-B & cost layers restored',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'TR-R18',
+          qty: 10,
+          unitCost: 100,
+          warehouse: 'WH-A',
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: 'WH-A',
           ),
-        ],
-      );
-      await transferRepo.saveTransfer(transferDoc);
+        );
 
-      final ref = InventoryDocumentRef(
-        documentId: transferDoc.id,
-        documentNumber: transferDoc.transferNumber,
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transferDoc.transferDate,
-        warehouseId: 'WH-A',
-      );
-      await coordinator.post(document: ref);
-      await coordinator.unpost(document: ref);
+        final trId = generateUuidV4();
+        final transferDoc = StockTransfer(
+          id: trId,
+          transferNumber: 'STR-018',
+          transferDate: DateTime.now(),
+          fromWarehouseId: 'WH-A',
+          toWarehouseId: 'WH-B',
+          notes: 'Transfer WH-A to WH-B',
+          status: InventoryDocumentStatus.draft,
+          companyId: 'company_A',
+          lines: [
+            StockTransferLine(
+              id: generateUuidV4(),
+              transferUuid: trId,
+              itemCode: 'ITEM-001',
+              itemName: 'Item 1',
+              quantity: 4,
+              unitCost: 100,
+              totalCost: 400,
+            ),
+          ],
+        );
+        await transferRepo.saveTransfer(transferDoc);
 
-      final srcLayers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-A');
-      expect(srcLayers.first.remainingQty, 10.0);
-    });
+        final ref = InventoryDocumentRef(
+          documentId: transferDoc.id,
+          documentNumber: transferDoc.transferNumber,
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: transferDoc.transferDate,
+          warehouseId: 'WH-A',
+        );
+        await coordinator.post(document: ref);
+        await coordinator.unpost(document: ref);
+
+        final srcLayers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-A',
+        );
+        expect(srcLayers.first.remainingQty, 10.0);
+      },
+    );
   });
 
   group('TEST GROUP 7 — RETURNS', () {
-    test('Test 19 — Purchase Return: stock decreases, supplier cost layer consumed', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'RET-R1', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+    test(
+      'Test 19 — Purchase Return: stock decreases, supplier cost layer consumed',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'RET-R1',
+          qty: 10,
+          unitCost: 100,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: receipt.warehouse,
+          ),
+        );
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'RET-I1', qty: 5);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-      ));
+        final issue = await createIssue(
+          id: generateUuidV4(),
+          docNumber: 'RET-I1',
+          qty: 5,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: issue.id,
+            documentNumber: issue.issueNumber,
+            documentType: InventoryDocumentType.stockIssue,
+            documentDate: issue.issueDate,
+            warehouseId: issue.warehouse,
+          ),
+        );
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.first.remainingQty, 5.0);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(layers.first.remainingQty, 5.0);
+      },
+    );
 
-    test('Test 20 — Sales Return: stock increases, return layer created', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'SRET-R1', qty: 3, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+    test(
+      'Test 20 — Sales Return: stock increases, return layer created',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'SRET-R1',
+          qty: 3,
+          unitCost: 100,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: receipt.warehouse,
+          ),
+        );
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.any((l) => l.movementUuid == receipt.id), true);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(layers.any((l) => l.movementUuid == receipt.id), true);
+      },
+    );
 
     test('Test 21 — Return Reversal: exact economic restoration', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'SRET-R21', qty: 3, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'SRET-R21',
+        qty: 3,
+        unitCost: 100,
+      );
       final ref = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -796,14 +1013,22 @@ void main() {
       await coordinator.post(document: ref);
       await coordinator.unpost(document: ref);
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
+      final layers = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: 'WH-001',
+      );
       expect(layers.any((l) => l.movementUuid == receipt.id), false);
     });
   });
 
   group('TEST GROUP 8 — REVERSAL', () {
     test('Test 22 — Receipt Reversal: exact restoration', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REV-R1', qty: 10, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'REV-R1',
+        qty: 10,
+        unitCost: 100,
+      );
       final ref = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -816,12 +1041,20 @@ void main() {
       final unpostRes = await coordinator.unpost(document: ref);
       expect(unpostRes, isA<UnpostSuccess>());
 
-      final open = await costLayerService.getOpenLayers('ITEM-001', warehouseId: receipt.warehouse);
+      final open = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: receipt.warehouse,
+      );
       expect(open.any((l) => l.movementUuid == receipt.id), false);
     });
 
     test('Test 23 — Issue Reversal: exact layer restoration', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REV-R2', qty: 10, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'REV-R2',
+        qty: 10,
+        unitCost: 100,
+      );
       final refR = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -831,7 +1064,11 @@ void main() {
       );
       await coordinator.post(document: refR);
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'REV-I2', qty: 4);
+      final issue = await createIssue(
+        id: generateUuidV4(),
+        docNumber: 'REV-I2',
+        qty: 4,
+      );
       final refI = InventoryDocumentRef(
         documentId: issue.id,
         documentNumber: issue.issueNumber,
@@ -844,12 +1081,23 @@ void main() {
       final unpostRes = await coordinator.unpost(document: refI);
       expect(unpostRes, isA<UnpostSuccess>());
 
-      final open = await costLayerService.getOpenLayers('ITEM-001', warehouseId: receipt.warehouse);
-      expect(open.firstWhere((l) => l.movementUuid == receipt.id).remainingQty, 10.0);
+      final open = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: receipt.warehouse,
+      );
+      expect(
+        open.firstWhere((l) => l.movementUuid == receipt.id).remainingQty,
+        10.0,
+      );
     });
 
     test('Test 24 — Double Reversal: no second economic effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REV-R24', qty: 10, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'REV-R24',
+        qty: 10,
+        unitCost: 100,
+      );
       final refR = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -867,7 +1115,12 @@ void main() {
     });
 
     test('Test 25 — Concurrent Reversal: single reversal effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REV-R3', qty: 10, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'REV-R3',
+        qty: 10,
+        unitCost: 100,
+      );
       final refR = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -887,30 +1140,42 @@ void main() {
       }
     });
 
-    test('Test 26 — Dependency Protection: reject reversal of receipt when dependent issue exists', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'DEP-R', qty: 10, unitCost: 100);
-      final refR = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      );
-      await coordinator.post(document: refR);
+    test(
+      'Test 26 — Dependency Protection: reject reversal of receipt when dependent issue exists',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'DEP-R',
+          qty: 10,
+          unitCost: 100,
+        );
+        final refR = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        );
+        await coordinator.post(document: refR);
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'DEP-I', qty: 5);
-      final refI = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-      );
-      await coordinator.post(document: refI);
+        final issue = await createIssue(
+          id: generateUuidV4(),
+          docNumber: 'DEP-I',
+          qty: 5,
+        );
+        final refI = InventoryDocumentRef(
+          documentId: issue.id,
+          documentNumber: issue.issueNumber,
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: issue.issueDate,
+          warehouseId: issue.warehouse,
+        );
+        await coordinator.post(document: refI);
 
-      final unpostRes = await coordinator.unpost(document: refR);
-      expect(unpostRes, isA<UnpostBlockedByDependencies>());
-    });
+        final unpostRes = await coordinator.unpost(document: refR);
+        expect(unpostRes, isA<UnpostBlockedByDependencies>());
+      },
+    );
   });
 
   group('TEST GROUP 9 — MULTI-COMPANY TENANT ISOLATION', () {
@@ -935,7 +1200,10 @@ void main() {
 
     test('Test 29 — Cross-Company Warehouse Access Rejection', () async {
       activeCompanyId = 'company_A';
-      final layers = await costLayerService.getOpenLayers('ITEM-002', warehouseId: 'WH-COMP-B');
+      final layers = await costLayerService.getOpenLayers(
+        'ITEM-002',
+        warehouseId: 'WH-COMP-B',
+      );
       expect(layers.isEmpty, true);
     });
 
@@ -948,31 +1216,53 @@ void main() {
   group('TEST GROUP 10 — MULTI-WAREHOUSE', () {
     test('Test 31 — Multi-Warehouse Stock Isolation', () async {
       activeCompanyId = 'company_A';
-      final receiptA = await createReceipt(id: generateUuidV4(), docNumber: 'MWH-A', qty: 100, unitCost: 10, warehouse: 'WH-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receiptA.id,
-        documentNumber: receiptA.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receiptA.receiptDate,
-        warehouseId: 'WH-A',
-      ));
+      final receiptA = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'MWH-A',
+        qty: 100,
+        unitCost: 10,
+        warehouse: 'WH-A',
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receiptA.id,
+          documentNumber: receiptA.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receiptA.receiptDate,
+          warehouseId: 'WH-A',
+        ),
+      );
 
-      final layersA = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-A');
-      final layersB = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-B');
+      final layersA = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: 'WH-A',
+      );
+      final layersB = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: 'WH-B',
+      );
 
       expect(layersA.fold<double>(0.0, (s, l) => s + l.remainingQty), 100.0);
       expect(layersB.isEmpty, true);
     });
 
     test('Test 32 — Transfer Balance Verification', () async {
-      final receiptA = await createReceipt(id: generateUuidV4(), docNumber: 'MWH-A2', qty: 100, unitCost: 10, warehouse: 'WH-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receiptA.id,
-        documentNumber: receiptA.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receiptA.receiptDate,
-        warehouseId: 'WH-A',
-      ));
+      final receiptA = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'MWH-A2',
+        qty: 100,
+        unitCost: 10,
+        warehouse: 'WH-A',
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receiptA.id,
+          documentNumber: receiptA.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receiptA.receiptDate,
+          warehouseId: 'WH-A',
+        ),
+      );
 
       final trId = generateUuidV4();
       final transferDoc = StockTransfer(
@@ -998,16 +1288,24 @@ void main() {
       );
       await transferRepo.saveTransfer(transferDoc);
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: transferDoc.id,
-        documentNumber: transferDoc.transferNumber,
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transferDoc.transferDate,
-        warehouseId: 'WH-A',
-      ));
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: transferDoc.id,
+          documentNumber: transferDoc.transferNumber,
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: transferDoc.transferDate,
+          warehouseId: 'WH-A',
+        ),
+      );
 
-      final layersA = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-A');
-      final layersB = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-B');
+      final layersA = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: 'WH-A',
+      );
+      final layersB = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: 'WH-B',
+      );
 
       expect(layersA.fold<double>(0.0, (s, l) => s + l.remainingQty), 70.0);
       expect(layersB.fold<double>(0.0, (s, l) => s + l.remainingQty), 30.0);
@@ -1017,7 +1315,12 @@ void main() {
   group('TEST GROUP 11 — OFFLINE -> ONLINE SYNC', () {
     test('Test 33 — Offline Local Post: outbox pending', () async {
       activeCompanyId = 'company_A';
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'OFF-R', qty: 10, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'OFF-R',
+        qty: 10,
+        unitCost: 100,
+      );
       final ref = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -1034,14 +1337,21 @@ void main() {
     });
 
     test('Test 34 — Restore Connectivity Sync: pending -> synced', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'OFF-R34', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'OFF-R34',
+        qty: 10,
+        unitCost: 100,
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        ),
+      );
 
       final ready = await syncQueue.peekReady();
       expect(ready, isNotEmpty);
@@ -1053,7 +1363,12 @@ void main() {
     });
 
     test('Test 36 — Network Timeout Retry: single economic effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'RETRY-R', qty: 5, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'RETRY-R',
+        qty: 5,
+        unitCost: 100,
+      );
       final ref = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -1065,21 +1380,35 @@ void main() {
       await coordinator.post(document: ref);
       await coordinator.post(document: ref);
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
+      final layers = await costLayerService.getOpenLayers(
+        'ITEM-001',
+        warehouseId: 'WH-001',
+      );
       expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
     });
 
     test('Test 37 — Offline Issue Sync Equality', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'OFF-R37', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'OFF-R37',
+        qty: 10,
+        unitCost: 100,
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        ),
+      );
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'OFF-ISS', qty: 3);
+      final issue = await createIssue(
+        id: generateUuidV4(),
+        docNumber: 'OFF-ISS',
+        qty: 3,
+      );
       final ref = InventoryDocumentRef(
         documentId: issue.id,
         documentNumber: issue.issueNumber,
@@ -1098,7 +1427,12 @@ void main() {
 
   group('TEST GROUP 12 — ACCOUNTING LEDGER CONSISTENCY', () {
     test('Test 38 — Post inventory receipt accounting effects', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'ACC-R', qty: 10, unitCost: 100);
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'ACC-R',
+        qty: 10,
+        unitCost: 100,
+      );
       final ref = InventoryDocumentRef(
         documentId: receipt.id,
         documentNumber: receipt.receiptNumber,
@@ -1112,16 +1446,27 @@ void main() {
     });
 
     test('Test 39 — Post issue COGS & accounting effects', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'ACC-R39', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'ACC-R39',
+        qty: 10,
+        unitCost: 100,
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        ),
+      );
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'ACC-I', qty: 4);
+      final issue = await createIssue(
+        id: generateUuidV4(),
+        docNumber: 'ACC-I',
+        qty: 4,
+      );
       final ref = InventoryDocumentRef(
         documentId: issue.id,
         documentNumber: issue.issueNumber,
@@ -1134,223 +1479,345 @@ void main() {
       expect(res, isA<PostSuccess>());
     });
 
-    test('Test 40 — Reverse inventory transaction accounting reversal', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'ACC-REV-R', qty: 10, unitCost: 100);
-      final ref = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      );
-      await coordinator.post(document: ref);
+    test(
+      'Test 40 — Reverse inventory transaction accounting reversal',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'ACC-REV-R',
+          qty: 10,
+          unitCost: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        );
+        await coordinator.post(document: ref);
 
-      final res = await coordinator.unpost(document: ref);
-      expect(res, isA<UnpostSuccess>());
-    });
+        final res = await coordinator.unpost(document: ref);
+        expect(res, isA<UnpostSuccess>());
+      },
+    );
 
-    test('Test 41 — Replay accounting sync duplicate journal protection', () async {
-      final ops = await syncQueue.peekReady();
-      expect(ops, isA<List<SyncOperation>>());
-    });
+    test(
+      'Test 41 — Replay accounting sync duplicate journal protection',
+      () async {
+        final ops = await syncQueue.peekReady();
+        expect(ops, isA<List<SyncOperation>>());
+      },
+    );
   });
 
   group('TEST GROUP 13 — END-TO-END LIFECYCLE', () {
-    test('Test 42 — Full Lifecycle: Receipt -> Sync -> Issue -> Sync -> Transfer -> Sync -> Return -> Sync -> Reverse -> Sync', () async {
-      activeCompanyId = 'company_A';
+    test(
+      'Test 42 — Full Lifecycle: Receipt -> Sync -> Issue -> Sync -> Transfer -> Sync -> Return -> Sync -> Reverse -> Sync',
+      () async {
+        activeCompanyId = 'company_A';
 
-      // 1. Receipt
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'E2E-R', qty: 50, unitCost: 100, warehouse: 'WH-E2E-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: 'WH-E2E-A',
-      ));
-      final ops1 = await syncQueue.peekReady();
-      expect(ops1.any((o) => o.entityId == receipt.id), true);
-
-      // 2. Issue
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'E2E-I', qty: 10, warehouse: 'WH-E2E-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: 'WH-E2E-A',
-      ));
-      final ops2 = await syncQueue.peekReady();
-      expect(ops2.any((o) => o.entityId == issue.id), true);
-
-      // 3. Transfer
-      final trId = generateUuidV4();
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'E2E-T',
-        transferDate: DateTime.now(),
-        fromWarehouseId: 'WH-E2E-A',
-        toWarehouseId: 'WH-E2E-B',
-        notes: 'E2E Transfer',
-        status: InventoryDocumentStatus.draft,
-        companyId: 'company_A',
-        lines: [
-          StockTransferLine(
-            id: generateUuidV4(),
-            transferUuid: trId,
-            itemCode: 'ITEM-001',
-            itemName: 'Item 1',
-            quantity: 15,
-            unitCost: 100,
-            totalCost: 1500,
+        // 1. Receipt
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'E2E-R',
+          qty: 50,
+          unitCost: 100,
+          warehouse: 'WH-E2E-A',
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: 'WH-E2E-A',
           ),
-        ],
-      );
-      await transferRepo.saveTransfer(transfer);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: transfer.id,
-        documentNumber: transfer.transferNumber,
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transfer.transferDate,
-        warehouseId: 'WH-E2E-A',
-      ));
+        );
+        final ops1 = await syncQueue.peekReady();
+        expect(ops1.any((o) => o.entityId == receipt.id), true);
 
-      // 4. Reverse Issue
-      await coordinator.unpost(document: InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: 'WH-E2E-A',
-      ));
+        // 2. Issue
+        final issue = await createIssue(
+          id: generateUuidV4(),
+          docNumber: 'E2E-I',
+          qty: 10,
+          warehouse: 'WH-E2E-A',
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: issue.id,
+            documentNumber: issue.issueNumber,
+            documentType: InventoryDocumentType.stockIssue,
+            documentDate: issue.issueDate,
+            warehouseId: 'WH-E2E-A',
+          ),
+        );
+        final ops2 = await syncQueue.peekReady();
+        expect(ops2.any((o) => o.entityId == issue.id), true);
 
-      // Check final stock state: WH-E2E-A = 50 - 15 = 35; WH-E2E-B = 15
-      final layersA = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-E2E-A');
-      final layersB = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-E2E-B');
+        // 3. Transfer
+        final trId = generateUuidV4();
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'E2E-T',
+          transferDate: DateTime.now(),
+          fromWarehouseId: 'WH-E2E-A',
+          toWarehouseId: 'WH-E2E-B',
+          notes: 'E2E Transfer',
+          status: InventoryDocumentStatus.draft,
+          companyId: 'company_A',
+          lines: [
+            StockTransferLine(
+              id: generateUuidV4(),
+              transferUuid: trId,
+              itemCode: 'ITEM-001',
+              itemName: 'Item 1',
+              quantity: 15,
+              unitCost: 100,
+              totalCost: 1500,
+            ),
+          ],
+        );
+        await transferRepo.saveTransfer(transfer);
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: transfer.id,
+            documentNumber: transfer.transferNumber,
+            documentType: InventoryDocumentType.stockTransfer,
+            documentDate: transfer.transferDate,
+            warehouseId: 'WH-E2E-A',
+          ),
+        );
 
-      expect(layersA.fold<double>(0.0, (s, l) => s + l.remainingQty), 35.0);
-      expect(layersB.fold<double>(0.0, (s, l) => s + l.remainingQty), 15.0);
-    });
+        // 4. Reverse Issue
+        await coordinator.unpost(
+          document: InventoryDocumentRef(
+            documentId: issue.id,
+            documentNumber: issue.issueNumber,
+            documentType: InventoryDocumentType.stockIssue,
+            documentDate: issue.issueDate,
+            warehouseId: 'WH-E2E-A',
+          ),
+        );
+
+        // Check final stock state: WH-E2E-A = 50 - 15 = 35; WH-E2E-B = 15
+        final layersA = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-E2E-A',
+        );
+        final layersB = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-E2E-B',
+        );
+
+        expect(layersA.fold<double>(0.0, (s, l) => s + l.remainingQty), 35.0);
+        expect(layersB.fold<double>(0.0, (s, l) => s + l.remainingQty), 15.0);
+      },
+    );
   });
 
   group('TEST GROUP 14 — SERVER REPLAY PROTECTION', () {
-    test('Test 43 — Replay operation 1, 2, 10, 100 times -> single economic effect', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'REP-R', qty: 25, unitCost: 100);
-      final ref = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      );
+    test(
+      'Test 43 — Replay operation 1, 2, 10, 100 times -> single economic effect',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'REP-R',
+          qty: 25,
+          unitCost: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        );
 
-      for (int i = 0; i < 20; i++) {
-        final res = await coordinator.post(document: ref);
-        expect(res, isA<PostSuccess>());
-      }
+        for (int i = 0; i < 20; i++) {
+          final res = await coordinator.post(document: ref);
+          expect(res, isA<PostSuccess>());
+        }
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
+      },
+    );
   });
 
   group('TEST GROUP 15 — CONCURRENCY STRESS', () {
-    test('Test 44 — Concurrent stock operations: no negative/impossible state', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'CONC-R', qty: 100, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+    test(
+      'Test 44 — Concurrent stock operations: no negative/impossible state',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'CONC-R',
+          qty: 100,
+          unitCost: 100,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: receipt.warehouse,
+          ),
+        );
 
-      final issue1 = await createIssue(id: generateUuidV4(), docNumber: 'CONC-I1', qty: 30);
-      final issue2 = await createIssue(id: generateUuidV4(), docNumber: 'CONC-I2', qty: 40);
+        final issue1 = await createIssue(
+          id: generateUuidV4(),
+          docNumber: 'CONC-I1',
+          qty: 30,
+        );
+        final issue2 = await createIssue(
+          id: generateUuidV4(),
+          docNumber: 'CONC-I2',
+          qty: 40,
+        );
 
-      await Future.wait([
-        coordinator.post(document: InventoryDocumentRef(
-          documentId: issue1.id,
-          documentNumber: issue1.issueNumber,
-          documentType: InventoryDocumentType.stockIssue,
-          documentDate: issue1.issueDate,
-          warehouseId: issue1.warehouse,
-        )),
-        coordinator.post(document: InventoryDocumentRef(
-          documentId: issue2.id,
-          documentNumber: issue2.issueNumber,
-          documentType: InventoryDocumentType.stockIssue,
-          documentDate: issue2.issueDate,
-          warehouseId: issue2.warehouse,
-        )),
-      ]);
+        await Future.wait([
+          coordinator.post(
+            document: InventoryDocumentRef(
+              documentId: issue1.id,
+              documentNumber: issue1.issueNumber,
+              documentType: InventoryDocumentType.stockIssue,
+              documentDate: issue1.issueDate,
+              warehouseId: issue1.warehouse,
+            ),
+          ),
+          coordinator.post(
+            document: InventoryDocumentRef(
+              documentId: issue2.id,
+              documentNumber: issue2.issueNumber,
+              documentType: InventoryDocumentType.stockIssue,
+              documentDate: issue2.issueDate,
+              warehouseId: issue2.warehouse,
+            ),
+          ),
+        ]);
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      final totalRemaining = layers.fold<double>(0.0, (s, l) => s + l.remainingQty);
-      expect(totalRemaining, 30.0);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        final totalRemaining = layers.fold<double>(
+          0.0,
+          (s, l) => s + l.remainingQty,
+        );
+        expect(totalRemaining, 30.0);
+      },
+    );
 
-    test('Test 45 — Concurrent Issue, Issue & Transfer: deterministic stock state', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'CONC-R45', qty: 100, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+    test(
+      'Test 45 — Concurrent Issue, Issue & Transfer: deterministic stock state',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'CONC-R45',
+          qty: 100,
+          unitCost: 100,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: receipt.warehouse,
+          ),
+        );
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001', warehouseId: 'WH-001');
-      expect(layers.fold<double>(0.0, (s, l) => s + l.remainingQty) >= 0, true);
-    });
+        final layers = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: 'WH-001',
+        );
+        expect(
+          layers.fold<double>(0.0, (s, l) => s + l.remainingQty) >= 0,
+          true,
+        );
+      },
+    );
 
-    test('Test 46 — Concurrent Posting and Reversal: deterministic final state', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'CONC-PR', qty: 20, unitCost: 100);
-      final ref = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      );
+    test(
+      'Test 46 — Concurrent Posting and Reversal: deterministic final state',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'CONC-PR',
+          qty: 20,
+          unitCost: 100,
+        );
+        final ref = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        );
 
-      await coordinator.post(document: ref);
-      await coordinator.unpost(document: ref);
+        await coordinator.post(document: ref);
+        await coordinator.unpost(document: ref);
 
-      final open = await costLayerService.getOpenLayers('ITEM-001', warehouseId: receipt.warehouse);
-      expect(open.any((l) => l.movementUuid == receipt.id), false);
-    });
+        final open = await costLayerService.getOpenLayers(
+          'ITEM-001',
+          warehouseId: receipt.warehouse,
+        );
+        expect(open.any((l) => l.movementUuid == receipt.id), false);
+      },
+    );
   });
 
   group('TEST GROUP 16 — DATA INVARIANTS', () {
-    test('Invariants Verification: stockBalance >= 0, sum(open layers) == stock', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'INV-R', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+    test(
+      'Invariants Verification: stockBalance >= 0, sum(open layers) == stock',
+      () async {
+        final receipt = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'INV-R',
+          qty: 10,
+          unitCost: 100,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: receipt.id,
+            documentNumber: receipt.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receipt.receiptDate,
+            warehouseId: receipt.warehouse,
+          ),
+        );
 
-      final layers = await costLayerService.getOpenLayers('ITEM-001');
-      for (final l in layers) {
-        expect(l.remainingQty >= 0, true);
-        expect(l.unitCost >= 0, true);
-      }
-    });
+        final layers = await costLayerService.getOpenLayers('ITEM-001');
+        for (final l in layers) {
+          expect(l.remainingQty >= 0, true);
+          expect(l.unitCost >= 0, true);
+        }
+      },
+    );
   });
 
   group('TEST GROUP 17 — AUDIT TRAIL INTEGRITY', () {
     test('Audit Verification: tenant and events recorded', () async {
-      final receipt = await createReceipt(id: generateUuidV4(), docNumber: 'AUD-R', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-      ));
+      final receipt = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'AUD-R',
+        qty: 10,
+        unitCost: 100,
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          warehouseId: receipt.warehouse,
+        ),
+      );
 
       final ops = await syncQueue.peekReady();
       for (final op in ops) {

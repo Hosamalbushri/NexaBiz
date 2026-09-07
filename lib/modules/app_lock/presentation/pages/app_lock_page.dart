@@ -277,9 +277,7 @@ class _GlowOrb extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [color, color.withValues(alpha: 0)],
-        ),
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
       ),
     );
   }
@@ -582,11 +580,7 @@ class _UnlockCard extends StatelessWidget {
 }
 
 class _PinMeter extends StatelessWidget {
-  const _PinMeter({
-    required this.count,
-    required this.hasError,
-    this.onTap,
-  });
+  const _PinMeter({required this.count, required this.hasError, this.onTap});
 
   final int count;
   final bool hasError;
@@ -680,11 +674,7 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 18,
-            color: colorScheme.error,
-          ),
+          Icon(Icons.error_outline_rounded, size: 18, color: colorScheme.error),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(

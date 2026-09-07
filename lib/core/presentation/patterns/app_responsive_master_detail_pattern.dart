@@ -38,24 +38,23 @@ class AppResponsiveMasterDetailPattern<T> extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: masterFlex,
-          child: masterBuilder(context, selectedItem),
-        ),
+        Expanded(flex: masterFlex, child: masterBuilder(context, selectedItem)),
         const SizedBox(width: AppSpacing.md),
         Expanded(
           flex: detailFlex,
           child: selectedItem != null
               ? detailBuilder(context, selectedItem as T)
               : (emptyDetailPlaceholder ??
-                  const AppCard(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(AppSpacing.xl),
-                        child: Text('Select an item from the list to view details'),
+                    const AppCard(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: Text(
+                            'Select an item from the list to view details',
+                          ),
+                        ),
                       ),
-                    ),
-                  )),
+                    )),
         ),
       ],
     );

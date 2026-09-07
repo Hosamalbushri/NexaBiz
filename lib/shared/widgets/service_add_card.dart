@@ -64,7 +64,9 @@ class ServiceAddCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(radius),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final titleReserve = label == null ? 0.0 : 32.0;

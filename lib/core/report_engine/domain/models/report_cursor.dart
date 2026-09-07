@@ -20,14 +20,14 @@ class ReportCursor {
   final String uniqueId;
 
   Map<String, dynamic> toJson() => {
-        'primarySortValue': primarySortValue,
-        'secondarySortValue': secondarySortValue,
-        'uniqueId': uniqueId,
-      };
+    'primarySortValue': primarySortValue,
+    'secondarySortValue': secondarySortValue,
+    'uniqueId': uniqueId,
+  };
 
   factory ReportCursor.fromJson(Map<String, dynamic> json) => ReportCursor(
-        primarySortValue: json['primarySortValue'],
-        secondarySortValue: json['secondarySortValue'],
-        uniqueId: json['uniqueId'] as String,
-      );
+    primarySortValue: json['primarySortValue'],
+    secondarySortValue: json['secondarySortValue'],
+    uniqueId: json['uniqueId'] as String,
+  );
 }

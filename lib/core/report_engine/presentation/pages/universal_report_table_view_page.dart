@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_dynamic_report_table.dart' as table;
+import 'package:stock_count/core/widgets/app_dynamic_report_table.dart'
+    as table;
 import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import '../../application/universal_report_execution_controller.dart';
 import '../../domain/adapters/report_dataset_compatibility_adapter.dart';
@@ -27,10 +28,12 @@ class UniversalReportTableViewPage extends StatefulWidget {
   final String companyName;
 
   @override
-  State<UniversalReportTableViewPage> createState() => _UniversalReportTableViewPageState();
+  State<UniversalReportTableViewPage> createState() =>
+      _UniversalReportTableViewPageState();
 }
 
-class _UniversalReportTableViewPageState extends State<UniversalReportTableViewPage> {
+class _UniversalReportTableViewPageState
+    extends State<UniversalReportTableViewPage> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -63,22 +66,32 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
     if (isPostedVal is String) {
       final s = isPostedVal.toLowerCase().trim();
       if (s == 'true' || s == '1' || s == 'posted' || s == 'مرحل') return true;
-      if (s == 'false' || s == '0' || s == 'unposted' || s == 'draft' || s == 'غير مرحل') return false;
+      if (s == 'false' ||
+          s == '0' ||
+          s == 'unposted' ||
+          s == 'draft' ||
+          s == 'غير مرحل')
+        return false;
     }
     final status = row['postingStatus']?.toString().toLowerCase();
     if (status != null) {
-      if (status.contains('unposted') || status.contains('draft') || status.contains('غير مرحل')) {
+      if (status.contains('unposted') ||
+          status.contains('draft') ||
+          status.contains('غير مرحل')) {
         return false;
       }
     }
     return true;
   }
 
-  List<table.ReportColumnSpec<ReportRowData>> _buildTableColumns(BuildContext context) {
+  List<table.ReportColumnSpec<ReportRowData>> _buildTableColumns(
+    BuildContext context,
+  ) {
     final scheme = Theme.of(context).colorScheme;
 
     return widget.definition.columns.where((c) => c.isVisible).map((col) {
-      final isDateColumn = col.id.toLowerCase().contains('date') || col.label.contains('تاريخ');
+      final isDateColumn =
+          col.id.toLowerCase().contains('date') || col.label.contains('تاريخ');
 
       return table.ReportColumnSpec<ReportRowData>(
         id: col.id,
@@ -113,7 +126,9 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
     }).toList();
   }
 
-  List<table.ReportHeaderInfoSpec> _buildHeaderCards(UniversalReportState state) {
+  List<table.ReportHeaderInfoSpec> _buildHeaderCards(
+    UniversalReportState state,
+  ) {
     if (widget.dataset != null) {
       return widget.dataset!.headerCards
           .map(
@@ -132,20 +147,24 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
     if (summary == null) return const [];
 
     final cards = <table.ReportHeaderInfoSpec>[];
-    cards.add(table.ReportHeaderInfoSpec(
-      title: 'إجمالي السجلات',
-      value: summary.totalCount.toString(),
-      icon: Icons.numbers_rounded,
-      accentColor: Colors.blue,
-    ));
+    cards.add(
+      table.ReportHeaderInfoSpec(
+        title: 'إجمالي السجلات',
+        value: summary.totalCount.toString(),
+        icon: Icons.numbers_rounded,
+        accentColor: Colors.blue,
+      ),
+    );
 
     summary.aggregates.forEach((key, val) {
-      cards.add(table.ReportHeaderInfoSpec(
-        title: key,
-        value: val.toStringAsFixed(2),
-        icon: Icons.analytics_outlined,
-        accentColor: Colors.teal,
-      ));
+      cards.add(
+        table.ReportHeaderInfoSpec(
+          title: key,
+          value: val.toStringAsFixed(2),
+          icon: Icons.analytics_outlined,
+          accentColor: Colors.teal,
+        ),
+      );
     });
 
     return cards;
@@ -163,9 +182,7 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
 
           if (state.isLoadingFirstPage && state.items.isEmpty) {
             return AppResponsiveScaffold(
-              appBar: AppBar(
-                title: Text(widget.definition.name),
-              ),
+              appBar: AppBar(title: Text(widget.definition.name)),
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -173,14 +190,18 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
                     const CircularProgressIndicator(),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      isAr ? 'جاري تحميل وتجهيز التقرير...' : 'Loading report data...',
+                      isAr
+                          ? 'جاري تحميل وتجهيز التقرير...'
+                          : 'Loading report data...',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      isAr ? 'يرجى الانتظار لحين استعلام قاعدة البيانات' : 'Please wait while records are fetched',
+                      isAr
+                          ? 'يرجى الانتظار لحين استعلام قاعدة البيانات'
+                          : 'Please wait while records are fetched',
                       style: TextStyle(color: scheme.outline, fontSize: 13),
                     ),
                   ],
@@ -189,7 +210,9 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
             );
           }
 
-          if (!state.isLoadingFirstPage && state.items.isEmpty && state.pageError == null) {
+          if (!state.isLoadingFirstPage &&
+              state.items.isEmpty &&
+              state.pageError == null) {
             return AppResponsiveScaffold(
               appBar: AppBar(
                 title: Text(widget.definition.name),
@@ -214,10 +237,11 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        isAr ? 'لا توجد بيانات مطابقة لمعايير التصفية المحددة' : 'No records match selected query criteria',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        isAr
+                            ? 'لا توجد بيانات مطابقة لمعايير التصفية المحددة'
+                            : 'No records match selected query criteria',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -246,19 +270,22 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
                   tooltip: isAr ? 'طباعة / PDF' : 'Print / PDF',
                   icon: const Icon(Icons.print_rounded, color: Colors.blue),
                   onPressed: () {
-                    final dataset = ReportDatasetCompatibilityAdapter.fromPagedResult(
-                      reportId: widget.definition.id,
-                      reportTitle: widget.definition.name,
-                      companyName: widget.companyName,
-                      currencyCode: state.context.currencyScope,
-                      summary: state.summary ?? const ReportSummary(totalCount: 0),
-                      firstPage: ReportPage(
-                        items: state.items,
-                        nextCursor: state.nextCursor,
-                        hasNextPage: state.hasNextPage,
-                      ),
-                      headerCards: const [],
-                    );
+                    final dataset =
+                        ReportDatasetCompatibilityAdapter.fromPagedResult(
+                          reportId: widget.definition.id,
+                          reportTitle: widget.definition.name,
+                          companyName: widget.companyName,
+                          currencyCode: state.context.currencyScope,
+                          summary:
+                              state.summary ??
+                              const ReportSummary(totalCount: 0),
+                          firstPage: ReportPage(
+                            items: state.items,
+                            nextCursor: state.nextCursor,
+                            hasNextPage: state.hasNextPage,
+                          ),
+                          headerCards: const [],
+                        );
                     PdfReportExporter.openPrintPreview(
                       context: context,
                       definition: widget.definition,
@@ -276,13 +303,15 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
                   Expanded(
                     child: table.AppDynamicReportTable<ReportRowData>(
                       title: widget.definition.name,
-                      subtitle: 'إجمالي السجلات: ${state.summary?.totalCount ?? 0}',
+                      subtitle:
+                          'إجمالي السجلات: ${state.summary?.totalCount ?? 0}',
                       minTableWidth: widget.definition.minTableWidth,
                       columns: _buildTableColumns(context),
                       items: state.items,
                       headerInfoCards: _buildHeaderCards(state),
                       onRowTap: (row) {
-                        if (row.documentType != null && row.documentUuid != null) {
+                        if (row.documentType != null &&
+                            row.documentUuid != null) {
                           ReportDrillDownHandler.navigateToDocument(
                             context,
                             documentType: row.documentType!,
@@ -295,9 +324,7 @@ class _UniversalReportTableViewPageState extends State<UniversalReportTableViewP
                   if (state.isLoadingNextPage) ...[
                     const Padding(
                       padding: EdgeInsets.all(AppSpacing.md),
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                   ],
                   if (state.pageError != null) ...[

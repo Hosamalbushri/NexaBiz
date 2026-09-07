@@ -93,7 +93,9 @@ void main() {
     acc2Uuid = generateUuidV4();
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
 
-    await accDb.into(accDb.accounts).insert(
+    await accDb
+        .into(accDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc1Uuid,
             companyId: Value(companyA),
@@ -109,7 +111,9 @@ void main() {
           ),
         );
 
-    await accDb.into(accDb.accounts).insert(
+    await accDb
+        .into(accDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc2Uuid,
             companyId: Value(companyA),
@@ -134,242 +138,300 @@ void main() {
   });
 
   group('ROOT FIX 24 — Repository Security Boundary Test Suite', () {
-    test('1. Multi-Tenant Isolation: Cross-tenant records cannot be read or modified by lower-layer calls', () async {
-      // Add accounts for company B
-      final acc1B = generateUuidV4();
-      final acc2B = generateUuidV4();
-      final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-      await accDb.into(accDb.accounts).insert(
-            AccountsCompanion.insert(
-              uuid: acc1B,
-              companyId: Value(companyB),
-              accountCode: '1010-B',
-              name: 'Cash Box B',
-              accountType: 'asset',
-              normalBalance: 'debit',
-              level: const Value(1),
-              isGroup: const Value(false),
-              isActive: const Value(true),
-              createdAt: nowMs,
-              updatedAt: nowMs,
+    test(
+      '1. Multi-Tenant Isolation: Cross-tenant records cannot be read or modified by lower-layer calls',
+      () async {
+        // Add accounts for company B
+        final acc1B = generateUuidV4();
+        final acc2B = generateUuidV4();
+        final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+        await accDb
+            .into(accDb.accounts)
+            .insert(
+              AccountsCompanion.insert(
+                uuid: acc1B,
+                companyId: Value(companyB),
+                accountCode: '1010-B',
+                name: 'Cash Box B',
+                accountType: 'asset',
+                normalBalance: 'debit',
+                level: const Value(1),
+                isGroup: const Value(false),
+                isActive: const Value(true),
+                createdAt: nowMs,
+                updatedAt: nowMs,
+              ),
+            );
+        await accDb
+            .into(accDb.accounts)
+            .insert(
+              AccountsCompanion.insert(
+                uuid: acc2B,
+                companyId: Value(companyB),
+                accountCode: '4010-B',
+                name: 'Sales Revenue B',
+                accountType: 'revenue',
+                normalBalance: 'credit',
+                level: const Value(1),
+                isGroup: const Value(false),
+                isActive: const Value(true),
+                createdAt: nowMs,
+                updatedAt: nowMs,
+              ),
+            );
+
+        // Create journal entry in company B
+        final journalRepoB = JournalRepositoryImpl(
+          accDb,
+          accounts: AccountRepositoryImpl(accDb, readCompanyId: () => companyB),
+          periodValidator: legacyPeriodValidator(),
+          readCompanyId: () => companyB,
+        );
+
+        final draftB = JournalEntryDraft(
+          voucherNumber: 'JE-COMPB-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Company B entry',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1B,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'SAR',
             ),
-          );
-      await accDb.into(accDb.accounts).insert(
-            AccountsCompanion.insert(
-              uuid: acc2B,
-              companyId: Value(companyB),
-              accountCode: '4010-B',
-              name: 'Sales Revenue B',
-              accountType: 'revenue',
-              normalBalance: 'credit',
-              level: const Value(1),
-              isGroup: const Value(false),
-              isActive: const Value(true),
-              createdAt: nowMs,
-              updatedAt: nowMs,
+            JournalLineDraft(
+              accountUuid: acc2B,
+              debit: 0,
+              credit: 100,
+              currencyCode: 'SAR',
             ),
-          );
+          ],
+        );
+        final postedB = await journalRepoB.post(draftB);
 
-      // Create journal entry in company B
-      final journalRepoB = JournalRepositoryImpl(
-        accDb,
-        accounts: AccountRepositoryImpl(accDb, readCompanyId: () => companyB),
-        periodValidator: legacyPeriodValidator(),
-        readCompanyId: () => companyB,
-      );
+        // Attempt reading entry from company A
+        final readFromA = await journalRepo.getByUuid(postedB.uuid);
+        expect(readFromA, isNull);
+      },
+    );
 
-      final draftB = JournalEntryDraft(
-        voucherNumber: 'JE-COMPB-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Company B entry',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1B, debit: 100, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2B, debit: 0, credit: 100, currencyCode: 'SAR'),
-        ],
-      );
-      final postedB = await journalRepoB.post(draftB);
+    test(
+      '2. Authorization Boundary: Disallowed permission rejects repository mutations',
+      () async {
+        final deniedGuard = CallbackPermissionGuard((_) => false);
 
-      // Attempt reading entry from company A
-      final readFromA = await journalRepo.getByUuid(postedB.uuid);
-      expect(readFromA, isNull);
-    });
+        final restrictedRpRepo = FinancialTransactionRepositoryImpl(
+          rpDb,
+          permissionGuard: deniedGuard,
+          readCompanyId: () => companyA,
+        );
 
-    test('2. Authorization Boundary: Disallowed permission rejects repository mutations', () async {
-      final deniedGuard = CallbackPermissionGuard((_) => false);
+        final draft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.now().toUtc(),
+          amount: 100,
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          counterAmount: 100,
+          counterCurrencyCode: 'SAR',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1Uuid,
+          counterAccountId: acc2Uuid,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+        );
 
-      final restrictedRpRepo = FinancialTransactionRepositoryImpl(
-        rpDb,
-        permissionGuard: deniedGuard,
-        readCompanyId: () => companyA,
-      );
+        expect(
+          () async =>
+              restrictedRpRepo.insert(draft, transactionNumber: 'TX-AUTH-FAIL'),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
-      final draft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.now().toUtc(),
-        amount: 100,
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        counterAmount: 100,
-        counterCurrencyCode: 'SAR',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1Uuid,
-        counterAccountId: acc2Uuid,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-      );
+    test(
+      '3. Posted-State Immutability: Posted records reject updates and soft deletes across all repositories',
+      () async {
+        // 3.1 Financial Transaction
+        final txDraft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.now().toUtc(),
+          amount: 500,
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          counterAmount: 500,
+          counterCurrencyCode: 'SAR',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1Uuid,
+          counterAccountId: acc2Uuid,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.posted,
+        );
+        final postedTx = await rpRepo.insert(
+          txDraft,
+          transactionNumber: 'TX-IMMUTABLE-01',
+        );
 
-      expect(
-        () async => restrictedRpRepo.insert(draft, transactionNumber: 'TX-AUTH-FAIL'),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+        expect(
+          () async => rpRepo.softDelete(postedTx.id),
+          throwsA(isA<Object>()),
+        );
 
-    test('3. Posted-State Immutability: Posted records reject updates and soft deletes across all repositories', () async {
-      // 3.1 Financial Transaction
-      final txDraft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.now().toUtc(),
-        amount: 500,
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        counterAmount: 500,
-        counterCurrencyCode: 'SAR',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1Uuid,
-        counterAccountId: acc2Uuid,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.posted,
-      );
-      final postedTx = await rpRepo.insert(txDraft, transactionNumber: 'TX-IMMUTABLE-01');
+        // 3.2 Sale Invoice
+        final saleDraft = SaleDraft(
+          voucherBookId: 'VB-01',
+          cashAccountId: acc1Uuid,
+          saleDate: DateTime.now().toUtc(),
+          settlementType: SaleSettlementType.cash,
+          customerId: 'CUST-01',
+          customerName: 'Customer One',
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          items: const [
+            SaleItemDraft(
+              productId: 'PROD-01',
+              productName: 'Product 1',
+              productCode: 'P01',
+              mainQuantity: 2,
+              subQuantity: 0,
+              unitPrice: 100,
+              baseUnitPrice: 100,
+            ),
+          ],
+          discountType: DiscountType.fixed,
+          discountValue: 0,
+          taxRate: 0,
+          paidAmount: 200,
+          paymentMethod: PaymentMethod.cash,
+          saleStatus: SaleStatus.posted,
+        );
+        final postedSale = await saleRepo.insert(
+          saleDraft,
+          saleNumber: 'INV-IMMUTABLE-01',
+        );
 
-      expect(
-        () async => rpRepo.softDelete(postedTx.id),
-        throwsA(isA<Object>()),
-      );
+        expect(
+          () async => saleRepo.softDelete(postedSale.id),
+          throwsA(isA<Object>()),
+        );
 
-      // 3.2 Sale Invoice
-      final saleDraft = SaleDraft(
-        voucherBookId: 'VB-01',
-        cashAccountId: acc1Uuid,
-        saleDate: DateTime.now().toUtc(),
-        settlementType: SaleSettlementType.cash,
-        customerId: 'CUST-01',
-        customerName: 'Customer One',
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        items: const [
-          SaleItemDraft(
-            productId: 'PROD-01',
-            productName: 'Product 1',
-            productCode: 'P01',
-            mainQuantity: 2,
-            subQuantity: 0,
-            unitPrice: 100,
-            baseUnitPrice: 100,
-          ),
-        ],
-        discountType: DiscountType.fixed,
-        discountValue: 0,
-        taxRate: 0,
-        paidAmount: 200,
-        paymentMethod: PaymentMethod.cash,
-        saleStatus: SaleStatus.posted,
-      );
-      final postedSale = await saleRepo.insert(saleDraft, saleNumber: 'INV-IMMUTABLE-01');
+        // 3.3 Inventory Document
+        final receiptId = generateUuidV4();
+        final lineId = generateUuidV4();
+        final date = DateTime.utc(2026, 1, 1);
 
-      expect(
-        () async => saleRepo.softDelete(postedSale.id),
-        throwsA(isA<Object>()),
-      );
+        final receipt = StockReceipt(
+          id: receiptId,
+          receiptNumber: 'REC-IMMUTABLE-01',
+          receiptDate: date,
+          status: InventoryDocumentStatus.posted,
+          lines: [
+            StockMovementLine(
+              id: lineId,
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-001',
+              itemName: 'Test Item 1',
+              quantity: 10,
+              unitCost: 50,
+              totalCost: 500,
+            ),
+          ],
+        );
+        await invRepo.saveReceipt(receipt);
 
-      // 3.3 Inventory Document
-      final receiptId = generateUuidV4();
-      final lineId = generateUuidV4();
-      final date = DateTime.utc(2026, 1, 1);
+        expect(
+          () async => invRepo.deleteReceipt(receiptId),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
 
-      final receipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: 'REC-IMMUTABLE-01',
-        receiptDate: date,
-        status: InventoryDocumentStatus.posted,
-        lines: [
-          StockMovementLine(
-            id: lineId,
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-001',
-            itemName: 'Test Item 1',
-            quantity: 10,
-            unitCost: 50,
-            totalCost: 500,
-          ),
-        ],
-      );
-      await invRepo.saveReceipt(receipt);
+    test(
+      '4. Period Lock Validation: Repository rejects posting in locked accounting periods',
+      () async {
+        final lockedValidator = legacyPeriodValidator(
+          closedThrough: DateTime.now().add(
+            const Duration(days: 365),
+          ), // Lock all current dates
+        );
 
-      expect(
-        () async => invRepo.deleteReceipt(receiptId),
-        throwsA(isA<StateError>()),
-      );
-    });
+        final lockedRepo = JournalRepositoryImpl(
+          accDb,
+          accounts: accountRepo,
+          periodValidator: lockedValidator,
+          readCompanyId: () => companyA,
+        );
 
-    test('4. Period Lock Validation: Repository rejects posting in locked accounting periods', () async {
-      final lockedValidator = legacyPeriodValidator(
-        closedThrough: DateTime.now().add(const Duration(days: 365)), // Lock all current dates
-      );
+        final draft = JournalEntryDraft(
+          voucherNumber: 'JE-LOCKED-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Locked period attempt',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 100,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
 
-      final lockedRepo = JournalRepositoryImpl(
-        accDb,
-        accounts: accountRepo,
-        periodValidator: lockedValidator,
-        readCompanyId: () => companyA,
-      );
+        expect(
+          () async => lockedRepo.post(draft),
+          throwsA(isA<JournalException>()),
+        );
+      },
+    );
 
-      final draft = JournalEntryDraft(
-        voucherNumber: 'JE-LOCKED-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Locked period attempt',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 100, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 100, currencyCode: 'SAR'),
-        ],
-      );
+    test(
+      '5. Business Invariants: Unbalanced journal entry is rejected at repository boundary',
+      () async {
+        final unbalancedDraft = JournalEntryDraft(
+          voucherNumber: 'JE-UNBALANCED-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Unbalanced entry attempt',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 50,
+              currencyCode: 'SAR',
+            ), // Unbalanced (100 vs 50)
+          ],
+        );
 
-      expect(
-        () async => lockedRepo.post(draft),
-        throwsA(isA<JournalException>()),
-      );
-    });
-
-    test('5. Business Invariants: Unbalanced journal entry is rejected at repository boundary', () async {
-      final unbalancedDraft = JournalEntryDraft(
-        voucherNumber: 'JE-UNBALANCED-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Unbalanced entry attempt',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 100, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 50, currencyCode: 'SAR'), // Unbalanced (100 vs 50)
-        ],
-      );
-
-      expect(
-        () async => journalRepo.post(unbalancedDraft),
-        throwsA(isA<JournalException>()),
-      );
-    });
+        expect(
+          () async => journalRepo.post(unbalancedDraft),
+          throwsA(isA<JournalException>()),
+        );
+      },
+    );
   });
 }

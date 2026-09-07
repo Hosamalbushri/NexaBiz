@@ -39,10 +39,9 @@ class _AdminPermissionsCatalogPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final syncOn = ref.watch(syncEnabledProvider);
-    final remote = ref.watch(authStateProvider).isRemoteSession;
+    final auth = ref.watch(authStateProvider);
 
-    if (!syncOn || !remote) {
+    if (auth.needsSessionRenewal) {
       return Scaffold(
         appBar: CustomAppBar(
           title: l10n.adminPermissionsCatalogTitle,
@@ -51,8 +50,8 @@ class _AdminPermissionsCatalogPageState
         ),
         body: AppEmptyState(
           icon: Icons.cloud_off_outlined,
-          title: l10n.adminRequiresOnlineTitle,
-          subtitle: l10n.adminRequiresOnlineMessage,
+          title: l10n.syncSessionExpired,
+          subtitle: l10n.syncSessionExpired,
         ),
       );
     }
@@ -89,10 +88,9 @@ class _AdminPermissionsCatalogPageState
         showBackButton: true,
       ),
       body: ListView(
-        padding: AppConstants.pageInsets(context).copyWith(
-          top: AppSpacing.sm,
-          bottom: AppSpacing.lg,
-        ),
+        padding: AppConstants.pageInsets(
+          context,
+        ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
         children: [
           Text(
             l10n.adminPermTreeCatalogIntro,
@@ -133,8 +131,9 @@ class _AdminPermissionsCatalogPageState
                       label: Text(pkg.title(context)),
                       selected: _packageFilter == pkg.id,
                       onSelected: (_) => setState(
-                        () => _packageFilter =
-                            _packageFilter == pkg.id ? null : pkg.id,
+                        () => _packageFilter = _packageFilter == pkg.id
+                            ? null
+                            : pkg.id,
                       ),
                     ),
                   ),
@@ -217,11 +216,7 @@ class _PackageCard extends StatelessWidget {
                         start: AppSpacing.lg,
                         end: 16,
                       ),
-                      leading: Icon(
-                        op.icon,
-                        size: 22,
-                        color: scheme.primary,
-                      ),
+                      leading: Icon(op.icon, size: 22, color: scheme.primary),
                       title: Text(op.label(context)),
                       dense: true,
                     ),

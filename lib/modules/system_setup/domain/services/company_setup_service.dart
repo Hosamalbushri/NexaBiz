@@ -45,7 +45,8 @@ class CompanySetupService {
     }
 
     // 2. Authorization Gate
-    final hasPermission = isSuperAdmin ||
+    final hasPermission =
+        isSuperAdmin ||
         (userPermissions != null &&
             (userPermissions.contains('system.setup') ||
                 userPermissions.contains('settings.company')));
@@ -60,10 +61,10 @@ class CompanySetupService {
     final companyId = (session.currentCompanyId?.trim().isNotEmpty == true)
         ? session.currentCompanyId!.trim()
         : (session.activeCompanyId?.trim().isNotEmpty == true
-            ? session.activeCompanyId!.trim()
-            : (session.companies.isNotEmpty
-                ? session.companies.first.id.trim()
-                : LocalAuthDefaults.companyId));
+              ? session.activeCompanyId!.trim()
+              : (session.companies.isNotEmpty
+                    ? session.companies.first.id.trim()
+                    : LocalAuthDefaults.companyId));
 
     // 4. Input Validation
     final trimmedName = profile.name.trim();

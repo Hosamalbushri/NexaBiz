@@ -33,7 +33,8 @@ class OpeningBalancesStep extends ConsumerWidget {
     final notifier = ref.read(accountOpeningSetupProvider.notifier);
     final accountsAsync = ref.watch(accountsProvider);
     final ratesAsync = ref.watch(currencyRateListProvider);
-    final defaultCurrency = ref
+    final defaultCurrency =
+        ref
             .watch(companyProfileProvider)
             .valueOrNull
             ?.defaultCurrencyCode
@@ -55,9 +56,9 @@ class OpeningBalancesStep extends ConsumerWidget {
         Text(
           l10n.accountingOpeningSetupStepBalancesHint,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         const _BalancesFormatHintCard(),
@@ -125,13 +126,13 @@ class OpeningBalancesStep extends ConsumerWidget {
                   onPressed: state.isBusy
                       ? null
                       : () => unawaited(
-                            _pickBalancesFile(
-                              context,
-                              notifier,
-                              allowedCodes: allowedCodes,
-                              defaultCurrencyCode: defaultCurrency,
-                            ),
+                          _pickBalancesFile(
+                            context,
+                            notifier,
+                            allowedCodes: allowedCodes,
+                            defaultCurrencyCode: defaultCurrency,
                           ),
+                        ),
                 ),
                 if (state.balanceFileName != null) ...[
                   const SizedBox(height: AppSpacing.sm),
@@ -149,19 +150,20 @@ class OpeningBalancesStep extends ConsumerWidget {
                   onChanged: notifier.updateBalanceLine,
                   onRemoveLine: notifier.removeBalanceLine,
                   onRemoveAccount: notifier.removeAccountBalances,
-                  onAddCurrencyLine: ({
-                    required accountId,
-                    required accountCode,
-                    required accountName,
-                  }) {
-                    notifier.addNextCurrencyLine(
-                      accountId: accountId,
-                      accountCode: accountCode,
-                      accountName: accountName,
-                      allowedCurrencyCodes: allowedCodes.toList(),
-                      defaultCurrencyCode: defaultCurrency,
-                    );
-                  },
+                  onAddCurrencyLine:
+                      ({
+                        required accountId,
+                        required accountCode,
+                        required accountName,
+                      }) {
+                        notifier.addNextCurrencyLine(
+                          accountId: accountId,
+                          accountCode: accountCode,
+                          accountName: accountName,
+                          allowedCurrencyCodes: allowedCodes.toList(),
+                          defaultCurrencyCode: defaultCurrency,
+                        );
+                      },
                 ),
               ],
             );
@@ -236,11 +238,7 @@ class OpeningBalancesStep extends ConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showAppSnackBar(
-        context,
-        message: l10n.invalidFile,
-        isSuccess: false,
-      );
+      showAppSnackBar(context, message: l10n.invalidFile, isSuccess: false);
       return;
     }
     await notifier.loadBalanceExcel(
@@ -256,9 +254,7 @@ class OpeningBalancesStep extends ConsumerWidget {
       AccountImportException.bothOpeningSides =>
         l10n.accountingImportErrorBothSides,
       AccountImportException.duplicateCurrency =>
-        l10n.accountingOpeningSetupErrorDuplicateCurrency(
-          details ?? '',
-        ),
+        l10n.accountingOpeningSetupErrorDuplicateCurrency(details ?? ''),
       AccountImportException.accountNotFound =>
         l10n.accountingOpeningSetupErrorAccountNotFound(details ?? ''),
       AccountImportException.currencyNotConfigured =>

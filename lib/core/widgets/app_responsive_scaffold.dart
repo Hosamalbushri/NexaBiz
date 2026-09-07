@@ -31,7 +31,8 @@ class AppBottomActions extends StatelessWidget {
     final bottomInset = media.viewInsets.bottom;
     final safeBottom = media.padding.bottom;
 
-    final defaultPadding = padding ??
+    final defaultPadding =
+        padding ??
         EdgeInsets.fromLTRB(
           AppSpacing.md,
           AppSpacing.sm,
@@ -51,15 +52,13 @@ class AppBottomActions extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: borderColor ?? scheme.outlineVariant.withValues(alpha: 0.4),
+                color:
+                    borderColor ?? scheme.outlineVariant.withValues(alpha: 0.4),
               ),
             ),
           ),
           child: AppContentConstraint(
-            child: Padding(
-              padding: defaultPadding,
-              child: child,
-            ),
+            child: Padding(padding: defaultPadding, child: child),
           ),
         ),
       ),

@@ -43,9 +43,7 @@ class SearchFilterBar extends StatelessWidget {
         if (activeFilterChips.isNotEmpty) ...[
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(
-              children: activeFilterChips,
-            ),
+            child: Row(children: activeFilterChips),
           ),
         ],
       ],

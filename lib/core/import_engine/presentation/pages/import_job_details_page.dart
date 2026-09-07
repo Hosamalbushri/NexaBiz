@@ -3,10 +3,7 @@ import '../../import_engine.dart';
 
 /// Reusable Import Job Details UI screen displaying full metrics, timing, and error summary.
 class ImportJobDetailsPage extends StatelessWidget {
-  const ImportJobDetailsPage({
-    super.key,
-    required this.job,
-  });
+  const ImportJobDetailsPage({super.key, required this.job});
 
   final ImportJob job;
 
@@ -16,9 +13,7 @@ class ImportJobDetailsPage extends StatelessWidget {
     final profileId = job.profile?.profileId ?? 'generic';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Job Details: ${job.jobId}'),
-      ),
+      appBar: AppBar(title: Text('Job Details: ${job.jobId}')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -28,7 +23,12 @@ class ImportJobDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Job ID: ${job.jobId}', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'Job ID: ${job.jobId}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 4.0),
                   Text('Company: ${job.companyId} | User: ${job.userId}'),
                   Text('Profile: $profileId | Source: ${job.source}'),
@@ -47,7 +47,12 @@ class ImportJobDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Metrics & Statistics', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'Metrics & Statistics',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const Divider(),
                   _buildMetricRow('Total Rows', '${job.totalRows}'),
                   _buildMetricRow('Processed Rows', '${job.processedRows}'),
@@ -69,7 +74,12 @@ class ImportJobDetailsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Error Summary', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Error Summary',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8.0),
                     Text(job.errorSummary.join('\n')),
                   ],

@@ -38,7 +38,9 @@ class SyncQueueRecoveryService {
         continue;
       }
       try {
-        final missingOps = await handler.findOrphanedPendingOperations(queuedKeys);
+        final missingOps = await handler.findOrphanedPendingOperations(
+          queuedKeys,
+        );
         for (final op in missingOps) {
           await _queue.enqueue(op);
           recoveredCount++;

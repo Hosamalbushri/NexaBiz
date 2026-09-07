@@ -47,7 +47,9 @@ class ReportDrillDownHandler {
 
       default:
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('الانتقال للمستند: $documentType / $documentUuid')),
+          SnackBar(
+            content: Text('الانتقال للمستند: $documentType / $documentUuid'),
+          ),
         );
         break;
     }

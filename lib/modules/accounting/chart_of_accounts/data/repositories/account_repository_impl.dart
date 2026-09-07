@@ -620,10 +620,11 @@ class AccountRepositoryImpl implements AccountRepository {
       );
     }
 
-    final existing = await (_db.select(_db.accounts)
-          ..where(_scoped)
-          ..limit(1))
-        .get();
+    final existing =
+        await (_db.select(_db.accounts)
+              ..where(_scoped)
+              ..limit(1))
+            .get();
     if (existing.isNotEmpty) {
       return;
     }
@@ -645,7 +646,9 @@ class AccountRepositoryImpl implements AccountRepository {
             ? 0
             : (keyToLevel[seed.parentKey!] ?? 0) + 1;
         final uuid = systemAccountUuid('${companyId}_${seed.systemKey}');
-        await _db.into(_db.accounts).insert(
+        await _db
+            .into(_db.accounts)
+            .insert(
               AccountsCompanion.insert(
                 uuid: uuid,
                 parentId: Value(parentUuid),

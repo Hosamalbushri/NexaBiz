@@ -12,21 +12,27 @@ void main() {
 
     test('handles build suffixes correctly', () {
       expect(AppUpdateInfo.compareVersions('1.4.0+10', '1.4.0+12'), equals(0));
-      expect(AppUpdateInfo.compareVersions('1.4.1+10', '1.4.0+12'), greaterThan(0));
+      expect(
+        AppUpdateInfo.compareVersions('1.4.1+10', '1.4.0+12'),
+        greaterThan(0),
+      );
     });
   });
 
   group('AppUpdateInfo policies', () {
-    test('triggers mandatory update when current < minimumSupportedVersion', () {
-      const info = AppUpdateInfo(
-        latestVersion: '2.0.0',
-        minimumSupportedVersion: '1.5.0',
-      );
+    test(
+      'triggers mandatory update when current < minimumSupportedVersion',
+      () {
+        const info = AppUpdateInfo(
+          latestVersion: '2.0.0',
+          minimumSupportedVersion: '1.5.0',
+        );
 
-      expect(info.isMandatoryUpdate('1.4.0'), isTrue);
-      expect(info.isMandatoryUpdate('1.5.0'), isFalse);
-      expect(info.isMandatoryUpdate('1.6.0'), isFalse);
-    });
+        expect(info.isMandatoryUpdate('1.4.0'), isTrue);
+        expect(info.isMandatoryUpdate('1.5.0'), isFalse);
+        expect(info.isMandatoryUpdate('1.6.0'), isFalse);
+      },
+    );
 
     test('triggers mandatory update when forceUpdate is true', () {
       const info = AppUpdateInfo(
@@ -38,14 +44,17 @@ void main() {
       expect(info.isMandatoryUpdate('1.8.0'), isTrue);
     });
 
-    test('triggers optional update when current < latestVersion and >= minimum', () {
-      const info = AppUpdateInfo(
-        latestVersion: '2.0.0',
-        minimumSupportedVersion: '1.5.0',
-      );
+    test(
+      'triggers optional update when current < latestVersion and >= minimum',
+      () {
+        const info = AppUpdateInfo(
+          latestVersion: '2.0.0',
+          minimumSupportedVersion: '1.5.0',
+        );
 
-      expect(info.isOptionalUpdate('1.6.0'), isTrue);
-      expect(info.isOptionalUpdate('2.0.0'), isFalse);
-    });
+        expect(info.isOptionalUpdate('1.6.0'), isTrue);
+        expect(info.isOptionalUpdate('2.0.0'), isFalse);
+      },
+    );
   });
 }

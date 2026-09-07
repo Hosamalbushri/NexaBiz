@@ -3,11 +3,7 @@ import 'app_field_shell.dart';
 
 /// Item definition for [AppSelectField].
 class AppSelectItem<T> {
-  const AppSelectItem({
-    required this.value,
-    required this.label,
-    this.icon,
-  });
+  const AppSelectItem({required this.value, required this.label, this.icon});
 
   final T value;
   final String label;
@@ -60,11 +56,7 @@ class AppSelectField<T> extends StatelessWidget {
       readOnly: readOnly,
       prefix: prefixIcon == null
           ? null
-          : Icon(
-              prefixIcon,
-              size: 20,
-              color: scheme.primary,
-            ),
+          : Icon(prefixIcon, size: 20, color: scheme.primary),
       suffix: Icon(
         Icons.keyboard_arrow_down_rounded,
         size: 22,
@@ -93,18 +85,11 @@ class AppSelectField<T> extends StatelessWidget {
               child: Row(
                 children: [
                   if (item.icon != null) ...[
-                    Icon(
-                      item.icon,
-                      size: 18,
-                      color: scheme.primary,
-                    ),
+                    Icon(item.icon, size: 18, color: scheme.primary),
                     const SizedBox(width: 8),
                   ],
                   Expanded(
-                    child: Text(
-                      item.label,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    child: Text(item.label, overflow: TextOverflow.ellipsis),
                   ),
                 ],
               ),

@@ -31,23 +31,39 @@ class BalanceSheetReportDefinition
     final rows = <List<String>>[];
 
     // Assets
-    rows.add(['—', '=== ${payload.labels.assetsHeader} ===', money.format(payload.totalAssets)]);
+    rows.add([
+      '—',
+      '=== ${payload.labels.assetsHeader} ===',
+      money.format(payload.totalAssets),
+    ]);
     for (final a in payload.assetItems) {
       rows.add([a.accountCode, a.accountName, money.format(a.amount)]);
     }
 
     // Liabilities
-    rows.add(['—', '=== ${payload.labels.liabilitiesHeader} ===', money.format(payload.totalLiabilities)]);
+    rows.add([
+      '—',
+      '=== ${payload.labels.liabilitiesHeader} ===',
+      money.format(payload.totalLiabilities),
+    ]);
     for (final l in payload.liabilityItems) {
       rows.add([l.accountCode, l.accountName, money.format(l.amount)]);
     }
 
     // Equity
-    rows.add(['—', '=== ${payload.labels.equityHeader} ===', money.format(payload.totalEquity)]);
+    rows.add([
+      '—',
+      '=== ${payload.labels.equityHeader} ===',
+      money.format(payload.totalEquity),
+    ]);
     for (final e in payload.equityItems) {
       rows.add([e.accountCode, e.accountName, money.format(e.amount)]);
     }
-    rows.add(['—', payload.labels.retainedEarningsLabel, money.format(payload.retainedEarnings)]);
+    rows.add([
+      '—',
+      payload.labels.retainedEarningsLabel,
+      money.format(payload.retainedEarnings),
+    ]);
 
     final widths = <int, pw.TableColumnWidth>{
       0: const pw.FixedColumnWidth(80),

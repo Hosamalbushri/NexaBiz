@@ -23,8 +23,7 @@ class AnimatedQrIllustration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final shouldAnimate =
-        animate && !MediaQuery.disableAnimationsOf(context);
+    final shouldAnimate = animate && !MediaQuery.disableAnimationsOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Semantics(
@@ -49,10 +48,7 @@ class AnimatedQrIllustration extends StatelessWidget {
               frameRate: FrameRate.max,
               delegates: LottieDelegates(
                 values: [
-                  ValueDelegate.strokeColor(
-                    const ['**'],
-                    value: Colors.white,
-                  ),
+                  ValueDelegate.strokeColor(const ['**'], value: Colors.white),
                 ],
               ),
               errorBuilder: (context, error, stackTrace) {

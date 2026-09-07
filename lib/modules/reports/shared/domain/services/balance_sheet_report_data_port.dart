@@ -93,8 +93,9 @@ abstract class BalanceSheetReportDataPort {
 }
 
 /// Provider for BalanceSheetReportDataPort.
-final balanceSheetReportDataPortProvider =
-    Provider<BalanceSheetReportDataPort>((ref) {
+final balanceSheetReportDataPortProvider = Provider<BalanceSheetReportDataPort>((
+  ref,
+) {
   throw UnimplementedError(
     'balanceSheetReportDataPortProvider must be overridden in providerOverrides',
   );

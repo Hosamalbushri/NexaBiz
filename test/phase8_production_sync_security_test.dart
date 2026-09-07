@@ -71,16 +71,15 @@ class Phase8MockEntityHandler implements SyncEntityHandler {
   Future<void> abandonPull() async {}
 
   @override
-  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async => null;
+  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async =>
+      null;
 }
 
 class Phase8MockRemoteSyncApi implements RemoteSyncApi {
-  Phase8MockRemoteSyncApi({
-    this.batchPushHandler,
-    this.pullHandler,
-  });
+  Phase8MockRemoteSyncApi({this.batchPushHandler, this.pullHandler});
 
-  final Future<List<SyncBatchPushItemResult>> Function(List<SyncOperation> ops)? batchPushHandler;
+  final Future<List<SyncBatchPushItemResult>> Function(List<SyncOperation> ops)?
+  batchPushHandler;
   final Future<List<SyncRemoteChange>> Function()? pullHandler;
 
   @override
@@ -92,7 +91,9 @@ class Phase8MockRemoteSyncApi implements RemoteSyncApi {
   }
 
   @override
-  Future<List<SyncBatchPushItemResult>> pushBatch(List<SyncOperation> operations) async {
+  Future<List<SyncBatchPushItemResult>> pushBatch(
+    List<SyncOperation> operations,
+  ) async {
     if (batchPushHandler != null) {
       return await batchPushHandler!(operations);
     }
@@ -101,7 +102,10 @@ class Phase8MockRemoteSyncApi implements RemoteSyncApi {
           (op) => SyncBatchPushItemResult(
             operationId: op.id,
             status: 'success',
-            ack: SyncUploadAck(entityId: op.entityId, remoteVersion: op.baseVersion + 1),
+            ack: SyncUploadAck(
+              entityId: op.entityId,
+              remoteVersion: op.baseVersion + 1,
+            ),
           ),
         )
         .toList();
@@ -149,14 +153,14 @@ void main() {
       Hive.registerAdapter(SyncOperationAdapter());
     }
 
-    final box = await Hive.openBox<SyncOperation>('test_phase8_queue_${DateTime.now().microsecondsSinceEpoch}');
-    queue = SyncQueue(
-      box: box,
-      companyId: companyA,
-      deviceId: deviceA,
+    final box = await Hive.openBox<SyncOperation>(
+      'test_phase8_queue_${DateTime.now().microsecondsSinceEpoch}',
     );
+    queue = SyncQueue(box: box, companyId: companyA, deviceId: deviceA);
 
-    final cursorBox = await Hive.openBox<int>('test_phase8_cursor_${DateTime.now().microsecondsSinceEpoch}');
+    final cursorBox = await Hive.openBox<int>(
+      'test_phase8_cursor_${DateTime.now().microsecondsSinceEpoch}',
+    );
     cursorStore = SyncCursorStore(box: cursorBox);
 
     connectivity = ConnectivityService(internetProbe: () async => true);
@@ -170,96 +174,124 @@ void main() {
 
   group('Phase 8 — Production Sync Backend Hardening & Disaster Recovery', () {
     test('1. Idempotency payload hash mismatch classification', () {
-      const err = ValidationFailure('Idempotency conflict: operation ID has already been used with a different payload.');
+      const err = ValidationFailure(
+        'Idempotency conflict: operation ID has already been used with a different payload.',
+      );
       final classification = SyncErrorClassifier.classify(err);
       expect(classification.quarantine, isTrue);
       expect(classification.isRetryable, isFalse);
     });
 
-    test('2. Financial documents (Sale/JournalEntry) non-destructive conflict handling', () async {
-      final op = SyncOperation.create(
-        entityType: 'journal_entry',
-        entityId: 'je-001',
-        type: SyncOperationType.update,
-        payload: {'amount': 500, 'isPosted': true},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op);
+    test(
+      '2. Financial documents (Sale/JournalEntry) non-destructive conflict handling',
+      () async {
+        final op = SyncOperation.create(
+          entityType: 'journal_entry',
+          entityId: 'je-001',
+          type: SyncOperationType.update,
+          payload: {'amount': 500, 'isPosted': true},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op);
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-        remoteProvider: () => Phase8MockRemoteSyncApi(
-          batchPushHandler: (ops) async => [
-            SyncBatchPushItemResult(
-              operationId: ops.first.id,
-              status: 'conflict',
-              failure: const SyncConflictFailure('Server journal entry version conflict', 3),
-            ),
-          ],
-        ),
-      );
-      manager.registerHandler(Phase8MockEntityHandler(entityType: 'journal_entry'));
-      await manager.setEnabled(true);
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+          remoteProvider: () => Phase8MockRemoteSyncApi(
+            batchPushHandler: (ops) async => [
+              SyncBatchPushItemResult(
+                operationId: ops.first.id,
+                status: 'conflict',
+                failure: const SyncConflictFailure(
+                  'Server journal entry version conflict',
+                  3,
+                ),
+              ),
+            ],
+          ),
+        );
+        manager.registerHandler(
+          Phase8MockEntityHandler(entityType: 'journal_entry'),
+        );
+        await manager.setEnabled(true);
 
-      final res = await manager.syncNow();
-      expect(res.conflicts, equals(1));
+        final res = await manager.syncNow();
+        expect(res.conflicts, equals(1));
 
-      final all = await queue.all();
-      expect(all.first.status, equals(SyncStatus.conflict));
-      expect(all.first.payload['amount'], equals(500)); // Local data preserved, not overwritten or deleted
-    });
+        final all = await queue.all();
+        expect(all.first.status, equals(SyncStatus.conflict));
+        expect(
+          all.first.payload['amount'],
+          equals(500),
+        ); // Local data preserved, not overwritten or deleted
+      },
+    );
 
-    test('3. Durable SyncCursorStore write, read, and crash recovery', () async {
-      await cursorStore.write('product', 1050);
-      final readVal = await cursorStore.read('product');
-      expect(readVal, equals(1050));
-    });
+    test(
+      '3. Durable SyncCursorStore write, read, and crash recovery',
+      () async {
+        await cursorStore.write('product', 1050);
+        final readVal = await cursorStore.read('product');
+        expect(readVal, equals(1050));
+      },
+    );
 
-    test('4. Token expiry (401) pauses sync pass without deleting or quarantining valid queue', () async {
-      final op = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-401',
-        type: SyncOperationType.create,
-        payload: {'name': 'Product 401'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op);
+    test(
+      '4. Token expiry (401) pauses sync pass without deleting or quarantining valid queue',
+      () async {
+        final op = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-401',
+          type: SyncOperationType.create,
+          payload: {'name': 'Product 401'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op);
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-        remoteProvider: () => Phase8MockRemoteSyncApi(
-          batchPushHandler: (ops) async {
-            throw const AuthenticationFailure('Token expired');
-          },
-        ),
-      );
-      manager.registerHandler(Phase8MockEntityHandler(entityType: 'product'));
-      await manager.setEnabled(true);
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+          remoteProvider: () => Phase8MockRemoteSyncApi(
+            batchPushHandler: (ops) async {
+              throw const AuthenticationFailure('Token expired');
+            },
+          ),
+        );
+        manager.registerHandler(Phase8MockEntityHandler(entityType: 'product'));
+        await manager.setEnabled(true);
 
-      final res = await manager.syncNow();
-      expect(res.outcome, equals(SyncPassOutcome.authRequired));
+        final res = await manager.syncNow();
+        expect(res.outcome, equals(SyncPassOutcome.authRequired));
 
-      final all = await queue.all();
-      expect(all.first.status, equals(SyncStatus.pending)); // Remained pending for re-auth
-    });
+        final all = await queue.all();
+        expect(
+          all.first.status,
+          equals(SyncStatus.pending),
+        ); // Remained pending for re-auth
+      },
+    );
 
     test('5. Tenant/device identity server authority validation', () async {
-      final box = await Hive.openBox<SyncOperation>('test_phase8_spoof_${DateTime.now().microsecondsSinceEpoch}');
-      final unscopedQueue = SyncQueue(box: box, companyId: null, deviceId: deviceA);
+      final box = await Hive.openBox<SyncOperation>(
+        'test_phase8_spoof_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      final unscopedQueue = SyncQueue(
+        box: box,
+        companyId: null,
+        deviceId: deviceA,
+      );
 
       final crossOp = SyncOperation.create(
         entityType: 'product',
@@ -289,7 +321,10 @@ void main() {
 
       final all = await unscopedQueue.all();
       expect(all.first.status, equals(SyncStatus.quarantined));
-      expect(all.first.lastError, contains('Cross-tenant operation upload blocked'));
+      expect(
+        all.first.lastError,
+        contains('Cross-tenant operation upload blocked'),
+      );
     });
   });
 }

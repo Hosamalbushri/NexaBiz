@@ -15,7 +15,6 @@ import 'package:stock_count/modules/customers/domain/usecases/ensure_customer_ac
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late Directory tempDir;
   late AccountingDatabase accountingDb;
   late CustomersDatabase customersDb;
@@ -49,54 +48,60 @@ void main() {
     }
   });
 
-  test('ensurePostingUnderParent creates account under customers group', () async {
-    final parent = await linkPort.findSystemCustomersParent();
-    expect(parent, isNotNull);
-    expect(parent!.code, '1221');
-    expect(parent.isGroup, isTrue);
+  test(
+    'ensurePostingUnderParent creates account under customers group',
+    () async {
+      final parent = await linkPort.findSystemCustomersParent();
+      expect(parent, isNotNull);
+      expect(parent!.code, '1221');
+      expect(parent.isGroup, isTrue);
 
-    final linked = await linkPort.ensurePostingUnderParent(
-      parentId: parent.accountId,
-      accountCode: '12210001',
-      name: 'Acme Trading',
-    );
-    expect(linked, isNotNull);
-    expect(linked!.code, '12210001');
-    expect(linked.name, 'Acme Trading');
-    expect(linked.isPosting, isTrue);
+      final linked = await linkPort.ensurePostingUnderParent(
+        parentId: parent.accountId,
+        accountCode: '12210001',
+        name: 'Acme Trading',
+      );
+      expect(linked, isNotNull);
+      expect(linked!.code, '12210001');
+      expect(linked.name, 'Acme Trading');
+      expect(linked.isPosting, isTrue);
 
-    final under = await linkPort.isUnderParent(
-      accountId: linked.accountId,
-      parentId: parent.accountId,
-    );
-    expect(under, isTrue);
+      final under = await linkPort.isUnderParent(
+        accountId: linked.accountId,
+        parentId: parent.accountId,
+      );
+      expect(under, isTrue);
 
-    final account = await accounts.getByAccountCode('12210001');
-    expect(account!.parentId, parent.accountId);
-  });
+      final account = await accounts.getByAccountCode('12210001');
+      expect(account!.parentId, parent.accountId);
+    },
+  );
 
-  test('ensurePostingUnderParent reuses and renames existing under parent', () async {
-    final parent = await linkPort.findSystemCustomersParent();
-    final first = await linkPort.ensurePostingUnderParent(
-      parentId: parent!.accountId,
-      accountCode: '12210002',
-      name: 'Old Name',
-    );
-    final second = await linkPort.ensurePostingUnderParent(
-      parentId: parent.accountId,
-      accountCode: '12210002',
-      name: 'New Name',
-    );
-    expect(second!.accountId, first!.accountId);
-    expect(second.name, 'New Name');
-    expect(await accounts.getByAccountCode('12210002'), isNotNull);
-  });
+  test(
+    'ensurePostingUnderParent reuses and renames existing under parent',
+    () async {
+      final parent = await linkPort.findSystemCustomersParent();
+      final first = await linkPort.ensurePostingUnderParent(
+        parentId: parent!.accountId,
+        accountCode: '12210002',
+        name: 'Old Name',
+      );
+      final second = await linkPort.ensurePostingUnderParent(
+        parentId: parent.accountId,
+        accountCode: '12210002',
+        name: 'New Name',
+      );
+      expect(second!.accountId, first!.accountId);
+      expect(second.name, 'New Name');
+      expect(await accounts.getByAccountCode('12210002'), isNotNull);
+    },
+  );
 
   test('customer create can store auto-linked account id', () async {
     final parent = await linkPort.findSystemCustomersParent();
-    final code = await CustomerCodeGenerator(customers).generate(
-      parentAccountCode: parent!.code,
-    );
+    final code = await CustomerCodeGenerator(
+      customers,
+    ).generate(parentAccountCode: parent!.code);
     final linked = await linkPort.ensurePostingUnderParent(
       parentId: parent.accountId,
       accountCode: code,
@@ -135,13 +140,10 @@ void main() {
   test('EnsureCustomerAccountLinks fills drafts for import', () async {
     final parent = await linkPort.findSystemCustomersParent();
     final linker = EnsureCustomerAccountLinks(linkPort);
-    final drafts = await linker.applyAll(
-      const [
-        CustomerDraft(customerCode: '12210901', name: 'Import A'),
-        CustomerDraft(customerCode: '12210902', name: 'Import B'),
-      ],
-      parentId: parent!.accountId,
-    );
+    final drafts = await linker.applyAll(const [
+      CustomerDraft(customerCode: '12210901', name: 'Import A'),
+      CustomerDraft(customerCode: '12210902', name: 'Import B'),
+    ], parentId: parent!.accountId);
     expect(
       drafts.every((d) => d.accountId != null && d.accountId!.isNotEmpty),
       isTrue,

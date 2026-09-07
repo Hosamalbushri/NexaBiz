@@ -16,10 +16,7 @@ export 'package:stock_count/core/domain/ports/posting_port.dart'
 abstract class PostingCoordinator implements PostingCoordinatorPort {
   /// Validates and posts an inventory document.
   @override
-  Future<PostResult> post({
-    required DocumentRef document,
-    String? userId,
-  });
+  Future<PostResult> post({required DocumentRef document, String? userId});
 
   /// Validates dependencies and unposts an inventory document.
   @override

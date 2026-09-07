@@ -11,10 +11,7 @@ import 'package:stock_count/modules/customers/accounts/domain/services/customer_
 /// under that parent also reserve sequence numbers (keeps customer codes and
 /// manual CoA leaves in sync).
 class CustomerCodeGenerator {
-  const CustomerCodeGenerator(
-    this._repository, {
-    this._linkPort,
-  });
+  const CustomerCodeGenerator(this._repository, {this._linkPort});
 
   final CustomerRepository _repository;
   final CustomerAccountLinkPort? _linkPort;

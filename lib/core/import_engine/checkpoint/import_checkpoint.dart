@@ -11,8 +11,8 @@ class ImportCheckpoint {
     this.skippedRows = 0,
     Set<String>? committedKeys,
     DateTime? timestamp,
-  })  : committedKeys = Set.unmodifiable(committedKeys ?? {}),
-        timestamp = timestamp ?? DateTime.now().toUtc();
+  }) : committedKeys = Set.unmodifiable(committedKeys ?? {}),
+       timestamp = timestamp ?? DateTime.now().toUtc();
 
   /// Target import job identifier.
   final String jobId;
@@ -58,7 +58,8 @@ class ImportCheckpoint {
     return ImportCheckpoint(
       jobId: jobId ?? this.jobId,
       companyId: companyId ?? this.companyId,
-      lastProcessedRowIndex: lastProcessedRowIndex ?? this.lastProcessedRowIndex,
+      lastProcessedRowIndex:
+          lastProcessedRowIndex ?? this.lastProcessedRowIndex,
       chunkSize: chunkSize ?? this.chunkSize,
       successfulRows: successfulRows ?? this.successfulRows,
       failedRows: failedRows ?? this.failedRows,

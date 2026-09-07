@@ -9,7 +9,8 @@ import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_n
 /// Allocates plain integer document numbers from exclusive offline blocks.
 /// A silent per-device numeric lane avoids collisions across devices
 /// without displaying a device prefix.
-class AccountingInventoryVoucherBookAdapter implements InventoryVoucherBookPort {
+class AccountingInventoryVoucherBookAdapter
+    implements InventoryVoucherBookPort {
   AccountingInventoryVoucherBookAdapter(
     this._repository, {
     required this.deviceId,

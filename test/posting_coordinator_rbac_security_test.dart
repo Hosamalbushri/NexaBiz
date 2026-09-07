@@ -58,17 +58,13 @@ void main() {
       null,
       () => companyId,
     );
-    validationService = StockValidationServiceImpl(
-      db,
-      () => companyId,
-    );
-    dependencyDetector = InventoryDependencyDetectorImpl(
-      db,
-      () => companyId,
-    );
+    validationService = StockValidationServiceImpl(db, () => companyId);
+    dependencyDetector = InventoryDependencyDetectorImpl(db, () => companyId);
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.into(db.products).insert(
+    await db
+        .into(db.products)
+        .insert(
           ProductsCompanion(
             id: const Value(1),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
@@ -91,7 +87,9 @@ void main() {
 
   Future<InventoryDocumentRef> createDraftReceipt(String receiptUuid) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.into(db.stockReceipts).insert(
+    await db
+        .into(db.stockReceipts)
+        .insert(
           StockReceiptsCompanion.insert(
             uuid: receiptUuid,
             receiptNumber: 'REC-SEC-001',
@@ -103,7 +101,9 @@ void main() {
           ),
         );
 
-    await db.into(db.stockMovementLines).insert(
+    await db
+        .into(db.stockMovementLines)
+        .insert(
           StockMovementLinesCompanion.insert(
             uuid: generateUuidV4(),
             movementUuid: receiptUuid,
@@ -124,108 +124,137 @@ void main() {
     );
   }
 
-  group('PostingCoordinator Security Hardening & Mandatory PermissionGuard Tests', () {
-    test('1. Unauthorized post attempt throws PermissionDeniedException and logs audit event', () async {
-      final denyingGuard = CallbackPermissionGuard((codes) => false);
+  group(
+    'PostingCoordinator Security Hardening & Mandatory PermissionGuard Tests',
+    () {
+      test(
+        '1. Unauthorized post attempt throws PermissionDeniedException and logs audit event',
+        () async {
+          final denyingGuard = CallbackPermissionGuard((codes) => false);
 
-      final coordinator = PostingCoordinatorImpl(
-        db: db,
-        stockValidationService: validationService,
-        dependencyDetector: dependencyDetector,
-        postingEngine: postingEngine,
-        permissionGuard: denyingGuard,
-        accountingPoster: mockAccountingPoster,
-        readCompanyId: () => companyId,
+          final coordinator = PostingCoordinatorImpl(
+            db: db,
+            stockValidationService: validationService,
+            dependencyDetector: dependencyDetector,
+            postingEngine: postingEngine,
+            permissionGuard: denyingGuard,
+            accountingPoster: mockAccountingPoster,
+            readCompanyId: () => companyId,
+          );
+
+          final docRef = await createDraftReceipt(generateUuidV4());
+
+          try {
+            await coordinator.post(
+              document: docRef,
+              userId: 'unauthorized_user',
+            );
+            fail('Should have thrown PermissionDeniedException');
+          } catch (e) {
+            expect(e, isA<PermissionDeniedException>());
+          }
+
+          final dbAuditRows = await db.select(db.inventoryAuditTrail).get();
+          expect(dbAuditRows.length, 1);
+          expect(dbAuditRows.first.eventType, 'unauthorized_attempt');
+          expect(dbAuditRows.first.userId, 'unauthorized_user');
+        },
       );
 
-      final docRef = await createDraftReceipt(generateUuidV4());
+      test(
+        '2. Unauthorized unpost attempt throws PermissionDeniedException and logs audit event',
+        () async {
+          final allowingGuard = CallbackPermissionGuard((codes) => true);
 
-      try {
-        await coordinator.post(document: docRef, userId: 'unauthorized_user');
-        fail('Should have thrown PermissionDeniedException');
-      } catch (e) {
-        expect(e, isA<PermissionDeniedException>());
-      }
+          final coordinator = PostingCoordinatorImpl(
+            db: db,
+            stockValidationService: validationService,
+            dependencyDetector: dependencyDetector,
+            postingEngine: postingEngine,
+            permissionGuard: allowingGuard,
+            accountingPoster: mockAccountingPoster,
+            readCompanyId: () => companyId,
+          );
 
-      final dbAuditRows = await db.select(db.inventoryAuditTrail).get();
-      expect(dbAuditRows.length, 1);
-      expect(dbAuditRows.first.eventType, 'unauthorized_attempt');
-      expect(dbAuditRows.first.userId, 'unauthorized_user');
-    });
+          final docRef = await createDraftReceipt(generateUuidV4());
+          final postRes = await coordinator.post(
+            document: docRef,
+            userId: 'authorized_user',
+          );
+          expect(postRes, isA<PostSuccess>());
 
-    test('2. Unauthorized unpost attempt throws PermissionDeniedException and logs audit event', () async {
-      final allowingGuard = CallbackPermissionGuard((codes) => true);
+          final denyingCoordinator = PostingCoordinatorImpl(
+            db: db,
+            stockValidationService: validationService,
+            dependencyDetector: dependencyDetector,
+            postingEngine: postingEngine,
+            permissionGuard: CallbackPermissionGuard((codes) => false),
+            accountingPoster: mockAccountingPoster,
+            readCompanyId: () => companyId,
+          );
 
-      final coordinator = PostingCoordinatorImpl(
-        db: db,
-        stockValidationService: validationService,
-        dependencyDetector: dependencyDetector,
-        postingEngine: postingEngine,
-        permissionGuard: allowingGuard,
-        accountingPoster: mockAccountingPoster,
-        readCompanyId: () => companyId,
+          try {
+            await denyingCoordinator.unpost(
+              document: docRef,
+              requestedBy: 'unauthorized_user',
+            );
+            fail('Should have thrown PermissionDeniedException');
+          } catch (e) {
+            expect(e, isA<PermissionDeniedException>());
+          }
+
+          final dbAuditRows = await db.select(db.inventoryAuditTrail).get();
+          final unauthAttempt = dbAuditRows.firstWhere(
+            (e) => e.eventType == 'unauthorized_attempt',
+          );
+          expect(unauthAttempt.userId, 'unauthorized_user');
+        },
       );
 
-      final docRef = await createDraftReceipt(generateUuidV4());
-      final postRes = await coordinator.post(document: docRef, userId: 'authorized_user');
-      expect(postRes, isA<PostSuccess>());
+      test('3. Authorized user post & unpost operations succeed', () async {
+        final allowingGuard = CallbackPermissionGuard((codes) => true);
 
-      final denyingCoordinator = PostingCoordinatorImpl(
-        db: db,
-        stockValidationService: validationService,
-        dependencyDetector: dependencyDetector,
-        postingEngine: postingEngine,
-        permissionGuard: CallbackPermissionGuard((codes) => false),
-        accountingPoster: mockAccountingPoster,
-        readCompanyId: () => companyId,
+        final coordinator = PostingCoordinatorImpl(
+          db: db,
+          stockValidationService: validationService,
+          dependencyDetector: dependencyDetector,
+          postingEngine: postingEngine,
+          permissionGuard: allowingGuard,
+          accountingPoster: mockAccountingPoster,
+          readCompanyId: () => companyId,
+        );
+
+        final docRef = await createDraftReceipt(generateUuidV4());
+
+        final postRes = await coordinator.post(
+          document: docRef,
+          userId: 'auth_user',
+        );
+        expect(postRes, isA<PostSuccess>());
+
+        final unpostRes = await coordinator.unpost(
+          document: docRef,
+          requestedBy: 'auth_user',
+        );
+        expect(unpostRes, isA<UnpostSuccess>());
+      });
+
+      test(
+        '4. postingCoordinatorProvider wires permissionGuardProvider correctly in Riverpod',
+        () {
+          final container = ProviderContainer(
+            overrides: [
+              permissionGuardProvider.overrideWithValue(
+                CallbackPermissionGuard((codes) => false),
+              ),
+            ],
+          );
+
+          final coordinator = container.read(postingCoordinatorProvider);
+          expect(coordinator, isA<PostingCoordinatorImpl>());
+          expect(coordinator, isNotNull);
+        },
       );
-
-      try {
-        await denyingCoordinator.unpost(document: docRef, requestedBy: 'unauthorized_user');
-        fail('Should have thrown PermissionDeniedException');
-      } catch (e) {
-        expect(e, isA<PermissionDeniedException>());
-      }
-
-      final dbAuditRows = await db.select(db.inventoryAuditTrail).get();
-      final unauthAttempt = dbAuditRows.firstWhere((e) => e.eventType == 'unauthorized_attempt');
-      expect(unauthAttempt.userId, 'unauthorized_user');
-    });
-
-    test('3. Authorized user post & unpost operations succeed', () async {
-      final allowingGuard = CallbackPermissionGuard((codes) => true);
-
-      final coordinator = PostingCoordinatorImpl(
-        db: db,
-        stockValidationService: validationService,
-        dependencyDetector: dependencyDetector,
-        postingEngine: postingEngine,
-        permissionGuard: allowingGuard,
-        accountingPoster: mockAccountingPoster,
-        readCompanyId: () => companyId,
-      );
-
-      final docRef = await createDraftReceipt(generateUuidV4());
-
-      final postRes = await coordinator.post(document: docRef, userId: 'auth_user');
-      expect(postRes, isA<PostSuccess>());
-
-      final unpostRes = await coordinator.unpost(document: docRef, requestedBy: 'auth_user');
-      expect(unpostRes, isA<UnpostSuccess>());
-    });
-
-    test('4. postingCoordinatorProvider wires permissionGuardProvider correctly in Riverpod', () {
-      final container = ProviderContainer(
-        overrides: [
-          permissionGuardProvider.overrideWithValue(
-            CallbackPermissionGuard((codes) => false),
-          ),
-        ],
-      );
-
-      final coordinator = container.read(postingCoordinatorProvider);
-      expect(coordinator, isA<PostingCoordinatorImpl>());
-      expect(coordinator, isNotNull);
-    });
-  });
+    },
+  );
 }

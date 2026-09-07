@@ -113,7 +113,8 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
 
           final books = await bookPort.listActiveIssueBooks();
           final accounts = await accountPort.listPostingAccounts();
-          final defaultAccount = await accountPort.findDefaultExpenseOrCostAccount();
+          final defaultAccount = await accountPort
+              .findDefaultExpenseOrCostAccount();
           final warehouses = await warehouseRepo.getAllWarehouses();
 
           if (!mounted) return;
@@ -125,7 +126,9 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
 
           if (_isEdit) {
             final useCases = ref.read(stockMovementUseCasesProvider);
-            final issue = await useCases.getIssueById(widget.issueId.toString());
+            final issue = await useCases.getIssueById(
+              widget.issueId.toString(),
+            );
             if (issue == null) throw Exception('أمر الصرف غير موجود');
             if (issue.isPosted) {
               _isPostedLocked = true;
@@ -138,7 +141,8 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
             composer.reset(baseCurrency);
             if (books.isNotEmpty) composer.setVoucherBook(books.first);
             if (defaultAccount != null) composer.setAccount(defaultAccount);
-            if (warehouses.isNotEmpty) composer.setWarehouse(warehouses.first.id);
+            if (warehouses.isNotEmpty)
+              composer.setWarehouse(warehouses.first.id);
           }
         },
       );
@@ -177,7 +181,9 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
       final raw = await ProductBarcodeScannerPage.open(context);
       if (raw == null || !mounted) return;
 
-      final resolution = await ref.read(productScanResolverProvider).resolve(raw);
+      final resolution = await ref
+          .read(productScanResolverProvider)
+          .resolve(raw);
       if (!mounted) return;
 
       if (resolution == null) {
@@ -190,7 +196,9 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
       }
 
       FocusManager.instance.primaryFocus?.unfocus();
-      ref.read(stockIssueComposerProvider.notifier).addProduct(resolution.product);
+      ref
+          .read(stockIssueComposerProvider.notifier)
+          .addProduct(resolution.product);
     } catch (e) {
       if (!mounted) return;
       showAppSnackBar(
@@ -206,7 +214,8 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
     if (_isPostedLocked) {
       showAppSnackBar(
         context,
-        message: 'لا يمكن تعديل المستند وهو في حالة (مرحّل). يرجى إلغاء الترحيل أولاً.',
+        message:
+            'لا يمكن تعديل المستند وهو في حالة (مرحّل). يرجى إلغاء الترحيل أولاً.',
         isSuccess: false,
       );
       return;
@@ -412,7 +421,9 @@ class _StockIssueHeaderCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final dateLabel = DateFormat('d/M/yyyy').format(state.issueDate);
-    final rawNumber = (state.previewIssueNumber != null && state.previewIssueNumber!.isNotEmpty)
+    final rawNumber =
+        (state.previewIssueNumber != null &&
+            state.previewIssueNumber!.isNotEmpty)
         ? state.previewIssueNumber!
         : (state.voucherBook?.previewNumber ?? '—');
     final numberView = rawNumber.length > 14
@@ -431,7 +442,8 @@ class _StockIssueHeaderCard extends ConsumerWidget {
             : 'اختر المستودع',
       ),
     );
-    final warehouseDisplay = (state.warehouse != null && state.warehouse!.isNotEmpty)
+    final warehouseDisplay =
+        (state.warehouse != null && state.warehouse!.isNotEmpty)
         ? selectedWarehouse.name
         : null;
 
@@ -496,7 +508,9 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                             InventoryVoucherBookRef? chosenBook;
                             await AppFilterSheet.show<void>(
                               context: context,
-                              title: l10n.localeName == 'ar' ? 'دفاتر المخزون' : 'Voucher Books',
+                              title: l10n.localeName == 'ar'
+                                  ? 'دفاتر المخزون'
+                                  : 'Voucher Books',
                               applyLabel: l10n.stockIssueSaveButton,
                               onApply: () {},
                               children: [
@@ -506,7 +520,8 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                                       b.bookId == state.voucherBook?.bookId
                                           ? Icons.check_circle
                                           : Icons.circle_outlined,
-                                      color: b.bookId == state.voucherBook?.bookId
+                                      color:
+                                          b.bookId == state.voucherBook?.bookId
                                           ? theme.colorScheme.primary
                                           : theme.colorScheme.onSurfaceVariant,
                                     ),
@@ -518,7 +533,8 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                                   ),
                               ],
                             );
-                            if (chosenBook != null) onVoucherBookSelected(chosenBook!);
+                            if (chosenBook != null)
+                              onVoucherBookSelected(chosenBook!);
                           }
                         : null,
                   ),
@@ -582,7 +598,8 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                     value: state.currencyCode,
                     placeholder: l10n.salesCurrency,
                     onTap: () async {
-                      final currencyListItems = currencyItemsAsync.asData?.value ?? [];
+                      final currencyListItems =
+                          currencyItemsAsync.asData?.value ?? [];
                       CurrencyRateListItem? chosenCurrency;
                       await AppFilterSheet.show<void>(
                         context: context,
@@ -597,11 +614,14 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                                   item.currency.code == state.currencyCode
                                       ? Icons.check_circle
                                       : Icons.circle_outlined,
-                                  color: item.currency.code == state.currencyCode
+                                  color:
+                                      item.currency.code == state.currencyCode
                                       ? theme.colorScheme.primary
                                       : theme.colorScheme.onSurfaceVariant,
                                 ),
-                                title: Text('${item.currency.code} - ${item.currency.nameAr}'),
+                                title: Text(
+                                  '${item.currency.code} - ${item.currency.nameAr}',
+                                ),
                                 subtitle: item.isBase
                                     ? Text(l10n.salesBaseCurrency)
                                     : Text(
@@ -628,7 +648,10 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                         ],
                       );
                       if (chosenCurrency != null) {
-                        onCurrencyChanged(chosenCurrency!.currency.code, chosenCurrency!.displayRate);
+                        onCurrencyChanged(
+                          chosenCurrency!.currency.code,
+                          chosenCurrency!.displayRate,
+                        );
                       }
                     },
                   ),
@@ -687,7 +710,9 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
       accountId: pickedAccount.uuid as String,
       code: pickedAccount.accountCode as String,
       name: pickedAccount.name as String,
-      systemKey: pickedAccount.isSystemAccount == true ? (pickedAccount.accountCode as String) : null,
+      systemKey: pickedAccount.isSystemAccount == true
+          ? (pickedAccount.accountCode as String)
+          : null,
     );
     widget.onAccountSelected(ref);
     _closeSearch();
@@ -779,15 +804,20 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: scheme.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                                    color: scheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.xs,
+                                    ),
                                   ),
                                   child: Text(
                                     selectedAccount.code,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: scheme.primary,
-                                      fontWeight: FontWeight.w900,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: scheme.primary,
+                                          fontWeight: FontWeight.w900,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -831,8 +861,6 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
   }
 }
 
-
-
 /// Multi-column spreadsheet editor matching SaleProductsTable.
 class StockIssueProductsTable extends StatefulWidget {
   const StockIssueProductsTable({
@@ -853,7 +881,8 @@ class StockIssueProductsTable extends StatefulWidget {
   final VoidCallback? onScanBarcode;
 
   @override
-  State<StockIssueProductsTable> createState() => _StockIssueProductsTableState();
+  State<StockIssueProductsTable> createState() =>
+      _StockIssueProductsTableState();
 }
 
 class _StockIssueProductsTableState extends State<StockIssueProductsTable> {
@@ -940,10 +969,7 @@ class _StockIssueProductsTableState extends State<StockIssueProductsTable> {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    this.onScanBarcode,
-  });
+  const _SectionHeader({required this.title, this.onScanBarcode});
 
   final String title;
   final VoidCallback? onScanBarcode;
@@ -969,9 +995,7 @@ class _SectionHeader extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: scheme.primary.withValues(alpha: 0.12)),
           ),
           child: Icon(
             Icons.inventory_2_outlined,
@@ -1019,7 +1043,9 @@ class _TableHeader extends StatelessWidget {
         vertical: AppSpacing.sm + 2,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.55,
+        ),
         border: Border(
           bottom: BorderSide(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
@@ -1038,19 +1064,35 @@ class _TableHeader extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.main,
-            child: Text('الكمية الرئيسية', style: style, textAlign: TextAlign.center),
+            child: Text(
+              'الكمية الرئيسية',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
           ),
           SizedBox(
             width: _Cols.sub,
-            child: Text('الكمية الفرعية', style: style, textAlign: TextAlign.center),
+            child: Text(
+              'الكمية الفرعية',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
           ),
           SizedBox(
             width: _Cols.cost,
-            child: Text('تكلفة الوحدة', style: style, textAlign: TextAlign.center),
+            child: Text(
+              'تكلفة الوحدة',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
           ),
           SizedBox(
             width: _Cols.total,
-            child: Text('إجمالي التكلفة', style: style, textAlign: TextAlign.end),
+            child: Text(
+              'إجمالي التكلفة',
+              style: style,
+              textAlign: TextAlign.end,
+            ),
           ),
           const SizedBox(width: _Cols.actions),
         ],
@@ -1072,7 +1114,8 @@ class _TableFooter extends StatelessWidget {
     final totalSub = items.fold(0.0, (sum, i) => sum + i.subQuantity);
     final totalCostSum = items.fold(0.0, (sum, i) => sum + i.totalCost);
 
-    String fmtQty(double v) => v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
+    String fmtQty(double v) =>
+        v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
 
     final style = theme.textTheme.labelSmall?.copyWith(
       fontWeight: FontWeight.w800,
@@ -1093,9 +1136,7 @@ class _TableFooter extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
         border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.45),
-          ),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.45)),
         ),
       ),
       child: Row(
@@ -1106,10 +1147,7 @@ class _TableFooter extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.product,
-            child: Text(
-              'المجموع الإجمالي (${items.length})',
-              style: style,
-            ),
+            child: Text('المجموع الإجمالي (${items.length})', style: style),
           ),
           SizedBox(
             width: _Cols.main,
@@ -1129,11 +1167,7 @@ class _TableFooter extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.cost,
-            child: Text(
-              '—',
-              style: style,
-              textAlign: TextAlign.center,
-            ),
+            child: Text('—', style: style, textAlign: TextAlign.center),
           ),
           SizedBox(
             width: _Cols.total,
@@ -1238,7 +1272,8 @@ class _FilledRow extends StatelessWidget {
                   decimalPlaces: 3,
                   trimTrailingZeros: true,
                   variant: AppAmountFieldVariant.compact,
-                  onChanged: (main) => onQuantitiesChanged(main, item.subQuantity),
+                  onChanged: (main) =>
+                      onQuantitiesChanged(main, item.subQuantity),
                 ),
               ),
             ),
@@ -1251,7 +1286,8 @@ class _FilledRow extends StatelessWidget {
                   decimalPlaces: 3,
                   trimTrailingZeros: true,
                   variant: AppAmountFieldVariant.compact,
-                  onChanged: (sub) => onQuantitiesChanged(item.mainQuantity, sub),
+                  onChanged: (sub) =>
+                      onQuantitiesChanged(item.mainQuantity, sub),
                 ),
               ),
             ),
@@ -1301,9 +1337,6 @@ class _FilledRow extends StatelessWidget {
   }
 }
 
-
-
-
 class _DraftProductRow extends ConsumerStatefulWidget {
   const _DraftProductRow({
     super.key,
@@ -1349,9 +1382,12 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: productsAsync.when(
           data: (products) {
-            final query = normalizeDigitsToWestern(_controller.text).toLowerCase().trim();
+            final query = normalizeDigitsToWestern(
+              _controller.text,
+            ).toLowerCase().trim();
             final filtered = products.where((p) {
-              return p.name.toLowerCase().contains(query) || p.itemCode.toLowerCase().contains(query);
+              return p.name.toLowerCase().contains(query) ||
+                  p.itemCode.toLowerCase().contains(query);
             }).toList();
 
             return Column(
@@ -1362,7 +1398,10 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     hintText: 'ابحث عن صنف بالاسم أو الرمز...',
-                    prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: scheme.primary,
+                    ),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.close_rounded),
                       onPressed: widget.onCancel,
@@ -1389,7 +1428,9 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                           final p = filtered[i];
                           return ListTile(
                             title: Text(p.name),
-                            subtitle: Text('الرمز: ${p.itemCode} | التكلفة للمنتج: ${p.unitCost.toStringAsFixed(2)} | المتوفر: ${p.onHandQty}'),
+                            subtitle: Text(
+                              'الرمز: ${p.itemCode} | التكلفة للمنتج: ${p.unitCost.toStringAsFixed(2)} | المتوفر: ${p.onHandQty}',
+                            ),
                             onTap: () => widget.onProductSelected(p),
                           );
                         },
@@ -1408,10 +1449,7 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
 }
 
 class _TableActionsBar extends StatelessWidget {
-  const _TableActionsBar({
-    required this.onAdd,
-    required this.addLabel,
-  });
+  const _TableActionsBar({required this.onAdd, required this.addLabel});
 
   final VoidCallback onAdd;
   final String addLabel;
@@ -1472,5 +1510,3 @@ class _AddRowButton extends StatelessWidget {
     );
   }
 }
-
-

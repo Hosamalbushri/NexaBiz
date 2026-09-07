@@ -12,11 +12,7 @@ import '../../domain/repositories/product_repository.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
-  ProductRepositoryImpl(
-    this._db, {
-    this._syncQueue,
-    this._readCompanyId,
-  });
+  ProductRepositoryImpl(this._db, {this._syncQueue, this._readCompanyId});
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
@@ -206,10 +202,9 @@ class ProductRepositoryImpl implements ProductRepository {
     if (code.isEmpty) {
       return null;
     }
-    final row =
-        await (_db.select(_db.products)
-              ..where((t) => t.itemCode.equals(code) & _scoped(t)))
-            .getSingleOrNull();
+    final row = await (_db.select(
+      _db.products,
+    )..where((t) => t.itemCode.equals(code) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -233,8 +228,7 @@ class ProductRepositoryImpl implements ProductRepository {
   ) {
     final contains = '%$normalized%';
     return switch (searchField) {
-      CatalogSearchField.name =>
-        t.name.collate(Collate.noCase).like(contains),
+      CatalogSearchField.name => t.name.collate(Collate.noCase).like(contains),
       CatalogSearchField.code =>
         t.itemCode.collate(Collate.noCase).like(contains),
       CatalogSearchField.barcode =>
@@ -452,7 +446,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.products)..where((t) => t.id.equals(id) & _scoped(t))).write(
+    await (_db.update(
+      _db.products,
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       ProductsCompanion(
         itemCode: Value(code),
         name: Value(name),
@@ -485,23 +481,26 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     // Referential Integrity Guard: Cannot delete product with open cost layers or posted movement lines
-    final openLayers = await (_db.select(_db.inventoryCostLayers)
-          ..where((t) =>
-              t.itemCode.equals(existing.itemCode) &
-              t.closed.equals(0) &
-              t.companyId.equals(_currentCompanyId)))
-        .get();
+    final openLayers =
+        await (_db.select(_db.inventoryCostLayers)..where(
+              (t) =>
+                  t.itemCode.equals(existing.itemCode) &
+                  t.closed.equals(0) &
+                  t.companyId.equals(_currentCompanyId),
+            ))
+            .get();
     if (openLayers.isNotEmpty) {
       throw StateError(
         'Referential Integrity Error: Cannot delete Product (${existing.itemCode}) because ${openLayers.length} open CostLayer(s) exist for this item.',
       );
     }
 
-    final postedLines = await (_db.select(_db.stockMovementLines)
-          ..where((t) =>
-              t.itemCode.equals(existing.itemCode) &
-              t.postedAt.isNotNull()))
-        .get();
+    final postedLines =
+        await (_db.select(_db.stockMovementLines)..where(
+              (t) =>
+                  t.itemCode.equals(existing.itemCode) & t.postedAt.isNotNull(),
+            ))
+            .get();
     if (postedLines.isNotEmpty) {
       throw StateError(
         'Referential Integrity Error: Cannot delete Product (${existing.itemCode}) because ${postedLines.length} posted movement lines exist.',
@@ -510,7 +509,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.products)..where((t) => t.id.equals(id) & _scoped(t))).write(
+    await (_db.update(
+      _db.products,
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       ProductsCompanion(
         deletedAt: Value(now.millisecondsSinceEpoch),
         updatedAt: Value(now.millisecondsSinceEpoch),
@@ -534,7 +535,9 @@ class ProductRepositoryImpl implements ProductRepository {
     DateTime? syncedAt,
   }) async {
     final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
-    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    await (_db.update(
+      _db.products,
+    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       ProductsCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(stamp),
@@ -544,9 +547,9 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
-      const ProductsCompanion(syncStatus: Value('conflict')),
-    );
+    await (_db.update(_db.products)
+          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
+        .write(const ProductsCompanion(syncStatus: Value('conflict')));
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
@@ -596,13 +599,17 @@ class ProductRepositoryImpl implements ProductRepository {
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
               version: Value(version),
-              companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
+              companyId: Value(
+                payload['companyId']?.toString() ?? _currentCompanyId,
+              ),
             ),
           );
       return;
     }
 
-    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+    await (_db.update(
+      _db.products,
+    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
       ProductsCompanion(
         itemCode: Value(payload['itemCode']?.toString() ?? existing.itemCode),
         name: Value(payload['name']?.toString() ?? existing.name),
@@ -641,8 +648,7 @@ class ProductRepositoryImpl implements ProductRepository {
     final nowMs = now.millisecondsSinceEpoch;
     final touched = <Product>[];
 
-    final existingRows =
-        await (_db.select(_db.products)..where(_scoped)).get();
+    final existingRows = await (_db.select(_db.products)..where(_scoped)).get();
     final byCode = <String, Product>{};
     final byBarcode = <String, Product>{};
     for (final row in existingRows) {
@@ -798,10 +804,9 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     return _db.transaction(() async {
-      final row =
-          await (_db.select(_db.products)
-                ..where((t) => t.uuid.equals(id) & _scoped(t)))
-              .getSingleOrNull();
+      final row = await (_db.select(
+        _db.products,
+      )..where((t) => t.uuid.equals(id) & _scoped(t))).getSingleOrNull();
       if (row == null) {
         throw const ProductException(ProductException.notFound);
       }
@@ -813,17 +818,18 @@ class ProductRepositoryImpl implements ProductRepository {
 
       final now = DateTime.now().toUtc();
       final nextVersion = row.version + 1;
-      final updatedRows = await (_db.update(_db.products)
-            ..where((t) => t.id.equals(row.id) & _scoped(t)))
-          .write(
-        ProductsCompanion(
-          onHandQty: Value(nextQty < 0 ? 0 : nextQty),
-          updatedAt: Value(now.millisecondsSinceEpoch),
-          syncStatus: const Value('pending'),
-          version: Value(nextVersion),
-          companyId: Value(_currentCompanyId),
-        ),
-      );
+      final updatedRows =
+          await (_db.update(
+            _db.products,
+          )..where((t) => t.id.equals(row.id) & _scoped(t))).write(
+            ProductsCompanion(
+              onHandQty: Value(nextQty < 0 ? 0 : nextQty),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              syncStatus: const Value('pending'),
+              version: Value(nextVersion),
+              companyId: Value(_currentCompanyId),
+            ),
+          );
       if (updatedRows == 0) {
         throw const ProductException(ProductException.notFound);
       }

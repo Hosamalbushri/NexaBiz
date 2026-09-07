@@ -23,29 +23,34 @@ class SubscriptionPackagesPage extends ConsumerWidget {
     final entitlementAsync = ref.watch(currentEntitlementProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.subscriptionAndPackagesTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.subscriptionAndPackagesTitle)),
       body: cloudState.isLocalOnly
           ? _buildLocalCompanyOnboardingView(context, ref, cloudState)
           : cloudState.cloudStatus == CompanyCloudStatus.provisioningFailed
-              ? _buildProvisioningFailedView(context, ref, cloudState)
-              : cloudState.cloudStatus == CompanyCloudStatus.provisioning ||
-                      cloudState.cloudStatus == CompanyCloudStatus.initialSyncing
-                  ? _buildMigrationProgressView(context, ref, cloudState)
-                  : entitlementAsync.when(
-                      data: (entitlement) =>
-                          _buildCloudReadySubscriptionView(context, ref, cloudState, entitlement),
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (err, stack) =>
-                          Center(child: Text('Error loading subscription: $err')),
-                    ),
+          ? _buildProvisioningFailedView(context, ref, cloudState)
+          : cloudState.cloudStatus == CompanyCloudStatus.provisioning ||
+                cloudState.cloudStatus == CompanyCloudStatus.initialSyncing
+          ? _buildMigrationProgressView(context, ref, cloudState)
+          : entitlementAsync.when(
+              data: (entitlement) => _buildCloudReadySubscriptionView(
+                context,
+                ref,
+                cloudState,
+                entitlement,
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) =>
+                  Center(child: Text('Error loading subscription: $err')),
+            ),
     );
   }
 
   /// Onboarding view for LOCAL_ONLY company.
   Widget _buildLocalCompanyOnboardingView(
-      BuildContext context, WidgetRef ref, CompanyCloudState cloudState) {
+    BuildContext context,
+    WidgetRef ref,
+    CompanyCloudState cloudState,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -71,7 +76,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                         color: colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.offline_pin, color: colorScheme.onPrimaryContainer),
+                      child: Icon(
+                        Icons.offline_pin,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
@@ -92,10 +100,30 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _buildBenefitItem(context, Icons.cloud_sync, 'Cloud Synchronization', 'Sync sales and accounting seamlessly across devices.'),
-                _buildBenefitItem(context, Icons.devices, 'Multi-device Access', 'Connect multiple POS registers and worker devices.'),
-                _buildBenefitItem(context, Icons.cloud_done, 'Cloud Backup & Restore', 'Never lose your business records.'),
-                _buildBenefitItem(context, Icons.add_shopping_cart, 'Premium Add-on Packages', 'Multi-branch management and team roles.'),
+                _buildBenefitItem(
+                  context,
+                  Icons.cloud_sync,
+                  'Cloud Synchronization',
+                  'Sync sales and accounting seamlessly across devices.',
+                ),
+                _buildBenefitItem(
+                  context,
+                  Icons.devices,
+                  'Multi-device Access',
+                  'Connect multiple POS registers and worker devices.',
+                ),
+                _buildBenefitItem(
+                  context,
+                  Icons.cloud_done,
+                  'Cloud Backup & Restore',
+                  'Never lose your business records.',
+                ),
+                _buildBenefitItem(
+                  context,
+                  Icons.add_shopping_cart,
+                  'Premium Add-on Packages',
+                  'Multi-branch management and team roles.',
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -147,21 +175,32 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                 leading: const Icon(Icons.cloud_sync, color: Colors.grey),
                 title: const Text('Cloud Sync Package'),
                 subtitle: const Text('Real-time database synchronization'),
-                trailing: const Text('Included in Starter', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                trailing: const Text(
+                  'Included in Starter',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.devices, color: Colors.grey),
                 title: const Text('Multi-Device Access'),
                 subtitle: const Text('Support up to 10 registers'),
-                trailing: const Text('Included in Starter', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                trailing: const Text(
+                  'Included in Starter',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.store, color: Colors.grey),
                 title: const Text('Multi-Branch Management'),
-                subtitle: const Text('Consolidated reports for multi-store setup'),
-                trailing: const Text('Requires Business Plan', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                subtitle: const Text(
+                  'Consolidated reports for multi-store setup',
+                ),
+                trailing: const Text(
+                  'Requires Business Plan',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -170,7 +209,12 @@ class SubscriptionPackagesPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildBenefitItem(BuildContext context, IconData icon, String title, String subtitle) {
+  Widget _buildBenefitItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -183,8 +227,19 @@ class SubscriptionPackagesPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
@@ -195,10 +250,15 @@ class SubscriptionPackagesPage extends ConsumerWidget {
 
   /// Provisioning / migration progress view.
   Widget _buildMigrationProgressView(
-      BuildContext context, WidgetRef ref, CompanyCloudState cloudState) {
+    BuildContext context,
+    WidgetRef ref,
+    CompanyCloudState cloudState,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final provisioningState = ref.watch(companyProvisioningControllerProvider).value;
+    final provisioningState = ref
+        .watch(companyProvisioningControllerProvider)
+        .value;
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -218,21 +278,37 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   'Preparing your cloud workspace',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  provisioningState?.stepMessage ?? 'Setting up server environment...',
+                  provisioningState?.stepMessage ??
+                      'Setting up server environment...',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const Divider(),
                 const SizedBox(height: AppSpacing.md),
                 _buildProgressCheck('Company setup', true),
-                _buildProgressCheck('Cloud admin linked', cloudState.cloudStatus.index >= CompanyCloudStatus.cloudAdminLinked.index),
-                _buildProgressCheck('Subscription active', cloudState.cloudStatus.index >= CompanyCloudStatus.subscriptionActive.index),
-                _buildProgressCheck('Uploading local data', cloudState.cloudStatus == CompanyCloudStatus.initialSyncing),
+                _buildProgressCheck(
+                  'Cloud admin linked',
+                  cloudState.cloudStatus.index >=
+                      CompanyCloudStatus.cloudAdminLinked.index,
+                ),
+                _buildProgressCheck(
+                  'Subscription active',
+                  cloudState.cloudStatus.index >=
+                      CompanyCloudStatus.subscriptionActive.index,
+                ),
+                _buildProgressCheck(
+                  'Uploading local data',
+                  cloudState.cloudStatus == CompanyCloudStatus.initialSyncing,
+                ),
               ],
             ),
           ),
@@ -260,7 +336,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
 
   /// Provisioning failed view with Retry and Continue Offline options.
   Widget _buildProvisioningFailedView(
-      BuildContext context, WidgetRef ref, CompanyCloudState cloudState) {
+    BuildContext context,
+    WidgetRef ref,
+    CompanyCloudState cloudState,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -276,13 +355,18 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   'Cloud setup could not be completed',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  cloudState.lastProvisioningError ?? 'Network or connection error during provisioning.',
+                  cloudState.lastProvisioningError ??
+                      'Network or connection error during provisioning.',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.error,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Wrap(
@@ -292,12 +376,15 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                   children: [
                     OutlinedButton(
                       onPressed: () {
-                        ref.read(companyCloudStateProvider.notifier).setStatus(CompanyCloudStatus.localOnly);
+                        ref
+                            .read(companyCloudStateProvider.notifier)
+                            .setStatus(CompanyCloudStatus.localOnly);
                       },
                       child: const Text('Continue Offline'),
                     ),
                     ElevatedButton(
-                      onPressed: () => CloudProvisioningFlowDialog.show(context),
+                      onPressed: () =>
+                          CloudProvisioningFlowDialog.show(context),
                       child: const Text('Retry Setup'),
                     ),
                   ],
@@ -339,14 +426,21 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Chip(
-                      avatar: const Icon(Icons.star, size: 18, color: Colors.amber),
+                      avatar: const Icon(
+                        Icons.star,
+                        size: 18,
+                        color: Colors.amber,
+                      ),
                       label: Text(
                         entitlement.tier.name.toUpperCase(),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -372,7 +466,9 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                 if (cloudState.serverCompanyId != null)
                   Text(
                     'Server Company ID: ${cloudState.serverCompanyId}',
-                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 Text(
                   'Verified: ${entitlement.lastVerifiedAt.toLocal().toString().split('.').first}',
@@ -421,14 +517,21 @@ class SubscriptionPackagesPage extends ConsumerWidget {
               ListTile(
                 leading: Icon(
                   Icons.store,
-                  color: entitlement.hasCapability(EntitlementCapability.multiBranch)
+                  color:
+                      entitlement.hasCapability(
+                        EntitlementCapability.multiBranch,
+                      )
                       ? Colors.green
                       : colorScheme.onSurfaceVariant,
                 ),
                 title: Text(l10n.multiBranchCapabilityTitle),
-                trailing: entitlement.hasCapability(EntitlementCapability.multiBranch)
+                trailing:
+                    entitlement.hasCapability(EntitlementCapability.multiBranch)
                     ? const Icon(Icons.check_circle, color: Colors.green)
-                    : Text(l10n.capabilityLockedLabel, style: const TextStyle(color: Colors.grey)),
+                    : Text(
+                        l10n.capabilityLockedLabel,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
               ),
             ],
           ),
@@ -484,7 +587,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('$used / $limit', style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              '$used / $limit',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         const SizedBox(height: 6),

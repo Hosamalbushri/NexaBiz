@@ -46,7 +46,8 @@ class RelationDefinition {
     dynamic rawReference,
     ResolutionStrategy strategy, [
     String? companyId,
-  ]) lookupFn;
+  ])
+  lookupFn;
 
   /// Whether missing relations may be auto-created during persistence phase.
   final bool allowCreationIfMissing;

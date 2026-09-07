@@ -21,11 +21,15 @@ class FinancialReferentialIntegrityValidator {
   /// Validates that a CostLayer does NOT have dependent CostConsumptions before deletion.
   Future<void> validateCostLayerDeletion(String layerUuid) async {
     final compId = _companyId;
-    final consumptions = await (_invDb.select(_invDb.inventoryCostConsumptions)
-          ..where((t) =>
-              t.layerUuid.equals(layerUuid) &
-              (compId != null ? t.companyId.equals(compId) : const Constant(true))))
-        .get();
+    final consumptions =
+        await (_invDb.select(_invDb.inventoryCostConsumptions)..where(
+              (t) =>
+                  t.layerUuid.equals(layerUuid) &
+                  (compId != null
+                      ? t.companyId.equals(compId)
+                      : const Constant(true)),
+            ))
+            .get();
 
     if (consumptions.isNotEmpty) {
       throw StateError(
@@ -60,18 +64,26 @@ class FinancialReferentialIntegrityValidator {
     required String issueLineUuid,
   }) async {
     if (layerUuid.trim().isEmpty) {
-      throw StateError('Referential Integrity Error: CostConsumption must reference a valid layerUuid.');
+      throw StateError(
+        'Referential Integrity Error: CostConsumption must reference a valid layerUuid.',
+      );
     }
     if (issueLineUuid.trim().isEmpty) {
-      throw StateError('Referential Integrity Error: CostConsumption must reference a valid issueLineUuid.');
+      throw StateError(
+        'Referential Integrity Error: CostConsumption must reference a valid issueLineUuid.',
+      );
     }
 
     final compId = _companyId;
-    final layer = await (_invDb.select(_invDb.inventoryCostLayers)
-          ..where((t) =>
-              t.uuid.equals(layerUuid) &
-              (compId != null ? t.companyId.equals(compId) : const Constant(true))))
-        .getSingleOrNull();
+    final layer =
+        await (_invDb.select(_invDb.inventoryCostLayers)..where(
+              (t) =>
+                  t.uuid.equals(layerUuid) &
+                  (compId != null
+                      ? t.companyId.equals(compId)
+                      : const Constant(true)),
+            ))
+            .getSingleOrNull();
 
     if (layer == null) {
       throw StateError(
@@ -87,11 +99,15 @@ class FinancialReferentialIntegrityValidator {
     if (accDb == null) return;
 
     final compId = _companyId;
-    final entry = await (accDb.select(accDb.journalEntries)
-          ..where((t) =>
-              t.uuid.equals(entryUuid) &
-              (compId != null ? t.companyId.equals(compId) : const Constant(true))))
-        .getSingleOrNull();
+    final entry =
+        await (accDb.select(accDb.journalEntries)..where(
+              (t) =>
+                  t.uuid.equals(entryUuid) &
+                  (compId != null
+                      ? t.companyId.equals(compId)
+                      : const Constant(true)),
+            ))
+            .getSingleOrNull();
 
     if (entry == null) return;
 
@@ -115,24 +131,34 @@ class FinancialReferentialIntegrityValidator {
     required String accountUuid,
   }) async {
     if (entryUuid.trim().isEmpty) {
-      throw StateError('Referential Integrity Error: JournalLine must reference a non-empty entryUuid.');
+      throw StateError(
+        'Referential Integrity Error: JournalLine must reference a non-empty entryUuid.',
+      );
     }
     if (accountUuid.trim().isEmpty) {
-      throw StateError('Referential Integrity Error: JournalLine must reference a valid accountUuid.');
+      throw StateError(
+        'Referential Integrity Error: JournalLine must reference a valid accountUuid.',
+      );
     }
 
     final accDb = _accDb;
     if (accDb == null) return;
 
     final compId = _companyId;
-    final entry = await (accDb.select(accDb.journalEntries)
-          ..where((t) =>
-              t.uuid.equals(entryUuid) &
-              (compId != null ? t.companyId.equals(compId) : const Constant(true))))
-        .getSingleOrNull();
+    final entry =
+        await (accDb.select(accDb.journalEntries)..where(
+              (t) =>
+                  t.uuid.equals(entryUuid) &
+                  (compId != null
+                      ? t.companyId.equals(compId)
+                      : const Constant(true)),
+            ))
+            .getSingleOrNull();
 
     if (entry == null) {
-      throw StateError('Referential Integrity Error: Target JournalEntry ($entryUuid) does not exist.');
+      throw StateError(
+        'Referential Integrity Error: Target JournalEntry ($entryUuid) does not exist.',
+      );
     }
   }
 
@@ -141,12 +167,16 @@ class FinancialReferentialIntegrityValidator {
   Future<void> validateWarehouseDeletion(String warehouseUuid) async {
     final compId = _companyId;
 
-    final openLayers = await (_invDb.select(_invDb.inventoryCostLayers)
-          ..where((t) =>
-              t.warehouseId.equals(warehouseUuid) &
-              t.closed.equals(0) &
-              (compId != null ? t.companyId.equals(compId) : const Constant(true))))
-        .get();
+    final openLayers =
+        await (_invDb.select(_invDb.inventoryCostLayers)..where(
+              (t) =>
+                  t.warehouseId.equals(warehouseUuid) &
+                  t.closed.equals(0) &
+                  (compId != null
+                      ? t.companyId.equals(compId)
+                      : const Constant(true)),
+            ))
+            .get();
 
     if (openLayers.isNotEmpty) {
       throw StateError(
@@ -154,12 +184,16 @@ class FinancialReferentialIntegrityValidator {
       );
     }
 
-    final stocks = await (_invDb.select(_invDb.productWarehouseStocks)
-          ..where((t) =>
-              t.warehouseId.equals(warehouseUuid) &
-              t.onHandQty.isBiggerThanValue(0.0001) &
-              (compId != null ? t.companyId.equals(compId) : const Constant(true))))
-        .get();
+    final stocks =
+        await (_invDb.select(_invDb.productWarehouseStocks)..where(
+              (t) =>
+                  t.warehouseId.equals(warehouseUuid) &
+                  t.onHandQty.isBiggerThanValue(0.0001) &
+                  (compId != null
+                      ? t.companyId.equals(compId)
+                      : const Constant(true)),
+            ))
+            .get();
 
     if (stocks.isNotEmpty) {
       throw StateError(
@@ -173,12 +207,16 @@ class FinancialReferentialIntegrityValidator {
   Future<void> validateProductDeletion(String itemCode) async {
     final compId = _companyId;
 
-    final openLayers = await (_invDb.select(_invDb.inventoryCostLayers)
-          ..where((t) =>
-              t.itemCode.equals(itemCode) &
-              t.closed.equals(0) &
-              (compId != null ? t.companyId.equals(compId) : const Constant(true))))
-        .get();
+    final openLayers =
+        await (_invDb.select(_invDb.inventoryCostLayers)..where(
+              (t) =>
+                  t.itemCode.equals(itemCode) &
+                  t.closed.equals(0) &
+                  (compId != null
+                      ? t.companyId.equals(compId)
+                      : const Constant(true)),
+            ))
+            .get();
 
     if (openLayers.isNotEmpty) {
       throw StateError(
@@ -186,11 +224,11 @@ class FinancialReferentialIntegrityValidator {
       );
     }
 
-    final postedLines = await (_invDb.select(_invDb.stockMovementLines)
-          ..where((t) =>
-              t.itemCode.equals(itemCode) &
-              t.postedAt.isNotNull()))
-        .get();
+    final postedLines =
+        await (_invDb.select(_invDb.stockMovementLines)..where(
+              (t) => t.itemCode.equals(itemCode) & t.postedAt.isNotNull(),
+            ))
+            .get();
 
     if (postedLines.isNotEmpty) {
       throw StateError(

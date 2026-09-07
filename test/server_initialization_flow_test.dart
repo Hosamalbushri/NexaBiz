@@ -39,7 +39,10 @@ class MockSyncEntityHandler implements SyncEntityHandler {
   }) async {}
 
   @override
-  Future<void> markLocalConflict({required String entityId, String? message}) async {}
+  Future<void> markLocalConflict({
+    required String entityId,
+    String? message,
+  }) async {}
 
   @override
   Future<void> confirmPull() async {}
@@ -55,49 +58,59 @@ class MockSyncEntityHandler implements SyncEntityHandler {
 
 void main() {
   group('Server Initialization Flow Tests', () {
-    test('Mock handler captures remote entity payload changes correctly', () async {
-      final handler = MockSyncEntityHandler('account');
-      final change = SyncRemoteChange(
-        entityType: 'account',
-        entityId: 'acc_123',
-        version: 1,
-        updatedAt: DateTime.utc(2026, 1, 1),
-        deleted: false,
-        payload: {
-          'id': 'acc_123',
-          'code': '1010',
-          'name': 'Cash on Hand',
-          'accountType': 'asset',
-        },
-      );
+    test(
+      'Mock handler captures remote entity payload changes correctly',
+      () async {
+        final handler = MockSyncEntityHandler('account');
+        final change = SyncRemoteChange(
+          entityType: 'account',
+          entityId: 'acc_123',
+          version: 1,
+          updatedAt: DateTime.utc(2026, 1, 1),
+          deleted: false,
+          payload: {
+            'id': 'acc_123',
+            'code': '1010',
+            'name': 'Cash on Hand',
+            'accountType': 'asset',
+          },
+        );
 
-      await handler.applyRemoteChange(change);
+        await handler.applyRemoteChange(change);
 
-      expect(handler.appliedChanges.length, equals(1));
-      expect(handler.appliedChanges.first.entityId, equals('acc_123'));
-      expect(handler.appliedChanges.first.payload['code'], equals('1010'));
-    });
+        expect(handler.appliedChanges.length, equals(1));
+        expect(handler.appliedChanges.first.entityId, equals('acc_123'));
+        expect(handler.appliedChanges.first.payload['code'], equals('1010'));
+      },
+    );
 
-    test('AuthState in remote mode with authenticated status allows remote sync', () {
-      final capturedAt = DateTime.now().toUtc();
-      final snapshot = AuthSessionSnapshot(
-        user: const AuthUser(id: 'usr_1', name: 'Admin', email: 'admin@nexabiz.com'),
-        companies: const [],
-        roles: const ['admin'],
-        permissions: const {'sync.execute'},
-        currentCompanyId: 'comp_1',
-        capturedAt: capturedAt,
-      );
+    test(
+      'AuthState in remote mode with authenticated status allows remote sync',
+      () {
+        final capturedAt = DateTime.now().toUtc();
+        final snapshot = AuthSessionSnapshot(
+          user: const AuthUser(
+            id: 'usr_1',
+            name: 'Admin',
+            email: 'admin@nexabiz.com',
+          ),
+          companies: const [],
+          roles: const ['admin'],
+          permissions: const {'sync.execute'},
+          currentCompanyId: 'comp_1',
+          capturedAt: capturedAt,
+        );
 
-      final state = AuthState(
-        status: AuthStatus.authenticated,
-        session: snapshot,
-        backend: AuthBackend.remote,
-      );
+        final state = AuthState(
+          status: AuthStatus.authenticated,
+          session: snapshot,
+          backend: AuthBackend.remote,
+        );
 
-      expect(state.isAuthenticated, isTrue);
-      expect(state.canUseRemoteSync, isTrue);
-    });
+        expect(state.isAuthenticated, isTrue);
+        expect(state.canUseRemoteSync, isTrue);
+      },
+    );
 
     test('InitializationState ready status indicates successful bootstrap', () {
       final completedAt = DateTime.now();

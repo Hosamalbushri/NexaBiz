@@ -10,10 +10,7 @@ import '../providers/auth_providers.dart';
 
 /// Modal bottom sheet to view detailed company profile and ownership data.
 class CompanyDetailsSheet extends ConsumerStatefulWidget {
-  const CompanyDetailsSheet({
-    super.key,
-    required this.company,
-  });
+  const CompanyDetailsSheet({super.key, required this.company});
 
   final AuthCompany company;
 
@@ -177,7 +174,8 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
 
                   final profile = snapshot.data ?? const CompanyProfile();
                   final session = ref.watch(authStateProvider).session;
-                  final isCurrentlyActive = session?.currentCompanyId == company.id;
+                  final isCurrentlyActive =
+                      session?.currentCompanyId == company.id;
                   final activeContext = session?.activeCompanyContext;
 
                   return Column(
@@ -189,13 +187,19 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: isCurrentlyActive
-                              ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                              ? colorScheme.primaryContainer.withValues(
+                                  alpha: 0.3,
+                                )
+                              : colorScheme.surfaceContainerHighest.withValues(
+                                  alpha: 0.5,
+                                ),
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(
                             color: isCurrentlyActive
                                 ? colorScheme.primary.withValues(alpha: 0.4)
-                                : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                                : colorScheme.outlineVariant.withValues(
+                                    alpha: 0.3,
+                                  ),
                           ),
                         ),
                         child: Column(
@@ -240,12 +244,15 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
                             _buildContextText(
                               context,
                               label: 'رمز الشركة (Code):',
-                              value: company.code.isNotEmpty ? company.code : 'غير محدد',
+                              value: company.code.isNotEmpty
+                                  ? company.code
+                                  : 'غير محدد',
                             ),
                             _buildContextText(
                               context,
                               label: 'الدور في السياق (Role):',
-                              value: company.role ??
+                              value:
+                                  company.role ??
                                   (session?.user.isSuperAdmin == true
                                       ? 'Owner (SuperAdmin)'
                                       : 'Member'),
@@ -375,11 +382,7 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: colorScheme.primary,
-          ),
+          Icon(icon, size: 20, color: colorScheme.primary),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(

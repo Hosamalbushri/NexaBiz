@@ -34,7 +34,8 @@ enum ImportStatus {
 
     switch (this) {
       case ImportStatus.draft:
-        return next == ImportStatus.configured || next == ImportStatus.cancelled;
+        return next == ImportStatus.configured ||
+            next == ImportStatus.cancelled;
       case ImportStatus.configured:
         return next == ImportStatus.parsing || next == ImportStatus.cancelled;
       case ImportStatus.parsing:

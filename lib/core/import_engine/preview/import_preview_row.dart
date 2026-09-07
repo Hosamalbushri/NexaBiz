@@ -36,21 +36,26 @@ class ImportPreviewRow {
   final String explanation;
 
   bool get hasWarnings => issues.any((i) => i.severity.name == 'WARNING');
-  bool get hasErrors => issues.any((i) => i.severity.name == 'ERROR' || i.severity.name == 'FATAL');
-  bool get hasRelationProblems => relationResults.values.any((r) => !r.isResolved);
+  bool get hasErrors => issues.any(
+    (i) => i.severity.name == 'ERROR' || i.severity.name == 'FATAL',
+  );
+  bool get hasRelationProblems =>
+      relationResults.values.any((r) => !r.isResolved);
 
   Map<String, dynamic> toJson() => {
-        'rowIndex': rowIndex,
-        'action': action.name,
-        'isSuccess': isSuccess,
-        'issues': issues.map((i) => i.toJson()).toList(),
-        'relationResults': relationResults.map((k, v) => MapEntry(k, {
-              'status': v.status.name,
-              'rawReference': v.rawReference?.toString(),
-              'resolvedId': v.resolvedId,
-              'errorMessage': v.errorMessage,
-            })),
-        'assignedFields': assignedFields,
-        'explanation': explanation,
-      };
+    'rowIndex': rowIndex,
+    'action': action.name,
+    'isSuccess': isSuccess,
+    'issues': issues.map((i) => i.toJson()).toList(),
+    'relationResults': relationResults.map(
+      (k, v) => MapEntry(k, {
+        'status': v.status.name,
+        'rawReference': v.rawReference?.toString(),
+        'resolvedId': v.resolvedId,
+        'errorMessage': v.errorMessage,
+      }),
+    ),
+    'assignedFields': assignedFields,
+    'explanation': explanation,
+  };
 }

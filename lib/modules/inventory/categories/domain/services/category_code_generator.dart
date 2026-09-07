@@ -21,8 +21,9 @@ class CategoryCodeGenerator {
 
     if (parentCategory == null) {
       // Root category under warehouse
-      final rootCategories =
-          whCategories.where((c) => c.parentId == null).toList();
+      final rootCategories = whCategories
+          .where((c) => c.parentId == null)
+          .toList();
       var maxRootNum = 0;
 
       for (final cat in rootCategories) {
@@ -32,7 +33,9 @@ class CategoryCodeGenerator {
         }
       }
 
-      final nextCode = maxRootNum == 0 ? 1000 : ((maxRootNum ~/ 1000) + 1) * 1000;
+      final nextCode = maxRootNum == 0
+          ? 1000
+          : ((maxRootNum ~/ 1000) + 1) * 1000;
       return nextCode.toString();
     } else {
       // Subcategory under parent

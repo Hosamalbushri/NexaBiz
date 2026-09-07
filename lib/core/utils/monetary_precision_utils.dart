@@ -51,7 +51,9 @@ class MonetaryPrecisionUtils {
         final residual = roundTotal(roundedTotal - allocatedSum);
         results.add(residual);
       } else {
-        final linePortion = roundTotal(roundedTotal * (quantities[i] / totalQty));
+        final linePortion = roundTotal(
+          roundedTotal * (quantities[i] / totalQty),
+        );
         results.add(linePortion);
         allocatedSum = roundTotal(allocatedSum + linePortion);
       }

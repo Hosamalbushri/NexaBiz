@@ -54,7 +54,9 @@ void main() {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
 
     // Seed default chart of accounts for accounting poster integration with valid 36-character UUIDs
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: '11111111-1111-1111-1111-111111111111',
             accountCode: '1230',
@@ -70,7 +72,9 @@ void main() {
           ),
         );
 
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: '22222222-2222-2222-2222-222222222222',
             accountCode: '5100',
@@ -88,8 +92,14 @@ void main() {
 
     coordinator = PostingCoordinatorImpl(
       db: db,
-      stockValidationService: StockValidationServiceImpl(db, () => currentTenant),
-      dependencyDetector: InventoryDependencyDetectorImpl(db, () => currentTenant),
+      stockValidationService: StockValidationServiceImpl(
+        db,
+        () => currentTenant,
+      ),
+      dependencyDetector: InventoryDependencyDetectorImpl(
+        db,
+        () => currentTenant,
+      ),
       postingEngine: postingEngine,
       accountingPoster: accountingPoster,
       readCompanyId: () => currentTenant,
@@ -112,7 +122,9 @@ void main() {
       const warehouseId = 'WH-FIFO';
 
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      await db.into(db.products).insert(
+      await db
+          .into(db.products)
+          .insert(
             ProductsCompanion.insert(
               uuid: generateUuidV4(),
               itemCode: itemCode,
@@ -193,12 +205,19 @@ void main() {
       await coordinator.post(document: refRec2);
 
       // Verify Initial Inventory: Stock = 150, Total Cost = $2,000
-      final productAfterReceipt = await (db.select(db.products)
-            ..where((tbl) => tbl.itemCode.equals(itemCode) & tbl.companyId.equals(currentTenant)))
-          .getSingle();
+      final productAfterReceipt =
+          await (db.select(db.products)..where(
+                (tbl) =>
+                    tbl.itemCode.equals(itemCode) &
+                    tbl.companyId.equals(currentTenant),
+              ))
+              .getSingle();
       expect(productAfterReceipt.onHandQty, equals(150.0));
 
-      final layersAfterReceipt = await costLayerService.getOpenLayers(itemCode, warehouseId: warehouseId);
+      final layersAfterReceipt = await costLayerService.getOpenLayers(
+        itemCode,
+        warehouseId: warehouseId,
+      );
       expect(layersAfterReceipt.length, equals(2));
 
       // ----------------------------------------------------
@@ -260,15 +279,22 @@ void main() {
       );
 
       // Verify Consumption: Stock = 30.0, Layer 1 exhausted (0 left), Layer 2 has 30 left
-      final productAfterIssue = await (db.select(db.products)
-            ..where((tbl) => tbl.itemCode.equals(itemCode) & tbl.companyId.equals(currentTenant)))
-          .getSingle();
+      final productAfterIssue =
+          await (db.select(db.products)..where(
+                (tbl) =>
+                    tbl.itemCode.equals(itemCode) &
+                    tbl.companyId.equals(currentTenant),
+              ))
+              .getSingle();
       expect(productAfterIssue.onHandQty, equals(30.0));
 
-      final consumptionsInDb = await (db.select(db.inventoryCostConsumptions)
-            ..where((tbl) => tbl.issueLineUuid.equals(issueLineId)))
-          .get();
-      expect(consumptionsInDb.length, equals(2)); // 2 consumptions (100 from L1, 20 from L2)
+      final consumptionsInDb = await (db.select(
+        db.inventoryCostConsumptions,
+      )..where((tbl) => tbl.issueLineUuid.equals(issueLineId))).get();
+      expect(
+        consumptionsInDb.length,
+        equals(2),
+      ); // 2 consumptions (100 from L1, 20 from L2)
 
       // ----------------------------------------------------
       // Step 3: Reverse Transaction (Unpost Issue)
@@ -278,52 +304,70 @@ void main() {
       // ----------------------------------------------------
       // Step 4: Verify Quantity Restored
       // ----------------------------------------------------
-      final productAfterReversal = await (db.select(db.products)
-            ..where((tbl) => tbl.itemCode.equals(itemCode) & tbl.companyId.equals(currentTenant)))
-          .getSingle();
+      final productAfterReversal =
+          await (db.select(db.products)..where(
+                (tbl) =>
+                    tbl.itemCode.equals(itemCode) &
+                    tbl.companyId.equals(currentTenant),
+              ))
+              .getSingle();
       expect(productAfterReversal.onHandQty, equals(150.0));
 
-      final whStockAfterReversal = await (db.select(db.productWarehouseStocks)
-            ..where((tbl) =>
-                tbl.itemCode.equals(itemCode) &
-                tbl.warehouseId.equals(warehouseId) &
-                tbl.companyId.equals(currentTenant)))
-          .getSingle();
+      final whStockAfterReversal =
+          await (db.select(db.productWarehouseStocks)..where(
+                (tbl) =>
+                    tbl.itemCode.equals(itemCode) &
+                    tbl.warehouseId.equals(warehouseId) &
+                    tbl.companyId.equals(currentTenant),
+              ))
+              .getSingle();
       expect(whStockAfterReversal.onHandQty, equals(150.0));
 
       // ----------------------------------------------------
       // Step 5: Verify Valuation & Layer State Restored
       // ----------------------------------------------------
-      final layersAfterReversal = await costLayerService.getOpenLayers(itemCode, warehouseId: warehouseId);
+      final layersAfterReversal = await costLayerService.getOpenLayers(
+        itemCode,
+        warehouseId: warehouseId,
+      );
       expect(layersAfterReversal.length, equals(2));
 
-      final layer1Restored = layersAfterReversal.firstWhere((l) => l.movementUuid == rec1.id);
+      final layer1Restored = layersAfterReversal.firstWhere(
+        (l) => l.movementUuid == rec1.id,
+      );
       expect(layer1Restored.remainingQty, equals(100.0));
       expect(layer1Restored.closed, isFalse);
 
-      final layer2Restored = layersAfterReversal.firstWhere((l) => l.movementUuid == rec2.id);
+      final layer2Restored = layersAfterReversal.firstWhere(
+        (l) => l.movementUuid == rec2.id,
+      );
       expect(layer2Restored.remainingQty, equals(50.0));
       expect(layer2Restored.closed, isFalse);
 
-      final totalValuation = layersAfterReversal.fold<double>(0.0, (sum, l) => sum + (l.remainingQty * l.unitCost));
+      final totalValuation = layersAfterReversal.fold<double>(
+        0.0,
+        (sum, l) => sum + (l.remainingQty * l.unitCost),
+      );
       expect(totalValuation, equals(2000.0));
 
       // ----------------------------------------------------
       // Step 6: Verify Cost Consumption Records Deleted/Reversed
       // ----------------------------------------------------
-      final consumptionsAfterReversal = await (db.select(db.inventoryCostConsumptions)
-            ..where((tbl) => tbl.issueLineUuid.equals(issueLineId)))
-          .get();
+      final consumptionsAfterReversal = await (db.select(
+        db.inventoryCostConsumptions,
+      )..where((tbl) => tbl.issueLineUuid.equals(issueLineId))).get();
       expect(consumptionsAfterReversal.isEmpty, isTrue);
 
       // ----------------------------------------------------
       // Step 7: Verify Journal Entry Reversal
       // ----------------------------------------------------
-      final journalEntries = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((tbl) => tbl.companyId.equals(currentTenant)))
-          .get();
+      final journalEntries = await (accountingDb.select(
+        accountingDb.journalEntries,
+      )..where((tbl) => tbl.companyId.equals(currentTenant))).get();
       expect(journalEntries.any((j) => j.voucherNumber.endsWith('-R')), isTrue);
-      final reversalJournal = journalEntries.firstWhere((j) => j.voucherNumber.endsWith('-R'));
+      final reversalJournal = journalEntries.firstWhere(
+        (j) => j.voucherNumber.endsWith('-R'),
+      );
       expect(reversalJournal.isPosted, isTrue);
     });
 
@@ -332,7 +376,9 @@ void main() {
       const warehouseId = 'WH-LIFO';
 
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      await db.into(db.products).insert(
+      await db
+          .into(db.products)
+          .insert(
             ProductsCompanion.insert(
               uuid: generateUuidV4(),
               itemCode: itemCode,
@@ -469,7 +515,10 @@ void main() {
       );
 
       // Remaining stock before reversal: 30 units in Layer 1 @ $10 = $300
-      final layersMid = await costLayerService.getOpenLayers(itemCode, warehouseId: warehouseId);
+      final layersMid = await costLayerService.getOpenLayers(
+        itemCode,
+        warehouseId: warehouseId,
+      );
       expect(layersMid.length, equals(1));
       expect(layersMid.first.remainingQty, equals(30.0));
       expect(layersMid.first.movementUuid, equals(rec1.id));
@@ -482,31 +531,42 @@ void main() {
       // ----------------------------------------------------
       // Step 4 & 5: Verify Quantity & Valuation Restored
       // ----------------------------------------------------
-      final productAfterReversal = await (db.select(db.products)
-            ..where((tbl) => tbl.itemCode.equals(itemCode) & tbl.companyId.equals(currentTenant)))
-          .getSingle();
+      final productAfterReversal =
+          await (db.select(db.products)..where(
+                (tbl) =>
+                    tbl.itemCode.equals(itemCode) &
+                    tbl.companyId.equals(currentTenant),
+              ))
+              .getSingle();
       expect(productAfterReversal.onHandQty, equals(150.0));
 
-      final layersAfterReversal = await costLayerService.getOpenLayers(itemCode, warehouseId: warehouseId);
+      final layersAfterReversal = await costLayerService.getOpenLayers(
+        itemCode,
+        warehouseId: warehouseId,
+      );
       expect(layersAfterReversal.length, equals(2));
 
-      final layer1Restored = layersAfterReversal.firstWhere((l) => l.movementUuid == rec1.id);
+      final layer1Restored = layersAfterReversal.firstWhere(
+        (l) => l.movementUuid == rec1.id,
+      );
       expect(layer1Restored.remainingQty, equals(100.0));
 
-      final layer2Restored = layersAfterReversal.firstWhere((l) => l.movementUuid == rec2.id);
+      final layer2Restored = layersAfterReversal.firstWhere(
+        (l) => l.movementUuid == rec2.id,
+      );
       expect(layer2Restored.remainingQty, equals(50.0));
 
       // ----------------------------------------------------
       // Step 6 & 7: Verify Consumptions & Journal Reversal
       // ----------------------------------------------------
-      final consumptionsAfterReversal = await (db.select(db.inventoryCostConsumptions)
-            ..where((tbl) => tbl.issueLineUuid.equals(issueLineId)))
-          .get();
+      final consumptionsAfterReversal = await (db.select(
+        db.inventoryCostConsumptions,
+      )..where((tbl) => tbl.issueLineUuid.equals(issueLineId))).get();
       expect(consumptionsAfterReversal.isEmpty, isTrue);
 
-      final journalEntries = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((tbl) => tbl.companyId.equals(currentTenant)))
-          .get();
+      final journalEntries = await (accountingDb.select(
+        accountingDb.journalEntries,
+      )..where((tbl) => tbl.companyId.equals(currentTenant))).get();
       expect(journalEntries.any((j) => j.voucherNumber.endsWith('-R')), isTrue);
     });
 
@@ -515,7 +575,9 @@ void main() {
       const warehouseId = 'WH-WAC';
 
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      await db.into(db.products).insert(
+      await db
+          .into(db.products)
+          .insert(
             ProductsCompanion.insert(
               uuid: generateUuidV4(),
               itemCode: itemCode,
@@ -660,12 +722,19 @@ void main() {
       // ----------------------------------------------------
       // Step 4, 5, 6, 7: Verify Stock Quantity, Valuation, Consumptions & Journal Entry
       // ----------------------------------------------------
-      final productAfterReversal = await (db.select(db.products)
-            ..where((tbl) => tbl.itemCode.equals(itemCode) & tbl.companyId.equals(currentTenant)))
-          .getSingle();
+      final productAfterReversal =
+          await (db.select(db.products)..where(
+                (tbl) =>
+                    tbl.itemCode.equals(itemCode) &
+                    tbl.companyId.equals(currentTenant),
+              ))
+              .getSingle();
       expect(productAfterReversal.onHandQty, equals(150.0));
 
-      final layersAfterReversal = await costLayerService.getOpenLayers(itemCode, warehouseId: warehouseId);
+      final layersAfterReversal = await costLayerService.getOpenLayers(
+        itemCode,
+        warehouseId: warehouseId,
+      );
       expect(layersAfterReversal.length, equals(2));
 
       final totalRestoredValuation = layersAfterReversal.fold<double>(
@@ -674,14 +743,14 @@ void main() {
       );
       expect(totalRestoredValuation, closeTo(2000.0, 0.01));
 
-      final consumptionsAfterReversal = await (db.select(db.inventoryCostConsumptions)
-            ..where((tbl) => tbl.issueLineUuid.equals(issueLineId)))
-          .get();
+      final consumptionsAfterReversal = await (db.select(
+        db.inventoryCostConsumptions,
+      )..where((tbl) => tbl.issueLineUuid.equals(issueLineId))).get();
       expect(consumptionsAfterReversal.isEmpty, isTrue);
 
-      final journalEntries = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((tbl) => tbl.companyId.equals(currentTenant)))
-          .get();
+      final journalEntries = await (accountingDb.select(
+        accountingDb.journalEntries,
+      )..where((tbl) => tbl.companyId.equals(currentTenant))).get();
       expect(journalEntries.any((j) => j.voucherNumber.endsWith('-R')), isTrue);
     });
   });

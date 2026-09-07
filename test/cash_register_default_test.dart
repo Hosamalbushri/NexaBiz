@@ -53,7 +53,10 @@ class FakeAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<List<Account>> search(String query, {bool includeInactive = false}) async {
+  Future<List<Account>> search(
+    String query, {
+    bool includeInactive = false,
+  }) async {
     return _accounts.values.where((a) => a.name.contains(query)).toList();
   }
 
@@ -71,10 +74,12 @@ class FakeAccountRepository implements AccountRepository {
   Future<bool> isUsedInTransactions(String uuid) async => false;
 
   @override
-  Future<Account> insert(AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> insert(AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
-  Future<Account> update(int id, AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> update(int id, AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
   Future<void> deactivate(int id) async {}
@@ -175,275 +180,533 @@ void main() {
       );
     });
 
-    test('Test 01: No default configured -> resolver returns notConfigured state, no automatic selection', () async {
-      final regA = CashRegister(
-        id: 'reg-a',
-        companyId: companyA,
-        name: 'Register A',
-        code: 'CR-A',
-        isActive: true,
-        accountingAccountId: cashAccountA.uuid,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await cashRepo.createCashRegister(regA);
+    test(
+      'Test 01: No default configured -> resolver returns notConfigured state, no automatic selection',
+      () async {
+        final regA = CashRegister(
+          id: 'reg-a',
+          companyId: companyA,
+          name: 'Register A',
+          code: 'CR-A',
+          isActive: true,
+          accountingAccountId: cashAccountA.uuid,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await cashRepo.createCashRegister(regA);
 
-      final result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.isValid, isFalse);
-      expect(result.errorCode, equals(DefaultCashRegisterErrorCode.notConfigured));
+        final result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.isValid, isFalse);
+        expect(
+          result.errorCode,
+          equals(DefaultCashRegisterErrorCode.notConfigured),
+        );
 
-      final saleAdapter = AccountingSaleTreasuryAdapter(accountRepo, cashRegisterRepository: cashRepo);
-      final defaultBox = await saleAdapter.findDefaultCashBox();
-      expect(defaultBox, isNull);
-    });
+        final saleAdapter = AccountingSaleTreasuryAdapter(
+          accountRepo,
+          cashRegisterRepository: cashRepo,
+        );
+        final defaultBox = await saleAdapter.findDefaultCashBox();
+        expect(defaultBox, isNull);
+      },
+    );
 
-    test('Test 02: Valid default configured -> automatically resolved for new documents', () async {
-      final regA = CashRegister(
-        id: 'reg-a',
-        companyId: companyA,
-        name: 'Register A',
-        code: 'CR-A',
-        isActive: true,
-        accountingAccountId: cashAccountA.uuid,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await cashRepo.createCashRegister(regA);
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: 'reg-a');
+    test(
+      'Test 02: Valid default configured -> automatically resolved for new documents',
+      () async {
+        final regA = CashRegister(
+          id: 'reg-a',
+          companyId: companyA,
+          name: 'Register A',
+          code: 'CR-A',
+          isActive: true,
+          accountingAccountId: cashAccountA.uuid,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await cashRepo.createCashRegister(regA);
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: 'reg-a',
+        );
 
-      final result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.isValid, isTrue);
-      expect(result.register?.id, equals('reg-a'));
-      expect(result.linkedAccount?.uuid, equals(cashAccountA.uuid));
+        final result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.isValid, isTrue);
+        expect(result.register?.id, equals('reg-a'));
+        expect(result.linkedAccount?.uuid, equals(cashAccountA.uuid));
 
-      final saleAdapter = AccountingSaleTreasuryAdapter(accountRepo, cashRegisterRepository: cashRepo);
-      final defaultBox = await saleAdapter.findDefaultCashBox();
-      expect(defaultBox, isNotNull);
-      expect(defaultBox?.accountId, equals(cashAccountA.uuid));
-    });
+        final saleAdapter = AccountingSaleTreasuryAdapter(
+          accountRepo,
+          cashRegisterRepository: cashRepo,
+        );
+        final defaultBox = await saleAdapter.findDefaultCashBox();
+        expect(defaultBox, isNotNull);
+        expect(defaultBox?.accountId, equals(cashAccountA.uuid));
+      },
+    );
 
-    test('Test 03: Multiple registers -> default auto-selected, ready registers available as options, unlinked hidden', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-b', companyId: companyA, name: 'Reg B', code: 'B', isActive: true,
-        accountingAccountId: cashAccountB.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-c-unlinked', companyId: companyA, name: 'Reg C', code: 'C', isActive: true,
-        accountingAccountId: null, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
+    test(
+      'Test 03: Multiple registers -> default auto-selected, ready registers available as options, unlinked hidden',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-b',
+            companyId: companyA,
+            name: 'Reg B',
+            code: 'B',
+            isActive: true,
+            accountingAccountId: cashAccountB.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-c-unlinked',
+            companyId: companyA,
+            name: 'Reg C',
+            code: 'C',
+            isActive: true,
+            accountingAccountId: null,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
 
-      final ready = await cashRepo.getAccountingReadyCashRegisters(companyA);
-      expect(ready.length, equals(2));
-      expect(ready.any((r) => r.id == 'reg-c-unlinked'), isFalse);
+        final ready = await cashRepo.getAccountingReadyCashRegisters(companyA);
+        expect(ready.length, equals(2));
+        expect(ready.any((r) => r.id == 'reg-c-unlinked'), isFalse);
 
-      final result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.register?.id, equals('reg-a'));
-    });
+        final result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.register?.id, equals('reg-a'));
+      },
+    );
 
-    test('Test 04: Setting unlinked Cash Register as default is rejected', () async {
-      final regUnlinked = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-u', companyId: companyA, name: 'Unlinked', code: 'U', isActive: true,
-        accountingAccountId: null, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
+    test(
+      'Test 04: Setting unlinked Cash Register as default is rejected',
+      () async {
+        final regUnlinked = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-u',
+            companyId: companyA,
+            name: 'Unlinked',
+            code: 'U',
+            isActive: true,
+            accountingAccountId: null,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      expect(
-        () => cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regUnlinked.id),
-        throwsA(isA<CashRegisterException>()),
-      );
-    });
+        expect(
+          () => cashRepo.setDefaultCashRegisterId(
+            companyId: companyA,
+            registerId: regUnlinked.id,
+          ),
+          throwsA(isA<CashRegisterException>()),
+        );
+      },
+    );
 
-    test('Test 05: Default register becomes unlinked -> default becomes INVALID, no silent fallback', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-b', companyId: companyA, name: 'Reg B', code: 'B', isActive: true,
-        accountingAccountId: cashAccountB.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
+    test(
+      'Test 05: Default register becomes unlinked -> default becomes INVALID, no silent fallback',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-b',
+            companyId: companyA,
+            name: 'Reg B',
+            code: 'B',
+            isActive: true,
+            accountingAccountId: cashAccountB.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
 
-      // Unlink Reg A
-      await cashRepo.unlinkAccountingAccount(registerId: 'reg-a', companyId: companyA);
+        // Unlink Reg A
+        await cashRepo.unlinkAccountingAccount(
+          registerId: 'reg-a',
+          companyId: companyA,
+        );
 
-      final result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.isValid, isFalse);
-      expect(result.errorCode, equals(DefaultCashRegisterErrorCode.registerUnlinked));
+        final result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.isValid, isFalse);
+        expect(
+          result.errorCode,
+          equals(DefaultCashRegisterErrorCode.registerUnlinked),
+        );
 
-      // Adapter must NOT fall back to Reg B automatically
-      final saleAdapter = AccountingSaleTreasuryAdapter(accountRepo, cashRegisterRepository: cashRepo);
-      final defaultBox = await saleAdapter.findDefaultCashBox();
-      expect(defaultBox, isNull);
-    });
+        // Adapter must NOT fall back to Reg B automatically
+        final saleAdapter = AccountingSaleTreasuryAdapter(
+          accountRepo,
+          cashRegisterRepository: cashRepo,
+        );
+        final defaultBox = await saleAdapter.findDefaultCashBox();
+        expect(defaultBox, isNull);
+      },
+    );
 
-    test('Test 06: Default account becomes inactive -> default becomes INVALID, no silent fallback', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
+    test(
+      'Test 06: Default account becomes inactive -> default becomes INVALID, no silent fallback',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
 
-      // Deactivate cashAccountA in accountRepo
-      accountRepo.addAccount(cashAccountA.copyWith(isActive: false));
+        // Deactivate cashAccountA in accountRepo
+        accountRepo.addAccount(cashAccountA.copyWith(isActive: false));
 
-      final result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.isValid, isFalse);
-      expect(result.errorCode, equals(DefaultCashRegisterErrorCode.accountInactive));
+        final result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.isValid, isFalse);
+        expect(
+          result.errorCode,
+          equals(DefaultCashRegisterErrorCode.accountInactive),
+        );
 
-      final saleAdapter = AccountingSaleTreasuryAdapter(accountRepo, cashRegisterRepository: cashRepo);
-      final defaultBox = await saleAdapter.findDefaultCashBox();
-      expect(defaultBox, isNull);
-    });
+        final saleAdapter = AccountingSaleTreasuryAdapter(
+          accountRepo,
+          cashRegisterRepository: cashRepo,
+        );
+        final defaultBox = await saleAdapter.findDefaultCashBox();
+        expect(defaultBox, isNull);
+      },
+    );
 
-    test('Test 07: Change default from A to B -> new documents resolve B', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      final regB = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-b', companyId: companyA, name: 'Reg B', code: 'B', isActive: true,
-        accountingAccountId: cashAccountB.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
+    test(
+      'Test 07: Change default from A to B -> new documents resolve B',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        final regB = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-b',
+            companyId: companyA,
+            name: 'Reg B',
+            code: 'B',
+            isActive: true,
+            accountingAccountId: cashAccountB.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
-      var result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.register?.id, equals('reg-a'));
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
+        var result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.register?.id, equals('reg-a'));
 
-      // Switch default to B
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regB.id);
-      result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.register?.id, equals('reg-b'));
-    });
+        // Switch default to B
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regB.id,
+        );
+        result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.register?.id, equals('reg-b'));
+      },
+    );
 
-    test('Test 08: Manual override in document -> override used, default remains unchanged', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      final regB = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-b', companyId: companyA, name: 'Reg B', code: 'B', isActive: true,
-        accountingAccountId: cashAccountB.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
+    test(
+      'Test 08: Manual override in document -> override used, default remains unchanged',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        final regB = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-b',
+            companyId: companyA,
+            name: 'Reg B',
+            code: 'B',
+            isActive: true,
+            accountingAccountId: cashAccountB.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
 
-      final saleAdapter = AccountingSaleTreasuryAdapter(accountRepo, cashRegisterRepository: cashRepo);
+        final saleAdapter = AccountingSaleTreasuryAdapter(
+          accountRepo,
+          cashRegisterRepository: cashRepo,
+        );
 
-      // Default resolves to A
-      final defaultBox = await saleAdapter.findDefaultCashBox();
-      expect(defaultBox?.accountId, equals(cashAccountA.uuid));
+        // Default resolves to A
+        final defaultBox = await saleAdapter.findDefaultCashBox();
+        expect(defaultBox?.accountId, equals(cashAccountA.uuid));
 
-      // User manually selects B by ID
-      final selectedBox = await saleAdapter.findById(regB.id);
-      expect(selectedBox?.accountId, equals(cashAccountB.uuid));
+        // User manually selects B by ID
+        final selectedBox = await saleAdapter.findById(regB.id);
+        expect(selectedBox?.accountId, equals(cashAccountB.uuid));
 
-      // System default remains A
-      final defaultStillA = await cashRepo.getDefaultCashRegisterId(companyA);
-      expect(defaultStillA, equals('reg-a'));
-    });
+        // System default remains A
+        final defaultStillA = await cashRepo.getDefaultCashRegisterId(companyA);
+        expect(defaultStillA, equals('reg-a'));
+      },
+    );
 
-    test('Test 09: Company isolation -> Company A default != Company B default', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
+    test(
+      'Test 09: Company isolation -> Company A default != Company B default',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      final cashAccountForB = Account(
-        id: 4,
-        uuid: 'acc-cash-comp-b',
-        accountCode: '1101-B',
-        name: 'Main Cash B',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-        level: 2,
-        isGroup: false,
-        isActive: true,
-        isSystemAccount: false,
-        companyId: companyB,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      accountRepo.addAccount(cashAccountForB);
+        final cashAccountForB = Account(
+          id: 4,
+          uuid: 'acc-cash-comp-b',
+          accountCode: '1101-B',
+          name: 'Main Cash B',
+          accountType: AccountType.asset,
+          normalBalance: NormalBalance.debit,
+          level: 2,
+          isGroup: false,
+          isActive: true,
+          isSystemAccount: false,
+          companyId: companyB,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        accountRepo.addAccount(cashAccountForB);
 
-      final regB = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-b-comp-b', companyId: companyB, name: 'Reg B', code: 'B', isActive: true,
-        accountingAccountId: cashAccountForB.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
+        final regB = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-b-comp-b',
+            companyId: companyB,
+            name: 'Reg B',
+            code: 'B',
+            isActive: true,
+            accountingAccountId: cashAccountForB.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
-      await cashRepo.setDefaultCashRegisterId(companyId: companyB, registerId: regB.id);
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyB,
+          registerId: regB.id,
+        );
 
-      final defaultA = await resolver.resolveDefaultCashRegister(companyA);
-      final defaultB = await resolver.resolveDefaultCashRegister(companyB);
+        final defaultA = await resolver.resolveDefaultCashRegister(companyA);
+        final defaultB = await resolver.resolveDefaultCashRegister(companyB);
 
-      expect(defaultA.register?.id, equals('reg-a'));
-      expect(defaultB.register?.id, equals('reg-b-comp-b'));
+        expect(defaultA.register?.id, equals('reg-a'));
+        expect(defaultB.register?.id, equals('reg-b-comp-b'));
 
-      // Cross company set attempt is rejected
-      expect(
-        () => cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regB.id),
-        throwsA(isA<CashRegisterException>()),
-      );
-    });
+        // Cross company set attempt is rejected
+        expect(
+          () => cashRepo.setDefaultCashRegisterId(
+            companyId: companyA,
+            registerId: regB.id,
+          ),
+          throwsA(isA<CashRegisterException>()),
+        );
+      },
+    );
 
-    test('Test 10: Posting -> Document references default register -> posting uses concrete COA account', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
+    test(
+      'Test 10: Posting -> Document references default register -> posting uses concrete COA account',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
 
-      final rpAdapter = AccountingRpTreasuryAdapter(accountRepo, cashRegisterRepository: cashRepo);
-      final defaultBox = await rpAdapter.findDefaultCashBox();
+        final rpAdapter = AccountingRpTreasuryAdapter(
+          accountRepo,
+          cashRegisterRepository: cashRepo,
+        );
+        final defaultBox = await rpAdapter.findDefaultCashBox();
 
-      expect(defaultBox, isNotNull);
-      expect(defaultBox?.accountId, equals(cashAccountA.uuid));
-      expect(defaultBox?.code, equals('1101'));
-    });
+        expect(defaultBox, isNotNull);
+        expect(defaultBox?.accountId, equals(cashAccountA.uuid));
+        expect(defaultBox?.code, equals('1101'));
+      },
+    );
 
-    test('Test 11: Historical integrity -> Changing default after document creation does not mutate historical link', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      final regB = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-b', companyId: companyA, name: 'Reg B', code: 'B', isActive: true,
-        accountingAccountId: cashAccountB.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
+    test(
+      'Test 11: Historical integrity -> Changing default after document creation does not mutate historical link',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        final regB = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-b',
+            companyId: companyA,
+            name: 'Reg B',
+            code: 'B',
+            isActive: true,
+            accountingAccountId: cashAccountB.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
-      final historicalDocAccountId = cashAccountA.uuid;
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
+        final historicalDocAccountId = cashAccountA.uuid;
 
-      // Change default to B
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regB.id);
+        // Change default to B
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regB.id,
+        );
 
-      // Historical document posted account ID remains cashAccountA
-      expect(historicalDocAccountId, equals('acc-cash-a'));
-    });
+        // Historical document posted account ID remains cashAccountA
+        expect(historicalDocAccountId, equals('acc-cash-a'));
+      },
+    );
 
-    test('Test 12: Cache invalidation -> Default change immediately reflected in resolver', () async {
-      final regA = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-a', companyId: companyA, name: 'Reg A', code: 'A', isActive: true,
-        accountingAccountId: cashAccountA.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
-      final regB = await cashRepo.createCashRegister(CashRegister(
-        id: 'reg-b', companyId: companyA, name: 'Reg B', code: 'B', isActive: true,
-        accountingAccountId: cashAccountB.uuid, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-      ));
+    test(
+      'Test 12: Cache invalidation -> Default change immediately reflected in resolver',
+      () async {
+        final regA = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-a',
+            companyId: companyA,
+            name: 'Reg A',
+            code: 'A',
+            isActive: true,
+            accountingAccountId: cashAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        final regB = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'reg-b',
+            companyId: companyA,
+            name: 'Reg B',
+            code: 'B',
+            isActive: true,
+            accountingAccountId: cashAccountB.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regA.id);
-      var result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.register?.id, equals('reg-a'));
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regA.id,
+        );
+        var result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.register?.id, equals('reg-a'));
 
-      // Update default immediately
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: regB.id);
-      result = await resolver.resolveDefaultCashRegister(companyA);
-      expect(result.register?.id, equals('reg-b'));
-    });
+        // Update default immediately
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: regB.id,
+        );
+        result = await resolver.resolveDefaultCashRegister(companyA);
+        expect(result.register?.id, equals('reg-b'));
+      },
+    );
   });
 }

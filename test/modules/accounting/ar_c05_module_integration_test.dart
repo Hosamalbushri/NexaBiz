@@ -28,14 +28,20 @@ class MockLookupPort implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return _accounts.values
         .where((a) => (companyId == null || a.companyId == companyId))
         .toList();
   }
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return _accounts.values
         .where((a) => (companyId == null || a.companyId == companyId))
         .toList();
@@ -50,7 +56,12 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 
   @override
   Future<void> saveBinding(AccountBinding binding) async {
-    _bindings[_key(binding.companyId, binding.packageId, binding.requirementKey)] = binding;
+    _bindings[_key(
+          binding.companyId,
+          binding.packageId,
+          binding.requirementKey,
+        )] =
+        binding;
   }
 
   @override
@@ -107,7 +118,8 @@ class MockAccountRepositoryForSafetyGate implements AccountRepository {
   }
 
   @override
-  Future<Account?> getById(int id) async => _store.values.where((a) => a.id == id).firstOrNull;
+  Future<Account?> getById(int id) async =>
+      _store.values.where((a) => a.id == id).firstOrNull;
 
   @override
   Future<void> ensureDefaultChartSeeded() async {}
@@ -156,96 +168,105 @@ void main() {
   });
 
   group('AR-C05 Module Accounting Integration Verification', () {
-    test('1. Valid configuration posting for all business modules (Cash, Bank, Customer, Supplier, Inventory, Sales, Purchases)', () async {
-      final cashAcc = const SetupAccountData(
-        uuid: 'acc-cash-reg-01',
-        accountCode: '101001',
-        companyId: 'compA',
-        accountType: SetupAccountType.asset,
-        isGroup: false,
-        isActive: true,
-        isDeleted: false,
-        canPost: true,
-      );
-      lookupPort.addAccount(cashAcc);
-
-      final req = const AccountRequirement(
-        packageId: 'treasury',
-        requirementKey: 'cash_register_account',
-        role: AccountRole.cash,
-        labelAr: 'حساب الصندوق الفرعي',
-        labelEn: 'Cash Register Account',
-        expectedAccountType: SetupAccountType.asset,
-        bindingMode: AccountBindingMode.exact,
-      );
-
-      await resolver.bindAccount(
-        companyId: 'compA',
-        requirement: req,
-        accountUuid: 'acc-cash-reg-01',
-      );
-
-      final resolved = await resolver.resolveAccountForTransaction(
-        companyId: 'compA',
-        requirement: req,
-      );
-
-      expect(resolved.uuid, equals('acc-cash-reg-01'));
-      expect(resolved.accountCode, equals('101001'));
-    });
-
-    test('2. Missing configuration handling throws AccountBindingException', () async {
-      final reqUnbound = const AccountRequirement(
-        packageId: 'purchases',
-        requirementKey: 'purchases_payable',
-        role: AccountRole.payable,
-        labelAr: 'حساب الموردين',
-        labelEn: 'Payables Account',
-        expectedAccountType: SetupAccountType.liability,
-        bindingMode: AccountBindingMode.exact,
-      );
-
-      expect(
-        () => resolver.resolveAccountForTransaction(
+    test(
+      '1. Valid configuration posting for all business modules (Cash, Bank, Customer, Supplier, Inventory, Sales, Purchases)',
+      () async {
+        final cashAcc = const SetupAccountData(
+          uuid: 'acc-cash-reg-01',
+          accountCode: '101001',
           companyId: 'compA',
-          requirement: reqUnbound,
-        ),
-        throwsA(isA<AccountBindingException>()),
-      );
-    });
+          accountType: SetupAccountType.asset,
+          isGroup: false,
+          isActive: true,
+          isDeleted: false,
+          canPost: true,
+        );
+        lookupPort.addAccount(cashAcc);
 
-    test('3. Wrong account type configuration rejection (e.g. Asset bound to Liability requirement)', () async {
-      final assetAcc = const SetupAccountData(
-        uuid: 'acc-asset-99',
-        accountCode: '120001',
-        companyId: 'compA',
-        accountType: SetupAccountType.asset,
-        isGroup: false,
-        isActive: true,
-        isDeleted: false,
-        canPost: true,
-      );
-      lookupPort.addAccount(assetAcc);
+        final req = const AccountRequirement(
+          packageId: 'treasury',
+          requirementKey: 'cash_register_account',
+          role: AccountRole.cash,
+          labelAr: 'حساب الصندوق الفرعي',
+          labelEn: 'Cash Register Account',
+          expectedAccountType: SetupAccountType.asset,
+          bindingMode: AccountBindingMode.exact,
+        );
 
-      final reqLiability = const AccountRequirement(
-        packageId: 'accounting',
-        requirementKey: 'supplier_payable',
-        role: AccountRole.payable,
-        labelAr: 'حساب المورد',
-        labelEn: 'Supplier Payable Account',
-        expectedAccountType: SetupAccountType.liability,
-        bindingMode: AccountBindingMode.exact,
-      );
-
-      expect(
-        () => resolver.bindAccount(
+        await resolver.bindAccount(
           companyId: 'compA',
-          requirement: reqLiability,
-          accountUuid: 'acc-asset-99',
-        ),
-        throwsA(isA<AccountBindingException>()),
-      );
-    });
+          requirement: req,
+          accountUuid: 'acc-cash-reg-01',
+        );
+
+        final resolved = await resolver.resolveAccountForTransaction(
+          companyId: 'compA',
+          requirement: req,
+        );
+
+        expect(resolved.uuid, equals('acc-cash-reg-01'));
+        expect(resolved.accountCode, equals('101001'));
+      },
+    );
+
+    test(
+      '2. Missing configuration handling throws AccountBindingException',
+      () async {
+        final reqUnbound = const AccountRequirement(
+          packageId: 'purchases',
+          requirementKey: 'purchases_payable',
+          role: AccountRole.payable,
+          labelAr: 'حساب الموردين',
+          labelEn: 'Payables Account',
+          expectedAccountType: SetupAccountType.liability,
+          bindingMode: AccountBindingMode.exact,
+        );
+
+        expect(
+          () => resolver.resolveAccountForTransaction(
+            companyId: 'compA',
+            requirement: reqUnbound,
+          ),
+          throwsA(isA<AccountBindingException>()),
+        );
+      },
+    );
+
+    test(
+      '3. Wrong account type configuration rejection (e.g. Asset bound to Liability requirement)',
+      () async {
+        final assetAcc = const SetupAccountData(
+          uuid: 'acc-asset-99',
+          accountCode: '120001',
+          companyId: 'compA',
+          accountType: SetupAccountType.asset,
+          isGroup: false,
+          isActive: true,
+          isDeleted: false,
+          canPost: true,
+        );
+        lookupPort.addAccount(assetAcc);
+
+        final reqLiability = const AccountRequirement(
+          packageId: 'accounting',
+          requirementKey: 'supplier_payable',
+          role: AccountRole.payable,
+          labelAr: 'حساب المورد',
+          labelEn: 'Supplier Payable Account',
+          expectedAccountType: SetupAccountType.liability,
+          bindingMode: AccountBindingMode.exact,
+        );
+
+        expect(
+          () => resolver.bindAccount(
+            companyId: 'compA',
+            requirement: reqLiability,
+            accountUuid: 'acc-asset-99',
+          ),
+          throwsA(isA<AccountBindingException>()),
+        );
+      },
+    );
 
     test('4. Cross-company tenant isolation rejection', () async {
       final compBAcc = const SetupAccountData(
@@ -346,72 +367,80 @@ void main() {
       );
     });
 
-    test('7. SafetyGate rejects non-postable group account for single binding mode', () async {
-      final groupAccount = Account(
-        id: 201,
-        uuid: 'acc-group-root',
-        accountCode: '101000',
-        name: 'مجموعة الصناديق',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-        level: 1,
-        isGroup: true,
-        isActive: true,
-        isSystemAccount: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: 'compA',
-      );
-      accountRepo.add(groupAccount);
-
-      final targetGroupAsSingle = AccountBindingTarget.single('acc-group-root');
-
-      expect(
-        () => safetyGate.validateTargetBinding(
+    test(
+      '7. SafetyGate rejects non-postable group account for single binding mode',
+      () async {
+        final groupAccount = Account(
+          id: 201,
+          uuid: 'acc-group-root',
+          accountCode: '101000',
+          name: 'مجموعة الصناديق',
+          accountType: AccountType.asset,
+          normalBalance: NormalBalance.debit,
+          level: 1,
+          isGroup: true,
+          isActive: true,
+          isSystemAccount: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
           companyId: 'compA',
+        );
+        accountRepo.add(groupAccount);
+
+        final targetGroupAsSingle = AccountBindingTarget.single(
+          'acc-group-root',
+        );
+
+        expect(
+          () => safetyGate.validateTargetBinding(
+            companyId: 'compA',
+            role: AccountRole.cash,
+            target: targetGroupAsSingle,
+          ),
+          throwsA(isA<AccountBindingValidationException>()),
+        );
+      },
+    );
+
+    test(
+      '8. Valid descendant resolution within parent scope (Cash Parent -> Cash Register Account)',
+      () async {
+        final cashRegAcc = const SetupAccountData(
+          uuid: 'acc-cash-box-reg-1',
+          accountCode: '101101',
+          companyId: 'compA',
+          accountType: SetupAccountType.asset,
+          isGroup: false,
+          isActive: true,
+          isDeleted: false,
+          canPost: true,
+        );
+        lookupPort.addAccount(cashRegAcc);
+
+        final reqParent = const AccountRequirement(
+          packageId: 'treasury',
+          requirementKey: 'cash_parent_group',
           role: AccountRole.cash,
-          target: targetGroupAsSingle,
-        ),
-        throwsA(isA<AccountBindingValidationException>()),
-      );
-    });
+          labelAr: 'مجموعة الصناديق',
+          labelEn: 'Cash Parent Group',
+          expectedAccountType: SetupAccountType.asset,
+          bindingMode: AccountBindingMode.parent,
+        );
 
-    test('8. Valid descendant resolution within parent scope (Cash Parent -> Cash Register Account)', () async {
-      final cashRegAcc = const SetupAccountData(
-        uuid: 'acc-cash-box-reg-1',
-        accountCode: '101101',
-        companyId: 'compA',
-        accountType: SetupAccountType.asset,
-        isGroup: false,
-        isActive: true,
-        isDeleted: false,
-        canPost: true,
-      );
-      lookupPort.addAccount(cashRegAcc);
+        await resolver.bindAccount(
+          companyId: 'compA',
+          requirement: reqParent,
+          accountUuid: 'acc-cash-box-reg-1',
+        );
 
-      final reqParent = const AccountRequirement(
-        packageId: 'treasury',
-        requirementKey: 'cash_parent_group',
-        role: AccountRole.cash,
-        labelAr: 'مجموعة الصناديق',
-        labelEn: 'Cash Parent Group',
-        expectedAccountType: SetupAccountType.asset,
-        bindingMode: AccountBindingMode.parent,
-      );
+        final resolved = await resolver.resolveAccountForTransaction(
+          companyId: 'compA',
+          requirement: reqParent,
+        );
 
-      await resolver.bindAccount(
-        companyId: 'compA',
-        requirement: reqParent,
-        accountUuid: 'acc-cash-box-reg-1',
-      );
-
-      final resolved = await resolver.resolveAccountForTransaction(
-        companyId: 'compA',
-        requirement: reqParent,
-      );
-
-      expect(resolved.uuid, equals('acc-cash-box-reg-1'));
-    });
+        expect(resolved.uuid, equals('acc-cash-box-reg-1'));
+      },
+    );
 
     test('9. Dynamic configuration change propagation', () async {
       final oldAcc = const SetupAccountData(
@@ -452,7 +481,10 @@ void main() {
         requirement: req,
         accountUuid: 'acc-sales-old',
       );
-      var resolved = await resolver.resolveAccountForTransaction(companyId: 'compA', requirement: req);
+      var resolved = await resolver.resolveAccountForTransaction(
+        companyId: 'compA',
+        requirement: req,
+      );
       expect(resolved.uuid, equals('acc-sales-old'));
 
       // Update binding
@@ -461,47 +493,53 @@ void main() {
         requirement: req,
         accountUuid: 'acc-sales-new',
       );
-      resolved = await resolver.resolveAccountForTransaction(companyId: 'compA', requirement: req);
+      resolved = await resolver.resolveAccountForTransaction(
+        companyId: 'compA',
+        requirement: req,
+      );
       expect(resolved.uuid, equals('acc-sales-new'));
     });
 
-    test('10. Journal entry verification: concrete account UUID recorded with zero silent fallback', () async {
-      final cogsAcc = const SetupAccountData(
-        uuid: 'acc-cogs-01',
-        accountCode: '501001',
-        companyId: 'compA',
-        accountType: SetupAccountType.expense,
-        isGroup: false,
-        isActive: true,
-        isDeleted: false,
-        canPost: true,
-      );
-      lookupPort.addAccount(cogsAcc);
+    test(
+      '10. Journal entry verification: concrete account UUID recorded with zero silent fallback',
+      () async {
+        final cogsAcc = const SetupAccountData(
+          uuid: 'acc-cogs-01',
+          accountCode: '501001',
+          companyId: 'compA',
+          accountType: SetupAccountType.expense,
+          isGroup: false,
+          isActive: true,
+          isDeleted: false,
+          canPost: true,
+        );
+        lookupPort.addAccount(cogsAcc);
 
-      final reqCogs = const AccountRequirement(
-        packageId: 'inventory',
-        requirementKey: 'inventory_cogs',
-        role: AccountRole.cogs,
-        labelAr: 'حساب تكلفة المبيعات',
-        labelEn: 'COGS Account',
-        expectedAccountType: SetupAccountType.expense,
-        bindingMode: AccountBindingMode.exact,
-      );
+        final reqCogs = const AccountRequirement(
+          packageId: 'inventory',
+          requirementKey: 'inventory_cogs',
+          role: AccountRole.cogs,
+          labelAr: 'حساب تكلفة المبيعات',
+          labelEn: 'COGS Account',
+          expectedAccountType: SetupAccountType.expense,
+          bindingMode: AccountBindingMode.exact,
+        );
 
-      await resolver.bindAccount(
-        companyId: 'compA',
-        requirement: reqCogs,
-        accountUuid: 'acc-cogs-01',
-      );
+        await resolver.bindAccount(
+          companyId: 'compA',
+          requirement: reqCogs,
+          accountUuid: 'acc-cogs-01',
+        );
 
-      final resolved = await resolver.resolveAccountForTransaction(
-        companyId: 'compA',
-        requirement: reqCogs,
-      );
+        final resolved = await resolver.resolveAccountForTransaction(
+          companyId: 'compA',
+          requirement: reqCogs,
+        );
 
-      expect(resolved.uuid, isNotEmpty);
-      expect(resolved.uuid, equals('acc-cogs-01'));
-      expect(resolved.accountCode, equals('501001'));
-    });
+        expect(resolved.uuid, isNotEmpty);
+        expect(resolved.uuid, equals('acc-cogs-01'));
+        expect(resolved.accountCode, equals('501001'));
+      },
+    );
   });
 }

@@ -109,8 +109,9 @@ class VoucherBookSectionPage extends ConsumerWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       border: Border.all(
-                        color: theme.colorScheme.outlineVariant
-                            .withValues(alpha: 0.5),
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                     child: Padding(
@@ -122,10 +123,10 @@ class VoucherBookSectionPage extends ConsumerWidget {
                             height: 48,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.12),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.sm),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.12,
+                              ),
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
                             ),
                             child: Icon(
                               voucherBookTypeIcon(kind),

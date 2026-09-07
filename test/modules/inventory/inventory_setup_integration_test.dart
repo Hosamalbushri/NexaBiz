@@ -17,10 +17,16 @@ class FakeSetupAccountLookupPort implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async => [];
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async => [];
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async => [];
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async => [];
 }
 
 void main() {
@@ -80,117 +86,138 @@ void main() {
       );
     });
 
-    test('1. CentralSetupRegistry discovers Inventory setup via module registration', () {
-      InventoryModule.register(setupRegistry: registry);
+    test(
+      '1. CentralSetupRegistry discovers Inventory setup via module registration',
+      () {
+        InventoryModule.register(setupRegistry: registry);
 
-      expect(registry.isRegistered('inventory'), isTrue);
+        expect(registry.isRegistered('inventory'), isTrue);
 
-      final setup = registry.get('inventory');
-      expect(setup, isNotNull);
-      expect(setup!.packageId, equals('inventory'));
-      expect(setup.displayName('ar'), equals('إعدادات المخزون'));
-      expect(setup.displayName('en'), equals('Inventory Setup'));
-      expect(setup.sortOrder, equals(20));
-    });
+        final setup = registry.get('inventory');
+        expect(setup, isNotNull);
+        expect(setup!.packageId, equals('inventory'));
+        expect(setup.displayName('ar'), equals('إعدادات المخزون'));
+        expect(setup.displayName('en'), equals('Inventory Setup'));
+        expect(setup.sortOrder, equals(20));
+      },
+    );
 
-    test('2. Inventory setup definition exposes all required sections and fields', () {
-      registerInventorySetup(registry);
+    test(
+      '2. Inventory setup definition exposes all required sections and fields',
+      () {
+        registerInventorySetup(registry);
 
-      final setup = registry.get('inventory')!;
-      final sectionIds = setup.sections.map((s) => s.id).toList();
+        final setup = registry.get('inventory')!;
+        final sectionIds = setup.sections.map((s) => s.id).toList();
 
-      expect(
-        sectionIds,
-        containsAll([
-          'currency',
-          'costing_policy',
-          'account_requirements',
-        ]),
-      );
+        expect(
+          sectionIds,
+          containsAll(['currency', 'costing_policy', 'account_requirements']),
+        );
 
-      final currencySection = setup.sections.firstWhere((s) => s.id == 'currency');
-      expect(currencySection.fields.first.key, equals('inventoryValuationCurrencyId'));
-      expect(currencySection.fields.first.defaultValue, equals('YER'));
+        final currencySection = setup.sections.firstWhere(
+          (s) => s.id == 'currency',
+        );
+        expect(
+          currencySection.fields.first.key,
+          equals('inventoryValuationCurrencyId'),
+        );
+        expect(currencySection.fields.first.defaultValue, equals('YER'));
 
-      final costingSection = setup.sections.firstWhere((s) => s.id == 'costing_policy');
-      expect(
-        costingSection.fields.map((f) => f.key),
-        containsAll([
-          'defaultCostingMethod',
-          'allowNegativeStock',
-          'quantityPrecision',
-          'costPrecision',
-        ]),
-      );
-    });
+        final costingSection = setup.sections.firstWhere(
+          (s) => s.id == 'costing_policy',
+        );
+        expect(
+          costingSection.fields.map((f) => f.key),
+          containsAll([
+            'defaultCostingMethod',
+            'allowNegativeStock',
+            'quantityPrecision',
+            'costPrecision',
+          ]),
+        );
+      },
+    );
 
-    test('3. Binds Inventory account requirements successfully with UUID references', () async {
-      final binding = await resolver.bindAccount(
-        companyId: companyA,
-        requirement: inventoryAccountRequirement,
-        accountUuid: validInventoryAccount.uuid,
-      );
+    test(
+      '3. Binds Inventory account requirements successfully with UUID references',
+      () async {
+        final binding = await resolver.bindAccount(
+          companyId: companyA,
+          requirement: inventoryAccountRequirement,
+          accountUuid: validInventoryAccount.uuid,
+        );
 
-      expect(binding.status, equals(AccountBindingStatus.bound));
-      expect(binding.accountUuid, equals('uuid_inv_asset_100'));
+        expect(binding.status, equals(AccountBindingStatus.bound));
+        expect(binding.accountUuid, equals('uuid_inv_asset_100'));
 
-      final result = await resolver.resolveRequirement(
-        companyId: companyA,
-        requirement: inventoryAccountRequirement,
-      );
+        final result = await resolver.resolveRequirement(
+          companyId: companyA,
+          requirement: inventoryAccountRequirement,
+        );
 
-      expect(result.isBound, isTrue);
-      expect(result.account?.uuid, equals('uuid_inv_asset_100'));
-    });
+        expect(result.isBound, isTrue);
+        expect(result.account?.uuid, equals('uuid_inv_asset_100'));
+      },
+    );
 
-    test('4. Missing account invariant — safe initialization; controlled error during transaction', () async {
-      final result = await resolver.resolveRequirement(
-        companyId: companyA,
-        requirement: cogsAccountRequirement,
-      );
-
-      expect(result.isUnbound, isTrue);
-      expect(result.account, isNull);
-
-      expect(
-        () async => resolver.resolveAccountForTransaction(
+    test(
+      '4. Missing account invariant — safe initialization; controlled error during transaction',
+      () async {
+        final result = await resolver.resolveRequirement(
           companyId: companyA,
           requirement: cogsAccountRequirement,
-        ),
-        throwsA(isA<AccountBindingException>()),
-      );
-    });
+        );
 
-    test('5. Multi-tenant company isolation rejects cross-company account assignment', () async {
-      expect(
-        () async => resolver.bindAccount(
+        expect(result.isUnbound, isTrue);
+        expect(result.account, isNull);
+
+        expect(
+          () async => resolver.resolveAccountForTransaction(
+            companyId: companyA,
+            requirement: cogsAccountRequirement,
+          ),
+          throwsA(isA<AccountBindingException>()),
+        );
+      },
+    );
+
+    test(
+      '5. Multi-tenant company isolation rejects cross-company account assignment',
+      () async {
+        expect(
+          () async => resolver.bindAccount(
+            companyId: companyA,
+            requirement: cogsAccountRequirement,
+            accountUuid: crossCompanyAccount.uuid, // belongs to companyB
+          ),
+          throwsA(isA<CrossCompanyAccountBindingException>()),
+        );
+      },
+    );
+
+    test(
+      '6. Preserves existing CompanyInventoryConfig and CompanyWarehouseConfig persistence',
+      () {
+        const invConfig = CompanyInventoryConfig(
           companyId: companyA,
-          requirement: cogsAccountRequirement,
-          accountUuid: crossCompanyAccount.uuid, // belongs to companyB
-        ),
-        throwsA(isA<CrossCompanyAccountBindingException>()),
-      );
-    });
+          inventoryBaseCurrencyId: 'SAR',
+          defaultCostingMethod: 'FIFO',
+          allowNegativeStock: false,
+        );
 
-    test('6. Preserves existing CompanyInventoryConfig and CompanyWarehouseConfig persistence', () {
-      const invConfig = CompanyInventoryConfig(
-        companyId: companyA,
-        inventoryBaseCurrencyId: 'SAR',
-        defaultCostingMethod: 'FIFO',
-        allowNegativeStock: false,
-      );
+        expect(invConfig.inventoryBaseCurrencyId, equals('SAR'));
+        expect(invConfig.defaultCostingMethod, equals('FIFO'));
+        expect(invConfig.allowNegativeStock, isFalse);
 
-      expect(invConfig.inventoryBaseCurrencyId, equals('SAR'));
-      expect(invConfig.defaultCostingMethod, equals('FIFO'));
-      expect(invConfig.allowNegativeStock, isFalse);
+        const whConfig = CompanyWarehouseConfig(
+          companyId: companyA,
+          defaultWarehouseId: 'wh_main_01',
+        );
 
-      const whConfig = CompanyWarehouseConfig(
-        companyId: companyA,
-        defaultWarehouseId: 'wh_main_01',
-      );
-
-      expect(whConfig.defaultWarehouseId, equals('wh_main_01'));
-      expect(whConfig.isValid, isTrue);
-    });
+        expect(whConfig.defaultWarehouseId, equals('wh_main_01'));
+        expect(whConfig.isValid, isTrue);
+      },
+    );
   });
 }

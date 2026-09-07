@@ -37,7 +37,8 @@ class CompanyContextResolver {
       final cleanRequested = requestedCompanyId.trim();
       if (cleanRequested != activeId) {
         throw CompanyContextMismatchException(
-          message: 'Company context mismatch: requested company ($cleanRequested) does not match active context ($activeId).',
+          message:
+              'Company context mismatch: requested company ($cleanRequested) does not match active context ($activeId).',
           expectedCompanyId: activeId,
           actualCompanyId: cleanRequested,
         );
@@ -64,7 +65,8 @@ class CompanyContextResolver {
 
     if (cleanEntityCompanyId != activeId) {
       throw CompanyContextMismatchException(
-        message: 'Entity invariant violated: $entityName companyId ($cleanEntityCompanyId) does not match active company context ($activeId).',
+        message:
+            'Entity invariant violated: $entityName companyId ($cleanEntityCompanyId) does not match active company context ($activeId).',
         expectedCompanyId: activeId,
         actualCompanyId: cleanEntityCompanyId,
       );

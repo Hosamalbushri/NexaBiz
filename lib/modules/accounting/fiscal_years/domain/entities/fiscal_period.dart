@@ -2,10 +2,7 @@ import 'package:stock_count/core/utils/business_date.dart';
 
 /// Inclusive fiscal-year window for a calendar date.
 class FiscalPeriod {
-  const FiscalPeriod({
-    required this.start,
-    required this.endInclusive,
-  });
+  const FiscalPeriod({required this.start, required this.endInclusive});
 
   /// First day of the fiscal year (UTC date-only midnight).
   final DateTime start;

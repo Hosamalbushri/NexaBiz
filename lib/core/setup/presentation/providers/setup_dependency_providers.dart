@@ -10,15 +10,18 @@ final setupDependencyEngineProvider = Provider<SetupDependencyEngine>((ref) {
   return const SetupDependencyEngine();
 });
 
-final centralSetupValidationEngineProvider = Provider<CentralSetupValidationEngine>((ref) {
-  return CentralSetupValidationEngine(
-    accountLookupPort: ref.watch(setupAccountLookupPortProvider),
-    bindingRepository: ref.watch(accountBindingRepositoryProvider),
-    dependencyEngine: ref.watch(setupDependencyEngineProvider),
-  );
-});
+final centralSetupValidationEngineProvider =
+    Provider<CentralSetupValidationEngine>((ref) {
+      return CentralSetupValidationEngine(
+        accountLookupPort: ref.watch(setupAccountLookupPortProvider),
+        bindingRepository: ref.watch(accountBindingRepositoryProvider),
+        dependencyEngine: ref.watch(setupDependencyEngineProvider),
+      );
+    });
 
-final transactionSetupValidatorProvider = Provider<TransactionSetupValidator>((ref) {
+final transactionSetupValidatorProvider = Provider<TransactionSetupValidator>((
+  ref,
+) {
   return TransactionSetupValidator(
     accountLookupPort: ref.watch(setupAccountLookupPortProvider),
     bindingRepository: ref.watch(accountBindingRepositoryProvider),
@@ -26,7 +29,9 @@ final transactionSetupValidatorProvider = Provider<TransactionSetupValidator>((r
 });
 
 /// Exposes all registered package setup definitions sorted in topological dependency order.
-final orderedPackageSetupsProvider = Provider<List<PackageSetupDefinition>>((ref) {
+final orderedPackageSetupsProvider = Provider<List<PackageSetupDefinition>>((
+  ref,
+) {
   final registry = ref.watch(centralSetupRegistryProvider);
   final engine = ref.watch(setupDependencyEngineProvider);
   final allSetups = registry.getAll();

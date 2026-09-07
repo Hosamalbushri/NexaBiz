@@ -34,7 +34,9 @@ class CashFlowReportDataAdapter implements CashFlowReportDataPort {
     final allAccounts = await accounts.getAll();
 
     // Cash and Bank accounts: Code starting 11 (Cash, Bank, Treasury)
-    final cashAccounts = allAccounts.where((a) => a.accountCode.startsWith('11')).toList();
+    final cashAccounts = allAccounts
+        .where((a) => a.accountCode.startsWith('11'))
+        .toList();
 
     double openingCash = 0.0;
     if (filter.fromDate != null) {
@@ -87,7 +89,8 @@ class CashFlowReportDataAdapter implements CashFlowReportDataPort {
       }
     }
 
-    final netCashChange = totalOperatingNet + totalInvestingNet + totalFinancingNet;
+    final netCashChange =
+        totalOperatingNet + totalInvestingNet + totalFinancingNet;
     final endingCash = openingCash + netCashChange;
 
     return CashFlowReportPayload(

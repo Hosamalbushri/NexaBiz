@@ -47,12 +47,8 @@ class CustomersSaleLookupAdapter implements SaleCustomerLookupPort {
     int limit = SaleAutocompleteDefaults.resultLimit,
   }) async {
     final normalized = query.trim();
-    final safeLimit =
-        limit <= 0 ? SaleAutocompleteDefaults.resultLimit : limit;
-    final results = await _repository.search(
-      normalized,
-      limit: safeLimit,
-    );
+    final safeLimit = limit <= 0 ? SaleAutocompleteDefaults.resultLimit : limit;
+    final results = await _repository.search(normalized, limit: safeLimit);
     return results.map(_map).toList(growable: false);
   }
 
@@ -77,10 +73,7 @@ class CustomersSaleLookupAdapter implements SaleCustomerLookupPort {
     }
 
     final draft = await EnsureCustomerAccountLinks(_accountLinkPort).apply(
-      CustomerDraft(
-        customerCode: customer.customerCode,
-        name: customer.name,
-      ),
+      CustomerDraft(customerCode: customer.customerCode, name: customer.name),
       parentId: parent.accountId,
     );
     final accountId = draft.accountId?.trim();

@@ -23,10 +23,7 @@ void main() {
     db = AccountingDatabase(executor: NativeDatabase.memory());
     companyId = 'company_alpha';
 
-    accountRepo = AccountRepositoryImpl(
-      db,
-      readCompanyId: () => companyId,
-    );
+    accountRepo = AccountRepositoryImpl(db, readCompanyId: () => companyId);
 
     journalRepo = JournalRepositoryImpl(
       db,
@@ -44,7 +41,9 @@ void main() {
     acc2Uuid = generateUuidV4();
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
 
-    await db.into(db.accounts).insert(
+    await db
+        .into(db.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc1Uuid,
             companyId: Value(companyId),
@@ -60,7 +59,9 @@ void main() {
           ),
         );
 
-    await db.into(db.accounts).insert(
+    await db
+        .into(db.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc2Uuid,
             companyId: Value(companyId),
@@ -81,114 +82,121 @@ void main() {
     await db.close();
   });
 
-  test('Different voucher_type documents (Receipt vs Issue) CAN share the SAME voucher_number', () async {
-    // 1. Post Stock Receipt (أمر توريد) with voucherNumber = 7275000001
-    final receiptDraft = JournalEntryDraft(
-      entryDate: DateTime.now(),
-      voucherNumber: '7275000001',
-      voucherType: 'أمر توريد',
-      currencyCode: 'SAR',
-      sourceType: 'stock_receipt',
-      sourceId: 'rec-doc-001',
-      lines: [
-        JournalLineDraft(
-          accountUuid: acc1Uuid,
-          debit: 1000.0,
-          credit: 0.0,
-          currencyCode: 'SAR',
-        ),
-        JournalLineDraft(
-          accountUuid: acc2Uuid,
-          debit: 0.0,
-          credit: 1000.0,
-          currencyCode: 'SAR',
-        ),
-      ],
-    );
+  test(
+    'Different voucher_type documents (Receipt vs Issue) CAN share the SAME voucher_number',
+    () async {
+      // 1. Post Stock Receipt (أمر توريد) with voucherNumber = 7275000001
+      final receiptDraft = JournalEntryDraft(
+        entryDate: DateTime.now(),
+        voucherNumber: '7275000001',
+        voucherType: 'أمر توريد',
+        currencyCode: 'SAR',
+        sourceType: 'stock_receipt',
+        sourceId: 'rec-doc-001',
+        lines: [
+          JournalLineDraft(
+            accountUuid: acc1Uuid,
+            debit: 1000.0,
+            credit: 0.0,
+            currencyCode: 'SAR',
+          ),
+          JournalLineDraft(
+            accountUuid: acc2Uuid,
+            debit: 0.0,
+            credit: 1000.0,
+            currencyCode: 'SAR',
+          ),
+        ],
+      );
 
-    final postedReceipt = await postingService.post(receiptDraft);
-    expect(postedReceipt.voucherNumber, equals('7275000001'));
-    expect(postedReceipt.voucherType, equals('أمر توريد'));
+      final postedReceipt = await postingService.post(receiptDraft);
+      expect(postedReceipt.voucherNumber, equals('7275000001'));
+      expect(postedReceipt.voucherType, equals('أمر توريد'));
 
-    // 2. Post Stock Issue (أمر صرف) with the EXACT SAME voucherNumber = 7275000001
-    final issueDraft = JournalEntryDraft(
-      entryDate: DateTime.now(),
-      voucherNumber: '7275000001',
-      voucherType: 'أمر صرف',
-      currencyCode: 'SAR',
-      sourceType: 'stock_issue',
-      sourceId: 'iss-doc-001',
-      lines: [
-        JournalLineDraft(
-          accountUuid: acc2Uuid,
-          debit: 600.0,
-          credit: 0.0,
-          currencyCode: 'SAR',
-        ),
-        JournalLineDraft(
-          accountUuid: acc1Uuid,
-          debit: 0.0,
-          credit: 600.0,
-          currencyCode: 'SAR',
-        ),
-      ],
-    );
+      // 2. Post Stock Issue (أمر صرف) with the EXACT SAME voucherNumber = 7275000001
+      final issueDraft = JournalEntryDraft(
+        entryDate: DateTime.now(),
+        voucherNumber: '7275000001',
+        voucherType: 'أمر صرف',
+        currencyCode: 'SAR',
+        sourceType: 'stock_issue',
+        sourceId: 'iss-doc-001',
+        lines: [
+          JournalLineDraft(
+            accountUuid: acc2Uuid,
+            debit: 600.0,
+            credit: 0.0,
+            currencyCode: 'SAR',
+          ),
+          JournalLineDraft(
+            accountUuid: acc1Uuid,
+            debit: 0.0,
+            credit: 600.0,
+            currencyCode: 'SAR',
+          ),
+        ],
+      );
 
-    // This must succeed without SqliteException(2067)
-    final postedIssue = await postingService.post(issueDraft);
-    expect(postedIssue.voucherNumber, equals('7275000001'));
-    expect(postedIssue.voucherType, equals('أمر صرف'));
-  });
+      // This must succeed without SqliteException(2067)
+      final postedIssue = await postingService.post(issueDraft);
+      expect(postedIssue.voucherNumber, equals('7275000001'));
+      expect(postedIssue.voucherType, equals('أمر صرف'));
+    },
+  );
 
-  test('Same voucher_type documents with same voucher_number in same company are rejected by unique constraint', () async {
-    final draft1 = JournalEntryDraft(
-      entryDate: DateTime.now(),
-      voucherNumber: '7275000002',
-      voucherType: 'أمر توريد',
-      currencyCode: 'SAR',
-      sourceType: 'stock_receipt',
-      sourceId: 'rec-doc-002',
-      lines: [
-        JournalLineDraft(
-          accountUuid: acc1Uuid,
-          debit: 500.0,
-          credit: 0.0,
-          currencyCode: 'SAR',
-        ),
-        JournalLineDraft(
-          accountUuid: acc2Uuid,
-          debit: 0.0,
-          credit: 500.0,
-          currencyCode: 'SAR',
-        ),
-      ],
-    );
+  test(
+    'Same voucher_type documents with same voucher_number in same company are rejected by unique constraint',
+    () async {
+      final draft1 = JournalEntryDraft(
+        entryDate: DateTime.now(),
+        voucherNumber: '7275000002',
+        voucherType: 'أمر توريد',
+        currencyCode: 'SAR',
+        sourceType: 'stock_receipt',
+        sourceId: 'rec-doc-002',
+        lines: [
+          JournalLineDraft(
+            accountUuid: acc1Uuid,
+            debit: 500.0,
+            credit: 0.0,
+            currencyCode: 'SAR',
+          ),
+          JournalLineDraft(
+            accountUuid: acc2Uuid,
+            debit: 0.0,
+            credit: 500.0,
+            currencyCode: 'SAR',
+          ),
+        ],
+      );
 
-    await postingService.post(draft1);
+      await postingService.post(draft1);
 
-    final draft2 = JournalEntryDraft(
-      entryDate: DateTime.now(),
-      voucherNumber: '7275000002',
-      voucherType: 'أمر توريد',
-      currencyCode: 'SAR',
-      sourceType: 'stock_receipt',
-      sourceId: 'rec-doc-003', // Different document ID, same voucher type and number
-      lines: [
-        JournalLineDraft(
-          accountUuid: acc1Uuid,
-          debit: 500.0,
-          credit: 0.0,
-          currencyCode: 'SAR',
-        ),
-        JournalLineDraft(
-          accountUuid: acc2Uuid,
-          debit: 0.0,
-          credit: 500.0,
-          currencyCode: 'SAR',
-        ),
-      ],
-    );
+      final draft2 = JournalEntryDraft(
+        entryDate: DateTime.now(),
+        voucherNumber: '7275000002',
+        voucherType: 'أمر توريد',
+        currencyCode: 'SAR',
+        sourceType: 'stock_receipt',
+        sourceId:
+            'rec-doc-003', // Different document ID, same voucher type and number
+        lines: [
+          JournalLineDraft(
+            accountUuid: acc1Uuid,
+            debit: 500.0,
+            credit: 0.0,
+            currencyCode: 'SAR',
+          ),
+          JournalLineDraft(
+            accountUuid: acc2Uuid,
+            debit: 0.0,
+            credit: 500.0,
+            currencyCode: 'SAR',
+          ),
+        ],
+      );
 
-    expect(() => postingService.post(draft2), throwsA(anything));
-  });
+      expect(() => postingService.post(draft2), throwsA(anything));
+    },
+  );
 }

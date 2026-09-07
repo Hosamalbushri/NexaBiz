@@ -12,7 +12,6 @@ import '../../../modules/reports/shared/presentation/pages/reports_routes.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_dataset.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_definition_spec.dart';
 
-
 /// PDF Exporter driver for the NexaBiz ERP Universal Report Engine.
 class PdfReportExporter {
   /// Builds PDF document bytes for any report definition and dataset.
@@ -29,7 +28,9 @@ class PdfReportExporter {
 
     final doc = pw.Document(theme: pdfContext.theme);
     final dateFmt = DateFormat('dd/MM/yyyy HH:mm');
-    final visibleColumns = definition.columns.where((c) => c.isVisible).toList();
+    final visibleColumns = definition.columns
+        .where((c) => c.isVisible)
+        .toList();
 
     doc.addPage(
       pw.MultiPage(
@@ -69,11 +70,17 @@ class PdfReportExporter {
                       children: [
                         pw.Text(
                           'تاريخ الطباعة: ${dateFmt.format(DateTime.now())}',
-                          style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+                          style: const pw.TextStyle(
+                            fontSize: 8,
+                            color: PdfColors.grey700,
+                          ),
                         ),
                         pw.Text(
                           'إجمالي السجلات: ${dataset.rows.length}',
-                          style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -94,10 +101,29 @@ class PdfReportExporter {
                       children: dataset.headerCards.map((card) {
                         return pw.Column(
                           children: [
-                            pw.Text(card.title, style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                            pw.Text(card.value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                            pw.Text(
+                              card.title,
+                              style: const pw.TextStyle(
+                                fontSize: 8,
+                                color: PdfColors.grey700,
+                              ),
+                            ),
+                            pw.Text(
+                              card.value,
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.blue800,
+                              ),
+                            ),
                             if (card.subValue != null)
-                              pw.Text(card.subValue!, style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
+                              pw.Text(
+                                card.subValue!,
+                                style: const pw.TextStyle(
+                                  fontSize: 7,
+                                  color: PdfColors.grey600,
+                                ),
+                              ),
                           ],
                         );
                       }).toList(),
@@ -115,8 +141,20 @@ class PdfReportExporter {
             child: pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text('NexaBiz ERP — Unified Reporting System', style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
-                pw.Text('${ctx.pageNumber} / ${ctx.pagesCount}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                pw.Text(
+                  'NexaBiz ERP — Unified Reporting System',
+                  style: const pw.TextStyle(
+                    fontSize: 7,
+                    color: PdfColors.grey600,
+                  ),
+                ),
+                pw.Text(
+                  '${ctx.pageNumber} / ${ctx.pagesCount}',
+                  style: const pw.TextStyle(
+                    fontSize: 8,
+                    color: PdfColors.grey700,
+                  ),
+                ),
               ],
             ),
           );
@@ -126,18 +164,26 @@ class PdfReportExporter {
             pw.Directionality(
               textDirection: pdfContext.textDirection,
               child: pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey500, width: 0.5),
+                border: pw.TableBorder.all(
+                  color: PdfColors.grey500,
+                  width: 0.5,
+                ),
                 children: [
                   // Table Column Headers
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey200,
+                    ),
                     children: visibleColumns.map((col) {
                       return pw.Padding(
                         padding: const pw.EdgeInsets.all(4),
                         child: pw.Text(
                           col.label,
                           textAlign: pw.TextAlign.center,
-                          style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -145,14 +191,18 @@ class PdfReportExporter {
                   // Table Rows
                   for (int i = 0; i < dataset.rows.length; i++)
                     pw.TableRow(
-                      decoration: i % 2 == 1 ? const pw.BoxDecoration(color: PdfColors.grey50) : null,
+                      decoration: i % 2 == 1
+                          ? const pw.BoxDecoration(color: PdfColors.grey50)
+                          : null,
                       children: visibleColumns.map((col) {
                         final val = dataset.rows[i][col.id]?.toString() ?? '';
                         return pw.Padding(
                           padding: const pw.EdgeInsets.all(3),
                           child: pw.Text(
                             val,
-                            textAlign: col.isNumeric ? pw.TextAlign.right : pw.TextAlign.left,
+                            textAlign: col.isNumeric
+                                ? pw.TextAlign.right
+                                : pw.TextAlign.left,
                             style: const pw.TextStyle(fontSize: 7),
                           ),
                         );
@@ -161,23 +211,32 @@ class PdfReportExporter {
                   // Footer Summaries (if present)
                   if (dataset.summaryTotals.isNotEmpty)
                     pw.TableRow(
-                      decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                      decoration: const pw.BoxDecoration(
+                        color: PdfColors.grey300,
+                      ),
                       children: visibleColumns.map((col) {
                         final summary = dataset.summaryTotals.firstWhere(
                           (s) => s.columnId == col.id,
-                          orElse: () => const ReportSummaryData(label: '', value: ''),
+                          orElse: () =>
+                              const ReportSummaryData(label: '', value: ''),
                         );
                         return pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Text(
-                            summary.value.isNotEmpty ? '${summary.label}: ${summary.value}' : '',
-                            textAlign: col.isNumeric ? pw.TextAlign.right : pw.TextAlign.center,
-                            style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+                            summary.value.isNotEmpty
+                                ? '${summary.label}: ${summary.value}'
+                                : '',
+                            textAlign: col.isNumeric
+                                ? pw.TextAlign.right
+                                : pw.TextAlign.center,
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
                           ),
                         );
                       }).toList(),
                     ),
-
                 ],
               ),
             ),

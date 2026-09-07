@@ -159,8 +159,9 @@ class _AppExpandableSearchBarState extends State<AppExpandableSearchBar> {
                             border: Border.all(
                               color: _focused
                                   ? colorScheme.primary.withValues(alpha: 0.5)
-                                  : colorScheme.outlineVariant
-                                      .withValues(alpha: 0.4),
+                                  : colorScheme.outlineVariant.withValues(
+                                      alpha: 0.4,
+                                    ),
                               width: _focused ? 1.4 : 1,
                             ),
                           ),

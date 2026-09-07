@@ -37,9 +37,7 @@ void main() {
   });
 
   test('LocalSaleNumberAllocator returns plain integers', () async {
-    final allocator = LocalSaleNumberAllocator(
-      nextSequence: () async => 5,
-    );
+    final allocator = LocalSaleNumberAllocator(nextSequence: () async => 5);
     expect(await allocator.allocateNext(), '5');
   });
 

@@ -20,12 +20,7 @@ import '../../domain/entities/journal_entry.dart';
 import '../../domain/services/journal_source_category_resolver.dart';
 import '../providers/journal_providers.dart';
 
-enum AutomatedSourceCategory {
-  all,
-  sales,
-  inventory,
-  receiptsPayments,
-}
+enum AutomatedSourceCategory { all, sales, inventory, receiptsPayments }
 
 extension AutomatedSourceCategoryX on AutomatedSourceCategory {
   String label(AppLocalizations l10n) {
@@ -90,7 +85,8 @@ AutomatedSourceCategory resolveAutomatedCategory(JournalEntryHeader entry) {
   return switch (category) {
     JournalSourceCategory.sales => AutomatedSourceCategory.sales,
     JournalSourceCategory.inventory => AutomatedSourceCategory.inventory,
-    JournalSourceCategory.receiptsPayments => AutomatedSourceCategory.receiptsPayments,
+    JournalSourceCategory.receiptsPayments =>
+      AutomatedSourceCategory.receiptsPayments,
     _ => AutomatedSourceCategory.all,
   };
 }
@@ -142,8 +138,14 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
           title: l10n.accountingJournalsTitle,
           showBackButton: true,
           bottom: TabBar(
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13.5),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13.5,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.normal,
+              fontSize: 13.5,
+            ),
             tabs: [
               Tab(
                 icon: const Icon(Icons.edit_note_rounded, size: 20),
@@ -166,58 +168,64 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: AppConstants.pageInsets(context).copyWith(bottom: 0, top: AppSpacing.sm),
+                padding: AppConstants.pageInsets(
+                  context,
+                ).copyWith(bottom: 0, top: AppSpacing.sm),
                 child: AppSearchBar(
                   controller: _searchController,
                   onChanged: _onSearch,
                   hint: l10n.accountingJournalsSearchHint,
                 ),
               ),
-            const SizedBox(height: AppSpacing.sm),
-            Expanded(
-              child: entriesAsync.when(
-                loading: () => const AppLoading(),
-                error: (e, _) => AppErrorState(message: e.toString()),
-                data: (allEntries) {
-                  if (allEntries.isEmpty) {
-                    return AppEmptyState(
-                      title: l10n.accountingJournalsEmptyTitle,
-                      subtitle: l10n.accountingJournalsEmptyMessage,
-                      icon: Icons.receipt_long_outlined,
+              const SizedBox(height: AppSpacing.sm),
+              Expanded(
+                child: entriesAsync.when(
+                  loading: () => const AppLoading(),
+                  error: (e, _) => AppErrorState(message: e.toString()),
+                  data: (allEntries) {
+                    if (allEntries.isEmpty) {
+                      return AppEmptyState(
+                        title: l10n.accountingJournalsEmptyTitle,
+                        subtitle: l10n.accountingJournalsEmptyMessage,
+                        icon: Icons.receipt_long_outlined,
+                      );
+                    }
+
+                    // Split manual vs automated entries
+                    final manualEntries = allEntries
+                        .where(isManualJournalEntry)
+                        .toList();
+                    final autoEntries = allEntries
+                        .where((e) => !isManualJournalEntry(e))
+                        .toList();
+
+                    return TabBarView(
+                      children: [
+                        // Tab 0 (Primary): Manual & Daily Journals
+                        _buildManualTab(
+                          context: context,
+                          manualEntries: manualEntries,
+                          isAr: isAr,
+                          dateFormat: dateFormat,
+                        ),
+
+                        // Tab 1: Automated System Journals
+                        _buildAutomatedTab(
+                          context: context,
+                          autoEntries: autoEntries,
+                          isAr: isAr,
+                          dateFormat: dateFormat,
+                        ),
+                      ],
                     );
-                  }
-
-                  // Split manual vs automated entries
-                  final manualEntries = allEntries.where(isManualJournalEntry).toList();
-                  final autoEntries = allEntries.where((e) => !isManualJournalEntry(e)).toList();
-
-                  return TabBarView(
-                    children: [
-                      // Tab 0 (Primary): Manual & Daily Journals
-                      _buildManualTab(
-                        context: context,
-                        manualEntries: manualEntries,
-                        isAr: isAr,
-                        dateFormat: dateFormat,
-                      ),
-
-                      // Tab 1: Automated System Journals
-                      _buildAutomatedTab(
-                        context: context,
-                        autoEntries: autoEntries,
-                        isAr: isAr,
-                        dateFormat: dateFormat,
-                      ),
-                    ],
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildAutomatedTab({
@@ -260,7 +268,10 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
       children: [
         // Controls bar: Category filter chips + toggle view
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 4,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -279,19 +290,31 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
                         child: FilterChip(
                           selected: isSelected,
                           avatar: CircleAvatar(
-                            backgroundColor: isSelected ? Colors.white.withValues(alpha: 0.2) : color.withValues(alpha: 0.15),
-                            child: Icon(cat.icon, size: 14, color: isSelected ? Colors.white : color),
+                            backgroundColor: isSelected
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : color.withValues(alpha: 0.15),
+                            child: Icon(
+                              cat.icon,
+                              size: 14,
+                              color: isSelected ? Colors.white : color,
+                            ),
                           ),
                           label: Text('${cat.label(l10n)} ($count)'),
                           labelStyle: TextStyle(
                             fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected ? Colors.white : colorScheme.onSurface,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? Colors.white
+                                : colorScheme.onSurface,
                           ),
                           selectedColor: color,
                           backgroundColor: color.withValues(alpha: 0.08),
                           side: BorderSide(
-                            color: isSelected ? color : color.withValues(alpha: 0.3),
+                            color: isSelected
+                                ? color
+                                : color.withValues(alpha: 0.3),
                           ),
                           onSelected: (_) {
                             setState(() {
@@ -308,7 +331,11 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
                 tooltip: _isGroupedView
                     ? (isAr ? 'قائمة واحدة' : 'List View')
                     : (isAr ? 'تجميع حسب المصدر' : 'Grouped View'),
-                icon: Icon(_isGroupedView ? Icons.view_list_rounded : Icons.account_tree_outlined),
+                icon: Icon(
+                  _isGroupedView
+                      ? Icons.view_list_rounded
+                      : Icons.account_tree_outlined,
+                ),
                 onPressed: () {
                   setState(() {
                     _isGroupedView = !_isGroupedView;
@@ -323,8 +350,19 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
         // List View or Grouped View
         Expanded(
           child: _isGroupedView
-              ? _buildGroupedAutoView(context: context, groupedAuto: groupedAuto, isAr: isAr, dateFormat: dateFormat)
-              : _buildListAutoView(context: context, autoEntries: autoEntries, groupedAuto: groupedAuto, isAr: isAr, dateFormat: dateFormat),
+              ? _buildGroupedAutoView(
+                  context: context,
+                  groupedAuto: groupedAuto,
+                  isAr: isAr,
+                  dateFormat: dateFormat,
+                )
+              : _buildListAutoView(
+                  context: context,
+                  autoEntries: autoEntries,
+                  groupedAuto: groupedAuto,
+                  isAr: isAr,
+                  dateFormat: dateFormat,
+                ),
         ),
       ],
     );
@@ -364,10 +402,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
           icon: cat.icon,
           badgeColor: cat.color(Theme.of(context).colorScheme),
           dateLabel: dateFormat.format(entry.entryDate.toLocal()),
-          onTap: () => AccountingRoutes.pushJournalDetails(
-            context,
-            entry.uuid,
-          ),
+          onTap: () => AccountingRoutes.pushJournalDetails(context, entry.uuid),
         );
       },
     );
@@ -383,13 +418,19 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final activeCategories = AutomatedSourceCategory.values
-        .where((c) => c != AutomatedSourceCategory.all && (groupedAuto[c]?.isNotEmpty ?? false))
+        .where(
+          (c) =>
+              c != AutomatedSourceCategory.all &&
+              (groupedAuto[c]?.isNotEmpty ?? false),
+        )
         .toList();
 
     if (activeCategories.isEmpty) {
       return AppEmptyState(
         title: isAr ? 'لا توجد قيود آلية' : 'No automated entries',
-        subtitle: isAr ? 'لم تنشأ أي قيود آليه حتى الآن' : 'No entries generated yet.',
+        subtitle: isAr
+            ? 'لم تنشأ أي قيود آليه حتى الآن'
+            : 'No entries generated yet.',
         icon: Icons.auto_awesome_rounded,
       );
     }
@@ -439,7 +480,10 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: catColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
@@ -507,15 +551,24 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
       );
     }
 
-    final totalManualAmount = manualEntries.fold(0.0, (sum, e) => sum + e.totalDebit);
+    final totalManualAmount = manualEntries.fold(
+      0.0,
+      (sum, e) => sum + e.totalDebit,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Header Summary Bar
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 4,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           decoration: BoxDecoration(
             color: manualColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -527,11 +580,16 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
               const SizedBox(width: AppSpacing.xs),
               Text(
                 '${isAr ? 'عدد القيود اليدوية' : 'Total Manual Entries'}: ',
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 '${manualEntries.length}',
-                style: TextStyle(fontWeight: FontWeight.bold, color: manualColor),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: manualColor,
+                ),
               ),
               const Spacer(),
               Text(
@@ -558,10 +616,8 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
                 icon: Icons.edit_note_rounded,
                 badgeColor: manualColor,
                 dateLabel: dateFormat.format(entry.entryDate.toLocal()),
-                onTap: () => AccountingRoutes.pushJournalDetails(
-                  context,
-                  entry.uuid,
-                ),
+                onTap: () =>
+                    AccountingRoutes.pushJournalDetails(context, entry.uuid),
               );
             },
           ),

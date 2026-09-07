@@ -10,7 +10,8 @@ class ReportTable {
     List<String> headers,
     List<List<String>> rows,
     Map<int, pw.TableColumnWidth> widths,
-  }) resolveRtl({
+  })
+  resolveRtl({
     required List<String> headers,
     required List<List<String>> rows,
     required Map<int, pw.TableColumnWidth> widths,
@@ -22,12 +23,8 @@ class ReportTable {
     final count = headers.length;
     return (
       headers: headers.reversed.toList(growable: false),
-      rows: [
-        for (final row in rows) row.reversed.toList(growable: false),
-      ],
-      widths: {
-        for (var i = 0; i < count; i++) i: widths[count - 1 - i]!,
-      },
+      rows: [for (final row in rows) row.reversed.toList(growable: false)],
+      widths: {for (var i = 0; i < count; i++) i: widths[count - 1 - i]!},
     );
   }
 

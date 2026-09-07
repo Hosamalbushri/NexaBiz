@@ -24,10 +24,7 @@ class AppUpdateInfo {
   static int compareVersions(String v1, String v2) {
     List<int> parseSegments(String v) {
       final cleaned = v.split('+').first.split('-').first;
-      return cleaned
-          .split('.')
-          .map((s) => int.tryParse(s) ?? 0)
-          .toList();
+      return cleaned.split('.').map((s) => int.tryParse(s) ?? 0).toList();
     }
 
     final s1 = parseSegments(v1);
@@ -132,7 +129,8 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
     }
 
     final isMandatory = info.isMandatoryUpdate(_currentVersion);
-    final isOptional = info.isOptionalUpdate(_currentVersion) && !_dismissedOptional;
+    final isOptional =
+        info.isOptionalUpdate(_currentVersion) && !_dismissedOptional;
 
     if (isMandatory) {
       return Scaffold(
@@ -153,8 +151,8 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
                   'Update Required',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -162,12 +160,15 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                if (info.releaseNotes != null && info.releaseNotes!.isNotEmpty) ...[
+                if (info.releaseNotes != null &&
+                    info.releaseNotes!.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -213,7 +214,9 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
                           Text(
                             'Update Available (v${info.latestVersion})',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onInverseSurface,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onInverseSurface,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -221,7 +224,10 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
                           Text(
                             'An optional app update is available.',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onInverseSurface.withValues(alpha: 0.8),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onInverseSurface
+                                  .withValues(alpha: 0.8),
                               fontSize: 12,
                             ),
                           ),
@@ -229,11 +235,14 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => setState(() => _dismissedOptional = true),
+                      onPressed: () =>
+                          setState(() => _dismissedOptional = true),
                       child: Text(
                         'Later',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onInverseSurface.withValues(alpha: 0.7),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onInverseSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ),

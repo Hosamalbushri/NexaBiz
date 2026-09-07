@@ -26,15 +26,17 @@ class AccountHierarchyResolver {
     }
 
     final children = await _accountRepository.getChildren(cleanParentUuid);
-    return children.where((a) {
-      if (!includeInactive && (!a.isActive || a.isDeleted)) {
-        return false;
-      }
-      if (a.companyId != null && a.companyId!.isNotEmpty) {
-        return a.companyId == cleanCompanyId;
-      }
-      return true;
-    }).toList(growable: false);
+    return children
+        .where((a) {
+          if (!includeInactive && (!a.isActive || a.isDeleted)) {
+            return false;
+          }
+          if (a.companyId != null && a.companyId!.isNotEmpty) {
+            return a.companyId == cleanCompanyId;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 
   /// Returns all recursive descendants of [parentUuid] matching tenant [companyId].
@@ -52,13 +54,17 @@ class AccountHierarchyResolver {
       return const [];
     }
 
-    final allAccounts = await _accountRepository.getAll(includeInactive: includeInactive);
-    final tenantAccounts = allAccounts.where((a) {
-      if (a.companyId != null && a.companyId!.isNotEmpty) {
-        return a.companyId == cleanCompanyId;
-      }
-      return true;
-    }).toList(growable: false);
+    final allAccounts = await _accountRepository.getAll(
+      includeInactive: includeInactive,
+    );
+    final tenantAccounts = allAccounts
+        .where((a) {
+          if (a.companyId != null && a.companyId!.isNotEmpty) {
+            return a.companyId == cleanCompanyId;
+          }
+          return true;
+        })
+        .toList(growable: false);
 
     final parentToChildrenMap = <String, List<Account>>{};
     for (final account in tenantAccounts) {

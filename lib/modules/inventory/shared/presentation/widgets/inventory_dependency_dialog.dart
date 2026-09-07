@@ -30,7 +30,11 @@ class InventoryDependencyDialog extends StatelessWidget {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800, size: 28),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orange.shade800,
+            size: 28,
+          ),
           const SizedBox(width: 8),
           const Text('تعذر إلغاء الترحيل'),
         ],
@@ -48,7 +52,11 @@ class InventoryDependencyDialog extends StatelessWidget {
             const SizedBox(height: 12),
             const Text(
               'يجب إلغاء ترحيل الحركات التالية أولاً بالترتيب:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.red),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.red,
+              ),
             ),
             const SizedBox(height: 8),
             Flexible(
@@ -71,7 +79,11 @@ class InventoryDependencyDialog extends StatelessWidget {
                         backgroundColor: Colors.red.shade100,
                         child: Text(
                           '${index + 1}',
-                          style: TextStyle(fontSize: 11, color: Colors.red.shade900, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.red.shade900,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       title: Text(
@@ -80,17 +92,27 @@ class InventoryDependencyDialog extends StatelessWidget {
                       ),
                       subtitle: Text(
                         'التاريخ: ${doc.documentDate.toString().substring(0, 10)}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
                       ),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green.shade50,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           'مرحّل',
-                          style: TextStyle(fontSize: 11, color: Colors.green.shade800, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.green.shade800,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     );

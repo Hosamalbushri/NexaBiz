@@ -159,11 +159,10 @@ class NoOpSalesPeriodReportDataPort implements SalesPeriodReportDataPort {
   Future<SalesPeriodReportPayload> loadFromFilter({
     required ReportQueryFilter filter,
     required SalesPeriodReportLabels labels,
-  }) =>
-      load(
-        fromDate: filter.fromDate,
-        toDate: filter.toDate,
-        statusStorageValue: filter.customFilters['statusStorageValue'] as String?,
-        labels: labels,
-      );
+  }) => load(
+    fromDate: filter.fromDate,
+    toDate: filter.toDate,
+    statusStorageValue: filter.customFilters['statusStorageValue'] as String?,
+    labels: labels,
+  );
 }

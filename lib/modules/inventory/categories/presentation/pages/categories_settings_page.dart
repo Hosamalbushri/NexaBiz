@@ -156,8 +156,9 @@ class _CategoriesSettingsPageState
                             ? 'قم بإضافة التصنيف الأول لبدء هيكلة المخزون وتحديد أساليب التكلفة'
                             : 'Create your first category to structure stock & valuation rules',
                         icon: Icons.account_tree_outlined,
-                        actionLabel:
-                            isAr ? 'إضافة أول تصنيف' : 'Add First Category',
+                        actionLabel: isAr
+                            ? 'إضافة أول تصنيف'
+                            : 'Add First Category',
                         actionIcon: Icons.add_rounded,
                         onAction: () => CategoryFormDialog.show(context),
                       )
@@ -167,7 +168,9 @@ class _CategoriesSettingsPageState
                             .where((c) => c.warehouseId == wh.id)
                             .toList();
 
-                        final roots = CategoryTreeNode.buildForest(whCategories);
+                        final roots = CategoryTreeNode.buildForest(
+                          whCategories,
+                        );
 
                         return _WarehouseCategorySection(
                           warehouse: wh,
@@ -210,7 +213,9 @@ class _CategoriesSettingsPageState
       if (mounted && success) {
         showAppSnackBar(
           context,
-          message: isAr ? 'تم حذف التصنيف بنجاح' : 'Category deleted successfully',
+          message: isAr
+              ? 'تم حذف التصنيف بنجاح'
+              : 'Category deleted successfully',
           isSuccess: true,
         );
       }
@@ -429,7 +434,9 @@ class _WarehouseCategorySection extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.folder_open_outlined,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.4,
+                      ),
                       size: 40,
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -461,10 +468,7 @@ class _WarehouseCategorySection extends StatelessWidget {
                   );
                 },
                 onEditCategory: (cat) {
-                  CategoryFormDialog.show(
-                    context,
-                    category: cat,
-                  );
+                  CategoryFormDialog.show(context, category: cat);
                 },
                 onDeleteCategory: (cat) => onConfirmDelete(cat),
               ),

@@ -33,7 +33,8 @@ class UniversalReportViewerPage extends StatefulWidget {
   final String currencyCode;
 
   @override
-  State<UniversalReportViewerPage> createState() => _UniversalReportViewerPageState();
+  State<UniversalReportViewerPage> createState() =>
+      _UniversalReportViewerPageState();
 }
 
 class _UniversalReportViewerPageState extends State<UniversalReportViewerPage> {
@@ -157,24 +158,29 @@ class _UniversalReportViewerPageState extends State<UniversalReportViewerPage> {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return AppResponsiveScaffold(
-      appBar: AppBar(
-        title: Text(widget.definition.name),
-      ),
+      appBar: AppBar(title: Text(widget.definition.name)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.sm),
         children: [
           // Standard ERP Filter Panel
           AppReportQueryFilterPanel(
             title: isAr ? 'خيارات وتصفية التقرير' : 'Report Criteria & Options',
-            showDateRange: widget.definition.parameters.any((p) => p.id == 'dateRange' || p.id == 'fromDate' || p.id == 'toDate'),
-            showPostingStatus: widget.definition.parameters.any((p) => p.id == 'postingStatus'),
+            showDateRange: widget.definition.parameters.any(
+              (p) =>
+                  p.id == 'dateRange' || p.id == 'fromDate' || p.id == 'toDate',
+            ),
+            showPostingStatus: widget.definition.parameters.any(
+              (p) => p.id == 'postingStatus',
+            ),
             isLoading: _isLoading,
             onPrint: _handlePrintPreview,
             onViewAsTable: _handleTableView,
             onApply: (queryData) {
               setState(() {
-                if (queryData.fromDate != null) _filterValues['fromDate'] = queryData.fromDate;
-                if (queryData.toDate != null) _filterValues['toDate'] = queryData.toDate;
+                if (queryData.fromDate != null)
+                  _filterValues['fromDate'] = queryData.fromDate;
+                if (queryData.toDate != null)
+                  _filterValues['toDate'] = queryData.toDate;
                 _filterValues['postingStatus'] = queryData.postingStatus.name;
               });
               _handleTableView();
@@ -185,7 +191,9 @@ class _UniversalReportViewerPageState extends State<UniversalReportViewerPage> {
                 currentFilterValues: _filterValues,
                 onSelectPreset: (preset) {
                   setState(() {
-                    _filterValues = Map<String, dynamic>.from(preset.filterValues);
+                    _filterValues = Map<String, dynamic>.from(
+                      preset.filterValues,
+                    );
                   });
                 },
                 onClearPreset: () {
@@ -195,7 +203,12 @@ class _UniversalReportViewerPageState extends State<UniversalReportViewerPage> {
               const SizedBox(height: AppSpacing.xs),
               AppDynamicFilterGenerator(
                 parameters: widget.definition.parameters
-                    .where((p) => p.id != 'fromDate' && p.id != 'toDate' && p.id != 'postingStatus')
+                    .where(
+                      (p) =>
+                          p.id != 'fromDate' &&
+                          p.id != 'toDate' &&
+                          p.id != 'postingStatus',
+                    )
                     .toList(),
                 values: _filterValues,
                 onChanged: (vals) {
@@ -212,7 +225,10 @@ class _UniversalReportViewerPageState extends State<UniversalReportViewerPage> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline_rounded, color: scheme.onErrorContainer),
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: scheme.onErrorContainer,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(

@@ -79,7 +79,10 @@ class CompanyProfileSyncHandler implements SyncEntityHandler {
   }
 
   @override
-  Future<void> markLocalConflict({required String entityId, String? message}) async {
+  Future<void> markLocalConflict({
+    required String entityId,
+    String? message,
+  }) async {
     // No local conflict state stored for settings.
   }
 }

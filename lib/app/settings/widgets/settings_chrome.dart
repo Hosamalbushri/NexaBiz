@@ -31,11 +31,7 @@ class SettingsGroupLabel extends StatelessWidget {
 
 /// Grouped surface for related settings rows.
 class SettingsGroup extends StatelessWidget {
-  const SettingsGroup({
-    super.key,
-    required this.children,
-    this.margin,
-  });
+  const SettingsGroup({super.key, required this.children, this.margin});
 
   final List<Widget> children;
   final EdgeInsetsGeometry? margin;
@@ -236,10 +232,7 @@ class _SettingsExpandableSectionState extends State<SettingsExpandableSection>
                 showChevron: true,
                 chevronColor: colorScheme.onSurfaceVariant,
                 chevronTurns: Tween<double>(begin: 0, end: 0.25).animate(
-                  CurvedAnimation(
-                    parent: _controller,
-                    curve: Curves.easeInOut,
-                  ),
+                  CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
                 ),
               ),
             ),
@@ -499,9 +492,7 @@ class SettingsChoiceCard extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  size: dense
-                      ? (showLabel ? 18 : 20)
-                      : (showLabel ? 22 : 24),
+                  size: dense ? (showLabel ? 18 : 20) : (showLabel ? 22 : 24),
                   color: selected
                       ? colorScheme.primary
                       : colorScheme.onSurfaceVariant,
@@ -513,15 +504,18 @@ class SettingsChoiceCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: (dense
-                            ? theme.textTheme.labelMedium
-                            : theme.textTheme.labelLarge)
-                        ?.copyWith(
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: selected
-                          ? colorScheme.primary
-                          : colorScheme.onSurface,
-                    ),
+                    style:
+                        (dense
+                                ? theme.textTheme.labelMedium
+                                : theme.textTheme.labelLarge)
+                            ?.copyWith(
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: selected
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurface,
+                            ),
                   ),
                 ],
               ],

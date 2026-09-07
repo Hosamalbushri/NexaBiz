@@ -43,23 +43,20 @@ class FakeStockValidationService implements StockValidationService {
   Future<List<StockShortageItem>> validateOutboundLines({
     required List<OutboundLineRequest> lines,
     String? warehouseId,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<double> getPostedBalance({
     required String itemCode,
     String? warehouseId,
-  }) async =>
-      100.0;
+  }) async => 100.0;
 }
 
 class FakeDependencyDetector implements InventoryDependencyDetector {
   @override
   Future<List<InventoryDocumentRef>> findDependentDocuments({
     required InventoryDocumentRef document,
-  }) async =>
-      [];
+  }) async => [];
 }
 
 class FakePostingEngine implements PostingEngine {
@@ -69,8 +66,7 @@ class FakePostingEngine implements PostingEngine {
     required List<InboundLineData> lines,
     required String? warehouseId,
     required DateTime documentDate,
-  }) async =>
-      1000.0;
+  }) async => 1000.0;
 
   @override
   Future<double> applyOutboundPosting({
@@ -78,8 +74,7 @@ class FakePostingEngine implements PostingEngine {
     required List<OutboundLineData> lines,
     required String? warehouseId,
     required CostValuationMethod valuationMethod,
-  }) async =>
-      1000.0;
+  }) async => 1000.0;
 
   @override
   Future<double> applyTransferPosting({
@@ -88,13 +83,10 @@ class FakePostingEngine implements PostingEngine {
     required String fromWarehouseId,
     required String toWarehouseId,
     required CostValuationMethod valuationMethod,
-  }) async =>
-      1000.0;
+  }) async => 1000.0;
 
   @override
-  Future<void> reversePosting({
-    required InventoryDocumentRef document,
-  }) async {}
+  Future<void> reversePosting({required InventoryDocumentRef document}) async {}
 }
 
 class FakeAccountingPoster implements InventoryAccountingPoster {
@@ -168,13 +160,22 @@ class MockWarehouseRepository implements WarehouseRepository {
   Future<void> deleteWarehouse(String id) async {}
 
   @override
-  Future<List<ProductWarehouseStock>> getStocksForWarehouse(String warehouseId) async => [];
+  Future<List<ProductWarehouseStock>> getStocksForWarehouse(
+    String warehouseId,
+  ) async => [];
 
   @override
-  Future<ProductWarehouseStock?> getStock(String itemCode, String warehouseId) async => null;
+  Future<ProductWarehouseStock?> getStock(
+    String itemCode,
+    String warehouseId,
+  ) async => null;
 
   @override
-  Future<void> updateWarehouseStock(String itemCode, String warehouseId, double deltaQty) async {}
+  Future<void> updateWarehouseStock(
+    String itemCode,
+    String warehouseId,
+    double deltaQty,
+  ) async {}
 }
 
 void main() {
@@ -266,7 +267,9 @@ void main() {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     // Seed Accounts for Company A
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: '10000000-0000-4000-8000-0000000000a1',
             accountCode: '1230-A',
@@ -280,7 +283,9 @@ void main() {
             isActive: const Value(true),
           ),
         );
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: '10000000-0000-4000-8000-0000000000a2',
             accountCode: '5100-A',
@@ -294,7 +299,9 @@ void main() {
             isActive: const Value(true),
           ),
         );
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: '10000000-0000-4000-8000-0000000000a3',
             accountCode: '2110-A',
@@ -310,7 +317,9 @@ void main() {
         );
 
     // Seed Accounts for Company B
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: '20000000-0000-4000-8000-0000000000b1',
             accountCode: '1230-B',
@@ -358,8 +367,14 @@ void main() {
     }
 
     final session = AuthSessionSnapshot(
-      user: const AuthUser(id: 'user-001', name: 'Admin', email: 'admin@nexabiz.com'),
-      companies: [AuthCompany(id: companyId, name: 'Company Alpha', code: 'ALPHA')],
+      user: const AuthUser(
+        id: 'user-001',
+        name: 'Admin',
+        email: 'admin@nexabiz.com',
+      ),
+      companies: [
+        AuthCompany(id: companyId, name: 'Company Alpha', code: 'ALPHA'),
+      ],
       roles: const ['admin'],
       permissions: const {'system.setup'},
       capturedAt: DateTime.now(),
@@ -372,13 +387,17 @@ void main() {
       userPermissions: ['system.setup'],
     );
 
-    await activeRepo.saveInventoryConfig(CompanyInventoryConfig(
-      companyId: companyId,
-      inventoryBaseCurrencyId: inventoryBaseCurrencyId,
-    ));
+    await activeRepo.saveInventoryConfig(
+      CompanyInventoryConfig(
+        companyId: companyId,
+        inventoryBaseCurrencyId: inventoryBaseCurrencyId,
+      ),
+    );
 
     await activeAccounting.saveAccountingConfig(mappings: accountMappings);
-    await activeWarehouse.configureDefaultWarehouse(warehouseId: defaultWarehouseId);
+    await activeWarehouse.configureDefaultWarehouse(
+      warehouseId: defaultWarehouseId,
+    );
     await activeWarehouse.configureInventoryOperationalSettings(
       allowNegativeStock: false,
       defaultCostingMethod: 'FIFO',
@@ -395,210 +414,209 @@ void main() {
     // -------------------------------------------------------------------------
     // 1. CROSS-TENANT ATTACKS
     // -------------------------------------------------------------------------
-    test('1.1 Cross-Tenant Isolation: Company A cannot read/write Company B setup config', () async {
-      await initRepoB.saveInventoryConfig(const CompanyInventoryConfig(
-        companyId: companyB,
-        inventoryBaseCurrencyId: 'SAR',
-      ));
+    test(
+      '1.1 Cross-Tenant Isolation: Company A cannot read/write Company B setup config',
+      () async {
+        await initRepoB.saveInventoryConfig(
+          const CompanyInventoryConfig(
+            companyId: companyB,
+            inventoryBaseCurrencyId: 'SAR',
+          ),
+        );
 
-      final configA = await initRepoA.getInventoryConfig();
-      expect(configA, isNull);
+        final configA = await initRepoA.getInventoryConfig();
+        expect(configA, isNull);
 
-      final stateA = await initRepoA.getState();
-      expect(stateA.companyId, equals(companyA));
-      expect(stateA.initializationCompleted, isFalse);
-    });
+        final stateA = await initRepoA.getState();
+        expect(stateA.companyId, equals(companyA));
+        expect(stateA.initializationCompleted, isFalse);
+      },
+    );
 
-    test('1.2 Cross-Tenant Attack: Company A cannot assign Company B account', () async {
-      expect(
-        () async => await accountingConfigServiceA.saveAccountingConfig(
-          mappings: {
-            AccountRole.inventory: '20000000-0000-4000-8000-0000000000b1', // Company B account
-          },
-        ),
-        throwsA(isA<InvalidCompanyAccountException>()),
-      );
-    });
+    test(
+      '1.2 Cross-Tenant Attack: Company A cannot assign Company B account',
+      () async {
+        expect(
+          () async => await accountingConfigServiceA.saveAccountingConfig(
+            mappings: {
+              AccountRole.inventory:
+                  '20000000-0000-4000-8000-0000000000b1', // Company B account
+            },
+          ),
+          throwsA(isA<InvalidCompanyAccountException>()),
+        );
+      },
+    );
 
-    test('1.3 Cross-Tenant Attack: Company A cannot assign Company B warehouse', () async {
-      expect(
-        () async => await warehouseConfigServiceA.configureDefaultWarehouse(
-          warehouseId: 'wh-B-valid', // Company B warehouse
-        ),
-        throwsA(isA<InvalidWarehouseException>()),
-      );
-    });
+    test(
+      '1.3 Cross-Tenant Attack: Company A cannot assign Company B warehouse',
+      () async {
+        expect(
+          () async => await warehouseConfigServiceA.configureDefaultWarehouse(
+            warehouseId: 'wh-B-valid', // Company B warehouse
+          ),
+          throwsA(isA<InvalidWarehouseException>()),
+        );
+      },
+    );
 
-    test('1.4 Cross-Tenant Currency Attack: Inventory base currency immutability violation rejected', () async {
-      await initRepoA.saveInventoryConfig(const CompanyInventoryConfig(
-        companyId: companyA,
-        inventoryBaseCurrencyId: 'YER',
-      ));
+    test(
+      '1.4 Cross-Tenant Currency Attack: Inventory base currency immutability violation rejected',
+      () async {
+        await initRepoA.saveInventoryConfig(
+          const CompanyInventoryConfig(
+            companyId: companyA,
+            inventoryBaseCurrencyId: 'YER',
+          ),
+        );
 
-      expect(
-        () async => await initRepoA.saveInventoryConfig(const CompanyInventoryConfig(
-          companyId: companyA,
-          inventoryBaseCurrencyId: 'USD',
-        )),
-        throwsA(isA<StateError>()),
-      );
-    });
+        expect(
+          () async => await initRepoA.saveInventoryConfig(
+            const CompanyInventoryConfig(
+              companyId: companyA,
+              inventoryBaseCurrencyId: 'USD',
+            ),
+          ),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
 
     // -------------------------------------------------------------------------
     // 2. AUTHORIZATION ATTACKS
     // -------------------------------------------------------------------------
-    test('2.1 Authorization Attack: Authenticated user without setup privilege rejected', () async {
-      expect(
-        () async => await performFullCompanySetup(
-          companyId: companyA,
-          isAuthenticated: true,
-          canAccessSetup: false, // Unauthorized user
-          inventoryBaseCurrencyId: 'YER',
-          accountMappings: {
-            AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
-            AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
-            AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
-          },
-          defaultWarehouseId: 'wh-A-valid',
-        ),
-        throwsA(isA<StateError>()),
-      );
-    });
+    test(
+      '2.1 Authorization Attack: Authenticated user without setup privilege rejected',
+      () async {
+        expect(
+          () async => await performFullCompanySetup(
+            companyId: companyA,
+            isAuthenticated: true,
+            canAccessSetup: false, // Unauthorized user
+            inventoryBaseCurrencyId: 'YER',
+            accountMappings: {
+              AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
+              AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
+              AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
+            },
+            defaultWarehouseId: 'wh-A-valid',
+          ),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
 
     // -------------------------------------------------------------------------
     // 3. ROUTING ATTACKS
     // -------------------------------------------------------------------------
-    test('3.1 Routing Deep-Link Attack: Deep link to inventory blocked when setup incomplete', () async {
-      const guard = CompanyInitializationRouteGuard();
+    test(
+      '3.1 Routing Deep-Link Attack: Deep link to inventory blocked when setup incomplete',
+      () async {
+        const guard = CompanyInitializationRouteGuard();
 
-      final decision = guard.evaluateRoute(
-        path: '/inventory/stock-receipt/new',
-        isAuthenticated: true,
-        isInitializationComplete: false,
-        isPublicRoute: false,
-        canAccessSetup: true,
-      );
+        final decision = guard.evaluateRoute(
+          path: '/inventory/stock-receipt/new',
+          isAuthenticated: true,
+          isInitializationComplete: false,
+          isPublicRoute: false,
+          canAccessSetup: true,
+        );
 
-      expect(decision, equals(RouteRedirectDecision.redirectToSetup));
-    });
+        expect(decision, equals(RouteRedirectDecision.redirectToSetup));
+      },
+    );
 
-    test('3.2 Application Restart Routing: Incomplete state retains setup redirection after restart', () async {
-      const guard = CompanyInitializationRouteGuard();
+    test(
+      '3.2 Application Restart Routing: Incomplete state retains setup redirection after restart',
+      () async {
+        const guard = CompanyInitializationRouteGuard();
 
-      final state = await initRepoA.getState();
-      expect(state.initializationCompleted, isFalse);
+        final state = await initRepoA.getState();
+        expect(state.initializationCompleted, isFalse);
 
-      final decision = guard.evaluateRoute(
-        path: '/dashboard',
-        isAuthenticated: true,
-        isInitializationComplete: state.initializationCompleted,
-        isPublicRoute: false,
-        canAccessSetup: true,
-      );
+        final decision = guard.evaluateRoute(
+          path: '/dashboard',
+          isAuthenticated: true,
+          isInitializationComplete: state.initializationCompleted,
+          isPublicRoute: false,
+          canAccessSetup: true,
+        );
 
-      expect(decision, equals(RouteRedirectDecision.redirectToSetup));
-    });
+        expect(decision, equals(RouteRedirectDecision.redirectToSetup));
+      },
+    );
 
     // -------------------------------------------------------------------------
     // 4. DOMAIN SERVICE BYPASS ATTACKS
     // -------------------------------------------------------------------------
-    test('4.1 Direct Domain Bypass: PostingCoordinator rejected when setup incomplete', () async {
-      final coordinator = PostingCoordinatorImpl(
-        db: inventoryDb,
-        stockValidationService: FakeStockValidationService(),
-        dependencyDetector: FakeDependencyDetector(),
-        postingEngine: FakePostingEngine(),
-        accountingPoster: FakeAccountingPoster(),
-        permissionGuard: FakePermissionGuard(),
-        initializationGuard: initGuardA,
-      );
+    test(
+      '4.1 Direct Domain Bypass: PostingCoordinator rejected when setup incomplete',
+      () async {
+        final coordinator = PostingCoordinatorImpl(
+          db: inventoryDb,
+          stockValidationService: FakeStockValidationService(),
+          dependencyDetector: FakeDependencyDetector(),
+          postingEngine: FakePostingEngine(),
+          accountingPoster: FakeAccountingPoster(),
+          permissionGuard: FakePermissionGuard(),
+          initializationGuard: initGuardA,
+        );
 
-      final docRef = InventoryDocumentRef(
-        documentId: 'doc-bypass-1',
-        documentNumber: 'DOC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'wh-A-valid',
-        status: InventoryDocumentStatus.draft,
-        currencyCode: 'YER',
-        exchangeRate: 1.0,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: 'doc-bypass-1',
+          documentNumber: 'DOC-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'wh-A-valid',
+          status: InventoryDocumentStatus.draft,
+          currencyCode: 'YER',
+          exchangeRate: 1.0,
+        );
 
-      expect(
-        () async => await coordinator.post(document: docRef),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
+        expect(
+          () async => await coordinator.post(document: docRef),
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
-    test('4.2 Direct Poster Bypass: InventoryAccountingPoster rejects posting when accounts unconfigured', () async {
-      final poster = InventoryAccountingPosterImpl(
-        accountingDb,
-        readCompanyId: () => companyA,
-        initRepository: initRepoA,
-      );
+    test(
+      '4.2 Direct Poster Bypass: InventoryAccountingPoster rejects posting when accounts unconfigured',
+      () async {
+        final poster = InventoryAccountingPosterImpl(
+          accountingDb,
+          readCompanyId: () => companyA,
+          initRepository: initRepoA,
+        );
 
-      final docRef = InventoryDocumentRef(
-        documentId: 'doc-poster-1',
-        documentNumber: 'REC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'wh-A-valid',
-        status: InventoryDocumentStatus.posted,
-        currencyCode: 'YER',
-        exchangeRate: 1.0,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: 'doc-poster-1',
+          documentNumber: 'REC-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'wh-A-valid',
+          status: InventoryDocumentStatus.posted,
+          currencyCode: 'YER',
+          exchangeRate: 1.0,
+        );
 
-      expect(
-        () async => await poster.postAccountingEntry(
-          document: docRef,
-          totalAmount: 100.0,
-        ),
-        throwsA(isA<Exception>()),
-      );
-    });
+        expect(
+          () async => await poster.postAccountingEntry(
+            document: docRef,
+            totalAmount: 100.0,
+          ),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
 
     // -------------------------------------------------------------------------
     // 5. IDEMPOTENCY ATTACKS
     // -------------------------------------------------------------------------
-    test('5.1 Setup Idempotency: Re-executing complete setup twice maintains valid state', () async {
-      final firstSetup = await performFullCompanySetup(
-        companyId: companyA,
-        isAuthenticated: true,
-        canAccessSetup: true,
-        inventoryBaseCurrencyId: 'YER',
-        accountMappings: {
-          AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
-          AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
-          AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
-        },
-        defaultWarehouseId: 'wh-A-valid',
-      );
-
-      expect(firstSetup.initializationCompleted, isTrue);
-
-      final secondSetup = await performFullCompanySetup(
-        companyId: companyA,
-        isAuthenticated: true,
-        canAccessSetup: true,
-        inventoryBaseCurrencyId: 'YER',
-        accountMappings: {
-          AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
-          AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
-          AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
-        },
-        defaultWarehouseId: 'wh-A-valid',
-      );
-
-      expect(secondSetup.initializationCompleted, isTrue);
-      expect(secondSetup.companyId, equals(companyA));
-    });
-
-    // -------------------------------------------------------------------------
-    // 6. FAILURE RECOVERY ATTACKS
-    // -------------------------------------------------------------------------
-    test('6.1 Failure Recovery: Partial setup failure leaves initializationIncomplete, retry succeeds', () async {
-      expect(
-        () async => await performFullCompanySetup(
+    test(
+      '5.1 Setup Idempotency: Re-executing complete setup twice maintains valid state',
+      () async {
+        final firstSetup = await performFullCompanySetup(
           companyId: companyA,
           isAuthenticated: true,
           canAccessSetup: true,
@@ -608,55 +626,96 @@ void main() {
             AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
             AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
           },
-          defaultWarehouseId: 'wh-INVALID-NON-EXISTENT',
-        ),
-        throwsA(isA<InvalidWarehouseException>()),
-      );
+          defaultWarehouseId: 'wh-A-valid',
+        );
 
-      final statePostFailure = await initRepoA.getState();
-      expect(statePostFailure.initializationCompleted, isFalse);
+        expect(firstSetup.initializationCompleted, isTrue);
 
-      final recoveredSetup = await performFullCompanySetup(
-        companyId: companyA,
-        isAuthenticated: true,
-        canAccessSetup: true,
-        inventoryBaseCurrencyId: 'YER',
-        accountMappings: {
-          AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
-          AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
-          AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
-        },
-        defaultWarehouseId: 'wh-A-valid',
-      );
+        final secondSetup = await performFullCompanySetup(
+          companyId: companyA,
+          isAuthenticated: true,
+          canAccessSetup: true,
+          inventoryBaseCurrencyId: 'YER',
+          accountMappings: {
+            AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
+            AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
+            AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
+          },
+          defaultWarehouseId: 'wh-A-valid',
+        );
 
-      expect(recoveredSetup.initializationCompleted, isTrue);
-    });
+        expect(secondSetup.initializationCompleted, isTrue);
+        expect(secondSetup.companyId, equals(companyA));
+      },
+    );
+
+    // -------------------------------------------------------------------------
+    // 6. FAILURE RECOVERY ATTACKS
+    // -------------------------------------------------------------------------
+    test(
+      '6.1 Failure Recovery: Partial setup failure leaves initializationIncomplete, retry succeeds',
+      () async {
+        expect(
+          () async => await performFullCompanySetup(
+            companyId: companyA,
+            isAuthenticated: true,
+            canAccessSetup: true,
+            inventoryBaseCurrencyId: 'YER',
+            accountMappings: {
+              AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
+              AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
+              AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
+            },
+            defaultWarehouseId: 'wh-INVALID-NON-EXISTENT',
+          ),
+          throwsA(isA<InvalidWarehouseException>()),
+        );
+
+        final statePostFailure = await initRepoA.getState();
+        expect(statePostFailure.initializationCompleted, isFalse);
+
+        final recoveredSetup = await performFullCompanySetup(
+          companyId: companyA,
+          isAuthenticated: true,
+          canAccessSetup: true,
+          inventoryBaseCurrencyId: 'YER',
+          accountMappings: {
+            AccountRole.inventory: '10000000-0000-4000-8000-0000000000a1',
+            AccountRole.cogs: '10000000-0000-4000-8000-0000000000a2',
+            AccountRole.payable: '10000000-0000-4000-8000-0000000000a3',
+          },
+          defaultWarehouseId: 'wh-A-valid',
+        );
+
+        expect(recoveredSetup.initializationCompleted, isTrue);
+      },
+    );
 
     // -------------------------------------------------------------------------
     // 7. SYNCHRONIZATION ATTACKS
     // -------------------------------------------------------------------------
-    test('7.1 Sync Queue Tenant Boundary: Cross-tenant SyncOperation enqueue strictly rejected', () async {
-      final queueA = SyncQueue(
-        box: syncQueueBox,
-        companyId: companyA,
-      );
+    test(
+      '7.1 Sync Queue Tenant Boundary: Cross-tenant SyncOperation enqueue strictly rejected',
+      () async {
+        final queueA = SyncQueue(box: syncQueueBox, companyId: companyA);
 
-      final invalidCrossTenantOp = SyncOperation(
-        id: 'op-cross-tenant-1',
-        companyId: companyB,
-        entityType: 'company_profile',
-        entityId: companyB,
-        type: SyncOperationType.create,
-        status: SyncStatus.pending,
-        payload: const {'companyId': companyB},
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+        final invalidCrossTenantOp = SyncOperation(
+          id: 'op-cross-tenant-1',
+          companyId: companyB,
+          entityType: 'company_profile',
+          entityId: companyB,
+          type: SyncOperationType.create,
+          status: SyncStatus.pending,
+          payload: const {'companyId': companyB},
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      expect(
-        () async => await queueA.enqueue(invalidCrossTenantOp),
-        throwsA(isA<SecurityException>()),
-      );
-    });
+        expect(
+          () async => await queueA.enqueue(invalidCrossTenantOp),
+          throwsA(isA<SecurityException>()),
+        );
+      },
+    );
   });
 }

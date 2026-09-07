@@ -32,42 +32,47 @@ Future<T?> showAppBottomSheet<T>({
       final verticalPadding = isLandscape ? AppSpacing.xs : AppSpacing.md;
 
       return Padding(
-        padding: EdgeInsets.only(
-          left: horizontalPadding,
-          right: horizontalPadding,
-          top: verticalPadding,
-          bottom: media.viewInsets.bottom + verticalPadding,
-        ),
-        child: AppContentConstraint(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (title != null) ...[
-                    Center(
-                      child: Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: (isLandscape
-                                ? Theme.of(context).textTheme.titleMedium
-                                : Theme.of(context).textTheme.titleLarge)
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    SizedBox(
-                      height: isLandscape ? AppSpacing.xs : AppSpacing.md,
-                    ),
-                  ],
-                  child,
-                ],
+            padding: EdgeInsets.only(
+              left: horizontalPadding,
+              right: horizontalPadding,
+              top: verticalPadding,
+              bottom: media.viewInsets.bottom + verticalPadding,
+            ),
+            child: AppContentConstraint(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxHeight),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (title != null) ...[
+                        Center(
+                          child: Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            style:
+                                (isLandscape
+                                        ? Theme.of(
+                                            context,
+                                          ).textTheme.titleMedium
+                                        : Theme.of(
+                                            context,
+                                          ).textTheme.titleLarge)
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        SizedBox(
+                          height: isLandscape ? AppSpacing.xs : AppSpacing.md,
+                        ),
+                      ],
+                      child,
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      )
+          )
           .animate()
           .fadeIn(duration: 160.ms)
           .moveY(

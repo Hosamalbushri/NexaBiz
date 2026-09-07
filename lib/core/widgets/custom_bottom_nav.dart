@@ -160,10 +160,7 @@ class _QuickActionsFabState extends State<QuickActionsFab>
   @override
   void initState() {
     super.initState();
-    _entrance = AnimationController(
-      vsync: this,
-      duration: _entranceDuration,
-    );
+    _entrance = AnimationController(vsync: this, duration: _entranceDuration);
     final curve = CurvedAnimation(
       parent: _entrance,
       curve: Curves.easeOutCubic,
@@ -247,9 +244,7 @@ class _QuickActionsFabState extends State<QuickActionsFab>
         borderRadius: BorderRadius.circular(QuickActionsFab.cornerRadius),
         elevation: elevation,
         color: colorScheme.primary,
-        shadowColor: colorScheme.shadow.withValues(
-          alpha: isDark ? 0.42 : 0.20,
-        ),
+        shadowColor: colorScheme.shadow.withValues(alpha: isDark ? 0.42 : 0.20),
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
@@ -272,10 +267,7 @@ class _QuickActionsFabState extends State<QuickActionsFab>
                   );
                   return FadeTransition(
                     opacity: animation,
-                    child: ScaleTransition(
-                      scale: rotated,
-                      child: child,
-                    ),
+                    child: ScaleTransition(scale: rotated, child: child),
                   );
                 },
                 child: Icon(
@@ -316,10 +308,7 @@ class _QuickActionsFabState extends State<QuickActionsFab>
               opacity: _entranceOpacity,
               child: SlideTransition(
                 position: _entranceSlide,
-                child: ScaleTransition(
-                  scale: _entranceScale,
-                  child: child,
-                ),
+                child: ScaleTransition(scale: _entranceScale, child: child),
               ),
             );
           },
@@ -380,9 +369,7 @@ class _NavItem extends StatelessWidget {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            decoration: const BoxDecoration(
-              color: Colors.transparent,
-            ),
+            decoration: const BoxDecoration(color: Colors.transparent),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,

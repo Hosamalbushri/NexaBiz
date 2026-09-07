@@ -47,14 +47,14 @@ class AccountBinding {
   }
 
   Map<String, dynamic> toJson() => {
-        'companyId': companyId,
-        'packageId': packageId,
-        'requirementKey': requirementKey,
-        'accountUuid': accountUuid,
-        'status': status.name,
-        'bindingMode': bindingMode.name,
-        'boundAt': boundAt?.toUtc().millisecondsSinceEpoch,
-      };
+    'companyId': companyId,
+    'packageId': packageId,
+    'requirementKey': requirementKey,
+    'accountUuid': accountUuid,
+    'status': status.name,
+    'bindingMode': bindingMode.name,
+    'boundAt': boundAt?.toUtc().millisecondsSinceEpoch,
+  };
 
   factory AccountBinding.fromJson(Map<String, dynamic> json) {
     final rawStatus = json['status'] as String?;
@@ -104,4 +104,3 @@ class AccountBinding {
       bindingMode.hashCode ^
       boundAt.hashCode;
 }
-

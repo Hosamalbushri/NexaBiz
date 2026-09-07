@@ -59,15 +59,14 @@ class AuthenticatedHttpClient {
       'Accept': 'application/json',
       if (jsonBody) 'Content-Type': 'application/json',
       'X-Device-Id': _config.deviceId,
+      if (_config.companyId.isNotEmpty) 'X-Company-Id': _config.companyId,
+      if (_config.userId.isNotEmpty) 'X-User-Id': _config.userId,
       if (correlation != null && correlation.isNotEmpty)
         'X-Correlation-Id': correlation,
     };
   }
 
-  Future<http.Response> get(
-    String path, {
-    Map<String, String>? query,
-  }) {
+  Future<http.Response> get(String path, {Map<String, String>? query}) {
     return _send(() async {
       return _client
           .get(uri(path, query), headers: await _headers(jsonBody: false))
@@ -142,9 +141,7 @@ class AuthenticatedHttpClient {
     return future;
   }
 
-  Future<http.Response> _send(
-    Future<http.Response> Function() request,
-  ) async {
+  Future<http.Response> _send(Future<http.Response> Function() request) async {
     try {
       var response = await request();
       if (response.statusCode != 401) {

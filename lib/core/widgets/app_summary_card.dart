@@ -59,7 +59,11 @@ class AppSummaryCard extends StatelessWidget {
                     color: effectiveIconColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
-                  child: Icon(icon, size: AppIcons.sm, color: effectiveIconColor),
+                  child: Icon(
+                    icon,
+                    size: AppIcons.sm,
+                    color: effectiveIconColor,
+                  ),
                 ),
               ],
             ],
@@ -82,9 +86,7 @@ class AppSummaryCard extends StatelessWidget {
                         ? Icons.trending_up_rounded
                         : Icons.trending_down_rounded,
                     size: 16,
-                    color: isPositiveTrend!
-                        ? AppColors.success
-                        : scheme.error,
+                    color: isPositiveTrend! ? AppColors.success : scheme.error,
                   ),
                   const SizedBox(width: 2),
                   Text(

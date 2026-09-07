@@ -42,16 +42,13 @@ class StockPostingErrorDetails {
       return StockPostingErrorDetails(
         title: 'التهيئة المحاسبية غير مكتملة',
         message: reason,
-        subtitle: 'يلزم استكمال تهيئة الحسابات المحاسبية قبل إتمام ترحيل حركات المخزون.',
+        subtitle:
+            'يلزم استكمال تهيئة الحسابات المحاسبية قبل إتمام ترحيل حركات المخزون.',
         category: StockPostingErrorCategory.configuration,
         actionLabel: 'الذهاب للتهيئة المحاسبية',
         onAction: () {
           Navigator.of(context).pop();
-          try {
-            context.push(AppRoutes.settingsSetup);
-          } catch (_) {
-            Navigator.of(context).pushNamed(AppRoutes.settingsSetup);
-          }
+          context.push(AppRoutes.settingsSetup);
         },
       );
     }
@@ -60,7 +57,8 @@ class StockPostingErrorDetails {
       return StockPostingErrorDetails(
         title: 'تكلفة أصناف غير مكتملة',
         message: reason,
-        subtitle: 'يرجى مراجعة وتحديث سعر التكلفة للأصناف ثم إعادة محاولة الترحيل.',
+        subtitle:
+            'يرجى مراجعة وتحديث سعر التكلفة للأصناف ثم إعادة محاولة الترحيل.',
         category: StockPostingErrorCategory.zeroCost,
         actionLabel: onEditRequested != null ? 'تعديل المستند' : null,
         onAction: onEditRequested != null
@@ -112,35 +110,35 @@ Future<void> showStockPostingErrorDialog(
 
   final (icon, iconColor, headerBg) = switch (category) {
     StockPostingErrorCategory.configuration => (
-        Icons.settings_suggest_rounded,
-        Colors.orange.shade800,
-        Colors.orange.shade50
-      ),
+      Icons.settings_suggest_rounded,
+      Colors.orange.shade800,
+      Colors.orange.shade50,
+    ),
     StockPostingErrorCategory.zeroCost => (
-        Icons.monetization_on_outlined,
-        Colors.amber.shade900,
-        Colors.amber.shade50
-      ),
+      Icons.monetization_on_outlined,
+      Colors.amber.shade900,
+      Colors.amber.shade50,
+    ),
     StockPostingErrorCategory.closedPeriod => (
-        Icons.edit_calendar_rounded,
-        Colors.purple.shade800,
-        Colors.purple.shade50
-      ),
+      Icons.edit_calendar_rounded,
+      Colors.purple.shade800,
+      Colors.purple.shade50,
+    ),
     StockPostingErrorCategory.shortage => (
-        Icons.inventory_2_outlined,
-        Colors.red.shade800,
-        Colors.red.shade50
-      ),
+      Icons.inventory_2_outlined,
+      Colors.red.shade800,
+      Colors.red.shade50,
+    ),
     StockPostingErrorCategory.permission => (
-        Icons.lock_rounded,
-        Colors.deepOrange.shade800,
-        Colors.deepOrange.shade50
-      ),
+      Icons.lock_rounded,
+      Colors.deepOrange.shade800,
+      Colors.deepOrange.shade50,
+    ),
     _ => (
-        Icons.error_outline_rounded,
-        scheme.error,
-        scheme.errorContainer.withValues(alpha: 0.3)
-      ),
+      Icons.error_outline_rounded,
+      scheme.error,
+      scheme.errorContainer.withValues(alpha: 0.3),
+    ),
   };
 
   await showDialog<void>(
@@ -157,10 +155,7 @@ Future<void> showStockPostingErrorDialog(
         children: [
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: headerBg,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: headerBg, shape: BoxShape.circle),
             child: Icon(icon, size: 36, color: iconColor),
           ),
           const SizedBox(height: AppSpacing.sm),

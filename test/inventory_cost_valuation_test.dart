@@ -151,235 +151,245 @@ void main() {
   });
 
   group('CostLayerService - Weighted Average Valuation', () {
-    test('calculates correct weighted average cost across open layers', () async {
-      final layer1Id = generateUuidV4();
-      final layer2Id = generateUuidV4();
-      final rcpt1Id = generateUuidV4();
-      final rcpt2Id = generateUuidV4();
-      final issueLineId = generateUuidV4();
+    test(
+      'calculates correct weighted average cost across open layers',
+      () async {
+        final layer1Id = generateUuidV4();
+        final layer2Id = generateUuidV4();
+        final rcpt1Id = generateUuidV4();
+        final rcpt2Id = generateUuidV4();
+        final issueLineId = generateUuidV4();
 
-      await service.createLayer(
-        CostLayer(
-          id: layer1Id,
+        await service.createLayer(
+          CostLayer(
+            id: layer1Id,
+            itemCode: 'ITEM-WA',
+            movementUuid: rcpt1Id,
+            movementType: 'receipt',
+            receivedDate: DateTime.utc(2026, 1, 1),
+            receivedQty: 10,
+            unitCost: 100,
+          ),
+        );
+
+        await service.createLayer(
+          CostLayer(
+            id: layer2Id,
+            itemCode: 'ITEM-WA',
+            movementUuid: rcpt2Id,
+            movementType: 'receipt',
+            receivedDate: DateTime.utc(2026, 1, 2),
+            receivedQty: 10,
+            unitCost: 200,
+          ),
+        );
+
+        final avgCost = await service.getWeightedAverageCost('ITEM-WA');
+        expect(avgCost, 150.0); // (1000 + 2000) / 20
+
+        final result = await service.consumeLayers(
           itemCode: 'ITEM-WA',
-          movementUuid: rcpt1Id,
-          movementType: 'receipt',
-          receivedDate: DateTime.utc(2026, 1, 1),
-          receivedQty: 10,
-          unitCost: 100,
-        ),
-      );
+          quantity: 10,
+          method: CostValuationMethod.weightedAverage,
+          issueLineUuid: issueLineId,
+          movementType: 'issue',
+        );
 
-      await service.createLayer(
-        CostLayer(
-          id: layer2Id,
-          itemCode: 'ITEM-WA',
-          movementUuid: rcpt2Id,
-          movementType: 'receipt',
-          receivedDate: DateTime.utc(2026, 1, 2),
-          receivedQty: 10,
-          unitCost: 200,
-        ),
-      );
-
-      final avgCost = await service.getWeightedAverageCost('ITEM-WA');
-      expect(avgCost, 150.0); // (1000 + 2000) / 20
-
-      final result = await service.consumeLayers(
-        itemCode: 'ITEM-WA',
-        quantity: 10,
-        method: CostValuationMethod.weightedAverage,
-        issueLineUuid: issueLineId,
-        movementType: 'issue',
-      );
-
-      expect(result.effectiveUnitCost, 150.0);
-      expect(result.totalCost, 1500.0);
-    });
+        expect(result.effectiveUnitCost, 150.0);
+        expect(result.totalCost, 1500.0);
+      },
+    );
   });
 
   group('CostLayerService - Reversals', () {
-    test('restores layer remaining quantities when issue line is reversed', () async {
-      final layerId = generateUuidV4();
-      final rcptId = generateUuidV4();
-      final issueLineId = generateUuidV4();
+    test(
+      'restores layer remaining quantities when issue line is reversed',
+      () async {
+        final layerId = generateUuidV4();
+        final rcptId = generateUuidV4();
+        final issueLineId = generateUuidV4();
 
-      await service.createLayer(
-        CostLayer(
-          id: layerId,
+        await service.createLayer(
+          CostLayer(
+            id: layerId,
+            itemCode: 'ITEM-REV',
+            movementUuid: rcptId,
+            movementType: 'receipt',
+            receivedDate: DateTime.utc(2026, 1, 1),
+            receivedQty: 10,
+            unitCost: 100,
+          ),
+        );
+
+        await service.consumeLayers(
           itemCode: 'ITEM-REV',
-          movementUuid: rcptId,
-          movementType: 'receipt',
-          receivedDate: DateTime.utc(2026, 1, 1),
-          receivedQty: 10,
-          unitCost: 100,
-        ),
-      );
+          quantity: 10,
+          method: CostValuationMethod.fifo,
+          issueLineUuid: issueLineId,
+          movementType: 'issue',
+        );
 
-      await service.consumeLayers(
-        itemCode: 'ITEM-REV',
-        quantity: 10,
-        method: CostValuationMethod.fifo,
-        issueLineUuid: issueLineId,
-        movementType: 'issue',
-      );
+        var openLayers = await service.getOpenLayers('ITEM-REV');
+        expect(openLayers.isEmpty, true);
 
-      var openLayers = await service.getOpenLayers('ITEM-REV');
-      expect(openLayers.isEmpty, true);
+        await service.reverseConsumptions(issueLineId);
 
-      await service.reverseConsumptions(issueLineId);
-
-      openLayers = await service.getOpenLayers('ITEM-REV');
-      expect(openLayers.length, 1);
-      expect(openLayers.first.remainingQty, 10.0);
-    });
+        openLayers = await service.getOpenLayers('ITEM-REV');
+        expect(openLayers.length, 1);
+        expect(openLayers.first.remainingQty, 10.0);
+      },
+    );
   });
 
   group('StockMovementsRepositoryImpl Integration', () {
-    test('automatically manages cost layers during receipt and issue operations', () async {
-      final rcptId = generateUuidV4();
-      final rcptLineId = generateUuidV4();
-      final issueId = generateUuidV4();
-      final issueLineId = generateUuidV4();
+    test(
+      'automatically manages cost layers during receipt and issue operations',
+      () async {
+        final rcptId = generateUuidV4();
+        final rcptLineId = generateUuidV4();
+        final issueId = generateUuidV4();
+        final issueLineId = generateUuidV4();
 
-      final receipt = StockReceipt(
-        id: rcptId,
-        receiptNumber: 'REC-001',
-        supplier: 'Test Supplier',
-        receiptDate: DateTime.utc(2026, 1, 1),
-        status: InventoryDocumentStatus.posted,
-        lines: [
-          StockMovementLine(
-            id: rcptLineId,
+        final receipt = StockReceipt(
+          id: rcptId,
+          receiptNumber: 'REC-001',
+          supplier: 'Test Supplier',
+          receiptDate: DateTime.utc(2026, 1, 1),
+          status: InventoryDocumentStatus.posted,
+          lines: [
+            StockMovementLine(
+              id: rcptLineId,
+              movementUuid: rcptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-REPO',
+              itemName: 'Repo Item',
+              quantity: 20,
+              unitCost: 50,
+              totalCost: 1000,
+            ),
+          ],
+        );
+
+        await repo.saveReceipt(receipt);
+        await service.createLayer(
+          CostLayer(
+            id: generateUuidV4(),
+            itemCode: 'ITEM-REPO',
             movementUuid: rcptId,
             movementType: 'receipt',
-            itemCode: 'ITEM-REPO',
-            itemName: 'Repo Item',
-            quantity: 20,
+            receivedDate: DateTime.utc(2026, 1, 1),
+            receivedQty: 20,
             unitCost: 50,
-            totalCost: 1000,
           ),
-        ],
-      );
+        );
 
-      await repo.saveReceipt(receipt);
-      await service.createLayer(
-        CostLayer(
-          id: generateUuidV4(),
+        final openLayers = await service.getOpenLayers('ITEM-REPO');
+        expect(openLayers.length, 1);
+        expect(openLayers.first.remainingQty, 20.0);
+
+        final issue = StockIssue(
+          id: issueId,
+          issueNumber: 'ISS-001',
+          issueDate: DateTime.utc(2026, 1, 2),
+          status: InventoryDocumentStatus.posted,
+          lines: [
+            StockMovementLine(
+              id: issueLineId,
+              movementUuid: issueId,
+              movementType: 'issue',
+              itemCode: 'ITEM-REPO',
+              itemName: 'Repo Item',
+              quantity: 5,
+              unitCost: 50,
+              totalCost: 250,
+            ),
+          ],
+        );
+
+        await repo.saveIssue(issue);
+        await service.consumeLayers(
           itemCode: 'ITEM-REPO',
-          movementUuid: rcptId,
-          movementType: 'receipt',
-          receivedDate: DateTime.utc(2026, 1, 1),
-          receivedQty: 20,
-          unitCost: 50,
-        ),
-      );
+          quantity: 5,
+          method: CostValuationMethod.fifo,
+          issueLineUuid: issueLineId,
+          movementType: 'issue',
+        );
 
-      final openLayers = await service.getOpenLayers('ITEM-REPO');
-      expect(openLayers.length, 1);
-      expect(openLayers.first.remainingQty, 20.0);
+        final savedIssue = await repo.getIssueById(issueId);
+        expect(savedIssue, isNotNull);
+        expect(savedIssue!.lines.first.unitCost, 50.0);
+        expect(savedIssue.lines.first.totalCost, 250.0);
 
-      final issue = StockIssue(
-        id: issueId,
-        issueNumber: 'ISS-001',
-        issueDate: DateTime.utc(2026, 1, 2),
-        status: InventoryDocumentStatus.posted,
-        lines: [
-          StockMovementLine(
-            id: issueLineId,
-            movementUuid: issueId,
-            movementType: 'issue',
-            itemCode: 'ITEM-REPO',
-            itemName: 'Repo Item',
-            quantity: 5,
-            unitCost: 50,
-            totalCost: 250,
-          ),
-        ],
-      );
-
-      await repo.saveIssue(issue);
-      await service.consumeLayers(
-        itemCode: 'ITEM-REPO',
-        quantity: 5,
-        method: CostValuationMethod.fifo,
-        issueLineUuid: issueLineId,
-        movementType: 'issue',
-      );
-
-      final savedIssue = await repo.getIssueById(issueId);
-      expect(savedIssue, isNotNull);
-      expect(savedIssue!.lines.first.unitCost, 50.0);
-      expect(savedIssue.lines.first.totalCost, 250.0);
-
-      final remainingLayers = await service.getOpenLayers('ITEM-REPO');
-      expect(remainingLayers.first.remainingQty, 15.0);
-    });
+        final remainingLayers = await service.getOpenLayers('ITEM-REPO');
+        expect(remainingLayers.first.remainingQty, 15.0);
+      },
+    );
   });
 
   group('StockReturnsRepositoryImpl Integration', () {
-    test('creates cost layer for sales return and consumes layer for purchase return', () async {
-      final salesReturnId = generateUuidV4();
-      final salesReturnLineId = generateUuidV4();
+    test(
+      'creates cost layer for sales return and consumes layer for purchase return',
+      () async {
+        final salesReturnId = generateUuidV4();
+        final salesReturnLineId = generateUuidV4();
 
-      final salesReturn = StockReturn(
-        id: salesReturnId,
-        returnNumber: 'SR-001',
-        returnType: StockReturnType.salesReturn,
-        returnDate: DateTime.utc(2026, 1, 3),
-        status: InventoryDocumentStatus.posted,
-        lines: [
-          StockMovementLine(
-            id: salesReturnLineId,
-            movementUuid: salesReturnId,
-            movementType: 'sales_return',
-            itemCode: 'ITEM-RETURN',
-            itemName: 'Returned Product',
-            quantity: 8,
-            unitCost: 75,
-            totalCost: 600,
-          ),
-        ],
-      );
+        final salesReturn = StockReturn(
+          id: salesReturnId,
+          returnNumber: 'SR-001',
+          returnType: StockReturnType.salesReturn,
+          returnDate: DateTime.utc(2026, 1, 3),
+          status: InventoryDocumentStatus.posted,
+          lines: [
+            StockMovementLine(
+              id: salesReturnLineId,
+              movementUuid: salesReturnId,
+              movementType: 'sales_return',
+              itemCode: 'ITEM-RETURN',
+              itemName: 'Returned Product',
+              quantity: 8,
+              unitCost: 75,
+              totalCost: 600,
+            ),
+          ],
+        );
 
-      await returnsRepo.saveReturn(salesReturn);
+        await returnsRepo.saveReturn(salesReturn);
 
-      var layers = await service.getOpenLayers('ITEM-RETURN');
-      expect(layers.length, 1);
-      expect(layers.first.remainingQty, 8.0);
-      expect(layers.first.unitCost, 75.0);
+        var layers = await service.getOpenLayers('ITEM-RETURN');
+        expect(layers.length, 1);
+        expect(layers.first.remainingQty, 8.0);
+        expect(layers.first.unitCost, 75.0);
 
-      // Perform a Purchase Return to return 3 units back to supplier
-      final purchaseReturnId = generateUuidV4();
-      final purchaseReturnLineId = generateUuidV4();
+        // Perform a Purchase Return to return 3 units back to supplier
+        final purchaseReturnId = generateUuidV4();
+        final purchaseReturnLineId = generateUuidV4();
 
-      final purchaseReturn = StockReturn(
-        id: purchaseReturnId,
-        returnNumber: 'PR-001',
-        returnType: StockReturnType.purchaseReturn,
-        returnDate: DateTime.utc(2026, 1, 4),
-        status: InventoryDocumentStatus.posted,
-        lines: [
-          StockMovementLine(
-            id: purchaseReturnLineId,
-            movementUuid: purchaseReturnId,
-            movementType: 'purchase_return',
-            itemCode: 'ITEM-RETURN',
-            itemName: 'Returned Product',
-            quantity: 3,
-            unitCost: 0,
-            totalCost: 0,
-          ),
-        ],
-      );
+        final purchaseReturn = StockReturn(
+          id: purchaseReturnId,
+          returnNumber: 'PR-001',
+          returnType: StockReturnType.purchaseReturn,
+          returnDate: DateTime.utc(2026, 1, 4),
+          status: InventoryDocumentStatus.posted,
+          lines: [
+            StockMovementLine(
+              id: purchaseReturnLineId,
+              movementUuid: purchaseReturnId,
+              movementType: 'purchase_return',
+              itemCode: 'ITEM-RETURN',
+              itemName: 'Returned Product',
+              quantity: 3,
+              unitCost: 0,
+              totalCost: 0,
+            ),
+          ],
+        );
 
-      await returnsRepo.saveReturn(purchaseReturn);
+        await returnsRepo.saveReturn(purchaseReturn);
 
-      layers = await service.getOpenLayers('ITEM-RETURN');
-      expect(layers.length, 1);
-      expect(layers.first.remainingQty, 5.0);
-    });
+        layers = await service.getOpenLayers('ITEM-RETURN');
+        expect(layers.length, 1);
+        expect(layers.first.remainingQty, 5.0);
+      },
+    );
   });
 }
-
-

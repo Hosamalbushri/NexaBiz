@@ -105,8 +105,7 @@ abstract class CashFlowReportDataPort {
 }
 
 /// Provider for CashFlowReportDataPort.
-final cashFlowReportDataPortProvider =
-    Provider<CashFlowReportDataPort>((ref) {
+final cashFlowReportDataPortProvider = Provider<CashFlowReportDataPort>((ref) {
   throw UnimplementedError(
     'cashFlowReportDataPortProvider must be overridden in providerOverrides',
   );

@@ -6,9 +6,9 @@ class ImportAssignment {
     this.staticValue,
     this.transformExpression,
   }) : assert(
-          sourceHeader != null || staticValue != null,
-          'Assignment must have either a sourceHeader or a staticValue.',
-        );
+         sourceHeader != null || staticValue != null,
+         'Assignment must have either a sourceHeader or a staticValue.',
+       );
 
   final String targetFieldKey;
   final String? sourceHeader;

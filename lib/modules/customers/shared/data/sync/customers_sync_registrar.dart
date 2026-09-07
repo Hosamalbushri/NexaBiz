@@ -3,11 +3,10 @@ import 'package:stock_count/modules/customers/directory/presentation/providers/c
 import 'customers_sync_handlers.dart';
 
 class CustomersSyncRegistrar implements SyncModuleRegistrar {
-  const CustomersSyncRegistrar({
-    this.ensureLinkedAccount,
-  });
+  const CustomersSyncRegistrar({this.ensureLinkedAccount});
 
-  final Future<void> Function(Map<String, dynamic> payload)? ensureLinkedAccount;
+  final Future<void> Function(Map<String, dynamic> payload)?
+  ensureLinkedAccount;
 
   @override
   String get moduleId => 'customers';

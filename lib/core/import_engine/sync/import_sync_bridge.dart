@@ -25,9 +25,7 @@ class ImportSyncEntityMetadata {
 
 /// Bridge orchestrating synchronization metadata preservation and selective outbox enqueueing.
 class ImportSyncBridge {
-  const ImportSyncBridge({
-    this.syncQueue,
-  });
+  const ImportSyncBridge({this.syncQueue});
 
   final SyncQueue? syncQueue;
 

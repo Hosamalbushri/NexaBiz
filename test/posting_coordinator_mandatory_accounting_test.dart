@@ -56,7 +56,9 @@ void main() {
 
     // Insert mandatory inventory (1230) and offset (1010) accounts into accounting db
     final now = DateTime.now().millisecondsSinceEpoch;
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: inventoryAccUuid,
             accountCode: '1230',
@@ -68,7 +70,9 @@ void main() {
             updatedAt: now,
           ),
         );
-    await accountingDb.into(accountingDb.accounts).insert(
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: offsetAccUuid,
             accountCode: '1010',
@@ -87,9 +91,14 @@ void main() {
     await accountingDb.close();
   });
 
-  Future<InventoryDocumentRef> createDraftReceipt(String receiptUuid, {String warehouseId = 'WH-MAIN'}) async {
+  Future<InventoryDocumentRef> createDraftReceipt(
+    String receiptUuid, {
+    String warehouseId = 'WH-MAIN',
+  }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.into(db.products).insertOnConflictUpdate(
+    await db
+        .into(db.products)
+        .insertOnConflictUpdate(
           ProductsCompanion(
             id: const Value(1),
             uuid: Value(generateUuidV4()),
@@ -105,7 +114,9 @@ void main() {
           ),
         );
 
-    await db.into(db.stockReceipts).insert(
+    await db
+        .into(db.stockReceipts)
+        .insert(
           StockReceiptsCompanion.insert(
             uuid: receiptUuid,
             receiptNumber: 'REC-001',
@@ -118,7 +129,9 @@ void main() {
           ),
         );
 
-    await db.into(db.stockMovementLines).insert(
+    await db
+        .into(db.stockMovementLines)
+        .insert(
           StockMovementLinesCompanion.insert(
             uuid: generateUuidV4(),
             movementUuid: receiptUuid,
@@ -140,7 +153,9 @@ void main() {
     );
   }
 
-  PostingCoordinator createCoordinator({InventoryAccountingPoster? customPoster}) {
+  PostingCoordinator createCoordinator({
+    InventoryAccountingPoster? customPoster,
+  }) {
     final costLayerService = CostLayerServiceImpl(
       db: db,
       readCompanyId: () => companyId,
@@ -151,15 +166,13 @@ void main() {
       null,
       () => companyId,
     );
-    final validationService = StockValidationServiceImpl(
-      db,
-      () => companyId,
-    );
+    final validationService = StockValidationServiceImpl(db, () => companyId);
     final dependencyDetector = InventoryDependencyDetectorImpl(
       db,
       () => companyId,
     );
-    final accountingPoster = customPoster ??
+    final accountingPoster =
+        customPoster ??
         InventoryAccountingPosterImpl(
           accountingDb,
           readCompanyId: () => companyId,
@@ -177,48 +190,73 @@ void main() {
   }
 
   group('Mandatory AccountingPoster & Atomic Integrity Tests', () {
-    test('Successful inventory posting creates corresponding accounting entry', () async {
-      final coordinator = createCoordinator();
-      final docRef = await createDraftReceipt(generateUuidV4());
+    test(
+      'Successful inventory posting creates corresponding accounting entry',
+      () async {
+        final coordinator = createCoordinator();
+        final docRef = await createDraftReceipt(generateUuidV4());
 
-      final res = await coordinator.post(document: docRef, userId: 'user_001');
+        final res = await coordinator.post(
+          document: docRef,
+          userId: 'user_001',
+        );
 
-      expect(res, isA<PostSuccess>());
+        expect(res, isA<PostSuccess>());
 
-      final journalEntries = await accountingDb.select(accountingDb.journalEntries).get();
-      expect(journalEntries.length, 1);
-      expect(journalEntries.first.voucherNumber, docRef.documentNumber);
-      expect(journalEntries.first.companyId, companyId);
-      expect(journalEntries.first.isPosted, isTrue);
+        final journalEntries = await accountingDb
+            .select(accountingDb.journalEntries)
+            .get();
+        expect(journalEntries.length, 1);
+        expect(journalEntries.first.voucherNumber, docRef.documentNumber);
+        expect(journalEntries.first.companyId, companyId);
+        expect(journalEntries.first.isPosted, isTrue);
 
-      final lines = await (accountingDb.select(accountingDb.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(journalEntries.first.uuid)))
-          .get();
-      expect(lines.length, 2);
-    });
+        final lines =
+            await (accountingDb.select(accountingDb.journalLines)..where(
+                  (tbl) => tbl.entryUuid.equals(journalEntries.first.uuid),
+                ))
+                .get();
+        expect(lines.length, 2);
+      },
+    );
 
-    test('Accounting failure prevents final Posted state and rolls back inventory mutations', () async {
-      final coordinator = createCoordinator(customPoster: FailingAccountingPoster());
-      final receiptUuid = generateUuidV4();
-      final docRef = await createDraftReceipt(receiptUuid);
+    test(
+      'Accounting failure prevents final Posted state and rolls back inventory mutations',
+      () async {
+        final coordinator = createCoordinator(
+          customPoster: FailingAccountingPoster(),
+        );
+        final receiptUuid = generateUuidV4();
+        final docRef = await createDraftReceipt(receiptUuid);
 
-      final res = await coordinator.post(document: docRef, userId: 'user_001');
+        final res = await coordinator.post(
+          document: docRef,
+          userId: 'user_001',
+        );
 
-      expect(res, isA<PostInvalidStatus>());
-      expect((res as PostInvalidStatus).reason, contains('فشل الترحيل المحاسبي'));
+        expect(res, isA<PostInvalidStatus>());
+        expect(
+          (res as PostInvalidStatus).reason,
+          contains('فشل الترحيل المحاسبي'),
+        );
 
-      // Verify document status in DB is STILL draft
-      final dbDoc = await (db.select(db.stockReceipts)..where((t) => t.uuid.equals(receiptUuid))).getSingle();
-      expect(dbDoc.status, 'draft');
+        // Verify document status in DB is STILL draft
+        final dbDoc = await (db.select(
+          db.stockReceipts,
+        )..where((t) => t.uuid.equals(receiptUuid))).getSingle();
+        expect(dbDoc.status, 'draft');
 
-      // Verify product onHandQty is STILL 0.0 (rolled back)
-      final prod = await (db.select(db.products)..where((p) => p.itemCode.equals('ITEM-001'))).getSingle();
-      expect(prod.onHandQty, 0.0);
+        // Verify product onHandQty is STILL 0.0 (rolled back)
+        final prod = await (db.select(
+          db.products,
+        )..where((p) => p.itemCode.equals('ITEM-001'))).getSingle();
+        expect(prod.onHandQty, 0.0);
 
-      // Verify cost layers are empty (rolled back)
-      final layers = await db.select(db.inventoryCostLayers).get();
-      expect(layers, isEmpty);
-    });
+        // Verify cost layers are empty (rolled back)
+        final layers = await db.select(db.inventoryCostLayers).get();
+        expect(layers, isEmpty);
+      },
+    );
 
     test('Retry of posting does not create duplicate journal entry', () async {
       final coordinator = createCoordinator();
@@ -233,75 +271,102 @@ void main() {
       expect(res2, isA<PostSuccess>());
 
       // Journal entry count MUST still be exactly 1
-      final journalEntries = await accountingDb.select(accountingDb.journalEntries).get();
+      final journalEntries = await accountingDb
+          .select(accountingDb.journalEntries)
+          .get();
       expect(journalEntries.length, 1);
     });
 
-    test('Unpost/reversal preserves accounting rules (creates offsetting entry or updates status)', () async {
-      final coordinator = createCoordinator();
-      final docRef = await createDraftReceipt(generateUuidV4());
+    test(
+      'Unpost/reversal preserves accounting rules (creates offsetting entry or updates status)',
+      () async {
+        final coordinator = createCoordinator();
+        final docRef = await createDraftReceipt(generateUuidV4());
 
-      // 1. Post document
-      await coordinator.post(document: docRef, userId: 'user_001');
+        // 1. Post document
+        await coordinator.post(document: docRef, userId: 'user_001');
 
-      // 2. Unpost document
-      final unpostRes = await coordinator.unpost(document: docRef, requestedBy: 'user_001', reason: 'Test unpost');
-      expect(unpostRes, isA<UnpostSuccess>());
+        // 2. Unpost document
+        final unpostRes = await coordinator.unpost(
+          document: docRef,
+          requestedBy: 'user_001',
+          reason: 'Test unpost',
+        );
+        expect(unpostRes, isA<UnpostSuccess>());
 
-      // 3. Verify document in DB is back to draft
-      final dbDoc = await (db.select(db.stockReceipts)..where((t) => t.uuid.equals(docRef.documentId))).getSingle();
-      expect(dbDoc.status, 'draft');
-    });
+        // 3. Verify document in DB is back to draft
+        final dbDoc = await (db.select(
+          db.stockReceipts,
+        )..where((t) => t.uuid.equals(docRef.documentId))).getSingle();
+        expect(dbDoc.status, 'draft');
+      },
+    );
 
-    test('Business-valid document types without direct inventory accounting entries (e.g. stock transfer) succeed', () async {
-      final coordinator = createCoordinator();
+    test(
+      'Business-valid document types without direct inventory accounting entries (e.g. stock transfer) succeed',
+      () async {
+        final coordinator = createCoordinator();
 
-      // 1. First seed stock by posting a receipt of 10 units in WH-MAIN
-      final receiptDoc = await createDraftReceipt(generateUuidV4(), warehouseId: 'WH-MAIN');
-      final receiptRes = await coordinator.post(document: receiptDoc, userId: 'user_001');
-      expect(receiptRes, isA<PostSuccess>());
+        // 1. First seed stock by posting a receipt of 10 units in WH-MAIN
+        final receiptDoc = await createDraftReceipt(
+          generateUuidV4(),
+          warehouseId: 'WH-MAIN',
+        );
+        final receiptRes = await coordinator.post(
+          document: receiptDoc,
+          userId: 'user_001',
+        );
+        expect(receiptRes, isA<PostSuccess>());
 
-      // 2. Now create draft stock transfer of 5 units from WH-MAIN to WH-BRANCH
-      final transferUuid = generateUuidV4();
-      final now = DateTime.now().millisecondsSinceEpoch;
+        // 2. Now create draft stock transfer of 5 units from WH-MAIN to WH-BRANCH
+        final transferUuid = generateUuidV4();
+        final now = DateTime.now().millisecondsSinceEpoch;
 
-      await db.into(db.stockTransfers).insert(
-            StockTransfersCompanion.insert(
-              uuid: transferUuid,
-              transferNumber: 'TRF-001',
-              transferDate: DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
-              fromWarehouseId: 'WH-MAIN',
-              toWarehouseId: 'WH-BRANCH',
-              createdAt: now,
-              updatedAt: now,
-              status: const Value('draft'),
-              companyId: const Value(companyId),
-            ),
-          );
+        await db
+            .into(db.stockTransfers)
+            .insert(
+              StockTransfersCompanion.insert(
+                uuid: transferUuid,
+                transferNumber: 'TRF-001',
+                transferDate: DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
+                fromWarehouseId: 'WH-MAIN',
+                toWarehouseId: 'WH-BRANCH',
+                createdAt: now,
+                updatedAt: now,
+                status: const Value('draft'),
+                companyId: const Value(companyId),
+              ),
+            );
 
-      await db.into(db.stockMovementLines).insert(
-            StockMovementLinesCompanion.insert(
-              uuid: generateUuidV4(),
-              movementUuid: transferUuid,
-              movementType: 'stock_transfer',
-              itemCode: 'ITEM-001',
-              itemName: 'Test Item',
-              quantity: const Value(5.0),
-              unitCost: const Value(50.0),
-              totalCost: const Value(250.0),
-            ),
-          );
+        await db
+            .into(db.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: generateUuidV4(),
+                movementUuid: transferUuid,
+                movementType: 'stock_transfer',
+                itemCode: 'ITEM-001',
+                itemName: 'Test Item',
+                quantity: const Value(5.0),
+                unitCost: const Value(50.0),
+                totalCost: const Value(250.0),
+              ),
+            );
 
-      final transferRef = InventoryDocumentRef(
-        documentId: transferUuid,
-        documentNumber: 'TRF-001',
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: DateTime.utc(2026, 1, 1),
-        warehouseId: 'WH-MAIN',
-      );
+        final transferRef = InventoryDocumentRef(
+          documentId: transferUuid,
+          documentNumber: 'TRF-001',
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: DateTime.utc(2026, 1, 1),
+          warehouseId: 'WH-MAIN',
+        );
 
-      final res = await coordinator.post(document: transferRef, userId: 'user_001');
-      expect(res, isA<PostSuccess>());
-    });
+        final res = await coordinator.post(
+          document: transferRef,
+          userId: 'user_001',
+        );
+        expect(res, isA<PostSuccess>());
+      },
+    );
   });
 }

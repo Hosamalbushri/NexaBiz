@@ -4,9 +4,7 @@ import 'package:stock_count/modules/sync/sync.dart';
 
 /// Central coordinator for tenant-safe, scope-guarded sync module registration.
 class SyncRegistryCoordinator {
-  const SyncRegistryCoordinator({
-    required this.registrars,
-  });
+  const SyncRegistryCoordinator({required this.registrars});
 
   /// Registered module registrars.
   final List<SyncModuleRegistrar> registrars;
@@ -24,8 +22,10 @@ class SyncRegistryCoordinator {
     final authState = ref.read(authStateProvider);
     final currentCompanyId = ref.read(currentCompanyIdProvider) as String;
     final hasCompanyContext = currentCompanyId.trim().isNotEmpty;
-    final isAuthenticated = authState.canUseRemoteSync || authState.isAuthenticated;
-    final isSystemScopeActive = !hasCompanyContext || authState.session?.activeCompanyContext == null;
+    final isAuthenticated =
+        authState.canUseRemoteSync || authState.isAuthenticated;
+    final isSystemScopeActive =
+        !hasCompanyContext || authState.session?.activeCompanyContext == null;
 
     final registeredModules = <String>[];
 

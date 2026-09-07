@@ -6,9 +6,7 @@ import '../domain/entities/import_job_status.dart';
 
 /// Notification bridge linking the Universal Import Engine lifecycle to NexaBiz's canonical NotificationService.
 class ImportNotificationBridge {
-  const ImportNotificationBridge({
-    required this.notificationService,
-  });
+  const ImportNotificationBridge({required this.notificationService});
 
   /// The authoritative platform NotificationService instance.
   final NotificationService notificationService;
@@ -23,7 +21,8 @@ class ImportNotificationBridge {
     final entityName = getEntityOrProfileName(job);
     return notificationService.showInfo(
       title: 'Import Queued: $entityName',
-      message: 'Job ID: ${job.jobId} | Status: QUEUED | Total rows: ${job.totalRows}',
+      message:
+          'Job ID: ${job.jobId} | Status: QUEUED | Total rows: ${job.totalRows}',
       category: NotificationCategory.system,
     );
   }
@@ -33,18 +32,23 @@ class ImportNotificationBridge {
     final entityName = getEntityOrProfileName(job);
     return notificationService.showInfo(
       title: 'Import Started: $entityName',
-      message: 'Job ID: ${job.jobId} | Status: PROCESSING | Processing ${job.totalRows} records',
+      message:
+          'Job ID: ${job.jobId} | Status: PROCESSING | Processing ${job.totalRows} records',
       category: NotificationCategory.system,
     );
   }
 
   /// Emits notification when a progress milestone (e.g. 25%, 50%, 75%) is reached.
-  Future<AppNotification> notifyProgressMilestone(ImportJob job, double milestoneRatio) {
+  Future<AppNotification> notifyProgressMilestone(
+    ImportJob job,
+    double milestoneRatio,
+  ) {
     final entityName = getEntityOrProfileName(job);
     final percent = (milestoneRatio * 100).toInt();
     return notificationService.showInfo(
       title: 'Import Progress ($percent%): $entityName',
-      message: 'Job ID: ${job.jobId} | Status: PROCESSING | $percent% completed (${job.processedRows}/${job.totalRows} rows)',
+      message:
+          'Job ID: ${job.jobId} | Status: PROCESSING | $percent% completed (${job.processedRows}/${job.totalRows} rows)',
       category: NotificationCategory.system,
     );
   }
@@ -54,7 +58,8 @@ class ImportNotificationBridge {
     final entityName = getEntityOrProfileName(job);
     return notificationService.showSuccess(
       title: 'Import Completed: $entityName',
-      message: 'Job ID: ${job.jobId} | Status: COMPLETED | ${job.successfulRows} created/updated, ${job.skippedRows} skipped',
+      message:
+          'Job ID: ${job.jobId} | Status: COMPLETED | ${job.successfulRows} created/updated, ${job.skippedRows} skipped',
       category: NotificationCategory.system,
     );
   }
@@ -64,7 +69,8 @@ class ImportNotificationBridge {
     final entityName = getEntityOrProfileName(job);
     return notificationService.showWarning(
       title: 'Import Completed with Errors: $entityName',
-      message: 'Job ID: ${job.jobId} | Status: COMPLETED_WITH_ERRORS | ${job.successfulRows} succeeded, ${job.failedRows} failed',
+      message:
+          'Job ID: ${job.jobId} | Status: COMPLETED_WITH_ERRORS | ${job.successfulRows} succeeded, ${job.failedRows} failed',
       category: NotificationCategory.system,
     );
   }
@@ -72,7 +78,11 @@ class ImportNotificationBridge {
   /// Emits notification when an import job fails.
   Future<AppNotification> notifyFailed(ImportJob job, [String? errorMessage]) {
     final entityName = getEntityOrProfileName(job);
-    final errorDetail = errorMessage ?? (job.errorSummary.isNotEmpty ? job.errorSummary.first : 'Unknown execution error');
+    final errorDetail =
+        errorMessage ??
+        (job.errorSummary.isNotEmpty
+            ? job.errorSummary.first
+            : 'Unknown execution error');
     return notificationService.showError(
       title: 'Import Failed: $entityName',
       message: 'Job ID: ${job.jobId} | Status: FAILED | $errorDetail',
@@ -85,13 +95,17 @@ class ImportNotificationBridge {
     final entityName = getEntityOrProfileName(job);
     return notificationService.showWarning(
       title: 'Import Cancelled: $entityName',
-      message: 'Job ID: ${job.jobId} | Status: CANCELLED | Stopped at ${job.processedRows}/${job.totalRows} rows',
+      message:
+          'Job ID: ${job.jobId} | Status: CANCELLED | Stopped at ${job.processedRows}/${job.totalRows} rows',
       category: NotificationCategory.system,
     );
   }
 
   /// Automatically evaluates job state and emits corresponding notification.
-  Future<AppNotification?> notifyForJobStatus(ImportJob job, {double? previousProgress}) async {
+  Future<AppNotification?> notifyForJobStatus(
+    ImportJob job, {
+    double? previousProgress,
+  }) async {
     switch (job.status) {
       case ImportJobStatus.queued:
         return notifyQueued(job);

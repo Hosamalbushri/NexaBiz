@@ -66,17 +66,10 @@ class InventorySaleProductCatalogAdapter implements SaleProductCatalogPort {
     String query, {
     int limit = SaleAutocompleteDefaults.resultLimit,
   }) async {
-    final safeLimit =
-        limit <= 0 ? SaleAutocompleteDefaults.resultLimit : limit;
+    final safeLimit = limit <= 0 ? SaleAutocompleteDefaults.resultLimit : limit;
     final normalized = query.trim();
     // Empty query: limited browse (selector sheets), never full-table load.
-    final results = await _repository.search(
-      normalized,
-      limit: safeLimit,
-    );
-    return results
-        .where((p) => !p.isDeleted)
-        .map(_map)
-        .toList(growable: false);
+    final results = await _repository.search(normalized, limit: safeLimit);
+    return results.where((p) => !p.isDeleted).map(_map).toList(growable: false);
   }
 }

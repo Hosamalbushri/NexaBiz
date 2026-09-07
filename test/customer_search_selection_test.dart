@@ -73,32 +73,35 @@ void main() {
       }
     });
 
-    test('1. SEARCH: Multi-field matching by name, code, phone, email, and tax number', () async {
-      final search = SearchCustomers(repo);
+    test(
+      '1. SEARCH: Multi-field matching by name, code, phone, email, and tax number',
+      () async {
+        final search = SearchCustomers(repo);
 
-      // Match by name
-      final byName = await search('الأمل');
-      expect(byName.length, equals(1));
-      expect(byName.first.customerCode, equals('12210030'));
+        // Match by name
+        final byName = await search('الأمل');
+        expect(byName.length, equals(1));
+        expect(byName.first.customerCode, equals('12210030'));
 
-      // Match by code
-      final byCode = await search('12210031');
-      expect(byCode.length, equals(1));
-      expect(byCode.first.name, equals('شركة النور للمقاولات'));
+        // Match by code
+        final byCode = await search('12210031');
+        expect(byCode.length, equals(1));
+        expect(byCode.first.name, equals('شركة النور للمقاولات'));
 
-      // Match by phone
-      final byPhone = await search('503333333');
-      expect(byPhone.length, equals(1));
-      expect(byPhone.first.customerCode, equals('12210032'));
+        // Match by phone
+        final byPhone = await search('503333333');
+        expect(byPhone.length, equals(1));
+        expect(byPhone.first.customerCode, equals('12210032'));
 
-      // Match by email
-      final byEmail = await search('alnoor@example.com');
-      expect(byEmail.length, equals(1));
+        // Match by email
+        final byEmail = await search('alnoor@example.com');
+        expect(byEmail.length, equals(1));
 
-      // Match by tax number
-      final byTax = await search('300000000000003');
-      expect(byTax.length, equals(1));
-    });
+        // Match by tax number
+        final byTax = await search('300000000000003');
+        expect(byTax.length, equals(1));
+      },
+    );
 
     test('2. BOUNDED QUERY: Search respects SQL limit parameter', () async {
       final search = SearchCustomers(repo);
@@ -111,43 +114,46 @@ void main() {
       expect(unbounded.length, equals(2));
     });
 
-    testWidgets('3. WIDGET: AppCustomerSearchField renders and executes selection callback', (tester) async {
-      Customer? selectedCustomer;
+    testWidgets(
+      '3. WIDGET: AppCustomerSearchField renders and executes selection callback',
+      (tester) async {
+        Customer? selectedCustomer;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AppCustomerSearchField<Customer>(
-              label: 'بحث عن عميل',
-              minQueryLength: 1,
-              debounceDuration: const Duration(milliseconds: 10),
-              fetchOptions: (query) => repo.search(query, limit: 10),
-              itemLabelBuilder: (c) => c.name,
-              onSelected: (customer) {
-                selectedCustomer = customer;
-              },
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AppCustomerSearchField<Customer>(
+                label: 'بحث عن عميل',
+                minQueryLength: 1,
+                debounceDuration: const Duration(milliseconds: 10),
+                fetchOptions: (query) => repo.search(query, limit: 10),
+                itemLabelBuilder: (c) => c.name,
+                onSelected: (customer) {
+                  selectedCustomer = customer;
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(AppCustomerSearchField<Customer>), findsOneWidget);
+        expect(find.byType(AppCustomerSearchField<Customer>), findsOneWidget);
 
-      // Enter query 'الأمل'
-      await tester.enterText(find.byType(TextField), 'الأمل');
-      await tester.pump(const Duration(milliseconds: 50));
-      await tester.pumpAndSettle();
+        // Enter query 'الأمل'
+        await tester.enterText(find.byType(TextField), 'الأمل');
+        await tester.pump(const Duration(milliseconds: 50));
+        await tester.pumpAndSettle();
 
-      // Verify search option appeared
-      final optionTile = find.text('مؤسسة الأمل التجارية');
-      expect(optionTile, findsOneWidget);
+        // Verify search option appeared
+        final optionTile = find.text('مؤسسة الأمل التجارية');
+        expect(optionTile, findsOneWidget);
 
-      // Tap option
-      await tester.tap(optionTile);
-      await tester.pumpAndSettle();
+        // Tap option
+        await tester.tap(optionTile);
+        await tester.pumpAndSettle();
 
-      expect(selectedCustomer, isNotNull);
-      expect(selectedCustomer!.customerCode, equals('12210030'));
-    });
+        expect(selectedCustomer, isNotNull);
+        expect(selectedCustomer!.customerCode, equals('12210030'));
+      },
+    );
   });
 }

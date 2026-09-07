@@ -8,7 +8,10 @@ abstract final class CashRegisterPermissions {
   static const update = ['cash_registers.update', 'accounting.accounts.update'];
   static const delete = ['cash_registers.delete'];
   static const link = ['cash_registers.link', 'accounting.accounts.update'];
-  static const transfer = ['cash_registers.transfer', 'accounting.journals.create'];
+  static const transfer = [
+    'cash_registers.transfer',
+    'accounting.journals.create',
+  ];
   static const configure = ['cash_registers.configure'];
 
   static const _icon = IconData(0xe49c, fontFamily: 'MaterialIcons');

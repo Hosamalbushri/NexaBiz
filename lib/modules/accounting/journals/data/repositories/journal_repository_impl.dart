@@ -1175,9 +1175,7 @@ class JournalRepositoryImpl implements JournalRepository {
     final targetCompanyId = (companyId != null && companyId.trim().isNotEmpty)
         ? companyId.trim()
         : _currentCompanyId;
-    final variables = <Variable<Object>>[
-      Variable.withString(targetCompanyId),
-    ];
+    final variables = <Variable<Object>>[Variable.withString(targetCompanyId)];
     final sql = StringBuffer('''
       SELECT a.uuid AS account_uuid,
              a.account_code AS account_code,
@@ -1239,9 +1237,7 @@ class JournalRepositoryImpl implements JournalRepository {
     final targetCompanyId = (companyId != null && companyId.trim().isNotEmpty)
         ? companyId.trim()
         : _currentCompanyId;
-    final variables = <Variable<Object>>[
-      Variable.withString(targetCompanyId),
-    ];
+    final variables = <Variable<Object>>[Variable.withString(targetCompanyId)];
     final sql = StringBuffer('''
       SELECT je.entry_date AS entry_date,
              je.voucher_number AS voucher_number,

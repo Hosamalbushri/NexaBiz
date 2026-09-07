@@ -60,7 +60,9 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
   @override
   Future<Warehouse?> getWarehouseById(String id) async {
     final query = _db.select(_db.warehouses)
-      ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(id) & tbl.deletedAt.isNull());
+      ..where(
+        (tbl) => _scoped(tbl) & tbl.uuid.equals(id) & tbl.deletedAt.isNull(),
+      );
     final row = await query.getSingleOrNull();
     return row == null ? null : _mapRowToWarehouse(row);
   }
@@ -68,7 +70,10 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
   @override
   Future<Warehouse?> getDefaultWarehouse() async {
     final query = _db.select(_db.warehouses)
-      ..where((tbl) => _scoped(tbl) & tbl.isDefault.equals(true) & tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            _scoped(tbl) & tbl.isDefault.equals(true) & tbl.deletedAt.isNull(),
+      );
     final row = await query.getSingleOrNull();
     if (row != null) {
       return _mapRowToWarehouse(row);
@@ -78,17 +83,22 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
 
   @override
   Future<Warehouse?> ensureDefaultWarehouse() async {
-    final existingDefault = await (_db.select(_db.warehouses)
-          ..where((tbl) => _scoped(tbl) & tbl.isDefault.equals(true) & tbl.deletedAt.isNull()))
-        .getSingleOrNull();
+    final existingDefault =
+        await (_db.select(_db.warehouses)..where(
+              (tbl) =>
+                  _scoped(tbl) &
+                  tbl.isDefault.equals(true) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
 
     if (existingDefault != null) {
       return _mapRowToWarehouse(existingDefault);
     }
 
-    final anyWarehouse = await (_db.select(_db.warehouses)
-          ..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull()))
-        .getSingleOrNull();
+    final anyWarehouse = await (_db.select(
+      _db.warehouses,
+    )..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull())).getSingleOrNull();
 
     if (anyWarehouse != null) {
       return _mapRowToWarehouse(anyWarehouse);
@@ -107,34 +117,37 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
         throw const JournalException(JournalException.notFound);
       }
 
-      final existing = await (_db.select(_db.warehouses)
-            ..where((tbl) => tbl.uuid.equals(warehouse.id) & _scoped(tbl)))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.warehouses)
+                ..where((tbl) => tbl.uuid.equals(warehouse.id) & _scoped(tbl)))
+              .getSingleOrNull();
 
       if (existing == null) {
-        final crossTenantCheck = await (_db.select(_db.warehouses)
-              ..where((tbl) => tbl.uuid.equals(warehouse.id)))
-            .getSingleOrNull();
+        final crossTenantCheck = await (_db.select(
+          _db.warehouses,
+        )..where((tbl) => tbl.uuid.equals(warehouse.id))).getSingleOrNull();
         if (crossTenantCheck != null) {
           throw const JournalException(JournalException.notFound);
         }
       }
 
       final now = DateTime.now().toUtc();
-      final newVersion = (existing?.version ?? warehouse.version) + (existing == null ? 0 : 1);
+      final newVersion =
+          (existing?.version ?? warehouse.version) + (existing == null ? 0 : 1);
       final effectiveCompanyId = warehouse.companyId ?? _currentCompanyId;
 
       if (warehouse.isDefault) {
         // Unset previous default warehouse ONLY for current company
-        await (_db.update(_db.warehouses)
-              ..where((tbl) => _scoped(tbl) & tbl.uuid.isNotValue(warehouse.id)))
+        await (_db.update(
+              _db.warehouses,
+            )..where((tbl) => _scoped(tbl) & tbl.uuid.isNotValue(warehouse.id)))
             .write(const WarehousesCompanion(isDefault: Value(false)));
       }
 
       if (existing != null) {
-        await (_db.update(_db.warehouses)
-              ..where((tbl) => tbl.uuid.equals(warehouse.id) & _scoped(tbl)))
-            .write(
+        await (_db.update(
+          _db.warehouses,
+        )..where((tbl) => tbl.uuid.equals(warehouse.id) & _scoped(tbl))).write(
           WarehousesCompanion(
             code: Value(warehouse.code),
             name: Value(warehouse.name),
@@ -150,23 +163,25 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
           ),
         );
       } else {
-        await _db.into(_db.warehouses).insert(
-          WarehousesCompanion(
-            uuid: Value(warehouse.id),
-            code: Value(warehouse.code),
-            name: Value(warehouse.name),
-            isDefault: Value(warehouse.isDefault),
-            isActive: Value(warehouse.isActive),
-            address: Value(warehouse.address),
-            phone: Value(warehouse.phone),
-            managerName: Value(warehouse.managerName),
-            createdAt: Value(warehouse.createdAt.millisecondsSinceEpoch),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: Value(newVersion),
-            companyId: Value(effectiveCompanyId),
-          ),
-        );
+        await _db
+            .into(_db.warehouses)
+            .insert(
+              WarehousesCompanion(
+                uuid: Value(warehouse.id),
+                code: Value(warehouse.code),
+                name: Value(warehouse.name),
+                isDefault: Value(warehouse.isDefault),
+                isActive: Value(warehouse.isActive),
+                address: Value(warehouse.address),
+                phone: Value(warehouse.phone),
+                managerName: Value(warehouse.managerName),
+                createdAt: Value(warehouse.createdAt.millisecondsSinceEpoch),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                syncStatus: const Value('pending'),
+                version: Value(newVersion),
+                companyId: Value(effectiveCompanyId),
+              ),
+            );
       }
 
       await _enqueueWarehouse(
@@ -195,9 +210,11 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       // Safeguard 2: Cannot delete warehouse referenced by active categories
       final categoryCountQuery = _db.selectOnly(_db.categories)
         ..addColumns([_db.categories.uuid.count()])
-        ..where(_db.categories.warehouseId.equals(id) &
-            _db.categories.companyId.equals(_currentCompanyId) &
-            _db.categories.deletedAt.isNull());
+        ..where(
+          _db.categories.warehouseId.equals(id) &
+              _db.categories.companyId.equals(_currentCompanyId) &
+              _db.categories.deletedAt.isNull(),
+        );
       final catRow = await categoryCountQuery.getSingle();
       final catCount = catRow.read(_db.categories.uuid.count()) ?? 0;
       if (catCount > 0) {
@@ -210,9 +227,11 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       // Safeguard 3: Cannot delete warehouse referenced by active stock issues
       final issueCountQuery = _db.selectOnly(_db.stockIssues)
         ..addColumns([_db.stockIssues.id.count()])
-        ..where(_db.stockIssues.warehouse.equals(id) &
-            _db.stockIssues.companyId.equals(_currentCompanyId) &
-            _db.stockIssues.deletedAt.isNull());
+        ..where(
+          _db.stockIssues.warehouse.equals(id) &
+              _db.stockIssues.companyId.equals(_currentCompanyId) &
+              _db.stockIssues.deletedAt.isNull(),
+        );
       final issueRow = await issueCountQuery.getSingle();
       final issueCount = issueRow.read(_db.stockIssues.id.count()) ?? 0;
       if (issueCount > 0) {
@@ -225,12 +244,15 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       // Safeguard 4: Cannot delete warehouse referenced by active stock transfers
       final transferCountQuery = _db.selectOnly(_db.stockTransfers)
         ..addColumns([_db.stockTransfers.uuid.count()])
-        ..where((_db.stockTransfers.fromWarehouseId.equals(id) |
-                _db.stockTransfers.toWarehouseId.equals(id)) &
-            _db.stockTransfers.companyId.equals(_currentCompanyId) &
-            _db.stockTransfers.deletedAt.isNull());
+        ..where(
+          (_db.stockTransfers.fromWarehouseId.equals(id) |
+                  _db.stockTransfers.toWarehouseId.equals(id)) &
+              _db.stockTransfers.companyId.equals(_currentCompanyId) &
+              _db.stockTransfers.deletedAt.isNull(),
+        );
       final transferRow = await transferCountQuery.getSingle();
-      final transferCount = transferRow.read(_db.stockTransfers.uuid.count()) ?? 0;
+      final transferCount =
+          transferRow.read(_db.stockTransfers.uuid.count()) ?? 0;
       if (transferCount > 0) {
         throw const JournalException(
           'warehouse_in_use',
@@ -241,9 +263,9 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       final now = DateTime.now().toUtc();
       final newVersion = existing.version + 1;
 
-      await (_db.update(_db.warehouses)
-            ..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl)))
-          .write(
+      await (_db.update(
+        _db.warehouses,
+      )..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl))).write(
         WarehousesCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -260,34 +282,52 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
   }
 
   @override
-  Future<List<ProductWarehouseStock>> getStocksForWarehouse(String warehouseId) async {
+  Future<List<ProductWarehouseStock>> getStocksForWarehouse(
+    String warehouseId,
+  ) async {
     final query = _db.select(_db.productWarehouseStocks)
-      ..where((tbl) => _scopedStock(tbl) & tbl.warehouseId.equals(warehouseId) & tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            _scopedStock(tbl) &
+            tbl.warehouseId.equals(warehouseId) &
+            tbl.deletedAt.isNull(),
+      );
     final rows = await query.get();
     return rows.map(_mapRowToWhStock).toList();
   }
 
   @override
-  Future<ProductWarehouseStock?> getStock(String itemCode, String warehouseId) async {
+  Future<ProductWarehouseStock?> getStock(
+    String itemCode,
+    String warehouseId,
+  ) async {
     final query = _db.select(_db.productWarehouseStocks)
-      ..where((tbl) =>
-          _scopedStock(tbl) &
-          tbl.itemCode.equals(itemCode) &
-          tbl.warehouseId.equals(warehouseId) &
-          tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            _scopedStock(tbl) &
+            tbl.itemCode.equals(itemCode) &
+            tbl.warehouseId.equals(warehouseId) &
+            tbl.deletedAt.isNull(),
+      );
     final row = await query.getSingleOrNull();
     return row == null ? null : _mapRowToWhStock(row);
   }
 
   @override
-  Future<void> updateWarehouseStock(String itemCode, String warehouseId, double deltaQty) async {
+  Future<void> updateWarehouseStock(
+    String itemCode,
+    String warehouseId,
+    double deltaQty,
+  ) async {
     await _db.transaction(() async {
-      final existing = await (_db.select(_db.productWarehouseStocks)
-            ..where((tbl) =>
-                _scopedStock(tbl) &
-                tbl.itemCode.equals(itemCode) &
-                tbl.warehouseId.equals(warehouseId)))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.productWarehouseStocks)..where(
+                (tbl) =>
+                    _scopedStock(tbl) &
+                    tbl.itemCode.equals(itemCode) &
+                    tbl.warehouseId.equals(warehouseId),
+              ))
+              .getSingleOrNull();
 
       final now = DateTime.now().toUtc();
 
@@ -301,16 +341,17 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
         }
         final newVersion = existing.version + 1;
 
-        await (_db.update(_db.productWarehouseStocks)
-              ..where((tbl) => tbl.uuid.equals(existing.uuid) & _scopedStock(tbl)))
+        await (_db.update(_db.productWarehouseStocks)..where(
+              (tbl) => tbl.uuid.equals(existing.uuid) & _scopedStock(tbl),
+            ))
             .write(
-          ProductWarehouseStocksCompanion(
-            onHandQty: Value(newQty),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: Value(newVersion),
-          ),
-        );
+              ProductWarehouseStocksCompanion(
+                onHandQty: Value(newQty),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                syncStatus: const Value('pending'),
+                version: Value(newVersion),
+              ),
+            );
       } else if (deltaQty < 0) {
         throw JournalException(
           JournalException.insufficientStock,
@@ -318,19 +359,21 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
         );
       } else {
         final id = generateUuidV4();
-        await _db.into(_db.productWarehouseStocks).insert(
-          ProductWarehouseStocksCompanion(
-            uuid: Value(id),
-            itemCode: Value(itemCode),
-            warehouseId: Value(warehouseId),
-            onHandQty: Value(deltaQty),
-            createdAt: Value(now.millisecondsSinceEpoch),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: const Value(1),
-            companyId: Value(_currentCompanyId),
-          ),
-        );
+        await _db
+            .into(_db.productWarehouseStocks)
+            .insert(
+              ProductWarehouseStocksCompanion(
+                uuid: Value(id),
+                itemCode: Value(itemCode),
+                warehouseId: Value(warehouseId),
+                onHandQty: Value(deltaQty),
+                createdAt: Value(now.millisecondsSinceEpoch),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                syncStatus: const Value('pending'),
+                version: const Value(1),
+                companyId: Value(_currentCompanyId),
+              ),
+            );
       }
     });
   }
@@ -345,8 +388,14 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       address: row.address,
       phone: row.phone,
       managerName: row.managerName,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
       version: row.version,
       companyId: row.companyId,
       deletedAt: row.deletedAt == null
@@ -363,8 +412,14 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       onHandQty: row.onHandQty,
       minReorderLevel: row.minReorderLevel,
       binLocation: row.binLocation,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
       version: row.version,
       companyId: row.companyId,
       deletedAt: row.deletedAt == null
@@ -373,7 +428,10 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
     );
   }
 
-  Future<void> _enqueueWarehouse(Warehouse warehouse, SyncOperationType type) async {
+  Future<void> _enqueueWarehouse(
+    Warehouse warehouse,
+    SyncOperationType type,
+  ) async {
     if (_syncQueue == null) return;
 
     final payload = {

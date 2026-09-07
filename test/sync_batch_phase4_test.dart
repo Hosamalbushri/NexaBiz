@@ -92,8 +92,6 @@ class _BatchHandler extends SyncEntityHandler {
   }
 }
 
-
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -106,7 +104,9 @@ void main() {
   SyncManager? manager;
 
   setUp(() async {
-    HiveEncryptionKeyStore.debugFixedKey = Uint8List.fromList(List.generate(32, (i) => i));
+    HiveEncryptionKeyStore.debugFixedKey = Uint8List.fromList(
+      List.generate(32, (i) => i),
+    );
     tempDir = await Directory.systemTemp.createTemp('sync_batch_');
     Hive.init(tempDir.path);
     if (!Hive.isAdapterRegistered(2)) {
@@ -162,6 +162,7 @@ void main() {
       remoteProvider: () => remote,
       clock: () => now,
       batchChunkSize: 50,
+      readCompanyId: () => 'company-123',
     );
     manager!.registerHandler(handler);
     await manager!.start(enabled: true);
@@ -186,6 +187,7 @@ void main() {
       remoteProvider: () => remote,
       clock: () => now,
       batchChunkSize: 100,
+      readCompanyId: () => 'company-123',
     );
     manager!.registerHandler(_BatchHandler(remote));
     await manager!.start(enabled: true);
@@ -196,7 +198,10 @@ void main() {
 
     expect(result.uploaded, 100);
     expect(remote.batchCalls, 1);
-    expect(remote.pushCalls, 100); // in-memory batch still uses push under the hood
+    expect(
+      remote.pushCalls,
+      100,
+    ); // in-memory batch still uses push under the hood
     // Soft budget for in-memory path (not a LAN measurement).
     expect(sw.elapsedMilliseconds, lessThan(5000));
   });
@@ -232,6 +237,7 @@ void main() {
       connectivity: connectivity,
       remoteProvider: () => remote,
       clock: () => now,
+      readCompanyId: () => 'company-123',
     );
     manager!.registerHandler(handler);
     await manager!.start(enabled: true);

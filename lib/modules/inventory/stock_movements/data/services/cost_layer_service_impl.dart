@@ -35,29 +35,39 @@ class CostLayerServiceImpl implements CostLayerService {
   @override
   Future<void> createLayer(CostLayer layer) async {
     final effectiveCompanyId = layer.companyId ?? _currentCompanyId;
-    final existing = await (_db.select(_db.inventoryCostLayers)
-          ..where((tbl) =>
-              tbl.uuid.equals(layer.id) &
-              tbl.companyId.equals(effectiveCompanyId)))
-        .getSingleOrNull();
+    final existing =
+        await (_db.select(_db.inventoryCostLayers)..where(
+              (tbl) =>
+                  tbl.uuid.equals(layer.id) &
+                  tbl.companyId.equals(effectiveCompanyId),
+            ))
+            .getSingleOrNull();
 
     if (existing != null) {
       return;
     }
 
     var invCurrency = layer.inventoryCurrencyId;
-    if (_initRepository != null && (invCurrency.isEmpty || invCurrency == 'YER')) {
+    if (_initRepository != null &&
+        (invCurrency.isEmpty || invCurrency == 'YER')) {
       final invConfig = await _initRepository.getInventoryConfig();
       if (invConfig != null && invConfig.inventoryBaseCurrencyId.isNotEmpty) {
         invCurrency = invConfig.inventoryBaseCurrencyId.toUpperCase();
       }
     }
 
-    final sanitizedReceivedQty = layer.receivedQty < 0 ? 0.0 : layer.receivedQty;
-    final sanitizedRemainingQty = layer.remainingQty.clamp(0.0, sanitizedReceivedQty);
+    final sanitizedReceivedQty = layer.receivedQty < 0
+        ? 0.0
+        : layer.receivedQty;
+    final sanitizedRemainingQty = layer.remainingQty.clamp(
+      0.0,
+      sanitizedReceivedQty,
+    );
     final isClosed = layer.closed || sanitizedRemainingQty <= 0.000001;
 
-    await _db.into(_db.inventoryCostLayers).insert(
+    await _db
+        .into(_db.inventoryCostLayers)
+        .insert(
           InventoryCostLayersCompanion(
             uuid: Value(layer.id),
             itemCode: Value(layer.itemCode),
@@ -68,15 +78,40 @@ class CostLayerServiceImpl implements CostLayerService {
             receivedQty: Value(sanitizedReceivedQty),
             remainingQty: Value(sanitizedRemainingQty),
             unitCost: Value(layer.unitCost < 0 ? 0.0 : layer.unitCost),
-            totalCost: Value(sanitizedReceivedQty * (layer.unitCost < 0 ? 0.0 : layer.unitCost)),
+            totalCost: Value(
+              sanitizedReceivedQty *
+                  (layer.unitCost < 0 ? 0.0 : layer.unitCost),
+            ),
             inventoryCurrencyId: Value(invCurrency),
-            unitCostInventoryCurrency: Value(layer.unitCostInventoryCurrency < 0 ? 0.0 : layer.unitCostInventoryCurrency),
-            totalCostInventoryCurrency: Value(sanitizedReceivedQty * (layer.unitCostInventoryCurrency < 0 ? 0.0 : layer.unitCostInventoryCurrency)),
+            unitCostInventoryCurrency: Value(
+              layer.unitCostInventoryCurrency < 0
+                  ? 0.0
+                  : layer.unitCostInventoryCurrency,
+            ),
+            totalCostInventoryCurrency: Value(
+              sanitizedReceivedQty *
+                  (layer.unitCostInventoryCurrency < 0
+                      ? 0.0
+                      : layer.unitCostInventoryCurrency),
+            ),
             documentCurrencyId: Value(layer.documentCurrencyId),
-            unitCostDocumentCurrency: Value(layer.unitCostDocumentCurrency < 0 ? 0.0 : layer.unitCostDocumentCurrency),
-            totalCostDocumentCurrency: Value(sanitizedReceivedQty * (layer.unitCostDocumentCurrency < 0 ? 0.0 : layer.unitCostDocumentCurrency)),
-            exchangeRate: Value(layer.exchangeRate <= 0 ? 1.0 : layer.exchangeRate),
-            exchangeRateDate: Value(layer.exchangeRateDate.millisecondsSinceEpoch),
+            unitCostDocumentCurrency: Value(
+              layer.unitCostDocumentCurrency < 0
+                  ? 0.0
+                  : layer.unitCostDocumentCurrency,
+            ),
+            totalCostDocumentCurrency: Value(
+              sanitizedReceivedQty *
+                  (layer.unitCostDocumentCurrency < 0
+                      ? 0.0
+                      : layer.unitCostDocumentCurrency),
+            ),
+            exchangeRate: Value(
+              layer.exchangeRate <= 0 ? 1.0 : layer.exchangeRate,
+            ),
+            exchangeRateDate: Value(
+              layer.exchangeRateDate.millisecondsSinceEpoch,
+            ),
             closed: Value(isClosed ? 1 : 0),
             createdAt: Value(layer.createdAt.millisecondsSinceEpoch),
             updatedAt: Value(layer.updatedAt.millisecondsSinceEpoch),
@@ -110,29 +145,42 @@ class CostLayerServiceImpl implements CostLayerService {
     final effectiveCompanyId = companyId ?? _currentCompanyId;
 
     // Duplicate Consumption Guard: Check if issueLineUuid has ALREADY been consumed for this company
-    final existingConsumptions = await (_db.select(_db.inventoryCostConsumptions)
-          ..where((tbl) =>
-              tbl.issueLineUuid.equals(issueLineUuid) &
-              tbl.companyId.equals(effectiveCompanyId)))
-        .get();
+    final existingConsumptions =
+        await (_db.select(_db.inventoryCostConsumptions)..where(
+              (tbl) =>
+                  tbl.issueLineUuid.equals(issueLineUuid) &
+                  tbl.companyId.equals(effectiveCompanyId),
+            ))
+            .get();
 
     if (existingConsumptions.isNotEmpty) {
-      final totalCost = existingConsumptions.fold<double>(0.0, (s, c) => s + c.totalCost);
-      final totalConsumed = existingConsumptions.fold<double>(0.0, (s, c) => s + c.consumedQty);
+      final totalCost = existingConsumptions.fold<double>(
+        0.0,
+        (s, c) => s + c.totalCost,
+      );
+      final totalConsumed = existingConsumptions.fold<double>(
+        0.0,
+        (s, c) => s + c.consumedQty,
+      );
       final effCost = totalConsumed > 0 ? totalCost / totalConsumed : 0.0;
       return LayerConsumptionResult(
         consumptions: existingConsumptions
-            .map((row) => CostConsumption(
-                  id: row.uuid,
-                  layerUuid: row.layerUuid,
-                  issueLineUuid: row.issueLineUuid,
-                  movementType: row.movementType,
-                  consumedQty: row.consumedQty,
-                  unitCost: row.unitCost,
-                  totalCost: row.totalCost,
-                  createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-                  companyId: row.companyId,
-                ))
+            .map(
+              (row) => CostConsumption(
+                id: row.uuid,
+                layerUuid: row.layerUuid,
+                issueLineUuid: row.issueLineUuid,
+                movementType: row.movementType,
+                consumedQty: row.consumedQty,
+                unitCost: row.unitCost,
+                totalCost: row.totalCost,
+                createdAt: DateTime.fromMillisecondsSinceEpoch(
+                  row.createdAt,
+                  isUtc: true,
+                ),
+                companyId: row.companyId,
+              ),
+            )
             .toList(),
         totalCost: totalCost,
         effectiveUnitCost: effCost,
@@ -162,12 +210,14 @@ class CostLayerServiceImpl implements CostLayerService {
 
       while (remainingNeeded > 0.000001) {
         var query = _db.select(_db.inventoryCostLayers)
-          ..where((tbl) =>
-              tbl.itemCode.equals(itemCode) &
-              tbl.companyId.equals(effectiveCompanyId) &
-              tbl.remainingQty.isBiggerThanValue(0) &
-              tbl.closed.equals(0) &
-              tbl.deletedAt.isNull());
+          ..where(
+            (tbl) =>
+                tbl.itemCode.equals(itemCode) &
+                tbl.companyId.equals(effectiveCompanyId) &
+                tbl.remainingQty.isBiggerThanValue(0) &
+                tbl.closed.equals(0) &
+                tbl.deletedAt.isNull(),
+          );
 
         if (warehouseId != null && warehouseId.isNotEmpty) {
           query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
@@ -176,13 +226,13 @@ class CostLayerServiceImpl implements CostLayerService {
         query = query
           ..orderBy([
             (tbl) => OrderingTerm(
-                  expression: tbl.receivedDate,
-                  mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
-                ),
+              expression: tbl.receivedDate,
+              mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
+            ),
             (tbl) => OrderingTerm(
-                  expression: tbl.id,
-                  mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
-                ),
+              expression: tbl.id,
+              mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
+            ),
           ])
           ..limit(1);
 
@@ -202,20 +252,24 @@ class CostLayerServiceImpl implements CostLayerService {
         final isClosed = newRemaining <= 0.000001;
 
         // Atomic conditional UPDATE with quantity guard to prevent concurrency race & negative quantity
-        final updatedCount = await (_db.update(_db.inventoryCostLayers)
-              ..where((tbl) =>
-                  tbl.uuid.equals(topLayer.uuid) &
-                  tbl.companyId.equals(effectiveCompanyId) &
-                  tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
-                  tbl.closed.equals(0) &
-                  tbl.deletedAt.isNull()))
-            .write(
-          InventoryCostLayersCompanion(
-            remainingQty: Value(newRemaining),
-            closed: Value(isClosed ? 1 : 0),
-            updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-          ),
-        );
+        final updatedCount =
+            await (_db.update(_db.inventoryCostLayers)..where(
+                  (tbl) =>
+                      tbl.uuid.equals(topLayer.uuid) &
+                      tbl.companyId.equals(effectiveCompanyId) &
+                      tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
+                      tbl.closed.equals(0) &
+                      tbl.deletedAt.isNull(),
+                ))
+                .write(
+                  InventoryCostLayersCompanion(
+                    remainingQty: Value(newRemaining),
+                    closed: Value(isClosed ? 1 : 0),
+                    updatedAt: Value(
+                      DateTime.now().toUtc().millisecondsSinceEpoch,
+                    ),
+                  ),
+                );
 
         if (updatedCount == 0) {
           // Race condition detected! Another concurrent request consumed from this layer.
@@ -223,14 +277,18 @@ class CostLayerServiceImpl implements CostLayerService {
           continue;
         }
 
-        final layerUnitCost = topLayer.unitCostInventoryCurrency > 0 ? topLayer.unitCostInventoryCurrency : topLayer.unitCost;
+        final layerUnitCost = topLayer.unitCostInventoryCurrency > 0
+            ? topLayer.unitCostInventoryCurrency
+            : topLayer.unitCost;
         final lineCost = takeQty * layerUnitCost;
         accumulatedTotalCost += lineCost;
         remainingNeeded -= takeQty;
 
         final consumptionUuid = generateUuidV4();
         final now = DateTime.now().toUtc();
-        await _db.into(_db.inventoryCostConsumptions).insert(
+        await _db
+            .into(_db.inventoryCostConsumptions)
+            .insert(
               InventoryCostConsumptionsCompanion(
                 uuid: Value(consumptionUuid),
                 layerUuid: Value(topLayer.uuid),
@@ -261,11 +319,16 @@ class CostLayerServiceImpl implements CostLayerService {
 
       final isShortage = remainingNeeded > 0.000001;
       if (isShortage) {
-        final fallbackCost = await _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
+        final fallbackCost = await _getFallbackUnitCost(
+          itemCode,
+          companyId: effectiveCompanyId,
+        );
         accumulatedTotalCost += (remainingNeeded * fallbackCost);
       }
 
-      final effectiveUnitCost = quantity > 0 ? accumulatedTotalCost / quantity : 0.0;
+      final effectiveUnitCost = quantity > 0
+          ? accumulatedTotalCost / quantity
+          : 0.0;
 
       return LayerConsumptionResult(
         consumptions: consumptions,
@@ -288,15 +351,23 @@ class CostLayerServiceImpl implements CostLayerService {
     final effectiveCompanyId = companyId ?? _currentCompanyId;
 
     return await _db.transaction(() async {
-      final avgCost = await getWeightedAverageCost(itemCode, warehouseId: warehouseId, companyId: effectiveCompanyId);
-      final unitCostToUse = avgCost > 0 ? avgCost : await _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
+      final avgCost = await getWeightedAverageCost(
+        itemCode,
+        warehouseId: warehouseId,
+        companyId: effectiveCompanyId,
+      );
+      final unitCostToUse = avgCost > 0
+          ? avgCost
+          : await _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
 
       var query = _db.select(_db.inventoryCostLayers)
-        ..where((tbl) =>
-            tbl.itemCode.equals(itemCode) &
-            tbl.companyId.equals(effectiveCompanyId) &
-            tbl.closed.equals(0) &
-            tbl.deletedAt.isNull());
+        ..where(
+          (tbl) =>
+              tbl.itemCode.equals(itemCode) &
+              tbl.companyId.equals(effectiveCompanyId) &
+              tbl.closed.equals(0) &
+              tbl.deletedAt.isNull(),
+        );
 
       if (warehouseId != null && warehouseId.isNotEmpty) {
         query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
@@ -305,7 +376,10 @@ class CostLayerServiceImpl implements CostLayerService {
       query = query..orderBy([(tbl) => OrderingTerm.asc(tbl.receivedDate)]);
       final layers = await query.get();
 
-      final totalQty = layers.fold<double>(0.0, (sum, row) => sum + row.remainingQty);
+      final totalQty = layers.fold<double>(
+        0.0,
+        (sum, row) => sum + row.remainingQty,
+      );
 
       if (quantity > totalQty + 0.000001) {
         final shortageQty = quantity - totalQty;
@@ -344,20 +418,24 @@ class CostLayerServiceImpl implements CostLayerService {
         final isClosed = newRemaining <= 0.000001;
 
         // Atomic conditional UPDATE with quantity guard to prevent negative quantity & concurrency conflict
-        final updatedCount = await (_db.update(_db.inventoryCostLayers)
-              ..where((tbl) =>
-                  tbl.uuid.equals(row.uuid) &
-                  tbl.companyId.equals(effectiveCompanyId) &
-                  tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
-                  tbl.closed.equals(0) &
-                  tbl.deletedAt.isNull()))
-            .write(
-          InventoryCostLayersCompanion(
-            remainingQty: Value(newRemaining),
-            closed: Value(isClosed ? 1 : 0),
-            updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-          ),
-        );
+        final updatedCount =
+            await (_db.update(_db.inventoryCostLayers)..where(
+                  (tbl) =>
+                      tbl.uuid.equals(row.uuid) &
+                      tbl.companyId.equals(effectiveCompanyId) &
+                      tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
+                      tbl.closed.equals(0) &
+                      tbl.deletedAt.isNull(),
+                ))
+                .write(
+                  InventoryCostLayersCompanion(
+                    remainingQty: Value(newRemaining),
+                    closed: Value(isClosed ? 1 : 0),
+                    updatedAt: Value(
+                      DateTime.now().toUtc().millisecondsSinceEpoch,
+                    ),
+                  ),
+                );
 
         if (updatedCount == 0) {
           // Concurrency conflict detected: abort WAC loop to prevent partial consumption
@@ -370,7 +448,9 @@ class CostLayerServiceImpl implements CostLayerService {
         final lineCost = takeQty * unitCostToUse;
         final consumptionUuid = generateUuidV4();
         final now = DateTime.now().toUtc();
-        await _db.into(_db.inventoryCostConsumptions).insert(
+        await _db
+            .into(_db.inventoryCostConsumptions)
+            .insert(
               InventoryCostConsumptionsCompanion(
                 uuid: Value(consumptionUuid),
                 layerUuid: Value(row.uuid),
@@ -414,9 +494,11 @@ class CostLayerServiceImpl implements CostLayerService {
     final effectiveCompanyId = _currentCompanyId;
     await _db.transaction(() async {
       final query = _db.select(_db.inventoryCostConsumptions)
-        ..where((tbl) =>
-            tbl.issueLineUuid.equals(issueLineUuid) &
-            tbl.companyId.equals(effectiveCompanyId));
+        ..where(
+          (tbl) =>
+              tbl.issueLineUuid.equals(issueLineUuid) &
+              tbl.companyId.equals(effectiveCompanyId),
+        );
       final consumptions = await query.get();
 
       if (consumptions.isEmpty) {
@@ -425,36 +507,47 @@ class CostLayerServiceImpl implements CostLayerService {
 
       for (final c in consumptions) {
         final layerQuery = _db.select(_db.inventoryCostLayers)
-          ..where((tbl) =>
-              tbl.uuid.equals(c.layerUuid) &
-              tbl.companyId.equals(effectiveCompanyId));
+          ..where(
+            (tbl) =>
+                tbl.uuid.equals(c.layerUuid) &
+                tbl.companyId.equals(effectiveCompanyId),
+          );
         final layer = await layerQuery.getSingleOrNull();
 
         if (layer != null) {
           // Enforce invariant: restoredQty <= layer.receivedQty and remainingQty >= 0
-          final maxAllowed = layer.receivedQty > 0 ? layer.receivedQty : double.infinity;
-          final restoredQty = (layer.remainingQty + c.consumedQty).clamp(0.0, maxAllowed);
+          final maxAllowed = layer.receivedQty > 0
+              ? layer.receivedQty
+              : double.infinity;
+          final restoredQty = (layer.remainingQty + c.consumedQty).clamp(
+            0.0,
+            maxAllowed,
+          );
           final isClosed = restoredQty <= 0.000001;
 
-          await (_db.update(_db.inventoryCostLayers)
-                ..where((tbl) =>
+          await (_db.update(_db.inventoryCostLayers)..where(
+                (tbl) =>
                     tbl.uuid.equals(layer.uuid) &
-                    tbl.companyId.equals(effectiveCompanyId)))
+                    tbl.companyId.equals(effectiveCompanyId),
+              ))
               .write(
-            InventoryCostLayersCompanion(
-              remainingQty: Value(restoredQty),
-              closed: Value(isClosed ? 1 : 0),
-              updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-            ),
-          );
+                InventoryCostLayersCompanion(
+                  remainingQty: Value(restoredQty),
+                  closed: Value(isClosed ? 1 : 0),
+                  updatedAt: Value(
+                    DateTime.now().toUtc().millisecondsSinceEpoch,
+                  ),
+                ),
+              );
         }
       }
 
       // Delete consumption rows scoped by tenant
-      await (_db.delete(_db.inventoryCostConsumptions)
-            ..where((tbl) =>
+      await (_db.delete(_db.inventoryCostConsumptions)..where(
+            (tbl) =>
                 tbl.issueLineUuid.equals(issueLineUuid) &
-                tbl.companyId.equals(effectiveCompanyId)))
+                tbl.companyId.equals(effectiveCompanyId),
+          ))
           .go();
     });
   }
@@ -464,21 +557,26 @@ class CostLayerServiceImpl implements CostLayerService {
     final effectiveCompanyId = _currentCompanyId;
     await _db.transaction(() async {
       final query = _db.select(_db.inventoryCostLayers)
-        ..where((tbl) =>
-            tbl.movementUuid.equals(movementUuid) &
-            tbl.companyId.equals(effectiveCompanyId));
+        ..where(
+          (tbl) =>
+              tbl.movementUuid.equals(movementUuid) &
+              tbl.companyId.equals(effectiveCompanyId),
+        );
       final layers = await query.get();
 
       final now = DateTime.now().toUtc();
       for (final layer in layers) {
         // Orphan Consumption Guard: check if downstream consumptions exist for this layer
-        final consumptions = await (_db.select(_db.inventoryCostConsumptions)
-              ..where((tbl) =>
-                  tbl.layerUuid.equals(layer.uuid) &
-                  tbl.companyId.equals(effectiveCompanyId)))
-            .get();
+        final consumptions =
+            await (_db.select(_db.inventoryCostConsumptions)..where(
+                  (tbl) =>
+                      tbl.layerUuid.equals(layer.uuid) &
+                      tbl.companyId.equals(effectiveCompanyId),
+                ))
+                .get();
 
-        if (consumptions.isNotEmpty || layer.remainingQty < layer.receivedQty - 0.000001) {
+        if (consumptions.isNotEmpty ||
+            layer.remainingQty < layer.receivedQty - 0.000001) {
           throw JournalException(
             JournalException.dependencyViolation,
             'Cannot reverse or delete cost layer created by movement $movementUuid because downstream cost consumptions exist.',
@@ -486,17 +584,18 @@ class CostLayerServiceImpl implements CostLayerService {
         }
 
         // Soft-delete the layer
-        await (_db.update(_db.inventoryCostLayers)
-              ..where((tbl) =>
+        await (_db.update(_db.inventoryCostLayers)..where(
+              (tbl) =>
                   tbl.uuid.equals(layer.uuid) &
-                  tbl.companyId.equals(effectiveCompanyId)))
+                  tbl.companyId.equals(effectiveCompanyId),
+            ))
             .write(
-          InventoryCostLayersCompanion(
-            deletedAt: Value(now.millisecondsSinceEpoch),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            closed: const Value(1),
-          ),
-        );
+              InventoryCostLayersCompanion(
+                deletedAt: Value(now.millisecondsSinceEpoch),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                closed: const Value(1),
+              ),
+            );
       }
     });
   }
@@ -509,11 +608,13 @@ class CostLayerServiceImpl implements CostLayerService {
   }) async {
     final effectiveCompanyId = companyId ?? _currentCompanyId;
     var query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) =>
-          tbl.itemCode.equals(itemCode) &
-          tbl.companyId.equals(effectiveCompanyId) &
-          tbl.closed.equals(0) &
-          tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            tbl.itemCode.equals(itemCode) &
+            tbl.companyId.equals(effectiveCompanyId) &
+            tbl.closed.equals(0) &
+            tbl.deletedAt.isNull(),
+      );
 
     if (warehouseId != null && warehouseId.isNotEmpty) {
       query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
@@ -526,7 +627,9 @@ class CostLayerServiceImpl implements CostLayerService {
     for (final row in layers) {
       if (row.remainingQty > 0) {
         totalQty += row.remainingQty;
-        final costToUse = row.unitCostInventoryCurrency > 0 ? row.unitCostInventoryCurrency : row.unitCost;
+        final costToUse = row.unitCostInventoryCurrency > 0
+            ? row.unitCostInventoryCurrency
+            : row.unitCost;
         totalValue += (row.remainingQty * costToUse);
       }
     }
@@ -546,11 +649,13 @@ class CostLayerServiceImpl implements CostLayerService {
   }) async {
     final effectiveCompanyId = companyId ?? _currentCompanyId;
     var query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) =>
-          tbl.itemCode.equals(itemCode) &
-          tbl.companyId.equals(effectiveCompanyId) &
-          tbl.closed.equals(0) &
-          tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            tbl.itemCode.equals(itemCode) &
+            tbl.companyId.equals(effectiveCompanyId) &
+            tbl.closed.equals(0) &
+            tbl.deletedAt.isNull(),
+      );
 
     if (warehouseId != null && warehouseId.isNotEmpty) {
       query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
@@ -567,29 +672,55 @@ class CostLayerServiceImpl implements CostLayerService {
             warehouseId: row.warehouseId,
             movementUuid: row.movementUuid,
             movementType: row.movementType,
-            receivedDate: DateTime.fromMillisecondsSinceEpoch(row.receivedDate, isUtc: true),
+            receivedDate: DateTime.fromMillisecondsSinceEpoch(
+              row.receivedDate,
+              isUtc: true,
+            ),
             receivedQty: row.receivedQty,
             remainingQty: row.remainingQty,
             unitCost: row.unitCost,
             totalCost: row.totalCost,
             inventoryCurrencyId: row.inventoryCurrencyId,
-            unitCostInventoryCurrency: row.unitCostInventoryCurrency > 0 ? row.unitCostInventoryCurrency : row.unitCost,
-            totalCostInventoryCurrency: row.totalCostInventoryCurrency > 0 ? row.totalCostInventoryCurrency : row.totalCost,
+            unitCostInventoryCurrency: row.unitCostInventoryCurrency > 0
+                ? row.unitCostInventoryCurrency
+                : row.unitCost,
+            totalCostInventoryCurrency: row.totalCostInventoryCurrency > 0
+                ? row.totalCostInventoryCurrency
+                : row.totalCost,
             documentCurrencyId: row.documentCurrencyId,
-            unitCostDocumentCurrency: row.unitCostDocumentCurrency > 0 ? row.unitCostDocumentCurrency : row.unitCost,
-            totalCostDocumentCurrency: row.totalCostDocumentCurrency > 0 ? row.totalCostDocumentCurrency : row.totalCost,
+            unitCostDocumentCurrency: row.unitCostDocumentCurrency > 0
+                ? row.unitCostDocumentCurrency
+                : row.unitCost,
+            totalCostDocumentCurrency: row.totalCostDocumentCurrency > 0
+                ? row.totalCostDocumentCurrency
+                : row.totalCost,
             exchangeRate: row.exchangeRate > 0 ? row.exchangeRate : 1.0,
             exchangeRateDate: row.exchangeRateDate == null
-                ? DateTime.fromMillisecondsSinceEpoch(row.receivedDate, isUtc: true)
-                : DateTime.fromMillisecondsSinceEpoch(row.exchangeRateDate!, isUtc: true),
+                ? DateTime.fromMillisecondsSinceEpoch(
+                    row.receivedDate,
+                    isUtc: true,
+                  )
+                : DateTime.fromMillisecondsSinceEpoch(
+                    row.exchangeRateDate!,
+                    isUtc: true,
+                  ),
             closed: row.closed == 1,
-            createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-            updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
+            createdAt: DateTime.fromMillisecondsSinceEpoch(
+              row.createdAt,
+              isUtc: true,
+            ),
+            updatedAt: DateTime.fromMillisecondsSinceEpoch(
+              row.updatedAt,
+              isUtc: true,
+            ),
             version: row.version,
             companyId: row.companyId,
             deletedAt: row.deletedAt == null
                 ? null
-                : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+                : DateTime.fromMillisecondsSinceEpoch(
+                    row.deletedAt!,
+                    isUtc: true,
+                  ),
           ),
         )
         .toList();
@@ -604,11 +735,13 @@ class CostLayerServiceImpl implements CostLayerService {
   }) async {
     final effectiveCompanyId = companyId ?? _currentCompanyId;
     var query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) =>
-          tbl.itemCode.equals(itemCode) &
-          tbl.companyId.equals(effectiveCompanyId) &
-          tbl.closed.equals(0) &
-          tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            tbl.itemCode.equals(itemCode) &
+            tbl.companyId.equals(effectiveCompanyId) &
+            tbl.closed.equals(0) &
+            tbl.deletedAt.isNull(),
+      );
 
     if (warehouseId != null && warehouseId.isNotEmpty) {
       query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
@@ -630,7 +763,9 @@ class CostLayerServiceImpl implements CostLayerService {
         for (final layer in layers) {
           if (layer.remainingQty > 0) {
             totalQty += layer.remainingQty;
-            final costToUse = layer.unitCostInventoryCurrency > 0 ? layer.unitCostInventoryCurrency : layer.unitCost;
+            final costToUse = layer.unitCostInventoryCurrency > 0
+                ? layer.unitCostInventoryCurrency
+                : layer.unitCost;
             totalValue += (layer.remainingQty * costToUse);
           }
         }
@@ -640,7 +775,9 @@ class CostLayerServiceImpl implements CostLayerService {
       } else {
         // FIFO or LIFO: pick cost from the first active layer with remainingQty > 0
         for (final layer in layers) {
-          final costToUse = layer.unitCostInventoryCurrency > 0 ? layer.unitCostInventoryCurrency : layer.unitCost;
+          final costToUse = layer.unitCostInventoryCurrency > 0
+              ? layer.unitCostInventoryCurrency
+              : layer.unitCost;
           if (layer.remainingQty > 0 && costToUse > 0) {
             resolvedCost = costToUse;
             break;
@@ -652,11 +789,13 @@ class CostLayerServiceImpl implements CostLayerService {
     // If open layers yielded zero, lookup historical cost layers for itemCode
     if (resolvedCost <= 0) {
       final historicalQuery = _db.select(_db.inventoryCostLayers)
-        ..where((tbl) =>
-            tbl.itemCode.equals(itemCode) &
-            tbl.companyId.equals(effectiveCompanyId) &
-            tbl.unitCost.isBiggerThanValue(0) &
-            tbl.deletedAt.isNull())
+        ..where(
+          (tbl) =>
+              tbl.itemCode.equals(itemCode) &
+              tbl.companyId.equals(effectiveCompanyId) &
+              tbl.unitCost.isBiggerThanValue(0) &
+              tbl.deletedAt.isNull(),
+        )
         ..orderBy([(tbl) => OrderingTerm.desc(tbl.receivedDate)])
         ..limit(1);
       final lastLayer = await historicalQuery.getSingleOrNull();
@@ -667,7 +806,10 @@ class CostLayerServiceImpl implements CostLayerService {
 
     // Fallback to product catalog unitCost
     if (resolvedCost <= 0) {
-      resolvedCost = await _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
+      resolvedCost = await _getFallbackUnitCost(
+        itemCode,
+        companyId: effectiveCompanyId,
+      );
     }
 
     return resolvedCost;
@@ -679,9 +821,11 @@ class CostLayerServiceImpl implements CostLayerService {
   }) async {
     final effectiveCompanyId = companyId ?? _currentCompanyId;
     final query = _db.select(_db.products)
-      ..where((tbl) =>
-          tbl.itemCode.equals(itemCode) &
-          tbl.companyId.equals(effectiveCompanyId));
+      ..where(
+        (tbl) =>
+            tbl.itemCode.equals(itemCode) &
+            tbl.companyId.equals(effectiveCompanyId),
+      );
     final product = await query.getSingleOrNull();
     if (product == null) return 0.0;
     return product.unitCost > 0 ? product.unitCost : 0.0;

@@ -38,7 +38,10 @@ void main() {
         lastVerifiedAt: now.subtract(const Duration(days: 3)),
       );
 
-      final resultActive = calculateEffectiveEntitlement(activeEntitlement, now);
+      final resultActive = calculateEffectiveEntitlement(
+        activeEntitlement,
+        now,
+      );
       expect(resultActive.tier, equals(EntitlementTier.premium));
       expect(resultActive.hasCapability(EntitlementCapability.sync), isTrue);
 

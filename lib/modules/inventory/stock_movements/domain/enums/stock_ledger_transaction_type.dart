@@ -37,7 +37,8 @@ enum StockLedgerTransactionType {
       case 'transfer_in':
         return StockLedgerTransactionType.transferIn;
       case 'stock_transfer':
-        return StockLedgerTransactionType.transferOut; // Default direction handled by direction field
+        return StockLedgerTransactionType
+            .transferOut; // Default direction handled by direction field
       case 'adjustment_increase':
         return StockLedgerTransactionType.adjustmentIncrease;
       case 'adjustment_decrease':

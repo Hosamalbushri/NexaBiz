@@ -69,7 +69,10 @@ class FakeAccountRepository implements AccountRepository {
   @override
   Future<List<Account>> getByUuids(Iterable<String> uuids) async {
     final set = uuids.toSet();
-    return [for (final a in _accounts) if (set.contains(a.uuid)) a];
+    return [
+      for (final a in _accounts)
+        if (set.contains(a.uuid)) a,
+    ];
   }
 
   @override
@@ -86,8 +89,7 @@ class FakeAccountRepository implements AccountRepository {
   Future<List<Account>> search(
     String query, {
     bool includeInactive = false,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<Account>> getChildren(String parentUuid) async => const [];
@@ -118,6 +120,8 @@ class FakeAccountRepository implements AccountRepository {
   Future<List<Account>> getByType(
     AccountType type, {
     bool includeInactive = false,
-  }) async =>
-      [for (final a in _accounts) if (a.accountType == type) a];
+  }) async => [
+    for (final a in _accounts)
+      if (a.accountType == type) a,
+  ];
 }

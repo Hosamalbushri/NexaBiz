@@ -7,9 +7,8 @@ import 'package_setup_definition_validator.dart';
 /// The registry enforces duplicate protection and valid setup structures without
 /// containing any package-specific business rules.
 class CentralSetupRegistry {
-  CentralSetupRegistry({
-    PackageSetupDefinitionValidator? validator,
-  }) : _validator = validator ?? const PackageSetupDefinitionValidator();
+  CentralSetupRegistry({PackageSetupDefinitionValidator? validator})
+    : _validator = validator ?? const PackageSetupDefinitionValidator();
 
   final PackageSetupDefinitionValidator _validator;
   final Map<String, PackageSetupDefinition> _registry = {};

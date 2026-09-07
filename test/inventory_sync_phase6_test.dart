@@ -25,6 +25,29 @@ import 'package:stock_count/core/auth/domain/services/local_access_policy.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:hive/hive.dart';
 
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
+
+class MockAccountingPoster implements InventoryAccountingPoster {
+  @override
+  Future<void> postAccountingEntry({
+    required InventoryDocumentRef document,
+    required double totalAmount,
+    String? accountId,
+    bool isPosted = true,
+  }) async {}
+
+  @override
+  Future<void> setAccountingEntryPostingStatus({
+    required InventoryDocumentRef document,
+    required bool isPosted,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
+  }) async {}
+}
+
 class MockSyncBox<T> implements Box<T> {
   MockSyncBox(List<T> initial) {
     for (final item in initial) {
@@ -70,8 +93,16 @@ void main() {
 
   setUp(() async {
     db = InventoryDatabase.memory();
-    costLayerService = CostLayerServiceImpl(db: db, readCompanyId: () => 'COMP-A');
-    postingEngine = PostingEngineImpl(db, costLayerService, null, () => 'COMP-A');
+    costLayerService = CostLayerServiceImpl(
+      db: db,
+      readCompanyId: () => 'COMP-A',
+    );
+    postingEngine = PostingEngineImpl(
+      db,
+      costLayerService,
+      null,
+      () => 'COMP-A',
+    );
     validationService = StockValidationServiceImpl(db, () => 'COMP-A');
     dependencyDetector = InventoryDependencyDetectorImpl(db, () => 'COMP-A');
     mockBox = MockSyncBox<SyncOperation>([]);
@@ -86,14 +117,26 @@ void main() {
       permissionGuard: const AllowAllPermissionGuard(),
       readCompanyId: () => 'COMP-A',
       syncQueue: syncQueue,
+      accountingPoster: MockAccountingPoster(),
     );
-    movementsRepo = StockMovementsRepositoryImpl(db: db, readCompanyId: () => 'COMP-A');
-    transferRepo = StockTransferRepositoryImpl(db: db, readCompanyId: () => 'COMP-A');
-    returnsRepo = StockReturnsRepositoryImpl(db: db, readCompanyId: () => 'COMP-A');
+    movementsRepo = StockMovementsRepositoryImpl(
+      db: db,
+      readCompanyId: () => 'COMP-A',
+    );
+    transferRepo = StockTransferRepositoryImpl(
+      db: db,
+      readCompanyId: () => 'COMP-A',
+    );
+    returnsRepo = StockReturnsRepositoryImpl(
+      db: db,
+      readCompanyId: () => 'COMP-A',
+    );
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await db.into(db.products).insert(
+    await db
+        .into(db.products)
+        .insert(
           ProductsCompanion(
             id: const Value(1),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
@@ -160,125 +203,149 @@ void main() {
     test('2. Outbound Sync Enqueue on Issue Posting', () async {
       final rId = generateUuidV4();
       final date = DateTime.utc(2026, 1, 1);
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: rId,
-        receiptNumber: 'REC-INIT',
-        receiptDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: rId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 100,
-            unitCost: 50,
-            totalCost: 5000,
-          ),
-        ],
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: rId,
-        documentNumber: 'REC-INIT',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: date,
-      ));
+      await movementsRepo.saveReceipt(
+        StockReceipt(
+          id: rId,
+          receiptNumber: 'REC-INIT',
+          receiptDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: rId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 100,
+              unitCost: 50,
+              totalCost: 5000,
+            ),
+          ],
+        ),
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: rId,
+          documentNumber: 'REC-INIT',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: date,
+        ),
+      );
 
       final issId = generateUuidV4();
-      await movementsRepo.saveIssue(StockIssue(
-        id: issId,
-        issueNumber: 'ISS-001',
-        issueDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: issId,
-            movementType: 'issue',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 30,
-            unitCost: 50,
-            totalCost: 1500,
-          ),
-        ],
-      ));
+      await movementsRepo.saveIssue(
+        StockIssue(
+          id: issId,
+          issueNumber: 'ISS-001',
+          issueDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: issId,
+              movementType: 'issue',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 30,
+              unitCost: 50,
+              totalCost: 1500,
+            ),
+          ],
+        ),
+      );
 
-      final res = await coordinator.post(document: InventoryDocumentRef(
-        documentId: issId,
-        documentNumber: 'ISS-001',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: date,
-      ));
+      final res = await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: issId,
+          documentNumber: 'ISS-001',
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: date,
+        ),
+      );
       expect(res, isA<PostSuccess>());
 
       final ops = await syncQueue.all();
-      expect(ops.any((op) => op.entityType == 'stock_issue' && op.entityId == issId), isTrue);
+      expect(
+        ops.any((op) => op.entityType == 'stock_issue' && op.entityId == issId),
+        isTrue,
+      );
     });
 
     // 3. Outbound Sync Enqueue on Transfer Posting
     test('3. Outbound Sync Enqueue on Transfer Posting', () async {
       final date = DateTime.utc(2026, 1, 1);
       final rId = generateUuidV4();
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: rId,
-        receiptNumber: 'REC-WH1',
-        receiptDate: date,
-        warehouse: 'WH-1',
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: rId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 50,
-            unitCost: 100,
-            totalCost: 5000,
-          ),
-        ],
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: rId,
-        documentNumber: 'REC-WH1',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: date,
-        warehouseId: 'WH-1',
-      ));
+      await movementsRepo.saveReceipt(
+        StockReceipt(
+          id: rId,
+          receiptNumber: 'REC-WH1',
+          receiptDate: date,
+          warehouse: 'WH-1',
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: rId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 50,
+              unitCost: 100,
+              totalCost: 5000,
+            ),
+          ],
+        ),
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: rId,
+          documentNumber: 'REC-WH1',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: date,
+          warehouseId: 'WH-1',
+        ),
+      );
 
       final trId = generateUuidV4();
-      await transferRepo.saveTransfer(StockTransfer(
-        id: trId,
-        transferNumber: 'TR-001',
-        fromWarehouseId: 'WH-1',
-        toWarehouseId: 'WH-2',
-        transferDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockTransferLine(
-            id: generateUuidV4(),
-            transferUuid: trId,
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 20,
-            unitCost: 100,
-            totalCost: 2000,
-          ),
-        ],
-      ));
+      await transferRepo.saveTransfer(
+        StockTransfer(
+          id: trId,
+          transferNumber: 'TR-001',
+          fromWarehouseId: 'WH-1',
+          toWarehouseId: 'WH-2',
+          transferDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockTransferLine(
+              id: generateUuidV4(),
+              transferUuid: trId,
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 20,
+              unitCost: 100,
+              totalCost: 2000,
+            ),
+          ],
+        ),
+      );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: trId,
-        documentNumber: 'TR-001',
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: date,
-        warehouseId: 'WH-1',
-      ));
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: trId,
+          documentNumber: 'TR-001',
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: date,
+          warehouseId: 'WH-1',
+        ),
+      );
 
       final ops = await syncQueue.all();
-      expect(ops.any((op) => op.entityType == 'stock_transfer' && op.entityId == trId), isTrue);
+      expect(
+        ops.any(
+          (op) => op.entityType == 'stock_transfer' && op.entityId == trId,
+        ),
+        isTrue,
+      );
     });
 
     // 4. Outbound Sync Enqueue on Purchase Return Posting
@@ -286,122 +353,146 @@ void main() {
       final date = DateTime.utc(2026, 1, 1);
       final pretId = generateUuidV4();
       final recForRetId = generateUuidV4();
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: recForRetId,
-        receiptNumber: 'REC-FOR-PRET',
-        receiptDate: date,
-        warehouse: 'WH-1',
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: recForRetId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 10,
-            unitCost: 50,
-            totalCost: 500,
-          ),
-        ],
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: recForRetId,
-        documentNumber: 'REC-FOR-PRET',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: date,
-        warehouseId: 'WH-1',
-      ));
+      await movementsRepo.saveReceipt(
+        StockReceipt(
+          id: recForRetId,
+          receiptNumber: 'REC-FOR-PRET',
+          receiptDate: date,
+          warehouse: 'WH-1',
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: recForRetId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 10,
+              unitCost: 50,
+              totalCost: 500,
+            ),
+          ],
+        ),
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: recForRetId,
+          documentNumber: 'REC-FOR-PRET',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: date,
+          warehouseId: 'WH-1',
+        ),
+      );
 
-      await returnsRepo.saveReturn(StockReturn(
-        id: pretId,
-        returnNumber: 'PRET-001',
-        returnType: StockReturnType.purchaseReturn,
-        returnDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: pretId,
-            movementType: 'return',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 5,
-            unitCost: 50,
-            totalCost: 250,
-          ),
-        ],
-      ));
+      await returnsRepo.saveReturn(
+        StockReturn(
+          id: pretId,
+          returnNumber: 'PRET-001',
+          returnType: StockReturnType.purchaseReturn,
+          returnDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: pretId,
+              movementType: 'return',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 5,
+              unitCost: 50,
+              totalCost: 250,
+            ),
+          ],
+        ),
+      );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: pretId,
-        documentNumber: 'PRET-001',
-        documentType: InventoryDocumentType.stockReturn,
-        documentDate: date,
-        warehouseId: 'WH-1',
-      ));
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: pretId,
+          documentNumber: 'PRET-001',
+          documentType: InventoryDocumentType.stockReturn,
+          documentDate: date,
+          warehouseId: 'WH-1',
+        ),
+      );
 
       final ops = await syncQueue.all();
-      expect(ops.any((op) => op.entityType == 'stock_return' && op.entityId == pretId), isTrue);
+      expect(
+        ops.any(
+          (op) => op.entityType == 'stock_return' && op.entityId == pretId,
+        ),
+        isTrue,
+      );
     });
 
     // 5. Outbound Sync Enqueue on Sales Return Posting
     test('5. Outbound Sync Enqueue on Sales Return Posting', () async {
       final date = DateTime.utc(2026, 1, 1);
       final sretId = generateUuidV4();
-      await returnsRepo.saveReturn(StockReturn(
-        id: sretId,
-        returnNumber: 'SRET-001',
-        returnType: StockReturnType.salesReturn,
-        returnDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: sretId,
-            movementType: 'return',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 10,
-            unitCost: 50,
-            totalCost: 500,
-          ),
-        ],
-      ));
+      await returnsRepo.saveReturn(
+        StockReturn(
+          id: sretId,
+          returnNumber: 'SRET-001',
+          returnType: StockReturnType.salesReturn,
+          returnDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: sretId,
+              movementType: 'return',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 10,
+              unitCost: 50,
+              totalCost: 500,
+            ),
+          ],
+        ),
+      );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: sretId,
-        documentNumber: 'SRET-001',
-        documentType: InventoryDocumentType.stockReturn,
-        documentDate: date,
-      ));
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: sretId,
+          documentNumber: 'SRET-001',
+          documentType: InventoryDocumentType.stockReturn,
+          documentDate: date,
+        ),
+      );
 
       final ops = await syncQueue.all();
-      expect(ops.any((op) => op.entityType == 'stock_return' && op.entityId == sretId), isTrue);
+      expect(
+        ops.any(
+          (op) => op.entityType == 'stock_return' && op.entityId == sretId,
+        ),
+        isTrue,
+      );
     });
 
     // 6. Outbound Sync Enqueue on Unpost/Reversal
     test('6. Outbound Sync Enqueue on Unpost/Reversal', () async {
       final rId = generateUuidV4();
       final date = DateTime.utc(2026, 1, 1);
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: rId,
-        receiptNumber: 'REC-REV-EX',
-        receiptDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: rId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 50,
-            unitCost: 100,
-            totalCost: 5000,
-          ),
-        ],
-      ));
+      await movementsRepo.saveReceipt(
+        StockReceipt(
+          id: rId,
+          receiptNumber: 'REC-REV-EX',
+          receiptDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: rId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 50,
+              unitCost: 100,
+              totalCost: 5000,
+            ),
+          ],
+        ),
+      );
 
       final docRef = InventoryDocumentRef(
         documentId: rId,
@@ -415,7 +506,12 @@ void main() {
       expect(unpostRes, isA<UnpostSuccess>());
 
       final ops = await syncQueue.all();
-      expect(ops.any((op) => op.entityType == 'inventory_reversal' && op.entityId == rId), isTrue);
+      expect(
+        ops.any(
+          (op) => op.entityType == 'inventory_reversal' && op.entityId == rId,
+        ),
+        isTrue,
+      );
     });
 
     // 7. Durable Outbox Persistence across Restart
@@ -432,7 +528,11 @@ void main() {
       final countBefore = (await syncQueue.all()).length;
 
       // Re-initialize SyncQueue using same underlying box
-      final restartedQueue = SyncQueue(box: mockBox, companyId: 'COMP-A', deviceId: 'DEV-1');
+      final restartedQueue = SyncQueue(
+        box: mockBox,
+        companyId: 'COMP-A',
+        deviceId: 'DEV-1',
+      );
       final countAfter = (await restartedQueue.all()).length;
 
       expect(countAfter, equals(countBefore));
@@ -449,8 +549,14 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack1 = await remoteSyncApi.push(entityType: 'stock_receipt', operation: op);
-      final ack2 = await remoteSyncApi.push(entityType: 'stock_receipt', operation: op);
+      final ack1 = await remoteSyncApi.push(
+        entityType: 'stock_receipt',
+        operation: op,
+      );
+      final ack2 = await remoteSyncApi.push(
+        entityType: 'stock_receipt',
+        operation: op,
+      );
 
       expect(ack1.remoteVersion, equals(1));
       expect(ack2.remoteVersion, equals(1));
@@ -466,8 +572,14 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack1 = await remoteSyncApi.push(entityType: 'stock_issue', operation: op);
-      final ack2 = await remoteSyncApi.push(entityType: 'stock_issue', operation: op);
+      final ack1 = await remoteSyncApi.push(
+        entityType: 'stock_issue',
+        operation: op,
+      );
+      final ack2 = await remoteSyncApi.push(
+        entityType: 'stock_issue',
+        operation: op,
+      );
 
       expect(ack1.remoteVersion, ack2.remoteVersion);
     });
@@ -482,8 +594,14 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack1 = await remoteSyncApi.push(entityType: 'stock_transfer', operation: op);
-      final ack2 = await remoteSyncApi.push(entityType: 'stock_transfer', operation: op);
+      final ack1 = await remoteSyncApi.push(
+        entityType: 'stock_transfer',
+        operation: op,
+      );
+      final ack2 = await remoteSyncApi.push(
+        entityType: 'stock_transfer',
+        operation: op,
+      );
 
       expect(ack1.remoteVersion, ack2.remoteVersion);
     });
@@ -497,7 +615,10 @@ void main() {
         payload: const {'documentNumber': 'REC-REV-IDEM'},
         companyId: 'COMP-A',
       );
-      await remoteSyncApi.push(entityType: 'stock_receipt', operation: opCreate);
+      await remoteSyncApi.push(
+        entityType: 'stock_receipt',
+        operation: opCreate,
+      );
 
       final opRev = SyncOperation.create(
         entityType: 'inventory_reversal',
@@ -508,7 +629,10 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack1 = await remoteSyncApi.push(entityType: 'inventory_reversal', operation: opRev);
+      final ack1 = await remoteSyncApi.push(
+        entityType: 'inventory_reversal',
+        operation: opRev,
+      );
       expect(ack1.remoteVersion, 2);
     });
 
@@ -528,7 +652,10 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack = await remoteSyncApi.push(entityType: 'journal_entry', operation: opJ);
+      final ack = await remoteSyncApi.push(
+        entityType: 'journal_entry',
+        operation: opJ,
+      );
       expect(ack.remoteVersion, 1);
     });
 
@@ -548,14 +675,20 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack = await remoteSyncApi.push(entityType: 'journal_entry', operation: opJ);
+      final ack = await remoteSyncApi.push(
+        entityType: 'journal_entry',
+        operation: opJ,
+      );
       expect(ack.remoteVersion, 1);
     });
 
     // 14. Server Cost Layer Authority Verification
     test('14. Server Cost Layer Authority Verification', () async {
       final localLayerCost = 100.0;
-      final serverMeta = await remoteSyncApi.getMeta(entityType: 'stock_receipt', entityId: 'r_authority_1');
+      final serverMeta = await remoteSyncApi.getMeta(
+        entityType: 'stock_receipt',
+        entityId: 'r_authority_1',
+      );
       expect(serverMeta == null || serverMeta.version >= 0, isTrue);
     });
 
@@ -576,7 +709,10 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final queue = SyncQueue(box: MockSyncBox<SyncOperation>([opReceipt, opProduct]), companyId: 'COMP-A');
+      final queue = SyncQueue(
+        box: MockSyncBox<SyncOperation>([opReceipt, opProduct]),
+        companyId: 'COMP-A',
+      );
       final ready = await queue.peekReady();
 
       expect(ready.first.entityType, equals('product'));
@@ -599,7 +735,10 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final queue = SyncQueue(box: MockSyncBox<SyncOperation>([opIssue, opReceipt]), companyId: 'COMP-A');
+      final queue = SyncQueue(
+        box: MockSyncBox<SyncOperation>([opIssue, opReceipt]),
+        companyId: 'COMP-A',
+      );
       final ready = await queue.peekReady();
 
       expect(ready.first.entityType, equals('stock_receipt'));
@@ -622,7 +761,10 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final queue = SyncQueue(box: MockSyncBox<SyncOperation>([opTransfer, opReceipt]), companyId: 'COMP-A');
+      final queue = SyncQueue(
+        box: MockSyncBox<SyncOperation>([opTransfer, opReceipt]),
+        companyId: 'COMP-A',
+      );
       final ready = await queue.peekReady();
 
       expect(ready.first.entityType, equals('stock_receipt'));
@@ -645,7 +787,10 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final queue = SyncQueue(box: MockSyncBox<SyncOperation>([opReversal, opReceipt]), companyId: 'COMP-A');
+      final queue = SyncQueue(
+        box: MockSyncBox<SyncOperation>([opReversal, opReceipt]),
+        companyId: 'COMP-A',
+      );
       final ready = await queue.peekReady();
 
       expect(ready.first.entityType, equals('stock_receipt'));
@@ -677,7 +822,10 @@ void main() {
         companyId: 'COMP-B',
       );
 
-      final queueA = SyncQueue(box: MockSyncBox<SyncOperation>([opB]), companyId: 'COMP-A');
+      final queueA = SyncQueue(
+        box: MockSyncBox<SyncOperation>([opB]),
+        companyId: 'COMP-A',
+      );
       final ready = await queueA.peekReady();
 
       expect(ready, isEmpty);
@@ -721,10 +869,18 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final syncingOp = op.copyWith(status: SyncStatus.syncing, updatedAt: DateTime.now().toUtc().subtract(const Duration(minutes: 10)));
-      final queue = SyncQueue(box: MockSyncBox<SyncOperation>([syncingOp]), companyId: 'COMP-A');
+      final syncingOp = op.copyWith(
+        status: SyncStatus.syncing,
+        updatedAt: DateTime.now().toUtc().subtract(const Duration(minutes: 10)),
+      );
+      final queue = SyncQueue(
+        box: MockSyncBox<SyncOperation>([syncingOp]),
+        companyId: 'COMP-A',
+      );
 
-      final reclaimed = await queue.reclaimInFlight(lease: const Duration(minutes: 5));
+      final reclaimed = await queue.reclaimInFlight(
+        lease: const Duration(minutes: 5),
+      );
       expect(reclaimed, equals(1));
 
       final ready = await queue.peekReady();
@@ -741,8 +897,14 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final quarantined = op.copyWith(status: SyncStatus.quarantined, lastError: 'Stale version');
-      final queue = SyncQueue(box: MockSyncBox<SyncOperation>([quarantined]), companyId: 'COMP-A');
+      final quarantined = op.copyWith(
+        status: SyncStatus.quarantined,
+        lastError: 'Stale version',
+      );
+      final queue = SyncQueue(
+        box: MockSyncBox<SyncOperation>([quarantined]),
+        companyId: 'COMP-A',
+      );
 
       await queue.resetQuarantine(quarantined.id);
       final ready = await queue.peekReady();
@@ -759,7 +921,10 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack1 = await remoteSyncApi.push(entityType: 'stock_receipt', operation: opCreate);
+      final ack1 = await remoteSyncApi.push(
+        entityType: 'stock_receipt',
+        operation: opCreate,
+      );
       expect(ack1.remoteVersion, 1);
     });
 
@@ -782,8 +947,14 @@ void main() {
         companyId: 'COMP-A',
       );
 
-      final ack1 = await remoteSyncApi.push(entityType: 'stock_receipt', operation: opDev1);
-      final ack2 = await remoteSyncApi.push(entityType: 'stock_receipt', operation: opDev2);
+      final ack1 = await remoteSyncApi.push(
+        entityType: 'stock_receipt',
+        operation: opDev1,
+      );
+      final ack2 = await remoteSyncApi.push(
+        entityType: 'stock_receipt',
+        operation: opDev2,
+      );
 
       expect(ack1.remoteVersion, equals(ack2.remoteVersion));
     });
@@ -798,102 +969,120 @@ void main() {
         deviceId: 'DEV-1',
         companyId: 'COMP-A',
       );
-      final ack1 = await remoteSyncApi.push(entityType: 'stock_issue', operation: opIssue1);
+      final ack1 = await remoteSyncApi.push(
+        entityType: 'stock_issue',
+        operation: opIssue1,
+      );
       expect(ack1.remoteVersion, 1);
     });
 
     // 27. Reversal Sync when Downstream Movement Exists (Blocked Safety)
-    test('27. Reversal Sync when Downstream Movement Exists (Blocked Safety)', () async {
-      final rId = generateUuidV4();
-      final date = DateTime.utc(2026, 1, 1);
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: rId,
-        receiptNumber: 'REC-DEP-TEST',
-        receiptDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: rId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 50,
-            unitCost: 100,
-            totalCost: 5000,
+    test(
+      '27. Reversal Sync when Downstream Movement Exists (Blocked Safety)',
+      () async {
+        final rId = generateUuidV4();
+        final date = DateTime.utc(2026, 1, 1);
+        await movementsRepo.saveReceipt(
+          StockReceipt(
+            id: rId,
+            receiptNumber: 'REC-DEP-TEST',
+            receiptDate: date,
+            companyId: 'COMP-A',
+            lines: [
+              StockMovementLine(
+                id: generateUuidV4(),
+                movementUuid: rId,
+                movementType: 'receipt',
+                itemCode: 'ITEM-SYNC-01',
+                itemName: 'Sync Test Item',
+                quantity: 50,
+                unitCost: 100,
+                totalCost: 5000,
+              ),
+            ],
           ),
-        ],
-      ));
+        );
 
-      final receiptDocRef = InventoryDocumentRef(
-        documentId: rId,
-        documentNumber: 'REC-DEP-TEST',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: date,
-      );
-      await coordinator.post(document: receiptDocRef);
+        final receiptDocRef = InventoryDocumentRef(
+          documentId: rId,
+          documentNumber: 'REC-DEP-TEST',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: date,
+        );
+        await coordinator.post(document: receiptDocRef);
 
-      final issId = generateUuidV4();
-      await movementsRepo.saveIssue(StockIssue(
-        id: issId,
-        issueNumber: 'ISS-DEP-TEST',
-        issueDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: issId,
-            movementType: 'issue',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 10,
-            unitCost: 100,
-            totalCost: 1000,
+        final issId = generateUuidV4();
+        await movementsRepo.saveIssue(
+          StockIssue(
+            id: issId,
+            issueNumber: 'ISS-DEP-TEST',
+            issueDate: date,
+            companyId: 'COMP-A',
+            lines: [
+              StockMovementLine(
+                id: generateUuidV4(),
+                movementUuid: issId,
+                movementType: 'issue',
+                itemCode: 'ITEM-SYNC-01',
+                itemName: 'Sync Test Item',
+                quantity: 10,
+                unitCost: 100,
+                totalCost: 1000,
+              ),
+            ],
           ),
-        ],
-      ));
+        );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: issId,
-        documentNumber: 'ISS-DEP-TEST',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: date,
-      ));
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: issId,
+            documentNumber: 'ISS-DEP-TEST',
+            documentType: InventoryDocumentType.stockIssue,
+            documentDate: date,
+          ),
+        );
 
-      final unpostRes = await coordinator.unpost(document: receiptDocRef);
-      expect(unpostRes, isA<UnpostBlockedByDependencies>());
-    });
+        final unpostRes = await coordinator.unpost(document: receiptDocRef);
+        expect(unpostRes, isA<UnpostBlockedByDependencies>());
+      },
+    );
 
     // 28. Weighted Average Cost Sync Convergence
     test('28. Weighted Average Cost Sync Convergence', () async {
       final date = DateTime.utc(2026, 1, 1);
       final r1Id = generateUuidV4();
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: r1Id,
-        receiptNumber: 'R1-AVG',
-        receiptDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: r1Id,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 10,
-            unitCost: 100,
-            totalCost: 1000,
-          ),
-        ],
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1Id,
-        documentNumber: 'R1-AVG',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: date,
-      ));
+      await movementsRepo.saveReceipt(
+        StockReceipt(
+          id: r1Id,
+          receiptNumber: 'R1-AVG',
+          receiptDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: r1Id,
+              movementType: 'receipt',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 10,
+              unitCost: 100,
+              totalCost: 1000,
+            ),
+          ],
+        ),
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: r1Id,
+          documentNumber: 'R1-AVG',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: date,
+        ),
+      );
 
-      final avgCost = await costLayerService.getWeightedAverageCost('ITEM-SYNC-01');
+      final avgCost = await costLayerService.getWeightedAverageCost(
+        'ITEM-SYNC-01',
+      );
       expect(avgCost, 100.0);
     });
 
@@ -901,30 +1090,34 @@ void main() {
     test('29. FIFO Cost Layer Sync Reconstruction', () async {
       final date = DateTime.utc(2026, 1, 1);
       final r1Id = generateUuidV4();
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: r1Id,
-        receiptNumber: 'R1-FIFO',
-        receiptDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: r1Id,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 20,
-            unitCost: 50,
-            totalCost: 1000,
-          ),
-        ],
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1Id,
-        documentNumber: 'R1-FIFO',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: date,
-      ));
+      await movementsRepo.saveReceipt(
+        StockReceipt(
+          id: r1Id,
+          receiptNumber: 'R1-FIFO',
+          receiptDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: r1Id,
+              movementType: 'receipt',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 20,
+              unitCost: 50,
+              totalCost: 1000,
+            ),
+          ],
+        ),
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: r1Id,
+          documentNumber: 'R1-FIFO',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: date,
+        ),
+      );
 
       final openLayers = await costLayerService.getOpenLayers('ITEM-SYNC-01');
       expect(openLayers.length, 1);
@@ -937,25 +1130,27 @@ void main() {
 
       // Step A: Post Inbound Receipt
       final rId = generateUuidV4();
-      await movementsRepo.saveReceipt(StockReceipt(
-        id: rId,
-        receiptNumber: 'E2E-R01',
-        receiptDate: date,
-        warehouse: 'WH-A',
-        companyId: 'COMP-A',
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: rId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 100,
-            unitCost: 50,
-            totalCost: 5000,
-          ),
-        ],
-      ));
+      await movementsRepo.saveReceipt(
+        StockReceipt(
+          id: rId,
+          receiptNumber: 'E2E-R01',
+          receiptDate: date,
+          warehouse: 'WH-A',
+          companyId: 'COMP-A',
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: rId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 100,
+              unitCost: 50,
+              totalCost: 5000,
+            ),
+          ],
+        ),
+      );
 
       final rDocRef = InventoryDocumentRef(
         documentId: rId,
@@ -970,25 +1165,27 @@ void main() {
 
       // Step B: Transfer 40 units to WH-B
       final trId = generateUuidV4();
-      await transferRepo.saveTransfer(StockTransfer(
-        id: trId,
-        transferNumber: 'E2E-T01',
-        fromWarehouseId: 'WH-A',
-        toWarehouseId: 'WH-B',
-        transferDate: date,
-        companyId: 'COMP-A',
-        lines: [
-          StockTransferLine(
-            id: generateUuidV4(),
-            transferUuid: trId,
-            itemCode: 'ITEM-SYNC-01',
-            itemName: 'Sync Test Item',
-            quantity: 40,
-            unitCost: 50,
-            totalCost: 2000,
-          ),
-        ],
-      ));
+      await transferRepo.saveTransfer(
+        StockTransfer(
+          id: trId,
+          transferNumber: 'E2E-T01',
+          fromWarehouseId: 'WH-A',
+          toWarehouseId: 'WH-B',
+          transferDate: date,
+          companyId: 'COMP-A',
+          lines: [
+            StockTransferLine(
+              id: generateUuidV4(),
+              transferUuid: trId,
+              itemCode: 'ITEM-SYNC-01',
+              itemName: 'Sync Test Item',
+              quantity: 40,
+              unitCost: 50,
+              totalCost: 2000,
+            ),
+          ],
+        ),
+      );
 
       final trDocRef = InventoryDocumentRef(
         documentId: trId,
@@ -1006,7 +1203,10 @@ void main() {
 
       // Step D: Execute Sync Pass to Remote API
       for (final op in queuedOps) {
-        final ack = await remoteSyncApi.push(entityType: op.entityType, operation: op);
+        final ack = await remoteSyncApi.push(
+          entityType: op.entityType,
+          operation: op,
+        );
         expect(ack.remoteVersion >= 1, isTrue);
       }
     });

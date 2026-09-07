@@ -6,9 +6,7 @@ import 'mapping_enums.dart';
 
 /// Automated 6-stage priority resolution engine for mapping source columns to target fields.
 class AutoMapper {
-  const AutoMapper({
-    this.fuzzySimilarityThreshold = 0.85,
-  });
+  const AutoMapper({this.fuzzySimilarityThreshold = 0.85});
 
   /// Similarity threshold for fuzzy matching (0.0 to 1.0). Matches below this threshold are rejected.
   final double fuzzySimilarityThreshold;
@@ -32,14 +30,16 @@ class AutoMapper {
 
       // Check if column is ignored
       if (ignoredSet.contains(normHeader) || ignoredSet.contains(rawHeader)) {
-        results.add(FieldMappingResult(
-          sourceColumnIndex: col.columnIndex,
-          sourceColumnHeader: rawHeader,
-          normalizedSourceHeader: normHeader,
-          matchStrategy: MappingMatchStrategy.ignored,
-          confidence: MappingConfidence.high,
-          isIgnored: true,
-        ));
+        results.add(
+          FieldMappingResult(
+            sourceColumnIndex: col.columnIndex,
+            sourceColumnHeader: rawHeader,
+            normalizedSourceHeader: normHeader,
+            matchStrategy: MappingMatchStrategy.ignored,
+            confidence: MappingConfidence.high,
+            isIgnored: true,
+          ),
+        );
         continue;
       }
 
@@ -48,16 +48,19 @@ class AutoMapper {
         final savedTargetKey = savedMap[normHeader]!;
         final target = _findTargetByKey(targetFields, savedTargetKey);
 
-        if (target != null && !assignedTargetKeys.contains(target.key.toLowerCase())) {
+        if (target != null &&
+            !assignedTargetKeys.contains(target.key.toLowerCase())) {
           assignedTargetKeys.add(target.key.toLowerCase());
-          results.add(FieldMappingResult(
-            sourceColumnIndex: col.columnIndex,
-            sourceColumnHeader: rawHeader,
-            normalizedSourceHeader: normHeader,
-            targetField: target,
-            matchStrategy: MappingMatchStrategy.manual,
-            confidence: MappingConfidence.high,
-          ));
+          results.add(
+            FieldMappingResult(
+              sourceColumnIndex: col.columnIndex,
+              sourceColumnHeader: rawHeader,
+              normalizedSourceHeader: normHeader,
+              targetField: target,
+              matchStrategy: MappingMatchStrategy.manual,
+              confidence: MappingConfidence.high,
+            ),
+          );
           continue;
         }
       }

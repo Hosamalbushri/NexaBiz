@@ -64,17 +64,21 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
   List<SyncOperation> _filterOperations(int tabIndex) {
     if (tabIndex == 1) {
       return _allOperations
-          .where((op) =>
-              op.status == SyncStatus.failed ||
-              op.status == SyncStatus.conflict ||
-              op.status == SyncStatus.rejected)
+          .where(
+            (op) =>
+                op.status == SyncStatus.failed ||
+                op.status == SyncStatus.conflict ||
+                op.status == SyncStatus.rejected,
+          )
           .toList();
     }
     if (tabIndex == 2) {
       return _allOperations
-          .where((op) =>
-              op.status == SyncStatus.pending ||
-              op.status == SyncStatus.syncing)
+          .where(
+            (op) =>
+                op.status == SyncStatus.pending ||
+                op.status == SyncStatus.syncing,
+          )
           .toList();
     }
     return _allOperations;
@@ -83,13 +87,20 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final issuesCount = _allOperations.where((o) =>
-        o.status == SyncStatus.failed ||
-        o.status == SyncStatus.conflict ||
-        o.status == SyncStatus.rejected).length;
-    final pendingCount = _allOperations.where((o) =>
-        o.status == SyncStatus.pending ||
-        o.status == SyncStatus.syncing).length;
+    final issuesCount = _allOperations
+        .where(
+          (o) =>
+              o.status == SyncStatus.failed ||
+              o.status == SyncStatus.conflict ||
+              o.status == SyncStatus.rejected,
+        )
+        .length;
+    final pendingCount = _allOperations
+        .where(
+          (o) =>
+              o.status == SyncStatus.pending || o.status == SyncStatus.syncing,
+        )
+        .length;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -153,8 +164,8 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
             Text(
               l10n.syncOutboxEmpty,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -205,10 +216,7 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
 }
 
 class _OperationTile extends StatelessWidget {
-  const _OperationTile({
-    required this.operation,
-    required this.onTap,
-  });
+  const _OperationTile({required this.operation, required this.onTap});
 
   final SyncOperation operation;
   final VoidCallback onTap;
@@ -313,7 +321,9 @@ class _OperationDetailDialog extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final jsonPretty = const JsonEncoder.withIndent('  ').convert(operation.payload);
+    final jsonPretty = const JsonEncoder.withIndent(
+      '  ',
+    ).convert(operation.payload);
 
     return AlertDialog(
       title: Text(l10n.syncOutboxDetailsTitle),
@@ -338,11 +348,18 @@ class _OperationDetailDialog extends StatelessWidget {
                     : 'Ready for retry',
               ),
             if (operation.lastError != null)
-              _detailRow(context, 'Last Error', operation.lastError!, isError: true),
+              _detailRow(
+                context,
+                'Last Error',
+                operation.lastError!,
+                isError: true,
+              ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'Payload Preview:',
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Container(
@@ -378,7 +395,12 @@ class _OperationDetailDialog extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(BuildContext context, String label, String value, {bool isError = false}) {
+  Widget _detailRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool isError = false,
+  }) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),

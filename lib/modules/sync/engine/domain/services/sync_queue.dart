@@ -61,9 +61,12 @@ class SyncQueue {
     final box = await _ensureBox();
 
     // Verify tenant boundary
-    if (companyId != null && operation.companyId != null && operation.companyId != companyId) {
+    if (companyId != null &&
+        operation.companyId != null &&
+        operation.companyId != companyId) {
       throw CompanyContextMismatchException(
-        message: 'Cross-tenant enqueue blocked: Operation belongs to company "${operation.companyId}" '
+        message:
+            'Cross-tenant enqueue blocked: Operation belongs to company "${operation.companyId}" '
             'but the active queue is scoped to company "$companyId".',
         expectedCompanyId: companyId,
         actualCompanyId: operation.companyId,
@@ -110,8 +113,7 @@ class SyncQueue {
     }
 
     // create then update before remote ack → keep create with latest payload.
-    final effectiveType =
-        hadCreate && enriched.type == SyncOperationType.update
+    final effectiveType = hadCreate && enriched.type == SyncOperationType.update
         ? SyncOperationType.create
         : enriched.type;
 
@@ -132,7 +134,12 @@ class SyncQueue {
       'company_profile' || 'fiscal_year' || 'currency_rate' => 1,
       'account' || 'customer' || 'product' || 'warehouse' => 2,
       'stock_receipt' || 'purchase_return' || 'sales_return' => 3,
-      'stock_issue' || 'stock_transfer' || 'sales_invoice' || 'inventory_item' || 'sale' || 'receipt_payment' => 4,
+      'stock_issue' ||
+      'stock_transfer' ||
+      'sales_invoice' ||
+      'inventory_item' ||
+      'sale' ||
+      'receipt_payment' => 4,
       'inventory_reversal' || 'journal_entry' => 5,
       _ => 6,
     };
@@ -263,7 +270,10 @@ class SyncQueue {
   /// Reset crash-interrupted uploads (`syncing`) back to `pending`.
   ///
   /// Call on app start and before each sync pass so peekReady can see them.
-  Future<int> reclaimInFlight({DateTime? now, Duration lease = const Duration(minutes: 5)}) async {
+  Future<int> reclaimInFlight({
+    DateTime? now,
+    Duration lease = const Duration(minutes: 5),
+  }) async {
     final box = await _ensureBox();
     final stamp = now ?? DateTime.now().toUtc();
     var count = 0;

@@ -98,40 +98,49 @@ void main() {
 
       // Attempt assigning Company B warehouse to Company A
       expect(
-        () => warehouseService.configureDefaultWarehouse(warehouseId: 'WH-COMPANY-B-UUID'),
+        () => warehouseService.configureDefaultWarehouse(
+          warehouseId: 'WH-COMPANY-B-UUID',
+        ),
         throwsA(isA<InvalidWarehouseException>()),
       );
     });
 
-    test('ATTACK 2: Unauthorized User Configuration Mutation Rejection', () async {
-      final initRepo = CompanyInitializationRepositoryImpl(
-        box: settingsBoxA,
-        readCompanyId: () => companyAId,
-      );
-      final setupService = CompanySetupService(
-        settingsRepository: _InMemorySettingsRepository(),
-        initRepository: initRepo,
-      );
+    test(
+      'ATTACK 2: Unauthorized User Configuration Mutation Rejection',
+      () async {
+        final initRepo = CompanyInitializationRepositoryImpl(
+          box: settingsBoxA,
+          readCompanyId: () => companyAId,
+        );
+        final setupService = CompanySetupService(
+          settingsRepository: _InMemorySettingsRepository(),
+          initRepository: initRepo,
+        );
 
-      final limitedSession = AuthSessionSnapshot(
-        user: const AuthUser(id: 'ATTACKER', name: 'Attacker', email: 'attacker@evil.com'),
-        companies: [],
-        roles: ['user'],
-        permissions: {'inventory.view'},
-        capturedAt: DateTime.now(),
-        currentCompanyId: companyAId,
-      );
+        final limitedSession = AuthSessionSnapshot(
+          user: const AuthUser(
+            id: 'ATTACKER',
+            name: 'Attacker',
+            email: 'attacker@evil.com',
+          ),
+          companies: [],
+          roles: ['user'],
+          permissions: {'inventory.view'},
+          capturedAt: DateTime.now(),
+          currentCompanyId: companyAId,
+        );
 
-      expect(
-        () => setupService.setupCompany(
-          session: limitedSession,
-          profile: const CompanyProfile(name: 'Evil Corp'),
-          userPermissions: ['inventory.view'],
-          isSuperAdmin: false,
-        ),
-        throwsA(isA<CompanySetupException>()),
-      );
-    });
+        expect(
+          () => setupService.setupCompany(
+            session: limitedSession,
+            profile: const CompanyProfile(name: 'Evil Corp'),
+            userPermissions: ['inventory.view'],
+            isSuperAdmin: false,
+          ),
+          throwsA(isA<CompanySetupException>()),
+        );
+      },
+    );
 
     test('ATTACK 3: Initialization Bypass Rejection at Domain Layer', () async {
       final uninitRepo = CompanyInitializationRepositoryImpl(
@@ -163,31 +172,34 @@ void main() {
       );
     });
 
-    test('ATTACK 4: Replay Complete Initialization (Idempotency Check)', () async {
-      final initRepo = CompanyInitializationRepositoryImpl(
-        box: settingsBoxA,
-        readCompanyId: () => companyAId,
-      );
+    test(
+      'ATTACK 4: Replay Complete Initialization (Idempotency Check)',
+      () async {
+        final initRepo = CompanyInitializationRepositoryImpl(
+          box: settingsBoxA,
+          readCompanyId: () => companyAId,
+        );
 
-      // Save initial config
-      await initRepo.saveAccountingConfig(
-        const CompanyAccountingConfig(
-          companyId: companyAId,
-          accountMappings: {AccountRole.inventory: '1230'},
-        ),
-      );
+        // Save initial config
+        await initRepo.saveAccountingConfig(
+          const CompanyAccountingConfig(
+            companyId: companyAId,
+            accountMappings: {AccountRole.inventory: '1230'},
+          ),
+        );
 
-      // Replay same initialization
-      await initRepo.saveAccountingConfig(
-        const CompanyAccountingConfig(
-          companyId: companyAId,
-          accountMappings: {AccountRole.inventory: '1230'},
-        ),
-      );
+        // Replay same initialization
+        await initRepo.saveAccountingConfig(
+          const CompanyAccountingConfig(
+            companyId: companyAId,
+            accountMappings: {AccountRole.inventory: '1230'},
+          ),
+        );
 
-      final config = await initRepo.getAccountingConfig();
-      expect(config?.accountMappings[AccountRole.inventory], equals('1230'));
-    });
+        final config = await initRepo.getAccountingConfig();
+        expect(config?.accountMappings[AccountRole.inventory], equals('1230'));
+      },
+    );
 
     test('ATTACK 5: Partial Failure keeps Initialization Incomplete', () async {
       final initRepo = CompanyInitializationRepositoryImpl(
@@ -208,37 +220,56 @@ void main() {
       final result = validator.validate(state: state);
 
       expect(result.isReady, isFalse);
-      expect(result.missingRequirements, contains('System chart of accounts mappings are incomplete'));
-      expect(result.missingRequirements, contains('Default primary warehouse is not configured'));
-    });
-
-    test('OFFLINE: Local Password Security uses PBKDF2-HMAC-SHA256 with 10,000 iterations', () async {
-      final storeBox = await Hive.openBox<dynamic>('test_auth_box');
-      await storeBox.clear();
-      final store = LocalAuthStore(box: storeBox);
-
-      await store.ensureSeeded();
-      final session = await store.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: LocalAuthDefaults.adminPassword,
-        deviceId: 'TEST-DEV',
+      expect(
+        result.missingRequirements,
+        contains('System chart of accounts mappings are incomplete'),
       );
-
-      expect(session, isNotNull);
-      expect(session!.user.email, equals(LocalAuthDefaults.adminEmail));
-      await storeBox.clear();
+      expect(
+        result.missingRequirements,
+        contains('Default primary warehouse is not configured'),
+      );
     });
 
-    test('SERVER VALIDATOR: Enforces HTTPS requirement for non-loopback connections', () async {
-      // Remote HTTP must be rejected
-      final remoteHttp = await ServerValidator.validate('http://api.nexabiz-erp.com');
-      expect(remoteHttp.healthy, isFalse);
-      expect(remoteHttp.error, contains('HTTPS protocol is required'));
+    test(
+      'OFFLINE: Local Password Security uses PBKDF2-HMAC-SHA256 with 10,000 iterations',
+      () async {
+        final storeBox = await Hive.openBox<dynamic>('test_auth_box');
+        await storeBox.clear();
+        final store = LocalAuthStore(box: storeBox);
 
-      // Loopback HTTP (localhost / 127.0.0.1) is allowed for dev testing
-      final localHttp = await ServerValidator.validate('http://localhost:8080');
-      // Should not throw HTTPS requirement error
-      expect(localHttp.error ?? '', isNot(contains('HTTPS protocol is required')));
-    });
+        await store.ensureSeeded();
+        final session = await store.login(
+          email: LocalAuthDefaults.adminEmail,
+          password: LocalAuthDefaults.adminPassword,
+          deviceId: 'TEST-DEV',
+        );
+
+        expect(session, isNotNull);
+        expect(session!.user.email, equals(LocalAuthDefaults.adminEmail));
+        await storeBox.clear();
+      },
+    );
+
+    test(
+      'SERVER VALIDATOR: Enforces HTTPS requirement for non-loopback connections',
+      () async {
+        // Remote HTTP must be rejected
+        final remoteHttp = await ServerValidator.validate(
+          'http://api.nexabiz-erp.com',
+        );
+        expect(remoteHttp.healthy, isFalse);
+        expect(remoteHttp.error, contains('HTTPS protocol is required'));
+
+        // Loopback HTTP (localhost / 127.0.0.1) is allowed for dev testing
+        final localHttp = await ServerValidator.validate(
+          'http://localhost:8080',
+        );
+        // Should not throw HTTPS requirement error
+        expect(
+          localHttp.error ?? '',
+          isNot(contains('HTTPS protocol is required')),
+        );
+      },
+    );
   });
 }

@@ -30,8 +30,8 @@ class AppLoadingState extends StatelessWidget {
                   message,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ],
@@ -63,7 +63,8 @@ class AppErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final displayMessage = message ?? error?.toString() ?? 'تعذر إكمال العملية المطلوب';
+    final displayMessage =
+        message ?? error?.toString() ?? 'تعذر إكمال العملية المطلوب';
 
     return Center(
       child: Semantics(
@@ -107,7 +108,10 @@ class AppErrorState extends StatelessWidget {
               if (onRetry != null) ...[
                 const SizedBox(height: 20),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 48, minWidth: 120),
+                  constraints: const BoxConstraints(
+                    minHeight: 48,
+                    minWidth: 120,
+                  ),
                   child: ElevatedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh_rounded, size: 20),
@@ -158,14 +162,12 @@ class AppEmptyState extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  size: 40,
-                  color: colorScheme.outline,
-                ),
+                child: Icon(icon, size: 40, color: colorScheme.outline),
               ),
               const SizedBox(height: 16),
               Text(
@@ -187,7 +189,10 @@ class AppEmptyState extends StatelessWidget {
               if (actionLabel != null && onAction != null) ...[
                 const SizedBox(height: 20),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 48, minWidth: 140),
+                  constraints: const BoxConstraints(
+                    minHeight: 48,
+                    minWidth: 140,
+                  ),
                   child: ElevatedButton(
                     onPressed: onAction,
                     child: Text(actionLabel!),

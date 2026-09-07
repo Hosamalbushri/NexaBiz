@@ -54,12 +54,13 @@ class _FakeProductRepository implements ProductRepository {
   Future<ProductUpsertResult> upsertAll(
     List<ProductDraft> drafts, {
     void Function(int processed, int total)? onProgress,
-  }) async =>
-      const ProductUpsertResult(insertedCount: 1, updatedCount: 0);
+  }) async => const ProductUpsertResult(insertedCount: 1, updatedCount: 0);
 
   @override
-  Future<Product> adjustOnHandByUuid({required String uuid, required double delta}) =>
-      throw UnimplementedError();
+  Future<Product> adjustOnHandByUuid({
+    required String uuid,
+    required double delta,
+  }) => throw UnimplementedError();
 
   @override
   Future<List<Product>> getAll() async => const [];
@@ -77,7 +78,12 @@ class _FakeProductRepository implements ProductRepository {
     required int pageSize,
     String query = '',
     CatalogSearchField searchField = CatalogSearchField.all,
-  }) async => PagedResult(items: const [], totalCount: 0, page: page, pageSize: pageSize);
+  }) async => PagedResult(
+    items: const [],
+    totalCount: 0,
+    page: page,
+    pageSize: pageSize,
+  );
   @override
   Future<List<Product>> search(
     String query, {
@@ -101,7 +107,8 @@ class _FakeInventoryRepository implements InventoryRepository {
   @override
   Future<int> countAll() async => 0;
   @override
-  Future<List<InventoryItem>> filterByStatus(ItemStatus? status) async => const [];
+  Future<List<InventoryItem>> filterByStatus(ItemStatus? status) async =>
+      const [];
   @override
   Future<List<InventoryItem>> getAll() async => const [];
   @override
@@ -113,7 +120,12 @@ class _FakeInventoryRepository implements InventoryRepository {
     String query = '',
     ItemStatus? status,
     CatalogSearchField searchField = CatalogSearchField.all,
-  }) async => PagedResult(items: const [], totalCount: 0, page: page, pageSize: pageSize);
+  }) async => PagedResult(
+    items: const [],
+    totalCount: 0,
+    page: page,
+    pageSize: pageSize,
+  );
   @override
   Future<ReportSummary> getReportSummary() async => const ReportSummary.empty();
   @override
@@ -158,7 +170,8 @@ class _FakeCustomerRepository implements CustomerRepository {
   Future<void> softDelete(int id) async {}
 
   @override
-  Future<Customer> upsertFromExternal(CustomerDraft draft) async => insert(draft);
+  Future<Customer> upsertFromExternal(CustomerDraft draft) async =>
+      insert(draft);
 
   @override
   Future<CustomerUpsertResult> upsertAll(
@@ -167,7 +180,8 @@ class _FakeCustomerRepository implements CustomerRepository {
   }) async => const CustomerUpsertResult(insertedCount: 1, updatedCount: 0);
 
   @override
-  Future<List<Customer>> getAll({bool includeInactive = false}) async => const [];
+  Future<List<Customer>> getAll({bool includeInactive = false}) async =>
+      const [];
   @override
   Future<Customer?> getByCustomerCode(String customerCode) async => null;
   @override
@@ -181,17 +195,28 @@ class _FakeCustomerRepository implements CustomerRepository {
     required int pageSize,
     String query = '',
     bool includeInactive = false,
-  }) async => PagedResult(items: const [], totalCount: 0, page: page, pageSize: pageSize);
+  }) async => PagedResult(
+    items: const [],
+    totalCount: 0,
+    page: page,
+    pageSize: pageSize,
+  );
   @override
-  Future<List<Customer>> search(String query, {bool includeInactive = false, int? limit}) async => const [];
+  Future<List<Customer>> search(
+    String query, {
+    bool includeInactive = false,
+    int? limit,
+  }) async => const [];
   @override
-  Stream<List<Customer>> watchAll({bool includeInactive = false}) => Stream.value(const []);
+  Stream<List<Customer>> watchAll({bool includeInactive = false}) =>
+      Stream.value(const []);
 }
 
 void main() {
   final denyAllGuard = CallbackPermissionGuard((codes) => false);
   final allowProductCreateGuard = CallbackPermissionGuard(
-    (codes) => codes.any((c) => InventoryPermissions.productsCreate.contains(c)),
+    (codes) =>
+        codes.any((c) => InventoryPermissions.productsCreate.contains(c)),
   );
   final allowCustomerCreateGuard = CallbackPermissionGuard(
     (codes) => codes.any((c) => CustomersPermissions.create.contains(c)),
@@ -202,41 +227,89 @@ void main() {
   final customerRepo = _FakeCustomerRepository();
 
   group('Inventory Domain Permission Enforcement', () {
-    test('CreateProduct throws PermissionDeniedException when permission missing', () async {
-      final create = CreateProduct(productRepo, permissionGuard: denyAllGuard);
-      await expectLater(
-        create(const ProductDraft(itemCode: 'ITEM-1', name: 'Product 1', packSize: 1, price: 10.0)),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+    test(
+      'CreateProduct throws PermissionDeniedException when permission missing',
+      () async {
+        final create = CreateProduct(
+          productRepo,
+          permissionGuard: denyAllGuard,
+        );
+        await expectLater(
+          create(
+            const ProductDraft(
+              itemCode: 'ITEM-1',
+              name: 'Product 1',
+              packSize: 1,
+              price: 10.0,
+            ),
+          ),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
     test('CreateProduct succeeds when permission granted', () async {
-      final create = CreateProduct(productRepo, permissionGuard: allowProductCreateGuard);
-      final result = await create(const ProductDraft(itemCode: 'ITEM-1', name: 'Product 1', packSize: 1, price: 10.0));
+      final create = CreateProduct(
+        productRepo,
+        permissionGuard: allowProductCreateGuard,
+      );
+      final result = await create(
+        const ProductDraft(
+          itemCode: 'ITEM-1',
+          name: 'Product 1',
+          packSize: 1,
+          price: 10.0,
+        ),
+      );
       expect(result.itemCode, 'ITEM-1');
     });
 
-    test('SaveInventoryCount throws PermissionDeniedException when permission missing', () async {
-      final save = SaveInventoryCount(inventoryRepo, permissionGuard: denyAllGuard);
-      await expectLater(
-        save(InventoryItem(itemCode: 'ITEM-1', itemName: 'Product 1', systemQuantity: 10)),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+    test(
+      'SaveInventoryCount throws PermissionDeniedException when permission missing',
+      () async {
+        final save = SaveInventoryCount(
+          inventoryRepo,
+          permissionGuard: denyAllGuard,
+        );
+        await expectLater(
+          save(
+            InventoryItem(
+              itemCode: 'ITEM-1',
+              itemName: 'Product 1',
+              systemQuantity: 10,
+            ),
+          ),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
   });
 
   group('Customers Domain Permission Enforcement', () {
-    test('CreateCustomer throws PermissionDeniedException when permission missing', () async {
-      final create = CreateCustomer(customerRepo, permissionGuard: denyAllGuard);
-      await expectLater(
-        create(const CustomerDraft(customerCode: 'CUST-1', name: 'Customer 1')),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+    test(
+      'CreateCustomer throws PermissionDeniedException when permission missing',
+      () async {
+        final create = CreateCustomer(
+          customerRepo,
+          permissionGuard: denyAllGuard,
+        );
+        await expectLater(
+          create(
+            const CustomerDraft(customerCode: 'CUST-1', name: 'Customer 1'),
+          ),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
     test('CreateCustomer succeeds when permission granted', () async {
-      final create = CreateCustomer(customerRepo, permissionGuard: allowCustomerCreateGuard);
-      final result = await create(const CustomerDraft(customerCode: 'CUST-1', name: 'Customer 1'));
+      final create = CreateCustomer(
+        customerRepo,
+        permissionGuard: allowCustomerCreateGuard,
+      );
+      final result = await create(
+        const CustomerDraft(customerCode: 'CUST-1', name: 'Customer 1'),
+      );
       expect(result.customerCode, 'CUST-1');
     });
   });

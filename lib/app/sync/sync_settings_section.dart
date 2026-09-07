@@ -137,9 +137,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
                 title: Text(
                   l10n.authBiometricPasswordDialogTitle,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.5,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.5,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 content: Column(
@@ -148,9 +148,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
                     Text(
                       l10n.authBiometricPasswordDialogContent,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 11.5,
-                          ),
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -158,9 +158,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
                       controller: pwdController,
                       obscureText: obscurePassword,
                       autofocus: true,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: 13,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 13),
                       decoration: InputDecoration(
                         labelText: l10n.authPasswordLabel,
                         prefixIcon: const Icon(Icons.key_outlined, size: 18),
@@ -194,9 +194,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
                     child: Text(
                       l10n.authBiometricPasswordDialogSkip,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: colorScheme.outline,
-                            fontSize: 12,
-                          ),
+                        color: colorScheme.outline,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   ElevatedButton(
@@ -212,10 +212,10 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
                     child: Text(
                       l10n.authBiometricPasswordDialogConfirm,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -226,7 +226,10 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
 
         // If user cancelled / clicked skip / entered empty password: DO NOT ENABLE BIOMETRICS
         if (pwdConfirmed == null || pwdConfirmed.isEmpty) {
-          await store.setBiometricEnabled(enabled: false, mode: AuthenticationMode.sync);
+          await store.setBiometricEnabled(
+            enabled: false,
+            mode: AuthenticationMode.sync,
+          );
           if (mounted) {
             setState(() => _biometricsEnabled = false);
           }
@@ -260,7 +263,10 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
         );
       }
 
-      await store.setBiometricEnabled(enabled: true, mode: AuthenticationMode.sync);
+      await store.setBiometricEnabled(
+        enabled: true,
+        mode: AuthenticationMode.sync,
+      );
 
       if (mounted) {
         setState(() => _biometricsEnabled = true);
@@ -271,7 +277,10 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
         );
       }
     } else {
-      await store.setBiometricEnabled(enabled: false, mode: AuthenticationMode.sync);
+      await store.setBiometricEnabled(
+        enabled: false,
+        mode: AuthenticationMode.sync,
+      );
       if (mounted) {
         setState(() => _biometricsEnabled = false);
         showAppSnackBar(
@@ -307,9 +316,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             ? '${uri.path}health'
             : '${uri.path}/health';
         final healthUri = uri.replace(path: healthPath);
-        final response = await client.get(healthUri).timeout(
-              const Duration(seconds: 6),
-            );
+        final response = await client
+            .get(healthUri)
+            .timeout(const Duration(seconds: 6));
         if (response.statusCode >= 200 && response.statusCode < 500) {
           return true;
         }
@@ -318,16 +327,16 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             ? '${uri.path}api/v1/ping'
             : '${uri.path}/api/v1/ping';
         final pingUri = uri.replace(path: pingPath);
-        final pingResponse = await client.get(pingUri).timeout(
-              const Duration(seconds: 5),
-            );
+        final pingResponse = await client
+            .get(pingUri)
+            .timeout(const Duration(seconds: 5));
         if (pingResponse.statusCode >= 200 && pingResponse.statusCode < 500) {
           return true;
         }
       } catch (_) {
-        final response = await client.get(uri).timeout(
-              const Duration(seconds: 5),
-            );
+        final response = await client
+            .get(uri)
+            .timeout(const Duration(seconds: 5));
         if (response.statusCode >= 200 && response.statusCode < 500) {
           return true;
         }
@@ -384,10 +393,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
         return;
       }
 
-      await ref.read(syncEnabledProvider.notifier).saveServer(
-            baseUrl: url,
-            apiToken: '',
-          );
+      await ref
+          .read(syncEnabledProvider.notifier)
+          .saveServer(baseUrl: url, apiToken: '');
       if (!mounted) return;
       setState(() => _serverVerified = true);
       showAppSnackBar(
@@ -435,7 +443,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
           icon: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.4),
+              color: Theme.of(
+                context,
+              ).colorScheme.errorContainer.withValues(alpha: 0.4),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -447,17 +457,17 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
           title: Text(
             l10n.syncDisableConfirmTitle,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.5,
-                ),
+              fontWeight: FontWeight.bold,
+              fontSize: 14.5,
+            ),
             textAlign: TextAlign.center,
           ),
           content: Text(
             l10n.syncDisableConfirmAdminContent,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 11.5,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 11.5,
+            ),
             textAlign: TextAlign.center,
           ),
           actions: [
@@ -465,9 +475,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(
                 l10n.cancel,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontSize: 12,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontSize: 12),
               ),
             ),
             ElevatedButton(
@@ -482,10 +492,10 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
               child: Text(
                 l10n.syncDisableConfirmAction,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onError,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
+                  color: Theme.of(context).colorScheme.onError,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
             ),
           ],
@@ -522,7 +532,8 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     final overviewAsync = ref.watch(syncOverviewProvider);
     final overview = overviewAsync.asData?.value ?? SyncOverview.initial();
     final auth = ref.watch(authStateProvider);
-    final isServerAuthenticated = syncEnabled &&
+    final isServerAuthenticated =
+        syncEnabled &&
         auth.isAuthenticated &&
         (session.phase == SyncSessionPhase.enabledAuthenticated ||
             auth.isRemoteSession);
@@ -546,9 +557,12 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
           subtitle: isServerAuthenticated
               ? l10n.syncActiveServerLabel
               : l10n.syncServerUrlHint,
-          badgeColor: isServerAuthenticated ? Colors.green : colorScheme.outline,
-          badgeText:
-              isServerAuthenticated ? l10n.syncConnectionOnline : l10n.syncConnectionOffline,
+          badgeColor: isServerAuthenticated
+              ? Colors.green
+              : colorScheme.outline,
+          badgeText: isServerAuthenticated
+              ? l10n.syncConnectionOnline
+              : l10n.syncConnectionOffline,
           children: [
             if (!isServerAuthenticated) ...[
               TextField(
@@ -600,7 +614,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
                   syncEnabled
                       ? Icons.power_settings_new_rounded
                       : Icons.cloud_off_rounded,
-                  color: syncEnabled ? colorScheme.primary : colorScheme.outline,
+                  color: syncEnabled
+                      ? colorScheme.primary
+                      : colorScheme.outline,
                 ),
                 title: Text(l10n.syncServerSectionTitle),
                 subtitle: Text(
@@ -649,229 +665,228 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             const SizedBox(height: AppSpacing.sm),
           ],
 
-        // Accordion Card 2: Auto Sync Configuration
-        if (syncEnabled &&
-            session.phase == SyncSessionPhase.enabledAuthenticated) ...[
-          _AccordionCard(
-            initiallyExpanded: true,
-            accentColor: Colors.teal,
-            leadingIcon: Icons.autorenew_rounded,
-            title: l10n.syncAutoTitle,
-            subtitle: autoPrefs.enabled
-                ? l10n.syncAutoIntervalMinutes(autoPrefs.intervalMinutes)
-                : l10n.syncDisabledMessage,
-            children: [
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                secondary: const Icon(Icons.autorenew_outlined),
-                title: Text(l10n.syncAutoTitle),
-                subtitle: Text(l10n.syncAutoSubtitle),
-                value: autoPrefs.enabled,
-                onChanged: (v) => ref
-                    .read(syncAutoPreferencesProvider.notifier)
-                    .setEnabled(v),
-              ),
-              if (autoPrefs.enabled) ...[
-                const SizedBox(height: AppSpacing.sm),
-                InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: l10n.syncAutoIntervalLabel,
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.timer_outlined),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      isExpanded: true,
-                      value: SyncAutoPreferences.intervalChoices.contains(
-                        autoPrefs.intervalMinutes,
-                      )
-                          ? autoPrefs.intervalMinutes
-                          : 15,
-                      items: [
-                        for (final minutes
-                            in SyncAutoPreferences.intervalChoices)
-                          DropdownMenuItem(
-                            value: minutes,
-                            child: Text(
-                              minutes == 0
-                                  ? l10n.syncAutoIntervalOnChange
-                                  : l10n.syncAutoIntervalMinutes(minutes),
+          // Accordion Card 2: Auto Sync Configuration
+          if (syncEnabled &&
+              session.phase == SyncSessionPhase.enabledAuthenticated) ...[
+            _AccordionCard(
+              initiallyExpanded: true,
+              accentColor: Colors.teal,
+              leadingIcon: Icons.autorenew_rounded,
+              title: l10n.syncAutoTitle,
+              subtitle: autoPrefs.enabled
+                  ? l10n.syncAutoIntervalMinutes(autoPrefs.intervalMinutes)
+                  : l10n.syncDisabledMessage,
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.autorenew_outlined),
+                  title: Text(l10n.syncAutoTitle),
+                  subtitle: Text(l10n.syncAutoSubtitle),
+                  value: autoPrefs.enabled,
+                  onChanged: (v) => ref
+                      .read(syncAutoPreferencesProvider.notifier)
+                      .setEnabled(v),
+                ),
+                if (autoPrefs.enabled) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: l10n.syncAutoIntervalLabel,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.timer_outlined),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        isExpanded: true,
+                        value:
+                            SyncAutoPreferences.intervalChoices.contains(
+                              autoPrefs.intervalMinutes,
+                            )
+                            ? autoPrefs.intervalMinutes
+                            : 15,
+                        items: [
+                          for (final minutes
+                              in SyncAutoPreferences.intervalChoices)
+                            DropdownMenuItem(
+                              value: minutes,
+                              child: Text(
+                                minutes == 0
+                                    ? l10n.syncAutoIntervalOnChange
+                                    : l10n.syncAutoIntervalMinutes(minutes),
+                              ),
                             ),
-                          ),
-                      ],
-                      onChanged: (v) {
-                        if (v == null) return;
-                        ref
-                            .read(syncAutoPreferencesProvider.notifier)
-                            .setIntervalMinutes(v);
-                      },
+                        ],
+                        onChanged: (v) {
+                          if (v == null) return;
+                          ref
+                              .read(syncAutoPreferencesProvider.notifier)
+                              .setIntervalMinutes(v);
+                        },
+                      ),
                     ),
                   ),
+                ],
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.sm),
+          ],
+
+          // Accordion Card 3: Diagnostics & Summary
+          _AccordionCard(
+            initiallyExpanded: true,
+            accentColor: Colors.deepPurple,
+            leadingIcon: Icons.analytics_rounded,
+            title: l10n.syncDiagnosticsTitle,
+            subtitle: '${l10n.syncLastSyncLabel}: $lastSyncText',
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  overview.isOnline
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_off_outlined,
+                  color: overview.isOnline
+                      ? colorScheme.primary
+                      : colorScheme.outline,
+                ),
+                title: Text(l10n.syncConnectionLabel),
+                subtitle: Text(
+                  overview.isOnline
+                      ? l10n.syncConnectionOnline
+                      : l10n.syncConnectionOffline,
+                ),
+                trailing: const SyncStatusIndicator(compact: true),
+              ),
+              const Divider(height: 1),
+
+              // Summary grid chips
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+                        child: Text(
+                          l10n.syncSummaryTitle,
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _SummaryChip(
+                            label: l10n.syncSummaryPending,
+                            count: overview.pendingCount,
+                            icon: Icons.pending_actions_outlined,
+                          ),
+                          _SummaryChip(
+                            label: l10n.syncSummaryConflicts,
+                            count: overview.conflictCount,
+                            icon: Icons.warning_amber_rounded,
+                            isError: overview.conflictCount > 0,
+                          ),
+                          _SummaryChip(
+                            label: l10n.syncSummaryFailed,
+                            count: overview.failedCount,
+                            icon: Icons.error_outline,
+                            isError: overview.failedCount > 0,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.monitor_heart_outlined),
+                title: Text(l10n.syncDiagnosticsTitle),
+                subtitle: Text(
+                  '${overview.diagnostics.serverConnected ? l10n.syncDiagnosticsServerConnected : l10n.syncDiagnosticsServerDisconnected} • ${overview.diagnostics.latencyMs ?? 0} ms',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.manage_search_outlined),
+                  tooltip: l10n.syncOutboxInspectorTooltip,
+                  onPressed: () => SyncInspectorSheet.show(context),
+                ),
+              ),
+
+              if (overview.failedCount > 0) ...[
+                const SizedBox(height: AppSpacing.xs),
+                AppButton(
+                  label: l10n.syncRetryFailedAction(overview.failedCount),
+                  expand: true,
+                  icon: Icons.refresh_outlined,
+                  variant: AppButtonVariant.tonal,
+                  isLoading: overview.isSyncing,
+                  onPressed: overview.isSyncing
+                      ? null
+                      : () async {
+                          await ref.read(syncManagerProvider).retryFailed();
+                        },
                 ),
               ],
             ],
           ),
 
           const SizedBox(height: AppSpacing.sm),
-        ],
 
-        // Accordion Card 3: Diagnostics & Summary
-        _AccordionCard(
-          initiallyExpanded: true,
-          accentColor: Colors.deepPurple,
-          leadingIcon: Icons.analytics_rounded,
-          title: l10n.syncDiagnosticsTitle,
-          subtitle: '${l10n.syncLastSyncLabel}: $lastSyncText',
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                overview.isOnline
-                    ? Icons.cloud_done_outlined
-                    : Icons.cloud_off_outlined,
-                color: overview.isOnline
-                    ? colorScheme.primary
-                    : colorScheme.outline,
-              ),
-              title: Text(l10n.syncConnectionLabel),
-              subtitle: Text(
-                overview.isOnline
-                    ? l10n.syncConnectionOnline
-                    : l10n.syncConnectionOffline,
-              ),
-              trailing: const SyncStatusIndicator(compact: true),
-            ),
-            const Divider(height: 1),
-
-            // Summary grid chips
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-                      child: Text(
-                        l10n.syncSummaryTitle,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _SummaryChip(
-                          label: l10n.syncSummaryPending,
-                          count: overview.pendingCount,
-                          icon: Icons.pending_actions_outlined,
-                        ),
-                        _SummaryChip(
-                          label: l10n.syncSummaryConflicts,
-                          count: overview.conflictCount,
-                          icon: Icons.warning_amber_rounded,
-                          isError: overview.conflictCount > 0,
-                        ),
-                        _SummaryChip(
-                          label: l10n.syncSummaryFailed,
-                          count: overview.failedCount,
-                          icon: Icons.error_outline,
-                          isError: overview.failedCount > 0,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.monitor_heart_outlined),
-              title: Text(l10n.syncDiagnosticsTitle),
-              subtitle: Text(
-                '${overview.diagnostics.serverConnected ? l10n.syncDiagnosticsServerConnected : l10n.syncDiagnosticsServerDisconnected} • ${overview.diagnostics.latencyMs ?? 0} ms',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.manage_search_outlined),
-                tooltip: l10n.syncOutboxInspectorTooltip,
-                onPressed: () => SyncInspectorSheet.show(context),
-              ),
-            ),
-
-            if (overview.failedCount > 0) ...[
-              const SizedBox(height: AppSpacing.xs),
+          // Accordion Card 4: Immediate Operations & Actions
+          _AccordionCard(
+            initiallyExpanded: true,
+            accentColor: Colors.amber.shade800,
+            leadingIcon: Icons.bolt_rounded,
+            title: l10n.syncCheckIncomingAction,
+            subtitle: l10n.syncActiveServerLabel,
+            children: [
               AppButton(
-                label: l10n.syncRetryFailedAction(overview.failedCount),
+                label: overview.isSyncing
+                    ? l10n.syncCheckingIncoming
+                    : l10n.syncCheckIncomingAction,
                 expand: true,
-                icon: Icons.refresh_outlined,
+                icon: Icons.cloud_download_rounded,
                 variant: AppButtonVariant.tonal,
                 isLoading: overview.isSyncing,
                 onPressed: overview.isSyncing
                     ? null
-                    : () async {
-                        await ref.read(syncManagerProvider).retryFailed();
-                      },
+                    : () => _onCheckIncoming(context, ref),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppButton(
+                label: !overview.isOnline
+                    ? l10n.syncStatusOffline
+                    : (overview.isSyncing
+                          ? l10n.syncStatusSyncing
+                          : l10n.syncNowAction),
+                expand: true,
+                icon: Icons.sync_rounded,
+                isLoading: overview.isSyncing,
+                onPressed: (overview.isSyncing || !overview.isOnline)
+                    ? null
+                    : () => _onSyncNow(context, ref),
               ),
             ],
-          ],
-        ),
-
-        const SizedBox(height: AppSpacing.sm),
-
-        // Accordion Card 4: Immediate Operations & Actions
-        _AccordionCard(
-          initiallyExpanded: true,
-          accentColor: Colors.amber.shade800,
-          leadingIcon: Icons.bolt_rounded,
-          title: l10n.syncCheckIncomingAction,
-          subtitle: l10n.syncActiveServerLabel,
-          children: [
-            AppButton(
-              label: overview.isSyncing
-                  ? l10n.syncCheckingIncoming
-                  : l10n.syncCheckIncomingAction,
-              expand: true,
-              icon: Icons.cloud_download_rounded,
-              variant: AppButtonVariant.tonal,
-              isLoading: overview.isSyncing,
-              onPressed: overview.isSyncing
-                  ? null
-                  : () => _onCheckIncoming(context, ref),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            AppButton(
-              label: !overview.isOnline
-                  ? l10n.syncStatusOffline
-                  : (overview.isSyncing
-                      ? l10n.syncStatusSyncing
-                      : l10n.syncNowAction),
-              expand: true,
-              icon: Icons.sync_rounded,
-              isLoading: overview.isSyncing,
-              onPressed: (overview.isSyncing || !overview.isOnline)
-                  ? null
-                  : () => _onSyncNow(context, ref),
-            ),
-          ],
-        ),
+          ),
         ],
       ],
     );
   }
 
-  Future<void> _onCheckIncoming(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _onCheckIncoming(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     if (!await _ensureCanSync(context, ref)) {
       return;
@@ -897,10 +912,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     }
   }
 
-  Future<void> _onSyncNow(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _onSyncNow(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     if (!await _ensureCanSync(context, ref)) {
       return;
@@ -926,10 +938,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     }
   }
 
-  Future<bool> _ensureCanSync(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<bool> _ensureCanSync(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     if (!ref.read(syncEnabledProvider)) {
       showAppSnackBar(
@@ -1001,10 +1010,14 @@ class _AccordionCard extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: (badgeColor ?? effectiveAccent).withValues(alpha: 0.12),
+                  color: (badgeColor ?? effectiveAccent).withValues(
+                    alpha: 0.12,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: (badgeColor ?? effectiveAccent).withValues(alpha: 0.3),
+                    color: (badgeColor ?? effectiveAccent).withValues(
+                      alpha: 0.3,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -1059,9 +1072,7 @@ class _SummaryChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1071,15 +1082,15 @@ class _SummaryChip extends StatelessWidget {
           Text(
             '$label: ',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           Text(
             '$count',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

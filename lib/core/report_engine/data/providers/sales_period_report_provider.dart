@@ -66,9 +66,7 @@ class SalesPeriodReportDataProvider
         'taxAmount': tax,
         'grandTotal': grandTotal,
       },
-      kpis: {
-        'countInvoices': count,
-      },
+      kpis: {'countInvoices': count},
     );
   }
 
@@ -105,19 +103,28 @@ class SalesPeriodReportDataProvider
       final cursorId = int.parse(cursor.uniqueId);
 
       if (isAscending) {
-        query.where((tbl) =>
-            tbl.saleDate.isBiggerThanValue(cursorDate) |
-            (tbl.saleDate.equals(cursorDate) & tbl.id.isBiggerThanValue(cursorId)));
+        query.where(
+          (tbl) =>
+              tbl.saleDate.isBiggerThanValue(cursorDate) |
+              (tbl.saleDate.equals(cursorDate) &
+                  tbl.id.isBiggerThanValue(cursorId)),
+        );
       } else {
-        query.where((tbl) =>
-            tbl.saleDate.isSmallerThanValue(cursorDate) |
-            (tbl.saleDate.equals(cursorDate) & tbl.id.isSmallerThanValue(cursorId)));
+        query.where(
+          (tbl) =>
+              tbl.saleDate.isSmallerThanValue(cursorDate) |
+              (tbl.saleDate.equals(cursorDate) &
+                  tbl.id.isSmallerThanValue(cursorId)),
+        );
       }
     }
 
     query.orderBy([
-      (tbl) => isAscending ? OrderingTerm.asc(tbl.saleDate) : OrderingTerm.desc(tbl.saleDate),
-      (tbl) => isAscending ? OrderingTerm.asc(tbl.id) : OrderingTerm.desc(tbl.id),
+      (tbl) => isAscending
+          ? OrderingTerm.asc(tbl.saleDate)
+          : OrderingTerm.desc(tbl.saleDate),
+      (tbl) =>
+          isAscending ? OrderingTerm.asc(tbl.id) : OrderingTerm.desc(tbl.id),
     ]);
 
     query.limit(pageSize);
@@ -132,23 +139,27 @@ class SalesPeriodReportDataProvider
         sale.saleDate > 0 ? sale.saleDate : sale.createdAt,
       );
 
-      datasetRows.add(ReportRowData(
-        documentType: 'sales_invoice',
-        documentUuid: sale.uuid,
-        values: {
-          'invoiceDate': dateFormat.format(date),
-          'invoiceNumber': sale.saleNumber,
-          'customerName': (sale.customerName != null && sale.customerName!.isNotEmpty)
-              ? sale.customerName!
-              : (sale.settlementType == 'cash' ? 'نقدي' : 'آجل'),
-          'paymentType': sale.settlementType == 'cash' ? 'نقدي' : 'آجل',
-          'subtotal': currencyFormat.format(sale.subtotal),
-          'taxAmount': currencyFormat.format(sale.taxAmount),
-          'grandTotal': currencyFormat.format(sale.total),
-          'id': sale.id.toString(),
-          'saleDateMs': (sale.saleDate > 0 ? sale.saleDate : sale.createdAt).toString(),
-        },
-      ));
+      datasetRows.add(
+        ReportRowData(
+          documentType: 'sales_invoice',
+          documentUuid: sale.uuid,
+          values: {
+            'invoiceDate': dateFormat.format(date),
+            'invoiceNumber': sale.saleNumber,
+            'customerName':
+                (sale.customerName != null && sale.customerName!.isNotEmpty)
+                ? sale.customerName!
+                : (sale.settlementType == 'cash' ? 'نقدي' : 'آجل'),
+            'paymentType': sale.settlementType == 'cash' ? 'نقدي' : 'آجل',
+            'subtotal': currencyFormat.format(sale.subtotal),
+            'taxAmount': currencyFormat.format(sale.taxAmount),
+            'grandTotal': currencyFormat.format(sale.total),
+            'id': sale.id.toString(),
+            'saleDateMs': (sale.saleDate > 0 ? sale.saleDate : sale.createdAt)
+                .toString(),
+          },
+        ),
+      );
     }
 
     ReportCursor? nextCursor;

@@ -24,9 +24,9 @@ class InventoryServicesController
   InventoryServicesController({
     required SettingsRepository repository,
     String companyId = '',
-  })  : _repository = repository,
-        _companyId = companyId,
-        super(AsyncValue.data(_defaultCatalogIds())) {
+  }) : _repository = repository,
+       _companyId = companyId,
+       super(AsyncValue.data(_defaultCatalogIds())) {
     _load();
   }
 

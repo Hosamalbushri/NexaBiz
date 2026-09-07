@@ -27,12 +27,18 @@ class MockLookupPort implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return const [];
   }
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return const [];
   }
 }
@@ -45,7 +51,12 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 
   @override
   Future<void> saveBinding(AccountBinding binding) async {
-    _bindings[_key(binding.companyId, binding.packageId, binding.requirementKey)] = binding;
+    _bindings[_key(
+          binding.companyId,
+          binding.packageId,
+          binding.requirementKey,
+        )] =
+        binding;
   }
 
   @override
@@ -102,7 +113,8 @@ class MockAccountRepositoryForSafetyGate implements AccountRepository {
   }
 
   @override
-  Future<Account?> getById(int id) async => _store.values.where((a) => a.id == id).firstOrNull;
+  Future<Account?> getById(int id) async =>
+      _store.values.where((a) => a.id == id).firstOrNull;
 
   @override
   Future<void> ensureDefaultChartSeeded() async {}
@@ -126,7 +138,9 @@ class ConfigurableUsageAnalyzer implements AccountUsageAnalyzer {
     final count = _postedCount[accountUuid] ?? 0;
     return AccountUsageRecord(
       accountUuid: accountUuid,
-      status: count > 0 ? AccountUsageStatus.usedInPostedTransactions : AccountUsageStatus.neverUsed,
+      status: count > 0
+          ? AccountUsageStatus.usedInPostedTransactions
+          : AccountUsageStatus.neverUsed,
       postedTransactionCount: count,
       draftTransactionCount: 0,
       currentBalance: 0.0,
@@ -160,106 +174,115 @@ void main() {
   });
 
   group('AR-C07 Accounting Configuration Change Safety & Type/Hierarchy Guards', () {
-    test('1. Safe configuration change (Unused account -> Binding allowed)', () async {
-      final unusedAccount = Account(
-        id: 1,
-        uuid: 'acc-unused-01',
-        accountCode: '101001',
-        name: 'صندوق غير مستخدم',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-        level: 2,
-        isGroup: false,
-        isActive: true,
-        isSystemAccount: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: 'compA',
-      );
-      accountRepo.add(unusedAccount);
-      usageAnalyzer.setPostedCount('acc-unused-01', 0);
-
-      final target = AccountBindingTarget.single('acc-unused-01');
-
-      expect(
-        () => safetyGate.validateTargetBinding(
+    test(
+      '1. Safe configuration change (Unused account -> Binding allowed)',
+      () async {
+        final unusedAccount = Account(
+          id: 1,
+          uuid: 'acc-unused-01',
+          accountCode: '101001',
+          name: 'صندوق غير مستخدم',
+          accountType: AccountType.asset,
+          normalBalance: NormalBalance.debit,
+          level: 2,
+          isGroup: false,
+          isActive: true,
+          isSystemAccount: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
           companyId: 'compA',
-          role: AccountRole.cash,
-          target: target,
-        ),
-        returnsNormally,
-      );
-    });
+        );
+        accountRepo.add(unusedAccount);
+        usageAnalyzer.setPostedCount('acc-unused-01', 0);
 
-    test('2. Blocked historical change (Account with posted transactions -> Binding policy block)', () async {
-      final postedAccount = Account(
-        id: 2,
-        uuid: 'acc-posted-01',
-        accountCode: '101002',
-        name: 'صندوق مرحل',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-        level: 2,
-        isGroup: false,
-        isActive: true,
-        isSystemAccount: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: 'compA',
-      );
-      accountRepo.add(postedAccount);
-      usageAnalyzer.setPostedCount('acc-posted-01', 15);
+        final target = AccountBindingTarget.single('acc-unused-01');
 
-      expect(
-        () => safetyGate.validateBindingChange(
+        expect(
+          () => safetyGate.validateTargetBinding(
+            companyId: 'compA',
+            role: AccountRole.cash,
+            target: target,
+          ),
+          returnsNormally,
+        );
+      },
+    );
+
+    test(
+      '2. Blocked historical change (Account with posted transactions -> Binding policy block)',
+      () async {
+        final postedAccount = Account(
+          id: 2,
+          uuid: 'acc-posted-01',
+          accountCode: '101002',
+          name: 'صندوق مرحل',
+          accountType: AccountType.asset,
+          normalBalance: NormalBalance.debit,
+          level: 2,
+          isGroup: false,
+          isActive: true,
+          isSystemAccount: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
           companyId: 'compA',
-          role: AccountRole.cash,
-          currentAccountUuid: 'acc-posted-01',
-          candidateAccountUuid: 'acc-new-01',
-        ),
-        throwsA(isA<AccountBindingChangeProhibitedException>()),
-      );
+        );
+        accountRepo.add(postedAccount);
+        usageAnalyzer.setPostedCount('acc-posted-01', 15);
 
-      final usage = await usageAnalyzer.analyzeAccountUsage(
-        companyId: 'compA',
-        accountUuid: 'acc-posted-01',
-      );
-      expect(usage.status, equals(AccountUsageStatus.usedInPostedTransactions));
-      expect(usage.postedTransactionCount, equals(15));
-    });
+        expect(
+          () => safetyGate.validateBindingChange(
+            companyId: 'compA',
+            role: AccountRole.cash,
+            currentAccountUuid: 'acc-posted-01',
+            candidateAccountUuid: 'acc-new-01',
+          ),
+          throwsA(isA<AccountBindingChangeProhibitedException>()),
+        );
 
-
-
-
-    test('3. Wrong account type configuration rejection (Asset bound to Liability role)', () async {
-      final liabilityAcc = Account(
-        id: 3,
-        uuid: 'acc-liability-01',
-        accountCode: '201001',
-        name: 'حساب دائن',
-        accountType: AccountType.liability,
-        normalBalance: NormalBalance.credit,
-        level: 2,
-        isGroup: false,
-        isActive: true,
-        isSystemAccount: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: 'compA',
-      );
-      accountRepo.add(liabilityAcc);
-
-      final target = AccountBindingTarget.single('acc-liability-01');
-
-      expect(
-        () => safetyGate.validateTargetBinding(
+        final usage = await usageAnalyzer.analyzeAccountUsage(
           companyId: 'compA',
-          role: AccountRole.cash, // Cash requires Asset
-          target: target,
-        ),
-        throwsA(isA<AccountBindingValidationException>()),
-      );
-    });
+          accountUuid: 'acc-posted-01',
+        );
+        expect(
+          usage.status,
+          equals(AccountUsageStatus.usedInPostedTransactions),
+        );
+        expect(usage.postedTransactionCount, equals(15));
+      },
+    );
+
+    test(
+      '3. Wrong account type configuration rejection (Asset bound to Liability role)',
+      () async {
+        final liabilityAcc = Account(
+          id: 3,
+          uuid: 'acc-liability-01',
+          accountCode: '201001',
+          name: 'حساب دائن',
+          accountType: AccountType.liability,
+          normalBalance: NormalBalance.credit,
+          level: 2,
+          isGroup: false,
+          isActive: true,
+          isSystemAccount: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          companyId: 'compA',
+        );
+        accountRepo.add(liabilityAcc);
+
+        final target = AccountBindingTarget.single('acc-liability-01');
+
+        expect(
+          () => safetyGate.validateTargetBinding(
+            companyId: 'compA',
+            role: AccountRole.cash, // Cash requires Asset
+            target: target,
+          ),
+          throwsA(isA<AccountBindingValidationException>()),
+        );
+      },
+    );
 
     test('4. Parent scope invalidation detection', () async {
       final parentAcc = Account(
@@ -359,7 +382,6 @@ void main() {
       );
       accountRepo.add(inactiveAcc);
 
-
       final target = AccountBindingTarget.single('acc-inactive-99');
 
       expect(
@@ -372,35 +394,40 @@ void main() {
       );
     });
 
-    test('8. Account reparented outside expected hierarchy rejection', () async {
-      final invalidTypeParent = Account(
-        id: 8,
-        uuid: 'acc-wrong-parent',
-        accountCode: '200000',
-        name: 'مجموعة الالتزامات',
-        accountType: AccountType.liability,
-        normalBalance: NormalBalance.credit,
-        level: 1,
-        isGroup: true,
-        isActive: true,
-        isSystemAccount: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: 'compA',
-      );
-      accountRepo.add(invalidTypeParent);
-
-      final targetWrongParent = AccountBindingTarget.parentScope('acc-wrong-parent');
-
-      expect(
-        () => safetyGate.validateTargetBinding(
+    test(
+      '8. Account reparented outside expected hierarchy rejection',
+      () async {
+        final invalidTypeParent = Account(
+          id: 8,
+          uuid: 'acc-wrong-parent',
+          accountCode: '200000',
+          name: 'مجموعة الالتزامات',
+          accountType: AccountType.liability,
+          normalBalance: NormalBalance.credit,
+          level: 1,
+          isGroup: true,
+          isActive: true,
+          isSystemAccount: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
           companyId: 'compA',
-          role: AccountRole.cash, // Cash requires Asset
-          target: targetWrongParent,
-        ),
-        throwsA(isA<AccountBindingValidationException>()),
-      );
-    });
+        );
+        accountRepo.add(invalidTypeParent);
+
+        final targetWrongParent = AccountBindingTarget.parentScope(
+          'acc-wrong-parent',
+        );
+
+        expect(
+          () => safetyGate.validateTargetBinding(
+            companyId: 'compA',
+            role: AccountRole.cash, // Cash requires Asset
+            target: targetWrongParent,
+          ),
+          throwsA(isA<AccountBindingValidationException>()),
+        );
+      },
+    );
 
     test('9. Cross-company account binding rejection', () async {
       final compBAcc = Account(
@@ -464,7 +491,9 @@ void main() {
     });
 
     test('11. Synchronization conflict safety validation', () async {
-      final syncConflictTarget = AccountBindingTarget.single('non-existent-uuid');
+      final syncConflictTarget = AccountBindingTarget.single(
+        'non-existent-uuid',
+      );
 
       expect(
         () => safetyGate.validateTargetBinding(

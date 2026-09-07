@@ -13,10 +13,7 @@ class ReportExportSuccess extends ReportExportResult {
 
 /// PDF bytes ready for shared preview / print / share.
 class ReportExportPdfReady extends ReportExportResult {
-  const ReportExportPdfReady({
-    required this.bytes,
-    required this.fileName,
-  });
+  const ReportExportPdfReady({required this.bytes, required this.fileName});
 
   final Uint8List bytes;
   final String fileName;

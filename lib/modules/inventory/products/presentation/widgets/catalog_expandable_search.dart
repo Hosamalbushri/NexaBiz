@@ -172,9 +172,7 @@ class _CatalogExpandableSearchPanelState
           borderRadius: BorderRadius.circular(AppRadius.md),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withValues(
-                alpha: isDark ? 0.24 : 0.05,
-              ),
+              color: colorScheme.shadow.withValues(alpha: isDark ? 0.24 : 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -423,12 +421,9 @@ class _ExpandableSearchPanelState extends State<ExpandableSearchPanel> {
                       controller: _controller,
                       focusNode: _focusNode,
                       textInputAction: TextInputAction.search,
-                      inputFormatters: const [
-                        WesternDigitsInputFormatter(),
-                      ],
-                      onChanged: (value) => widget.onChanged(
-                        normalizeDigitsToWestern(value),
-                      ),
+                      inputFormatters: const [WesternDigitsInputFormatter()],
+                      onChanged: (value) =>
+                          widget.onChanged(normalizeDigitsToWestern(value)),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -490,10 +485,7 @@ class _ExpandableSearchPanelState extends State<ExpandableSearchPanel> {
 
 /// Shared search-field chrome: soft fill + focus ring.
 class _SearchInputShell extends StatelessWidget {
-  const _SearchInputShell({
-    required this.focused,
-    required this.child,
-  });
+  const _SearchInputShell({required this.focused, required this.child});
 
   final bool focused;
   final Widget child;

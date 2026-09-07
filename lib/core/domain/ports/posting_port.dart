@@ -6,27 +6,20 @@ abstract class PostResult {
 }
 
 class PostSuccess extends PostResult {
-  const PostSuccess({
-    required this.document,
-    required this.postedValue,
-  });
+  const PostSuccess({required this.document, required this.postedValue});
 
   final DocumentRef document;
   final double postedValue;
 }
 
 class PostStockShortage extends PostResult {
-  const PostStockShortage({
-    required this.shortages,
-  });
+  const PostStockShortage({required this.shortages});
 
   final List<dynamic> shortages;
 }
 
 class PostInvalidStatus extends PostResult {
-  const PostInvalidStatus({
-    required this.reason,
-  });
+  const PostInvalidStatus({required this.reason});
 
   final String reason;
 }
@@ -50,9 +43,7 @@ class UnpostBlockedByDependencies extends UnpostResult {
 }
 
 class UnpostInvalidStatus extends UnpostResult {
-  const UnpostInvalidStatus({
-    required this.reason,
-  });
+  const UnpostInvalidStatus({required this.reason});
 
   final String reason;
 }
@@ -60,10 +51,7 @@ class UnpostInvalidStatus extends UnpostResult {
 /// Abstract contract for inventory posting operations.
 abstract class PostingCoordinatorPort {
   /// Validates and posts an inventory document.
-  Future<PostResult> post({
-    required DocumentRef document,
-    String? userId,
-  });
+  Future<PostResult> post({required DocumentRef document, String? userId});
 
   /// Validates dependencies and unposts an inventory document.
   Future<UnpostResult> unpost({
@@ -100,15 +88,15 @@ class StockDocumentPostingData {
   final double exchangeRate;
 
   DocumentRef toDocumentRef() => DocumentRef(
-        documentId: id,
-        documentNumber: documentNumber,
-        documentType: documentType,
-        documentDate: documentDate,
-        warehouseId: warehouseId,
-        status: status,
-        currencyCode: currencyCode,
-        exchangeRate: exchangeRate,
-      );
+    documentId: id,
+    documentNumber: documentNumber,
+    documentType: documentType,
+    documentDate: documentDate,
+    warehouseId: warehouseId,
+    status: status,
+    currencyCode: currencyCode,
+    exchangeRate: exchangeRate,
+  );
 }
 
 enum PostingSettlementType { cash, credit }
@@ -144,4 +132,3 @@ class SaleInvoicePostingData {
   final String? customerAccountId;
   final String? cashAccountId;
 }
-

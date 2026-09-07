@@ -29,9 +29,7 @@ class AppDetailSurfaceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor ?? scheme.surface,
         borderRadius: effectiveRadius,
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       padding: padding,
       child: child,

@@ -42,11 +42,7 @@ class MigrationProgress {
 }
 
 class InitialCloudSyncScanner {
-  InitialCloudSyncScanner(
-    this._ref, {
-    this._remoteProvider,
-    this._scanners,
-  });
+  InitialCloudSyncScanner(this._ref, {this._remoteProvider, this._scanners});
 
   final Ref _ref;
   final RemoteSyncApi Function()? _remoteProvider;
@@ -63,18 +59,20 @@ class InitialCloudSyncScanner {
     required String deviceId,
     required SyncQueue queue,
   }) async {
-    _controller.add(const MigrationProgress(
-      status: MigrationStatus.scanning,
-      processedCount: 0,
-      totalCount: 0,
-    ));
+    _controller.add(
+      const MigrationProgress(
+        status: MigrationStatus.scanning,
+        processedCount: 0,
+        totalCount: 0,
+      ),
+    );
 
     try {
       final List<InitialCloudEntityScanner> activeScanners =
           _scanners ?? _ref.read(initialCloudEntityScannersProvider);
-      final sortedScanners =
-          List<InitialCloudEntityScanner>.from(activeScanners)
-            ..sort((a, b) => a.priorityOrder.compareTo(b.priorityOrder));
+      final sortedScanners = List<InitialCloudEntityScanner>.from(
+        activeScanners,
+      )..sort((a, b) => a.priorityOrder.compareTo(b.priorityOrder));
 
       final allOperations = <SyncOperation>[];
       for (final scanner in sortedScanners) {
@@ -88,11 +86,13 @@ class InitialCloudSyncScanner {
 
       final totalItems = allOperations.length;
 
-      _controller.add(MigrationProgress(
-        status: MigrationStatus.uploading,
-        processedCount: 0,
-        totalCount: totalItems,
-      ));
+      _controller.add(
+        MigrationProgress(
+          status: MigrationStatus.uploading,
+          processedCount: 0,
+          totalCount: totalItems,
+        ),
+      );
 
       var processed = 0;
 
@@ -105,25 +105,31 @@ class InitialCloudSyncScanner {
           await queue.enqueue(op);
         }
         processed++;
-        _controller.add(MigrationProgress(
-          status: MigrationStatus.uploading,
-          processedCount: processed,
-          totalCount: totalItems,
-        ));
+        _controller.add(
+          MigrationProgress(
+            status: MigrationStatus.uploading,
+            processedCount: processed,
+            totalCount: totalItems,
+          ),
+        );
       }
 
-      _controller.add(MigrationProgress(
-        status: MigrationStatus.completed,
-        processedCount: processed,
-        totalCount: totalItems,
-      ));
+      _controller.add(
+        MigrationProgress(
+          status: MigrationStatus.completed,
+          processedCount: processed,
+          totalCount: totalItems,
+        ),
+      );
     } catch (e) {
-      _controller.add(MigrationProgress(
-        status: MigrationStatus.failedRetryable,
-        processedCount: 0,
-        totalCount: 0,
-        errorMessage: e.toString(),
-      ));
+      _controller.add(
+        MigrationProgress(
+          status: MigrationStatus.failedRetryable,
+          processedCount: 0,
+          totalCount: 0,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 

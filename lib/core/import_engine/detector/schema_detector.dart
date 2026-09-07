@@ -8,9 +8,7 @@ import 'type_inferrer.dart';
 
 /// Automatic structure, header, and primitive type detector.
 class SchemaDetector {
-  const SchemaDetector({
-    this.sampleRowCount = 100,
-  });
+  const SchemaDetector({this.sampleRowCount = 100});
 
   final int sampleRowCount;
 
@@ -18,10 +16,7 @@ class SchemaDetector {
   DetectedSchema detectDocument(ParsedDocument document) {
     final activeSheet = document.activeSheet;
     if (activeSheet == null || activeSheet.isEmpty) {
-      return const DetectedSchema(
-        columns: [],
-        totalRowsSampled: 0,
-      );
+      return const DetectedSchema(columns: [], totalRowsSampled: 0);
     }
     return detectSheet(activeSheet);
   }
@@ -29,10 +24,7 @@ class SchemaDetector {
   /// Detects structure, headers, duplicate names, and primitive types from a [ParsedSheet].
   DetectedSchema detectSheet(ParsedSheet sheet) {
     if (sheet.isEmpty) {
-      return const DetectedSchema(
-        columns: [],
-        totalRowsSampled: 0,
-      );
+      return const DetectedSchema(columns: [], totalRowsSampled: 0);
     }
 
     final rawHeaders = sheet.headers;
@@ -81,22 +73,25 @@ class SchemaDetector {
       DetectionConfidence confidence = inferenceResult.confidence;
       if (isDuplicate || isEmptyHeader) {
         confidence = DetectionConfidence.low;
-      } else if (inferenceResult.inferredType == InferredPrimitiveType.nullOrMixed) {
+      } else if (inferenceResult.inferredType ==
+          InferredPrimitiveType.nullOrMixed) {
         confidence = DetectionConfidence.low;
       }
 
-      detectedColumns.add(DetectedColumn(
-        columnIndex: c,
-        rawHeader: rawHeader,
-        normalizedHeader: normalizedHeader,
-        inferredType: inferenceResult.inferredType,
-        confidence: confidence,
-        sampleValues: inferenceResult.sampleValues,
-        isDuplicate: isDuplicate,
-        isEmptyHeader: isEmptyHeader,
-        distinctCount: inferenceResult.distinctCount,
-        nullCount: inferenceResult.nullCount,
-      ));
+      detectedColumns.add(
+        DetectedColumn(
+          columnIndex: c,
+          rawHeader: rawHeader,
+          normalizedHeader: normalizedHeader,
+          inferredType: inferenceResult.inferredType,
+          confidence: confidence,
+          sampleValues: inferenceResult.sampleValues,
+          isDuplicate: isDuplicate,
+          isEmptyHeader: isEmptyHeader,
+          distinctCount: inferenceResult.distinctCount,
+          nullCount: inferenceResult.nullCount,
+        ),
+      );
     }
 
     return DetectedSchema(

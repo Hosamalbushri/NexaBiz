@@ -70,8 +70,10 @@ final purchasesPackageSetupDefinition = PackageSetupDefinition(
       packageId: 'purchases',
       titleAr: 'سياسات فواتير واستلام المشتريات',
       titleEn: 'Purchases & Receiving Controls',
-      descriptionAr: 'اشتراط مطابقة أمر الشراء، السماح بالاستلام الجزئي، والتحكم بالفروقات',
-      descriptionEn: 'Purchase Order matching rules, partial receiving policy, and variance tolerances',
+      descriptionAr:
+          'اشتراط مطابقة أمر الشراء، السماح بالاستلام الجزئي، والتحكم بالفروقات',
+      descriptionEn:
+          'Purchase Order matching rules, partial receiving policy, and variance tolerances',
       fields: [
         SetupField(
           id: 'requirePurchaseOrderMatching',
@@ -98,8 +100,10 @@ final purchasesPackageSetupDefinition = PackageSetupDefinition(
       packageId: 'purchases',
       titleAr: 'ربط حسابات المشتريات والموردين',
       titleEn: 'Purchases Account Bindings',
-      descriptionAr: 'ربط حسابات الموردين والاستلام النقدي والخصم المكتسب من دليل الحسابات',
-      descriptionEn: 'Bind Accounts Payable, inventory valuation, cash, and discount accounts from Chart of Accounts',
+      descriptionAr:
+          'ربط حسابات الموردين والاستلام النقدي والخصم المكتسب من دليل الحسابات',
+      descriptionEn:
+          'Bind Accounts Payable, inventory valuation, cash, and discount accounts from Chart of Accounts',
       fields: [
         SetupField(
           id: 'payable_account',
@@ -155,7 +159,8 @@ final purchasesSetupSteps = [
     titleAr: 'إعدادات وسياسات المشتريات',
     titleEn: 'Purchases Defaults & Policies',
     descriptionAr: 'سياسات الاستلام، الخصومات المكتسبة، وقواعد الموردين',
-    descriptionEn: 'Receiving policies, earned discounts, and supplier controls',
+    descriptionEn:
+        'Receiving policies, earned discounts, and supplier controls',
     icon: Icons.shopping_bag_outlined,
     sortOrder: 45,
     builder: (context, ref) {

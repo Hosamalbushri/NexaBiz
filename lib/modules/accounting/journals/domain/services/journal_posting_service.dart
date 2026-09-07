@@ -6,7 +6,6 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/accounting/permissions/accounting_permissions.dart';
 
-
 /// Application entry point for posting / voiding journals.
 ///
 /// Period checks also run inside [JournalRepository.post]; this service adds
@@ -31,11 +30,7 @@ class JournalPostingService {
   Future<JournalEntry?> findBySource({
     required String sourceType,
     required String sourceId,
-  }) =>
-      _journals.findBySource(
-        sourceType: sourceType,
-        sourceId: sourceId,
-      );
+  }) => _journals.findBySource(sourceType: sourceType, sourceId: sourceId);
 
   Future<JournalEntry> post(JournalEntryDraft draft, {String? userId}) async {
     try {
@@ -74,7 +69,6 @@ class JournalPostingService {
       );
       rethrow;
     }
-
 
     final posted = await _journals.post(draft);
 
@@ -147,7 +141,6 @@ class JournalPostingService {
     if (!existing.isPosted) {
       throw const JournalException(JournalException.notPosted);
     }
-
 
     final already = await _journals.findBySource(
       sourceType: reverseSourceType,
@@ -234,8 +227,7 @@ class JournalPostingService {
   Future<void> softDeleteBySource({
     required String sourceType,
     required String sourceId,
-  }) =>
-      voidBySource(sourceType: sourceType, sourceId: sourceId);
+  }) => voidBySource(sourceType: sourceType, sourceId: sourceId);
 
   @Deprecated('Use voidByUuid — soft-delete of posted journals is blocked')
   Future<void> softDeleteByUuid(String uuid) => voidByUuid(uuid);

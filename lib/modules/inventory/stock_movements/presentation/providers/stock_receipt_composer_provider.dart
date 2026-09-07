@@ -93,8 +93,7 @@ class StockReceiptComposerState {
   double get totalQuantity =>
       lines.fold(0.0, (sum, line) => sum + line.totalQuantity);
 
-  double get totalCost =>
-      lines.fold(0.0, (sum, line) => sum + line.totalCost);
+  double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
 
   StockReceiptComposerState copyWith({
     DateTime? receiptDate,
@@ -121,8 +120,7 @@ class StockReceiptComposerState {
   }) {
     return StockReceiptComposerState(
       receiptDate: receiptDate ?? this.receiptDate,
-      voucherBook:
-          clearVoucherBook ? null : (voucherBook ?? this.voucherBook),
+      voucherBook: clearVoucherBook ? null : (voucherBook ?? this.voucherBook),
       previewReceiptNumber: clearPreviewReceiptNumber
           ? null
           : (previewReceiptNumber ?? this.previewReceiptNumber),
@@ -145,7 +143,7 @@ class StockReceiptComposerState {
 class StockReceiptComposerNotifier
     extends StateNotifier<StockReceiptComposerState> {
   StockReceiptComposerNotifier()
-      : super(StockReceiptComposerState(receiptDate: DateTime.now()));
+    : super(StockReceiptComposerState(receiptDate: DateTime.now()));
 
   void reset([String? defaultCurrencyCode]) {
     state = StockReceiptComposerState(
@@ -164,7 +162,9 @@ class StockReceiptComposerNotifier
     String? defaultCurrencyCode,
   }) {
     if (receiptToEdit != null) {
-      final accountRef = (receiptToEdit.accountId != null && receiptToEdit.accountId!.isNotEmpty)
+      final accountRef =
+          (receiptToEdit.accountId != null &&
+              receiptToEdit.accountId!.isNotEmpty)
           ? InventoryAccountRef(
               accountId: receiptToEdit.accountId!,
               code: '',
@@ -189,7 +189,11 @@ class StockReceiptComposerNotifier
                 subQuantity: l.subQuantity,
                 packSize: l.packSize,
                 unitCost: l.unitCost,
-                baseUnitCost: l.unitCost * (receiptToEdit.exchangeRate > 0 ? receiptToEdit.exchangeRate : 1.0),
+                baseUnitCost:
+                    l.unitCost *
+                    (receiptToEdit.exchangeRate > 0
+                        ? receiptToEdit.exchangeRate
+                        : 1.0),
               ),
             )
             .toList(),
@@ -250,7 +254,10 @@ class StockReceiptComposerNotifier
     );
   }
 
-  Future<void> addProduct(Product product, {CostLayerService? costLayerService}) async {
+  Future<void> addProduct(
+    Product product, {
+    CostLayerService? costLayerService,
+  }) async {
     double baseCost = product.unitCost;
     if (baseCost <= 0 && costLayerService != null) {
       baseCost = await costLayerService.getItemCostValuation(
@@ -261,15 +268,17 @@ class StockReceiptComposerNotifier
     final rate = state.exchangeRate <= 0 ? 1.0 : state.exchangeRate;
     final docUnitCost = baseCost / rate;
 
-    addLine(StockReceiptLineDraft(
-      itemCode: product.itemCode,
-      itemName: product.name,
-      packSize: product.packSize > 0 ? product.packSize.toDouble() : 1.0,
-      unitCost: docUnitCost,
-      baseUnitCost: baseCost,
-      mainQuantity: 1.0,
-      subQuantity: 0.0,
-    ));
+    addLine(
+      StockReceiptLineDraft(
+        itemCode: product.itemCode,
+        itemName: product.name,
+        packSize: product.packSize > 0 ? product.packSize.toDouble() : 1.0,
+        unitCost: docUnitCost,
+        baseUnitCost: baseCost,
+        mainQuantity: 1.0,
+        subQuantity: 0.0,
+      ),
+    );
   }
 
   void addLine(StockReceiptLineDraft line) {
@@ -290,10 +299,7 @@ class StockReceiptComposerNotifier
     state = state.copyWith(lines: updated);
   }
 
-  void updateUnitCost({
-    required int index,
-    required double unitCost,
-  }) {
+  void updateUnitCost({required int index, required double unitCost}) {
     if (index < 0 || index >= state.lines.length) return;
     final updated = List<StockReceiptLineDraft>.from(state.lines);
     final rate = state.exchangeRate <= 0 ? 1.0 : state.exchangeRate;
@@ -315,7 +321,8 @@ class StockReceiptComposerNotifier
 
   void removeLine(int index) {
     if (index < 0 || index >= state.lines.length) return;
-    final updated = List<StockReceiptLineDraft>.from(state.lines)..removeAt(index);
+    final updated = List<StockReceiptLineDraft>.from(state.lines)
+      ..removeAt(index);
     state = state.copyWith(lines: updated);
   }
 
@@ -329,21 +336,26 @@ class StockReceiptComposerNotifier
     }
 
     if (state.account == null || state.account!.accountId.trim().isEmpty) {
-      state = state.copyWith(error: 'يرجى اختيار الحساب المحاسبي للمستند أولاً');
+      state = state.copyWith(
+        error: 'يرجى اختيار الحساب المحاسبي للمستند أولاً',
+      );
       return false;
     }
 
     for (final line in state.lines) {
       if (line.unitCost <= 0 || line.totalCost <= 0) {
         state = state.copyWith(
-          error: 'لا يمكن حفظ أمر التوريد بتكلفة صفرية للصنف (${line.itemName}). يرجى إدخال تكلفة الصنف.',
+          error:
+              'لا يمكن حفظ أمر التوريد بتكلفة صفرية للصنف (${line.itemName}). يرجى إدخال تكلفة الصنف.',
         );
         return false;
       }
     }
 
     if (state.totalCost <= 0) {
-      state = state.copyWith(error: 'لا يمكن حفظ أمر التوريد بتكلفة إجمالية صفرية.');
+      state = state.copyWith(
+        error: 'لا يمكن حفظ أمر التوريد بتكلفة إجمالية صفرية.',
+      );
       return false;
     }
 
@@ -356,7 +368,9 @@ class StockReceiptComposerNotifier
 
       if (number.isEmpty) {
         if (state.voucherBook != null) {
-          number = await voucherPort.allocateReceiptNumber(state.voucherBook!.bookId);
+          number = await voucherPort.allocateReceiptNumber(
+            state.voucherBook!.bookId,
+          );
         } else {
           number = 'REC-${DateTime.now().millisecondsSinceEpoch % 10000}';
         }
@@ -400,7 +414,10 @@ class StockReceiptComposerNotifier
   }
 }
 
-final stockReceiptComposerProvider = StateNotifierProvider.autoDispose<
-    StockReceiptComposerNotifier, StockReceiptComposerState>((ref) {
-  return StockReceiptComposerNotifier();
-});
+final stockReceiptComposerProvider =
+    StateNotifierProvider.autoDispose<
+      StockReceiptComposerNotifier,
+      StockReceiptComposerState
+    >((ref) {
+      return StockReceiptComposerNotifier();
+    });

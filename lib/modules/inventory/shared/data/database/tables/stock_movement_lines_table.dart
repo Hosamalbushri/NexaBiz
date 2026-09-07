@@ -18,14 +18,11 @@ class StockMovementLines extends Table {
 
   TextColumn get itemName => text().withLength(min: 1, max: 512)();
 
-  RealColumn get mainQuantity =>
-      real().withDefault(const Constant(0))();
+  RealColumn get mainQuantity => real().withDefault(const Constant(0))();
 
-  RealColumn get subQuantity =>
-      real().withDefault(const Constant(0))();
+  RealColumn get subQuantity => real().withDefault(const Constant(0))();
 
-  RealColumn get quantity =>
-      real().withDefault(const Constant(0))();
+  RealColumn get quantity => real().withDefault(const Constant(0))();
 
   RealColumn get unitCost => real().withDefault(const Constant(0))();
 

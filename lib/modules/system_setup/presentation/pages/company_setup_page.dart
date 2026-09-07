@@ -118,7 +118,6 @@ class _CompanySetupPageState extends ConsumerState<CompanySetupPage> {
         isSuperAdmin: auth.session?.user.isSuperAdmin ?? false,
       );
 
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تم حفظ بيانات الشركة بنجاح')),
@@ -174,9 +173,7 @@ class _CompanySetupPageState extends ConsumerState<CompanySetupPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('إعداد بيانات الشركة'),
-      ),
+      appBar: AppBar(title: const Text('إعداد بيانات الشركة')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -184,7 +181,6 @@ class _CompanySetupPageState extends ConsumerState<CompanySetupPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               if (_errorMessage != null) ...[
                 Card(
                   color: Theme.of(context).colorScheme.errorContainer,
@@ -201,8 +197,9 @@ class _CompanySetupPageState extends ConsumerState<CompanySetupPage> {
                   labelText: 'اسم الشركة *',
                   border: OutlineInputBorder(),
                 ),
-                validator: (val) =>
-                    val == null || val.trim().isEmpty ? 'يرجى إدخال اسم الشركة' : null,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? 'يرجى إدخال اسم الشركة'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(

@@ -29,61 +29,58 @@ class InventoryHomePage extends ConsumerWidget {
     final controller = ref.read(inventoryServicesProvider.notifier);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.moduleInventory,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: l10n.moduleInventory, showBackButton: true),
       body: servicesAsync.when(
-          loading: () => const AppLoading(),
-          error: (error, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.somethingWentWrong),
-                  const SizedBox(height: AppSpacing.md),
-                  AppButton(label: l10n.retry, onPressed: controller.reload),
-                ],
-              ),
+        loading: () => const AppLoading(),
+        error: (error, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.somethingWentWrong),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(label: l10n.retry, onPressed: controller.reload),
+              ],
             ),
           ),
-          data: (_) {
-            final services = controller.resolveServices();
-            return ListView(
-              padding: AppConstants.pageInsets(context),
-              children: [
-                Text(
-                  l10n.servicesTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.moduleInventoryDescription,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                if (services.isEmpty)
-                  _EmptyPinnedServices(
-                    onCustomize: () => _openCustomize(context, ref),
-                  )
-                else
-                  _InventoryServiceGrid(
-                    services: services,
-                    onOpen: (service) => context.go(service.path),
-                    onReorder: controller.reorder,
-                    onCustomize: () => _openCustomize(context, ref),
-                    customizeLabel: l10n.inventoryCustomizeServices,
-                  ),
-              ],
-            );
-          },
         ),
+        data: (_) {
+          final services = controller.resolveServices();
+          return ListView(
+            padding: AppConstants.pageInsets(context),
+            children: [
+              Text(
+                l10n.servicesTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l10n.moduleInventoryDescription,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (services.isEmpty)
+                _EmptyPinnedServices(
+                  onCustomize: () => _openCustomize(context, ref),
+                )
+              else
+                _InventoryServiceGrid(
+                  services: services,
+                  onOpen: (service) => context.go(service.path),
+                  onReorder: controller.reorder,
+                  onCustomize: () => _openCustomize(context, ref),
+                  customizeLabel: l10n.inventoryCustomizeServices,
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 

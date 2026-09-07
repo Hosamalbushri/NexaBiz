@@ -31,7 +31,6 @@ import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   group('AsyncSearchToken', () {
     test('discards stale generations while keeping the latest', () {
       final token = AsyncSearchToken();
@@ -95,25 +94,18 @@ void main() {
         account(uuid: 'b', code: '1100', parentId: 'a', isGroup: true),
       ]);
 
-      final collapsed = AccountTreeNode.flatten(
-        roots,
-        expandedIds: const {},
-      );
+      final collapsed = AccountTreeNode.flatten(roots, expandedIds: const {});
       expect(collapsed.map((e) => e.account.uuid).toList(), ['a']);
 
-      final expandedRoot = AccountTreeNode.flatten(
-        roots,
-        expandedIds: {'a'},
-      );
-      expect(
-        expandedRoot.map((e) => e.account.uuid).toList(),
-        ['a', 'b', 'c'],
-      );
+      final expandedRoot = AccountTreeNode.flatten(roots, expandedIds: {'a'});
+      expect(expandedRoot.map((e) => e.account.uuid).toList(), ['a', 'b', 'c']);
     });
   });
 
   group('AccountTree widget', () {
-    testWidgets('toggles expansion without losing root section', (tester) async {
+    testWidgets('toggles expansion without losing root section', (
+      tester,
+    ) async {
       final now = DateTime.utc(2026, 8, 14);
       final root = Account(
         id: 1,
@@ -205,7 +197,12 @@ void main() {
       queue = SyncQueue(box: syncBox);
       db = AccountingDatabase.memory();
       accounts = AccountRepositoryImpl(db, syncQueue: queue);
-      journals = JournalRepositoryImpl(db, accounts: accounts, periodValidator: legacyPeriodValidator(), syncQueue: queue);
+      journals = JournalRepositoryImpl(
+        db,
+        accounts: accounts,
+        periodValidator: legacyPeriodValidator(),
+        syncQueue: queue,
+      );
       await accounts.ensureDefaultChartSeeded();
     });
 
@@ -219,9 +216,9 @@ void main() {
 
     JournalPostingService postingService({DateTime? closedThrough}) {
       return journalPostingWithLegacyPolicy(
-      journals: journals,
-      closedThrough: closedThrough,
-    );
+        journals: journals,
+        closedThrough: closedThrough,
+      );
     }
 
     test('softDeleteByUuid rejects posted journals', () async {
@@ -264,73 +261,75 @@ void main() {
       expect(await journals.getByUuid(posted.uuid), isNotNull);
     });
 
-    test('softDeleteByUuid hides draft ledger reads but keeps audit lines',
-        () async {
-      final cash = (await accounts.getByAccountCode('1211'))!;
-      final revenue = (await accounts.getByAccountCode('4100'))!;
-      final custom = await accounts.insert(
-        AccountDraft(
-          parentId: cash.parentId,
-          accountCode: '12991',
-          name: 'Phase5 Cash Drawer',
-          accountType: AccountType.asset,
-          isGroup: false,
-        ),
-      );
-
-      final draft = await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 8, 10),
-          voucherNumber: 'JV-draft-del',
-          voucherType: 'قيود يومية',
-          currencyCode: 'YER',
-          isPosted: false,
-          lines: [
-            JournalLineDraft(
-              accountUuid: custom.uuid,
-              debit: 50,
-              credit: 0,
-              currencyCode: 'YER',
-            ),
-            JournalLineDraft(
-              accountUuid: revenue.uuid,
-              debit: 0,
-              credit: 50,
-              currencyCode: 'YER',
-            ),
-          ],
-        ),
-      );
-
-      await journals.softDeleteByUuid(draft.uuid);
-
-      expect(await journals.getByUuid(draft.uuid), isNull);
-      expect(
-        await journals.listMovementsForAccount(accountUuid: custom.uuid),
-        isEmpty,
-      );
-      expect(
-        await journals.sumNetBefore(
-          accountUuid: custom.uuid,
-          beforeDate: DateTime.utc(2026, 8, 11),
-        ),
-        0,
-      );
-      final headers = await journals.listHeaders(limit: 50);
-      expect(headers.any((h) => h.uuid == draft.uuid), isFalse);
-
-      expect(await accounts.isUsedInTransactions(custom.uuid), isTrue);
-      await expectLater(
-        accounts.softDelete(custom.id),
-        throwsA(
-          isA<AccountException>().having(
-            (e) => e.code,
-            'code',
-            AccountException.accountInUse,
+    test(
+      'softDeleteByUuid hides draft ledger reads but keeps audit lines',
+      () async {
+        final cash = (await accounts.getByAccountCode('1211'))!;
+        final revenue = (await accounts.getByAccountCode('4100'))!;
+        final custom = await accounts.insert(
+          AccountDraft(
+            parentId: cash.parentId,
+            accountCode: '12991',
+            name: 'Phase5 Cash Drawer',
+            accountType: AccountType.asset,
+            isGroup: false,
           ),
-        ),
-      );
-    });
+        );
+
+        final draft = await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 10),
+            voucherNumber: 'JV-draft-del',
+            voucherType: 'قيود يومية',
+            currencyCode: 'YER',
+            isPosted: false,
+            lines: [
+              JournalLineDraft(
+                accountUuid: custom.uuid,
+                debit: 50,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 50,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        );
+
+        await journals.softDeleteByUuid(draft.uuid);
+
+        expect(await journals.getByUuid(draft.uuid), isNull);
+        expect(
+          await journals.listMovementsForAccount(accountUuid: custom.uuid),
+          isEmpty,
+        );
+        expect(
+          await journals.sumNetBefore(
+            accountUuid: custom.uuid,
+            beforeDate: DateTime.utc(2026, 8, 11),
+          ),
+          0,
+        );
+        final headers = await journals.listHeaders(limit: 50);
+        expect(headers.any((h) => h.uuid == draft.uuid), isFalse);
+
+        expect(await accounts.isUsedInTransactions(custom.uuid), isTrue);
+        await expectLater(
+          accounts.softDelete(custom.id),
+          throwsA(
+            isA<AccountException>().having(
+              (e) => e.code,
+              'code',
+              AccountException.accountInUse,
+            ),
+          ),
+        );
+      },
+    );
 
     test('voidByUuid posts reversing entry for posted journals', () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
@@ -378,8 +377,7 @@ void main() {
       expect(netCash, 0);
     });
 
-    test('void then re-post same source creates a new active entry',
-        () async {
+    test('void then re-post same source creates a new active entry', () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
       final revenue = (await accounts.getByAccountCode('4100'))!;
       const sourceId = 'sale-void-repost';
@@ -409,10 +407,7 @@ void main() {
           ],
         ),
       );
-      await posting.voidBySource(
-        sourceType: 'sale',
-        sourceId: sourceId,
-      );
+      await posting.voidBySource(sourceType: 'sale', sourceId: sourceId);
       expect(
         await journals.findBySource(sourceType: 'sale', sourceId: sourceId),
         isNull,
@@ -453,8 +448,7 @@ void main() {
       expect(found?.uuid, second.uuid);
     });
 
-    test('sale adapter void + re-sync stays single active journal',
-        () async {
+    test('sale adapter void + re-sync stays single active journal', () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
       final adapter = AccountingSaleLedgerAdapter(
         posting: postingService(),
@@ -533,50 +527,53 @@ void main() {
       expect(await journals.getByUuid(entry.uuid), isNotNull);
     });
 
-    test('repository.post enforces closed period at persistence layer', () async {
-      final cash = (await accounts.getByAccountCode('1211'))!;
-      final revenue = (await accounts.getByAccountCode('4100'))!;
-      final closedRepo = JournalRepositoryImpl(
-        db,
-        accounts: accounts,
-        periodValidator: legacyPeriodValidator(
-          closedThrough: DateTime.utc(2026, 8, 15),
-        ),
-        syncQueue: queue,
-      );
+    test(
+      'repository.post enforces closed period at persistence layer',
+      () async {
+        final cash = (await accounts.getByAccountCode('1211'))!;
+        final revenue = (await accounts.getByAccountCode('4100'))!;
+        final closedRepo = JournalRepositoryImpl(
+          db,
+          accounts: accounts,
+          periodValidator: legacyPeriodValidator(
+            closedThrough: DateTime.utc(2026, 8, 15),
+          ),
+          syncQueue: queue,
+        );
 
-      await expectLater(
-        closedRepo.post(
-          JournalEntryDraft(
-            entryDate: DateTime.utc(2026, 8, 1),
-            voucherNumber: 'JV-bypass',
-            voucherType: 'قيود يومية',
-            currencyCode: 'YER',
-            lines: [
-              JournalLineDraft(
-                accountUuid: cash.uuid,
-                debit: 5,
-                credit: 0,
-                currencyCode: 'YER',
-              ),
-              JournalLineDraft(
-                accountUuid: revenue.uuid,
-                debit: 0,
-                credit: 5,
-                currencyCode: 'YER',
-              ),
-            ],
+        await expectLater(
+          closedRepo.post(
+            JournalEntryDraft(
+              entryDate: DateTime.utc(2026, 8, 1),
+              voucherNumber: 'JV-bypass',
+              voucherType: 'قيود يومية',
+              currencyCode: 'YER',
+              lines: [
+                JournalLineDraft(
+                  accountUuid: cash.uuid,
+                  debit: 5,
+                  credit: 0,
+                  currencyCode: 'YER',
+                ),
+                JournalLineDraft(
+                  accountUuid: revenue.uuid,
+                  debit: 0,
+                  credit: 5,
+                  currencyCode: 'YER',
+                ),
+              ],
+            ),
           ),
-        ),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.periodClosed,
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.periodClosed,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('replace by draft.uuid updates in place', () async {
       final cash = (await accounts.getByAccountCode('1211'))!;

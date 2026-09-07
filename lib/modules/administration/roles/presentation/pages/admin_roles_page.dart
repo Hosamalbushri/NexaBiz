@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
@@ -13,7 +16,6 @@ import 'package:stock_count/modules/authentication/presentation/providers/auth_p
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
 import 'package:stock_count/modules/administration/shared/data/admin_api_repository.dart';
 import 'package:stock_count/modules/administration/shared/presentation/providers/admin_providers.dart';
-import 'admin_role_editor_page.dart';
 
 enum _RoleFilter { all, custom, system }
 
@@ -32,7 +34,6 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final syncOn = ref.watch(syncEnabledProvider);
     final auth = ref.watch(authStateProvider);
     final rolesAsync = ref.watch(adminRolesProvider);
     final canCreate = auth.hasAnyPermission(const [
@@ -40,19 +41,13 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
       'roles.manage',
     ]);
 
-    if (!syncOn || !auth.canUseRemoteSync) {
+    if (auth.needsSessionRenewal) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.adminRolesTitle),
-        ),
+        appBar: AppBar(title: Text(l10n.adminRolesTitle)),
         body: AppEmptyState(
           icon: Icons.cloud_off_outlined,
-          title: auth.needsSessionRenewal
-              ? l10n.syncSessionExpired
-              : l10n.adminRequiresOnlineTitle,
-          subtitle: auth.needsSessionRenewal
-              ? l10n.syncSessionExpired
-              : l10n.adminRequiresOnlineMessage,
+          title: l10n.syncSessionExpired,
+          subtitle: l10n.syncSessionExpired,
         ),
       );
     }
@@ -134,11 +129,10 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
     BuildContext context, {
     AdminRoleSummary? existing,
   }) async {
-    final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => AdminRoleEditorPage(existing: existing),
-      ),
-    );
+    final route = existing == null
+        ? AppRoutes.administrationRolesCreate
+        : AppRoutes.administrationRolesEdit;
+    final saved = await context.push<bool>(route, extra: existing);
     if (saved == true) {
       ref.invalidate(adminRolesProvider);
     }
@@ -168,7 +162,7 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
     );
     if (ok != true || !context.mounted) return;
     try {
-      await ref.read(adminApiRepositoryProvider).deleteRole(role.id);
+      await ref.read(manageAdminRolesUseCaseProvider).deleteRole(role.id);
       ref.invalidate(adminRolesProvider);
       if (context.mounted) {
         showAppSnackBar(
@@ -186,11 +180,7 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
 }
 
 class _RoleCard extends StatelessWidget {
-  const _RoleCard({
-    required this.role,
-    required this.onOpen,
-    this.onDelete,
-  });
+  const _RoleCard({required this.role, required this.onOpen, this.onDelete});
 
   final AdminRoleSummary role;
   final VoidCallback onOpen;
@@ -245,8 +235,8 @@ class _RoleCard extends StatelessWidget {
                           role.description?.isNotEmpty == true
                               ? role.description!
                               : (role.systemRole
-                                  ? l10n.adminSystemRoleHint
-                                  : l10n.adminCustomRoleHint),
+                                    ? l10n.adminSystemRoleHint
+                                    : l10n.adminCustomRoleHint),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -262,10 +252,7 @@ class _RoleCard extends StatelessWidget {
                       onPressed: onDelete,
                       icon: const Icon(Icons.delete_outline),
                     ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -305,11 +292,7 @@ class _RoleCard extends StatelessWidget {
 }
 
 class _Tag extends StatelessWidget {
-  const _Tag({
-    required this.label,
-    required this.tone,
-    required this.onTone,
-  });
+  const _Tag({required this.label, required this.tone, required this.onTone});
 
   final String label;
   final Color tone;
@@ -326,9 +309,9 @@ class _Tag extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: onTone,
-              fontWeight: FontWeight.w600,
-            ),
+          color: onTone,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

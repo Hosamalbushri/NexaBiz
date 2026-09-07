@@ -12,7 +12,6 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late AccountingDatabase db;
   late AccountRepositoryImpl repo;
   late AccountingRpTreasuryAdapter adapter;

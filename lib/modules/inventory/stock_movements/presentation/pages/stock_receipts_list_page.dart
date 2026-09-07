@@ -22,10 +22,7 @@ import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
 
 class StockReceiptsListPage extends ConsumerWidget {
-  const StockReceiptsListPage({
-    super.key,
-    this.embedInTab = false,
-  });
+  const StockReceiptsListPage({super.key, this.embedInTab = false});
 
   final bool embedInTab;
 
@@ -43,13 +40,16 @@ class StockReceiptsListPage extends ConsumerWidget {
             padding: AppConstants.pageInsets(context),
             children: [
               _MovementCategoryActionHeader(
-                title: l10n.localeName == 'ar' ? 'أوامر التوريد' : 'Stock Receipts',
+                title: l10n.localeName == 'ar'
+                    ? 'أوامر التوريد'
+                    : 'Stock Receipts',
                 subtitle: l10n.localeName == 'ar'
                     ? 'استلام البضائع وتحديث رصيد وأصل المخزون'
                     : 'Receive items & update inventory asset',
                 icon: Icons.move_to_inbox_rounded,
                 count: receipts.length,
-                onNewPressed: () => InventoryRoutes.pushStockReceiptsNew(context),
+                onNewPressed: () =>
+                    InventoryRoutes.pushStockReceiptsNew(context),
               ),
               if (receipts.isEmpty)
                 Padding(
@@ -59,7 +59,8 @@ class StockReceiptsListPage extends ConsumerWidget {
                     subtitle: l10n.stockReceiptsEmptyAction,
                     icon: Icons.move_to_inbox_outlined,
                     actionLabel: l10n.stockReceiptsEmptyAction,
-                    onAction: () => InventoryRoutes.pushStockReceiptsNew(context),
+                    onAction: () =>
+                        InventoryRoutes.pushStockReceiptsNew(context),
                   ),
                 )
               else
@@ -111,14 +112,16 @@ class _StockReceiptCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    final dateStr = '${receipt.receiptDate.year}-${receipt.receiptDate.month.toString().padLeft(2, '0')}-${receipt.receiptDate.day.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${receipt.receiptDate.year}-${receipt.receiptDate.month.toString().padLeft(2, '0')}-${receipt.receiptDate.day.toString().padLeft(2, '0')}';
 
     return Material(
       color: scheme.surface,
       borderRadius: BorderRadius.circular(AppRadius.md),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => InventoryRoutes.pushStockReceiptDetails(context, receipt.id),
+        onTap: () =>
+            InventoryRoutes.pushStockReceiptDetails(context, receipt.id),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.md),
@@ -160,12 +163,16 @@ class _StockReceiptCard extends ConsumerWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          InventoryStatusBadge(status: receipt.status, compact: true),
+                          InventoryStatusBadge(
+                            status: receipt.status,
+                            compact: true,
+                          ),
                           _SyncStatusBadge(status: receipt.syncStatus),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      if (receipt.supplier != null && receipt.supplier!.isNotEmpty)
+                      if (receipt.supplier != null &&
+                          receipt.supplier!.isNotEmpty)
                         Text(
                           '${l10n.stockReceiptSupplierLabel}: ${receipt.supplier}',
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -186,13 +193,22 @@ class _StockReceiptCard extends ConsumerWidget {
                   children: [
                     if (receipt.isDraft)
                       IconButton(
-                        icon: const Icon(Icons.send_rounded, color: Colors.green),
+                        icon: const Icon(
+                          Icons.send_rounded,
+                          color: Colors.green,
+                        ),
                         tooltip: 'ترحيل',
                         onPressed: () async {
-                          final coordinator = ref.read(postingCoordinatorPortProvider);
-                          final docRef = receipt.toPostingData().toDocumentRef();
+                          final coordinator = ref.read(
+                            postingCoordinatorPortProvider,
+                          );
+                          final docRef = receipt
+                              .toPostingData()
+                              .toDocumentRef();
                           try {
-                            final result = await coordinator.post(document: docRef);
+                            final result = await coordinator.post(
+                              document: docRef,
+                            );
                             if (context.mounted) {
                               if (result is PostSuccess) {
                                 showAppSnackBar(
@@ -201,11 +217,16 @@ class _StockReceiptCard extends ConsumerWidget {
                                   isSuccess: true,
                                 );
                               } else if (result is PostInvalidStatus) {
-                                final details = StockPostingErrorDetails.fromReason(
-                                  context: context,
-                                  reason: result.reason,
-                                  onEditRequested: () => InventoryRoutes.pushStockReceiptDetails(context, receipt.id),
-                                );
+                                final details =
+                                    StockPostingErrorDetails.fromReason(
+                                      context: context,
+                                      reason: result.reason,
+                                      onEditRequested: () =>
+                                          InventoryRoutes.pushStockReceiptDetails(
+                                            context,
+                                            receipt.id,
+                                          ),
+                                    );
                                 await showStockPostingErrorDialog(
                                   context,
                                   title: details.title,
@@ -219,19 +240,28 @@ class _StockReceiptCard extends ConsumerWidget {
                                 await showStockPostingErrorDialog(
                                   context,
                                   title: 'عجز في رصيد المخزون',
-                                  message: 'لا يوجد رصيد كافٍ في المستودع لبعض أصناف المستند.',
+                                  message:
+                                      'لا يوجد رصيد كافٍ في المستودع لبعض أصناف المستند.',
                                   category: StockPostingErrorCategory.shortage,
                                 );
                               }
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              final errorMsg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
-                              final details = StockPostingErrorDetails.fromReason(
-                                context: context,
-                                reason: errorMsg,
-                                onEditRequested: () => InventoryRoutes.pushStockReceiptDetails(context, receipt.id),
+                              final errorMsg = e.toString().replaceFirst(
+                                RegExp(r'^Exception:\s*'),
+                                '',
                               );
+                              final details =
+                                  StockPostingErrorDetails.fromReason(
+                                    context: context,
+                                    reason: errorMsg,
+                                    onEditRequested: () =>
+                                        InventoryRoutes.pushStockReceiptDetails(
+                                          context,
+                                          receipt.id,
+                                        ),
+                                  );
                               await showStockPostingErrorDialog(
                                 context,
                                 title: details.title,
@@ -247,12 +277,21 @@ class _StockReceiptCard extends ConsumerWidget {
                       )
                     else if (receipt.isPosted)
                       IconButton(
-                        icon: const Icon(Icons.undo_rounded, color: Colors.orange),
+                        icon: const Icon(
+                          Icons.undo_rounded,
+                          color: Colors.orange,
+                        ),
                         tooltip: 'إلغاء الترحيل',
                         onPressed: () async {
-                          final coordinator = ref.read(postingCoordinatorPortProvider);
-                          final docRef = receipt.toPostingData().toDocumentRef();
-                          final result = await coordinator.unpost(document: docRef);
+                          final coordinator = ref.read(
+                            postingCoordinatorPortProvider,
+                          );
+                          final docRef = receipt
+                              .toPostingData()
+                              .toDocumentRef();
+                          final result = await coordinator.unpost(
+                            document: docRef,
+                          );
                           if (context.mounted) {
                             if (result is UnpostSuccess) {
                               showAppSnackBar(
@@ -271,12 +310,16 @@ class _StockReceiptCard extends ConsumerWidget {
                         },
                       ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.redAccent,
+                      ),
                       onPressed: () async {
                         if (receipt.isPosted) {
                           showAppSnackBar(
                             context,
-                            message: 'لا يمكن حذف مستند مرحّل. يجب إلغاء ترحيله أولاً.',
+                            message:
+                                'لا يمكن حذف مستند مرحّل. يجب إلغاء ترحيله أولاً.',
                             isSuccess: false,
                           );
                           return;
@@ -290,21 +333,32 @@ class _StockReceiptCard extends ConsumerWidget {
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
-                                child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                                child: Text(
+                                  MaterialLocalizations.of(
+                                    context,
+                                  ).cancelButtonLabel,
+                                ),
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red,
                                 ),
                                 onPressed: () => Navigator.pop(ctx, true),
-                                child: Text(MaterialLocalizations.of(context).deleteButtonTooltip, style: const TextStyle(color: Colors.white)),
+                                child: Text(
+                                  MaterialLocalizations.of(
+                                    context,
+                                  ).deleteButtonTooltip,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
                             ],
                           ),
                         );
 
                         if (confirm == true) {
-                          await ref.read(stockMovementUseCasesProvider).deleteReceipt(receipt.id);
+                          await ref
+                              .read(stockMovementUseCasesProvider)
+                              .deleteReceipt(receipt.id);
                         }
                       },
                     ),
@@ -334,11 +388,7 @@ class _SyncStatusBadge extends StatelessWidget {
       _ => (AppStatusTone.error, l10n.syncStatusFailed),
     };
 
-    return AppStatusBadge(
-      label: label,
-      tone: tone,
-      animate: false,
-    );
+    return AppStatusBadge(label: label, tone: tone, animate: false);
   }
 }
 

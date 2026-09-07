@@ -1,8 +1,101 @@
 import 'package:stock_count/core/network/authenticated_http_client.dart';
 import '../../domain/repositories/admin_repository.dart';
 
-class AdminUserSummary {
+class AdminCompanySummary {
+  const AdminCompanySummary({
+    required this.id,
+    required this.name,
+    this.legalName,
+    this.taxNumber,
+    this.phone,
+    this.email,
+    this.address,
+    this.status = 'active',
+    this.createdAt,
+  });
 
+  final String id;
+  final String name;
+  final String? legalName;
+  final String? taxNumber;
+  final String? phone;
+  final String? email;
+  final String? address;
+  final String status;
+  final DateTime? createdAt;
+
+  bool get isActive => status == 'active';
+
+  factory AdminCompanySummary.fromJson(Map<String, dynamic> json) {
+    return AdminCompanySummary(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      legalName: json['legal_name'] as String?,
+      taxNumber: json['tax_number'] as String?,
+      phone: json['phone'] as String?,
+      email: json['email'] as String?,
+      address: json['address'] as String?,
+      status: json['status'] as String? ?? 'active',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? ''),
+    );
+  }
+}
+
+class AdminBranchSummary {
+  const AdminBranchSummary({
+    required this.id,
+    required this.companyId,
+    required this.name,
+    this.parentBranchId,
+    this.code,
+    this.phone,
+    this.email,
+    this.address,
+    this.status = 'active',
+    this.assignedUserIds = const [],
+    this.createdAt,
+  });
+
+  final String id;
+  final String companyId;
+  final String name;
+  final String? parentBranchId;
+  final String? code;
+  final String? phone;
+  final String? email;
+  final String? address;
+  final String status;
+  final List<String> assignedUserIds;
+  final DateTime? createdAt;
+
+  bool get isActive => status == 'active';
+  bool get isRoot => parentBranchId == null || parentBranchId!.trim().isEmpty;
+
+  factory AdminBranchSummary.fromJson(Map<String, dynamic> json) {
+    final users = json['assigned_user_ids'];
+    final parsedUsers = users is List
+        ? [
+            for (final u in users)
+              if (u is String) u,
+          ]
+        : const <String>[];
+    return AdminBranchSummary(
+      id: json['id'] as String? ?? '',
+      companyId: json['company_id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      parentBranchId: json['parent_branch_id'] as String?,
+      code: json['code'] as String?,
+      phone: json['phone'] as String?,
+      email: json['email'] as String?,
+      address: json['address'] as String?,
+      status: json['status'] as String? ?? 'active',
+      assignedUserIds: parsedUsers,
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? ''),
+    );
+  }
+}
+
+class AdminUserSummary {
   const AdminUserSummary({
     required this.id,
     required this.name,
@@ -31,6 +124,43 @@ class AdminUserSummary {
   }
 }
 
+class UserCompanyMembership {
+  const UserCompanyMembership({
+    required this.id,
+    required this.userId,
+    required this.companyId,
+    this.companyName,
+    this.roleId,
+    this.roleName,
+    this.status = 'active',
+    this.createdAt,
+  });
+
+  final String id;
+  final String userId;
+  final String companyId;
+  final String? companyName;
+  final String? roleId;
+  final String? roleName;
+  final String status;
+  final DateTime? createdAt;
+
+  bool get isActive => status == 'active';
+
+  factory UserCompanyMembership.fromJson(Map<String, dynamic> json) {
+    return UserCompanyMembership(
+      id: json['id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '',
+      companyId: json['company_id'] as String? ?? '',
+      companyName: json['company_name'] as String?,
+      roleId: json['role_id'] as String?,
+      roleName: json['role_name'] as String?,
+      status: json['status'] as String? ?? 'active',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? ''),
+    );
+  }
+}
+
 class AdminRoleSummary {
   const AdminRoleSummary({
     required this.id,
@@ -51,10 +181,15 @@ class AdminRoleSummary {
   int get effectivePermissionCount =>
       permissions.isNotEmpty ? permissions.length : permissionCount;
 
+  List<String> get permissionCodes => permissions;
+
   factory AdminRoleSummary.fromJson(Map<String, dynamic> json) {
     final perms = json['permissions'];
     final parsedPerms = perms is List
-        ? [for (final p in perms) if (p is String) p]
+        ? [
+            for (final p in perms)
+              if (p is String) p,
+          ]
         : const <String>[];
     return AdminRoleSummary(
       id: json['id'] as String? ?? '',
@@ -62,17 +197,14 @@ class AdminRoleSummary {
       description: json['description'] as String?,
       systemRole: json['system_role'] == true,
       permissions: parsedPerms,
-      permissionCount: (json['permission_count'] as num?)?.toInt() ??
-          parsedPerms.length,
+      permissionCount:
+          (json['permission_count'] as num?)?.toInt() ?? parsedPerms.length,
     );
   }
 }
 
 class AdminPermissionInfo {
-  const AdminPermissionInfo({
-    required this.code,
-    this.description,
-  });
+  const AdminPermissionInfo({required this.code, this.description});
 
   final String code;
   final String? description;
@@ -144,7 +276,6 @@ class AdminDeviceSummary {
 /// Online-only admin API client (users / roles). Backend enforces authorization.
 class AdminApiRepository implements AdminRepository {
   AdminApiRepository(this._http);
-
 
   final AuthenticatedHttpClient _http;
 
@@ -223,6 +354,68 @@ class AdminApiRepository implements AdminRepository {
   }
 
   @override
+  Future<List<UserCompanyMembership>> listUserCompanyMemberships(
+    String userId,
+  ) async {
+    final response = await _http.get(
+      '/api/v1/users/$userId/company-memberships',
+    );
+    final data = _http.decodeDataList(response);
+    return [
+      for (final item in data)
+        if (item is Map)
+          UserCompanyMembership.fromJson(Map<String, dynamic>.from(item)),
+    ];
+  }
+
+  @override
+  Future<UserCompanyMembership> assignUserToCompany({
+    required String userId,
+    required String companyId,
+    String? roleId,
+    String status = 'active',
+  }) async {
+    final response = await _http.post(
+      '/api/v1/users/$userId/company-memberships',
+      body: {
+        'company_id': companyId,
+        if (roleId != null && roleId.isNotEmpty) 'role_id': roleId,
+        'status': status,
+      },
+    );
+    final data = _http.decodeData(response);
+    return UserCompanyMembership.fromJson(data);
+  }
+
+  @override
+  Future<void> removeUserFromCompany({
+    required String userId,
+    required String companyId,
+  }) async {
+    final response = await _http.delete(
+      '/api/v1/users/$userId/company-memberships/$companyId',
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
+  @override
+  Future<void> setUserCompanyMembershipStatus({
+    required String userId,
+    required String companyId,
+    required String status,
+  }) async {
+    final response = await _http.patch(
+      '/api/v1/users/$userId/company-memberships/$companyId',
+      body: {'status': status},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
+  @override
   Future<List<AdminRoleSummary>> listRoles() async {
     final response = await _http.get('/api/v1/roles');
     final data = _http.decodeDataList(response);
@@ -293,6 +486,31 @@ class AdminApiRepository implements AdminRepository {
   }
 
   @override
+  Future<void> assignRoleToUser({
+    required String userId,
+    required String roleId,
+  }) async {
+    final response = await _http.post(
+      '/api/v1/users/$userId/roles',
+      body: {'role_id': roleId},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
+  @override
+  Future<void> removeRoleFromUser({
+    required String userId,
+    required String roleId,
+  }) async {
+    final response = await _http.delete('/api/v1/users/$userId/roles/$roleId');
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
+  @override
   Future<List<AdminPermissionInfo>> listPermissions() async {
     final response = await _http.get('/api/v1/permissions');
     final data = _http.decodeDataList(response);
@@ -308,6 +526,241 @@ class AdminApiRepository implements AdminRepository {
   Future<List<String>> listPermissionCodes() async {
     final perms = await listPermissions();
     return [for (final p in perms) p.code];
+  }
+
+  @override
+  Future<List<AdminCompanySummary>> listCompanies() async {
+    final response = await _http.get('/api/v1/companies');
+    final data = _http.decodeDataList(response);
+    return [
+      for (final item in data)
+        if (item is Map)
+          AdminCompanySummary.fromJson(Map<String, dynamic>.from(item)),
+    ];
+  }
+
+  @override
+  Future<AdminCompanySummary> getCompany(String companyId) async {
+    final response = await _http.get('/api/v1/companies/$companyId');
+    final data = _http.decodeData(response);
+    return AdminCompanySummary.fromJson(data);
+  }
+
+  @override
+  Future<AdminCompanySummary> createCompany({
+    required String name,
+    String? legalName,
+    String? taxNumber,
+    String? phone,
+    String? email,
+    String? address,
+    String status = 'active',
+  }) async {
+    final response = await _http.post(
+      '/api/v1/companies',
+      body: {
+        'name': name.trim(),
+        if (legalName != null && legalName.trim().isNotEmpty)
+          'legal_name': legalName.trim(),
+        if (taxNumber != null && taxNumber.trim().isNotEmpty)
+          'tax_number': taxNumber.trim(),
+        if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+        if (email != null && email.trim().isNotEmpty)
+          'email': email.trim().toLowerCase(),
+        if (address != null && address.trim().isNotEmpty)
+          'address': address.trim(),
+        'status': status,
+      },
+    );
+    final data = _http.decodeData(response);
+    return AdminCompanySummary.fromJson(data);
+  }
+
+  @override
+  Future<AdminCompanySummary> updateCompany({
+    required String companyId,
+    String? name,
+    String? legalName,
+    String? taxNumber,
+    String? phone,
+    String? email,
+    String? address,
+    String? status,
+  }) async {
+    final response = await _http.patch(
+      '/api/v1/companies/$companyId',
+      body: {
+        if (name != null) 'name': name.trim(),
+        if (legalName != null) 'legal_name': legalName.trim(),
+        if (taxNumber != null) 'tax_number': taxNumber.trim(),
+        if (phone != null) 'phone': phone.trim(),
+        if (email != null) 'email': email.trim().toLowerCase(),
+        if (address != null) 'address': address.trim(),
+        if (status != null) 'status': status,
+      },
+    );
+    final data = _http.decodeData(response);
+    return AdminCompanySummary.fromJson(data);
+  }
+
+  @override
+  Future<void> setCompanyStatus({
+    required String companyId,
+    required String status,
+  }) async {
+    await updateCompany(companyId: companyId, status: status);
+  }
+
+  @override
+  Future<List<AdminBranchSummary>> listBranches() async {
+    final response = await _http.get('/api/v1/branches');
+    final data = _http.decodeDataList(response);
+    return [
+      for (final item in data)
+        if (item is Map)
+          AdminBranchSummary.fromJson(Map<String, dynamic>.from(item)),
+    ];
+  }
+
+  @override
+  Future<AdminBranchSummary> getBranch(String branchId) async {
+    final response = await _http.get('/api/v1/branches/$branchId');
+    final data = _http.decodeData(response);
+    return AdminBranchSummary.fromJson(data);
+  }
+
+  @override
+  Future<AdminBranchSummary> createBranch({
+    required String name,
+    String? parentBranchId,
+    String? code,
+    String? phone,
+    String? email,
+    String? address,
+    String status = 'active',
+    List<String> assignedUserIds = const [],
+  }) async {
+    final response = await _http.post(
+      '/api/v1/branches',
+      body: {
+        'name': name.trim(),
+        if (parentBranchId != null && parentBranchId.trim().isNotEmpty)
+          'parent_branch_id': parentBranchId.trim(),
+        if (code != null && code.trim().isNotEmpty) 'code': code.trim(),
+        if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+        if (email != null && email.trim().isNotEmpty)
+          'email': email.trim().toLowerCase(),
+        if (address != null && address.trim().isNotEmpty)
+          'address': address.trim(),
+        'status': status,
+        'assigned_user_ids': assignedUserIds,
+      },
+    );
+    final data = _http.decodeData(response);
+    return AdminBranchSummary.fromJson(data);
+  }
+
+  @override
+  Future<AdminBranchSummary> updateBranch({
+    required String branchId,
+    String? name,
+    String? parentBranchId,
+    String? code,
+    String? phone,
+    String? email,
+    String? address,
+    String? status,
+    List<String>? assignedUserIds,
+  }) async {
+    final response = await _http.patch(
+      '/api/v1/branches/$branchId',
+      body: {
+        if (name != null) 'name': name.trim(),
+        if (parentBranchId != null) 'parent_branch_id': parentBranchId.trim(),
+        if (code != null) 'code': code.trim(),
+        if (phone != null) 'phone': phone.trim(),
+        if (email != null) 'email': email.trim().toLowerCase(),
+        if (address != null) 'address': address.trim(),
+        if (status != null) 'status': status,
+        if (assignedUserIds != null) 'assigned_user_ids': assignedUserIds,
+      },
+    );
+    final data = _http.decodeData(response);
+    return AdminBranchSummary.fromJson(data);
+  }
+
+  @override
+  Future<void> setBranchStatus({
+    required String branchId,
+    required String status,
+  }) async {
+    await updateBranch(branchId: branchId, status: status);
+  }
+
+  @override
+  Future<void> assignUserToBranch({
+    required String branchId,
+    required String userId,
+  }) async {
+    final response = await _http.post(
+      '/api/v1/branches/$branchId/users',
+      body: {'user_id': userId},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
+  @override
+  Future<void> removeUserFromBranch({
+    required String branchId,
+    required String userId,
+  }) async {
+    final response = await _http.delete(
+      '/api/v1/branches/$branchId/users/$userId',
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getCompanySettings() async {
+    final response = await _http.get('/api/v1/company-settings');
+    final data = _http.decodeData(response);
+    return Map<String, dynamic>.from(data);
+  }
+
+  @override
+  Future<void> updateCompanySettings(Map<String, dynamic> settings) async {
+    final response = await _http.patch(
+      '/api/v1/company-settings',
+      body: settings,
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getModuleSettings(String moduleId) async {
+    final response = await _http.get('/api/v1/module-settings/$moduleId');
+    final data = _http.decodeData(response);
+    return Map<String, dynamic>.from(data);
+  }
+
+  @override
+  Future<void> updateModuleSettings(
+    String moduleId,
+    Map<String, dynamic> settings,
+  ) async {
+    final response = await _http.patch(
+      '/api/v1/module-settings/$moduleId',
+      body: settings,
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
   }
 
   @override

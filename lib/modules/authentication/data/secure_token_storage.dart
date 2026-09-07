@@ -13,10 +13,11 @@ import '../../../core/network/token_store.dart';
 /// or the general settings Hive box. The Hive fallback is AES-encrypted.
 class SecureTokenStorage implements TokenStore {
   SecureTokenStorage({FlutterSecureStorage? secureStorage})
-      : _secure = secureStorage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+    : _secure =
+          secureStorage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          );
 
   static const _accessKey = 'auth_access_token';
   static const _refreshKey = 'auth_refresh_token';

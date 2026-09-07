@@ -206,7 +206,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         continue;
       }
       final uuid = generateUuidV4();
-      final name = _defaultSectionNamesAr[section] ??
+      final name =
+          _defaultSectionNamesAr[section] ??
           _defaultSectionNamesEn[section] ??
           section.name;
       await _db
@@ -326,22 +327,24 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       if (sectionUuid == null) continue;
       final existingKinds = leavesBySectionAndType[sectionUuid] ?? const {};
       if (existingKinds.contains(seed.bookType)) continue;
-      await _db.into(_db.voucherBooks).insert(
-        VoucherBooksCompanion.insert(
-          uuid: generateUuidV4(),
-          parentId: Value(sectionUuid),
-          name: seed.nameAr,
-          bookType: seed.bookType.storageValue,
-          isGroup: const Value(false),
-          nextNumber: Value(seed.currentNumber),
-          endNumber: Value(seed.endNumber),
-          isActive: const Value(true),
-          notes: Value(seed.nameEn),
-          createdAt: nowMs,
-          updatedAt: nowMs,
-          companyId: Value(_currentCompanyId),
-        ),
-      );
+      await _db
+          .into(_db.voucherBooks)
+          .insert(
+            VoucherBooksCompanion.insert(
+              uuid: generateUuidV4(),
+              parentId: Value(sectionUuid),
+              name: seed.nameAr,
+              bookType: seed.bookType.storageValue,
+              isGroup: const Value(false),
+              nextNumber: Value(seed.currentNumber),
+              endNumber: Value(seed.endNumber),
+              isActive: const Value(true),
+              notes: Value(seed.nameEn),
+              createdAt: nowMs,
+              updatedAt: nowMs,
+              companyId: Value(_currentCompanyId),
+            ),
+          );
       (leavesBySectionAndType[sectionUuid] ??= {}).add(seed.bookType);
     }
   }
@@ -414,7 +417,9 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     await _assertParentValid(draft);
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
     final notes = draft.notes?.trim();
-    await (_db.update(_db.voucherBooks)..where((t) => t.id.equals(id) & _scoped(t))).write(
+    await (_db.update(
+      _db.voucherBooks,
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       VoucherBooksCompanion(
         parentId: Value(draft.isGroup ? null : draft.parentId?.trim()),
         name: Value(draft.name.trim()),
@@ -447,7 +452,9 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         );
       }
     }
-    await (_db.delete(_db.voucherBooks)..where((t) => t.id.equals(id) & _scoped(t))).go();
+    await (_db.delete(
+      _db.voucherBooks,
+    )..where((t) => t.id.equals(id) & _scoped(t))).go();
   }
 
   @override

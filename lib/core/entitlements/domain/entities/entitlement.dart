@@ -1,16 +1,6 @@
-enum EntitlementTier {
-  free,
-  premium,
-  trial,
-  enterprise,
-}
+enum EntitlementTier { free, premium, trial, enterprise }
 
-enum EntitlementStatus {
-  active,
-  expired,
-  grace,
-  cancelled,
-}
+enum EntitlementStatus { active, expired, grace, cancelled }
 
 enum EntitlementCapability {
   sync,
@@ -22,11 +12,7 @@ enum EntitlementCapability {
   cloudStorage,
 }
 
-enum EntitlementSource {
-  localDefault,
-  cachedServer,
-  activeServer,
-}
+enum EntitlementSource { localDefault, cachedServer, activeServer }
 
 /// Domain entity representing a company's purchased capabilities and subscription status.
 class Entitlement {
@@ -110,14 +96,8 @@ class Entitlement {
         'reports',
         'receipts_payments',
       },
-      limits: const {
-        'max_devices': 99,
-        'max_users': 99,
-      },
-      usage: const {
-        'active_devices': 1,
-        'active_users': 1,
-      },
+      limits: const {'max_devices': 99, 'max_users': 99},
+      usage: const {'active_devices': 1, 'active_users': 1},
       source: EntitlementSource.localDefault,
       lastVerifiedAt: DateTime.now().toUtc(),
     );
@@ -139,7 +119,8 @@ class Entitlement {
       planId: planId ?? 'plan_starter',
       tier: EntitlementTier.premium,
       status: EntitlementStatus.active,
-      capabilities: capabilities ??
+      capabilities:
+          capabilities ??
           const {
             EntitlementCapability.sync,
             EntitlementCapability.cloudBackup,
@@ -212,24 +193,25 @@ class Entitlement {
   }
 
   Map<String, dynamic> toJson() => {
-        'companyId': companyId,
-        'planId': planId,
-        'tier': tier.name,
-        'status': status.name,
-        'capabilities': capabilities.map((c) => c.name).toList(),
-        'packageCodes': packageCodes.toList(),
-        'limits': limits,
-        'usage': usage,
-        'source': source.name,
-        'lastVerifiedAt': lastVerifiedAt.toIso8601String(),
-        'validFrom': validFrom?.toIso8601String(),
-        'validUntil': validUntil?.toIso8601String(),
-        'graceUntil': graceUntil?.toIso8601String(),
-      };
+    'companyId': companyId,
+    'planId': planId,
+    'tier': tier.name,
+    'status': status.name,
+    'capabilities': capabilities.map((c) => c.name).toList(),
+    'packageCodes': packageCodes.toList(),
+    'limits': limits,
+    'usage': usage,
+    'source': source.name,
+    'lastVerifiedAt': lastVerifiedAt.toIso8601String(),
+    'validFrom': validFrom?.toIso8601String(),
+    'validUntil': validUntil?.toIso8601String(),
+    'graceUntil': graceUntil?.toIso8601String(),
+  };
 
   factory Entitlement.fromJson(Map<String, dynamic> json) {
     final capList = json['capabilities'] as List? ?? [];
-    final pkgList = json['package_codes'] ?? json['packageCodes'] as List? ?? [];
+    final pkgList =
+        json['package_codes'] ?? json['packageCodes'] as List? ?? [];
     final rawLimits = json['limits'] as Map? ?? {};
     final rawUsage = json['usage'] as Map? ?? {};
 
@@ -257,7 +239,10 @@ class Entitlement {
         (e) => e.name == json['tier'],
         orElse: () {
           final t = (json['tier'] as String?)?.toLowerCase();
-          if (t == 'business' || t == 'starter' || t == 'commercial' || t == 'premium') {
+          if (t == 'business' ||
+              t == 'starter' ||
+              t == 'commercial' ||
+              t == 'premium') {
             return EntitlementTier.premium;
           }
           return EntitlementTier.free;
@@ -285,16 +270,25 @@ class Entitlement {
         (e) => e.name == json['source'],
         orElse: () => EntitlementSource.localDefault,
       ),
-      lastVerifiedAt: DateTime.tryParse(json['lastVerifiedAt'] ?? json['verified_at'] as String? ?? '') ??
+      lastVerifiedAt:
+          DateTime.tryParse(
+            json['lastVerifiedAt'] ?? json['verified_at'] as String? ?? '',
+          ) ??
           DateTime.now().toUtc(),
       validFrom: json['validFrom'] != null || json['valid_from'] != null
-          ? DateTime.tryParse((json['validFrom'] ?? json['valid_from']) as String)
+          ? DateTime.tryParse(
+              (json['validFrom'] ?? json['valid_from']) as String,
+            )
           : null,
       validUntil: json['validUntil'] != null || json['valid_until'] != null
-          ? DateTime.tryParse((json['validUntil'] ?? json['valid_until']) as String)
+          ? DateTime.tryParse(
+              (json['validUntil'] ?? json['valid_until']) as String,
+            )
           : null,
       graceUntil: json['graceUntil'] != null || json['grace_until'] != null
-          ? DateTime.tryParse((json['graceUntil'] ?? json['grace_until']) as String)
+          ? DateTime.tryParse(
+              (json['graceUntil'] ?? json['grace_until']) as String,
+            )
           : null,
     );
   }

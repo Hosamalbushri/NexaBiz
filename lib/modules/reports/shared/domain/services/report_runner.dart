@@ -15,10 +15,7 @@ class ReportRunner {
     required String fileName,
   }) async {
     try {
-      final bytes = await definition.build(
-        context: context,
-        payload: payload,
-      );
+      final bytes = await definition.build(context: context, payload: payload);
       if (bytes.isEmpty) {
         throw const ReportException(ReportException.generationFailed);
       }

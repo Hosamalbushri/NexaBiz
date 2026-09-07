@@ -19,18 +19,17 @@ import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
 
 class StockReceiptDetailsPage extends ConsumerStatefulWidget {
-  const StockReceiptDetailsPage({
-    super.key,
-    required this.receiptId,
-  });
+  const StockReceiptDetailsPage({super.key, required this.receiptId});
 
   final String receiptId;
 
   @override
-  ConsumerState<StockReceiptDetailsPage> createState() => _StockReceiptDetailsPageState();
+  ConsumerState<StockReceiptDetailsPage> createState() =>
+      _StockReceiptDetailsPageState();
 }
 
-class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPage> {
+class _StockReceiptDetailsPageState
+    extends ConsumerState<StockReceiptDetailsPage> {
   bool _isProcessing = false;
 
   Future<void> _handlePost(StockReceipt receipt) async {
@@ -77,7 +76,10 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
       }
     } catch (e) {
       if (mounted) {
-        final errorMsg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+        final errorMsg = e.toString().replaceFirst(
+          RegExp(r'^Exception:\s*'),
+          '',
+        );
         final details = StockPostingErrorDetails.fromReason(
           context: context,
           reason: errorMsg,
@@ -125,7 +127,10 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ أثناء إلغاء الترحيل: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('خطأ أثناء إلغاء الترحيل: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -170,14 +175,19 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت تأكد من حذف أمر التوريد ${receipt.receiptNumber}؟'),
+        content: Text(
+          'هل أنت تأكد من حذف أمر التوريد ${receipt.receiptNumber}؟',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('إلغاء'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('حذف'),
           ),
@@ -230,12 +240,18 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
           );
         }
 
-        final dateStr = '${receipt.receiptDate.year}-${receipt.receiptDate.month.toString().padLeft(2, '0')}-${receipt.receiptDate.day.toString().padLeft(2, '0')}';
-        final totalCostSum = receipt.lines.fold(0.0, (sum, line) => sum + line.totalCost);
-        final supplierName = (receipt.supplier != null && receipt.supplier!.trim().isNotEmpty)
+        final dateStr =
+            '${receipt.receiptDate.year}-${receipt.receiptDate.month.toString().padLeft(2, '0')}-${receipt.receiptDate.day.toString().padLeft(2, '0')}';
+        final totalCostSum = receipt.lines.fold(
+          0.0,
+          (sum, line) => sum + line.totalCost,
+        );
+        final supplierName =
+            (receipt.supplier != null && receipt.supplier!.trim().isNotEmpty)
             ? receipt.supplier!.trim()
             : 'غير محدد';
-        final warehouseName = (receipt.warehouse != null && receipt.warehouse!.trim().isNotEmpty)
+        final warehouseName =
+            (receipt.warehouse != null && receipt.warehouse!.trim().isNotEmpty)
             ? receipt.warehouse!.trim()
             : 'المستودع الرئيسي';
 
@@ -246,7 +262,9 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
             showBackButton: true,
             actions: [
               CustomAppBarAction(
-                icon: receipt.isPosted ? Icons.lock_outlined : Icons.edit_outlined,
+                icon: receipt.isPosted
+                    ? Icons.lock_outlined
+                    : Icons.edit_outlined,
                 tooltip: receipt.isPosted ? 'تعديل (مرحّل)' : 'تعديل',
                 onPressed: _isProcessing ? null : () => _handleEdit(receipt),
               ),
@@ -273,7 +291,11 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                       value: 'post',
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.green,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text('ترحيل المستند'),
                         ],
@@ -295,7 +317,11 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                          Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text('حذف المستند'),
                         ],
@@ -330,7 +356,9 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                 ),
                 child: receipt.isDraft
                     ? FilledButton.icon(
-                        onPressed: _isProcessing ? null : () => _handlePost(receipt),
+                        onPressed: _isProcessing
+                            ? null
+                            : () => _handlePost(receipt),
                         icon: const Icon(Icons.check_circle_outline),
                         label: const Text('ترحيل أمر التوريد'),
                         style: FilledButton.styleFrom(
@@ -340,7 +368,9 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                         ),
                       )
                     : OutlinedButton.icon(
-                        onPressed: _isProcessing ? null : () => _handleUnpost(receipt),
+                        onPressed: _isProcessing
+                            ? null
+                            : () => _handleUnpost(receipt),
                         icon: const Icon(Icons.undo),
                         label: const Text('إلغاء ترحيل أمر التوريد'),
                         style: OutlinedButton.styleFrom(
@@ -380,7 +410,10 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.lock_rounded, color: Colors.amber.shade900),
+                          Icon(
+                            Icons.lock_rounded,
+                            color: Colors.amber.shade900,
+                          ),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
@@ -493,7 +526,8 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                   ),
 
                   // Notes Card
-                  if (receipt.notes != null && receipt.notes!.trim().isNotEmpty) ...[
+                  if (receipt.notes != null &&
+                      receipt.notes!.trim().isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.md),
                     _SurfaceCard(
                       child: Column(
@@ -558,9 +592,7 @@ class _DocumentHero extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -759,14 +791,17 @@ class _MetaTile extends StatelessWidget {
                   value,
                   maxLines: compact ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
-                  style: (compact
-                          ? theme.textTheme.labelLarge
-                          : theme.textTheme.titleSmall)
-                      ?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: emphasized ? scheme.primary : scheme.onSurface,
-                    height: 1.15,
-                  ),
+                  style:
+                      (compact
+                              ? theme.textTheme.labelLarge
+                              : theme.textTheme.titleSmall)
+                          ?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: emphasized
+                                ? scheme.primary
+                                : scheme.onSurface,
+                            height: 1.15,
+                          ),
                 ),
               ],
             ),
@@ -795,9 +830,7 @@ class _ProductsReadonlyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -879,9 +912,7 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Column(
         children: [

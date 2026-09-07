@@ -19,7 +19,6 @@ abstract class InventoryRepository {
     void Function(int processed, int total)? onProgress,
   });
 
-
   Future<void> clear();
 
   Future<List<InventoryItem>> search(

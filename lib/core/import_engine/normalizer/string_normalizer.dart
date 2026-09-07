@@ -22,9 +22,7 @@ class StringNormalizer {
       normalizedValue: cleaned,
       isNormalized: isChanged,
       isNull: false,
-      normalizationMetadata: {
-        if (isChanged) 'trimmedWhitespace': true,
-      },
+      normalizationMetadata: {if (isChanged) 'trimmedWhitespace': true},
     );
   }
 }

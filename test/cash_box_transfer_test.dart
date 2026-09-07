@@ -55,8 +55,7 @@ class _RecordingJournals implements JournalRepository {
   Future<JournalEntry?> findBySource({
     required String sourceType,
     required String sourceId,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
   Future<void> softDeleteBySource({
@@ -78,8 +77,7 @@ class _RecordingJournals implements JournalRepository {
     String? query,
     int? limit,
     int? afterId,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<AccountLedgerMovement>> listMovementsForAccount({
@@ -90,8 +88,7 @@ class _RecordingJournals implements JournalRepository {
     bool? isPosted,
     int? limit,
     AccountLedgerCursor? after,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<String>> listCurrencyCodesForAccount({
@@ -99,8 +96,7 @@ class _RecordingJournals implements JournalRepository {
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<double> sumNetBefore({
@@ -108,31 +104,27 @@ class _RecordingJournals implements JournalRepository {
     required DateTime beforeDate,
     String? currencyCode,
     bool? isPosted,
-  }) async =>
-      0;
+  }) async => 0;
 
   @override
   Future<List<MonetaryFxPositionRow>> listMonetaryFxPositions({
     required DateTime asOfInclusive,
     required String baseCurrencyCode,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<TrialBalanceRow>> listTrialBalance({
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<JournalBookLineRow>> listJournalBookLines({
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
-  }) async =>
-      const [];
+  }) async => const [];
 }
 
 void main() {

@@ -6,18 +6,27 @@ import 'package:stock_count/core/entitlements/presentation/providers/entitlement
 
 void main() {
   group('Phase 14 — Company Switching & Context Isolation Tests', () {
-    test('Switching from Premium Company A to Free Company B immediately revokes active capabilities', () async {
-      final container = ProviderContainer();
-      final service = container.read(entitlementServiceProvider);
+    test(
+      'Switching from Premium Company A to Free Company B immediately revokes active capabilities',
+      () async {
+        final container = ProviderContainer();
+        final service = container.read(entitlementServiceProvider);
 
-      await service.setEntitlement(Entitlement.premiumActive('company_A'));
-      expect(service.currentEntitlement.companyId, equals('company_A'));
-      expect(service.currentEntitlement.hasCapability(EntitlementCapability.sync), isTrue);
+        await service.setEntitlement(Entitlement.premiumActive('company_A'));
+        expect(service.currentEntitlement.companyId, equals('company_A'));
+        expect(
+          service.currentEntitlement.hasCapability(EntitlementCapability.sync),
+          isTrue,
+        );
 
-      await service.invalidateCache('company_B');
-      expect(service.currentEntitlement.companyId, equals('company_B'));
-      expect(service.currentEntitlement.tier, equals(EntitlementTier.free));
-      expect(service.currentEntitlement.hasCapability(EntitlementCapability.sync), isFalse);
-    });
+        await service.invalidateCache('company_B');
+        expect(service.currentEntitlement.companyId, equals('company_B'));
+        expect(service.currentEntitlement.tier, equals(EntitlementTier.free));
+        expect(
+          service.currentEntitlement.hasCapability(EntitlementCapability.sync),
+          isFalse,
+        );
+      },
+    );
   });
 }

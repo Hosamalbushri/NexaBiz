@@ -120,10 +120,7 @@ class AccountStatementReportDefinition
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text(
-                      generated,
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
+                    pw.Text(generated, style: const pw.TextStyle(fontSize: 8)),
                     pw.Text(
                       '${ctx.pageNumber}',
                       style: const pw.TextStyle(fontSize: 8),
@@ -244,9 +241,7 @@ class AccountStatementReportDefinition
           pw.Container(
             width: 28,
             height: 30,
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(left: _line),
-            ),
+            decoration: const pw.BoxDecoration(border: pw.Border(left: _line)),
           ),
         ],
       ),
@@ -473,8 +468,7 @@ class AccountStatementReportDefinition
       for (var i = 0; i < widths.length; i++) i: widths[widths.length - 1 - i],
     };
 
-    final code =
-        (balance.displayCurrencyCode ?? balance.currencyCode).trim();
+    final code = (balance.displayCurrencyCode ?? balance.currencyCode).trim();
     final words = (balance.amountInWords ?? '').trim();
 
     return pw.Column(

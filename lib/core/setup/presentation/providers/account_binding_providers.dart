@@ -10,15 +10,21 @@ final setupAccountLookupPortProvider = Provider<SetupAccountLookupPort>((ref) {
 });
 
 /// Provider for the persistent [AccountBindingRepository].
-final accountBindingRepositoryProvider = Provider<AccountBindingRepository>((ref) {
+final accountBindingRepositoryProvider = Provider<AccountBindingRepository>((
+  ref,
+) {
   return HiveAccountBindingRepository();
 });
 
 /// Provider for [AccountBindingResolver].
-final accountBindingResolverProvider = Provider.family<AccountBindingResolver, SetupAccountLookupPort>((ref, lookupPort) {
-  final repository = ref.watch(accountBindingRepositoryProvider);
-  return AccountBindingResolver(
-    accountLookupPort: lookupPort,
-    bindingRepository: repository,
-  );
-});
+final accountBindingResolverProvider =
+    Provider.family<AccountBindingResolver, SetupAccountLookupPort>((
+      ref,
+      lookupPort,
+    ) {
+      final repository = ref.watch(accountBindingRepositoryProvider);
+      return AccountBindingResolver(
+        accountLookupPort: lookupPort,
+        bindingRepository: repository,
+      );
+    });

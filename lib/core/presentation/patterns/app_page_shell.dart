@@ -47,7 +47,8 @@ class AppPageShell extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: backgroundColor ?? theme.colorScheme.surfaceContainerLowest,
+      backgroundColor:
+          backgroundColor ?? theme.colorScheme.surfaceContainerLowest,
       appBar: appBar,
       body: SafeArea(child: content),
       bottomNavigationBar: bottomNavigationBar,

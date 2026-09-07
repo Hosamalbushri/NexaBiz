@@ -55,8 +55,9 @@ class AccountImportOpeningJournal {
           ? balance.accountCode
           : balance.accountName.trim();
       if (debit > 0) {
-        netByCurrency[currency] =
-            JournalMoney.round((netByCurrency[currency] ?? 0) + debit);
+        netByCurrency[currency] = JournalMoney.round(
+          (netByCurrency[currency] ?? 0) + debit,
+        );
         lines.add(
           JournalLineDraft(
             accountUuid: balance.accountId,
@@ -68,8 +69,9 @@ class AccountImportOpeningJournal {
           ),
         );
       } else {
-        netByCurrency[currency] =
-            JournalMoney.round((netByCurrency[currency] ?? 0) - credit);
+        netByCurrency[currency] = JournalMoney.round(
+          (netByCurrency[currency] ?? 0) - credit,
+        );
         lines.add(
           JournalLineDraft(
             accountUuid: balance.accountId,

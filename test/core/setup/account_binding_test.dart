@@ -14,12 +14,18 @@ class FakeLookupPort implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return [];
   }
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return [];
   }
 }
@@ -120,41 +126,50 @@ void main() {
       expect(result.account, isNull);
     });
 
-    test('3. Missing required account -> setup status evaluated as needsAttention/notConfigured', () async {
-      final result = await resolver.resolveRequirement(
-        companyId: companyA,
-        requirement: inventoryRequirement,
-      );
-
-      final status = result.isBound
-          ? SetupStatus.configured
-          : (inventoryRequirement.isRequired
-              ? SetupStatus.partiallyConfigured
-              : SetupStatus.notConfigured);
-
-      expect(status, equals(SetupStatus.partiallyConfigured));
-    });
-
-    test('4. Missing required account during transaction -> controlled AccountBindingException thrown', () async {
-      expect(
-        () async => resolver.resolveAccountForTransaction(
+    test(
+      '3. Missing required account -> setup status evaluated as needsAttention/notConfigured',
+      () async {
+        final result = await resolver.resolveRequirement(
           companyId: companyA,
           requirement: inventoryRequirement,
-        ),
-        throwsA(isA<AccountBindingException>()),
-      );
-    });
+        );
 
-    test('5. Account from another company -> rejected with CrossCompanyAccountBindingException', () async {
-      expect(
-        () async => resolver.bindAccount(
-          companyId: companyA,
-          requirement: inventoryRequirement,
-          accountUuid: validAccountB.uuid, // belongs to companyB
-        ),
-        throwsA(isA<CrossCompanyAccountBindingException>()),
-      );
-    });
+        final status = result.isBound
+            ? SetupStatus.configured
+            : (inventoryRequirement.isRequired
+                  ? SetupStatus.partiallyConfigured
+                  : SetupStatus.notConfigured);
+
+        expect(status, equals(SetupStatus.partiallyConfigured));
+      },
+    );
+
+    test(
+      '4. Missing required account during transaction -> controlled AccountBindingException thrown',
+      () async {
+        expect(
+          () async => resolver.resolveAccountForTransaction(
+            companyId: companyA,
+            requirement: inventoryRequirement,
+          ),
+          throwsA(isA<AccountBindingException>()),
+        );
+      },
+    );
+
+    test(
+      '5. Account from another company -> rejected with CrossCompanyAccountBindingException',
+      () async {
+        expect(
+          () async => resolver.bindAccount(
+            companyId: companyA,
+            requirement: inventoryRequirement,
+            accountUuid: validAccountB.uuid, // belongs to companyB
+          ),
+          throwsA(isA<CrossCompanyAccountBindingException>()),
+        );
+      },
+    );
 
     test('6. Stale/Deleted account -> detected as invalidStale', () async {
       await repository.saveBinding(
@@ -177,32 +192,38 @@ void main() {
       expect(result.account, isNull);
     });
 
-    test('7. Bound account UUID persists across repository operations', () async {
-      await resolver.bindAccount(
-        companyId: companyA,
-        requirement: inventoryRequirement,
-        accountUuid: validAccountA.uuid,
-      );
+    test(
+      '7. Bound account UUID persists across repository operations',
+      () async {
+        await resolver.bindAccount(
+          companyId: companyA,
+          requirement: inventoryRequirement,
+          accountUuid: validAccountA.uuid,
+        );
 
-      final bindings = await repository.getBindingsForPackage(
-        companyId: companyA,
-        packageId: 'inventory',
-      );
+        final bindings = await repository.getBindingsForPackage(
+          companyId: companyA,
+          packageId: 'inventory',
+        );
 
-      expect(bindings.length, equals(1));
-      expect(bindings.first.accountUuid, equals('uuid_acc_100'));
-      expect(bindings.first.companyId, equals(companyA));
-    });
+        expect(bindings.length, equals(1));
+        expect(bindings.first.accountUuid, equals('uuid_acc_100'));
+        expect(bindings.first.companyId, equals(companyA));
+      },
+    );
 
-    test('8. Permanent reference uses UUID (no hardcoded account code)', () async {
-      final binding = await resolver.bindAccount(
-        companyId: companyA,
-        requirement: inventoryRequirement,
-        accountUuid: validAccountA.uuid,
-      );
+    test(
+      '8. Permanent reference uses UUID (no hardcoded account code)',
+      () async {
+        final binding = await resolver.bindAccount(
+          companyId: companyA,
+          requirement: inventoryRequirement,
+          accountUuid: validAccountA.uuid,
+        );
 
-      expect(binding.accountUuid, equals(validAccountA.uuid));
-      expect(binding.accountUuid, isNot(equals(validAccountA.accountCode)));
-    });
+        expect(binding.accountUuid, equals(validAccountA.uuid));
+        expect(binding.accountUuid, isNot(equals(validAccountA.accountCode)));
+      },
+    );
   });
 }

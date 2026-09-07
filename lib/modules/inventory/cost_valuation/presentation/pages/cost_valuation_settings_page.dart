@@ -23,7 +23,9 @@ class CostValuationSettingsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: l10n.localeName == 'ar' ? 'تقييم تكلفة المخزون' : 'Inventory Cost Valuation',
+        title: l10n.localeName == 'ar'
+            ? 'تقييم تكلفة المخزون'
+            : 'Inventory Cost Valuation',
         showBackButton: true,
       ),
       body: ListView(
@@ -41,58 +43,99 @@ class CostValuationSettingsPage extends ConsumerWidget {
             ),
           ),
           SettingsGroupLabel(
-            l10n.localeName == 'ar' ? 'طريقة احتساب التكلفة الحالية' : 'Valuation Methods',
+            l10n.localeName == 'ar'
+                ? 'طريقة احتساب التكلفة الحالية'
+                : 'Valuation Methods',
           ),
           _ValuationMethodCard(
             method: CostValuationMethod.fifo,
-            title: l10n.localeName == 'ar' ? 'FIFO - الوارد أولاً يصرف أولاً' : 'FIFO - First In, First Out',
+            title: l10n.localeName == 'ar'
+                ? 'FIFO - الوارد أولاً يصرف أولاً'
+                : 'FIFO - First In, First Out',
             subtitle: l10n.localeName == 'ar'
                 ? 'يتم صرف وتحديد تكلفة المنتجات بناءً على أقدم طبقات تكلفة تم توريدها. يعطي تقييماً دقيقاً للمخزون المتبقي بأسعار السوق الحديثة.'
                 : 'Consumes oldest cost layers first. Provides modern balance sheet valuation.',
             icon: Icons.filter_1_rounded,
             isSelected: currentMethod == CostValuationMethod.fifo,
             onTap: () {
-              ref.read(costValuationMethodProvider.notifier).setMethod(CostValuationMethod.fifo);
-              showAppSnackBar(context, message: l10n.localeName == 'ar' ? 'تم اختيار طريقة FIFO' : 'FIFO method selected', isSuccess: true);
+              ref
+                  .read(costValuationMethodProvider.notifier)
+                  .setMethod(CostValuationMethod.fifo);
+              showAppSnackBar(
+                context,
+                message: l10n.localeName == 'ar'
+                    ? 'تم اختيار طريقة FIFO'
+                    : 'FIFO method selected',
+                isSuccess: true,
+              );
             },
           ),
           const SizedBox(height: AppSpacing.sm),
           _ValuationMethodCard(
             method: CostValuationMethod.lifo,
-            title: l10n.localeName == 'ar' ? 'LIFO - الوارد أخيراً يصرف أولاً' : 'LIFO - Last In, First Out',
+            title: l10n.localeName == 'ar'
+                ? 'LIFO - الوارد أخيراً يصرف أولاً'
+                : 'LIFO - Last In, First Out',
             subtitle: l10n.localeName == 'ar'
                 ? 'يتم صرف المنتجات بناءً على أحدث شحنات تم استلامها، مما يعكس تكلفة البضاعة المباعة وفقاً لأحدث الأسعار.'
                 : 'Consumes newest cost layers first. Matches recent purchase costs with current revenues.',
             icon: Icons.filter_3_rounded,
             isSelected: currentMethod == CostValuationMethod.lifo,
             onTap: () {
-              ref.read(costValuationMethodProvider.notifier).setMethod(CostValuationMethod.lifo);
-              showAppSnackBar(context, message: l10n.localeName == 'ar' ? 'تم اختيار طريقة LIFO' : 'LIFO method selected', isSuccess: true);
+              ref
+                  .read(costValuationMethodProvider.notifier)
+                  .setMethod(CostValuationMethod.lifo);
+              showAppSnackBar(
+                context,
+                message: l10n.localeName == 'ar'
+                    ? 'تم اختيار طريقة LIFO'
+                    : 'LIFO method selected',
+                isSuccess: true,
+              );
             },
           ),
           const SizedBox(height: AppSpacing.sm),
           _ValuationMethodCard(
             method: CostValuationMethod.weightedAverage,
-            title: l10n.localeName == 'ar' ? 'Weighted Average - المتوسط المرجح' : 'Weighted Average',
+            title: l10n.localeName == 'ar'
+                ? 'Weighted Average - المتوسط المرجح'
+                : 'Weighted Average',
             subtitle: l10n.localeName == 'ar'
                 ? 'يحسب متوسط تكلفة للوحدة بناءً على إجمالي تكلفة الطبقات المتاحة مقسوماً على إجمالي الكمية. يقلل من تقلبات الأسعار.'
                 : 'Calculates average unit cost by total layer cost divided by available quantity.',
             icon: Icons.functions_rounded,
             isSelected: currentMethod == CostValuationMethod.weightedAverage,
             onTap: () {
-              ref.read(costValuationMethodProvider.notifier).setMethod(CostValuationMethod.weightedAverage);
-              showAppSnackBar(context, message: l10n.localeName == 'ar' ? 'تم اختيار طريقة المتوسط المرجح' : 'Weighted Average selected', isSuccess: true);
+              ref
+                  .read(costValuationMethodProvider.notifier)
+                  .setMethod(CostValuationMethod.weightedAverage);
+              showAppSnackBar(
+                context,
+                message: l10n.localeName == 'ar'
+                    ? 'تم اختيار طريقة المتوسط المرجح'
+                    : 'Weighted Average selected',
+                isSuccess: true,
+              );
             },
           ),
           const SizedBox(height: AppSpacing.lg),
           SettingsGroupLabel(
-            l10n.localeName == 'ar' ? 'توضيح وحالة التتبع' : 'Valuation Details',
+            l10n.localeName == 'ar'
+                ? 'توضيح وحالة التتبع'
+                : 'Valuation Details',
           ),
           SettingsGroup(
             children: [
               ListTile(
-                leading: const Icon(Icons.verified_outlined, color: Colors.green),
-                title: Text(l10n.localeName == 'ar' ? 'تتبع محرك طبقات التكلفة (Cost Layers Engine)' : 'Cost Layers Engine Active'),
+                leading: const Icon(
+                  Icons.verified_outlined,
+                  color: Colors.green,
+                ),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'تتبع محرك طبقات التكلفة (Cost Layers Engine)'
+                      : 'Cost Layers Engine Active',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'يتم تسريع وتأمين كافة حركات الإيصال الصرف والارتجاع والتحويلات مخزنياً مع تتبع رصيد الطبقات المتبقي'
@@ -130,7 +173,9 @@ class _ValuationMethodCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Material(
-      color: isSelected ? colorScheme.primaryContainer.withValues(alpha: 0.4) : colorScheme.surfaceContainerLow,
+      color: isSelected
+          ? colorScheme.primaryContainer.withValues(alpha: 0.4)
+          : colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -139,7 +184,9 @@ class _ValuationMethodCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             border: Border.all(
-              color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.outlineVariant,
               width: isSelected ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(16),
@@ -148,10 +195,14 @@ class _ValuationMethodCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundColor: isSelected ? colorScheme.primary : colorScheme.surfaceContainerHigh,
+                backgroundColor: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.surfaceContainerHigh,
                 child: Icon(
                   icon,
-                  color: isSelected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+                  color: isSelected
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -163,7 +214,9 @@ class _ValuationMethodCard extends StatelessWidget {
                       title,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+                        color: isSelected
+                            ? colorScheme.primary
+                            : colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),

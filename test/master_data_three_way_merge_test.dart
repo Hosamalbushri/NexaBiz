@@ -45,37 +45,40 @@ void main() {
       expect(result.conflictingFields, isEmpty);
     });
 
-    test('overlapping field edits produce explicit conflict with conflictingFields', () {
-      final base = {
-        'uuid': 'cust-1',
-        'name': 'Original Name',
-        'phone': '111111111',
-      };
+    test(
+      'overlapping field edits produce explicit conflict with conflictingFields',
+      () {
+        final base = {
+          'uuid': 'cust-1',
+          'name': 'Original Name',
+          'phone': '111111111',
+        };
 
-      final local = {
-        'uuid': 'cust-1',
-        'name': 'Name From Device A',
-        'phone': '111111111',
-      };
+        final local = {
+          'uuid': 'cust-1',
+          'name': 'Name From Device A',
+          'phone': '111111111',
+        };
 
-      final remote = {
-        'uuid': 'cust-1',
-        'name': 'Name From Device B',
-        'phone': '111111111',
-      };
+        final remote = {
+          'uuid': 'cust-1',
+          'name': 'Name From Device B',
+          'phone': '111111111',
+        };
 
-      final policy = EntityConflictPolicy.getForEntity('customer');
-      final result = merger.merge(
-        basePayload: base,
-        localPayload: local,
-        remotePayload: remote,
-        policy: policy,
-      );
+        final policy = EntityConflictPolicy.getForEntity('customer');
+        final result = merger.merge(
+          basePayload: base,
+          localPayload: local,
+          remotePayload: remote,
+          policy: policy,
+        );
 
-      expect(result.isSuccess, isFalse);
-      expect(result.mergeStatus, 'requires_user_resolution');
-      expect(result.conflictingFields, contains('name'));
-    });
+        expect(result.isSuccess, isFalse);
+        expect(result.mergeStatus, 'requires_user_resolution');
+        expect(result.conflictingFields, contains('name'));
+      },
+    );
 
     test('never-merge fields (e.g. balance) flag conflict when differing', () {
       final base = {
@@ -108,21 +111,28 @@ void main() {
       expect(result.conflictingFields, contains('balance'));
     });
 
-    test('immutable entity strategy (journal_entry) immediately rejects merge', () {
-      final base = {'uuid': 'j-1', 'isPosted': true};
-      final local = {'uuid': 'j-1', 'isPosted': true, 'voucherNumber': 'J-1'};
-      final remote = {'uuid': 'j-1', 'isPosted': true, 'voucherNumber': 'J-2'};
+    test(
+      'immutable entity strategy (journal_entry) immediately rejects merge',
+      () {
+        final base = {'uuid': 'j-1', 'isPosted': true};
+        final local = {'uuid': 'j-1', 'isPosted': true, 'voucherNumber': 'J-1'};
+        final remote = {
+          'uuid': 'j-1',
+          'isPosted': true,
+          'voucherNumber': 'J-2',
+        };
 
-      final policy = EntityConflictPolicy.getForEntity('journal_entry');
-      final result = merger.merge(
-        basePayload: base,
-        localPayload: local,
-        remotePayload: remote,
-        policy: policy,
-      );
+        final policy = EntityConflictPolicy.getForEntity('journal_entry');
+        final result = merger.merge(
+          basePayload: base,
+          localPayload: local,
+          remotePayload: remote,
+          policy: policy,
+        );
 
-      expect(result.isSuccess, isFalse);
-      expect(result.mergeStatus, 'rejected');
-    });
+        expect(result.isSuccess, isFalse);
+        expect(result.mergeStatus, 'rejected');
+      },
+    );
   });
 }

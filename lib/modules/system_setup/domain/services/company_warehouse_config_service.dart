@@ -94,7 +94,9 @@ class CompanyWarehouseConfigService {
     final companyId = state.companyId;
 
     if (companyId.trim().isEmpty) {
-      throw StateError('Cannot configure warehouse: Active companyId is uninitialized');
+      throw StateError(
+        'Cannot configure warehouse: Active companyId is uninitialized',
+      );
     }
 
     // Validate warehouse invariants
@@ -134,28 +136,31 @@ class CompanyWarehouseConfigService {
     final companyId = state.companyId;
 
     if (companyId.trim().isEmpty) {
-      throw StateError('Cannot configure inventory settings: Active companyId is uninitialized');
+      throw StateError(
+        'Cannot configure inventory settings: Active companyId is uninitialized',
+      );
     }
 
     final existingInventoryConfig = await _initRepository.getInventoryConfig();
     final now = DateTime.now().toUtc();
 
-    final config = (existingInventoryConfig ??
-            CompanyInventoryConfig(
-              companyId: companyId,
-              inventoryBaseCurrencyId: 'YER',
-            ))
-        .copyWith(
-      allowNegativeStock: allowNegativeStock,
-      defaultCostingMethod: defaultCostingMethod.trim(),
-      quantityPrecision: quantityPrecision,
-      costPrecision: costPrecision,
-      currencyPrecision: currencyPrecision,
-      allowReturnsWithoutInvoice: allowReturnsWithoutInvoice,
-      requireStockCountApproval: requireStockCountApproval,
-      autoPostAccountingEntries: autoPostAccountingEntries,
-      updatedAt: now,
-    );
+    final config =
+        (existingInventoryConfig ??
+                CompanyInventoryConfig(
+                  companyId: companyId,
+                  inventoryBaseCurrencyId: 'YER',
+                ))
+            .copyWith(
+              allowNegativeStock: allowNegativeStock,
+              defaultCostingMethod: defaultCostingMethod.trim(),
+              quantityPrecision: quantityPrecision,
+              costPrecision: costPrecision,
+              currencyPrecision: currencyPrecision,
+              allowReturnsWithoutInvoice: allowReturnsWithoutInvoice,
+              requireStockCountApproval: requireStockCountApproval,
+              autoPostAccountingEntries: autoPostAccountingEntries,
+              updatedAt: now,
+            );
 
     await _initRepository.saveInventoryConfig(config);
 

@@ -103,334 +103,387 @@ void main() {
   });
 
   group('ROOT FIX 04 — Stock Return Tenant Isolation & Posted Immutability', () {
-    test('1. Cross-Tenant Read Isolation: Company B cannot read Company A stock returns', () async {
-      activeCompanyId = companyA;
-      final returnAId = generateUuidV4();
-      final returnA = StockReturn(
-        id: returnAId,
-        returnNumber: 'RET-COMP-A-01',
-        returnType: StockReturnType.salesReturn,
-        returnDate: DateTime.now(),
-        companyId: companyA,
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: returnAId,
-            movementType: 'sales_return',
-            itemCode: 'ITEM-1',
-            itemName: 'Item 1',
-            quantity: 5,
-            unitCost: 100,
-            totalCost: 500,
+    test(
+      '1. Cross-Tenant Read Isolation: Company B cannot read Company A stock returns',
+      () async {
+        activeCompanyId = companyA;
+        final returnAId = generateUuidV4();
+        final returnA = StockReturn(
+          id: returnAId,
+          returnNumber: 'RET-COMP-A-01',
+          returnType: StockReturnType.salesReturn,
+          returnDate: DateTime.now(),
+          companyId: companyA,
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: returnAId,
+              movementType: 'sales_return',
+              itemCode: 'ITEM-1',
+              itemName: 'Item 1',
+              quantity: 5,
+              unitCost: 100,
+              totalCost: 500,
+            ),
+          ],
+        );
+
+        await stockReturnsRepo.saveReturn(returnA);
+
+        // Verify Company A can read it
+        final readByA = await stockReturnsRepo.getReturnById(returnAId);
+        expect(readByA, isNotNull);
+        expect(readByA!.returnNumber, equals('RET-COMP-A-01'));
+
+        final allA = await stockReturnsRepo.getAllReturns();
+        expect(allA.length, equals(1));
+
+        // Switch context to Company B
+        activeCompanyId = companyB;
+
+        // Verify Company B CANNOT read it
+        final readByB = await stockReturnsRepo.getReturnById(returnAId);
+        expect(readByB, isNull);
+
+        final allB = await stockReturnsRepo.getAllReturns();
+        expect(allB, isEmpty);
+      },
+    );
+
+    test(
+      '2. Cross-Tenant Update Rejection: Company B saving Company A stock return throws notFound',
+      () async {
+        activeCompanyId = companyA;
+        final returnAId = generateUuidV4();
+        final returnA = StockReturn(
+          id: returnAId,
+          returnNumber: 'RET-COMP-A-02',
+          returnType: StockReturnType.salesReturn,
+          returnDate: DateTime.now(),
+          companyId: companyA,
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: returnAId,
+              movementType: 'sales_return',
+              itemCode: 'ITEM-1',
+              itemName: 'Item 1',
+              quantity: 10,
+              unitCost: 50,
+              totalCost: 500,
+            ),
+          ],
+        );
+
+        await stockReturnsRepo.saveReturn(returnA);
+
+        // Switch context to Company B
+        activeCompanyId = companyB;
+
+        // Attempt to overwrite Company A's return from Company B context
+        final tamperedReturn = returnA.copyWith(
+          partyName: 'Tampered Party by Company B',
+          companyId: companyB,
+        );
+
+        await expectLater(
+          () async => stockReturnsRepo.saveReturn(tamperedReturn),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.notFound,
+            ),
           ),
-        ],
-      );
+        );
 
-      await stockReturnsRepo.saveReturn(returnA);
+        // Verify Company A data was NOT modified
+        activeCompanyId = companyA;
+        final originalCheck = await stockReturnsRepo.getReturnById(returnAId);
+        expect(
+          originalCheck!.partyName,
+          isNot(equals('Tampered Party by Company B')),
+        );
+      },
+    );
 
-      // Verify Company A can read it
-      final readByA = await stockReturnsRepo.getReturnById(returnAId);
-      expect(readByA, isNotNull);
-      expect(readByA!.returnNumber, equals('RET-COMP-A-01'));
+    test(
+      '3. Cross-Tenant Delete Rejection: Company B deleting Company A stock return throws notFound',
+      () async {
+        activeCompanyId = companyA;
+        final returnAId = generateUuidV4();
+        final returnA = StockReturn(
+          id: returnAId,
+          returnNumber: 'RET-COMP-A-03',
+          returnType: StockReturnType.purchaseReturn,
+          returnDate: DateTime.now(),
+          companyId: companyA,
+        );
 
-      final allA = await stockReturnsRepo.getAllReturns();
-      expect(allA.length, equals(1));
+        await stockReturnsRepo.saveReturn(returnA);
 
-      // Switch context to Company B
-      activeCompanyId = companyB;
+        // Switch context to Company B
+        activeCompanyId = companyB;
 
-      // Verify Company B CANNOT read it
-      final readByB = await stockReturnsRepo.getReturnById(returnAId);
-      expect(readByB, isNull);
-
-      final allB = await stockReturnsRepo.getAllReturns();
-      expect(allB, isEmpty);
-    });
-
-    test('2. Cross-Tenant Update Rejection: Company B saving Company A stock return throws notFound', () async {
-      activeCompanyId = companyA;
-      final returnAId = generateUuidV4();
-      final returnA = StockReturn(
-        id: returnAId,
-        returnNumber: 'RET-COMP-A-02',
-        returnType: StockReturnType.salesReturn,
-        returnDate: DateTime.now(),
-        companyId: companyA,
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: returnAId,
-            movementType: 'sales_return',
-            itemCode: 'ITEM-1',
-            itemName: 'Item 1',
-            quantity: 10,
-            unitCost: 50,
-            totalCost: 500,
+        await expectLater(
+          () async => stockReturnsRepo.deleteReturn(returnAId),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.notFound,
+            ),
           ),
-        ],
-      );
+        );
 
-      await stockReturnsRepo.saveReturn(returnA);
+        // Switch back to Company A and verify it is not deleted
+        activeCompanyId = companyA;
+        final checkA = await stockReturnsRepo.getReturnById(returnAId);
+        expect(checkA, isNotNull);
+        expect(checkA!.deletedAt, isNull);
+      },
+    );
 
-      // Switch context to Company B
-      activeCompanyId = companyB;
+    test(
+      '4. Cross-Tenant Post Rejection: Company B posting Company A stock return is rejected',
+      () async {
+        activeCompanyId = companyA;
+        final returnAId = generateUuidV4();
+        final lineUuid = generateUuidV4();
+        final now = DateTime.now();
 
-      // Attempt to overwrite Company A's return from Company B context
-      final tamperedReturn = returnA.copyWith(
-        partyName: 'Tampered Party by Company B',
-        companyId: companyB,
-      );
+        final returnA = StockReturn(
+          id: returnAId,
+          returnNumber: 'RET-COMP-A-04',
+          returnType: StockReturnType.salesReturn,
+          returnDate: now,
+          companyId: companyA,
+          lines: [
+            StockMovementLine(
+              id: lineUuid,
+              movementUuid: returnAId,
+              movementType: 'sales_return',
+              itemCode: 'ITEM-X',
+              itemName: 'Item X',
+              quantity: 2,
+              unitCost: 150,
+              totalCost: 300,
+            ),
+          ],
+        );
 
-      await expectLater(
-        () async => stockReturnsRepo.saveReturn(tamperedReturn),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.notFound)),
-      );
+        await stockReturnsRepo.saveReturn(returnA);
 
-      // Verify Company A data was NOT modified
-      activeCompanyId = companyA;
-      final originalCheck = await stockReturnsRepo.getReturnById(returnAId);
-      expect(originalCheck!.partyName, isNot(equals('Tampered Party by Company B')));
-    });
+        final docRef = InventoryDocumentRef(
+          documentId: returnAId,
+          documentNumber: 'RET-COMP-A-04',
+          documentType: InventoryDocumentType.stockReturn,
+          documentDate: now,
+        );
 
-    test('3. Cross-Tenant Delete Rejection: Company B deleting Company A stock return throws notFound', () async {
-      activeCompanyId = companyA;
-      final returnAId = generateUuidV4();
-      final returnA = StockReturn(
-        id: returnAId,
-        returnNumber: 'RET-COMP-A-03',
-        returnType: StockReturnType.purchaseReturn,
-        returnDate: DateTime.now(),
-        companyId: companyA,
-      );
+        // Switch context to Company B
+        activeCompanyId = companyB;
 
-      await stockReturnsRepo.saveReturn(returnA);
+        final postResult = await postingCoordinator.post(document: docRef);
+        expect(postResult, isA<PostInvalidStatus>());
 
-      // Switch context to Company B
-      activeCompanyId = companyB;
+        // Switch back to Company A and verify it remains draft
+        activeCompanyId = companyA;
+        final checkA = await stockReturnsRepo.getReturnById(returnAId);
+        expect(checkA!.isPosted, isFalse);
+      },
+    );
 
-      await expectLater(
-        () async => stockReturnsRepo.deleteReturn(returnAId),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.notFound)),
-      );
+    test(
+      '5. Posted Return Save Immutability: Attempting saveReturn on posted return throws postedImmutable',
+      () async {
+        activeCompanyId = companyA;
+        final returnId = generateUuidV4();
+        final postedReturn = StockReturn(
+          id: returnId,
+          returnNumber: 'RET-POSTED-05',
+          returnType: StockReturnType.salesReturn,
+          returnDate: DateTime.now(),
+          status: InventoryDocumentStatus.posted,
+          postedAt: DateTime.now(),
+          companyId: companyA,
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: returnId,
+              movementType: 'sales_return',
+              itemCode: 'ITEM-5',
+              itemName: 'Item 5',
+              quantity: 3,
+              unitCost: 200,
+              totalCost: 600,
+            ),
+          ],
+        );
 
-      // Switch back to Company A and verify it is not deleted
-      activeCompanyId = companyA;
-      final checkA = await stockReturnsRepo.getReturnById(returnAId);
-      expect(checkA, isNotNull);
-      expect(checkA!.deletedAt, isNull);
-    });
+        await stockReturnsRepo.saveReturn(postedReturn);
 
-    test('4. Cross-Tenant Post Rejection: Company B posting Company A stock return is rejected', () async {
-      activeCompanyId = companyA;
-      final returnAId = generateUuidV4();
-      final lineUuid = generateUuidV4();
-      final now = DateTime.now();
+        final checkPosted = await stockReturnsRepo.getReturnById(returnId);
+        expect(checkPosted!.isPosted, isTrue);
 
-      final returnA = StockReturn(
-        id: returnAId,
-        returnNumber: 'RET-COMP-A-04',
-        returnType: StockReturnType.salesReturn,
-        returnDate: now,
-        companyId: companyA,
-        lines: [
-          StockMovementLine(
-            id: lineUuid,
-            movementUuid: returnAId,
-            movementType: 'sales_return',
-            itemCode: 'ITEM-X',
-            itemName: 'Item X',
-            quantity: 2,
-            unitCost: 150,
-            totalCost: 300,
+        // Attempt to modify posted return
+        final editedReturn = checkPosted.copyWith(
+          notes: 'Trying to modify posted return',
+        );
+
+        await expectLater(
+          () async => stockReturnsRepo.saveReturn(editedReturn),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
           ),
-        ],
-      );
+        );
+      },
+    );
 
-      await stockReturnsRepo.saveReturn(returnA);
+    test(
+      '6. Posted Return Delete Immutability: Attempting deleteReturn on posted return throws postedImmutable',
+      () async {
+        activeCompanyId = companyA;
+        final returnId = generateUuidV4();
+        final postedReturn = StockReturn(
+          id: returnId,
+          returnNumber: 'RET-POSTED-06',
+          returnType: StockReturnType.purchaseReturn,
+          returnDate: DateTime.now(),
+          status: InventoryDocumentStatus.posted,
+          postedAt: DateTime.now(),
+          companyId: companyA,
+        );
 
-      final docRef = InventoryDocumentRef(
-        documentId: returnAId,
-        documentNumber: 'RET-COMP-A-04',
-        documentType: InventoryDocumentType.stockReturn,
-        documentDate: now,
-      );
+        await stockReturnsRepo.saveReturn(postedReturn);
 
-      // Switch context to Company B
-      activeCompanyId = companyB;
-
-      final postResult = await postingCoordinator.post(document: docRef);
-      expect(postResult, isA<PostInvalidStatus>());
-
-      // Switch back to Company A and verify it remains draft
-      activeCompanyId = companyA;
-      final checkA = await stockReturnsRepo.getReturnById(returnAId);
-      expect(checkA!.isPosted, isFalse);
-    });
-
-    test('5. Posted Return Save Immutability: Attempting saveReturn on posted return throws postedImmutable', () async {
-      activeCompanyId = companyA;
-      final returnId = generateUuidV4();
-      final postedReturn = StockReturn(
-        id: returnId,
-        returnNumber: 'RET-POSTED-05',
-        returnType: StockReturnType.salesReturn,
-        returnDate: DateTime.now(),
-        status: InventoryDocumentStatus.posted,
-        postedAt: DateTime.now(),
-        companyId: companyA,
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: returnId,
-            movementType: 'sales_return',
-            itemCode: 'ITEM-5',
-            itemName: 'Item 5',
-            quantity: 3,
-            unitCost: 200,
-            totalCost: 600,
+        await expectLater(
+          () async => stockReturnsRepo.deleteReturn(returnId),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
           ),
-        ],
-      );
+        );
 
-      await stockReturnsRepo.saveReturn(postedReturn);
+        final checkIntact = await stockReturnsRepo.getReturnById(returnId);
+        expect(checkIntact, isNotNull);
+        expect(checkIntact!.deletedAt, isNull);
+      },
+    );
 
-      final checkPosted = await stockReturnsRepo.getReturnById(returnId);
-      expect(checkPosted!.isPosted, isTrue);
+    test(
+      '7. Duplicate Return Posting Protection: Re-posting posted return is idempotent without duplicating layers',
+      () async {
+        activeCompanyId = companyA;
+        final returnId = generateUuidV4();
+        final lineUuid = generateUuidV4();
+        final now = DateTime.now();
 
-      // Attempt to modify posted return
-      final editedReturn = checkPosted.copyWith(notes: 'Trying to modify posted return');
+        final salesReturnDoc = StockReturn(
+          id: returnId,
+          returnNumber: 'RET-IDEM-07',
+          returnType: StockReturnType.salesReturn,
+          returnDate: now,
+          companyId: companyA,
+          lines: [
+            StockMovementLine(
+              id: lineUuid,
+              movementUuid: returnId,
+              movementType: 'sales_return',
+              itemCode: 'ITEM-IDEM',
+              itemName: 'Idempotent Item',
+              quantity: 5,
+              unitCost: 80,
+              totalCost: 400,
+            ),
+          ],
+        );
 
-      await expectLater(
-        () async => stockReturnsRepo.saveReturn(editedReturn),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.postedImmutable)),
-      );
-    });
+        await stockReturnsRepo.saveReturn(salesReturnDoc);
 
-    test('6. Posted Return Delete Immutability: Attempting deleteReturn on posted return throws postedImmutable', () async {
-      activeCompanyId = companyA;
-      final returnId = generateUuidV4();
-      final postedReturn = StockReturn(
-        id: returnId,
-        returnNumber: 'RET-POSTED-06',
-        returnType: StockReturnType.purchaseReturn,
-        returnDate: DateTime.now(),
-        status: InventoryDocumentStatus.posted,
-        postedAt: DateTime.now(),
-        companyId: companyA,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: returnId,
+          documentNumber: 'RET-IDEM-07',
+          documentType: InventoryDocumentType.stockReturn,
+          documentDate: now,
+        );
 
-      await stockReturnsRepo.saveReturn(postedReturn);
+        // First post
+        final result1 = await postingCoordinator.post(document: docRef);
+        expect(result1, isA<PostSuccess>());
 
-      await expectLater(
-        () async => stockReturnsRepo.deleteReturn(returnId),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.postedImmutable)),
-      );
+        final layers1 = await costLayerService.getOpenLayers('ITEM-IDEM');
+        expect(layers1.length, equals(1));
+        expect(layers1.single.receivedQty, equals(5));
 
-      final checkIntact = await stockReturnsRepo.getReturnById(returnId);
-      expect(checkIntact, isNotNull);
-      expect(checkIntact!.deletedAt, isNull);
-    });
+        // Duplicate second post
+        final result2 = await postingCoordinator.post(document: docRef);
+        expect(result2, isA<PostSuccess>());
 
-    test('7. Duplicate Return Posting Protection: Re-posting posted return is idempotent without duplicating layers', () async {
-      activeCompanyId = companyA;
-      final returnId = generateUuidV4();
-      final lineUuid = generateUuidV4();
-      final now = DateTime.now();
+        // Verify NO duplicate cost layers were created
+        final layers2 = await costLayerService.getOpenLayers('ITEM-IDEM');
+        expect(layers2.length, equals(1));
+        expect(layers2.single.receivedQty, equals(5));
+      },
+    );
 
-      final salesReturnDoc = StockReturn(
-        id: returnId,
-        returnNumber: 'RET-IDEM-07',
-        returnType: StockReturnType.salesReturn,
-        returnDate: now,
-        companyId: companyA,
-        lines: [
-          StockMovementLine(
-            id: lineUuid,
-            movementUuid: returnId,
-            movementType: 'sales_return',
-            itemCode: 'ITEM-IDEM',
-            itemName: 'Idempotent Item',
-            quantity: 5,
-            unitCost: 80,
-            totalCost: 400,
-          ),
-        ],
-      );
+    test(
+      '8. Inventory & Accounting Consistency: Sales Return post creates cost layer, reversal restores balance',
+      () async {
+        activeCompanyId = companyA;
+        final returnId = generateUuidV4();
+        final lineUuid = generateUuidV4();
+        final now = DateTime.now();
 
-      await stockReturnsRepo.saveReturn(salesReturnDoc);
+        final salesReturnDoc = StockReturn(
+          id: returnId,
+          returnNumber: 'RET-CONS-08',
+          returnType: StockReturnType.salesReturn,
+          returnDate: now,
+          companyId: companyA,
+          lines: [
+            StockMovementLine(
+              id: lineUuid,
+              movementUuid: returnId,
+              movementType: 'sales_return',
+              itemCode: 'ITEM-CONS',
+              itemName: 'Consistent Item',
+              quantity: 10,
+              unitCost: 25,
+              totalCost: 250,
+            ),
+          ],
+        );
 
-      final docRef = InventoryDocumentRef(
-        documentId: returnId,
-        documentNumber: 'RET-IDEM-07',
-        documentType: InventoryDocumentType.stockReturn,
-        documentDate: now,
-      );
+        await stockReturnsRepo.saveReturn(salesReturnDoc);
 
-      // First post
-      final result1 = await postingCoordinator.post(document: docRef);
-      expect(result1, isA<PostSuccess>());
+        final docRef = InventoryDocumentRef(
+          documentId: returnId,
+          documentNumber: 'RET-CONS-08',
+          documentType: InventoryDocumentType.stockReturn,
+          documentDate: now,
+        );
 
-      final layers1 = await costLayerService.getOpenLayers('ITEM-IDEM');
-      expect(layers1.length, equals(1));
-      expect(layers1.single.receivedQty, equals(5));
+        // Post Sales Return -> increases inventory cost layer by 10 units
+        await postingCoordinator.post(document: docRef);
 
-      // Duplicate second post
-      final result2 = await postingCoordinator.post(document: docRef);
-      expect(result2, isA<PostSuccess>());
+        var layers = await costLayerService.getOpenLayers('ITEM-CONS');
+        expect(layers.single.remainingQty, equals(10));
 
-      // Verify NO duplicate cost layers were created
-      final layers2 = await costLayerService.getOpenLayers('ITEM-IDEM');
-      expect(layers2.length, equals(1));
-      expect(layers2.single.receivedQty, equals(5));
-    });
+        // Reverse Sales Return posting via PostingEngine
+        await postingEngine.reversePosting(document: docRef);
 
-    test('8. Inventory & Accounting Consistency: Sales Return post creates cost layer, reversal restores balance', () async {
-      activeCompanyId = companyA;
-      final returnId = generateUuidV4();
-      final lineUuid = generateUuidV4();
-      final now = DateTime.now();
-
-      final salesReturnDoc = StockReturn(
-        id: returnId,
-        returnNumber: 'RET-CONS-08',
-        returnType: StockReturnType.salesReturn,
-        returnDate: now,
-        companyId: companyA,
-        lines: [
-          StockMovementLine(
-            id: lineUuid,
-            movementUuid: returnId,
-            movementType: 'sales_return',
-            itemCode: 'ITEM-CONS',
-            itemName: 'Consistent Item',
-            quantity: 10,
-            unitCost: 25,
-            totalCost: 250,
-          ),
-        ],
-      );
-
-      await stockReturnsRepo.saveReturn(salesReturnDoc);
-
-      final docRef = InventoryDocumentRef(
-        documentId: returnId,
-        documentNumber: 'RET-CONS-08',
-        documentType: InventoryDocumentType.stockReturn,
-        documentDate: now,
-      );
-
-      // Post Sales Return -> increases inventory cost layer by 10 units
-      await postingCoordinator.post(document: docRef);
-
-      var layers = await costLayerService.getOpenLayers('ITEM-CONS');
-      expect(layers.single.remainingQty, equals(10));
-
-      // Reverse Sales Return posting via PostingEngine
-      await postingEngine.reversePosting(document: docRef);
-
-      // Cost layer should be reversed/closed
-      layers = await costLayerService.getOpenLayers('ITEM-CONS');
-      expect(layers, isEmpty);
-    });
+        // Cost layer should be reversed/closed
+        layers = await costLayerService.getOpenLayers('ITEM-CONS');
+        expect(layers, isEmpty);
+      },
+    );
   });
 }

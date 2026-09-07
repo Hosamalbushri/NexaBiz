@@ -24,10 +24,9 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     }
     query.write('ORDER BY is_default DESC, code ASC');
 
-    final rows = await _db.customSelect(
-      query.toString(),
-      variables: variables,
-    ).get();
+    final rows = await _db
+        .customSelect(query.toString(), variables: variables)
+        .get();
 
     return rows.map(_mapRow).toList();
   }
@@ -45,10 +44,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     query.write('ORDER BY is_default DESC, code ASC');
 
     return _db
-        .customSelect(
-          query.toString(),
-          variables: variables,
-        )
+        .customSelect(query.toString(), variables: variables)
         .watch()
         .map((rows) => rows.map(_mapRow).toList());
   }
@@ -58,13 +54,15 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     final trimmed = code.trim().toUpperCase();
     if (trimmed.isEmpty) return null;
 
-    final rows = await _db.customSelect(
-      'SELECT * FROM currencies WHERE code = ? AND deleted_at IS NULL AND company_id = ? LIMIT 1',
-      variables: [
-        Variable.withString(trimmed),
-        Variable.withString(_currentCompanyId),
-      ],
-    ).get();
+    final rows = await _db
+        .customSelect(
+          'SELECT * FROM currencies WHERE code = ? AND deleted_at IS NULL AND company_id = ? LIMIT 1',
+          variables: [
+            Variable.withString(trimmed),
+            Variable.withString(_currentCompanyId),
+          ],
+        )
+        .get();
 
     if (rows.isEmpty) return null;
     return _mapRow(rows.first);
@@ -75,13 +73,15 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     final trimmed = uuid.trim();
     if (trimmed.isEmpty) return null;
 
-    final rows = await _db.customSelect(
-      'SELECT * FROM currencies WHERE uuid = ? AND deleted_at IS NULL AND company_id = ? LIMIT 1',
-      variables: [
-        Variable.withString(trimmed),
-        Variable.withString(_currentCompanyId),
-      ],
-    ).get();
+    final rows = await _db
+        .customSelect(
+          'SELECT * FROM currencies WHERE uuid = ? AND deleted_at IS NULL AND company_id = ? LIMIT 1',
+          variables: [
+            Variable.withString(trimmed),
+            Variable.withString(_currentCompanyId),
+          ],
+        )
+        .get();
 
     if (rows.isEmpty) return null;
     return _mapRow(rows.first);
@@ -89,10 +89,12 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
 
   @override
   Future<Currency?> getDefaultCurrency() async {
-    final rows = await _db.customSelect(
-      'SELECT * FROM currencies WHERE is_default = 1 AND deleted_at IS NULL AND company_id = ? LIMIT 1',
-      variables: [Variable.withString(_currentCompanyId)],
-    ).get();
+    final rows = await _db
+        .customSelect(
+          'SELECT * FROM currencies WHERE is_default = 1 AND deleted_at IS NULL AND company_id = ? LIMIT 1',
+          variables: [Variable.withString(_currentCompanyId)],
+        )
+        .get();
 
     if (rows.isEmpty) return null;
     return _mapRow(rows.first);
@@ -228,7 +230,9 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
   }
 
   @override
-  Future<void> ensureDefaultCurrenciesSeeded({String defaultCode = 'SAR'}) async {
+  Future<void> ensureDefaultCurrenciesSeeded({
+    String defaultCode = 'SAR',
+  }) async {
     final existing = await getAll(includeInactive: true);
     if (existing.isNotEmpty) return;
 

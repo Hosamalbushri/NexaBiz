@@ -38,9 +38,7 @@ class AppRateField extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
-      style: theme.textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 }

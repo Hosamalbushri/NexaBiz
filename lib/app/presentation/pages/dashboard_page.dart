@@ -58,8 +58,7 @@ class DashboardPage extends ConsumerWidget {
         ),
         data: (_) {
           final permissions = ref.watch(currentPermissionsProvider);
-          final modules =
-              controller.resolveModules(permissions: permissions);
+          final modules = controller.resolveModules(permissions: permissions);
           return SingleChildScrollView(
             padding: AppConstants.pageInsets(context),
             physics: const BouncingScrollPhysics(

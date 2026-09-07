@@ -49,8 +49,7 @@ class AccountOpeningSetupState {
       importRows.any((r) => r.hasName) &&
       !isBusy;
 
-  bool get canPostOpening =>
-      balanceLines.any((l) => l.hasAmount) && !isBusy;
+  bool get canPostOpening => balanceLines.any((l) => l.hasAmount) && !isBusy;
 
   List<OpeningBalanceCurrencySummary> currencySummaries(
     String defaultCurrencyCode,
@@ -94,8 +93,9 @@ class AccountOpeningSetupState {
           : (balanceFileName ?? this.balanceFileName),
       isBusy: isBusy ?? this.isBusy,
       progress: progress ?? this.progress,
-      importResult:
-          clearImportResult ? null : (importResult ?? this.importResult),
+      importResult: clearImportResult
+          ? null
+          : (importResult ?? this.importResult),
       postResult: clearPostResult ? null : (postResult ?? this.postResult),
       errorCode: clearError ? null : (errorCode ?? this.errorCode),
       errorDetails: clearError ? null : (errorDetails ?? this.errorDetails),
@@ -106,17 +106,14 @@ class AccountOpeningSetupState {
 class AccountOpeningSetupNotifier
     extends StateNotifier<AccountOpeningSetupState> {
   AccountOpeningSetupNotifier(this._ref)
-      : super(const AccountOpeningSetupState());
+    : super(const AccountOpeningSetupState());
 
   final Ref _ref;
   final _accountExcel = const AccountExcelImportDatasource();
   final _balanceExcel = const OpeningBalanceExcelDatasource();
 
   void setStep(int index) {
-    state = state.copyWith(
-      stepIndex: index.clamp(0, 2),
-      clearError: true,
-    );
+    state = state.copyWith(stepIndex: index.clamp(0, 2), clearError: true);
   }
 
   void setParent(Account? parent) {
@@ -278,7 +275,8 @@ class AccountOpeningSetupNotifier
         }
       }
 
-      final defaultCurrency = _ref
+      final defaultCurrency =
+          _ref
               .read(companyProfileProvider)
               .valueOrNull
               ?.defaultCurrencyCode
@@ -449,8 +447,7 @@ class AccountOpeningSetupNotifier
     ];
     final used = {
       for (final line in state.balanceLines)
-        if (line.accountId == accountId)
-          line.currencyCode.trim().toUpperCase(),
+        if (line.accountId == accountId) line.currencyCode.trim().toUpperCase(),
     };
     String? next;
     for (final code in allowed) {
@@ -624,8 +621,7 @@ class AccountOpeningSetupNotifier
         '${line.accountId}|${line.currencyCode.trim().toUpperCase()}': line,
     };
     for (final line in incoming) {
-      final key =
-          '${line.accountId}|${line.currencyCode.trim().toUpperCase()}';
+      final key = '${line.accountId}|${line.currencyCode.trim().toUpperCase()}';
       final prev = map[key];
       if (prev == null) {
         map[key] = line;
@@ -661,7 +657,8 @@ class AccountOpeningSetupNotifier
     final allowed = {
       for (final code in allowedCurrencyCodes) code.trim().toUpperCase(),
     };
-    final fallback = _ref
+    final fallback =
+        _ref
             .read(companyProfileProvider)
             .valueOrNull
             ?.defaultCurrencyCode
@@ -789,7 +786,8 @@ class AccountOpeningSetupNotifier
   }
 }
 
-final accountOpeningSetupProvider = StateNotifierProvider.autoDispose<
-    AccountOpeningSetupNotifier, AccountOpeningSetupState>(
-  (ref) => AccountOpeningSetupNotifier(ref),
-);
+final accountOpeningSetupProvider =
+    StateNotifierProvider.autoDispose<
+      AccountOpeningSetupNotifier,
+      AccountOpeningSetupState
+    >((ref) => AccountOpeningSetupNotifier(ref));

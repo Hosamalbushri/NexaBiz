@@ -12,7 +12,9 @@ class ImportReport {
 
   factory ImportReport.fromJson(Map<String, dynamic> json) {
     return ImportReport(
-      auditRecord: ImportAuditRecord.fromJson(json['auditRecord'] as Map<String, dynamic>),
+      auditRecord: ImportAuditRecord.fromJson(
+        json['auditRecord'] as Map<String, dynamic>,
+      ),
       rowResults: (json['rowResults'] as List? ?? [])
           .map((r) => ImportRowResult.fromJson(r as Map<String, dynamic>))
           .toList(),
@@ -35,8 +37,8 @@ class ImportReport {
   String get companyId => auditRecord.companyId;
 
   Map<String, dynamic> toJson() => {
-        'auditRecord': auditRecord.toJson(),
-        'rowResults': rowResults.map((r) => r.toJson()).toList(),
-        'errorReports': errorReports.map((e) => e.toJson()).toList(),
-      };
+    'auditRecord': auditRecord.toJson(),
+    'rowResults': rowResults.map((r) => r.toJson()).toList(),
+    'errorReports': errorReports.map((e) => e.toJson()).toList(),
+  };
 }

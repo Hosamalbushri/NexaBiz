@@ -60,7 +60,8 @@ class CashRegisterInitializerService {
     }
 
     // 1. Check if default register is already resolved and valid
-    final existingDefault = await defaultCashRegisterResolver.resolveDefaultCashRegister(companyId);
+    final existingDefault = await defaultCashRegisterResolver
+        .resolveDefaultCashRegister(companyId);
     if (existingDefault.isValid) {
       return CashRegisterInitializationResult(
         isSuccess: true,
@@ -78,7 +79,9 @@ class CashRegisterInitializerService {
         ? registerId.trim()
         : 'cr_def_$companyId';
 
-    final existingRegisters = await cashRegisterRepository.getCashRegisters(companyId);
+    final existingRegisters = await cashRegisterRepository.getCashRegisters(
+      companyId,
+    );
     CashRegister? existing = existingRegisters.firstWhere(
       (r) => r.id == targetId || r.code == targetCode,
       orElse: () => CashRegister(
@@ -98,7 +101,8 @@ class CashRegisterInitializerService {
     // 3. Resolve target account if provided or check existing
     Account? targetAccount;
     if (accountUuid != null && accountUuid.trim().isNotEmpty) {
-      targetAccount = await accountRepository.getByUuid(accountUuid.trim()) ??
+      targetAccount =
+          await accountRepository.getByUuid(accountUuid.trim()) ??
           await accountRepository.getByAccountCode(accountUuid.trim());
       if (targetAccount == null) {
         return CashRegisterInitializationResult(
@@ -115,7 +119,8 @@ class CashRegisterInitializerService {
           isSuccess: false,
           isAlreadyInitialized: false,
           errorCode: 'CROSS_COMPANY_ACCOUNT',
-          message: 'Account belongs to company ${targetAccount.companyId}, expected $companyId',
+          message:
+              'Account belongs to company ${targetAccount.companyId}, expected $companyId',
         );
       }
       if (!targetAccount.isActive || targetAccount.isDeleted) {
@@ -126,12 +131,14 @@ class CashRegisterInitializerService {
           message: 'Target accounting account is inactive or deleted',
         );
       }
-      if (!targetAccount.canPost || targetAccount.accountType != AccountType.asset) {
+      if (!targetAccount.canPost ||
+          targetAccount.accountType != AccountType.asset) {
         return const CashRegisterInitializationResult(
           isSuccess: false,
           isAlreadyInitialized: false,
           errorCode: 'INVALID_ACCOUNT_TYPE',
-          message: 'Target account must be an active, posting-eligible Asset account',
+          message:
+              'Target account must be an active, posting-eligible Asset account',
         );
       }
     }
@@ -170,7 +177,8 @@ class CashRegisterInitializerService {
     }
 
     // 5. Apply account link if targetAccount was resolved and not yet linked
-    if (targetAccount != null && currentReg.accountingAccountId != targetAccount.uuid) {
+    if (targetAccount != null &&
+        currentReg.accountingAccountId != targetAccount.uuid) {
       try {
         currentReg = await cashRegisterRepository.linkAccountingAccount(
           registerId: currentReg.id,
@@ -217,7 +225,8 @@ class CashRegisterInitializerService {
     }
 
     // 7. Verify persistent readback
-    final verifiedDefault = await defaultCashRegisterResolver.resolveDefaultCashRegister(companyId);
+    final verifiedDefault = await defaultCashRegisterResolver
+        .resolveDefaultCashRegister(companyId);
     if (!verifiedDefault.isValid && currentReg.isLinked) {
       return const CashRegisterInitializationResult(
         isSuccess: false,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:stock_count/core/navigation/app_route_param_parser.dart';
+
 import '../../app/customers/accounting_customer_account_link_adapter.dart';
 import '../../app/localization/app_localizations.dart';
 import '../../app/presentation/providers/dashboard_services_provider.dart';
@@ -100,7 +102,6 @@ class AccountingModule extends AppModule {
 
   @override
   bool get isEnabled => true;
-
 
   @override
   List<ModuleSetupStepDefinition> get setupSteps => accountingSetupSteps;
@@ -329,7 +330,7 @@ class AccountingModule extends AppModule {
               path: ':id/edit',
               name: 'accountingVoucherBooksEdit',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
                 if (id == null) {
                   return const VoucherBookFormPage(bookId: -1);
                 }
@@ -371,7 +372,7 @@ class AccountingModule extends AppModule {
               path: ':id',
               name: 'accountingAccountDetails',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
                 if (id == null) {
                   return const AccountDetailsPage(accountId: -1);
                 }
@@ -382,7 +383,7 @@ class AccountingModule extends AppModule {
                   path: 'edit',
                   name: 'accountingAccountEdit',
                   builder: (context, state) {
-                    final id = int.tryParse(state.pathParameters['id'] ?? '');
+                    final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
                     if (id == null) {
                       return const AccountFormPage(accountId: -1);
                     }

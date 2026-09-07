@@ -22,15 +22,20 @@ class FakeSetupAccountLookupPort implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async => [];
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async => [];
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async => [];
-
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async => [];
 }
 
-
-class FakeCompanyInitializationRepository implements CompanyInitializationRepository {
+class FakeCompanyInitializationRepository
+    implements CompanyInitializationRepository {
   CompanyInitializationState _state = const CompanyInitializationState(
     companyId: 'company_100',
     initializationCompleted: false,
@@ -77,87 +82,105 @@ void main() {
       registry = CentralSetupRegistry();
     });
 
-    test('1. CentralSetupRegistry discovers Accounting setup via module registration', () {
-      AccountingModule.register(setupRegistry: registry);
+    test(
+      '1. CentralSetupRegistry discovers Accounting setup via module registration',
+      () {
+        AccountingModule.register(setupRegistry: registry);
 
-      expect(registry.isRegistered('accounting'), isTrue);
+        expect(registry.isRegistered('accounting'), isTrue);
 
-      final setup = registry.get('accounting');
-      expect(setup, isNotNull);
-      expect(setup!.packageId, equals('accounting'));
-      expect(setup.displayName('ar'), equals('إعدادات المحاسبة'));
-      expect(setup.displayName('en'), equals('Accounting Setup'));
-      expect(setup.sortOrder, equals(10));
-    });
+        final setup = registry.get('accounting');
+        expect(setup, isNotNull);
+        expect(setup!.packageId, equals('accounting'));
+        expect(setup.displayName('ar'), equals('إعدادات المحاسبة'));
+        expect(setup.displayName('en'), equals('Accounting Setup'));
+        expect(setup.sortOrder, equals(10));
+      },
+    );
 
-    test('2. Accounting setup definition exposes all required sections and fields', () {
-      registerAccountingSetup(registry);
+    test(
+      '2. Accounting setup definition exposes all required sections and fields',
+      () {
+        registerAccountingSetup(registry);
 
-      final setup = registry.get('accounting')!;
-      final sectionIds = setup.sections.map((s) => s.id).toList();
+        final setup = registry.get('accounting')!;
+        final sectionIds = setup.sections.map((s) => s.id).toList();
 
-      expect(
-        sectionIds,
-        containsAll([
-          'currency',
-          'chart_of_accounts',
-          'accounting_defaults',
-        ]),
-      );
+        expect(
+          sectionIds,
+          containsAll(['currency', 'chart_of_accounts', 'accounting_defaults']),
+        );
 
-      final coaSection = setup.sections.firstWhere((s) => s.id == 'chart_of_accounts');
-      expect(coaSection.fields.map((f) => f.key), containsAll([
-        'account_role_inventory',
-        'account_role_revenue',
-      ]));
+        final coaSection = setup.sections.firstWhere(
+          (s) => s.id == 'chart_of_accounts',
+        );
+        expect(
+          coaSection.fields.map((f) => f.key),
+          containsAll(['account_role_inventory', 'account_role_revenue']),
+        );
 
-      final currencySection = setup.sections.firstWhere((s) => s.id == 'currency');
-      expect(currencySection.fields.first.key, equals('defaultCurrencyCode'));
-      expect(currencySection.fields.first.defaultValue, equals('SAR'));
-    });
+        final currencySection = setup.sections.firstWhere(
+          (s) => s.id == 'currency',
+        );
+        expect(currencySection.fields.first.key, equals('defaultCurrencyCode'));
+        expect(currencySection.fields.first.defaultValue, equals('SAR'));
+      },
+    );
 
-    test('3. Preserves existing CompanyAccountingConfigService validation rules', () async {
-      final lookupPort = FakeSetupAccountLookupPort({
-        '1230': const SetupAccountData(
-          uuid: 'acc_inv_uuid',
-          accountCode: '1230',
-          accountType: SetupAccountType.asset,
-          companyId: 'company_100',
-          isActive: true,
-          isDeleted: false,
-          isGroup: false,
-          canPost: true,
-        ),
-      });
-      final initRepo = FakeCompanyInitializationRepository();
-      final configService = CompanyAccountingConfigService(
-        accountLookupPort: lookupPort,
-        initRepository: initRepo,
-      );
+    test(
+      '3. Preserves existing CompanyAccountingConfigService validation rules',
+      () async {
+        final lookupPort = FakeSetupAccountLookupPort({
+          '1230': const SetupAccountData(
+            uuid: 'acc_inv_uuid',
+            accountCode: '1230',
+            accountType: SetupAccountType.asset,
+            companyId: 'company_100',
+            isActive: true,
+            isDeleted: false,
+            isGroup: false,
+            canPost: true,
+          ),
+        });
+        final initRepo = FakeCompanyInitializationRepository();
+        final configService = CompanyAccountingConfigService(
+          accountLookupPort: lookupPort,
+          initRepository: initRepo,
+        );
 
-      final validatedAccount = await configService.validateAccountForRole(
-        companyId: 'company_100',
-        role: AccountRole.inventory,
-        accountCodeOrUuid: '1230',
-      );
-      expect(validatedAccount.accountCode, equals('1230'));
-
-      expect(
-        () async => configService.validateAccountForRole(
+        final validatedAccount = await configService.validateAccountForRole(
           companyId: 'company_100',
           role: AccountRole.inventory,
-          accountCodeOrUuid: 'non_existent',
-        ),
-        throwsA(isA<InvalidCompanyAccountException>()),
-      );
-    });
+          accountCodeOrUuid: '1230',
+        );
+        expect(validatedAccount.accountCode, equals('1230'));
 
-    test('4. Preserves legacy accountingSetupSteps definitions and metadata', () {
-      expect(accountingSetupSteps.length, equals(2));
-      expect(accountingSetupSteps[0].id, equals('accounting_currencies_setup_step'));
-      expect(accountingSetupSteps[1].id, equals('accounting_role_mapping_setup_step'));
-      expect(accountingSetupSteps[0].moduleId, equals('accounting'));
-      expect(accountingSetupSteps[1].moduleId, equals('accounting'));
-    });
+        expect(
+          () async => configService.validateAccountForRole(
+            companyId: 'company_100',
+            role: AccountRole.inventory,
+            accountCodeOrUuid: 'non_existent',
+          ),
+          throwsA(isA<InvalidCompanyAccountException>()),
+        );
+      },
+    );
+
+    test(
+      '4. Preserves legacy accountingSetupSteps definitions and metadata',
+      () {
+        expect(accountingSetupSteps.length, equals(2));
+        expect(
+          accountingSetupSteps[0].id,
+          equals('accounting_currencies_setup_step'),
+        );
+        expect(
+          accountingSetupSteps[1].id,
+          equals('accounting_role_mapping_setup_step'),
+        );
+        expect(accountingSetupSteps[0].moduleId, equals('accounting'));
+        expect(accountingSetupSteps[1].moduleId, equals('accounting'));
+      },
+    );
   });
 }

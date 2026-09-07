@@ -64,109 +64,112 @@ void main() {
     expect(filter.postingScope, PostingScope.postedOnly);
   });
 
-  test('Journal book excludes unposted entries when postedOnly is true', () async {
-    final cash = await accounts.getByAccountCode('1211');
-    final revenue = await accounts.getByAccountCode('4100');
-    expect(cash, isNotNull);
-    expect(revenue, isNotNull);
+  test(
+    'Journal book excludes unposted entries when postedOnly is true',
+    () async {
+      final cash = await accounts.getByAccountCode('1211');
+      final revenue = await accounts.getByAccountCode('4100');
+      expect(cash, isNotNull);
+      expect(revenue, isNotNull);
 
-    // 1. Post a valid posted journal entry (100 YER)
-    await journals.post(
-      JournalEntryDraft(
-        entryDate: DateTime.utc(2026, 8, 1),
-        voucherNumber: 'JV-POSTED-1',
-        voucherType: 'manual',
-        currencyCode: 'YER',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(
-            accountUuid: cash!.uuid,
-            debit: 100,
-            credit: 0,
-            currencyCode: 'YER',
-          ),
-          JournalLineDraft(
-            accountUuid: revenue!.uuid,
-            debit: 0,
-            credit: 100,
-            currencyCode: 'YER',
-          ),
-        ],
-      ),
-    );
+      // 1. Post a valid posted journal entry (100 YER)
+      await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 1),
+          voucherNumber: 'JV-POSTED-1',
+          voucherType: 'manual',
+          currencyCode: 'YER',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash!.uuid,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue!.uuid,
+              debit: 0,
+              credit: 100,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
 
-    // 2. Post an unposted / draft journal entry (500 YER)
-    await journals.post(
-      JournalEntryDraft(
-        entryDate: DateTime.utc(2026, 8, 2),
-        voucherNumber: 'JV-DRAFT-2',
-        voucherType: 'manual',
-        currencyCode: 'YER',
-        isPosted: false,
-        lines: [
-          JournalLineDraft(
-            accountUuid: cash.uuid,
-            debit: 500,
-            credit: 0,
-            currencyCode: 'YER',
-          ),
-          JournalLineDraft(
-            accountUuid: revenue.uuid,
-            debit: 0,
-            credit: 500,
-            currencyCode: 'YER',
-          ),
-        ],
-      ),
-    );
+      // 2. Post an unposted / draft journal entry (500 YER)
+      await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 2),
+          voucherNumber: 'JV-DRAFT-2',
+          voucherType: 'manual',
+          currencyCode: 'YER',
+          isPosted: false,
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash.uuid,
+              debit: 500,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 500,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
 
-    final adapter = JournalBookReportDataAdapter(
-      journals: journals,
-      loadCompanyProfile: () async =>
-          const CompanyProfile(defaultCurrencyCode: 'YER'),
-    );
+      final adapter = JournalBookReportDataAdapter(
+        journals: journals,
+        loadCompanyProfile: () async =>
+            const CompanyProfile(defaultCurrencyCode: 'YER'),
+      );
 
-    const labels = JournalBookReportLabels(
-      companyName: 'Demo',
-      reportTitle: 'Journal book',
-      generatedAtLabel: 'Generated',
-      periodLabel: 'Period',
-      periodAll: 'All dates',
-      columnDate: 'Date',
-      columnVoucher: 'Voucher',
-      columnType: 'Type',
-      columnDescription: 'Description',
-      columnAccount: 'Account',
-      columnDebit: 'Debit',
-      columnCredit: 'Credit',
-      totalsLabel: 'Totals',
-      emptyMessage: 'Empty',
-    );
+      const labels = JournalBookReportLabels(
+        companyName: 'Demo',
+        reportTitle: 'Journal book',
+        generatedAtLabel: 'Generated',
+        periodLabel: 'Period',
+        periodAll: 'All dates',
+        columnDate: 'Date',
+        columnVoucher: 'Voucher',
+        columnType: 'Type',
+        columnDescription: 'Description',
+        columnAccount: 'Account',
+        columnDebit: 'Debit',
+        columnCredit: 'Credit',
+        totalsLabel: 'Totals',
+        emptyMessage: 'Empty',
+      );
 
-    // Default posted-only query via ReportQueryFilter
-    const filterPosted = ReportQueryFilter(
-      companyId: 'test-company',
-      postingScope: PostingScope.postedOnly,
-    );
-    final payloadPosted = await adapter.loadFromFilter(
-      filter: filterPosted,
-      labels: labels,
-    );
-    expect(payloadPosted.rows, hasLength(2));
-    expect(payloadPosted.totalsDebit, 100);
+      // Default posted-only query via ReportQueryFilter
+      const filterPosted = ReportQueryFilter(
+        companyId: 'test-company',
+        postingScope: PostingScope.postedOnly,
+      );
+      final payloadPosted = await adapter.loadFromFilter(
+        filter: filterPosted,
+        labels: labels,
+      );
+      expect(payloadPosted.rows, hasLength(2));
+      expect(payloadPosted.totalsDebit, 100);
 
-    // Unposted included query via ReportQueryFilter
-    const filterAll = ReportQueryFilter(
-      companyId: 'test-company',
-      postingScope: PostingScope.all,
-    );
-    final payloadAll = await adapter.loadFromFilter(
-      filter: filterAll,
-      labels: labels,
-    );
-    expect(payloadAll.rows, hasLength(4));
-    expect(payloadAll.totalsDebit, 600);
-  });
+      // Unposted included query via ReportQueryFilter
+      const filterAll = ReportQueryFilter(
+        companyId: 'test-company',
+        postingScope: PostingScope.all,
+      );
+      final payloadAll = await adapter.loadFromFilter(
+        filter: filterAll,
+        labels: labels,
+      );
+      expect(payloadAll.rows, hasLength(4));
+      expect(payloadAll.totalsDebit, 600);
+    },
+  );
 
   test('Trial Balance excludes unposted entries by default', () async {
     final cash = await accounts.getByAccountCode('1211');

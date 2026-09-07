@@ -41,68 +41,93 @@ void main() {
       branchCompanyId = branchCompany.id;
     });
 
-    test('TEST 1 — A -> B: Session ID remains stable during company switch', () async {
-      final initialSession = await authStore.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: 'password',
-        deviceId: 'test_device',
-        companyId: LocalAuthDefaults.companyId,
-      );
+    test(
+      'TEST 1 — A -> B: Session ID remains stable during company switch',
+      () async {
+        final initialSession = await authStore.login(
+          email: LocalAuthDefaults.adminEmail,
+          password: 'password',
+          deviceId: 'test_device',
+          companyId: LocalAuthDefaults.companyId,
+        );
 
-      expect(initialSession, isNotNull);
-      final originalSessionId = initialSession!.sessionId;
-      expect(originalSessionId, isNotNull);
-      expect(initialSession.currentCompanyId, equals(LocalAuthDefaults.companyId));
+        expect(initialSession, isNotNull);
+        final originalSessionId = initialSession!.sessionId;
+        expect(originalSessionId, isNotNull);
+        expect(
+          initialSession.currentCompanyId,
+          equals(LocalAuthDefaults.companyId),
+        );
 
-      final switched = await authStore.switchCompany(
-        current: initialSession,
-        companyId: branchCompanyId,
-      );
+        final switched = await authStore.switchCompany(
+          current: initialSession,
+          companyId: branchCompanyId,
+        );
 
-      expect(switched, isNotNull);
-      expect(switched!.currentCompanyId, equals(branchCompanyId));
-      expect(switched.sessionId, equals(originalSessionId), reason: 'Rule 1: sessionId MUST NOT change during company switch');
-    });
+        expect(switched, isNotNull);
+        expect(switched!.currentCompanyId, equals(branchCompanyId));
+        expect(
+          switched.sessionId,
+          equals(originalSessionId),
+          reason: 'Rule 1: sessionId MUST NOT change during company switch',
+        );
+      },
+    );
 
-    test('TEST 2 — B -> A: Reverse company switch preserves session ID', () async {
-      final sessionA = await authStore.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: 'password',
-        deviceId: 'test_device',
-        companyId: LocalAuthDefaults.companyId,
-      );
-      final originalSessionId = sessionA!.sessionId;
+    test(
+      'TEST 2 — B -> A: Reverse company switch preserves session ID',
+      () async {
+        final sessionA = await authStore.login(
+          email: LocalAuthDefaults.adminEmail,
+          password: 'password',
+          deviceId: 'test_device',
+          companyId: LocalAuthDefaults.companyId,
+        );
+        final originalSessionId = sessionA!.sessionId;
 
-      final sessionB = await authStore.switchCompany(
-        current: sessionA,
-        companyId: branchCompanyId,
-      );
-      expect(sessionB!.currentCompanyId, equals(branchCompanyId));
+        final sessionB = await authStore.switchCompany(
+          current: sessionA,
+          companyId: branchCompanyId,
+        );
+        expect(sessionB!.currentCompanyId, equals(branchCompanyId));
 
-      final reversedA = await authStore.switchCompany(
-        current: sessionB,
-        companyId: LocalAuthDefaults.companyId,
-      );
+        final reversedA = await authStore.switchCompany(
+          current: sessionB,
+          companyId: LocalAuthDefaults.companyId,
+        );
 
-      expect(reversedA, isNotNull);
-      expect(reversedA!.currentCompanyId, equals(LocalAuthDefaults.companyId));
-      expect(reversedA.sessionId, equals(originalSessionId));
-    });
+        expect(reversedA, isNotNull);
+        expect(
+          reversedA!.currentCompanyId,
+          equals(LocalAuthDefaults.companyId),
+        );
+        expect(reversedA.sessionId, equals(originalSessionId));
+      },
+    );
 
-    test('TEST 3 — A -> B -> A: Multi-switch preserves original session ID', () async {
-      final sessionA = (await authStore.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: 'password',
-        deviceId: 'test_device',
-        companyId: LocalAuthDefaults.companyId,
-      ))!;
-      final originalSessionId = sessionA.sessionId;
+    test(
+      'TEST 3 — A -> B -> A: Multi-switch preserves original session ID',
+      () async {
+        final sessionA = (await authStore.login(
+          email: LocalAuthDefaults.adminEmail,
+          password: 'password',
+          deviceId: 'test_device',
+          companyId: LocalAuthDefaults.companyId,
+        ))!;
+        final originalSessionId = sessionA.sessionId;
 
-      final sessionB = await authStore.switchCompany(current: sessionA, companyId: branchCompanyId);
-      final sessionBackA = await authStore.switchCompany(current: sessionB!, companyId: LocalAuthDefaults.companyId);
+        final sessionB = await authStore.switchCompany(
+          current: sessionA,
+          companyId: branchCompanyId,
+        );
+        final sessionBackA = await authStore.switchCompany(
+          current: sessionB!,
+          companyId: LocalAuthDefaults.companyId,
+        );
 
-      expect(sessionBackA!.sessionId, equals(originalSessionId));
-    });
+        expect(sessionBackA!.sessionId, equals(originalSessionId));
+      },
+    );
 
     test('TEST 4 — SAME COMPANY: A -> A is idempotent no-op', () async {
       final sessionA = (await authStore.login(
@@ -121,48 +146,66 @@ void main() {
       expect(sameCompanySession!.sessionId, equals(sessionA.sessionId));
     });
 
-    test('TEST 5 — INVALID MEMBERSHIP: Switch to invalid company returns null and preserves context', () async {
-      final sessionA = (await authStore.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: 'password',
-        deviceId: 'test_device',
-        companyId: LocalAuthDefaults.companyId,
-      ))!;
+    test(
+      'TEST 5 — INVALID MEMBERSHIP: Switch to invalid company returns null and preserves context',
+      () async {
+        final sessionA = (await authStore.login(
+          email: LocalAuthDefaults.adminEmail,
+          password: 'password',
+          deviceId: 'test_device',
+          companyId: LocalAuthDefaults.companyId,
+        ))!;
 
-      final invalidSwitch = await authStore.switchCompany(
-        current: sessionA,
-        companyId: 'non_existent_company_9999',
-      );
+        final invalidSwitch = await authStore.switchCompany(
+          current: sessionA,
+          companyId: 'non_existent_company_9999',
+        );
 
-      expect(invalidSwitch, isNull, reason: 'Rule 12: Invalid switch MUST return null');
+        expect(
+          invalidSwitch,
+          isNull,
+          reason: 'Rule 12: Invalid switch MUST return null',
+        );
 
-      final restoredSession = await authStore.loadSession();
-      expect(restoredSession, isNotNull);
-      expect(restoredSession!.currentCompanyId, equals(LocalAuthDefaults.companyId), reason: 'Rule 12: Active context A MUST remain intact on switch failure');
-    });
+        final restoredSession = await authStore.loadSession();
+        expect(restoredSession, isNotNull);
+        expect(
+          restoredSession!.currentCompanyId,
+          equals(LocalAuthDefaults.companyId),
+          reason:
+              'Rule 12: Active context A MUST remain intact on switch failure',
+        );
+      },
+    );
 
-    test('TEST 9 — SYSTEM SCOPE: Unassigned/system scope tenant context has empty companyId', () {
-      const emptyContext = TenantContext.empty;
-      expect(emptyContext.companyId, equals(''));
-      expect(emptyContext.hasActiveCompany, isFalse);
-    });
+    test(
+      'TEST 9 — SYSTEM SCOPE: Unassigned/system scope tenant context has empty companyId',
+      () {
+        const emptyContext = TenantContext.empty;
+        expect(emptyContext.companyId, equals(''));
+        expect(emptyContext.hasActiveCompany, isFalse);
+      },
+    );
 
-    test('TEST 10 — SESSION RESTORATION: Preserves persisted companyId and sessionId', () async {
-      final loginSession = (await authStore.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: 'password',
-        deviceId: 'test_device',
-        companyId: LocalAuthDefaults.companyId,
-      ))!;
-      final switchedSession = await authStore.switchCompany(
-        current: loginSession,
-        companyId: branchCompanyId,
-      );
+    test(
+      'TEST 10 — SESSION RESTORATION: Preserves persisted companyId and sessionId',
+      () async {
+        final loginSession = (await authStore.login(
+          email: LocalAuthDefaults.adminEmail,
+          password: 'password',
+          deviceId: 'test_device',
+          companyId: LocalAuthDefaults.companyId,
+        ))!;
+        final switchedSession = await authStore.switchCompany(
+          current: loginSession,
+          companyId: branchCompanyId,
+        );
 
-      final restored = await authStore.loadSession();
-      expect(restored, isNotNull);
-      expect(restored!.sessionId, equals(switchedSession!.sessionId));
-      expect(restored.currentCompanyId, equals(branchCompanyId));
-    });
+        final restored = await authStore.loadSession();
+        expect(restored, isNotNull);
+        expect(restored!.sessionId, equals(switchedSession!.sessionId));
+        expect(restored.currentCompanyId, equals(branchCompanyId));
+      },
+    );
   });
 }

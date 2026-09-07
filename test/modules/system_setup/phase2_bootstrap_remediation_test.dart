@@ -24,15 +24,16 @@ void main() {
 
   setUpAll(() async {
     FlutterSecureStorage.setMockInitialValues({});
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('dev.fluttercommunity.plus/connectivity'),
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'check') {
-          return ['wifi'];
-        }
-        return null;
-      },
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('dev.fluttercommunity.plus/connectivity'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'check') {
+              return ['wifi'];
+            }
+            return null;
+          },
+        );
     Hive.init('./test_tmp_phase2_bootstrap');
   });
 
@@ -41,31 +42,37 @@ void main() {
   });
 
   group('Phase 2 — State Ownership & Persistence Authorities', () {
-    test('SettingsRepository is authority for onboarding completed state', () async {
-      final settings = SettingsRepository();
-      await settings.saveOnboardingCompleted(true);
-      expect(await settings.loadOnboardingCompleted(), isTrue);
+    test(
+      'SettingsRepository is authority for onboarding completed state',
+      () async {
+        final settings = SettingsRepository();
+        await settings.saveOnboardingCompleted(true);
+        expect(await settings.loadOnboardingCompleted(), isTrue);
 
-      await settings.saveOnboardingCompleted(false);
-      expect(await settings.loadOnboardingCompleted(), isFalse);
-    });
+        await settings.saveOnboardingCompleted(false);
+        expect(await settings.loadOnboardingCompleted(), isFalse);
+      },
+    );
 
-    test('LocalAuthStore is authority for system admin configured state', () async {
-      final authStore = LocalAuthStore();
-      await authStore.ensureSeeded();
+    test(
+      'LocalAuthStore is authority for system admin configured state',
+      () async {
+        final authStore = LocalAuthStore();
+        await authStore.ensureSeeded();
 
-      final before = await authStore.hasConfiguredAdmin();
-      expect(before, isFalse);
+        final before = await authStore.hasConfiguredAdmin();
+        expect(before, isFalse);
 
-      await authStore.createInitialSystemAdmin(
-        name: 'System Admin',
-        email: 'sysadmin@nexabiz.test',
-        password: 'Password123!',
-      );
+        await authStore.createInitialSystemAdmin(
+          name: 'System Admin',
+          email: 'sysadmin@nexabiz.test',
+          password: 'Password123!',
+        );
 
-      final after = await authStore.hasConfiguredAdmin();
-      expect(after, isTrue);
-    });
+        final after = await authStore.hasConfiguredAdmin();
+        expect(after, isTrue);
+      },
+    );
   });
 
   group('Phase 2 — Bootstrap State Machine & Transitions', () {
@@ -92,7 +99,9 @@ void main() {
       final authStore = LocalAuthStore();
       await authStore.clearAuthData();
 
-      final coordinator = container.read(appBootstrapCoordinatorProvider.notifier);
+      final coordinator = container.read(
+        appBootstrapCoordinatorProvider.notifier,
+      );
       await coordinator.startBootstrap();
 
       final state = container.read(appBootstrapCoordinatorProvider);
@@ -100,97 +109,124 @@ void main() {
       expect(state.isFirstRunRequired, isTrue);
     });
 
-    test('Initialized system transitions to unauthenticated when no session saved', () async {
-      final settings = SettingsRepository();
-      await settings.saveOnboardingCompleted(true);
-      final authStore = LocalAuthStore();
-      await authStore.ensureSeeded();
-      if (!await authStore.hasConfiguredAdmin()) {
-        await authStore.createInitialSystemAdmin(
-          name: 'Admin',
-          email: 'admin@nexabiz.test',
-          password: 'Password123!',
-        );
-      }
-
-      final coordinator = container.read(appBootstrapCoordinatorProvider.notifier);
-      await coordinator.startBootstrap();
-
-      final state = container.read(appBootstrapCoordinatorProvider);
-      expect(state.status, equals(AppBootstrapStatus.unauthenticated));
-      expect(state.isUnauthenticated, isTrue);
-    });
-
-    test('System Scope login transitions status to authenticatedSystemScope', () async {
-      final settings = SettingsRepository();
-      await settings.saveOnboardingCompleted(true);
-      final authStore = LocalAuthStore();
-      await authStore.ensureSeeded();
-      if (!await authStore.hasConfiguredAdmin()) {
-        await authStore.createInitialSystemAdmin(
-          name: 'SysAdmin',
-          email: 'admin@nexabiz.test',
-          password: 'Password123!',
-        );
-      }
-
-      final coordinator = container.read(appBootstrapCoordinatorProvider.notifier);
-      await coordinator.startBootstrap();
-
-      // Log in as System Admin
-      await container.read(authStateProvider.notifier).login(
+    test(
+      'Initialized system transitions to unauthenticated when no session saved',
+      () async {
+        final settings = SettingsRepository();
+        await settings.saveOnboardingCompleted(true);
+        final authStore = LocalAuthStore();
+        await authStore.ensureSeeded();
+        if (!await authStore.hasConfiguredAdmin()) {
+          await authStore.createInitialSystemAdmin(
+            name: 'Admin',
             email: 'admin@nexabiz.test',
             password: 'Password123!',
-            deviceId: 'test_device_123',
-            deviceName: 'Test Device',
-            platform: 'Linux',
           );
+        }
 
-      final state = container.read(appBootstrapCoordinatorProvider);
-      expect(state.status, equals(AppBootstrapStatus.authenticatedSystemScope));
-      expect(state.isSystemScope, isTrue);
-      expect(state.activeCompanyId, isNull);
-    });
+        final coordinator = container.read(
+          appBootstrapCoordinatorProvider.notifier,
+        );
+        await coordinator.startBootstrap();
+
+        final state = container.read(appBootstrapCoordinatorProvider);
+        expect(state.status, equals(AppBootstrapStatus.unauthenticated));
+        expect(state.isUnauthenticated, isTrue);
+      },
+    );
+
+    test(
+      'System Scope login transitions status to authenticatedSystemScope',
+      () async {
+        final settings = SettingsRepository();
+        await settings.saveOnboardingCompleted(true);
+        final authStore = LocalAuthStore();
+        await authStore.ensureSeeded();
+        if (!await authStore.hasConfiguredAdmin()) {
+          await authStore.createInitialSystemAdmin(
+            name: 'SysAdmin',
+            email: 'admin@nexabiz.test',
+            password: 'Password123!',
+          );
+        }
+
+        final coordinator = container.read(
+          appBootstrapCoordinatorProvider.notifier,
+        );
+        await coordinator.startBootstrap();
+
+        // Log in as System Admin
+        await container
+            .read(authStateProvider.notifier)
+            .login(
+              email: 'admin@nexabiz.test',
+              password: 'Password123!',
+              deviceId: 'test_device_123',
+              deviceName: 'Test Device',
+              platform: 'Linux',
+            );
+
+        final state = container.read(appBootstrapCoordinatorProvider);
+        expect(
+          state.status,
+          equals(AppBootstrapStatus.authenticatedSystemScope),
+        );
+        expect(state.isSystemScope, isTrue);
+        expect(state.activeCompanyId, isNull);
+      },
+    );
   });
 
   group('Phase 2 — Auth Event Queueing & Replay During Bootstrap', () {
-    test('Incoming auth event during session restoration is queued and replayed', () async {
-      final fakeConnectivity = ConnectivityService(internetProbe: () async => false);
-      final container = ProviderContainer(
-        overrides: [
-          connectivityServiceProvider.overrideWithValue(fakeConnectivity),
-        ],
-      );
-      final coordinator = container.read(appBootstrapCoordinatorProvider.notifier);
+    test(
+      'Incoming auth event during session restoration is queued and replayed',
+      () async {
+        final fakeConnectivity = ConnectivityService(
+          internetProbe: () async => false,
+        );
+        final container = ProviderContainer(
+          overrides: [
+            connectivityServiceProvider.overrideWithValue(fakeConnectivity),
+          ],
+        );
+        final coordinator = container.read(
+          appBootstrapCoordinatorProvider.notifier,
+        );
 
-      // Simulate auth state change during initialization
-      container.read(authStateProvider.notifier).logout();
+        // Simulate auth state change during initialization
+        container.read(authStateProvider.notifier).logout();
 
-      await coordinator.startBootstrap();
-      final state = container.read(appBootstrapCoordinatorProvider);
+        await coordinator.startBootstrap();
+        final state = container.read(appBootstrapCoordinatorProvider);
 
-      expect(state.status, isNot(equals(AppBootstrapStatus.initializing)));
-      fakeConnectivity.dispose();
-      container.dispose();
-    });
+        expect(state.status, isNot(equals(AppBootstrapStatus.initializing)));
+        fakeConnectivity.dispose();
+        container.dispose();
+      },
+    );
   });
 
   group('Phase 2 — Sync Execution Boundary (System Scope Guard)', () {
-    test('Sync pass is skipped gracefully when in System Scope (companyId is empty)', () async {
-      final connectivity = ConnectivityService(internetProbe: () async => false);
-      final queue = SyncQueue(companyId: '', encryptedBoxName: 'test_queue');
+    test(
+      'Sync pass is skipped gracefully when in System Scope (companyId is empty)',
+      () async {
+        final connectivity = ConnectivityService(
+          internetProbe: () async => false,
+        );
+        final queue = SyncQueue(companyId: '', encryptedBoxName: 'test_queue');
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        readCompanyId: () => '', // System Scope: empty companyId
-      );
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          readCompanyId: () => '', // System Scope: empty companyId
+        );
 
-      await manager.start(enabled: true);
-      final passResult = await manager.syncNow(notify: false);
+        await manager.start(enabled: true);
+        final passResult = await manager.syncNow(notify: false);
 
-      expect(passResult.outcome, equals(SyncPassOutcome.skippedDisabled));
-      await manager.dispose();
-    });
+        expect(passResult.outcome, equals(SyncPassOutcome.skippedDisabled));
+        await manager.dispose();
+      },
+    );
   });
 }

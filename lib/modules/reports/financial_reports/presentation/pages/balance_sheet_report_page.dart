@@ -77,34 +77,34 @@ class _BalanceSheetReportPageState
         companyId: profile.name.isEmpty ? 'default' : profile.name,
         asOfDate: _asOfDate,
         toDate: _asOfDate,
-        postingScope:
-            _postedOnly ? PostingScope.postedOnly : PostingScope.all,
+        postingScope: _postedOnly ? PostingScope.postedOnly : PostingScope.all,
       );
 
-      final document = await ref.read(loadingControllerProvider).run(
-        message: l10n.reportsGenerating,
-        action: () async {
-          final payload = await ref
-              .read(balanceSheetReportDataPortProvider)
-              .loadFromFilter(
-                filter: filter,
-                labels: labels,
+      final document = await ref
+          .read(loadingControllerProvider)
+          .run(
+            message: l10n.reportsGenerating,
+            action: () async {
+              final payload = await ref
+                  .read(balanceSheetReportDataPortProvider)
+                  .loadFromFilter(filter: filter, labels: labels);
+              final contextPdf = await ReportPdfContext.create(
+                isRtl: locale.languageCode == 'ar',
+                localeCode: locale.toLanguageTag(),
+                pageFormat: ReportPageFormat.a4Portrait,
               );
-          final contextPdf = await ReportPdfContext.create(
-            isRtl: locale.languageCode == 'ar',
-            localeCode: locale.toLanguageTag(),
-            pageFormat: ReportPageFormat.a4Portrait,
+              return ref
+                  .read(reportRunnerProvider)
+                  .run(
+                    definition: const BalanceSheetReportDefinition(),
+                    payload: payload,
+                    context: contextPdf,
+                    title: 'الميزانية العمومية',
+                    fileName:
+                        'balance_sheet_${DateTime.now().millisecondsSinceEpoch}.pdf',
+                  );
+            },
           );
-          return ref.read(reportRunnerProvider).run(
-                definition: const BalanceSheetReportDefinition(),
-                payload: payload,
-                context: contextPdf,
-                title: 'الميزانية العمومية',
-                fileName:
-                    'balance_sheet_${DateTime.now().millisecondsSinceEpoch}.pdf',
-              );
-        },
-      );
 
       if (!mounted) return;
 

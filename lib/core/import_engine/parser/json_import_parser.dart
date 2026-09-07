@@ -111,18 +111,17 @@ class JsonImportParser extends ImportParser {
         final key = headers[c];
         final val = record[key];
 
-        cells.add(ParsedCell(
-          columnIndex: c,
-          headerName: key,
-          rawValue: val,
-          formattedValue: val?.toString() ?? '',
-        ));
+        cells.add(
+          ParsedCell(
+            columnIndex: c,
+            headerName: key,
+            rawValue: val,
+            formattedValue: val?.toString() ?? '',
+          ),
+        );
       }
 
-      rows.add(ParsedRow(
-        rowIndex: r + 1,
-        cells: cells,
-      ));
+      rows.add(ParsedRow(rowIndex: r + 1, cells: cells));
     }
 
     return ParsedSheet(
@@ -175,8 +174,9 @@ class JsonImportParser extends ImportParser {
     }
 
     final result = <String, dynamic>{};
-    final separator =
-        flatteningStrategy == JsonFlatteningStrategy.dotNotation ? '.' : '_';
+    final separator = flatteningStrategy == JsonFlatteningStrategy.dotNotation
+        ? '.'
+        : '_';
 
     input.forEach((key, value) {
       final newKey = prefix.isEmpty ? key : '$prefix$separator$key';

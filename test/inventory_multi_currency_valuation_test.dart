@@ -86,39 +86,43 @@ void main() {
     });
 
     test('FIFO issue 120 units from Receipt 1 & 2 layers', () async {
-      await costLayerService.createLayer(CostLayer(
-        id: '22222222-2222-2222-2222-222222222201',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '22222222-2222-2222-2222-222222222202',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 1),
-        receivedQty: 100,
-        unitCost: 1400.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1400.0,
-        documentCurrencyId: 'SAR',
-        unitCostDocumentCurrency: 10.0,
-        exchangeRate: 140.0,
-        companyId: companyId,
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: '22222222-2222-2222-2222-222222222201',
+          itemCode: productX,
+          warehouseId: warehouseA,
+          movementUuid: '22222222-2222-2222-2222-222222222202',
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 9, 1),
+          receivedQty: 100,
+          unitCost: 1400.0,
+          inventoryCurrencyId: 'YER',
+          unitCostInventoryCurrency: 1400.0,
+          documentCurrencyId: 'SAR',
+          unitCostDocumentCurrency: 10.0,
+          exchangeRate: 140.0,
+          companyId: companyId,
+        ),
+      );
 
-      await costLayerService.createLayer(CostLayer(
-        id: '22222222-2222-2222-2222-222222222203',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '22222222-2222-2222-2222-222222222204',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 2),
-        receivedQty: 100,
-        unitCost: 1800.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1800.0,
-        documentCurrencyId: 'SAR',
-        unitCostDocumentCurrency: 12.0,
-        exchangeRate: 150.0,
-        companyId: companyId,
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: '22222222-2222-2222-2222-222222222203',
+          itemCode: productX,
+          warehouseId: warehouseA,
+          movementUuid: '22222222-2222-2222-2222-222222222204',
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 9, 2),
+          receivedQty: 100,
+          unitCost: 1800.0,
+          inventoryCurrencyId: 'YER',
+          unitCostInventoryCurrency: 1800.0,
+          documentCurrencyId: 'SAR',
+          unitCostDocumentCurrency: 12.0,
+          exchangeRate: 150.0,
+          companyId: companyId,
+        ),
+      );
 
       final result = await costLayerService.consumeLayers(
         itemCode: productX,
@@ -147,39 +151,43 @@ void main() {
     });
 
     test('LIFO issue 120 units from Receipt 1 & 2 layers', () async {
-      await costLayerService.createLayer(CostLayer(
-        id: '33333333-3333-3333-3333-333333333301',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '33333333-3333-3333-3333-333333333302',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 1),
-        receivedQty: 100,
-        unitCost: 1400.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1400.0,
-        documentCurrencyId: 'SAR',
-        unitCostDocumentCurrency: 10.0,
-        exchangeRate: 140.0,
-        companyId: companyId,
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: '33333333-3333-3333-3333-333333333301',
+          itemCode: productX,
+          warehouseId: warehouseA,
+          movementUuid: '33333333-3333-3333-3333-333333333302',
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 9, 1),
+          receivedQty: 100,
+          unitCost: 1400.0,
+          inventoryCurrencyId: 'YER',
+          unitCostInventoryCurrency: 1400.0,
+          documentCurrencyId: 'SAR',
+          unitCostDocumentCurrency: 10.0,
+          exchangeRate: 140.0,
+          companyId: companyId,
+        ),
+      );
 
-      await costLayerService.createLayer(CostLayer(
-        id: '33333333-3333-3333-3333-333333333303',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '33333333-3333-3333-3333-333333333304',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 2),
-        receivedQty: 100,
-        unitCost: 1800.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1800.0,
-        documentCurrencyId: 'SAR',
-        unitCostDocumentCurrency: 12.0,
-        exchangeRate: 150.0,
-        companyId: companyId,
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: '33333333-3333-3333-3333-333333333303',
+          itemCode: productX,
+          warehouseId: warehouseA,
+          movementUuid: '33333333-3333-3333-3333-333333333304',
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 9, 2),
+          receivedQty: 100,
+          unitCost: 1800.0,
+          inventoryCurrencyId: 'YER',
+          unitCostInventoryCurrency: 1800.0,
+          documentCurrencyId: 'SAR',
+          unitCostDocumentCurrency: 12.0,
+          exchangeRate: 150.0,
+          companyId: companyId,
+        ),
+      );
 
       final result = await costLayerService.consumeLayers(
         itemCode: productX,
@@ -196,103 +204,113 @@ void main() {
       expect(result.effectiveUnitCost, equals(208000.0 / 120.0));
     });
 
-    test('Weighted Average Cost (WAC) average unit cost and 50 units issue', () async {
-      await costLayerService.createLayer(CostLayer(
-        id: '44444444-4444-4444-4444-444444444401',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '44444444-4444-4444-4444-444444444402',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 1),
-        receivedQty: 100,
-        unitCost: 1400.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1400.0,
-        companyId: companyId,
-      ));
+    test(
+      'Weighted Average Cost (WAC) average unit cost and 50 units issue',
+      () async {
+        await costLayerService.createLayer(
+          CostLayer(
+            id: '44444444-4444-4444-4444-444444444401',
+            itemCode: productX,
+            warehouseId: warehouseA,
+            movementUuid: '44444444-4444-4444-4444-444444444402',
+            movementType: 'receipt',
+            receivedDate: DateTime.utc(2026, 9, 1),
+            receivedQty: 100,
+            unitCost: 1400.0,
+            inventoryCurrencyId: 'YER',
+            unitCostInventoryCurrency: 1400.0,
+            companyId: companyId,
+          ),
+        );
 
-      await costLayerService.createLayer(CostLayer(
-        id: '44444444-4444-4444-4444-444444444403',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '44444444-4444-4444-4444-444444444404',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 2),
-        receivedQty: 100,
-        unitCost: 1800.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1800.0,
-        companyId: companyId,
-      ));
+        await costLayerService.createLayer(
+          CostLayer(
+            id: '44444444-4444-4444-4444-444444444403',
+            itemCode: productX,
+            warehouseId: warehouseA,
+            movementUuid: '44444444-4444-4444-4444-444444444404',
+            movementType: 'receipt',
+            receivedDate: DateTime.utc(2026, 9, 2),
+            receivedQty: 100,
+            unitCost: 1800.0,
+            inventoryCurrencyId: 'YER',
+            unitCostInventoryCurrency: 1800.0,
+            companyId: companyId,
+          ),
+        );
 
-      final avgCost = await costLayerService.getWeightedAverageCost(
-        productX,
-        warehouseId: warehouseA,
-        companyId: companyId,
-      );
+        final avgCost = await costLayerService.getWeightedAverageCost(
+          productX,
+          warehouseId: warehouseA,
+          companyId: companyId,
+        );
 
-      // Expected WAC: (140,000 + 180,000) / 200 = 1,600 YER/unit
-      expect(avgCost, equals(1600.0));
+        // Expected WAC: (140,000 + 180,000) / 200 = 1,600 YER/unit
+        expect(avgCost, equals(1600.0));
 
-      // Issue 50 units
-      final result = await costLayerService.consumeLayers(
-        itemCode: productX,
-        quantity: 50,
-        method: CostValuationMethod.weightedAverage,
-        issueLineUuid: '44444444-4444-4444-4444-444444444405',
-        movementType: 'issue',
-        warehouseId: warehouseA,
-        companyId: companyId,
-      );
+        // Issue 50 units
+        final result = await costLayerService.consumeLayers(
+          itemCode: productX,
+          quantity: 50,
+          method: CostValuationMethod.weightedAverage,
+          issueLineUuid: '44444444-4444-4444-4444-444444444405',
+          movementType: 'issue',
+          warehouseId: warehouseA,
+          companyId: companyId,
+        );
 
-      // Expected total cost: 50 * 1600 = 80,000 YER
-      expect(result.totalCost, equals(80000.0));
-      expect(result.effectiveUnitCost, equals(1600.0));
-    });
+        // Expected total cost: 50 * 1600 = 80,000 YER
+        expect(result.totalCost, equals(80000.0));
+        expect(result.effectiveUnitCost, equals(1600.0));
+      },
+    );
 
-    test('Historical FX immutability: changing current FX does not affect layer cost', () async {
-      final layer = CostLayer(
-        id: '55555555-5555-5555-5555-555555555501',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '55555555-5555-5555-5555-555555555502',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 1),
-        receivedQty: 10,
-        unitCost: 1400.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1400.0,
-        documentCurrencyId: 'SAR',
-        unitCostDocumentCurrency: 10.0,
-        exchangeRate: 140.0,
-        companyId: companyId,
-      );
-      await costLayerService.createLayer(layer);
+    test(
+      'Historical FX immutability: changing current FX does not affect layer cost',
+      () async {
+        final layer = CostLayer(
+          id: '55555555-5555-5555-5555-555555555501',
+          itemCode: productX,
+          warehouseId: warehouseA,
+          movementUuid: '55555555-5555-5555-5555-555555555502',
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 9, 1),
+          receivedQty: 10,
+          unitCost: 1400.0,
+          inventoryCurrencyId: 'YER',
+          unitCostInventoryCurrency: 1400.0,
+          documentCurrencyId: 'SAR',
+          unitCostDocumentCurrency: 10.0,
+          exchangeRate: 140.0,
+          companyId: companyId,
+        );
+        await costLayerService.createLayer(layer);
 
-      // Verify stored historical layer unit cost is permanently 1,400 YER
-      final openLayers = await costLayerService.getOpenLayers(
-        productX,
-        warehouseId: warehouseA,
-        companyId: companyId,
-      );
-      expect(openLayers.first.unitCostInventoryCurrency, equals(1400.0));
-      expect(openLayers.first.exchangeRate, equals(140.0));
+        // Verify stored historical layer unit cost is permanently 1,400 YER
+        final openLayers = await costLayerService.getOpenLayers(
+          productX,
+          warehouseId: warehouseA,
+          companyId: companyId,
+        );
+        expect(openLayers.first.unitCostInventoryCurrency, equals(1400.0));
+        expect(openLayers.first.exchangeRate, equals(140.0));
 
-      // Consume stock later when market FX rate is 160 YER/SAR
-      final result = await costLayerService.consumeLayers(
-        itemCode: productX,
-        quantity: 5,
-        method: CostValuationMethod.fifo,
-        issueLineUuid: '55555555-5555-5555-5555-555555555503',
-        movementType: 'issue',
-        warehouseId: warehouseA,
-        companyId: companyId,
-      );
+        // Consume stock later when market FX rate is 160 YER/SAR
+        final result = await costLayerService.consumeLayers(
+          itemCode: productX,
+          quantity: 5,
+          method: CostValuationMethod.fifo,
+          issueLineUuid: '55555555-5555-5555-5555-555555555503',
+          movementType: 'issue',
+          warehouseId: warehouseA,
+          companyId: companyId,
+        );
 
-      // Cost MUST still be calculated using the original 1,400 YER cost (not 10 * 160 = 1,600 YER)
-      expect(result.totalCost, equals(7000.0));
-      expect(result.effectiveUnitCost, equals(1400.0));
-    });
+        // Cost MUST still be calculated using the original 1,400 YER cost (not 10 * 160 = 1,600 YER)
+        expect(result.totalCost, equals(7000.0));
+        expect(result.effectiveUnitCost, equals(1400.0));
+      },
+    );
 
     test('Missing and invalid FX validation', () {
       expect(
@@ -334,34 +352,38 @@ void main() {
 
     test('Multi-company currency and layer isolation', () async {
       // Company A layer (YER)
-      await costLayerService.createLayer(CostLayer(
-        id: '66666666-6666-6666-6666-666666666601',
-        itemCode: productX,
-        warehouseId: warehouseA,
-        movementUuid: '66666666-6666-6666-6666-666666666602',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 1),
-        receivedQty: 50,
-        unitCost: 1400.0,
-        inventoryCurrencyId: 'YER',
-        unitCostInventoryCurrency: 1400.0,
-        companyId: 'company_a',
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: '66666666-6666-6666-6666-666666666601',
+          itemCode: productX,
+          warehouseId: warehouseA,
+          movementUuid: '66666666-6666-6666-6666-666666666602',
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 9, 1),
+          receivedQty: 50,
+          unitCost: 1400.0,
+          inventoryCurrencyId: 'YER',
+          unitCostInventoryCurrency: 1400.0,
+          companyId: 'company_a',
+        ),
+      );
 
       // Company B layer (EUR)
-      await costLayerService.createLayer(CostLayer(
-        id: '77777777-7777-7777-7777-777777777701',
-        itemCode: productX,
-        warehouseId: warehouseB,
-        movementUuid: '77777777-7777-7777-7777-777777777702',
-        movementType: 'receipt',
-        receivedDate: DateTime.utc(2026, 9, 1),
-        receivedQty: 50,
-        unitCost: 20.0,
-        inventoryCurrencyId: 'EUR',
-        unitCostInventoryCurrency: 20.0,
-        companyId: 'company_b',
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: '77777777-7777-7777-7777-777777777701',
+          itemCode: productX,
+          warehouseId: warehouseB,
+          movementUuid: '77777777-7777-7777-7777-777777777702',
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 9, 1),
+          receivedQty: 50,
+          unitCost: 20.0,
+          inventoryCurrencyId: 'EUR',
+          unitCostInventoryCurrency: 20.0,
+          companyId: 'company_b',
+        ),
+      );
 
       // Query Company A open layers
       final compALayers = await costLayerService.getOpenLayers(

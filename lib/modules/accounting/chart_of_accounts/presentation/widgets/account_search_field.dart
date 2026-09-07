@@ -26,7 +26,8 @@ class AccountSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppAccountInlineSearchField(
       hintText: hintText ?? label,
-      contract: contract ?? AccountSelectionContract(selectedUuid: selectedUuid),
+      contract:
+          contract ?? AccountSelectionContract(selectedUuid: selectedUuid),
       onAccountSelected: (account) => onSelected(account),
     );
   }

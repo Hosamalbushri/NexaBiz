@@ -60,15 +60,9 @@ class AppFormPagePattern extends StatelessWidget {
           ? Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: 3,
-                  child: body,
-                ),
+                Expanded(flex: 3, child: body),
                 const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  flex: 2,
-                  child: secondaryBody!,
-                ),
+                Expanded(flex: 2, child: secondaryBody!),
               ],
             )
           : Column(

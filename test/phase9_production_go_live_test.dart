@@ -70,16 +70,15 @@ class Phase9MockEntityHandler implements SyncEntityHandler {
   Future<void> abandonPull() async {}
 
   @override
-  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async => null;
+  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async =>
+      null;
 }
 
 class Phase9MockRemoteSyncApi implements RemoteSyncApi {
-  Phase9MockRemoteSyncApi({
-    this.batchPushHandler,
-    this.pullHandler,
-  });
+  Phase9MockRemoteSyncApi({this.batchPushHandler, this.pullHandler});
 
-  final Future<List<SyncBatchPushItemResult>> Function(List<SyncOperation> ops)? batchPushHandler;
+  final Future<List<SyncBatchPushItemResult>> Function(List<SyncOperation> ops)?
+  batchPushHandler;
   final Future<List<SyncRemoteChange>> Function()? pullHandler;
 
   @override
@@ -91,7 +90,9 @@ class Phase9MockRemoteSyncApi implements RemoteSyncApi {
   }
 
   @override
-  Future<List<SyncBatchPushItemResult>> pushBatch(List<SyncOperation> operations) async {
+  Future<List<SyncBatchPushItemResult>> pushBatch(
+    List<SyncOperation> operations,
+  ) async {
     if (batchPushHandler != null) {
       return await batchPushHandler!(operations);
     }
@@ -100,7 +101,10 @@ class Phase9MockRemoteSyncApi implements RemoteSyncApi {
           (op) => SyncBatchPushItemResult(
             operationId: op.id,
             status: 'success',
-            ack: SyncUploadAck(entityId: op.entityId, remoteVersion: op.baseVersion + 1),
+            ack: SyncUploadAck(
+              entityId: op.entityId,
+              remoteVersion: op.baseVersion + 1,
+            ),
           ),
         )
         .toList();
@@ -148,14 +152,14 @@ void main() {
       Hive.registerAdapter(SyncOperationAdapter());
     }
 
-    final box = await Hive.openBox<SyncOperation>('test_phase9_queue_${DateTime.now().microsecondsSinceEpoch}');
-    queue = SyncQueue(
-      box: box,
-      companyId: companyA,
-      deviceId: deviceA,
+    final box = await Hive.openBox<SyncOperation>(
+      'test_phase9_queue_${DateTime.now().microsecondsSinceEpoch}',
     );
+    queue = SyncQueue(box: box, companyId: companyA, deviceId: deviceA);
 
-    final cursorBox = await Hive.openBox<int>('test_phase9_cursor_${DateTime.now().microsecondsSinceEpoch}');
+    final cursorBox = await Hive.openBox<int>(
+      'test_phase9_cursor_${DateTime.now().microsecondsSinceEpoch}',
+    );
     cursorStore = SyncCursorStore(box: cursorBox);
 
     connectivity = ConnectivityService(internetProbe: () async => true);
@@ -168,34 +172,34 @@ void main() {
   });
 
   group('Phase 9 — Final Production Go-Live Gate & Certification', () {
-    test('1. Invariant 1: Tenant isolation blocks cross-tenant enqueue and peek', () async {
-      final opCompanyA = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-comp-a',
-        type: SyncOperationType.create,
-        payload: {'name': 'Company A Product'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      final opCompanyB = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-comp-b',
-        type: SyncOperationType.create,
-        payload: {'name': 'Company B Product'},
-        companyId: 'company-OTHER',
-        deviceId: deviceA,
-      );
+    test(
+      '1. Invariant 1: Tenant isolation blocks cross-tenant enqueue and peek',
+      () async {
+        final opCompanyA = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-comp-a',
+          type: SyncOperationType.create,
+          payload: {'name': 'Company A Product'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        final opCompanyB = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-comp-b',
+          type: SyncOperationType.create,
+          payload: {'name': 'Company B Product'},
+          companyId: 'company-OTHER',
+          deviceId: deviceA,
+        );
 
-      await queue.enqueue(opCompanyA);
-      expect(
-        () async => await queue.enqueue(opCompanyB),
-        throwsException,
-      );
+        await queue.enqueue(opCompanyA);
+        expect(() async => await queue.enqueue(opCompanyB), throwsException);
 
-      final ready = await queue.peekReady();
-      expect(ready.length, equals(1));
-      expect(ready.first.id, equals(opCompanyA.id));
-    });
+        final ready = await queue.peekReady();
+        expect(ready.length, equals(1));
+        expect(ready.first.id, equals(opCompanyA.id));
+      },
+    );
 
     test('2. Invariant 6: Atomic transaction grouping handling', () async {
       final saleOp = SyncOperation.create(
@@ -229,7 +233,9 @@ void main() {
         remoteProvider: () => Phase9MockRemoteSyncApi(),
       );
       manager.registerHandler(Phase9MockEntityHandler(entityType: 'sale'));
-      manager.registerHandler(Phase9MockEntityHandler(entityType: 'journal_entry'));
+      manager.registerHandler(
+        Phase9MockEntityHandler(entityType: 'journal_entry'),
+      );
       await manager.setEnabled(true);
 
       final res = await manager.syncNow();
@@ -239,118 +245,154 @@ void main() {
       expect(remaining.isEmpty, isTrue); // Both committed atomically
     });
 
-    test('3. Invariant 8: Financial non-destructive conflict handling & immutability', () async {
-      final err = SyncErrorClassifier.classify(const SyncConflictFailure('Journal entry conflict', 2));
-      expect(err.quarantine, isFalse); // Conflict goes to SyncStatus.conflict, not deleted or silently overwritten
-      expect(err.isRetryable, isFalse);
-    });
+    test(
+      '3. Invariant 8: Financial non-destructive conflict handling & immutability',
+      () async {
+        final err = SyncErrorClassifier.classify(
+          const SyncConflictFailure('Journal entry conflict', 2),
+        );
+        expect(
+          err.quarantine,
+          isFalse,
+        ); // Conflict goes to SyncStatus.conflict, not deleted or silently overwritten
+        expect(err.isRetryable, isFalse);
+      },
+    );
 
-    test('4. Invariant 9: Lease-based crash recovery threshold (5 minutes)', () async {
-      final now = DateTime.utc(2026, 8, 26, 12, 0);
+    test(
+      '4. Invariant 9: Lease-based crash recovery threshold (5 minutes)',
+      () async {
+        final now = DateTime.utc(2026, 8, 26, 12, 0);
 
-      final activeOp = SyncOperation(
-        id: 'op-lease-active',
-        entityType: 'product',
-        entityId: 'p-active',
-        type: SyncOperationType.create,
-        status: SyncStatus.syncing,
-        payload: {'name': 'Active'},
-        createdAt: now.subtract(const Duration(minutes: 2)),
-        updatedAt: now.subtract(const Duration(minutes: 2)),
-        companyId: companyA,
-        deviceId: deviceA,
-      );
+        final activeOp = SyncOperation(
+          id: 'op-lease-active',
+          entityType: 'product',
+          entityId: 'p-active',
+          type: SyncOperationType.create,
+          status: SyncStatus.syncing,
+          payload: {'name': 'Active'},
+          createdAt: now.subtract(const Duration(minutes: 2)),
+          updatedAt: now.subtract(const Duration(minutes: 2)),
+          companyId: companyA,
+          deviceId: deviceA,
+        );
 
-      final expiredOp = SyncOperation(
-        id: 'op-lease-expired',
-        entityType: 'product',
-        entityId: 'p-expired',
-        type: SyncOperationType.create,
-        status: SyncStatus.syncing,
-        payload: {'name': 'Expired'},
-        createdAt: now.subtract(const Duration(minutes: 10)),
-        updatedAt: now.subtract(const Duration(minutes: 10)),
-        companyId: companyA,
-        deviceId: deviceA,
-      );
+        final expiredOp = SyncOperation(
+          id: 'op-lease-expired',
+          entityType: 'product',
+          entityId: 'p-expired',
+          type: SyncOperationType.create,
+          status: SyncStatus.syncing,
+          payload: {'name': 'Expired'},
+          createdAt: now.subtract(const Duration(minutes: 10)),
+          updatedAt: now.subtract(const Duration(minutes: 10)),
+          companyId: companyA,
+          deviceId: deviceA,
+        );
 
-      await queue.update(activeOp);
-      await queue.update(expiredOp);
+        await queue.update(activeOp);
+        await queue.update(expiredOp);
 
-      final count = await queue.reclaimInFlight(now: now, lease: const Duration(minutes: 5));
-      expect(count, equals(1));
+        final count = await queue.reclaimInFlight(
+          now: now,
+          lease: const Duration(minutes: 5),
+        );
+        expect(count, equals(1));
 
-      final all = await queue.all();
-      expect(all.firstWhere((o) => o.id == 'op-lease-active').status, equals(SyncStatus.syncing));
-      expect(all.firstWhere((o) => o.id == 'op-lease-expired').status, equals(SyncStatus.pending));
-    });
+        final all = await queue.all();
+        expect(
+          all.firstWhere((o) => o.id == 'op-lease-active').status,
+          equals(SyncStatus.syncing),
+        );
+        expect(
+          all.firstWhere((o) => o.id == 'op-lease-expired').status,
+          equals(SyncStatus.pending),
+        );
+      },
+    );
 
-    test('5. Invariant 12: Logout during active sync stops execution safely', () async {
-      var isAuth = true;
+    test(
+      '5. Invariant 12: Logout during active sync stops execution safely',
+      () async {
+        var isAuth = true;
 
-      final op = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-logout',
-        type: SyncOperationType.create,
-        payload: {'name': 'Product'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op);
+        final op = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-logout',
+          type: SyncOperationType.create,
+          payload: {'name': 'Product'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op);
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => isAuth,
-        hasSyncPermission: () => isAuth,
-        readCompanyId: () => isAuth ? companyA : '',
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-        remoteProvider: () => Phase9MockRemoteSyncApi(),
-      );
-      manager.registerHandler(Phase9MockEntityHandler(entityType: 'product'));
-      await manager.setEnabled(true);
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => isAuth,
+          hasSyncPermission: () => isAuth,
+          readCompanyId: () => isAuth ? companyA : '',
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+          remoteProvider: () => Phase9MockRemoteSyncApi(),
+        );
+        manager.registerHandler(Phase9MockEntityHandler(entityType: 'product'));
+        await manager.setEnabled(true);
 
-      // Simulate logout while sync starts
-      isAuth = false;
+        // Simulate logout while sync starts
+        isAuth = false;
 
-      final res = await manager.syncNow();
-      expect(res.outcome == SyncPassOutcome.skippedDisabled || res.outcome == SyncPassOutcome.authRequired, isTrue);
+        final res = await manager.syncNow();
+        expect(
+          res.outcome == SyncPassOutcome.skippedDisabled ||
+              res.outcome == SyncPassOutcome.authRequired,
+          isTrue,
+        );
 
-      final all = await queue.all();
-      expect(all.first.status, equals(SyncStatus.pending)); // Queue preserved safely
-    });
+        final all = await queue.all();
+        expect(
+          all.first.status,
+          equals(SyncStatus.pending),
+        ); // Queue preserved safely
+      },
+    );
 
-    test('6. Invariant 15: Trusted Clock tamper fail-closed temporal gates', () async {
-      final op = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-clock',
-        type: SyncOperationType.create,
-        payload: {'name': 'Product'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op);
+    test(
+      '6. Invariant 15: Trusted Clock tamper fail-closed temporal gates',
+      () async {
+        final op = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-clock',
+          type: SyncOperationType.create,
+          payload: {'name': 'Product'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op);
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.tampered,
-        isTimeTrusted: () => false,
-        remoteProvider: () => Phase9MockRemoteSyncApi(),
-      );
-      manager.registerHandler(Phase9MockEntityHandler(entityType: 'product'));
-      await manager.setEnabled(true);
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.tampered,
+          isTimeTrusted: () => false,
+          remoteProvider: () => Phase9MockRemoteSyncApi(),
+        );
+        manager.registerHandler(Phase9MockEntityHandler(entityType: 'product'));
+        await manager.setEnabled(true);
 
-      final res = await manager.syncNow();
-      expect(res.outcome, equals(SyncPassOutcome.clockTampered));
+        final res = await manager.syncNow();
+        expect(res.outcome, equals(SyncPassOutcome.clockTampered));
 
-      final all = await queue.all();
-      expect(all.first.status, equals(SyncStatus.pending)); // Kept pending, not deleted or corrupted
-    });
+        final all = await queue.all();
+        expect(
+          all.first.status,
+          equals(SyncStatus.pending),
+        ); // Kept pending, not deleted or corrupted
+      },
+    );
 
     test('7. Invariant 17: Durable pull sequence cursor persistence', () async {
       await cursorStore.write('sale', 500);

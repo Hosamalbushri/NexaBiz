@@ -18,10 +18,8 @@ class SearchAccounts {
 
   final AccountRepository _repository;
 
-  Future<List<Account>> call(
-    String query, {
-    bool includeInactive = false,
-  }) => _repository.search(query, includeInactive: includeInactive);
+  Future<List<Account>> call(String query, {bool includeInactive = false}) =>
+      _repository.search(query, includeInactive: includeInactive);
 }
 
 class GetAccountById {
@@ -95,7 +93,6 @@ class SeedDefaultChartOfAccounts {
 
   Future<void> call() => _repository.seedDefaultChart();
 }
-
 
 class GetAccountsByType {
   const GetAccountsByType(this._repository);

@@ -45,8 +45,10 @@ class AuthUser {
   }
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
-    final roleRaw = json['system_role'] as String? ?? json['systemRole'] as String?;
-    final explicitSuper = json['is_super_admin'] == true || json['isSuperAdmin'] == true;
+    final roleRaw =
+        json['system_role'] as String? ?? json['systemRole'] as String?;
+    final explicitSuper =
+        json['is_super_admin'] == true || json['isSuperAdmin'] == true;
     final parsedRole = roleRaw != null
         ? SystemRole.fromString(roleRaw)
         : (explicitSuper ? SystemRole.systemAdmin : SystemRole.regularUser);
@@ -102,4 +104,3 @@ class AuthCompany {
     'role': role,
   };
 }
-

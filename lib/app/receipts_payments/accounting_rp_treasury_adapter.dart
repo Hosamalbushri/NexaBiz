@@ -32,7 +32,11 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     return AppLocalizationsEn();
   }
 
-  RpAccountRef _map(CashRegister register, Account account, AppLocalizations l10n) {
+  RpAccountRef _map(
+    CashRegister register,
+    Account account,
+    AppLocalizations l10n,
+  ) {
     return RpAccountRef(
       accountId: account.uuid,
       code: account.accountCode,
@@ -56,19 +60,27 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     return scope.accounts;
   }
 
-  Future<List<MapEntry<CashRegister, Account>>> _getReadyRegistersWithAccounts() async {
+  Future<List<MapEntry<CashRegister, Account>>>
+  _getReadyRegistersWithAccounts() async {
     final state = await initRepository?.getState();
     final companyId = state?.companyId ?? '';
 
     if (cashRegisterRepository != null) {
-      final readyRegisters = await cashRegisterRepository!.getAccountingReadyCashRegisters(companyId);
+      final readyRegisters = await cashRegisterRepository!
+          .getAccountingReadyCashRegisters(companyId);
       final results = <MapEntry<CashRegister, Account>>[];
       for (final reg in readyRegisters) {
         final accId = reg.accountingAccountId;
         if (accId != null) {
-          final account = await _repository.getByUuid(accId) ??
+          final account =
+              await _repository.getByUuid(accId) ??
               await _repository.getByAccountCode(accId);
-          if (account != null && (companyId.isEmpty || account.companyId == companyId || account.companyId == reg.companyId) && account.canPost && !account.isDeleted) {
+          if (account != null &&
+              (companyId.isEmpty ||
+                  account.companyId == companyId ||
+                  account.companyId == reg.companyId) &&
+              account.canPost &&
+              !account.isDeleted) {
             results.add(MapEntry(reg, account));
           }
         }
@@ -78,28 +90,34 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
 
     // Fallback if cashRegisterRepository is not provided: query scoped accounts
     final scopedAccounts = await _scopedCashAccounts(companyId);
-    return scopedAccounts.map((a) => MapEntry(
-      CashRegister(
-        id: 'cr-${a.uuid}',
-        companyId: companyId.isNotEmpty ? companyId : (a.companyId ?? 'default'),
-        name: a.name,
-        code: a.accountCode,
-        isActive: true,
-        accountingAccountId: a.uuid,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      a,
-    )).toList();
+    return scopedAccounts
+        .map(
+          (a) => MapEntry(
+            CashRegister(
+              id: 'cr-${a.uuid}',
+              companyId: companyId.isNotEmpty
+                  ? companyId
+                  : (a.companyId ?? 'default'),
+              name: a.name,
+              code: a.accountCode,
+              isActive: true,
+              accountingAccountId: a.uuid,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+            a,
+          ),
+        )
+        .toList();
   }
 
   @override
-  Future<List<RpAccountRef>> listCashBoxAccounts({
-    String? languageCode,
-  }) async {
+  Future<List<RpAccountRef>> listCashBoxAccounts({String? languageCode}) async {
     final l10n = _l10n(languageCode);
     final entries = await _getReadyRegistersWithAccounts();
-    return entries.map((e) => _map(e.key, e.value, l10n)).toList(growable: false);
+    return entries
+        .map((e) => _map(e.key, e.value, l10n))
+        .toList(growable: false);
   }
 
   @override
@@ -118,9 +136,14 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     final matched = <MapEntry<CashRegister, Account>>[];
 
     for (final entry in entries) {
-      final regNameMatch = entry.key.name.toLowerCase().contains(normalized) ||
+      final regNameMatch =
+          entry.key.name.toLowerCase().contains(normalized) ||
           entry.key.code.toLowerCase().contains(normalized);
-      final accMatch = AccountLabels.matchesQuery(l10n, entry.value, normalized);
+      final accMatch = AccountLabels.matchesQuery(
+        l10n,
+        entry.value,
+        normalized,
+      );
 
       if (normalized.isEmpty || regNameMatch || accMatch) {
         matched.add(entry);
@@ -149,9 +172,7 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
   }
 
   @override
-  Future<RpAccountRef?> findDefaultCashBox({
-    String? languageCode,
-  }) async {
+  Future<RpAccountRef?> findDefaultCashBox({String? languageCode}) async {
     final l10n = _l10n(languageCode);
     final state = await initRepository?.getState();
     final companyId = state?.companyId ?? 'default';
@@ -172,6 +193,8 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
 
     // Fallback only if cashRegisterRepository is completely unavailable
     final entries = await _getReadyRegistersWithAccounts();
-    return entries.isEmpty ? null : _map(entries.first.key, entries.first.value, l10n);
+    return entries.isEmpty
+        ? null
+        : _map(entries.first.key, entries.first.value, l10n);
   }
 }

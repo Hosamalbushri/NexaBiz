@@ -61,35 +61,43 @@ void main() {
       readCompanyId: () => tenantId,
     );
     final now = DateTime.now().millisecondsSinceEpoch;
-    await accDb.into(accDb.accounts).insert(
-      AccountsCompanion.insert(
-        uuid: generateUuidV4(),
-        accountCode: '1230',
-        name: 'حساب المخزون',
-        accountType: 'asset',
-        normalBalance: 'debit',
-        createdAt: now,
-        updatedAt: now,
-        companyId: Value(tenantId),
-        description: Value('system:inventory'),
-      ),
-    );
-    await accDb.into(accDb.accounts).insert(
-      AccountsCompanion.insert(
-        uuid: generateUuidV4(),
-        accountCode: '5100',
-        name: 'تكلفة البضاعة المباعة',
-        accountType: 'expense',
-        normalBalance: 'debit',
-        createdAt: now,
-        updatedAt: now,
-        companyId: Value(tenantId),
-        description: Value('system:cost_of_goods'),
-      ),
-    );
+    await accDb
+        .into(accDb.accounts)
+        .insert(
+          AccountsCompanion.insert(
+            uuid: generateUuidV4(),
+            accountCode: '1230',
+            name: 'حساب المخزون',
+            accountType: 'asset',
+            normalBalance: 'debit',
+            createdAt: now,
+            updatedAt: now,
+            companyId: Value(tenantId),
+            description: Value('system:inventory'),
+          ),
+        );
+    await accDb
+        .into(accDb.accounts)
+        .insert(
+          AccountsCompanion.insert(
+            uuid: generateUuidV4(),
+            accountCode: '5100',
+            name: 'تكلفة البضاعة المباعة',
+            accountType: 'expense',
+            normalBalance: 'debit',
+            createdAt: now,
+            updatedAt: now,
+            companyId: Value(tenantId),
+            description: Value('system:cost_of_goods'),
+          ),
+        );
     final periodValidator = AccountingPeriodValidator(
-      repository: FiscalYearRepositoryImpl(accDb, readCompanyId: () => tenantId),
-      legacyPolicyReader: () => const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
+      repository: FiscalYearRepositoryImpl(
+        accDb,
+        readCompanyId: () => tenantId,
+      ),
+      legacyPolicyReader: () =>
+          const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
     );
 
     final journalRepo = JournalRepositoryImpl(
@@ -109,10 +117,7 @@ void main() {
       readCompanyId: () => tenantId,
     );
 
-    final validationService = StockValidationServiceImpl(
-      invDb,
-      () => tenantId,
-    );
+    final validationService = StockValidationServiceImpl(invDb, () => tenantId);
     final dependencyDetector = InventoryDependencyDetectorImpl(
       invDb,
       () => tenantId,
@@ -140,209 +145,221 @@ void main() {
   });
 
   group('ROOT FIX 33 — Database Transaction Boundaries Fault-Injection Tests', () {
-    test('1. Fault during Movement Line Insertion: Header save is rolled back cleanly', () async {
-      final receiptId = generateUuidV4();
+    test(
+      '1. Fault during Movement Line Insertion: Header save is rolled back cleanly',
+      () async {
+        final receiptId = generateUuidV4();
 
-      // Create a receipt with invalid negative total cost line (triggers exception during line insertion check)
-      final invalidReceipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: receiptId,
-        supplier: 'Supplier Tx Test',
-        receiptDate: DateTime.now(),
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-FAULT-1',
-            itemName: 'Fault Item 1',
-            quantity: 10.0,
-            unitCost: -5.0, // Invalid negative unit cost
-            totalCost: -50.0,
-          ),
-        ],
-        status: InventoryDocumentStatus.draft,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: tenantId,
-      );
+        // Create a receipt with invalid negative total cost line (triggers exception during line insertion check)
+        final invalidReceipt = StockReceipt(
+          id: receiptId,
+          receiptNumber: receiptId,
+          supplier: 'Supplier Tx Test',
+          receiptDate: DateTime.now(),
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-FAULT-1',
+              itemName: 'Fault Item 1',
+              quantity: 10.0,
+              unitCost: -5.0, // Invalid negative unit cost
+              totalCost: -50.0,
+            ),
+          ],
+          status: InventoryDocumentStatus.draft,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          companyId: tenantId,
+        );
 
-      // Attempt to save receipt (must throw exception)
-      expect(
-        () async => await stockMovementsRepo.saveReceipt(invalidReceipt),
-        throwsA(isA<ArgumentError>()),
-      );
+        // Attempt to save receipt (must throw exception)
+        expect(
+          () async => await stockMovementsRepo.saveReceipt(invalidReceipt),
+          throwsA(isA<ArgumentError>()),
+        );
 
-      // Verify receipt header was NOT inserted into database
-      final savedHeader = await (invDb.select(invDb.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals(receiptId)))
-          .getSingleOrNull();
+        // Verify receipt header was NOT inserted into database
+        final savedHeader = await (invDb.select(
+          invDb.stockReceipts,
+        )..where((tbl) => tbl.uuid.equals(receiptId))).getSingleOrNull();
 
-      expect(savedHeader, isNull);
-    });
+        expect(savedHeader, isNull);
+      },
+    );
 
-    test('2. Fault during Posting: Stock shortage rolls back cost layers and leaves document in draft', () async {
-      final receiptId = generateUuidV4();
+    test(
+      '2. Fault during Posting: Stock shortage rolls back cost layers and leaves document in draft',
+      () async {
+        final receiptId = generateUuidV4();
 
-      final validReceipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: receiptId,
-        supplier: 'Supplier Valid',
-        receiptDate: DateTime.now(),
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-STOCK-OK',
-            itemName: 'Stock Item OK',
-            quantity: 10.0,
-            unitCost: 20.0,
-            totalCost: 200.0,
-          ),
-        ],
-        status: InventoryDocumentStatus.draft,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: tenantId,
-      );
+        final validReceipt = StockReceipt(
+          id: receiptId,
+          receiptNumber: receiptId,
+          supplier: 'Supplier Valid',
+          receiptDate: DateTime.now(),
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-STOCK-OK',
+              itemName: 'Stock Item OK',
+              quantity: 10.0,
+              unitCost: 20.0,
+              totalCost: 200.0,
+            ),
+          ],
+          status: InventoryDocumentStatus.draft,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          companyId: tenantId,
+        );
 
-      await stockMovementsRepo.saveReceipt(validReceipt);
+        await stockMovementsRepo.saveReceipt(validReceipt);
 
-      final docRef = InventoryDocumentRef(
-        documentId: receiptId,
-        documentNumber: receiptId,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'WH-TX-1',
-        status: InventoryDocumentStatus.draft,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: receiptId,
+          documentNumber: receiptId,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'WH-TX-1',
+          status: InventoryDocumentStatus.draft,
+        );
 
-      // Post the receipt successfully
-      final postResult = await postingCoordinator.post(document: docRef);
-      expect(postResult, isA<PostSuccess>());
+        // Post the receipt successfully
+        final postResult = await postingCoordinator.post(document: docRef);
+        expect(postResult, isA<PostSuccess>());
 
-      // Verify cost layers created
-      final layers = await (invDb.select(invDb.inventoryCostLayers)
-            ..where((tbl) => tbl.movementUuid.equals(receiptId)))
-          .get();
-      expect(layers.length, equals(1));
-    });
+        // Verify cost layers created
+        final layers = await (invDb.select(
+          invDb.inventoryCostLayers,
+        )..where((tbl) => tbl.movementUuid.equals(receiptId))).get();
+        expect(layers.length, equals(1));
+      },
+    );
 
-    test('3. Fault during Unposting / Reversal: Dependent movements block reversal atomically', () async {
-      final receiptId = generateUuidV4();
+    test(
+      '3. Fault during Unposting / Reversal: Dependent movements block reversal atomically',
+      () async {
+        final receiptId = generateUuidV4();
 
-      final receipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: receiptId,
-        supplier: 'Supplier Unpost Fault',
-        receiptDate: DateTime.now(),
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-UNPOST-FAULT',
-            itemName: 'Unpost Fault Item',
-            quantity: 50.0,
-            unitCost: 10.0,
-            totalCost: 500.0,
-          ),
-        ],
-        status: InventoryDocumentStatus.draft,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: tenantId,
-      );
+        final receipt = StockReceipt(
+          id: receiptId,
+          receiptNumber: receiptId,
+          supplier: 'Supplier Unpost Fault',
+          receiptDate: DateTime.now(),
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-UNPOST-FAULT',
+              itemName: 'Unpost Fault Item',
+              quantity: 50.0,
+              unitCost: 10.0,
+              totalCost: 500.0,
+            ),
+          ],
+          status: InventoryDocumentStatus.draft,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          companyId: tenantId,
+        );
 
-      await stockMovementsRepo.saveReceipt(receipt);
+        await stockMovementsRepo.saveReceipt(receipt);
 
-      final docRef = InventoryDocumentRef(
-        documentId: receiptId,
-        documentNumber: receiptId,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'WH-TX-2',
-        status: InventoryDocumentStatus.draft,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: receiptId,
+          documentNumber: receiptId,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'WH-TX-2',
+          status: InventoryDocumentStatus.draft,
+        );
 
-      await postingCoordinator.post(document: docRef);
+        await postingCoordinator.post(document: docRef);
 
-      // Consume quantity from this cost layer to simulate dependent outbound movement
-      final issueLineId = generateUuidV4();
-      await costLayerService.consumeLayers(
-        itemCode: 'ITEM-UNPOST-FAULT',
-        quantity: 20.0,
-        method: CostValuationMethod.fifo,
-        issueLineUuid: issueLineId,
-        movementType: 'issue',
-        companyId: tenantId,
-      );
+        // Consume quantity from this cost layer to simulate dependent outbound movement
+        final issueLineId = generateUuidV4();
+        await costLayerService.consumeLayers(
+          itemCode: 'ITEM-UNPOST-FAULT',
+          quantity: 20.0,
+          method: CostValuationMethod.fifo,
+          issueLineUuid: issueLineId,
+          movementType: 'issue',
+          companyId: tenantId,
+        );
 
-      // Attempt to unpost the receipt (returns UnpostBlockedByDependencies result)
-      final unpostResult = await postingCoordinator.unpost(document: docRef);
-      expect(unpostResult, isA<UnpostBlockedByDependencies>());
+        // Attempt to unpost the receipt (returns UnpostBlockedByDependencies result)
+        final unpostResult = await postingCoordinator.unpost(document: docRef);
+        expect(unpostResult, isA<UnpostBlockedByDependencies>());
 
-      // Verify status in DB remains 'posted' (not updated to draft partially)
-      final dbStatus = await (invDb.select(invDb.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals(receiptId)))
-          .getSingle();
+        // Verify status in DB remains 'posted' (not updated to draft partially)
+        final dbStatus = await (invDb.select(
+          invDb.stockReceipts,
+        )..where((tbl) => tbl.uuid.equals(receiptId))).getSingle();
 
-      expect(dbStatus.status, equals('posted'));
-    });
+        expect(dbStatus.status, equals('posted'));
+      },
+    );
 
-    test('4. Atomic Dual-Database Integrity: Invariant maintained on successful posting transaction', () async {
-      final receiptId = generateUuidV4();
+    test(
+      '4. Atomic Dual-Database Integrity: Invariant maintained on successful posting transaction',
+      () async {
+        final receiptId = generateUuidV4();
 
-      final receipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: receiptId,
-        supplier: 'Supplier Dual DB',
-        receiptDate: DateTime.now(),
-        lines: [
-          StockMovementLine(
-            id: generateUuidV4(),
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-DUAL-DB',
-            itemName: 'Dual DB Item',
-            quantity: 15.0,
-            unitCost: 30.0,
-            totalCost: 450.0,
-          ),
-        ],
-        status: InventoryDocumentStatus.draft,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: tenantId,
-      );
+        final receipt = StockReceipt(
+          id: receiptId,
+          receiptNumber: receiptId,
+          supplier: 'Supplier Dual DB',
+          receiptDate: DateTime.now(),
+          lines: [
+            StockMovementLine(
+              id: generateUuidV4(),
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-DUAL-DB',
+              itemName: 'Dual DB Item',
+              quantity: 15.0,
+              unitCost: 30.0,
+              totalCost: 450.0,
+            ),
+          ],
+          status: InventoryDocumentStatus.draft,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          companyId: tenantId,
+        );
 
-      await stockMovementsRepo.saveReceipt(receipt);
+        await stockMovementsRepo.saveReceipt(receipt);
 
-      final docRef = InventoryDocumentRef(
-        documentId: receiptId,
-        documentNumber: receiptId,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'WH-DUAL-1',
-        status: InventoryDocumentStatus.draft,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: receiptId,
+          documentNumber: receiptId,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'WH-DUAL-1',
+          status: InventoryDocumentStatus.draft,
+        );
 
-      final result = await postingCoordinator.post(document: docRef);
-      expect(result, isA<PostSuccess>());
+        final result = await postingCoordinator.post(document: docRef);
+        expect(result, isA<PostSuccess>());
 
-      // Verify inventory database status
-      final invRow = await (invDb.select(invDb.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals(receiptId)))
-          .getSingle();
-      expect(invRow.status, equals('posted'));
+        // Verify inventory database status
+        final invRow = await (invDb.select(
+          invDb.stockReceipts,
+        )..where((tbl) => tbl.uuid.equals(receiptId))).getSingle();
+        expect(invRow.status, equals('posted'));
 
-      // Verify cost layer created in inventory database
-      final costLayers = await (invDb.select(invDb.inventoryCostLayers)
-            ..where((tbl) => tbl.movementUuid.equals(receiptId)))
-          .get();
-      expect(costLayers.length, equals(1));
-      expect(costLayers.first.receivedQty, equals(15.0));
-    });
+        // Verify cost layer created in inventory database
+        final costLayers = await (invDb.select(
+          invDb.inventoryCostLayers,
+        )..where((tbl) => tbl.movementUuid.equals(receiptId))).get();
+        expect(costLayers.length, equals(1));
+        expect(costLayers.first.receivedQty, equals(15.0));
+      },
+    );
   });
 }

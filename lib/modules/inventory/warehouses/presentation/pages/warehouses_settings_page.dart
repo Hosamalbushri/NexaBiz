@@ -29,7 +29,9 @@ class WarehousesSettingsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: l10n.localeName == 'ar' ? 'إدارة المستودعات' : 'Warehouse Management',
+        title: l10n.localeName == 'ar'
+            ? 'إدارة المستودعات'
+            : 'Warehouse Management',
         showBackButton: true,
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -41,7 +43,9 @@ class WarehousesSettingsPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(
           child: Text(
-            l10n.localeName == 'ar' ? 'حدث خطأ أثناء تحميل المستودعات' : 'Error loading warehouses',
+            l10n.localeName == 'ar'
+                ? 'حدث خطأ أثناء تحميل المستودعات'
+                : 'Error loading warehouses',
             style: TextStyle(color: colorScheme.error),
           ),
         ),
@@ -51,17 +55,29 @@ class WarehousesSettingsPage extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.store_mall_directory_outlined, size: 64, color: colorScheme.outline),
+                  Icon(
+                    Icons.store_mall_directory_outlined,
+                    size: 64,
+                    color: colorScheme.outline,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    l10n.localeName == 'ar' ? 'لا توجد مستودعات مضافة' : 'No warehouses found',
-                    style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                    l10n.localeName == 'ar'
+                        ? 'لا توجد مستودعات مضافة'
+                        : 'No warehouses found',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   ElevatedButton.icon(
                     onPressed: () => _openWarehouseDialog(context, ref),
                     icon: const Icon(Icons.add),
-                    label: Text(l10n.localeName == 'ar' ? 'إضافة المستودع الأول' : 'Add First Warehouse'),
+                    label: Text(
+                      l10n.localeName == 'ar'
+                          ? 'إضافة المستودع الأول'
+                          : 'Add First Warehouse',
+                    ),
                   ),
                 ],
               ),
@@ -83,16 +99,24 @@ class WarehousesSettingsPage extends ConsumerWidget {
                 ),
               ),
               SettingsGroupLabel(
-                l10n.localeName == 'ar' ? 'المستودعات المسجلة' : 'Registered Warehouses',
+                l10n.localeName == 'ar'
+                    ? 'المستودعات المسجلة'
+                    : 'Registered Warehouses',
               ),
               SettingsGroup(
                 children: warehouses.map((wh) {
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: wh.isDefault ? colorScheme.primaryContainer : colorScheme.surfaceContainerHigh,
+                      backgroundColor: wh.isDefault
+                          ? colorScheme.primaryContainer
+                          : colorScheme.surfaceContainerHigh,
                       child: Icon(
-                        wh.isDefault ? Icons.warehouse_rounded : Icons.store_outlined,
-                        color: wh.isDefault ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                        wh.isDefault
+                            ? Icons.warehouse_rounded
+                            : Icons.store_outlined,
+                        color: wh.isDefault
+                            ? colorScheme.primary
+                            : colorScheme.onSurfaceVariant,
                       ),
                     ),
                     title: Row(
@@ -101,13 +125,18 @@ class WarehousesSettingsPage extends ConsumerWidget {
                           child: Text(
                             wh.name,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         if (wh.isDefault)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(12),
@@ -154,7 +183,11 @@ class WarehousesSettingsPage extends ConsumerWidget {
                               children: [
                                 const Icon(Icons.star_outline, size: 20),
                                 const SizedBox(width: 8),
-                                Text(l10n.localeName == 'ar' ? 'تعيين كافتراضي' : 'Set as Default'),
+                                Text(
+                                  l10n.localeName == 'ar'
+                                      ? 'تعيين كافتراضي'
+                                      : 'Set as Default',
+                                ),
                               ],
                             ),
                           ),
@@ -163,7 +196,11 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                  color: colorScheme.error,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   l10n.localeName == 'ar' ? 'حذف' : 'Delete',
@@ -184,12 +221,18 @@ class WarehousesSettingsPage extends ConsumerWidget {
     );
   }
 
-  void _openWarehouseDialog(BuildContext context, WidgetRef ref, {Warehouse? warehouse}) async {
+  void _openWarehouseDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    Warehouse? warehouse,
+  }) async {
     final codeCtrl = TextEditingController(text: warehouse?.code ?? '');
     final nameCtrl = TextEditingController(text: warehouse?.name ?? '');
     final addressCtrl = TextEditingController(text: warehouse?.address ?? '');
     final phoneCtrl = TextEditingController(text: warehouse?.phone ?? '');
-    final managerCtrl = TextEditingController(text: warehouse?.managerName ?? '');
+    final managerCtrl = TextEditingController(
+      text: warehouse?.managerName ?? '',
+    );
     bool isDefault = warehouse?.isDefault ?? false;
     CostValuationMethod? costValuationMethod = warehouse?.costValuationMethod;
     final isEditing = warehouse != null;
@@ -199,7 +242,9 @@ class WarehousesSettingsPage extends ConsumerWidget {
     String? adjustmentAccountId;
 
     if (warehouse != null) {
-      final bindingRepo = ref.read(warehouseAccountingBindingRepositoryProvider);
+      final bindingRepo = ref.read(
+        warehouseAccountingBindingRepositoryProvider,
+      );
       final binding = await bindingRepo.getBindingForWarehouse(warehouse.id);
       if (binding != null) {
         inventoryAssetAccountId = binding.inventoryAssetAccountId;
@@ -220,7 +265,10 @@ class WarehousesSettingsPage extends ConsumerWidget {
           final isAr = l10n.localeName == 'ar';
 
           return Dialog(
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
             ),
@@ -242,7 +290,9 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Icon(
-                            isEditing ? Icons.warehouse_rounded : Icons.add_business_rounded,
+                            isEditing
+                                ? Icons.warehouse_rounded
+                                : Icons.add_business_rounded,
                             color: colorScheme.primary,
                             size: 26,
                           ),
@@ -254,8 +304,12 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             children: [
                               Text(
                                 isEditing
-                                    ? (isAr ? 'تعديل بيانات المستودع' : 'Edit Warehouse Details')
-                                    : (isAr ? 'إضافة مستودع جديد' : 'Add New Warehouse'),
+                                    ? (isAr
+                                          ? 'تعديل بيانات المستودع'
+                                          : 'Edit Warehouse Details')
+                                    : (isAr
+                                          ? 'إضافة مستودع جديد'
+                                          : 'Add New Warehouse'),
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -305,9 +359,14 @@ class WarehousesSettingsPage extends ConsumerWidget {
                                 child: TextField(
                                   controller: codeCtrl,
                                   decoration: InputDecoration(
-                                    labelText: isAr ? 'كود المستودع *' : 'Code *',
+                                    labelText: isAr
+                                        ? 'كود المستودع *'
+                                        : 'Code *',
                                     hintText: 'WH-01',
-                                    prefixIcon: const Icon(Icons.qr_code_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.qr_code_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -317,9 +376,14 @@ class WarehousesSettingsPage extends ConsumerWidget {
                                 child: TextField(
                                   controller: nameCtrl,
                                   decoration: InputDecoration(
-                                    labelText: isAr ? 'اسم المستودع *' : 'Warehouse Name *',
+                                    labelText: isAr
+                                        ? 'اسم المستودع *'
+                                        : 'Warehouse Name *',
                                     hintText: 'المستودع الرئيسي',
-                                    prefixIcon: const Icon(Icons.store_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.store_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -329,16 +393,25 @@ class WarehousesSettingsPage extends ConsumerWidget {
                           TextField(
                             controller: managerCtrl,
                             decoration: InputDecoration(
-                              labelText: isAr ? 'أمين / مدير المستودع' : 'Warehouse Manager',
-                              hintText: isAr ? 'اسم المسؤول عن المستودع' : 'Manager Name',
-                              prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
+                              labelText: isAr
+                                  ? 'أمين / مدير المستودع'
+                                  : 'Warehouse Manager',
+                              hintText: isAr
+                                  ? 'اسم المسؤول عن المستودع'
+                                  : 'Manager Name',
+                              prefixIcon: const Icon(
+                                Icons.person_outline_rounded,
+                                size: 20,
+                              ),
                             ),
                           ),
 
                           const SizedBox(height: AppSpacing.md),
                           // Contact & Location Section
                           Text(
-                            isAr ? 'بيانات التواصل والموقع' : 'Contact & Location',
+                            isAr
+                                ? 'بيانات التواصل والموقع'
+                                : 'Contact & Location',
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -350,22 +423,32 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             keyboardType: TextInputType.phone,
                             decoration: InputDecoration(
                               labelText: isAr ? 'رقم الهاتف' : 'Phone Number',
-                              prefixIcon: const Icon(Icons.phone_outlined, size: 20),
+                              prefixIcon: const Icon(
+                                Icons.phone_outlined,
+                                size: 20,
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           TextField(
                             controller: addressCtrl,
                             decoration: InputDecoration(
-                              labelText: isAr ? 'العنوان / الموقع' : 'Address / Location',
-                              prefixIcon: const Icon(Icons.location_on_outlined, size: 20),
+                              labelText: isAr
+                                  ? 'العنوان / الموقع'
+                                  : 'Address / Location',
+                              prefixIcon: const Icon(
+                                Icons.location_on_outlined,
+                                size: 20,
+                              ),
                             ),
                           ),
 
                           const SizedBox(height: AppSpacing.md),
                           // Valuation & Policy Section
                           Text(
-                            isAr ? 'سياسة احتساب التكلفة' : 'Cost Valuation Policy',
+                            isAr
+                                ? 'سياسة احتساب التكلفة'
+                                : 'Cost Valuation Policy',
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -376,48 +459,68 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             isExpanded: true,
                             initialValue: costValuationMethod,
                             decoration: InputDecoration(
-                              labelText: isAr ? 'طريقة احتساب التكلفة الافتراضية' : 'Default Valuation Method',
-                              prefixIcon: const Icon(Icons.calculate_outlined, size: 20),
-                              helperText: isAr ? 'تطبق على جميع المنتجات ما لم يُحدد خلاف ذلك' : 'Applies to products unless overridden',
+                              labelText: isAr
+                                  ? 'طريقة احتساب التكلفة الافتراضية'
+                                  : 'Default Valuation Method',
+                              prefixIcon: const Icon(
+                                Icons.calculate_outlined,
+                                size: 20,
+                              ),
+                              helperText: isAr
+                                  ? 'تطبق على جميع المنتجات ما لم يُحدد خلاف ذلك'
+                                  : 'Applies to products unless overridden',
                             ),
                             items: [
                               DropdownMenuItem<CostValuationMethod?>(
                                 value: null,
                                 child: Text(
-                                  isAr ? 'افتراضي للنظام (المتوسط المرجح)' : 'System Default (Weighted Average)',
+                                  isAr
+                                      ? 'افتراضي للنظام (المتوسط المرجح)'
+                                      : 'System Default (Weighted Average)',
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                               DropdownMenuItem<CostValuationMethod?>(
                                 value: CostValuationMethod.fifo,
                                 child: Text(
-                                  isAr ? 'FIFO - الوارد أولاً يصدر أولاً' : 'FIFO (First-In, First-Out)',
+                                  isAr
+                                      ? 'FIFO - الوارد أولاً يصدر أولاً'
+                                      : 'FIFO (First-In, First-Out)',
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               DropdownMenuItem<CostValuationMethod?>(
                                 value: CostValuationMethod.lifo,
                                 child: Text(
-                                  isAr ? 'LIFO - الوارد أخيراً يصدر أولاً' : 'LIFO (Last-In, First-Out)',
+                                  isAr
+                                      ? 'LIFO - الوارد أخيراً يصدر أولاً'
+                                      : 'LIFO (Last-In, First-Out)',
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               DropdownMenuItem<CostValuationMethod?>(
                                 value: CostValuationMethod.weightedAverage,
                                 child: Text(
-                                  isAr ? 'Weighted Average - المتوسط المرجح' : 'Weighted Average',
+                                  isAr
+                                      ? 'Weighted Average - المتوسط المرجح'
+                                      : 'Weighted Average',
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
-                            onChanged: (val) => setStateDialog(() => costValuationMethod = val),
+                            onChanged: (val) =>
+                                setStateDialog(() => costValuationMethod = val),
                           ),
                           const SizedBox(height: AppSpacing.md),
 
                           // Accounting Binding Section
                           Text(
-                            isAr ? 'الربط المحاسبي بالدليل (مخصص للمستودع)' : 'Chart of Accounts Binding (Custom)',
+                            isAr
+                                ? 'الربط المحاسبي بالدليل (مخصص للمستودع)'
+                                : 'Chart of Accounts Binding (Custom)',
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -429,27 +532,50 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             decoration: BoxDecoration(
                               color: colorScheme.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
                             ),
                             child: Column(
                               children: [
                                 ListTile(
                                   dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  leading: const Icon(Icons.account_balance_outlined),
-                                  title: Text(isAr ? 'حساب أصل المخزون' : 'Inventory Asset Account', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  subtitle: Text(inventoryAssetAccountId ?? (isAr ? 'لم يحدد (استخدام افتراضي الشركة)' : 'Not set (Uses company default)')),
+                                  leading: const Icon(
+                                    Icons.account_balance_outlined,
+                                  ),
+                                  title: Text(
+                                    isAr
+                                        ? 'حساب أصل المخزون'
+                                        : 'Inventory Asset Account',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    inventoryAssetAccountId ??
+                                        (isAr
+                                            ? 'لم يحدد (استخدام افتراضي الشركة)'
+                                            : 'Not set (Uses company default)'),
+                                  ),
                                   trailing: IconButton(
                                     icon: const Icon(Icons.search_rounded),
                                     onPressed: () async {
                                       final acc = await showAppAccountPicker(
                                         context,
-                                        title: isAr ? 'اختر حساب أصل المخزون' : 'Select Inventory Asset Account',
+                                        title: isAr
+                                            ? 'اختر حساب أصل المخزون'
+                                            : 'Select Inventory Asset Account',
                                         initialTypeFilter: AccountType.asset,
                                         selectedUuid: inventoryAssetAccountId,
                                       );
                                       if (acc != null) {
-                                        setStateDialog(() => inventoryAssetAccountId = acc.uuid);
+                                        setStateDialog(
+                                          () => inventoryAssetAccountId =
+                                              acc.uuid,
+                                        );
                                       }
                                     },
                                   ),
@@ -458,20 +584,38 @@ class WarehousesSettingsPage extends ConsumerWidget {
                                 ListTile(
                                   dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  leading: const Icon(Icons.shopping_cart_outlined),
-                                  title: Text(isAr ? 'حساب تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold Account', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  subtitle: Text(cogsAccountId ?? (isAr ? 'لم يحدد (استخدام افتراضي الشركة)' : 'Not set (Uses company default)')),
+                                  leading: const Icon(
+                                    Icons.shopping_cart_outlined,
+                                  ),
+                                  title: Text(
+                                    isAr
+                                        ? 'حساب تكلفة البضاعة المباعة (COGS)'
+                                        : 'Cost of Goods Sold Account',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    cogsAccountId ??
+                                        (isAr
+                                            ? 'لم يحدد (استخدام افتراضي الشركة)'
+                                            : 'Not set (Uses company default)'),
+                                  ),
                                   trailing: IconButton(
                                     icon: const Icon(Icons.search_rounded),
                                     onPressed: () async {
                                       final acc = await showAppAccountPicker(
                                         context,
-                                        title: isAr ? 'اختر حساب تكلفة المبيعات' : 'Select COGS Account',
+                                        title: isAr
+                                            ? 'اختر حساب تكلفة المبيعات'
+                                            : 'Select COGS Account',
                                         initialTypeFilter: AccountType.expense,
                                         selectedUuid: cogsAccountId,
                                       );
                                       if (acc != null) {
-                                        setStateDialog(() => cogsAccountId = acc.uuid);
+                                        setStateDialog(
+                                          () => cogsAccountId = acc.uuid,
+                                        );
                                       }
                                     },
                                   ),
@@ -481,18 +625,34 @@ class WarehousesSettingsPage extends ConsumerWidget {
                                   dense: true,
                                   contentPadding: EdgeInsets.zero,
                                   leading: const Icon(Icons.tune_outlined),
-                                  title: Text(isAr ? 'حساب تسوية المخزون' : 'Inventory Adjustment Account', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  subtitle: Text(adjustmentAccountId ?? (isAr ? 'لم يحدد (استخدام افتراضي الشركة)' : 'Not set (Uses company default)')),
+                                  title: Text(
+                                    isAr
+                                        ? 'حساب تسوية المخزون'
+                                        : 'Inventory Adjustment Account',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    adjustmentAccountId ??
+                                        (isAr
+                                            ? 'لم يحدد (استخدام افتراضي الشركة)'
+                                            : 'Not set (Uses company default)'),
+                                  ),
                                   trailing: IconButton(
                                     icon: const Icon(Icons.search_rounded),
                                     onPressed: () async {
                                       final acc = await showAppAccountPicker(
                                         context,
-                                        title: isAr ? 'اختر حساب تسوية المخزون' : 'Select Adjustment Account',
+                                        title: isAr
+                                            ? 'اختر حساب تسوية المخزون'
+                                            : 'Select Adjustment Account',
                                         selectedUuid: adjustmentAccountId,
                                       );
                                       if (acc != null) {
-                                        setStateDialog(() => adjustmentAccountId = acc.uuid);
+                                        setStateDialog(
+                                          () => adjustmentAccountId = acc.uuid,
+                                        );
                                       }
                                     },
                                   ),
@@ -507,22 +667,37 @@ class WarehousesSettingsPage extends ConsumerWidget {
                               color: colorScheme.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                             child: CheckboxListTile(
                               value: isDefault,
-                              onChanged: (val) => setStateDialog(() => isDefault = val ?? false),
+                              onChanged: (val) => setStateDialog(
+                                () => isDefault = val ?? false,
+                              ),
                               title: Text(
-                                isAr ? 'تعيين كمستودع افتراضي للنظام' : 'Set as Default Warehouse',
-                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                                isAr
+                                    ? 'تعيين كمستودع افتراضي للنظام'
+                                    : 'Set as Default Warehouse',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               subtitle: Text(
-                                isAr ? 'سيتم اعتماد هذا المستودع تلقائياً في العمليات' : 'Auto-selected for default transactions',
-                                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                isAr
+                                    ? 'سيتم اعتماد هذا المستودع تلقائياً في العمليات'
+                                    : 'Auto-selected for default transactions',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                               controlAffinity: ListTileControlAffinity.leading,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
                             ),
                           ),
                         ],
@@ -540,37 +715,54 @@ class WarehousesSettingsPage extends ConsumerWidget {
                         OutlinedButton(
                           onPressed: () => Navigator.of(ctx).pop(),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: Text(isAr ? 'إلغاء' : 'Cancel'),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         FilledButton.icon(
                           onPressed: () async {
-                            if (codeCtrl.text.trim().isEmpty || nameCtrl.text.trim().isEmpty) {
+                            if (codeCtrl.text.trim().isEmpty ||
+                                nameCtrl.text.trim().isEmpty) {
                               showAppSnackBar(
                                 context,
-                                message: isAr ? 'يرجى إدخال كود واسم المستودع' : 'Please enter code and name',
+                                message: isAr
+                                    ? 'يرجى إدخال كود واسم المستودع'
+                                    : 'Please enter code and name',
                                 isSuccess: false,
                               );
                               return;
                             }
 
-                            final targetWarehouseId = warehouse?.id ?? generateUuidV4();
+                            final targetWarehouseId =
+                                warehouse?.id ?? generateUuidV4();
                             final newWh = Warehouse(
                               id: targetWarehouseId,
                               code: codeCtrl.text.trim(),
                               name: nameCtrl.text.trim(),
                               isDefault: isDefault,
                               costValuationMethod: costValuationMethod,
-                              address: addressCtrl.text.trim().isEmpty ? null : addressCtrl.text.trim(),
-                              phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
-                              managerName: managerCtrl.text.trim().isEmpty ? null : managerCtrl.text.trim(),
+                              address: addressCtrl.text.trim().isEmpty
+                                  ? null
+                                  : addressCtrl.text.trim(),
+                              phone: phoneCtrl.text.trim().isEmpty
+                                  ? null
+                                  : phoneCtrl.text.trim(),
+                              managerName: managerCtrl.text.trim().isEmpty
+                                  ? null
+                                  : managerCtrl.text.trim(),
                               version: warehouse?.version ?? 1,
                             );
 
-                            final companyId = ref.read(currentCompanyIdProvider);
+                            final companyId = ref.read(
+                              currentCompanyIdProvider,
+                            );
                             final binding = WarehouseAccountingBinding(
                               id: targetWarehouseId,
                               warehouseId: targetWarehouseId,
@@ -583,20 +775,32 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             );
 
                             Navigator.of(ctx).pop();
-                            final success = await ref.read(warehouseControllerProvider.notifier).saveWarehouse(newWh, binding: binding);
+                            final success = await ref
+                                .read(warehouseControllerProvider.notifier)
+                                .saveWarehouse(newWh, binding: binding);
                             if (context.mounted && success) {
                               showAppSnackBar(
                                 context,
-                                message: isAr ? 'تم حفظ المستودع والربط المحاسبي بنجاح' : 'Warehouse and accounting binding saved successfully',
+                                message: isAr
+                                    ? 'تم حفظ المستودع والربط المحاسبي بنجاح'
+                                    : 'Warehouse and accounting binding saved successfully',
                                 isSuccess: true,
                               );
                             }
                           },
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          icon: const Icon(Icons.check_circle_rounded, size: 20),
+                          icon: const Icon(
+                            Icons.check_circle_rounded,
+                            size: 20,
+                          ),
                           label: Text(isAr ? 'حفظ البيانات' : 'Save Details'),
                         ),
                       ],
@@ -611,16 +815,32 @@ class WarehousesSettingsPage extends ConsumerWidget {
     );
   }
 
-  void _setDefaultWarehouse(BuildContext context, WidgetRef ref, Warehouse wh) async {
+  void _setDefaultWarehouse(
+    BuildContext context,
+    WidgetRef ref,
+    Warehouse wh,
+  ) async {
     final updated = wh.copyWith(isDefault: true);
-    final success = await ref.read(warehouseControllerProvider.notifier).saveWarehouse(updated);
+    final success = await ref
+        .read(warehouseControllerProvider.notifier)
+        .saveWarehouse(updated);
     if (context.mounted && success) {
       final l10n = AppLocalizations.of(context);
-      showAppSnackBar(context, message: l10n.localeName == 'ar' ? 'تم تعيين المستودع كافتراضي' : 'Set as default warehouse', isSuccess: true);
+      showAppSnackBar(
+        context,
+        message: l10n.localeName == 'ar'
+            ? 'تم تعيين المستودع كافتراضي'
+            : 'Set as default warehouse',
+        isSuccess: true,
+      );
     }
   }
 
-  void _confirmDeleteWarehouse(BuildContext context, WidgetRef ref, Warehouse wh) {
+  void _confirmDeleteWarehouse(
+    BuildContext context,
+    WidgetRef ref,
+    Warehouse wh,
+  ) {
     final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
@@ -637,15 +857,28 @@ class WarehousesSettingsPage extends ConsumerWidget {
             child: Text(l10n.localeName == 'ar' ? 'إلغاء' : 'Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () async {
               Navigator.of(ctx).pop();
-              final success = await ref.read(warehouseControllerProvider.notifier).deleteWarehouse(wh.id);
+              final success = await ref
+                  .read(warehouseControllerProvider.notifier)
+                  .deleteWarehouse(wh.id);
               if (context.mounted && success) {
-                showAppSnackBar(context, message: l10n.localeName == 'ar' ? 'تم حذف المستودع بنجاح' : 'Warehouse deleted successfully', isSuccess: true);
+                showAppSnackBar(
+                  context,
+                  message: l10n.localeName == 'ar'
+                      ? 'تم حذف المستودع بنجاح'
+                      : 'Warehouse deleted successfully',
+                  isSuccess: true,
+                );
               }
             },
-            child: Text(l10n.localeName == 'ar' ? 'حذف' : 'Delete', style: const TextStyle(color: Colors.white)),
+            child: Text(
+              l10n.localeName == 'ar' ? 'حذف' : 'Delete',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

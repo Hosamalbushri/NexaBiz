@@ -1,10 +1,6 @@
 import 'entities/entitlement.dart';
 
-enum BuildFlavor {
-  free,
-  premium,
-  enterprise,
-}
+enum BuildFlavor { free, premium, enterprise }
 
 abstract class PackageContract {
   String get code;

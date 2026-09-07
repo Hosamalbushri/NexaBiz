@@ -6,10 +6,7 @@ import '../../../shared/permissions/standard_permission_ops.dart';
 
 /// Inventory permission codes (primary + legacy).
 abstract final class InventoryPermissions {
-  static const stockView = [
-    'inventory.stock_count.view',
-    'inventory.view',
-  ];
+  static const stockView = ['inventory.stock_count.view', 'inventory.view'];
   static const stockAdjust = [
     'inventory.stock_count.adjust',
     'inventory.adjust',
@@ -20,14 +17,8 @@ abstract final class InventoryPermissions {
     'inventory.create',
   ];
   static const stockExport = ['inventory.stock_count.export'];
-  static const stockClear = [
-    'inventory.stock_count.clear',
-    'inventory.delete',
-  ];
-  static const productsView = [
-    'inventory.products.view',
-    'products.view',
-  ];
+  static const stockClear = ['inventory.stock_count.clear', 'inventory.delete'];
+  static const productsView = ['inventory.products.view', 'products.view'];
   static const productsCreate = [
     'inventory.products.create',
     'products.create',
@@ -46,10 +37,7 @@ abstract final class InventoryPermissions {
     'inventory.products.view',
     'products.view',
   ];
-  static const receiptsView = [
-    'inventory.receipts.view',
-    'inventory.view',
-  ];
+  static const receiptsView = ['inventory.receipts.view', 'inventory.view'];
   static const receiptsCreate = [
     'inventory.receipts.create',
     'inventory.create',
@@ -72,22 +60,10 @@ abstract final class InventoryPermissions {
     'inventory.receipts.delete',
     'inventory.delete',
   ];
-  static const issuesView = [
-    'inventory.issues.view',
-    'inventory.view',
-  ];
-  static const issuesCreate = [
-    'inventory.issues.create',
-    'inventory.create',
-  ];
-  static const issuesUpdate = [
-    'inventory.issues.update',
-    'inventory.update',
-  ];
-  static const issuesDelete = [
-    'inventory.issues.delete',
-    'inventory.delete',
-  ];
+  static const issuesView = ['inventory.issues.view', 'inventory.view'];
+  static const issuesCreate = ['inventory.issues.create', 'inventory.create'];
+  static const issuesUpdate = ['inventory.issues.update', 'inventory.update'];
+  static const issuesDelete = ['inventory.issues.delete', 'inventory.delete'];
   static const issuesPost = [
     'inventory.issues.post',
     'inventory.issues.create',
@@ -100,18 +76,33 @@ abstract final class InventoryPermissions {
   ];
 
   static const transfersView = ['inventory.transfers.view', 'inventory.view'];
-  static const transfersCreate = ['inventory.transfers.create', 'inventory.create'];
-  static const transfersUpdate = ['inventory.transfers.update', 'inventory.update'];
-  static const transfersDelete = ['inventory.transfers.delete', 'inventory.delete'];
+  static const transfersCreate = [
+    'inventory.transfers.create',
+    'inventory.create',
+  ];
+  static const transfersUpdate = [
+    'inventory.transfers.update',
+    'inventory.update',
+  ];
+  static const transfersDelete = [
+    'inventory.transfers.delete',
+    'inventory.delete',
+  ];
   static const transfersPost = ['inventory.transfers.post', 'inventory.create'];
-  static const transfersReverse = ['inventory.transfers.reverse', 'inventory.delete'];
+  static const transfersReverse = [
+    'inventory.transfers.reverse',
+    'inventory.delete',
+  ];
 
   static const returnsView = ['inventory.returns.view', 'inventory.view'];
   static const returnsCreate = ['inventory.returns.create', 'inventory.create'];
   static const returnsUpdate = ['inventory.returns.update', 'inventory.update'];
   static const returnsDelete = ['inventory.returns.delete', 'inventory.delete'];
   static const returnsPost = ['inventory.returns.post', 'inventory.create'];
-  static const returnsReverse = ['inventory.returns.reverse', 'inventory.delete'];
+  static const returnsReverse = [
+    'inventory.returns.reverse',
+    'inventory.delete',
+  ];
 
   static const adjustCost = [
     'inventory.stock_count.adjust',
@@ -119,7 +110,6 @@ abstract final class InventoryPermissions {
     'inventory.adjust',
   ];
 }
-
 
 /// Inventory RBAC package — Stock count + Products services.
 PermissionPackageDef inventoryPermissionPackage() {

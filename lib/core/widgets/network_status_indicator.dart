@@ -65,11 +65,7 @@ class NetworkStatusIndicator extends ConsumerWidget {
     if (!showLabel) {
       return Tooltip(
         message: labelText,
-        child: Icon(
-          icon,
-          size: compact ? 18 : 22,
-          color: textColor,
-        ),
+        child: Icon(icon, size: compact ? 18 : 22, color: textColor),
       );
     }
 
@@ -81,10 +77,7 @@ class NetworkStatusIndicator extends ConsumerWidget {
       decoration: BoxDecoration(
         color: badgeColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: textColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: textColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -99,11 +92,7 @@ class NetworkStatusIndicator extends ConsumerWidget {
               ),
             )
           else
-            Icon(
-              icon,
-              size: compact ? 14 : 16,
-              color: textColor,
-            ),
+            Icon(icon, size: compact ? 14 : 16, color: textColor),
           const SizedBox(width: 5),
           Text(
             labelText,

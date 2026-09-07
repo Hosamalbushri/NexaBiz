@@ -26,7 +26,6 @@ import 'package:stock_count/modules/sync/engine/data/repositories/sync_repositor
 import 'package:stock_count/modules/sync/engine/domain/repositories/sync_repository.dart';
 import 'package:stock_count/modules/sync/engine/domain/usecases/execute_sync_usecase.dart';
 
-
 final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   final service = ConnectivityService(
     internetProbe: () {
@@ -92,10 +91,10 @@ final remoteSyncApiProvider = Provider<RemoteSyncApi>((ref) {
   // After login the config token is cleared (JWT lives in SecureStorage),
   // so accept either a config token or an injected auth client as credential.
   final url = config.baseUrl.trim();
-  final hasUrl = url.isNotEmpty &&
+  final hasUrl =
+      url.isNotEmpty &&
       (url.startsWith('https://') || url.startsWith('http://'));
-  final hasAuth =
-      config.apiToken.trim().isNotEmpty || authClient != null;
+  final hasAuth = config.apiToken.trim().isNotEmpty || authClient != null;
 
   if (!hasUrl || !hasAuth) {
     return InMemoryRemoteSyncApi();
@@ -163,7 +162,6 @@ final executeSyncUseCaseProvider = Provider<ExecuteSyncUseCase>((ref) {
 });
 
 final syncOverviewProvider = StreamProvider<SyncOverview>((ref) {
-
   return ref.watch(syncManagerProvider).overviewStream;
 });
 

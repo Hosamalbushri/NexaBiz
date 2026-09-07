@@ -9,7 +9,6 @@ import 'package:stock_count/modules/sales/data/repositories/sale_repository_impl
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   group('SyncQueue coalesce', () {
     late Directory tempDir;
     late Box<SyncOperation> syncBox;

@@ -79,4 +79,3 @@ class AccountResolutionResult {
       Object.hashAll(descendants) ^
       message.hashCode;
 }
-

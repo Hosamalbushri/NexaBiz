@@ -68,7 +68,10 @@ class SyncLoginCredentialStore {
     String? serverContext,
   }) async {
     final isSync = _resolveIsSyncMode(mode, isSyncMode);
-    if (!await isBiometricLoginEnabled(isSyncMode: isSync, serverContext: serverContext)) {
+    if (!await isBiometricLoginEnabled(
+      isSyncMode: isSync,
+      serverContext: serverContext,
+    )) {
       return false;
     }
     final email = await readEmail(isSyncMode: isSync);
@@ -156,10 +159,7 @@ class SyncLoginCredentialStore {
     }
   }
 
-  Future<void> clear({
-    AuthenticationMode? mode,
-    bool? isSyncMode,
-  }) async {
+  Future<void> clear({AuthenticationMode? mode, bool? isSyncMode}) async {
     final isSync = _resolveIsSyncMode(mode, isSyncMode);
     try {
       await _secure.delete(key: _emailKey(isSync));
@@ -186,4 +186,3 @@ class SyncLoginCredentialStore {
     } catch (_) {}
   }
 }
-

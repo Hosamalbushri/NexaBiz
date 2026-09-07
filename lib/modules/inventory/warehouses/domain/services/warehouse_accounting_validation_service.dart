@@ -4,12 +4,14 @@ abstract class WarehouseAccountingValidationResult {
   const WarehouseAccountingValidationResult();
 }
 
-class WarehouseAccountingValidationSuccess extends WarehouseAccountingValidationResult {
+class WarehouseAccountingValidationSuccess
+    extends WarehouseAccountingValidationResult {
   const WarehouseAccountingValidationSuccess({required this.accountUuid});
   final String accountUuid;
 }
 
-class WarehouseAccountingValidationFailure extends WarehouseAccountingValidationResult {
+class WarehouseAccountingValidationFailure
+    extends WarehouseAccountingValidationResult {
   const WarehouseAccountingValidationFailure({
     required this.reason,
     required this.role,

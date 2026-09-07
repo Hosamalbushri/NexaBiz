@@ -16,7 +16,6 @@ import 'helpers/journal_posting_test_helper.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late AccountingDatabase db;
   late AccountRepositoryImpl accounts;
   late JournalRepositoryImpl journals;

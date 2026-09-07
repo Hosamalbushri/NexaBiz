@@ -45,8 +45,12 @@ class AppRoutes {
   static const String administration = '/administration';
   static const String administrationUsers = '/administration/users';
   static const String administrationRoles = '/administration/roles';
+  static const String administrationRolesCreate = '/administration/roles/new';
+  static const String administrationRolesEdit = '/administration/roles/edit';
   static const String administrationPermissions = '/administration/permissions';
   static const String administrationDevices = '/administration/devices';
+  static const String administrationCompanies = '/administration/companies';
+  static const String administrationBranches = '/administration/branches';
 
   /// Reports hub for a specific module (e.g. `/reports/modules/inventory`).
   static const String reportsModules = '$reports/modules';

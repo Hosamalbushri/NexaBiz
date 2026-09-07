@@ -80,9 +80,7 @@ class _AppShellState extends ConsumerState<AppShell>
       }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          ref
-              .read(shellHistoryProvider.notifier)
-              .pushLocation(widget.location);
+          ref.read(shellHistoryProvider.notifier).pushLocation(widget.location);
         }
       });
     }
@@ -253,180 +251,172 @@ class _AppShellState extends ConsumerState<AppShell>
       }
 
       return Scaffold(
-          // Keep docked FAB + BottomAppBar fixed when the keyboard opens.
-          resizeToAvoidBottomInset: false,
-          // Required so the notched BottomAppBar reveals body through the cutout.
-          extendBody: showChrome,
-          body: MediaQuery(
-            data: media.copyWith(
-              padding: media.padding.copyWith(bottom: bodyBottomPadding),
-            ),
-            child: _buildQuickActionsLayer(
-              navHeight: navHeight,
-              child: widget.child,
-            ),
+        // Keep docked FAB + BottomAppBar fixed when the keyboard opens.
+        resizeToAvoidBottomInset: false,
+        // Required so the notched BottomAppBar reveals body through the cutout.
+        extendBody: showChrome,
+        body: MediaQuery(
+          data: media.copyWith(
+            padding: media.padding.copyWith(bottom: bodyBottomPadding),
           ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
-          floatingActionButton: showChrome && !keyboardOpen
-              ? QuickActionsFab(
-                  key: kQuickActionsNavButtonKey,
-                  tooltip: l10n.quickActionsTitle,
-                  isOpen: _quickActionsOpen,
-                  onPressed: _toggleQuickActions,
-                )
-              : null,
-          bottomNavigationBar: showChrome
-              ? CustomBottomNav(
-                  selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
-                  onDestinationSelected: (i) => _onSelect(context, i),
-                  destinations: [
-                    for (final item in items)
-                      CustomBottomNavDestination(
-                        icon: item.icon,
-                        selectedIcon: item.selectedIcon,
-                        label: item.label(l10n),
-                      ),
-                  ],
-                  // Drop the notch while the FAB is hidden for the keyboard.
-                  shape: keyboardOpen ? null : QuickActionsFab.barNotchShape,
-                )
-              : null,
-        );
-      }
+          child: _buildQuickActionsLayer(
+            navHeight: navHeight,
+            child: widget.child,
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: showChrome && !keyboardOpen
+            ? QuickActionsFab(
+                key: kQuickActionsNavButtonKey,
+                tooltip: l10n.quickActionsTitle,
+                isOpen: _quickActionsOpen,
+                onPressed: _toggleQuickActions,
+              )
+            : null,
+        bottomNavigationBar: showChrome
+            ? CustomBottomNav(
+                selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
+                onDestinationSelected: (i) => _onSelect(context, i),
+                destinations: [
+                  for (final item in items)
+                    CustomBottomNavDestination(
+                      icon: item.icon,
+                      selectedIcon: item.selectedIcon,
+                      label: item.label(l10n),
+                    ),
+                ],
+                // Drop the notch while the FAB is hidden for the keyboard.
+                shape: keyboardOpen ? null : QuickActionsFab.barNotchShape,
+              )
+            : null,
+      );
+    }
 
     if (AppBreakpoints.isTablet(width)) {
       if (!showChrome) {
         return Scaffold(
-            body: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
+          body: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
         );
       }
 
       return Scaffold(
-          body: Row(
-            children: [
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isShortScreen = constraints.maxHeight < 480;
-                  final labelType = isShortScreen
-                      ? NavigationRailLabelType.selected
-                      : NavigationRailLabelType.all;
-
-                  return SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: IntrinsicHeight(
-                        child: NavigationRail(
-                          selectedIndex: railIndex,
-                          onDestinationSelected: (i) => _onSelect(context, i),
-                          labelType: labelType,
-                          leading: Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.md,
-                            ),
-                            child: FloatingActionButton(
-                              key: kQuickActionsNavButtonKey,
-                              mini: true,
-                              tooltip: l10n.quickActionsTitle,
-                              onPressed: _toggleQuickActions,
-                              child: _animatedQuickActionIcon(mini: true),
-                            ),
-                          ),
-                          destinations: [
-                            for (final item in items)
-                              NavigationRailDestination(
-                                icon: Icon(item.icon),
-                                selectedIcon: Icon(item.selectedIcon),
-                                label: Text(item.label(l10n)),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                child: _buildQuickActionsLayer(
-                  navHeight: 0,
-                  child: widget.child,
-                ),
-              ),
-            ],
-          ),
-        );
-    }
-
-    if (!showChrome) {
-      return Scaffold(
-          body: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
-      );
-    }
-
-    return Scaffold(
         body: Row(
           children: [
-            SizedBox(
-              width: 260,
-              child: Material(
-                color: Theme.of(context).colorScheme.surface,
-                child: SafeArea(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.md,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isShortScreen = constraints.maxHeight < 480;
+                final labelType = isShortScreen
+                    ? NavigationRailLabelType.selected
+                    : NavigationRailLabelType.all;
+
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Text(
-                          l10n.appTitle,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                    child: IntrinsicHeight(
+                      child: NavigationRail(
+                        selectedIndex: railIndex,
+                        onDestinationSelected: (i) => _onSelect(context, i),
+                        labelType: labelType,
+                        leading: Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                          child: FloatingActionButton(
+                            key: kQuickActionsNavButtonKey,
+                            mini: true,
+                            tooltip: l10n.quickActionsTitle,
+                            onPressed: _toggleQuickActions,
+                            child: _animatedQuickActionIcon(mini: true),
+                          ),
                         ),
+                        destinations: [
+                          for (final item in items)
+                            NavigationRailDestination(
+                              icon: Icon(item.icon),
+                              selectedIcon: Icon(item.selectedIcon),
+                              label: Text(item.label(l10n)),
+                            ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.sm,
-                          0,
-                          AppSpacing.sm,
-                          AppSpacing.md,
-                        ),
-                        child: FilledButton.tonalIcon(
-                          key: kQuickActionsNavButtonKey,
-                          onPressed: _toggleQuickActions,
-                          icon: _animatedQuickActionIcon(mini: false),
-                          label: Text(l10n.quickActionsTitle),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      for (var i = 0; i < items.length; i++)
-                        _DrawerTile(
-                          selected: selectedIndex == i,
-                          icon: selectedIndex == i
-                              ? items[i].selectedIcon
-                              : items[i].icon,
-                          label: items[i].label(l10n),
-                          onTap: () => _onSelect(context, i),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
             const VerticalDivider(width: 1),
             Expanded(
-              child: _buildQuickActionsLayer(
-                navHeight: 0,
-                child: widget.child,
-              ),
+              child: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
             ),
           ],
         ),
       );
+    }
+
+    if (!showChrome) {
+      return Scaffold(
+        body: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
+      );
+    }
+
+    return Scaffold(
+      body: Row(
+        children: [
+          SizedBox(
+            width: 260,
+            child: Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: SafeArea(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.md,
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Text(
+                        l10n.appTitle,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.sm,
+                        0,
+                        AppSpacing.sm,
+                        AppSpacing.md,
+                      ),
+                      child: FilledButton.tonalIcon(
+                        key: kQuickActionsNavButtonKey,
+                        onPressed: _toggleQuickActions,
+                        icon: _animatedQuickActionIcon(mini: false),
+                        label: Text(l10n.quickActionsTitle),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    for (var i = 0; i < items.length; i++)
+                      _DrawerTile(
+                        selected: selectedIndex == i,
+                        icon: selectedIndex == i
+                            ? items[i].selectedIcon
+                            : items[i].icon,
+                        label: items[i].label(l10n),
+                        onTap: () => _onSelect(context, i),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const VerticalDivider(width: 1),
+          Expanded(
+            child: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
+          ),
+        ],
+      ),
+    );
   }
 }
 

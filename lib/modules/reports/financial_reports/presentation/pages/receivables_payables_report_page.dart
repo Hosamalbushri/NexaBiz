@@ -84,9 +84,13 @@ class _ReceivablesPayablesReportPageState
         periodLabel: 'الفترة',
         periodAll: 'جميع التواريخ',
         columnEntityCode: 'الرمز',
-        columnEntityName: isReceivables ? 'اسم العميل/الحساب' : 'اسم المورد/الحساب',
+        columnEntityName: isReceivables
+            ? 'اسم العميل/الحساب'
+            : 'اسم المورد/الحساب',
         columnOpeningBalance: 'رصيد البداية',
-        columnInvoices: isReceivables ? 'الفواتير/المديونية' : 'الفواتير/المطالبات',
+        columnInvoices: isReceivables
+            ? 'الفواتير/المديونية'
+            : 'الفواتير/المطالبات',
         columnPayments: isReceivables ? 'المقبوضات' : 'المدفوعات',
         columnAdjustments: 'التسويات',
         columnEndingBalance: 'الرصيد المتبقي',
@@ -100,35 +104,38 @@ class _ReceivablesPayablesReportPageState
         companyId: profile.name.isEmpty ? 'default' : profile.name,
         fromDate: _from,
         toDate: _to,
-        postingScope:
-            _postedOnly ? PostingScope.postedOnly : PostingScope.all,
+        postingScope: _postedOnly ? PostingScope.postedOnly : PostingScope.all,
       );
 
-      final document = await ref.read(loadingControllerProvider).run(
-        message: l10n.reportsGenerating,
-        action: () async {
-          final payload = await ref
-              .read(receivablesPayablesReportDataPortProvider)
-              .loadFromFilter(
-                filter: filter,
-                type: widget.type,
-                labels: labels,
+      final document = await ref
+          .read(loadingControllerProvider)
+          .run(
+            message: l10n.reportsGenerating,
+            action: () async {
+              final payload = await ref
+                  .read(receivablesPayablesReportDataPortProvider)
+                  .loadFromFilter(
+                    filter: filter,
+                    type: widget.type,
+                    labels: labels,
+                  );
+              final contextPdf = await ReportPdfContext.create(
+                isRtl: locale.languageCode == 'ar',
+                localeCode: locale.toLanguageTag(),
+                pageFormat: ReportPageFormat.a4Landscape,
               );
-          final contextPdf = await ReportPdfContext.create(
-            isRtl: locale.languageCode == 'ar',
-            localeCode: locale.toLanguageTag(),
-            pageFormat: ReportPageFormat.a4Landscape,
+              return ref
+                  .read(reportRunnerProvider)
+                  .run(
+                    definition: const ReceivablesPayablesReportDefinition(),
+                    payload: payload,
+                    context: contextPdf,
+                    title: isReceivables ? 'ذمم العملاء' : 'ذمم الموردين',
+                    fileName:
+                        '${isReceivables ? "receivables" : "payables"}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+                  );
+            },
           );
-          return ref.read(reportRunnerProvider).run(
-                definition: const ReceivablesPayablesReportDefinition(),
-                payload: payload,
-                context: contextPdf,
-                title: isReceivables ? 'ذمم العملاء' : 'ذمم الموردين',
-                fileName:
-                    '${isReceivables ? "receivables" : "payables"}_${DateTime.now().millisecondsSinceEpoch}.pdf',
-              );
-        },
-      );
 
       if (!mounted) return;
 
@@ -177,7 +184,8 @@ class _ReceivablesPayablesReportPageState
             title: isReceivables
                 ? 'كشف أركان مديونية العملاء'
                 : 'كشف مستحقات الموردين',
-            subtitle: 'تتبع رصيد البداية، الفواتير، المقبوضات/المدفوعات والرصيد المتبقي',
+            subtitle:
+                'تتبع رصيد البداية، الفواتير، المقبوضات/المدفوعات والرصيد المتبقي',
             fromDate: _from,
             toDate: _to,
             onPickFromDate: _pickFrom,

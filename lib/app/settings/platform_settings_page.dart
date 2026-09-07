@@ -107,216 +107,210 @@ class _PlatformSettingsBody extends ConsumerWidget {
                 bottom: pageInsets.bottom,
               ),
               children: [
-              SettingsExpandableSection(
-          icon: Icons.tune_rounded,
-          title: l10n.settingsGeneralSection,
-          subtitle: l10n.settingsGeneralSectionSubtitle,
-          children: [
-            Text(
-              l10n.appearance,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              children: [
-                Expanded(
-                  child: SettingsChoiceCard(
-                    icon: Icons.light_mode_outlined,
-                    label: l10n.lightTheme,
-                    showLabel: false,
-                    dense: true,
-                    selected: themeMode == ThemeMode.light,
-                    onTap: () => _saveTheme(
-                      ref,
-                      repository,
-                      ThemeMode.light,
+                SettingsExpandableSection(
+                  icon: Icons.tune_rounded,
+                  title: l10n.settingsGeneralSection,
+                  subtitle: l10n.settingsGeneralSectionSubtitle,
+                  children: [
+                    Text(
+                      l10n.appearance,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: SettingsChoiceCard(
-                    icon: Icons.dark_mode_outlined,
-                    label: l10n.darkTheme,
-                    showLabel: false,
-                    dense: true,
-                    selected: themeMode == ThemeMode.dark,
-                    onTap: () => _saveTheme(
-                      ref,
-                      repository,
-                      ThemeMode.dark,
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SettingsChoiceCard(
+                            icon: Icons.light_mode_outlined,
+                            label: l10n.lightTheme,
+                            showLabel: false,
+                            dense: true,
+                            selected: themeMode == ThemeMode.light,
+                            onTap: () =>
+                                _saveTheme(ref, repository, ThemeMode.light),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: SettingsChoiceCard(
+                            icon: Icons.dark_mode_outlined,
+                            label: l10n.darkTheme,
+                            showLabel: false,
+                            dense: true,
+                            selected: themeMode == ThemeMode.dark,
+                            onTap: () =>
+                                _saveTheme(ref, repository, ThemeMode.dark),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: SettingsChoiceCard(
+                            icon: Icons.brightness_auto_outlined,
+                            label: l10n.systemTheme,
+                            showLabel: false,
+                            dense: true,
+                            selected: themeMode == ThemeMode.system,
+                            onTap: () =>
+                                _saveTheme(ref, repository, ThemeMode.system),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: SettingsChoiceCard(
-                    icon: Icons.brightness_auto_outlined,
-                    label: l10n.systemTheme,
-                    showLabel: false,
-                    dense: true,
-                    selected: themeMode == ThemeMode.system,
-                    onTap: () => _saveTheme(
-                      ref,
-                      repository,
-                      ThemeMode.system,
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l10n.language,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              l10n.language,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              children: [
-                Expanded(
-                  child: SettingsChoiceCard(
-                    icon: Icons.language_rounded,
-                    label: l10n.english,
-                    dense: true,
-                    selected:
-                        (locale ?? AppConstants.englishLocale) ==
-                        AppConstants.englishLocale,
-                    onTap: () => _saveLocale(
-                      ref,
-                      repository,
-                      AppConstants.englishLocale,
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SettingsChoiceCard(
+                            icon: Icons.language_rounded,
+                            label: l10n.english,
+                            dense: true,
+                            selected:
+                                (locale ?? AppConstants.englishLocale) ==
+                                AppConstants.englishLocale,
+                            onTap: () => _saveLocale(
+                              ref,
+                              repository,
+                              AppConstants.englishLocale,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: SettingsChoiceCard(
+                            icon: Icons.translate_rounded,
+                            label: l10n.arabic,
+                            dense: true,
+                            selected:
+                                (locale ?? AppConstants.englishLocale) ==
+                                AppConstants.arabicLocale,
+                            onTap: () => _saveLocale(
+                              ref,
+                              repository,
+                              AppConstants.arabicLocale,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: SettingsChoiceCard(
-                    icon: Icons.translate_rounded,
-                    label: l10n.arabic,
-                    dense: true,
-                    selected:
-                        (locale ?? AppConstants.englishLocale) ==
-                        AppConstants.arabicLocale,
-                    onTap: () => _saveLocale(
-                      ref,
-                      repository,
-                      AppConstants.arabicLocale,
+                const SizedBox(height: AppSpacing.sm),
+                SettingsGroup(
+                  children: [
+                    SettingsTile(
+                      icon: Icons.store_outlined,
+                      title: l10n.setupSettingsTitle,
+                      subtitle:
+                          companyAsync.asData?.value.name ??
+                          l10n.systemSetupEditCompany,
+                      showChevron: true,
+                      onTap: () => context.push(AppRoutes.settingsSetup),
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        SettingsGroup(
-          children: [
-            SettingsTile(
-              icon: Icons.store_outlined,
-              title: l10n.setupSettingsTitle,
-              subtitle: companyAsync.asData?.value.name ?? l10n.systemSetupEditCompany,
-              showChevron: true,
-              onTap: () => context.push(AppRoutes.settingsSetup),
-            ),
-            SettingsTile(
-              icon: Icons.business_outlined,
-              title: l10n.authSelectCompanyTitle,
-              subtitle: companyAsync.asData?.value.name ?? '',
-              showChevron: true,
-              onTap: () => CompanySelectionSheet.show(context),
-            ),
-            SettingsTile(
-              icon: Icons.star_outline,
-              title: l10n.subscriptionAndPackagesTitle,
-              subtitle: l10n.subscriptionAndPackagesSubtitle,
-              showChevron: true,
-              onTap: () => context.push(AppRoutes.settingsSubscription),
-            ),
-            SettingsTile(
-              icon: Icons.shield_outlined,
-              title: l10n.appLockSettingsTitle,
-              subtitle: ref.watch(appLockControllerProvider).enabled
-                  ? l10n.appLockSettingsEnabledHint
-                  : l10n.appLockSettingsDisabledHint,
-              showChevron: true,
-              onTap: () => context.push(AppRoutes.settingsSecurity),
-            ),
-          ],
-        ),
-        if (categories.isNotEmpty) ...[
-          SettingsGroup(
-            children: [
-              SettingsTile(
-                icon: Icons.grid_view_rounded,
-                title: l10n.moduleUnitsSettingsTitle,
-                subtitle: l10n.moduleUnitsSettingsSubtitle,
-                showChevron: true,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ModulesSettingsPage(categories: categories),
+                    SettingsTile(
+                      icon: Icons.business_outlined,
+                      title: l10n.authSelectCompanyTitle,
+                      subtitle: companyAsync.asData?.value.name ?? '',
+                      showChevron: true,
+                      onTap: () => CompanySelectionSheet.show(context),
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        SettingsExpandableSection(
-          icon: Icons.info_outline_rounded,
-          title: l10n.about,
-          subtitle: l10n.settingsAboutSectionSubtitle,
-          children: [
-            packageInfo.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (_, _) => Text(
-                l10n.settingsAboutSectionSubtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+                    SettingsTile(
+                      icon: Icons.star_outline,
+                      title: l10n.subscriptionAndPackagesTitle,
+                      subtitle: l10n.subscriptionAndPackagesSubtitle,
+                      showChevron: true,
+                      onTap: () => context.push(AppRoutes.settingsSubscription),
+                    ),
+                    SettingsTile(
+                      icon: Icons.shield_outlined,
+                      title: l10n.appLockSettingsTitle,
+                      subtitle: ref.watch(appLockControllerProvider).enabled
+                          ? l10n.appLockSettingsEnabledHint
+                          : l10n.appLockSettingsDisabledHint,
+                      showChevron: true,
+                      onTap: () => context.push(AppRoutes.settingsSecurity),
+                    ),
+                  ],
                 ),
-              ),
-              data: (info) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _AboutInfoRow(
-                    icon: Icons.apps_outlined,
-                    label: l10n.applicationName,
-                    value: info.appName,
+                if (categories.isNotEmpty) ...[
+                  SettingsGroup(
+                    children: [
+                      SettingsTile(
+                        icon: Icons.grid_view_rounded,
+                        title: l10n.moduleUnitsSettingsTitle,
+                        subtitle: l10n.moduleUnitsSettingsSubtitle,
+                        showChevron: true,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ModulesSettingsPage(categories: categories),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  _AboutInfoRow(
-                    icon: Icons.tag_outlined,
-                    label: l10n.version,
-                    value: '${info.version} (${info.buildNumber})',
-                  ),
                 ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        SettingsGroup(
-          children: [
-            SettingsTile(
-              icon: Icons.restart_alt_rounded,
-              iconColor: colorScheme.error,
-              titleColor: colorScheme.error,
-              title: l10n.resetApplication,
-              subtitle: l10n.settingsResetHint,
-              onTap: () => _resetSettings(context, ref, repository),
-            ),
-          ],
-        ),
+                SettingsExpandableSection(
+                  icon: Icons.info_outline_rounded,
+                  title: l10n.about,
+                  subtitle: l10n.settingsAboutSectionSubtitle,
+                  children: [
+                    packageInfo.when(
+                      loading: () => const Padding(
+                        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (_, _) => Text(
+                        l10n.settingsAboutSectionSubtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      data: (info) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _AboutInfoRow(
+                            icon: Icons.apps_outlined,
+                            label: l10n.applicationName,
+                            value: info.appName,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          _AboutInfoRow(
+                            icon: Icons.tag_outlined,
+                            label: l10n.version,
+                            value: '${info.version} (${info.buildNumber})',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SettingsGroup(
+                  children: [
+                    SettingsTile(
+                      icon: Icons.restart_alt_rounded,
+                      iconColor: colorScheme.error,
+                      titleColor: colorScheme.error,
+                      title: l10n.resetApplication,
+                      subtitle: l10n.settingsResetHint,
+                      onTap: () => _resetSettings(context, ref, repository),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.xxl),
               ],
             ),
@@ -377,8 +371,6 @@ class _PlatformSettingsBody extends ConsumerWidget {
   }
 }
 
-
-
 class _ModuleCard extends StatelessWidget {
   const _ModuleCard({required this.category});
 
@@ -390,7 +382,8 @@ class _ModuleCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final title = category.titleBuilder(l10n);
-    final subtitle = category.subtitleBuilder?.call(l10n) ??
+    final subtitle =
+        category.subtitleBuilder?.call(l10n) ??
         (l10n.localeName == 'ar'
             ? '${category.items.length} وحدات إعدادات'
             : '${category.items.length} setting units');

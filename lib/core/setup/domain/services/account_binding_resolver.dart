@@ -21,8 +21,8 @@ class AccountBindingResolver {
   const AccountBindingResolver({
     required SetupAccountLookupPort accountLookupPort,
     required AccountBindingRepository bindingRepository,
-  })  : _accountLookupPort = accountLookupPort,
-        _bindingRepository = bindingRepository;
+  }) : _accountLookupPort = accountLookupPort,
+       _bindingRepository = bindingRepository;
 
   final SetupAccountLookupPort _accountLookupPort;
   final AccountBindingRepository _bindingRepository;
@@ -44,7 +44,8 @@ class AccountBindingResolver {
       throw AccountBindingException(
         packageId: requirement.packageId,
         requirementKey: requirement.requirementKey,
-        message: 'Account with UUID "$trimmedUuid" does not exist in Chart of Accounts.',
+        message:
+            'Account with UUID "$trimmedUuid" does not exist in Chart of Accounts.',
       );
     }
 
@@ -74,7 +75,8 @@ class AccountBindingResolver {
         throw AccountBindingException(
           packageId: requirement.packageId,
           requirementKey: requirement.requirementKey,
-          message: 'Exact account requirement "$trimmedUuid" cannot be a summary group account and must be eligible for posting.',
+          message:
+              'Exact account requirement "$trimmedUuid" cannot be a summary group account and must be eligible for posting.',
         );
       }
     }
@@ -85,10 +87,10 @@ class AccountBindingResolver {
       throw AccountBindingException(
         packageId: requirement.packageId,
         requirementKey: requirement.requirementKey,
-        message: 'Account type "${account.accountType.name}" is incompatible with expected type "${requirement.expectedAccountType!.name}".',
+        message:
+            'Account type "${account.accountType.name}" is incompatible with expected type "${requirement.expectedAccountType!.name}".',
       );
     }
-
 
     final binding = AccountBinding(
       companyId: trimmedCompanyId,
@@ -129,7 +131,8 @@ class AccountBindingResolver {
     if (account == null) {
       return AccountResolutionResult.invalidStale(
         requirement: requirement,
-        message: 'Bound account [${binding.accountUuid}] no longer exists in Chart of Accounts.',
+        message:
+            'Bound account [${binding.accountUuid}] no longer exists in Chart of Accounts.',
       );
     }
 
@@ -139,7 +142,8 @@ class AccountBindingResolver {
         account.companyId != trimmedCompanyId) {
       return AccountResolutionResult.invalidStale(
         requirement: requirement,
-        message: 'Bound account [${binding.accountUuid}] belongs to company [${account.companyId}] instead of active tenant [$trimmedCompanyId].',
+        message:
+            'Bound account [${binding.accountUuid}] belongs to company [${account.companyId}] instead of active tenant [$trimmedCompanyId].',
       );
     }
 
@@ -147,7 +151,8 @@ class AccountBindingResolver {
     if (!account.isActive || account.isDeleted) {
       return AccountResolutionResult.invalidStale(
         requirement: requirement,
-        message: 'Bound account [${binding.accountUuid}] is inactive or archived.',
+        message:
+            'Bound account [${binding.accountUuid}] is inactive or archived.',
       );
     }
 
@@ -156,7 +161,8 @@ class AccountBindingResolver {
       if (account.isGroup || !account.canPost) {
         return AccountResolutionResult.invalidStale(
           requirement: requirement,
-          message: 'Bound account [${binding.accountUuid}] is a summary group account and ineligible for exact posting.',
+          message:
+              'Bound account [${binding.accountUuid}] is a summary group account and ineligible for exact posting.',
         );
       }
       return AccountResolutionResult.bound(
@@ -199,7 +205,8 @@ class AccountBindingResolver {
     throw AccountBindingException(
       packageId: requirement.packageId,
       requirementKey: requirement.requirementKey,
-      message: 'Financial transaction blocked: Required account is missing or invalid (${result.message}).',
+      message:
+          'Financial transaction blocked: Required account is missing or invalid (${result.message}).',
     );
   }
 }

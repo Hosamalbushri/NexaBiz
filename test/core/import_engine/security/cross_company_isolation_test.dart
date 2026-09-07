@@ -19,7 +19,8 @@ class MockCategoryRepository implements CategoryRepository {
   Future<Category?> getCategoryById(String id) async => _categories[id];
 
   @override
-  Future<List<Category>> getAllCategories() async => _categories.values.toList();
+  Future<List<Category>> getAllCategories() async =>
+      _categories.values.toList();
 
   @override
   Future<void> saveCategory(Category category) async {
@@ -40,8 +41,9 @@ class MockProductRepository implements ProductRepository {
   final Map<int, Product> _products = {};
 
   @override
-  Future<Product?> getByItemCode(String code) async =>
-      _products.values.cast<Product?>().firstWhere((p) => p?.itemCode == code, orElse: () => null);
+  Future<Product?> getByItemCode(String code) async => _products.values
+      .cast<Product?>()
+      .firstWhere((p) => p?.itemCode == code, orElse: () => null);
 
   @override
   Future<Product> insert(ProductDraft draft) async {
@@ -93,22 +95,26 @@ class MockAccountRepository implements AccountRepository {
   final Map<int, Account> _accounts = {};
 
   @override
-  Future<Account?> getByAccountCode(String code) async =>
-      _accounts.values.cast<Account?>().firstWhere((a) => a?.accountCode == code, orElse: () => null);
+  Future<Account?> getByAccountCode(String code) async => _accounts.values
+      .cast<Account?>()
+      .firstWhere((a) => a?.accountCode == code, orElse: () => null);
 
   @override
-  Future<Account?> getByUuid(String uuid) async =>
-      _accounts.values.cast<Account?>().firstWhere((a) => a?.uuid == uuid, orElse: () => null);
+  Future<Account?> getByUuid(String uuid) async => _accounts.values
+      .cast<Account?>()
+      .firstWhere((a) => a?.uuid == uuid, orElse: () => null);
 
   @override
   Future<List<Account>> getAll({bool includeInactive = false}) async =>
       _accounts.values.toList();
 
   @override
-  Future<List<Account>> search(String query, {bool includeInactive = false}) async =>
-      _accounts.values
-          .where((a) => a.accountCode.contains(query) || a.name.contains(query))
-          .toList();
+  Future<List<Account>> search(
+    String query, {
+    bool includeInactive = false,
+  }) async => _accounts.values
+      .where((a) => a.accountCode.contains(query) || a.name.contains(query))
+      .toList();
 
   @override
   Future<Account> insert(AccountDraft draft) async {
@@ -189,242 +195,284 @@ void main() {
       worker.dispose();
     });
 
-    test('1. ATTACK: Company A attempts to resolve Category belonging to Company B', () async {
-      final categoryRepo = MockCategoryRepository();
-      final productRepo = MockProductRepository();
+    test(
+      '1. ATTACK: Company A attempts to resolve Category belonging to Company B',
+      () async {
+        final categoryRepo = MockCategoryRepository();
+        final productRepo = MockProductRepository();
 
-      // Company B Category
-      await categoryRepo.saveCategory(Category(
-        id: 'CAT-COMP-B-001',
-        code: 'ELECTRONICS-B',
-        name: 'Electronics B',
-        warehouseId: 'WH-B',
-        companyId: companyB,
-        createdAt: DateTime.now().toUtc(),
-        updatedAt: DateTime.now().toUtc(),
-      ));
-
-      final executor = ProductImportExecutor(
-        productRepository: productRepo,
-        categoryRepository: categoryRepo,
-      );
-
-      // Company A attempts to resolve category "Electronics B" or fixed category ID "CAT-COMP-B-001"
-      expect(
-        () async => executor.executeProductRow(
-          rowData: {
-            'name': 'Laptop A',
-            'itemCode': 'LAP-001',
-            'price': 1000.0,
-            'category': 'Electronics B',
-          },
-          companyId: companyA,
-        ),
-        throwsA(isA<TenantIsolationException>()),
-      );
-
-      expect(
-        () async => executor.executeProductRow(
-          rowData: {
-            'name': 'Laptop A2',
-            'itemCode': 'LAP-002',
-            'price': 1200.0,
-          },
-          companyId: companyA,
-          categoryConfig: const CategoryAssignmentConfig(
-            strategyType: CategoryAssignmentStrategyType.fixed,
-            fixedCategoryId: 'CAT-COMP-B-001',
+        // Company B Category
+        await categoryRepo.saveCategory(
+          Category(
+            id: 'CAT-COMP-B-001',
+            code: 'ELECTRONICS-B',
+            name: 'Electronics B',
+            warehouseId: 'WH-B',
+            companyId: companyB,
+            createdAt: DateTime.now().toUtc(),
+            updatedAt: DateTime.now().toUtc(),
           ),
-        ),
-        throwsA(isA<TenantIsolationException>()),
-      );
-    });
+        );
 
-    test('2. ATTACK: Company A attempts to resolve Parent Account belonging to Company B', () async {
-      final accountRepo = MockAccountRepository();
-      final now = DateTime.now().toUtc();
-      accountRepo.addMockAccount(Account(
-        id: 100,
-        uuid: 'UUID-COMP-B-1000',
-        companyId: companyB,
-        accountCode: '1000',
-        name: 'Assets B',
-        accountType: AccountType.asset,
-        normalBalance: NormalBalance.debit,
-        level: 1,
-        isGroup: true,
-        isActive: true,
-        isSystemAccount: false,
-        createdAt: now,
-        updatedAt: now,
-      ));
+        final executor = ProductImportExecutor(
+          productRepository: productRepo,
+          categoryRepository: categoryRepo,
+        );
 
-      final executor = AccountImportExecutor(accountRepository: accountRepo);
+        // Company A attempts to resolve category "Electronics B" or fixed category ID "CAT-COMP-B-001"
+        expect(
+          () async => executor.executeProductRow(
+            rowData: {
+              'name': 'Laptop A',
+              'itemCode': 'LAP-001',
+              'price': 1000.0,
+              'category': 'Electronics B',
+            },
+            companyId: companyA,
+          ),
+          throwsA(isA<TenantIsolationException>()),
+        );
 
-      // Company A attempts to use Company B's "1000" parent account
-      expect(
-        () async => executor.executeAccountRow(
-          rowData: {
-            'accountCode': '1100',
-            'name': 'Current Assets A',
-            'accountType': 'asset',
-            'parentAccount': '1000',
-          },
-          companyId: companyA,
-        ),
-        throwsA(isA<TenantIsolationException>()),
-      );
-    });
+        expect(
+          () async => executor.executeProductRow(
+            rowData: {
+              'name': 'Laptop A2',
+              'itemCode': 'LAP-002',
+              'price': 1200.0,
+            },
+            companyId: companyA,
+            categoryConfig: const CategoryAssignmentConfig(
+              strategyType: CategoryAssignmentStrategyType.fixed,
+              fixedCategoryId: 'CAT-COMP-B-001',
+            ),
+          ),
+          throwsA(isA<TenantIsolationException>()),
+        );
+      },
+    );
 
-    test('3. ATTACK: Company A attempts to overwrite or delete Company B job in repository', () async {
-      final jobB = ImportJob(
-        jobId: 'JOB-COMP-B-777',
-        companyId: companyB,
-        userId: 'USER-B',
-        source: 'b_data.xlsx',
-        status: ImportJobStatus.queued,
-        createdAt: DateTime.now().toUtc(),
-      );
+    test(
+      '2. ATTACK: Company A attempts to resolve Parent Account belonging to Company B',
+      () async {
+        final accountRepo = MockAccountRepository();
+        final now = DateTime.now().toUtc();
+        accountRepo.addMockAccount(
+          Account(
+            id: 100,
+            uuid: 'UUID-COMP-B-1000',
+            companyId: companyB,
+            accountCode: '1000',
+            name: 'Assets B',
+            accountType: AccountType.asset,
+            normalBalance: NormalBalance.debit,
+            level: 1,
+            isGroup: true,
+            isActive: true,
+            isSystemAccount: false,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
 
-      await jobRepo.save(jobB);
+        final executor = AccountImportExecutor(accountRepository: accountRepo);
 
-      // Company A attempts to read Company B job -> Returns null
-      final readAttempt = await jobRepo.getById('JOB-COMP-B-777', companyId: companyA);
-      expect(readAttempt, isNull);
+        // Company A attempts to use Company B's "1000" parent account
+        expect(
+          () async => executor.executeAccountRow(
+            rowData: {
+              'accountCode': '1100',
+              'name': 'Current Assets A',
+              'accountType': 'asset',
+              'parentAccount': '1000',
+            },
+            companyId: companyA,
+          ),
+          throwsA(isA<TenantIsolationException>()),
+        );
+      },
+    );
 
-      // Company A attempts to delete Company B job -> Throws TenantIsolationException
-      expect(
-        () async => jobRepo.delete('JOB-COMP-B-777', companyId: companyA),
-        throwsA(isA<TenantIsolationException>()),
-      );
-
-      // Company A attempts to overwrite Company B job -> Throws TenantIsolationException
-      final maliciousJobA = jobB.copyWith(companyId: companyA);
-      expect(
-        () async => jobRepo.save(maliciousJobA),
-        throwsA(isA<TenantIsolationException>()),
-      );
-    });
-
-    test('4. ATTACK: Company A attempts to modify or delete Company B ImportTemplate', () async {
-      final templateB = ImportTemplate(
-        templateId: 'TPL-COMP-B-001',
-        name: 'Company B Template',
-        companyId: companyB,
-        targetProfileId: 'PROF-PROD',
-        targetEntityType: 'Product',
-      );
-
-      await templateRepo.createTemplate(templateB);
-
-      // Read attempt by Company A -> Returns null
-      final loaded = await templateRepo.getTemplate('TPL-COMP-B-001', companyId: companyA);
-      expect(loaded, isNull);
-
-      // Delete attempt by Company A -> Throws TenantIsolationException
-      expect(
-        () async => templateRepo.deleteTemplate('TPL-COMP-B-001', companyId: companyA),
-        throwsA(isA<TenantIsolationException>()),
-      );
-
-      // Update attempt under Company A context -> Throws TenantIsolationException
-      expect(
-        () async => templateRepo.updateTemplate(templateB.copyWith(companyId: companyA)),
-        throwsA(isA<TenantIsolationException>()),
-      );
-    });
-
-    test('5. ATTACK: Company A attempts to read Company B post-import Report & Audit Record', () async {
-      final reportB = ImportReport(
-        auditRecord: ImportAuditRecord(
-          auditId: 'AUDIT-B-1',
-          jobId: 'JOB-COMP-B-99',
+    test(
+      '3. ATTACK: Company A attempts to overwrite or delete Company B job in repository',
+      () async {
+        final jobB = ImportJob(
+          jobId: 'JOB-COMP-B-777',
           companyId: companyB,
           userId: 'USER-B',
           source: 'b_data.xlsx',
-          entityType: 'Product',
-          configuration: const {},
-          mappingSummary: const {},
-          startedAt: DateTime.now().toUtc(),
-          totalRows: 10,
-          createdRows: 8,
-          updatedRows: 0,
-          skippedRows: 2,
-          failedRows: 0,
-          warningCount: 0,
-          errorCount: 0,
-        ),
-      );
+          status: ImportJobStatus.queued,
+          createdAt: DateTime.now().toUtc(),
+        );
 
-      await reportRepo.saveReport(reportB);
+        await jobRepo.save(jobB);
 
-      // Read attempt by Company A -> Returns null
-      final retrievedReport = await reportRepo.getReport('JOB-COMP-B-99', companyId: companyA);
-      expect(retrievedReport, isNull);
-
-      final retrievedAudit = await reportRepo.getAuditRecord('JOB-COMP-B-99', companyId: companyA);
-      expect(retrievedAudit, isNull);
-
-      // Listing audits for Company A -> Empty list
-      final listA = await reportRepo.listAuditRecordsForCompany(companyA);
-      expect(listA, isEmpty);
-    });
-
-    test('6. ATTACK: RelationResolver detects candidate belonging to different company', () async {
-      const resolver = RelationResolver();
-
-      final definition = RelationDefinition(
-        targetEntityKey: 'category',
-        strategy: ResolutionStrategy.name,
-        lookupFn: (ref, strategy, [companyId]) async => [
-          const ResolvedCandidate(
-            id: 'CAT-B-99',
-            displayName: 'Leaked Category',
-            companyId: companyB, // Candidate belongs to Company B
-          ),
-        ],
-      );
-
-      expect(
-        () async => resolver.resolve(
-          rawReference: 'Leaked Category',
-          definition: definition,
-          companyId: companyA, // Scope is Company A
-        ),
-        throwsA(isA<TenantIsolationException>()),
-      );
-    });
-
-    test('7. ATTACK: Product accounting relation assigned account from Company B', () async {
-      final categoryRepo = MockCategoryRepository();
-      final productRepo = MockProductRepository();
-
-      final executor = ProductImportExecutor(
-        productRepository: productRepo,
-        categoryRepository: categoryRepo,
-        accountsRegistry: {
-          '1300': const ResolvedAccount(
-            accountId: 'ACC-COMP-B-1300',
-            accountCode: '1300',
-            accountName: 'Inventory B',
-            companyId: companyB, // Belongs to Company B
-          ),
-        },
-      );
-
-      // Company A product row tries to link to Company B's asset account '1300'
-      expect(
-        () async => executor.executeProductRow(
-          rowData: {
-            'name': 'Product A',
-            'itemCode': 'PROD-A',
-            'price': 500.0,
-            'accountingAssetAccount': '1300',
-          },
+        // Company A attempts to read Company B job -> Returns null
+        final readAttempt = await jobRepo.getById(
+          'JOB-COMP-B-777',
           companyId: companyA,
-        ),
-        throwsA(isA<TenantIsolationException>()),
-      );
-    });
+        );
+        expect(readAttempt, isNull);
+
+        // Company A attempts to delete Company B job -> Throws TenantIsolationException
+        expect(
+          () async => jobRepo.delete('JOB-COMP-B-777', companyId: companyA),
+          throwsA(isA<TenantIsolationException>()),
+        );
+
+        // Company A attempts to overwrite Company B job -> Throws TenantIsolationException
+        final maliciousJobA = jobB.copyWith(companyId: companyA);
+        expect(
+          () async => jobRepo.save(maliciousJobA),
+          throwsA(isA<TenantIsolationException>()),
+        );
+      },
+    );
+
+    test(
+      '4. ATTACK: Company A attempts to modify or delete Company B ImportTemplate',
+      () async {
+        final templateB = ImportTemplate(
+          templateId: 'TPL-COMP-B-001',
+          name: 'Company B Template',
+          companyId: companyB,
+          targetProfileId: 'PROF-PROD',
+          targetEntityType: 'Product',
+        );
+
+        await templateRepo.createTemplate(templateB);
+
+        // Read attempt by Company A -> Returns null
+        final loaded = await templateRepo.getTemplate(
+          'TPL-COMP-B-001',
+          companyId: companyA,
+        );
+        expect(loaded, isNull);
+
+        // Delete attempt by Company A -> Throws TenantIsolationException
+        expect(
+          () async => templateRepo.deleteTemplate(
+            'TPL-COMP-B-001',
+            companyId: companyA,
+          ),
+          throwsA(isA<TenantIsolationException>()),
+        );
+
+        // Update attempt under Company A context -> Throws TenantIsolationException
+        expect(
+          () async => templateRepo.updateTemplate(
+            templateB.copyWith(companyId: companyA),
+          ),
+          throwsA(isA<TenantIsolationException>()),
+        );
+      },
+    );
+
+    test(
+      '5. ATTACK: Company A attempts to read Company B post-import Report & Audit Record',
+      () async {
+        final reportB = ImportReport(
+          auditRecord: ImportAuditRecord(
+            auditId: 'AUDIT-B-1',
+            jobId: 'JOB-COMP-B-99',
+            companyId: companyB,
+            userId: 'USER-B',
+            source: 'b_data.xlsx',
+            entityType: 'Product',
+            configuration: const {},
+            mappingSummary: const {},
+            startedAt: DateTime.now().toUtc(),
+            totalRows: 10,
+            createdRows: 8,
+            updatedRows: 0,
+            skippedRows: 2,
+            failedRows: 0,
+            warningCount: 0,
+            errorCount: 0,
+          ),
+        );
+
+        await reportRepo.saveReport(reportB);
+
+        // Read attempt by Company A -> Returns null
+        final retrievedReport = await reportRepo.getReport(
+          'JOB-COMP-B-99',
+          companyId: companyA,
+        );
+        expect(retrievedReport, isNull);
+
+        final retrievedAudit = await reportRepo.getAuditRecord(
+          'JOB-COMP-B-99',
+          companyId: companyA,
+        );
+        expect(retrievedAudit, isNull);
+
+        // Listing audits for Company A -> Empty list
+        final listA = await reportRepo.listAuditRecordsForCompany(companyA);
+        expect(listA, isEmpty);
+      },
+    );
+
+    test(
+      '6. ATTACK: RelationResolver detects candidate belonging to different company',
+      () async {
+        const resolver = RelationResolver();
+
+        final definition = RelationDefinition(
+          targetEntityKey: 'category',
+          strategy: ResolutionStrategy.name,
+          lookupFn: (ref, strategy, [companyId]) async => [
+            const ResolvedCandidate(
+              id: 'CAT-B-99',
+              displayName: 'Leaked Category',
+              companyId: companyB, // Candidate belongs to Company B
+            ),
+          ],
+        );
+
+        expect(
+          () async => resolver.resolve(
+            rawReference: 'Leaked Category',
+            definition: definition,
+            companyId: companyA, // Scope is Company A
+          ),
+          throwsA(isA<TenantIsolationException>()),
+        );
+      },
+    );
+
+    test(
+      '7. ATTACK: Product accounting relation assigned account from Company B',
+      () async {
+        final categoryRepo = MockCategoryRepository();
+        final productRepo = MockProductRepository();
+
+        final executor = ProductImportExecutor(
+          productRepository: productRepo,
+          categoryRepository: categoryRepo,
+          accountsRegistry: {
+            '1300': const ResolvedAccount(
+              accountId: 'ACC-COMP-B-1300',
+              accountCode: '1300',
+              accountName: 'Inventory B',
+              companyId: companyB, // Belongs to Company B
+            ),
+          },
+        );
+
+        // Company A product row tries to link to Company B's asset account '1300'
+        expect(
+          () async => executor.executeProductRow(
+            rowData: {
+              'name': 'Product A',
+              'itemCode': 'PROD-A',
+              'price': 500.0,
+              'accountingAssetAccount': '1300',
+            },
+            companyId: companyA,
+          ),
+          throwsA(isA<TenantIsolationException>()),
+        );
+      },
+    );
   });
 }

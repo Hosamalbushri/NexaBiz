@@ -20,9 +20,9 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     required JournalPostingService posting,
     required AccountRepository accounts,
     CompanyInitializationRepository? initRepository,
-  })  : _posting = posting,
-        _accounts = accounts,
-        _initRepository = initRepository;
+  }) : _posting = posting,
+       _accounts = accounts,
+       _initRepository = initRepository;
 
   final JournalPostingService _posting;
   final AccountRepository _accounts;
@@ -36,7 +36,9 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
   Future<void> syncSale(Sale sale) async {
     final netAmount = sale.total;
     final discountAmount = _totalDiscount(sale);
-    final taxAmount = sale.taxAmount > 0 ? JournalMoney.round(sale.taxAmount) : 0.0;
+    final taxAmount = sale.taxAmount > 0
+        ? JournalMoney.round(sale.taxAmount)
+        : 0.0;
     if (netAmount <= 0 && discountAmount <= 0 && taxAmount <= 0) {
       return;
     }
@@ -47,7 +49,8 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
       SaleSettlementType.credit => sale.customerAccountId?.trim(),
       SaleSettlementType.cash => sale.cashAccountId?.trim(),
     };
-    if (sale.settlementType == SaleSettlementType.credit && (debitAccountId == null || debitAccountId.isEmpty)) {
+    if (sale.settlementType == SaleSettlementType.credit &&
+        (debitAccountId == null || debitAccountId.isEmpty)) {
       final arAccount = await _resolveRoleAccount(
         companyConfig: companyConfig,
         role: AccountRole.receivable,
@@ -55,7 +58,8 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
       if (arAccount != null) {
         debitAccountId = arAccount.uuid;
       }
-    } else if (sale.settlementType == SaleSettlementType.cash && (debitAccountId == null || debitAccountId.isEmpty)) {
+    } else if (sale.settlementType == SaleSettlementType.cash &&
+        (debitAccountId == null || debitAccountId.isEmpty)) {
       final cashAccount = await _resolveRoleAccount(
         companyConfig: companyConfig,
         role: AccountRole.cash,
@@ -78,13 +82,15 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
 
     Account? discountAccount;
     if (discountAmount > 0) {
-      discountAccount = await _resolveRoleAccount(
-        companyConfig: companyConfig,
-        role: AccountRole.discount,
-      ) ?? await _resolveRoleAccount(
-        companyConfig: companyConfig,
-        role: AccountRole.cogs,
-      );
+      discountAccount =
+          await _resolveRoleAccount(
+            companyConfig: companyConfig,
+            role: AccountRole.discount,
+          ) ??
+          await _resolveRoleAccount(
+            companyConfig: companyConfig,
+            role: AccountRole.cogs,
+          );
       if (discountAccount == null) {
         throw const JournalException(JournalException.discountAccountMissing);
       }
@@ -116,7 +122,9 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     final description = customerLabel.isEmpty
         ? 'فاتورة $voucherType ${sale.saleNumber}'
         : 'فاتورة $voucherType ${sale.saleNumber} — $customerLabel';
-    final revenueCredit = JournalMoney.round(netAmount + discountAmount - taxAmount);
+    final revenueCredit = JournalMoney.round(
+      netAmount + discountAmount - taxAmount,
+    );
 
     final lines = <JournalLineDraft>[
       if (netAmount > 0 && debitAccountId != null)
@@ -194,10 +202,12 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     required CompanyAccountingConfig? companyConfig,
     required AccountRole role,
   }) async {
-    final configuredKey = companyConfig?.bindingTargets[role]?.activeUuid ??
+    final configuredKey =
+        companyConfig?.bindingTargets[role]?.activeUuid ??
         companyConfig?.accountMappings[role]?.trim();
     if (configuredKey != null && configuredKey.isNotEmpty) {
-      final acc = await _accounts.getByUuid(configuredKey) ??
+      final acc =
+          await _accounts.getByUuid(configuredKey) ??
           await _accounts.getByAccountCode(configuredKey) ??
           (int.tryParse(configuredKey) != null
               ? await _accounts.getById(int.parse(configuredKey))
@@ -209,4 +219,3 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     return null;
   }
 }
-

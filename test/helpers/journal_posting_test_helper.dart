@@ -42,37 +42,32 @@ class EmptyFiscalYearRepository implements FiscalYearRepository {
   @override
   Future<List<PeriodClosingRecord>> listClosingsForFiscalYear(
     String fiscalYearUuid,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<int> countUnpostedJournals({
     required DateTime startInclusive,
     required DateTime endInclusive,
-  }) async =>
-      0;
+  }) async => 0;
 
   @override
   Future<List<String>> listForeignCurrenciesInRange({
     required DateTime startInclusive,
     required DateTime endInclusive,
     required String baseCurrencyCode,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<FiscalYear> createFiscalYear({
     required FiscalYearDraft draft,
     required List<GeneratedPeriodSpec> periods,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<AccountingPeriod> openPeriod({
     required String periodUuid,
     required String openedBy,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<AccountingPeriod> markPeriodClosing(String periodUuid) =>
@@ -89,8 +84,7 @@ class EmptyFiscalYearRepository implements FiscalYearRepository {
     double fxLoss = 0,
     double netFxDifference = 0,
     String? journalEntryUuid,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<PeriodClosingRecord> completePeriodClose({
@@ -104,16 +98,14 @@ class EmptyFiscalYearRepository implements FiscalYearRepository {
     double fxLoss = 0,
     double netFxDifference = 0,
     String? journalEntryUuid,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<AccountingPeriod> reopenPeriod({
     required String periodUuid,
     required String reopenedBy,
     required String reason,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 }
 
 JournalPostingService journalPostingWithLegacyPolicy({

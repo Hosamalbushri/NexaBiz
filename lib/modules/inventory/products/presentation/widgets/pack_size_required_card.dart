@@ -37,9 +37,7 @@ class PackSizeRequiredCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: AppColors.warning.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),

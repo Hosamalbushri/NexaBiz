@@ -28,22 +28,23 @@ class AccountPickerDropdown extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    final effectiveContract = contract ??
-        AccountSelectionContract(
-          postingOnly: true,
-          selectedUuid: selectedUuid,
-        );
+    final effectiveContract =
+        contract ??
+        AccountSelectionContract(postingOnly: true, selectedUuid: selectedUuid);
 
-    final accountsAsync = ref.watch(filteredAccountsProvider((
-      contract: effectiveContract,
-      query: '',
-      activeTypeFilter: null,
-      activePostingOnly: null,
-    )));
+    final accountsAsync = ref.watch(
+      filteredAccountsProvider((
+        contract: effectiveContract,
+        query: '',
+        activeTypeFilter: null,
+        activePostingOnly: null,
+      )),
+    );
 
     return accountsAsync.when(
       data: (eligibleAccounts) {
-        final currentSelection = eligibleAccounts.any((a) => a.uuid == selectedUuid)
+        final currentSelection =
+            eligibleAccounts.any((a) => a.uuid == selectedUuid)
             ? selectedUuid
             : null;
 
@@ -51,7 +52,10 @@ class AccountPickerDropdown extends ConsumerWidget {
           decoration: InputDecoration(
             labelText: label,
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(

@@ -142,125 +142,131 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            AccountExpandableSearch(
-              expanded: _searchExpanded,
-              onExpandedChanged: _setSearchExpanded,
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              onQueryChanged: _onQueryChanged,
-            ),
-            Padding(
-              padding: AppConstants.pageInsets(
-                context,
-              ).copyWith(top: _searchExpanded ? 0 : AppSpacing.md, bottom: 0),
-              child: AccountBrowseToolbar(
-                accountsCount: forestAsync.hasValue ? visibleCount : null,
-                typeFilter: typeFilter,
-                includeInactive: includeInactive,
-                showSubtitle: !_searchExpanded,
-                onTypeFilterChanged: (type) {
-                  ref.read(accountTypeFilterProvider.notifier).state = type;
-                },
-                onIncludeInactiveChanged: (value) {
-                  ref.read(accountsIncludeInactiveProvider.notifier).state =
-                      value;
-                },
-                onExpandAll: () {
-                  final roots =
-                      forestAsync.valueOrNull ?? const <AccountTreeNode>[];
-                  ref.read(accountTreeExpandedIdsProvider.notifier).state =
-                      _allGroupIds(roots);
-                },
-                onCollapseAll: () {
-                  ref.read(accountTreeExpandedIdsProvider.notifier).state =
-                      <String>{};
-                },
+              AccountExpandableSearch(
+                expanded: _searchExpanded,
+                onExpandedChanged: _setSearchExpanded,
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                onQueryChanged: _onQueryChanged,
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Expanded(
-              child: forestAsync.when(
-                loading: () => const AppLoading(),
-                error: (error, _) => AppErrorState(
-                  message: error.toString(),
-                  onRetry: () => ref.invalidate(accountsProvider),
+              Padding(
+                padding: AppConstants.pageInsets(
+                  context,
+                ).copyWith(top: _searchExpanded ? 0 : AppSpacing.md, bottom: 0),
+                child: AccountBrowseToolbar(
+                  accountsCount: forestAsync.hasValue ? visibleCount : null,
+                  typeFilter: typeFilter,
+                  includeInactive: includeInactive,
+                  showSubtitle: !_searchExpanded,
+                  onTypeFilterChanged: (type) {
+                    ref.read(accountTypeFilterProvider.notifier).state = type;
+                  },
+                  onIncludeInactiveChanged: (value) {
+                    ref.read(accountsIncludeInactiveProvider.notifier).state =
+                        value;
+                  },
+                  onExpandAll: () {
+                    final roots =
+                        forestAsync.valueOrNull ?? const <AccountTreeNode>[];
+                    ref.read(accountTreeExpandedIdsProvider.notifier).state =
+                        _allGroupIds(roots);
+                  },
+                  onCollapseAll: () {
+                    ref.read(accountTreeExpandedIdsProvider.notifier).state =
+                        <String>{};
+                  },
                 ),
-                data: (roots) {
-                  if (roots.isEmpty) {
-                    final isSearchEmpty = query.trim().isEmpty;
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AppEmptyState(
-                          title: isSearchEmpty
-                              ? l10n.accountingEmptyTitle
-                              : l10n.accountingNoSearchResults,
-                          subtitle: isSearchEmpty
-                              ? l10n.accountingEmptyMessage
-                              : l10n.accountingNoSearchResultsMessage,
-                          icon: Icons.account_tree_outlined,
-                        ),
-                        if (isSearchEmpty) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              try {
-                                await ref
-                                    .read(ensureDefaultChartUseCaseProvider)
-                                    .call();
-                                ref.invalidate(accountsProvider);
-                                if (context.mounted) {
-                                  showAppSnackBar(
-                                    context,
-                                    message: l10n.accountingChartSeedSuccess,
-                                    isSuccess: true,
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  showAppSnackBar(
-                                    context,
-                                    message: e is MissingCompanyContextException
-                                        ? l10n.somethingWentWrong
-                                        : e.toString(),
-                                    isSuccess: false,
-                                  );
-                                }
-                              }
-                            },
-                            icon: const Icon(Icons.account_tree_rounded),
-                            label: Text(l10n.accountingGenerateDefaultChart),
-                          ),
-                        ],
-                      ],
-                    );
-                  }
-                  return AccountTree(
-                    roots: roots,
-                    expandedIds: expandedIds,
-                    padding: AppConstants.pageInsets(
-                      context,
-                    ).copyWith(top: 0, bottom: 96),
-                    onToggleExpand: (uuid) {
-                      final next = {...expandedIds};
-                      if (!next.add(uuid)) {
-                        next.remove(uuid);
-                      }
-                      ref.read(accountTreeExpandedIdsProvider.notifier).state =
-                          next;
-                    },
-                    onOpenDetails: (account) {
-                      AccountingRoutes.pushAccountDetails(context, account.id);
-                    },
-                  );
-                },
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              Expanded(
+                child: forestAsync.when(
+                  loading: () => const AppLoading(),
+                  error: (error, _) => AppErrorState(
+                    message: error.toString(),
+                    onRetry: () => ref.invalidate(accountsProvider),
+                  ),
+                  data: (roots) {
+                    if (roots.isEmpty) {
+                      final isSearchEmpty = query.trim().isEmpty;
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AppEmptyState(
+                            title: isSearchEmpty
+                                ? l10n.accountingEmptyTitle
+                                : l10n.accountingNoSearchResults,
+                            subtitle: isSearchEmpty
+                                ? l10n.accountingEmptyMessage
+                                : l10n.accountingNoSearchResultsMessage,
+                            icon: Icons.account_tree_outlined,
+                          ),
+                          if (isSearchEmpty) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                try {
+                                  await ref
+                                      .read(seedDefaultChartUseCaseProvider)
+                                      .call();
+                                  ref.invalidate(accountsProvider);
+                                  if (context.mounted) {
+                                    showAppSnackBar(
+                                      context,
+                                      message: l10n.accountingChartSeedSuccess,
+                                      isSuccess: true,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    showAppSnackBar(
+                                      context,
+                                      message:
+                                          e is MissingCompanyContextException
+                                          ? l10n.somethingWentWrong
+                                          : e.toString(),
+                                      isSuccess: false,
+                                    );
+                                  }
+                                }
+                              },
+                              icon: const Icon(Icons.account_tree_rounded),
+                              label: Text(l10n.accountingGenerateDefaultChart),
+                            ),
+                          ],
+                        ],
+                      );
+                    }
+                    return AccountTree(
+                      roots: roots,
+                      expandedIds: expandedIds,
+                      padding: AppConstants.pageInsets(
+                        context,
+                      ).copyWith(top: 0, bottom: 96),
+                      onToggleExpand: (uuid) {
+                        final next = {...expandedIds};
+                        if (!next.add(uuid)) {
+                          next.remove(uuid);
+                        }
+                        ref
+                                .read(accountTreeExpandedIdsProvider.notifier)
+                                .state =
+                            next;
+                      },
+                      onOpenDetails: (account) {
+                        AccountingRoutes.pushAccountDetails(
+                          context,
+                          account.id,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   int _countAccounts(List<AccountTreeNode> roots) {

@@ -63,7 +63,7 @@ Future<bool> showCompanySwitchConfirmationFlow(
     barrierDismissible: false,
     builder: (dialogCtx) => _CompanySwitchAuthDialog(
       targetCompany: targetCompany,
-      initialEmail: '',
+      initialEmail: ref.read(authStateProvider).session?.user.email ?? '',
       ref: ref,
     ),
   );
@@ -83,7 +83,8 @@ class _CompanySwitchAuthDialog extends StatefulWidget {
   });
 
   @override
-  State<_CompanySwitchAuthDialog> createState() => _CompanySwitchAuthDialogState();
+  State<_CompanySwitchAuthDialog> createState() =>
+      _CompanySwitchAuthDialogState();
 }
 
 class _CompanySwitchAuthDialogState extends State<_CompanySwitchAuthDialog> {
@@ -133,6 +134,7 @@ class _CompanySwitchAuthDialogState extends State<_CompanySwitchAuthDialog> {
       if (!mounted) return;
 
       if (result.isSuccess) {
+        performTenantContextReset(widget.ref);
         await AppBootstrap.bootstrapSync(widget.ref);
         if (mounted) {
           Navigator.of(context).pop(true);
@@ -252,7 +254,11 @@ class _CompanySwitchAuthDialogState extends State<_CompanySwitchAuthDialog> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: colorScheme.error, size: 20),
+                      Icon(
+                        Icons.error_outline,
+                        color: colorScheme.error,
+                        size: 20,
+                      ),
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
                         child: Text(

@@ -33,21 +33,21 @@ void main() {
   });
 
   test('empty list is treated as online (plugin hasConnectivity)', () {
-    expect(
-      ConnectivityService.mapResults(const []),
-      ConnectivityStatus.online,
-    );
+    expect(ConnectivityService.mapResults(const []), ConnectivityStatus.online);
   });
 
-  test('start with none stays offline when probe is skipped in tests', () async {
-    final stream = StreamController<List<ConnectivityResult>>.broadcast();
-    final service = ConnectivityService(
-      connectivityStream: stream.stream,
-      initialResults: const [ConnectivityResult.none],
-    );
-    await service.start();
-    expect(service.isOnline, isFalse);
-    await service.dispose();
-    await stream.close();
-  });
+  test(
+    'start with none stays offline when probe is skipped in tests',
+    () async {
+      final stream = StreamController<List<ConnectivityResult>>.broadcast();
+      final service = ConnectivityService(
+        connectivityStream: stream.stream,
+        initialResults: const [ConnectivityResult.none],
+      );
+      await service.start();
+      expect(service.isOnline, isFalse);
+      await service.dispose();
+      await stream.close();
+    },
+  );
 }

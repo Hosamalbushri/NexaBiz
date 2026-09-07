@@ -10,8 +10,8 @@ class WarehouseAccountingBinding {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.deletedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   final String id;
   final String warehouseId;
@@ -55,7 +55,7 @@ class WarehouseAccountingBinding {
       stockTransferClearingAccountId: clearStockTransferClearingAccountId
           ? null
           : (stockTransferClearingAccountId ??
-              this.stockTransferClearingAccountId),
+                this.stockTransferClearingAccountId),
       companyId: companyId ?? this.companyId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

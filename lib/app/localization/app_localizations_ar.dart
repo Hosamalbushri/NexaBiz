@@ -6821,4 +6821,99 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get cashRegisterNoReadyRegisters =>
       'لا توجد صناديق جاهزة ومربوطة محاسبياً. يرجى ربط صندوق بحساب محاسبي أولاً.';
+
+  @override
+  String get setupAdminSuccess => 'تم تهيئة مدير النظام بنجاح';
+
+  @override
+  String get setupAlreadyCompleted => 'التهيئة الأولى مكتملة بالفعل';
+
+  @override
+  String get setupAdminTitle => 'تهيئة مدير النظام';
+
+  @override
+  String get setupStepLanguage => 'اللغة';
+
+  @override
+  String get setupStepAdmin => 'مدير النظام';
+
+  @override
+  String get setupStepConfirm => 'تأكيد';
+
+  @override
+  String get setupLanguageArabic => 'العربية';
+
+  @override
+  String get setupLanguageArabicSubtitle => 'العربية (RTL)';
+
+  @override
+  String get setupLanguageEnglish => 'English';
+
+  @override
+  String get setupLanguageEnglishSubtitle => 'English (LTR)';
+
+  @override
+  String get setupAdminAccountTitle => 'حساب مدير النظام';
+
+  @override
+  String get setupAdminAccountSubtitle =>
+      'إنشاء حساب مدير النظام الرئيسي للتحكم في التطبيق';
+
+  @override
+  String get setupAdminNameLabel => 'اسم مدير النظام *';
+
+  @override
+  String get setupAdminNameHint => 'مثال: عبد الله أحمد';
+
+  @override
+  String get setupAdminNameRequired => 'يرجى إدخال اسم مدير النظام';
+
+  @override
+  String get setupEmailLabel => 'البريد الإلكتروني *';
+
+  @override
+  String get setupEmailRequired => 'يرجى إدخال البريد الإلكتروني';
+
+  @override
+  String get setupEmailInvalid => 'البريد الإلكتروني غير صحيح';
+
+  @override
+  String get setupPasswordLabel => 'كلمة المرور * (8 أحرف فأكثر)';
+
+  @override
+  String get setupPasswordRequired => 'أدخل كلمة المرور';
+
+  @override
+  String get setupPasswordMinLength => '8 أحرف على الأقل';
+
+  @override
+  String get setupConfirmPasswordLabel => 'تأكيد كلمة المرور *';
+
+  @override
+  String get setupConfirmPasswordRequired => 'أدخل تأكيد كلمة المرور';
+
+  @override
+  String get setupPasswordsMismatch => 'كلمتا المرور غير متطابقتين';
+
+  @override
+  String get setupConfirmTitle => 'تأكيد تهيئة النظام';
+
+  @override
+  String get setupTargetRoleLabel => 'الدور المستهدف';
+
+  @override
+  String get setupTargetRoleValue => 'مدير النظام الرئيسي';
+
+  @override
+  String get setupConfirmNote =>
+      'سيتم اعتماد تهيئة النظام وإنشاء مدير النظام. لا يتم إنشاء أي شركة أو انتماء في هذه الخطوة.';
+
+  @override
+  String get setupInitializeButton => 'اعتماد تهيئة النظام';
+
+  @override
+  String get setupBackButton => 'السابق';
+
+  @override
+  String get setupNextButton => 'التالي';
 }

@@ -112,7 +112,8 @@ class AuthRepositoryImpl implements AuthRepository {
     final device = data['device'];
     String? deviceId;
     if (device is Map) {
-      deviceId = device['device_identifier'] as String? ?? device['id'] as String?;
+      deviceId =
+          device['device_identifier'] as String? ?? device['id'] as String?;
     }
     return AuthSessionSnapshot(
       user: user,
@@ -120,7 +121,8 @@ class AuthRepositoryImpl implements AuthRepository {
       roles: roles,
       permissions: permissions,
       capturedAt: DateTime.now().toUtc(),
-      currentCompanyId: data['current_company_id'] as String? ??
+      currentCompanyId:
+          data['current_company_id'] as String? ??
           (data['current_company'] is Map
               ? (data['current_company'] as Map)['id'] as String?
               : null),
@@ -289,8 +291,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final existing = await _loadSnapshot();
     final companies = existing?.companies ?? const <AuthCompany>[];
     final snapshot = AuthSessionSnapshot(
-      user: existing?.user ??
-          AuthUser(id: '', name: '', email: ''),
+      user: existing?.user ?? AuthUser(id: '', name: '', email: ''),
       companies: companies,
       roles: [
         if (data['roles'] is List)
@@ -375,10 +376,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     final response = await _http.post(
       '/api/v1/auth/change-password',
-      body: {
-        'current_password': currentPassword,
-        'new_password': newPassword,
-      },
+      body: {'current_password': currentPassword, 'new_password': newPassword},
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw _http.mapFailure(response);

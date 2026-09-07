@@ -17,18 +17,27 @@ class MockAccountLookupPort implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return [];
   }
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return [];
   }
 }
 
-class FakeCompanyInitializationRepository implements CompanyInitializationRepository {
-  CompanyInitializationState _state = const CompanyInitializationState(companyId: 'company_1');
+class FakeCompanyInitializationRepository
+    implements CompanyInitializationRepository {
+  CompanyInitializationState _state = const CompanyInitializationState(
+    companyId: 'company_1',
+  );
   CompanyAccountingConfig? _accountingConfig;
   CompanyInventoryConfig? _inventoryConfig;
   CompanyWarehouseConfig? _warehouseConfig;
@@ -42,7 +51,8 @@ class FakeCompanyInitializationRepository implements CompanyInitializationReposi
   }
 
   @override
-  Future<CompanyAccountingConfig?> getAccountingConfig() async => _accountingConfig;
+  Future<CompanyAccountingConfig?> getAccountingConfig() async =>
+      _accountingConfig;
 
   @override
   Future<void> saveAccountingConfig(CompanyAccountingConfig config) async {
@@ -50,7 +60,8 @@ class FakeCompanyInitializationRepository implements CompanyInitializationReposi
   }
 
   @override
-  Future<CompanyInventoryConfig?> getInventoryConfig() async => _inventoryConfig;
+  Future<CompanyInventoryConfig?> getInventoryConfig() async =>
+      _inventoryConfig;
 
   @override
   Future<void> saveInventoryConfig(CompanyInventoryConfig config) async {
@@ -58,7 +69,8 @@ class FakeCompanyInitializationRepository implements CompanyInitializationReposi
   }
 
   @override
-  Future<CompanyWarehouseConfig?> getWarehouseConfig() async => _warehouseConfig;
+  Future<CompanyWarehouseConfig?> getWarehouseConfig() async =>
+      _warehouseConfig;
 
   @override
   Future<void> saveWarehouseConfig(CompanyWarehouseConfig config) async {
@@ -87,247 +99,284 @@ void main() {
       fakeCompanyInitRepo = FakeCompanyInitializationRepository();
     });
 
-    test('1. Save / Reload — Configuration and account bindings save and reload with identical data', () async {
-      final binding = AccountBinding(
-        companyId: companyA,
-        packageId: 'accounting',
-        requirementKey: 'cash_account',
-        accountUuid: 'cash_uuid_101',
-        status: AccountBindingStatus.bound,
-        boundAt: DateTime.now().toUtc(),
-      );
+    test(
+      '1. Save / Reload — Configuration and account bindings save and reload with identical data',
+      () async {
+        final binding = AccountBinding(
+          companyId: companyA,
+          packageId: 'accounting',
+          requirementKey: 'cash_account',
+          accountUuid: 'cash_uuid_101',
+          status: AccountBindingStatus.bound,
+          boundAt: DateTime.now().toUtc(),
+        );
 
-      await bindingRepo.saveBinding(binding);
-
-      final reloaded = await bindingRepo.getBinding(
-        companyId: companyA,
-        packageId: 'accounting',
-        requirementKey: 'cash_account',
-      );
-
-      expect(reloaded, isNotNull);
-      expect(reloaded!.accountUuid, equals('cash_uuid_101'));
-      expect(reloaded.companyId, equals(companyA));
-    });
-
-    test('2. Restart simulation — Re-instantiating repository from persistent storage preserves bindings', () async {
-      final repoInstance1 = InMemoryAccountBindingRepository();
-      const binding = AccountBinding(
-        companyId: companyA,
-        packageId: 'inventory',
-        requirementKey: 'inventory_account',
-        accountUuid: 'inv_uuid_201',
-        status: AccountBindingStatus.bound,
-      );
-
-      await repoInstance1.saveBinding(binding);
-
-      final loaded = await repoInstance1.getBinding(
-        companyId: companyA,
-        packageId: 'inventory',
-        requirementKey: 'inventory_account',
-      );
-
-      expect(loaded, isNotNull);
-      expect(loaded!.accountUuid, equals('inv_uuid_201'));
-    });
-
-    test('3. Repeated setup (Idempotency) — Executing save setup multiple times creates 0 duplicates', () async {
-      const binding = AccountBinding(
-        companyId: companyA,
-        packageId: 'sales',
-        requirementKey: 'sales_account',
-        accountUuid: 'sales_uuid_301',
-        status: AccountBindingStatus.bound,
-      );
-
-      for (int i = 0; i < 5; i++) {
         await bindingRepo.saveBinding(binding);
-      }
 
-      final list = await bindingRepo.getBindingsForPackage(
-        companyId: companyA,
-        packageId: 'sales',
-      );
+        final reloaded = await bindingRepo.getBinding(
+          companyId: companyA,
+          packageId: 'accounting',
+          requirementKey: 'cash_account',
+        );
 
-      expect(list.length, equals(1));
-      expect(list.first.accountUuid, equals('sales_uuid_301'));
-    });
+        expect(reloaded, isNotNull);
+        expect(reloaded!.accountUuid, equals('cash_uuid_101'));
+        expect(reloaded.companyId, equals(companyA));
+      },
+    );
 
-    test('4. Migration — Legacy CompanyAccountingConfig & CompanyInventoryConfig auto-migrate seamlessly', () async {
-      await fakeCompanyInitRepo.saveAccountingConfig(const CompanyAccountingConfig(
-        companyId: companyA,
-        accountMappings: {
-          AccountRole.cash: 'cash_uuid_999',
-          AccountRole.revenue: 'sales_uuid_888',
-          AccountRole.inventory: 'inv_uuid_777',
-        },
-      ));
+    test(
+      '2. Restart simulation — Re-instantiating repository from persistent storage preserves bindings',
+      () async {
+        final repoInstance1 = InMemoryAccountBindingRepository();
+        const binding = AccountBinding(
+          companyId: companyA,
+          packageId: 'inventory',
+          requirementKey: 'inventory_account',
+          accountUuid: 'inv_uuid_201',
+          status: AccountBindingStatus.bound,
+        );
 
-      await fakeCompanyInitRepo.saveInventoryConfig(const CompanyInventoryConfig(
-        companyId: companyA,
-        inventoryBaseCurrencyId: 'USD',
-      ));
+        await repoInstance1.saveBinding(binding);
 
-      const migrationAdapter = SetupMigrationAdapter();
-      final count = await migrationAdapter.migrateIfNeeded(
-        companyId: companyA,
-        companyInitRepo: fakeCompanyInitRepo,
-        bindingRepo: bindingRepo,
-      );
+        final loaded = await repoInstance1.getBinding(
+          companyId: companyA,
+          packageId: 'inventory',
+          requirementKey: 'inventory_account',
+        );
 
-      expect(count, equals(3));
+        expect(loaded, isNotNull);
+        expect(loaded!.accountUuid, equals('inv_uuid_201'));
+      },
+    );
 
-      final cashBinding = await bindingRepo.getBinding(
-        companyId: companyA,
-        packageId: 'accounting',
-        requirementKey: 'cash_account',
-      );
-      expect(cashBinding?.accountUuid, equals('cash_uuid_999'));
+    test(
+      '3. Repeated setup (Idempotency) — Executing save setup multiple times creates 0 duplicates',
+      () async {
+        const binding = AccountBinding(
+          companyId: companyA,
+          packageId: 'sales',
+          requirementKey: 'sales_account',
+          accountUuid: 'sales_uuid_301',
+          status: AccountBindingStatus.bound,
+        );
 
-      final invBinding = await bindingRepo.getBinding(
-        companyId: companyA,
-        packageId: 'inventory',
-        requirementKey: 'inventory_account',
-      );
-      expect(invBinding?.accountUuid, equals('inv_uuid_777'));
+        for (int i = 0; i < 5; i++) {
+          await bindingRepo.saveBinding(binding);
+        }
 
-      final secondRunCount = await migrationAdapter.migrateIfNeeded(
-        companyId: companyA,
-        companyInitRepo: fakeCompanyInitRepo,
-        bindingRepo: bindingRepo,
-      );
-      expect(secondRunCount, equals(0));
-    });
+        final list = await bindingRepo.getBindingsForPackage(
+          companyId: companyA,
+          packageId: 'sales',
+        );
 
-    test('5. Stale account binding — Deleted / deactivated account turns binding into invalidStale safely', () async {
-      const salesAccountReq = AccountRequirement(
-        packageId: 'sales',
-        requirementKey: 'sales_account',
-        role: AccountRole.revenue,
-        labelAr: 'حساب المبيعات',
-        labelEn: 'Sales Account',
-        isRequired: true,
-      );
+        expect(list.length, equals(1));
+        expect(list.first.accountUuid, equals('sales_uuid_301'));
+      },
+    );
 
-      await bindingRepo.saveBinding(const AccountBinding(
-        companyId: companyA,
-        packageId: 'sales',
-        requirementKey: 'sales_account',
-        accountUuid: 'stale_account_uuid',
-        status: AccountBindingStatus.bound,
-      ));
+    test(
+      '4. Migration — Legacy CompanyAccountingConfig & CompanyInventoryConfig auto-migrate seamlessly',
+      () async {
+        await fakeCompanyInitRepo.saveAccountingConfig(
+          const CompanyAccountingConfig(
+            companyId: companyA,
+            accountMappings: {
+              AccountRole.cash: 'cash_uuid_999',
+              AccountRole.revenue: 'sales_uuid_888',
+              AccountRole.inventory: 'inv_uuid_777',
+            },
+          ),
+        );
 
-      mockAccountLookup.accounts['stale_account_uuid'] = const SetupAccountData(
-        uuid: 'stale_account_uuid',
-        accountCode: '4101',
-        accountType: SetupAccountType.revenue,
-        companyId: companyA,
-        isActive: false,
-        isDeleted: true,
-        isGroup: false,
-        canPost: false,
-      );
+        await fakeCompanyInitRepo.saveInventoryConfig(
+          const CompanyInventoryConfig(
+            companyId: companyA,
+            inventoryBaseCurrencyId: 'USD',
+          ),
+        );
 
-      final resolver = AccountBindingResolver(
-        accountLookupPort: mockAccountLookup,
-        bindingRepository: bindingRepo,
-      );
+        const migrationAdapter = SetupMigrationAdapter();
+        final count = await migrationAdapter.migrateIfNeeded(
+          companyId: companyA,
+          companyInitRepo: fakeCompanyInitRepo,
+          bindingRepo: bindingRepo,
+        );
 
-      final resolution = await resolver.resolveRequirement(
-        companyId: companyA,
-        requirement: salesAccountReq,
-      );
+        expect(count, equals(3));
 
-      expect(resolution.status, equals(AccountBindingStatus.invalidStale));
-      expect(resolution.isBound, isFalse);
+        final cashBinding = await bindingRepo.getBinding(
+          companyId: companyA,
+          packageId: 'accounting',
+          requirementKey: 'cash_account',
+        );
+        expect(cashBinding?.accountUuid, equals('cash_uuid_999'));
 
-      final validationEngine = CentralSetupValidationEngine(
-        accountLookupPort: mockAccountLookup,
-        bindingRepository: bindingRepo,
-      );
+        final invBinding = await bindingRepo.getBinding(
+          companyId: companyA,
+          packageId: 'inventory',
+          requirementKey: 'inventory_account',
+        );
+        expect(invBinding?.accountUuid, equals('inv_uuid_777'));
 
-      final registry = CentralSetupRegistry();
-      const salesDef = PackageSetupDefinition(
-        packageId: 'sales',
-        displayNameAr: 'المبيعات',
-        displayNameEn: 'Sales',
-      );
-      registry.register(salesDef);
+        final secondRunCount = await migrationAdapter.migrateIfNeeded(
+          companyId: companyA,
+          companyInitRepo: fakeCompanyInitRepo,
+          bindingRepo: bindingRepo,
+        );
+        expect(secondRunCount, equals(0));
+      },
+    );
 
-      final status = await validationEngine.evaluatePackageStatus(
-        companyId: companyA,
-        packageDef: salesDef,
-        fieldValues: {},
-        registry: registry,
-        allPackageStatuses: {},
-        accountRequirements: [salesAccountReq],
-      );
+    test(
+      '5. Stale account binding — Deleted / deactivated account turns binding into invalidStale safely',
+      () async {
+        const salesAccountReq = AccountRequirement(
+          packageId: 'sales',
+          requirementKey: 'sales_account',
+          role: AccountRole.revenue,
+          labelAr: 'حساب المبيعات',
+          labelEn: 'Sales Account',
+          isRequired: true,
+        );
 
-      expect(status, equals(SetupStatus.invalid));
-    });
+        await bindingRepo.saveBinding(
+          const AccountBinding(
+            companyId: companyA,
+            packageId: 'sales',
+            requirementKey: 'sales_account',
+            accountUuid: 'stale_account_uuid',
+            status: AccountBindingStatus.bound,
+          ),
+        );
 
-    test('6. Company Isolation — Configuration and bindings for Company A and Company B are strictly isolated', () async {
-      await bindingRepo.saveBinding(const AccountBinding(
-        companyId: companyA,
-        packageId: 'accounting',
-        requirementKey: 'bank_account',
-        accountUuid: 'bank_account_comp_A',
-        status: AccountBindingStatus.bound,
-      ));
+        mockAccountLookup.accounts['stale_account_uuid'] =
+            const SetupAccountData(
+              uuid: 'stale_account_uuid',
+              accountCode: '4101',
+              accountType: SetupAccountType.revenue,
+              companyId: companyA,
+              isActive: false,
+              isDeleted: true,
+              isGroup: false,
+              canPost: false,
+            );
 
-      await bindingRepo.saveBinding(const AccountBinding(
-        companyId: companyB,
-        packageId: 'accounting',
-        requirementKey: 'bank_account',
-        accountUuid: 'bank_account_comp_B',
-        status: AccountBindingStatus.bound,
-      ));
+        final resolver = AccountBindingResolver(
+          accountLookupPort: mockAccountLookup,
+          bindingRepository: bindingRepo,
+        );
 
-      final bindingCompA = await bindingRepo.getBinding(
-        companyId: companyA,
-        packageId: 'accounting',
-        requirementKey: 'bank_account',
-      );
+        final resolution = await resolver.resolveRequirement(
+          companyId: companyA,
+          requirement: salesAccountReq,
+        );
 
-      final bindingCompB = await bindingRepo.getBinding(
-        companyId: companyB,
-        packageId: 'accounting',
-        requirementKey: 'bank_account',
-      );
+        expect(resolution.status, equals(AccountBindingStatus.invalidStale));
+        expect(resolution.isBound, isFalse);
 
-      expect(bindingCompA?.accountUuid, equals('bank_account_comp_A'));
-      expect(bindingCompB?.accountUuid, equals('bank_account_comp_B'));
-    });
+        final validationEngine = CentralSetupValidationEngine(
+          accountLookupPort: mockAccountLookup,
+          bindingRepository: bindingRepo,
+        );
 
-    test('7. Existing Data Preservation — Migration preserves existing legacy initialization state and settings', () async {
-      await fakeCompanyInitRepo.saveState(const CompanyInitializationState(
-        companyId: companyA,
-        accountingConfigured: true,
-        inventoryCurrencyConfigured: true,
-        initializationCompleted: true,
-      ));
+        final registry = CentralSetupRegistry();
+        const salesDef = PackageSetupDefinition(
+          packageId: 'sales',
+          displayNameAr: 'المبيعات',
+          displayNameEn: 'Sales',
+        );
+        registry.register(salesDef);
 
-      await fakeCompanyInitRepo.saveAccountingConfig(const CompanyAccountingConfig(
-        companyId: companyA,
-        accountMappings: {
-          AccountRole.cash: 'cash_uuid_123',
-        },
-      ));
+        final status = await validationEngine.evaluatePackageStatus(
+          companyId: companyA,
+          packageDef: salesDef,
+          fieldValues: {},
+          registry: registry,
+          allPackageStatuses: {},
+          accountRequirements: [salesAccountReq],
+        );
 
-      const migrationAdapter = SetupMigrationAdapter();
-      await migrationAdapter.migrateIfNeeded(
-        companyId: companyA,
-        companyInitRepo: fakeCompanyInitRepo,
-        bindingRepo: bindingRepo,
-      );
+        expect(status, equals(SetupStatus.invalid));
+      },
+    );
 
-      final state = await fakeCompanyInitRepo.getState();
-      final accConfig = await fakeCompanyInitRepo.getAccountingConfig();
+    test(
+      '6. Company Isolation — Configuration and bindings for Company A and Company B are strictly isolated',
+      () async {
+        await bindingRepo.saveBinding(
+          const AccountBinding(
+            companyId: companyA,
+            packageId: 'accounting',
+            requirementKey: 'bank_account',
+            accountUuid: 'bank_account_comp_A',
+            status: AccountBindingStatus.bound,
+          ),
+        );
 
-      expect(state.initializationCompleted, isTrue);
-      expect(state.accountingConfigured, isTrue);
-      expect(accConfig?.accountMappings[AccountRole.cash], equals('cash_uuid_123'));
-    });
+        await bindingRepo.saveBinding(
+          const AccountBinding(
+            companyId: companyB,
+            packageId: 'accounting',
+            requirementKey: 'bank_account',
+            accountUuid: 'bank_account_comp_B',
+            status: AccountBindingStatus.bound,
+          ),
+        );
+
+        final bindingCompA = await bindingRepo.getBinding(
+          companyId: companyA,
+          packageId: 'accounting',
+          requirementKey: 'bank_account',
+        );
+
+        final bindingCompB = await bindingRepo.getBinding(
+          companyId: companyB,
+          packageId: 'accounting',
+          requirementKey: 'bank_account',
+        );
+
+        expect(bindingCompA?.accountUuid, equals('bank_account_comp_A'));
+        expect(bindingCompB?.accountUuid, equals('bank_account_comp_B'));
+      },
+    );
+
+    test(
+      '7. Existing Data Preservation — Migration preserves existing legacy initialization state and settings',
+      () async {
+        await fakeCompanyInitRepo.saveState(
+          const CompanyInitializationState(
+            companyId: companyA,
+            accountingConfigured: true,
+            inventoryCurrencyConfigured: true,
+            initializationCompleted: true,
+          ),
+        );
+
+        await fakeCompanyInitRepo.saveAccountingConfig(
+          const CompanyAccountingConfig(
+            companyId: companyA,
+            accountMappings: {AccountRole.cash: 'cash_uuid_123'},
+          ),
+        );
+
+        const migrationAdapter = SetupMigrationAdapter();
+        await migrationAdapter.migrateIfNeeded(
+          companyId: companyA,
+          companyInitRepo: fakeCompanyInitRepo,
+          bindingRepo: bindingRepo,
+        );
+
+        final state = await fakeCompanyInitRepo.getState();
+        final accConfig = await fakeCompanyInitRepo.getAccountingConfig();
+
+        expect(state.initializationCompleted, isTrue);
+        expect(state.accountingConfigured, isTrue);
+        expect(
+          accConfig?.accountMappings[AccountRole.cash],
+          equals('cash_uuid_123'),
+        );
+      },
+    );
   });
 }

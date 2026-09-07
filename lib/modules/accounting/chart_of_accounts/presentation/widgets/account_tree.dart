@@ -123,7 +123,8 @@ class _AccountRootCard extends StatelessWidget {
     final typeLabel = AccountLabels.typeLabel(l10n, account.accountType);
 
     return Semantics(
-      label: '$displayName, $typeLabel, ${l10n.accountingFieldCode}: ${account.accountCode}',
+      label:
+          '$displayName, $typeLabel, ${l10n.accountingFieldCode}: ${account.accountCode}',
       hint: node.hasChildren
           ? (expanded ? l10n.accountingCollapseAll : l10n.accountingExpandAll)
           : l10n.accountingAccountDetails,
@@ -289,11 +290,12 @@ class _AccountChildRow extends StatelessWidget {
     final selected = entry.isSelected;
 
     return Semantics(
-      label: '$displayName, ${l10n.accountingFieldCode}: ${account.accountCode}',
+      label:
+          '$displayName, ${l10n.accountingFieldCode}: ${account.accountCode}',
       hint: entry.node.hasChildren
           ? (entry.isExpanded
-              ? l10n.accountingCollapseAll
-              : l10n.accountingExpandAll)
+                ? l10n.accountingCollapseAll
+                : l10n.accountingExpandAll)
           : l10n.accountingAccountDetails,
       expanded: entry.node.hasChildren ? entry.isExpanded : null,
       selected: selected,
@@ -355,78 +357,78 @@ class _AccountChildRow extends StatelessWidget {
                           ),
                         ),
                 ),
-              const SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      maxLines: 2,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: account.isGroup
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: account.isActive
-                            ? theme.colorScheme.onSurface
-                            : theme.colorScheme.onSurfaceVariant,
-                        height: 1.25,
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        maxLines: 2,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: account.isGroup
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: account.isActive
+                              ? theme.colorScheme.onSurface
+                              : theme.colorScheme.onSurfaceVariant,
+                          height: 1.25,
+                        ),
                       ),
-                    ),
-                    if (account.isGroup ||
-                        account.isSystemAccount ||
-                        !account.isActive) ...[
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          if (account.isGroup)
-                            AppStatusBadge(
-                              label: l10n.accountingAccountGroup,
-                              tone: AppStatusTone.neutral,
-                              animate: false,
-                            ),
-                          if (account.isSystemAccount)
-                            AppStatusBadge(
-                              label: l10n.accountingSystemAccount,
-                              tone: AppStatusTone.info,
-                              animate: false,
-                            ),
-                          if (!account.isActive)
-                            AppStatusBadge(
-                              label: l10n.accountingAccountInactive,
-                              tone: AppStatusTone.warning,
-                              animate: false,
-                            ),
-                        ],
-                      ),
+                      if (account.isGroup ||
+                          account.isSystemAccount ||
+                          !account.isActive) ...[
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            if (account.isGroup)
+                              AppStatusBadge(
+                                label: l10n.accountingAccountGroup,
+                                tone: AppStatusTone.neutral,
+                                animate: false,
+                              ),
+                            if (account.isSystemAccount)
+                              AppStatusBadge(
+                                label: l10n.accountingSystemAccount,
+                                tone: AppStatusTone.info,
+                                animate: false,
+                              ),
+                            if (!account.isActive)
+                              AppStatusBadge(
+                                label: l10n.accountingAccountInactive,
+                                tone: AppStatusTone.warning,
+                                animate: false,
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _TrailingCode(code: account.accountCode, color: typeColor),
-              if (onOpenDetails != null)
-                IconButton(
-                  tooltip: l10n.accountingAccountDetails,
-                  visualDensity: VisualDensity.compact,
-                  onPressed: onOpenDetails,
-                  icon: Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-            ],
+                const SizedBox(width: AppSpacing.sm),
+                _TrailingCode(code: account.accountCode, color: typeColor),
+                if (onOpenDetails != null)
+                  IconButton(
+                    tooltip: l10n.accountingAccountDetails,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onOpenDetails,
+                    icon: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _TypeAvatar extends StatelessWidget {

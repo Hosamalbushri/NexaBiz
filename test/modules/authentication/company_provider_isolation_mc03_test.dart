@@ -18,9 +18,21 @@ void main() {
 
   late ProviderContainer container;
 
-  final companyA = const AuthCompany(id: 'cmp_a_1111', name: 'Company Alpha', code: 'ALPHA');
-  final companyB = const AuthCompany(id: 'cmp_b_2222', name: 'Company Beta', code: 'BETA');
-  final companyC = const AuthCompany(id: 'cmp_c_3333', name: 'Company Gamma', code: 'GAMMA');
+  final companyA = const AuthCompany(
+    id: 'cmp_a_1111',
+    name: 'Company Alpha',
+    code: 'ALPHA',
+  );
+  final companyB = const AuthCompany(
+    id: 'cmp_b_2222',
+    name: 'Company Beta',
+    code: 'BETA',
+  );
+  final companyC = const AuthCompany(
+    id: 'cmp_c_3333',
+    name: 'Company Gamma',
+    code: 'GAMMA',
+  );
 
   final testUser = const AuthUser(
     id: 'usr_owner_001',
@@ -70,8 +82,12 @@ void main() {
       final tenantContextA = container.read(tenantContextProvider);
       expect(tenantContextA.companyId, equals(companyA.id));
 
-      container.read(customerSearchQueryProvider.notifier).state = 'SearchAlpha';
-      expect(container.read(customerSearchQueryProvider), equals('SearchAlpha'));
+      container.read(customerSearchQueryProvider.notifier).state =
+          'SearchAlpha';
+      expect(
+        container.read(customerSearchQueryProvider),
+        equals('SearchAlpha'),
+      );
 
       container.dispose();
       container = buildContainerWithCompany(companyB.id);
@@ -82,53 +98,78 @@ void main() {
       expect(container.read(customerSearchQueryProvider), equals(''));
     });
 
-    test('TEST 2 — Company A filter does not affect Company B where filter is company-scoped', () {
-      container.read(customerSearchQueryProvider.notifier).state = 'CustomerInCompanyA';
-      container.read(accountsIncludeInactiveProvider.notifier).state = true;
+    test(
+      'TEST 2 — Company A filter does not affect Company B where filter is company-scoped',
+      () {
+        container.read(customerSearchQueryProvider.notifier).state =
+            'CustomerInCompanyA';
+        container.read(accountsIncludeInactiveProvider.notifier).state = true;
 
-      expect(container.read(customerSearchQueryProvider), equals('CustomerInCompanyA'));
-      expect(container.read(accountsIncludeInactiveProvider), isTrue);
+        expect(
+          container.read(customerSearchQueryProvider),
+          equals('CustomerInCompanyA'),
+        );
+        expect(container.read(accountsIncludeInactiveProvider), isTrue);
 
-      container.dispose();
-      container = buildContainerWithCompany(companyB.id);
+        container.dispose();
+        container = buildContainerWithCompany(companyB.id);
 
-      expect(container.read(customerSearchQueryProvider), equals(''));
-      expect(container.read(accountsIncludeInactiveProvider), isFalse);
-    });
+        expect(container.read(customerSearchQueryProvider), equals(''));
+        expect(container.read(accountsIncludeInactiveProvider), isFalse);
+      },
+    );
 
-    test('TEST 3 — Cached company object cannot be returned after switching to B', () {
-      expect(container.read(currentCompanyIdProvider), equals(companyA.id));
+    test(
+      'TEST 3 — Cached company object cannot be returned after switching to B',
+      () {
+        expect(container.read(currentCompanyIdProvider), equals(companyA.id));
 
-      container.dispose();
-      container = buildContainerWithCompany(companyB.id);
+        container.dispose();
+        container = buildContainerWithCompany(companyB.id);
 
-      expect(container.read(currentCompanyIdProvider), equals(companyB.id));
-      expect(container.read(currentCompanyIdProvider), isNot(equals(companyA.id)));
-    });
+        expect(container.read(currentCompanyIdProvider), equals(companyB.id));
+        expect(
+          container.read(currentCompanyIdProvider),
+          isNot(equals(companyA.id)),
+        );
+      },
+    );
 
-    test('TEST 4 — Long-lived notifier cannot issue Company A query after B becomes active', () {
-      expect(container.read(tenantContextProvider).companyId, equals(companyA.id));
+    test(
+      'TEST 4 — Long-lived notifier cannot issue Company A query after B becomes active',
+      () {
+        expect(
+          container.read(tenantContextProvider).companyId,
+          equals(companyA.id),
+        );
 
-      container.dispose();
-      container = buildContainerWithCompany(companyB.id);
+        container.dispose();
+        container = buildContainerWithCompany(companyB.id);
 
-      expect(container.read(tenantContextProvider).companyId, equals(companyB.id));
-    });
+        expect(
+          container.read(tenantContextProvider).companyId,
+          equals(companyB.id),
+        );
+      },
+    );
 
-    test('TEST 5 — Provider family autoDisposes family cache across transitions', () {
-      final subA = container.listen(
-        saleByIdProvider(101),
-        (previous, next) {},
-      );
+    test(
+      'TEST 5 — Provider family autoDisposes family cache across transitions',
+      () {
+        final subA = container.listen(
+          saleByIdProvider(101),
+          (previous, next) {},
+        );
 
-      expect(subA, isNotNull);
+        expect(subA, isNotNull);
 
-      container.dispose();
-      container = buildContainerWithCompany(companyB.id);
+        container.dispose();
+        container = buildContainerWithCompany(companyB.id);
 
-      final tenantContext = container.read(tenantContextProvider);
-      expect(tenantContext.companyId, equals(companyB.id));
-    });
+        final tenantContext = container.read(tenantContextProvider);
+        expect(tenantContext.companyId, equals(companyB.id));
+      },
+    );
 
     test('TEST 6 — A -> B -> A reconstructs correct state', () {
       expect(container.read(currentCompanyIdProvider), equals(companyA.id));
@@ -149,44 +190,53 @@ void main() {
       container = buildContainerWithCompany(companyC.id);
 
       expect(container.read(currentCompanyIdProvider), equals(companyC.id));
-      expect(container.read(currentCompanyIdProvider), isNot(equals(companyA.id)));
-      expect(container.read(currentCompanyIdProvider), isNot(equals(companyB.id)));
+      expect(
+        container.read(currentCompanyIdProvider),
+        isNot(equals(companyA.id)),
+      );
+      expect(
+        container.read(currentCompanyIdProvider),
+        isNot(equals(companyB.id)),
+      );
     });
 
-    test('TEST 8 — System scope does not accidentally acquire company state', () {
-      container.dispose();
-      final systemSession = AuthSessionSnapshot(
-        sessionId: 'system_admin_session',
-        user: testUser,
-        currentCompanyId: null,
-        companies: [companyA, companyB],
-        roles: const ['superadmin'],
-        permissions: const {'*'},
-        deviceId: 'dev_sys',
-        capturedAt: DateTime.now(),
-      );
-      container = ProviderContainer(
-        overrides: [
-          ...authenticationOverrides(),
-          authStateProvider.overrideWith((ref) {
-            return TestAuthController(systemSession);
-          }),
-        ],
-      );
+    test(
+      'TEST 8 — System scope does not accidentally acquire company state',
+      () {
+        container.dispose();
+        final systemSession = AuthSessionSnapshot(
+          sessionId: 'system_admin_session',
+          user: testUser,
+          currentCompanyId: null,
+          companies: [companyA, companyB],
+          roles: const ['superadmin'],
+          permissions: const {'*'},
+          deviceId: 'dev_sys',
+          capturedAt: DateTime.now(),
+        );
+        container = ProviderContainer(
+          overrides: [
+            ...authenticationOverrides(),
+            authStateProvider.overrideWith((ref) {
+              return TestAuthController(systemSession);
+            }),
+          ],
+        );
 
-      final tenantContext = container.read(tenantContextProvider);
-      expect(tenantContext.companyId, equals(''));
-      expect(container.read(currentCompanyIdProvider), equals(''));
-    });
+        final tenantContext = container.read(tenantContextProvider);
+        expect(tenantContext.companyId, equals(''));
+        expect(container.read(currentCompanyIdProvider), equals(''));
+      },
+    );
   });
 }
 
 class TestAuthController extends AuthController {
   TestAuthController(AuthSessionSnapshot session)
-      : super(
-          local: MockLocalAuthRepository(),
-          remote: MockAuthRepositoryImpl(),
-        ) {
+    : super(
+        local: MockLocalAuthRepository(),
+        remote: MockAuthRepositoryImpl(),
+      ) {
     state = AuthState(
       status: AuthStatus.authenticated,
       session: session,

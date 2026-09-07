@@ -50,7 +50,9 @@ class AppViewModeToggle<T> extends StatelessWidget {
             iconSize: 18,
             style: IconButton.styleFrom(
               backgroundColor: isSelected ? scheme.surface : Colors.transparent,
-              foregroundColor: isSelected ? scheme.primary : scheme.onSurfaceVariant,
+              foregroundColor: isSelected
+                  ? scheme.primary
+                  : scheme.onSurfaceVariant,
               elevation: isSelected ? 1 : 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.sm),

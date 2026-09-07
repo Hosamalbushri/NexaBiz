@@ -44,12 +44,13 @@ final companyInitializationRepositoryProvider =
 
 final companyAccountingConfigProvider =
     FutureProvider<CompanyAccountingConfig?>((ref) async {
-  final repo = ref.watch(companyInitializationRepositoryProvider);
-  return repo.getAccountingConfig();
-});
+      final repo = ref.watch(companyInitializationRepositoryProvider);
+      return repo.getAccountingConfig();
+    });
 
-final companyInventoryConfigProvider =
-    FutureProvider<CompanyInventoryConfig?>((ref) async {
+final companyInventoryConfigProvider = FutureProvider<CompanyInventoryConfig?>((
+  ref,
+) async {
   final repo = ref.watch(companyInitializationRepositoryProvider);
   return repo.getInventoryConfig();
 });
@@ -114,8 +115,8 @@ class FirstRunCompletedNotifier extends StateNotifier<AsyncValue<bool>> {
       final integrity = await _validator.validate();
       if (integrity.isValid) return true;
       if (integrity.isCorrupted) return false;
-      final onboardingDone =
-          await _settingsRepository.loadOnboardingCompleted();
+      final onboardingDone = await _settingsRepository
+          .loadOnboardingCompleted();
       if (!onboardingDone) return false;
       final hasAdmin = await _authStore.hasConfiguredAdmin();
       return hasAdmin;
@@ -131,12 +132,12 @@ class FirstRunCompletedNotifier extends StateNotifier<AsyncValue<bool>> {
 
 final firstRunCompletedProvider =
     StateNotifierProvider<FirstRunCompletedNotifier, AsyncValue<bool>>((ref) {
-  return FirstRunCompletedNotifier(
-    ref.watch(settingsRepositoryProvider),
-    ref.watch(localAuthStoreProvider),
-    ref.watch(installationIntegrityValidatorProvider),
-  );
-});
+      return FirstRunCompletedNotifier(
+        ref.watch(settingsRepositoryProvider),
+        ref.watch(localAuthStoreProvider),
+        ref.watch(installationIntegrityValidatorProvider),
+      );
+    });
 
 class SystemSetupReadyNotifier extends StateNotifier<AsyncValue<bool>> {
   SystemSetupReadyNotifier(
@@ -161,27 +162,19 @@ class SystemSetupReadyNotifier extends StateNotifier<AsyncValue<bool>> {
       if (integrity.isValid) return true;
       if (integrity.isCorrupted) return false;
 
-      // 1. Device or onboarding setup completion check
-      final onboardingDone =
-          await _settingsRepository.loadOnboardingCompleted();
       final hasAdmin = await _authStore.hasConfiguredAdmin();
-      if (onboardingDone && hasAdmin) {
-        return true;
-      }
+      if (!hasAdmin) return false;
 
-      final deviceInit =
-          await _settingsRepository.loadDeviceInitialization();
-      if (deviceInit.initialized) {
-        return true;
-      }
-
-      // 2. Company initialization state check
-      final s = await _initRepository.getState();
-      if (s.initializationCompleted) return true;
-
-      // 3. Fallback progress check
+      final onboardingDone = await _settingsRepository
+          .loadOnboardingCompleted();
+      final deviceInit = await _settingsRepository.loadDeviceInitialization();
+      final companyState = await _initRepository.getState();
       final progress = await _coordinator.loadProgress();
-      return progress.isReady;
+
+      return (onboardingDone ||
+          deviceInit.initialized ||
+          companyState.initializationCompleted ||
+          progress.isReady);
     });
   }
 
@@ -194,24 +187,24 @@ class SystemSetupReadyNotifier extends StateNotifier<AsyncValue<bool>> {
 
 final systemSetupReadyProvider =
     StateNotifierProvider<SystemSetupReadyNotifier, AsyncValue<bool>>((ref) {
-  return SystemSetupReadyNotifier(
-    ref.watch(companyInitializationRepositoryProvider),
-    ref.watch(systemInitializationCoordinatorProvider),
-    ref.watch(settingsRepositoryProvider),
-    ref.watch(localAuthStoreProvider),
-    ref.watch(installationIntegrityValidatorProvider),
-  );
-});
+      return SystemSetupReadyNotifier(
+        ref.watch(companyInitializationRepositoryProvider),
+        ref.watch(systemInitializationCoordinatorProvider),
+        ref.watch(settingsRepositoryProvider),
+        ref.watch(localAuthStoreProvider),
+        ref.watch(installationIntegrityValidatorProvider),
+      );
+    });
 
 final registeredModuleSetupStepsProvider =
     Provider<List<ModuleSetupStepDefinition>>((ref) {
-  final modules = ref.watch(moduleRegistryProvider).modules;
-  final steps = <ModuleSetupStepDefinition>[];
-  for (final module in modules) {
-    if (module.isEnabled && module.hasSetupSteps) {
-      steps.addAll(module.setupSteps);
-    }
-  }
-  steps.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-  return steps;
-});
+      final modules = ref.watch(moduleRegistryProvider).modules;
+      final steps = <ModuleSetupStepDefinition>[];
+      for (final module in modules) {
+        if (module.isEnabled && module.hasSetupSteps) {
+          steps.addAll(module.setupSteps);
+        }
+      }
+      steps.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return steps;
+    });

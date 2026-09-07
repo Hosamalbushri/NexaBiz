@@ -454,7 +454,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
             padding: AppConstants.pageInsets(context),
             children: [
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'البيانات الأساسية' : 'Basic Details',
+                title: l10n.localeName == 'ar'
+                    ? 'البيانات الأساسية'
+                    : 'Basic Details',
                 icon: Icons.person_outline,
                 topSpacing: 0,
               ),
@@ -477,14 +479,17 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                                   : () async {
                                       setState(() => _generatingCode = true);
                                       try {
-                                        final code = await _generateCodeFromParent();
+                                        final code =
+                                            await _generateCodeFromParent();
                                         if (!mounted || code == null) {
                                           return;
                                         }
                                         _codeController.text = code;
                                       } finally {
                                         if (mounted) {
-                                          setState(() => _generatingCode = false);
+                                          setState(
+                                            () => _generatingCode = false,
+                                          );
                                         }
                                       }
                                     },
@@ -523,7 +528,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                 ],
               ),
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'معلومات التواصل والعنوان' : 'Contact & Address',
+                title: l10n.localeName == 'ar'
+                    ? 'معلومات التواصل والعنوان'
+                    : 'Contact & Address',
                 icon: Icons.contact_phone_outlined,
               ),
               AppResponsiveForm(
@@ -568,7 +575,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                 ),
               ),
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'الربط المحاسبي' : 'Accounting Link',
+                title: l10n.localeName == 'ar'
+                    ? 'الربط المحاسبي'
+                    : 'Accounting Link',
                 icon: Icons.account_balance_outlined,
               ),
               TextFormField(
@@ -592,7 +601,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
               ),
               const SizedBox(height: AppSpacing.md),
               AppExpandableFormSection(
-                title: l10n.localeName == 'ar' ? 'الإعدادات ومصدر البيانات' : 'Settings & Data Source',
+                title: l10n.localeName == 'ar'
+                    ? 'الإعدادات ومصدر البيانات'
+                    : 'Settings & Data Source',
                 icon: Icons.tune_outlined,
                 initiallyExpanded: false,
                 child: Column(
@@ -612,25 +623,34 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Material(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outlineVariant.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.md, top: AppSpacing.md, bottom: AppSpacing.xs),
+                              padding: const EdgeInsets.only(
+                                left: AppSpacing.md,
+                                right: AppSpacing.md,
+                                top: AppSpacing.md,
+                                bottom: AppSpacing.xs,
+                              ),
                               child: Text(
                                 l10n.customersFieldDataSource,
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                             ),
                             RadioListTile<CustomerDataSource>(
@@ -647,7 +667,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                             ),
                             RadioListTile<CustomerDataSource>(
                               title: Text(l10n.customersDataSourceExternal),
-                              subtitle: Text(l10n.customersDataSourceExternalHint),
+                              subtitle: Text(
+                                l10n.customersDataSourceExternalHint,
+                              ),
                               value: CustomerDataSource.external,
                               groupValue: _dataSource,
                               onChanged: (value) {

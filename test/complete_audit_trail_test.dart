@@ -35,8 +35,7 @@ class _FakePostingEngine implements PostingEngine {
     required List<InboundLineData> lines,
     required String? warehouseId,
     required DateTime documentDate,
-  }) async =>
-      100.0;
+  }) async => 100.0;
 
   @override
   Future<double> applyOutboundPosting({
@@ -44,8 +43,7 @@ class _FakePostingEngine implements PostingEngine {
     required List<OutboundLineData> lines,
     required String? warehouseId,
     required CostValuationMethod valuationMethod,
-  }) async =>
-      100.0;
+  }) async => 100.0;
 
   @override
   Future<double> applyTransferPosting({
@@ -54,13 +52,10 @@ class _FakePostingEngine implements PostingEngine {
     required String fromWarehouseId,
     required String toWarehouseId,
     required CostValuationMethod valuationMethod,
-  }) async =>
-      100.0;
+  }) async => 100.0;
 
   @override
-  Future<void> reversePosting({
-    required InventoryDocumentRef document,
-  }) async {}
+  Future<void> reversePosting({required InventoryDocumentRef document}) async {}
 }
 
 class _FakeStockValidationService implements StockValidationService {
@@ -68,23 +63,20 @@ class _FakeStockValidationService implements StockValidationService {
   Future<double> getPostedBalance({
     required String itemCode,
     String? warehouseId,
-  }) async =>
-      1000.0;
+  }) async => 1000.0;
 
   @override
   Future<List<StockShortageItem>> validateOutboundLines({
     required List<OutboundLineRequest> lines,
     String? warehouseId,
-  }) async =>
-      [];
+  }) async => [];
 }
 
 class _FakeDependencyDetector implements InventoryDependencyDetector {
   @override
   Future<List<InventoryDocumentRef>> findDependentDocuments({
     required InventoryDocumentRef document,
-  }) async =>
-      [];
+  }) async => [];
 }
 
 void main() {
@@ -142,16 +134,15 @@ void main() {
     Hive.init(tempDir.path);
     await SyncQueue.registerAdapter();
 
-    syncBox = await Hive.openBox<SyncOperation>('test_audit_sync_box_${DateTime.now().millisecondsSinceEpoch}');
+    syncBox = await Hive.openBox<SyncOperation>(
+      'test_audit_sync_box_${DateTime.now().millisecondsSinceEpoch}',
+    );
     syncQueue = SyncQueue(box: syncBox, companyId: companyId);
 
     accDb = AccountingDatabase.memory();
     invDb = InventoryDatabase.memory();
 
-    accountRepo = AccountRepositoryImpl(
-      accDb,
-      readCompanyId: () => companyId,
-    );
+    accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => companyId);
     await accountRepo.seedDefaultChart();
     await accountRepo.ensureDefaultChartSeeded();
 
@@ -168,7 +159,8 @@ void main() {
 
     periodValidator = AccountingPeriodValidator(
       repository: fiscalYearRepo,
-      legacyPolicyReader: () => const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
+      legacyPolicyReader: () =>
+          const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
     );
 
     auditService = AuditTrailService(
@@ -215,111 +207,156 @@ void main() {
   });
 
   group('ROOT FIX 21 — Complete Audit Trail Test Suite', () {
-    test('1. Posting creates an audit event with timestamps, actor, and snapshots', () async {
-      await createFY2025();
+    test(
+      '1. Posting creates an audit event with timestamps, actor, and snapshots',
+      () async {
+        await createFY2025();
 
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.utc(2025, 1, 15),
-        voucherNumber: 'V-AUDIT-1',
-        voucherType: 'general',
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        description: 'Audit test entry',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: acc1, debit: 1000, credit: 0, currencyCode: 'YER'),
-          JournalLineDraft(accountUuid: acc2, debit: 0, credit: 1000, currencyCode: 'YER'),
-        ],
-      );
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.utc(2025, 1, 15),
+          voucherNumber: 'V-AUDIT-1',
+          voucherType: 'general',
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'Audit test entry',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1,
+              debit: 1000,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2,
+              debit: 0,
+              credit: 1000,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      final posted = await journalService.post(draft, userId: 'user-101');
-      expect(posted.isPosted, true);
+        final posted = await journalService.post(draft, userId: 'user-101');
+        expect(posted.isPosted, true);
 
-      final auditTrail = await auditService.getAuditTrail(documentId: posted.uuid);
-      expect(auditTrail, isNotEmpty);
+        final auditTrail = await auditService.getAuditTrail(
+          documentId: posted.uuid,
+        );
+        expect(auditTrail, isNotEmpty);
 
-      final postEvent = auditTrail.firstWhere((e) => e.eventType == 'post');
-      expect(postEvent.documentId, posted.uuid);
-      expect(postEvent.documentType, 'journal_entry');
-      expect(postEvent.userId, 'user-101');
-      expect(postEvent.timestamp, isNotNull);
-      expect(postEvent.metadata, isNotNull);
-      expect(postEvent.metadata!['before'], isNotNull);
-      expect(postEvent.metadata!['after'], isNotNull);
-    });
+        final postEvent = auditTrail.firstWhere((e) => e.eventType == 'post');
+        expect(postEvent.documentId, posted.uuid);
+        expect(postEvent.documentType, 'journal_entry');
+        expect(postEvent.userId, 'user-101');
+        expect(postEvent.timestamp, isNotNull);
+        expect(postEvent.metadata, isNotNull);
+        expect(postEvent.metadata!['before'], isNotNull);
+        expect(postEvent.metadata!['after'], isNotNull);
+      },
+    );
 
-    test('2. Reversal creates an audit event linking original and reversal transactions', () async {
-      await createFY2025();
+    test(
+      '2. Reversal creates an audit event linking original and reversal transactions',
+      () async {
+        await createFY2025();
 
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.utc(2025, 1, 20),
-        voucherNumber: 'V-AUDIT-ORIG',
-        voucherType: 'general',
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        description: 'Original entry to reverse',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: acc1, debit: 5000, credit: 0, currencyCode: 'YER'),
-          JournalLineDraft(accountUuid: acc2, debit: 0, credit: 5000, currencyCode: 'YER'),
-        ],
-      );
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.utc(2025, 1, 20),
+          voucherNumber: 'V-AUDIT-ORIG',
+          voucherType: 'general',
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'Original entry to reverse',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1,
+              debit: 5000,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2,
+              debit: 0,
+              credit: 5000,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      final original = await journalService.post(draft, userId: 'user-101');
-      final reversal = await journalService.reverseByUuid(original.uuid);
+        final original = await journalService.post(draft, userId: 'user-101');
+        final reversal = await journalService.reverseByUuid(original.uuid);
 
-      final reversalAudit = await auditService.getAuditTrail(documentId: reversal.uuid);
-      expect(reversalAudit, isNotEmpty);
+        final reversalAudit = await auditService.getAuditTrail(
+          documentId: reversal.uuid,
+        );
+        expect(reversalAudit, isNotEmpty);
 
-      final revEvent = reversalAudit.firstWhere((e) => e.eventType == 'reverse');
-      expect(revEvent.documentId, reversal.uuid);
-      expect(revEvent.metadata, isNotNull);
-      expect(revEvent.metadata!['originalTransactionId'], original.uuid);
-      expect(revEvent.metadata!['reversalTransactionId'], reversal.uuid);
-    });
+        final revEvent = reversalAudit.firstWhere(
+          (e) => e.eventType == 'reverse',
+        );
+        expect(revEvent.documentId, reversal.uuid);
+        expect(revEvent.metadata, isNotNull);
+        expect(revEvent.metadata!['originalTransactionId'], original.uuid);
+        expect(revEvent.metadata!['reversalTransactionId'], reversal.uuid);
+      },
+    );
 
-    test('3. Unauthorized attempt (posting into closed period) is recorded in audit trail', () async {
-      final fy = await createFY2025();
-      final periodList = await fiscalYearRepo.listPeriods(fy.uuid);
-      final janPeriod = periodList.firstWhere((p) => p.periodNumber == 1);
-      await fiscalYearRepo.closePeriodAtomically(
-        periodUuid: janPeriod.uuid,
-        closedBy: 'admin',
-        fxRevaluationEnabled: false,
-        fxRevaluationExecuted: false,
-      );
+    test(
+      '3. Unauthorized attempt (posting into closed period) is recorded in audit trail',
+      () async {
+        final fy = await createFY2025();
+        final periodList = await fiscalYearRepo.listPeriods(fy.uuid);
+        final janPeriod = periodList.firstWhere((p) => p.periodNumber == 1);
+        await fiscalYearRepo.closePeriodAtomically(
+          periodUuid: janPeriod.uuid,
+          closedBy: 'admin',
+          fxRevaluationEnabled: false,
+          fxRevaluationExecuted: false,
+        );
 
-      final closedDraft = JournalEntryDraft(
-        entryDate: DateTime.utc(2025, 1, 15),
-        voucherNumber: 'V-CLOSED-ATTEMPT',
-        voucherType: 'general',
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        description: 'Attempt post into closed Jan',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: acc1, debit: 100, credit: 0, currencyCode: 'YER'),
-          JournalLineDraft(accountUuid: acc2, debit: 0, credit: 100, currencyCode: 'YER'),
-        ],
-      );
+        final closedDraft = JournalEntryDraft(
+          entryDate: DateTime.utc(2025, 1, 15),
+          voucherNumber: 'V-CLOSED-ATTEMPT',
+          voucherType: 'general',
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'Attempt post into closed Jan',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2,
+              debit: 0,
+              credit: 100,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      try {
-        await journalService.post(closedDraft, userId: 'malicious-actor');
-        fail('Should have thrown JournalException.periodClosed');
-      } on JournalException catch (e) {
-        expect(e.code, JournalException.periodClosed);
-      }
+        try {
+          await journalService.post(closedDraft, userId: 'malicious-actor');
+          fail('Should have thrown JournalException.periodClosed');
+        } on JournalException catch (e) {
+          expect(e.code, JournalException.periodClosed);
+        }
 
-      final unauthEvents = await auditService.getAuditTrailByCompany(
-        companyId: companyId,
-        eventType: 'unauthorized_attempt',
-      );
-      expect(unauthEvents, isNotEmpty);
-      final attempt = unauthEvents.first;
-      expect(attempt.eventType, 'unauthorized_attempt');
-      expect(attempt.userId, 'malicious-actor');
-      expect(attempt.metadata!['errorReason'], contains('closed'));
-    });
+        final unauthEvents = await auditService.getAuditTrailByCompany(
+          companyId: companyId,
+          eventType: 'unauthorized_attempt',
+        );
+        expect(unauthEvents, isNotEmpty);
+        final attempt = unauthEvents.first;
+        expect(attempt.eventType, 'unauthorized_attempt');
+        expect(attempt.userId, 'malicious-actor');
+        expect(attempt.metadata!['errorReason'], contains('closed'));
+      },
+    );
 
     test('4. Audit data changes contain before and after values', () async {
       await createFY2025();
@@ -328,30 +365,34 @@ void main() {
       const lineUuid = '00000000-0000-0000-0000-000000000101';
 
       // Create & post receipt via database
-      await invDb.into(invDb.stockReceipts).insert(
-        StockReceiptsCompanion.insert(
-          uuid: docUuid,
-          receiptNumber: 'REC-100',
-          receiptDate: DateTime.utc(2025, 1, 10).millisecondsSinceEpoch,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-          updatedAt: DateTime.now().millisecondsSinceEpoch,
-          status: const Value('draft'),
-          companyId: const Value(companyId),
-        ),
-      );
+      await invDb
+          .into(invDb.stockReceipts)
+          .insert(
+            StockReceiptsCompanion.insert(
+              uuid: docUuid,
+              receiptNumber: 'REC-100',
+              receiptDate: DateTime.utc(2025, 1, 10).millisecondsSinceEpoch,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+              updatedAt: DateTime.now().millisecondsSinceEpoch,
+              status: const Value('draft'),
+              companyId: const Value(companyId),
+            ),
+          );
 
-      await invDb.into(invDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: lineUuid,
-          movementUuid: docUuid,
-          movementType: 'receipt',
-          itemCode: 'ITEM-1',
-          itemName: 'Item 1',
-          quantity: const Value(10.0),
-          unitCost: const Value(50.0),
-          totalCost: const Value(500.0),
-        ),
-      );
+      await invDb
+          .into(invDb.stockMovementLines)
+          .insert(
+            StockMovementLinesCompanion.insert(
+              uuid: lineUuid,
+              movementUuid: docUuid,
+              movementType: 'receipt',
+              itemCode: 'ITEM-1',
+              itemName: 'Item 1',
+              quantity: const Value(10.0),
+              unitCost: const Value(50.0),
+              totalCost: const Value(500.0),
+            ),
+          );
 
       final docRef = InventoryDocumentRef(
         documentId: docUuid,
@@ -360,7 +401,10 @@ void main() {
         documentDate: DateTime.utc(2025, 1, 10),
       );
 
-      final result = await postingCoordinator.post(document: docRef, userId: 'inv-user');
+      final result = await postingCoordinator.post(
+        document: docRef,
+        userId: 'inv-user',
+      );
       expect(result, isA<PostSuccess>());
 
       final auditTrail = await auditService.getAuditTrail(documentId: docUuid);
@@ -369,76 +413,109 @@ void main() {
       final postEvent = auditTrail.firstWhere((e) => e.eventType == 'post');
       expect(postEvent.metadata, isNotNull);
       expect(postEvent.metadata!['before'], equals({'status': 'draft'}));
-      expect(postEvent.metadata!['after'], equals({'status': 'posted', 'postedValue': 100.0}));
-    });
-
-    test('5. Audit data survives reversal and maintains historical chain', () async {
-      await createFY2025();
-
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.utc(2025, 1, 25),
-        voucherNumber: 'V-HIST-1',
-        voucherType: 'general',
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        description: 'Historical entry',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: acc1, debit: 2000, credit: 0, currencyCode: 'YER'),
-          JournalLineDraft(accountUuid: acc2, debit: 0, credit: 2000, currencyCode: 'YER'),
-        ],
+      expect(
+        postEvent.metadata!['after'],
+        equals({'status': 'posted', 'postedValue': 100.0}),
       );
-
-      final original = await journalService.post(draft, userId: 'user-1');
-      final reversal = await journalService.reverseByUuid(original.uuid);
-
-      final originalAudit = await auditService.getAuditTrail(documentId: original.uuid);
-      final reversalAudit = await auditService.getAuditTrail(documentId: reversal.uuid);
-
-      expect(originalAudit, isNotEmpty);
-      expect(reversalAudit, isNotEmpty);
-
-      // Verify original post audit log is intact
-      expect(originalAudit.any((e) => e.eventType == 'post'), true);
-      // Verify reversal audit log references original
-      expect(reversalAudit.first.metadata!['originalTransactionId'], original.uuid);
     });
 
-    test('6. Audit data enqueues sync payload so audit events survive sync', () async {
-      await createFY2025();
+    test(
+      '5. Audit data survives reversal and maintains historical chain',
+      () async {
+        await createFY2025();
 
-      final event = await auditService.recordEvent(
-        documentId: 'DOC-SYNC-1',
-        documentType: 'stock_receipt',
-        eventType: 'post',
-        userId: 'sync-user',
-        notes: 'Test sync survival',
-        metadata: {'postedValue': 1200.0},
-      );
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.utc(2025, 1, 25),
+          voucherNumber: 'V-HIST-1',
+          voucherType: 'general',
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'Historical entry',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1,
+              debit: 2000,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2,
+              debit: 0,
+              credit: 2000,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      final pendingOps = await syncQueue.peekAll();
-      final auditOp = pendingOps.firstWhere((op) => op.entityType == 'audit_event');
+        final original = await journalService.post(draft, userId: 'user-1');
+        final reversal = await journalService.reverseByUuid(original.uuid);
 
-      expect(auditOp.entityId, event.uuid);
-      expect(auditOp.payload['documentId'], 'DOC-SYNC-1');
-      expect(auditOp.payload['eventType'], 'post');
-      expect(auditOp.payload['metadata'], equals({'postedValue': 1200.0}));
-    });
+        final originalAudit = await auditService.getAuditTrail(
+          documentId: original.uuid,
+        );
+        final reversalAudit = await auditService.getAuditTrail(
+          documentId: reversal.uuid,
+        );
 
-    test('7. Audit trail is strictly immutable (no update or delete interfaces exist)', () async {
-      await createFY2025();
+        expect(originalAudit, isNotEmpty);
+        expect(reversalAudit, isNotEmpty);
 
-      final event = await auditService.recordEvent(
-        documentId: 'IMMUTABLE-DOC-1',
-        documentType: 'journal_entry',
-        eventType: 'post',
-        userId: 'user-sys',
-        notes: 'Immutability check',
-      );
+        // Verify original post audit log is intact
+        expect(originalAudit.any((e) => e.eventType == 'post'), true);
+        // Verify reversal audit log references original
+        expect(
+          reversalAudit.first.metadata!['originalTransactionId'],
+          original.uuid,
+        );
+      },
+    );
 
-      final records = await auditService.getAuditTrail(documentId: 'IMMUTABLE-DOC-1');
-      expect(records.length, 1);
-      expect(records.first.uuid, event.uuid);
-    });
+    test(
+      '6. Audit data enqueues sync payload so audit events survive sync',
+      () async {
+        await createFY2025();
+
+        final event = await auditService.recordEvent(
+          documentId: 'DOC-SYNC-1',
+          documentType: 'stock_receipt',
+          eventType: 'post',
+          userId: 'sync-user',
+          notes: 'Test sync survival',
+          metadata: {'postedValue': 1200.0},
+        );
+
+        final pendingOps = await syncQueue.peekAll();
+        final auditOp = pendingOps.firstWhere(
+          (op) => op.entityType == 'audit_event',
+        );
+
+        expect(auditOp.entityId, event.uuid);
+        expect(auditOp.payload['documentId'], 'DOC-SYNC-1');
+        expect(auditOp.payload['eventType'], 'post');
+        expect(auditOp.payload['metadata'], equals({'postedValue': 1200.0}));
+      },
+    );
+
+    test(
+      '7. Audit trail is strictly immutable (no update or delete interfaces exist)',
+      () async {
+        await createFY2025();
+
+        final event = await auditService.recordEvent(
+          documentId: 'IMMUTABLE-DOC-1',
+          documentType: 'journal_entry',
+          eventType: 'post',
+          userId: 'user-sys',
+          notes: 'Immutability check',
+        );
+
+        final records = await auditService.getAuditTrail(
+          documentId: 'IMMUTABLE-DOC-1',
+        );
+        expect(records.length, 1);
+        expect(records.first.uuid, event.uuid);
+      },
+    );
   });
 }

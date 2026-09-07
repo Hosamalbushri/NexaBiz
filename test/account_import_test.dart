@@ -8,16 +8,16 @@ import 'package:stock_count/modules/accounting/domain/models/account_import_row.
 import 'package:stock_count/modules/accounting/domain/models/opening_balance_line.dart';
 import 'package:stock_count/modules/accounting/domain/services/account_import_opening_journal.dart';
 
-Uint8List _workbookBytes({
-  required List<List<String>> rows,
-}) {
+Uint8List _workbookBytes({required List<List<String>> rows}) {
   final excel = Excel.createExcel();
   final sheet = excel[excel.getDefaultSheet()!];
   for (var r = 0; r < rows.length; r++) {
     for (var c = 0; c < rows[r].length; c++) {
       sheet
           .cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r))
-          .value = TextCellValue(rows[r][c]);
+          .value = TextCellValue(
+        rows[r][c],
+      );
     }
   }
   final encoded = excel.encode();
@@ -91,9 +91,7 @@ void main() {
 
       final lines = datasource.resolveRows(
         rawRows: result.rows,
-        byCode: {
-          '1214': (id: 'cash', code: '1214', name: 'Store'),
-        },
+        byCode: {'1214': (id: 'cash', code: '1214', name: 'Store')},
         byId: const {},
       );
       expect(lines, hasLength(2));
@@ -183,7 +181,10 @@ void main() {
 
       expect(draft, isNotNull);
       expect(draft!.allowUnbalancedMultiCurrency, isTrue);
-      expect(draft.lines.where((l) => l.accountUuid == 'capital'), hasLength(2));
+      expect(
+        draft.lines.where((l) => l.accountUuid == 'capital'),
+        hasLength(2),
+      );
       expect(
         draft.lines.where((l) => l.currencyCode == 'SAR' && l.credit == 100),
         hasLength(1),
@@ -280,35 +281,32 @@ void main() {
     });
 
     test('summarize groups totals by currency', () {
-      final summaries = AccountImportOpeningJournal.summarize(
-        [
-          const OpeningBalanceLine(
-            id: '1',
-            accountId: 'a',
-            accountCode: '1',
-            accountName: 'A',
-            currencyCode: 'SAR',
-            debit: 100,
-          ),
-          const OpeningBalanceLine(
-            id: '2',
-            accountId: 'b',
-            accountCode: '2',
-            accountName: 'B',
-            currencyCode: 'SAR',
-            credit: 40,
-          ),
-          const OpeningBalanceLine(
-            id: '3',
-            accountId: 'c',
-            accountCode: '3',
-            accountName: 'C',
-            currencyCode: 'YER',
-            debit: 10,
-          ),
-        ],
-        defaultCurrencyCode: 'SAR',
-      );
+      final summaries = AccountImportOpeningJournal.summarize([
+        const OpeningBalanceLine(
+          id: '1',
+          accountId: 'a',
+          accountCode: '1',
+          accountName: 'A',
+          currencyCode: 'SAR',
+          debit: 100,
+        ),
+        const OpeningBalanceLine(
+          id: '2',
+          accountId: 'b',
+          accountCode: '2',
+          accountName: 'B',
+          currencyCode: 'SAR',
+          credit: 40,
+        ),
+        const OpeningBalanceLine(
+          id: '3',
+          accountId: 'c',
+          accountCode: '3',
+          accountName: 'C',
+          currencyCode: 'YER',
+          debit: 10,
+        ),
+      ], defaultCurrencyCode: 'SAR');
       expect(summaries, hasLength(2));
       expect(summaries.first.currencyCode, 'SAR');
       expect(summaries.first.totalDebit, 100);

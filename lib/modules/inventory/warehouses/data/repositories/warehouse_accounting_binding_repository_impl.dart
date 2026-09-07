@@ -5,18 +5,18 @@ import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehou
 import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_accounting_binding_repository.dart';
 
 class MissingCompanyContextException implements Exception {
-  const MissingCompanyContextException([this.message = 'مطلوب سياق شركة صالح لتنفيذ العملية المحاسبية.']);
+  const MissingCompanyContextException([
+    this.message = 'مطلوب سياق شركة صالح لتنفيذ العملية المحاسبية.',
+  ]);
   final String message;
 
   @override
   String toString() => message;
 }
 
-class WarehouseAccountingBindingRepositoryImpl implements WarehouseAccountingBindingRepository {
-  WarehouseAccountingBindingRepositoryImpl(
-    this.db,
-    this.readCompanyId,
-  );
+class WarehouseAccountingBindingRepositoryImpl
+    implements WarehouseAccountingBindingRepository {
+  WarehouseAccountingBindingRepositoryImpl(this.db, this.readCompanyId);
 
   final InventoryDatabase db;
   final String Function()? readCompanyId;
@@ -28,15 +28,18 @@ class WarehouseAccountingBindingRepositoryImpl implements WarehouseAccountingBin
   }
 
   @override
-  Future<WarehouseAccountingBinding?> getBindingForWarehouse(String warehouseId) async {
+  Future<WarehouseAccountingBinding?> getBindingForWarehouse(
+    String warehouseId,
+  ) async {
     final companyId = _currentCompanyId;
-    final row = await (db.select(db.warehouseAccountingBindings)..where(
-          (tbl) =>
-              tbl.warehouseId.equals(warehouseId) &
-              tbl.companyId.equals(companyId) &
-              tbl.deletedAt.isNull(),
-        ))
-        .getSingleOrNull();
+    final row =
+        await (db.select(db.warehouseAccountingBindings)..where(
+              (tbl) =>
+                  tbl.warehouseId.equals(warehouseId) &
+                  tbl.companyId.equals(companyId) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
 
     if (row == null) return null;
 
@@ -61,40 +64,46 @@ class WarehouseAccountingBindingRepositoryImpl implements WarehouseAccountingBin
     final companyId = _currentCompanyId;
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    final existing = await (db.select(db.warehouseAccountingBindings)..where(
-          (tbl) =>
-              tbl.warehouseId.equals(binding.warehouseId) &
-              tbl.companyId.equals(companyId) &
-              tbl.deletedAt.isNull(),
-        ))
-        .getSingleOrNull();
+    final existing =
+        await (db.select(db.warehouseAccountingBindings)..where(
+              (tbl) =>
+                  tbl.warehouseId.equals(binding.warehouseId) &
+                  tbl.companyId.equals(companyId) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
 
     if (existing != null) {
-      await (db.update(db.warehouseAccountingBindings)..where(
-            (tbl) => tbl.uuid.equals(existing.uuid),
-          ))
-          .write(
-            WarehouseAccountingBindingsCompanion(
-              inventoryAssetAccountId: Value(binding.inventoryAssetAccountId),
-              cogsAccountId: Value(binding.cogsAccountId),
-              inventoryAdjustmentAccountId:
-                  Value(binding.inventoryAdjustmentAccountId),
-              stockTransferClearingAccountId:
-                  Value(binding.stockTransferClearingAccountId),
-              updatedAt: Value(now),
-            ),
-          );
+      await (db.update(
+        db.warehouseAccountingBindings,
+      )..where((tbl) => tbl.uuid.equals(existing.uuid))).write(
+        WarehouseAccountingBindingsCompanion(
+          inventoryAssetAccountId: Value(binding.inventoryAssetAccountId),
+          cogsAccountId: Value(binding.cogsAccountId),
+          inventoryAdjustmentAccountId: Value(
+            binding.inventoryAdjustmentAccountId,
+          ),
+          stockTransferClearingAccountId: Value(
+            binding.stockTransferClearingAccountId,
+          ),
+          updatedAt: Value(now),
+        ),
+      );
     } else {
-      await db.into(db.warehouseAccountingBindings).insert(
+      await db
+          .into(db.warehouseAccountingBindings)
+          .insert(
             WarehouseAccountingBindingsCompanion.insert(
               uuid: binding.id.isNotEmpty ? binding.id : generateUuidV4(),
               warehouseId: binding.warehouseId,
               inventoryAssetAccountId: Value(binding.inventoryAssetAccountId),
               cogsAccountId: Value(binding.cogsAccountId),
-              inventoryAdjustmentAccountId:
-                  Value(binding.inventoryAdjustmentAccountId),
-              stockTransferClearingAccountId:
-                  Value(binding.stockTransferClearingAccountId),
+              inventoryAdjustmentAccountId: Value(
+                binding.inventoryAdjustmentAccountId,
+              ),
+              stockTransferClearingAccountId: Value(
+                binding.stockTransferClearingAccountId,
+              ),
               createdAt: now,
               updatedAt: now,
               companyId: companyId,

@@ -18,7 +18,8 @@ class AccountingConfigurationErrorCard extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final roleLabel = error.accountingRole?.name ?? error.module;
-    final expectedTypeLabel = error.expectedAccountType?.name ?? l10n.accountingUnspecified;
+    final expectedTypeLabel =
+        error.expectedAccountType?.name ?? l10n.accountingUnspecified;
     final actualTypeLabel = error.actualAccountType?.name;
 
     return Card(
@@ -79,10 +80,22 @@ class AccountingConfigurationErrorCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDetailRow(context, l10n.accountingModuleRuleLabel, roleLabel),
-                  _buildDetailRow(context, l10n.accountingRequiredAccountType, expectedTypeLabel),
+                  _buildDetailRow(
+                    context,
+                    l10n.accountingModuleRuleLabel,
+                    roleLabel,
+                  ),
+                  _buildDetailRow(
+                    context,
+                    l10n.accountingRequiredAccountType,
+                    expectedTypeLabel,
+                  ),
                   if (actualTypeLabel != null)
-                    _buildDetailRow(context, l10n.accountingCurrentAccountType, actualTypeLabel),
+                    _buildDetailRow(
+                      context,
+                      l10n.accountingCurrentAccountType,
+                      actualTypeLabel,
+                    ),
                 ],
               ),
             ),
@@ -90,13 +103,16 @@ class AccountingConfigurationErrorCard extends StatelessWidget {
             Align(
               alignment: AlignmentDirectional.centerEnd,
               child: ElevatedButton.icon(
-                onPressed: onConfigurePressed ?? () => _defaultNavigate(context),
+                onPressed:
+                    onConfigurePressed ?? () => _defaultNavigate(context),
                 icon: const Icon(Icons.settings, size: 18),
                 label: Text(_getActionLabel(l10n, error.errorCode)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.error,
                   foregroundColor: theme.colorScheme.onError,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
@@ -130,7 +146,10 @@ class AccountingConfigurationErrorCard extends StatelessWidget {
     );
   }
 
-  String _getActionLabel(AppLocalizations l10n, AccountingConfigurationErrorCode code) {
+  String _getActionLabel(
+    AppLocalizations l10n,
+    AccountingConfigurationErrorCode code,
+  ) {
     switch (code) {
       case AccountingConfigurationErrorCode.accountTypeMismatch:
       case AccountingConfigurationErrorCode.accountScopeInvalid:
@@ -147,12 +166,7 @@ class AccountingConfigurationErrorCard extends StatelessWidget {
 
   void _defaultNavigate(BuildContext context) {
     if (error.configurationRoute != null) {
-      final route = error.configurationRoute!;
-      try {
-        context.push(route);
-      } catch (_) {
-        Navigator.of(context).pushNamed(route);
-      }
+      context.push(error.configurationRoute!);
     }
   }
 }

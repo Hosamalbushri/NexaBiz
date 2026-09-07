@@ -3,10 +3,7 @@
 /// UI [PermissionGate] remains UX-only; use cases must call [requireAny] so
 /// repository/service calls cannot bypass offline RBAC.
 class PermissionDeniedException implements Exception {
-  const PermissionDeniedException(
-    this.requiredAny, {
-    this.message,
-  });
+  const PermissionDeniedException(this.requiredAny, {this.message});
 
   static const code = 'permission_denied';
 

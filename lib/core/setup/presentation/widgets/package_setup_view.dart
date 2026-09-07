@@ -56,7 +56,9 @@ class PackageSetupView extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isArabic ? 'حزمة ${definition.packageId}' : 'Package: ${definition.packageId}',
+                    isArabic
+                        ? 'حزمة ${definition.packageId}'
+                        : 'Package: ${definition.packageId}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -75,8 +77,12 @@ class PackageSetupView extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Text(
-                isArabic ? 'لا توجد أقسام إعدادات لهذه الحزمة' : 'No setup sections available for this package',
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                isArabic
+                    ? 'لا توجد أقسام إعدادات لهذه الحزمة'
+                    : 'No setup sections available for this package',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           )
@@ -125,7 +131,11 @@ class PackageSetupView extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusHeaderBadge(ThemeData theme, SetupStatus status, bool isArabic) {
+  Widget _buildStatusHeaderBadge(
+    ThemeData theme,
+    SetupStatus status,
+    bool isArabic,
+  ) {
     Color bg;
     Color fg;
     String label;
@@ -171,7 +181,11 @@ class PackageSetupView extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: fg),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: fg,
+            ),
           ),
         ],
       ),

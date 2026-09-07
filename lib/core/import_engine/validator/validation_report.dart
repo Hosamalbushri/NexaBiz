@@ -30,9 +30,11 @@ class ValidationReport {
 
   /// Set of 1-indexed row numbers that contain invalidating errors.
   Set<int> get invalidRows => issues
-      .where((i) =>
-          i.severity == ValidationSeverity.error ||
-          i.severity == ValidationSeverity.fatal)
+      .where(
+        (i) =>
+            i.severity == ValidationSeverity.error ||
+            i.severity == ValidationSeverity.fatal,
+      )
       .map((i) => i.row)
       .toSet();
 

@@ -12,11 +12,7 @@ import 'package:stock_count/modules/accounting/shared/data/database/accounting_d
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 class FiscalYearRepositoryImpl implements FiscalYearRepository {
-  FiscalYearRepositoryImpl(
-    this._db, {
-    this._syncQueue,
-    this._readCompanyId,
-  });
+  FiscalYearRepositoryImpl(this._db, {this._syncQueue, this._readCompanyId});
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
@@ -59,8 +55,14 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
       fxRevaluationEnabled: row.fxRevaluationEnabled,
       fxGainAccountUuid: row.fxGainAccountUuid,
       fxLossAccountUuid: row.fxLossAccountUuid,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
       closedAt: row.closedAt == null ? null : _dayFromMs(row.closedAt!),
       createdBy: row.createdBy,
       closedBy: row.closedBy,
@@ -109,7 +111,10 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
       netFxDifference: row.netFxDifference,
       journalEntryUuid: row.journalEntryUuid,
       createdBy: row.createdBy,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
     );
   }
 
@@ -129,10 +134,11 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
     if (normalized == null || normalized.isEmpty) {
       return null;
     }
-    final row = await (_db.select(
-      _db.accounts,
-    )..where((t) => t.accountCode.equals(normalized) & t.deletedAt.isNull()))
-        .getSingleOrNull();
+    final row =
+        await (_db.select(_db.accounts)..where(
+              (t) => t.accountCode.equals(normalized) & t.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
     return row?.uuid;
   }
 
@@ -148,10 +154,10 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
     if (uuid == null || uuid.isEmpty) {
       return null;
     }
-    final row = await (_db.select(
-      _db.accounts,
-    )..where((t) => t.uuid.equals(uuid) & t.deletedAt.isNull()))
-        .getSingleOrNull();
+    final row =
+        await (_db.select(_db.accounts)
+              ..where((t) => t.uuid.equals(uuid) & t.deletedAt.isNull()))
+            .getSingleOrNull();
     return row?.uuid ?? uuid;
   }
 
@@ -220,10 +226,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
     };
   }
 
-  Future<void> _enqueue(
-    String fiscalYearUuid,
-    SyncOperationType type,
-  ) async {
+  Future<void> _enqueue(String fiscalYearUuid, SyncOperationType type) async {
     final queue = _syncQueue;
     if (queue == null) {
       return;
@@ -254,15 +257,15 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
       return;
     }
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await (_db.update(_db.fiscalYears)
-          ..where((t) => t.uuid.equals(fiscalYearUuid)))
-        .write(
-          FiscalYearsCompanion(
-            updatedAt: Value(nowMs),
-            version: Value(row.version + 1),
-            syncStatus: const Value('pending'),
-          ),
-        );
+    await (_db.update(
+      _db.fiscalYears,
+    )..where((t) => t.uuid.equals(fiscalYearUuid))).write(
+      FiscalYearsCompanion(
+        updatedAt: Value(nowMs),
+        version: Value(row.version + 1),
+        syncStatus: const Value('pending'),
+      ),
+    );
     await _enqueue(fiscalYearUuid, SyncOperationType.update);
   }
 
@@ -271,21 +274,28 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
     final query = _db.select(_db.fiscalYears)
       ..where(_scoped)
       ..orderBy([(t) => OrderingTerm.desc(t.startDate)]);
-    return query.watch().map((rows) => rows.map(_mapYear).toList(growable: false));
+    return query.watch().map(
+      (rows) => rows.map(_mapYear).toList(growable: false),
+    );
   }
 
   @override
   Future<List<FiscalYear>> listAll() async {
-    final rows = await (_db.select(_db.fiscalYears)
-          ..where(_scoped)
-          ..orderBy([(t) => OrderingTerm.desc(t.startDate)]))
-        .get();
+    final rows =
+        await (_db.select(_db.fiscalYears)
+              ..where(_scoped)
+              ..orderBy([(t) => OrderingTerm.desc(t.startDate)]))
+            .get();
     return rows.map(_mapYear).toList(growable: false);
   }
 
   @override
   Future<bool> hasAnyFiscalYear() async {
-    final row = await (_db.select(_db.fiscalYears)..where(_scoped)..limit(1)).getSingleOrNull();
+    final row =
+        await (_db.select(_db.fiscalYears)
+              ..where(_scoped)
+              ..limit(1))
+            .getSingleOrNull();
     return row != null;
   }
 
@@ -352,21 +362,23 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
   @override
   Future<AccountingPeriod?> findPeriodContaining(DateTime date) async {
     final dayMs = _dayMs(date);
-    final row = await (_db.select(_db.accountingPeriods)..where(
-          (t) =>
-              t.startDate.isSmallerOrEqualValue(dayMs) &
-              t.endDate.isBiggerOrEqualValue(dayMs),
-        ))
-        .getSingleOrNull();
+    final row =
+        await (_db.select(_db.accountingPeriods)..where(
+              (t) =>
+                  t.startDate.isSmallerOrEqualValue(dayMs) &
+                  t.endDate.isBiggerOrEqualValue(dayMs),
+            ))
+            .getSingleOrNull();
     return row == null ? null : _mapPeriod(row);
   }
 
   @override
   Future<List<AccountingPeriod>> listPeriods(String fiscalYearUuid) async {
-    final rows = await (_db.select(_db.accountingPeriods)
-          ..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid))
-          ..orderBy([(t) => OrderingTerm.asc(t.periodNumber)]))
-        .get();
+    final rows =
+        await (_db.select(_db.accountingPeriods)
+              ..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid))
+              ..orderBy([(t) => OrderingTerm.asc(t.periodNumber)]))
+            .get();
     return rows.map(_mapPeriod).toList(growable: false);
   }
 
@@ -380,12 +392,13 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
 
   @override
   Future<PeriodClosingRecord?> getCompletedClosing(String periodUuid) async {
-    final row = await (_db.select(_db.periodClosingRecords)..where(
-          (t) =>
-              t.periodUuid.equals(periodUuid) &
-              t.status.equals(PeriodClosingStatus.completed.storageValue),
-        ))
-        .getSingleOrNull();
+    final row =
+        await (_db.select(_db.periodClosingRecords)..where(
+              (t) =>
+                  t.periodUuid.equals(periodUuid) &
+                  t.status.equals(PeriodClosingStatus.completed.storageValue),
+            ))
+            .getSingleOrNull();
     return row == null ? null : _mapClosing(row);
   }
 
@@ -393,10 +406,11 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
   Future<List<PeriodClosingRecord>> listClosingsForFiscalYear(
     String fiscalYearUuid,
   ) async {
-    final rows = await (_db.select(_db.periodClosingRecords)
-          ..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid))
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .get();
+    final rows =
+        await (_db.select(_db.periodClosingRecords)
+              ..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid))
+              ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+            .get();
     return rows.map(_mapClosing).toList(growable: false);
   }
 
@@ -475,12 +489,13 @@ WHERE je.deleted_at IS NULL
       throw const FiscalYearException(FiscalYearException.duplicateCode);
     }
 
-    final overlap = await (_db.select(_db.fiscalYears)..where(
-          (t) =>
-              t.startDate.isSmallerOrEqualValue(endMs) &
-              t.endDate.isBiggerOrEqualValue(startMs),
-        ))
-        .get();
+    final overlap =
+        await (_db.select(_db.fiscalYears)..where(
+              (t) =>
+                  t.startDate.isSmallerOrEqualValue(endMs) &
+                  t.endDate.isBiggerOrEqualValue(startMs),
+            ))
+            .get();
     if (overlap.isNotEmpty) {
       throw const FiscalYearException(FiscalYearException.overlapExisting);
     }
@@ -586,13 +601,9 @@ WHERE je.deleted_at IS NULL
     if (!period.allowsPosting) {
       throw const FiscalYearException(FiscalYearException.periodNotCloseable);
     }
-    await (_db.update(
-      _db.accountingPeriods,
-    )..where((t) => t.uuid.equals(periodUuid))).write(
-      const AccountingPeriodsCompanion(
-        status: Value('closing'),
-      ),
-    );
+    await (_db.update(_db.accountingPeriods)
+          ..where((t) => t.uuid.equals(periodUuid)))
+        .write(const AccountingPeriodsCompanion(status: Value('closing')));
     final updated = await getPeriodByUuid(periodUuid);
     if (updated == null) {
       throw const FiscalYearException(FiscalYearException.periodNotFound);
@@ -738,21 +749,20 @@ WHERE je.deleted_at IS NULL
     DateTime? syncedAt,
   }) async {
     final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
-    await (_db.update(_db.fiscalYears)..where((t) => t.uuid.equals(uuid)))
-        .write(
-          FiscalYearsCompanion(
-            syncStatus: const Value('synced'),
-            lastSyncedAt: Value(stamp),
-            version: Value(remoteVersion),
-          ),
-        );
+    await (_db.update(
+      _db.fiscalYears,
+    )..where((t) => t.uuid.equals(uuid))).write(
+      FiscalYearsCompanion(
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(stamp),
+        version: Value(remoteVersion),
+      ),
+    );
   }
 
   Future<void> markConflict(String uuid) async {
     await (_db.update(_db.fiscalYears)..where((t) => t.uuid.equals(uuid)))
-        .write(
-          const FiscalYearsCompanion(syncStatus: Value('conflict')),
-        );
+        .write(const FiscalYearsCompanion(syncStatus: Value('conflict')));
   }
 
   Future<SyncStatus> _syncStatusForUuid(String uuid) async {
@@ -854,30 +864,30 @@ WHERE je.deleted_at IS NULL
       final byCode = await getByCode(code);
       if (byCode != null && byCode.uuid != uuid) {
         final oldUuid = byCode.uuid;
-        await (_db.update(_db.fiscalYears)
-              ..where((t) => t.id.equals(byCode.id)))
-            .write(
-              FiscalYearsCompanion(
-                uuid: Value(uuid),
-                name: Value(name),
-                startDate: Value(startDate),
-                endDate: Value(endDate),
-                status: Value(status),
-                baseCurrencyCode: Value(baseCurrency),
-                periodCount: Value(periodCount),
-                periodFrequency: Value(periodFrequency),
-                fxRevaluationEnabled: Value(fxEnabled),
-                fxGainAccountUuid: Value(fxGainUuid),
-                fxLossAccountUuid: Value(fxLossUuid),
-                updatedAt: Value(updatedAt),
-                closedAt: Value(closedAt),
-                createdBy: Value(createdBy ?? byCode.createdBy),
-                closedBy: Value(closedBy),
-                syncStatus: const Value('synced'),
-                lastSyncedAt: Value(nowMs),
-                version: Value(version),
-              ),
-            );
+        await (_db.update(
+          _db.fiscalYears,
+        )..where((t) => t.id.equals(byCode.id))).write(
+          FiscalYearsCompanion(
+            uuid: Value(uuid),
+            name: Value(name),
+            startDate: Value(startDate),
+            endDate: Value(endDate),
+            status: Value(status),
+            baseCurrencyCode: Value(baseCurrency),
+            periodCount: Value(periodCount),
+            periodFrequency: Value(periodFrequency),
+            fxRevaluationEnabled: Value(fxEnabled),
+            fxGainAccountUuid: Value(fxGainUuid),
+            fxLossAccountUuid: Value(fxLossUuid),
+            updatedAt: Value(updatedAt),
+            closedAt: Value(closedAt),
+            createdBy: Value(createdBy ?? byCode.createdBy),
+            closedBy: Value(closedBy),
+            syncStatus: const Value('synced'),
+            lastSyncedAt: Value(nowMs),
+            version: Value(version),
+          ),
+        );
         await (_db.update(_db.accountingPeriods)
               ..where((t) => t.fiscalYearUuid.equals(oldUuid)))
             .write(AccountingPeriodsCompanion(fiscalYearUuid: Value(uuid)));
@@ -928,34 +938,39 @@ WHERE je.deleted_at IS NULL
                 syncStatus: const Value('synced'),
                 lastSyncedAt: Value(nowMs),
                 version: Value(version),
-                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
+                companyId: Value(
+                  payload['companyId']?.toString() ?? _currentCompanyId,
+                ),
               ),
             );
       } else {
-        await (_db.update(_db.fiscalYears)..where((t) => t.uuid.equals(uuid) & _scoped(t)))
-            .write(
-              FiscalYearsCompanion(
-                code: Value(code),
-                name: Value(name),
-                startDate: Value(startDate),
-                endDate: Value(endDate),
-                status: Value(status),
-                baseCurrencyCode: Value(baseCurrency),
-                periodCount: Value(periodCount),
-                periodFrequency: Value(periodFrequency),
-                fxRevaluationEnabled: Value(fxEnabled),
-                fxGainAccountUuid: Value(fxGainUuid),
-                fxLossAccountUuid: Value(fxLossUuid),
-                updatedAt: Value(updatedAt),
-                closedAt: Value(closedAt),
-                createdBy: Value(createdBy ?? current.createdBy),
-                closedBy: Value(closedBy),
-                syncStatus: const Value('synced'),
-                lastSyncedAt: Value(nowMs),
-                version: Value(version),
-                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
-              ),
-            );
+        await (_db.update(
+          _db.fiscalYears,
+        )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+          FiscalYearsCompanion(
+            code: Value(code),
+            name: Value(name),
+            startDate: Value(startDate),
+            endDate: Value(endDate),
+            status: Value(status),
+            baseCurrencyCode: Value(baseCurrency),
+            periodCount: Value(periodCount),
+            periodFrequency: Value(periodFrequency),
+            fxRevaluationEnabled: Value(fxEnabled),
+            fxGainAccountUuid: Value(fxGainUuid),
+            fxLossAccountUuid: Value(fxLossUuid),
+            updatedAt: Value(updatedAt),
+            closedAt: Value(closedAt),
+            createdBy: Value(createdBy ?? current.createdBy),
+            closedBy: Value(closedBy),
+            syncStatus: const Value('synced'),
+            lastSyncedAt: Value(nowMs),
+            version: Value(version),
+            companyId: Value(
+              payload['companyId']?.toString() ?? _currentCompanyId,
+            ),
+          ),
+        );
       }
 
       await _replacePeriodsAndClosings(
@@ -971,12 +986,12 @@ WHERE je.deleted_at IS NULL
     required Object? periodsRaw,
     required Object? closingsRaw,
   }) async {
-    await (_db.delete(_db.periodClosingRecords)
-          ..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid)))
-        .go();
-    await (_db.delete(_db.accountingPeriods)
-          ..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid)))
-        .go();
+    await (_db.delete(
+      _db.periodClosingRecords,
+    )..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid))).go();
+    await (_db.delete(
+      _db.accountingPeriods,
+    )..where((t) => t.fiscalYearUuid.equals(fiscalYearUuid))).go();
 
     if (periodsRaw is List) {
       for (final item in periodsRaw) {
@@ -1007,7 +1022,8 @@ WHERE je.deleted_at IS NULL
                 name: periodName,
                 startDate: startDate,
                 endDate: endDate,
-                status: map['status']?.toString() ??
+                status:
+                    map['status']?.toString() ??
                     AccountingPeriodStatus.closed.storageValue,
                 openedAt: Value((map['openedAt'] as num?)?.toInt()),
                 openedBy: Value(map['openedBy']?.toString()),
@@ -1045,7 +1061,8 @@ WHERE je.deleted_at IS NULL
                 fiscalYearUuid: fiscalYearUuid,
                 periodUuid: periodUuid,
                 closingDate: closingDate,
-                status: map['status']?.toString() ??
+                status:
+                    map['status']?.toString() ??
                     PeriodClosingStatus.completed.storageValue,
                 fxRevaluationEnabled: Value(
                   map['fxRevaluationEnabled'] as bool? ?? false,
@@ -1061,7 +1078,8 @@ WHERE je.deleted_at IS NULL
                 ),
                 journalEntryUuid: Value(map['journalEntryUuid']?.toString()),
                 createdBy: Value(map['createdBy']?.toString()),
-                createdAt: (map['createdAt'] as num?)?.toInt() ??
+                createdAt:
+                    (map['createdAt'] as num?)?.toInt() ??
                     DateTime.now().toUtc().millisecondsSinceEpoch,
               ),
             );

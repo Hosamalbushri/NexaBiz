@@ -99,10 +99,14 @@ class LocalPermissions {
   static const accountingFiscalYearsView = 'accounting.fiscal_years.view';
   static const accountingFiscalYearsCreate = 'accounting.fiscal_years.create';
   static const accountingFiscalYearsUpdate = 'accounting.fiscal_years.update';
-  static const accountingFiscalYearsOpenPeriod = 'accounting.fiscal_years.open_period';
-  static const accountingFiscalYearsClosePeriod = 'accounting.fiscal_years.close_period';
-  static const accountingFiscalYearsReopenPeriod = 'accounting.fiscal_years.reopen_period';
-  static const accountingFiscalYearsConfigureFx = 'accounting.fiscal_years.configure_fx';
+  static const accountingFiscalYearsOpenPeriod =
+      'accounting.fiscal_years.open_period';
+  static const accountingFiscalYearsClosePeriod =
+      'accounting.fiscal_years.close_period';
+  static const accountingFiscalYearsReopenPeriod =
+      'accounting.fiscal_years.reopen_period';
+  static const accountingFiscalYearsConfigureFx =
+      'accounting.fiscal_years.configure_fx';
 
   // Receipts & Payments
   static const receiptsView = 'receipts.view';
@@ -131,7 +135,8 @@ class LocalPermissions {
   static const reportsSalesPeriodView = 'reports.sales_period.view';
   static const reportsSalesPeriodExport = 'reports.sales_period.export';
   static const reportsAccountStatementView = 'reports.account_statement.view';
-  static const reportsAccountStatementExport = 'reports.account_statement.export';
+  static const reportsAccountStatementExport =
+      'reports.account_statement.export';
   static const reportsTrialBalanceView = 'reports.trial_balance.view';
   static const reportsTrialBalanceExport = 'reports.trial_balance.export';
   static const reportsJournalBookView = 'reports.journal_book.view';

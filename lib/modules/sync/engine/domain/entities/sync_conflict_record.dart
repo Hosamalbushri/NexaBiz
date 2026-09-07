@@ -99,7 +99,8 @@ class SyncConflictRecord {
       mergeStatus: map['mergeStatus'] as String? ?? 'unresolved',
       resolutionStrategy: map['resolutionStrategy'] as String? ?? 'none',
       resolvedOperationId: map['resolvedOperationId'] as String?,
-      createdAt: DateTime.tryParse(map['createdAt'] as String? ?? '')?.toUtc() ??
+      createdAt:
+          DateTime.tryParse(map['createdAt'] as String? ?? '')?.toUtc() ??
           DateTime.now().toUtc(),
     );
   }

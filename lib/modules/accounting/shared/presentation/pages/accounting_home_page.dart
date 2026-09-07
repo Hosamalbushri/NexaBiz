@@ -21,10 +21,7 @@ class AccountingHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.moduleAccounting,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: l10n.moduleAccounting, showBackButton: true),
       body: AppContentConstraint(
         child: ListView(
           padding: AppConstants.pageInsets(context),
@@ -192,7 +189,9 @@ class _ServiceCard extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: EdgeInsets.all(isCompactLandscape ? AppSpacing.sm : AppSpacing.md),
+            padding: EdgeInsets.all(
+              isCompactLandscape ? AppSpacing.sm : AppSpacing.md,
+            ),
             child: Row(
               children: [
                 Container(
@@ -202,7 +201,11 @@ class _ServiceCard extends StatelessWidget {
                     color: theme.colorScheme.primary.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
-                  child: Icon(icon, color: theme.colorScheme.primary, size: iconSize),
+                  child: Icon(
+                    icon,
+                    color: theme.colorScheme.primary,
+                    size: iconSize,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -211,12 +214,11 @@ class _ServiceCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: (isCompactLandscape
-                                ? theme.textTheme.titleSmall
-                                : theme.textTheme.titleMedium)
-                            ?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style:
+                            (isCompactLandscape
+                                    ? theme.textTheme.titleSmall
+                                    : theme.textTheme.titleMedium)
+                                ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 2),
                       Text(

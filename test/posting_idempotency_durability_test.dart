@@ -82,7 +82,10 @@ void main() {
     accDb = AccountingDatabase(executor: NativeDatabase.memory());
     invDb = InventoryDatabase(executor: NativeDatabase.memory());
 
-    accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => testCompanyId);
+    accountRepo = AccountRepositoryImpl(
+      accDb,
+      readCompanyId: () => testCompanyId,
+    );
     final periodValidator = legacyPeriodValidator();
 
     journalRepo = JournalRepositoryImpl(
@@ -116,10 +119,24 @@ void main() {
       readCompanyId: () => testCompanyId,
     );
 
-    costLayerService = CostLayerServiceImpl(db: invDb, readCompanyId: () => testCompanyId);
-    postingEngine = PostingEngineImpl(invDb, costLayerService, null, () => testCompanyId);
-    stockValidationService = StockValidationServiceImpl(invDb, () => testCompanyId);
-    dependencyDetector = InventoryDependencyDetectorImpl(invDb, () => testCompanyId);
+    costLayerService = CostLayerServiceImpl(
+      db: invDb,
+      readCompanyId: () => testCompanyId,
+    );
+    postingEngine = PostingEngineImpl(
+      invDb,
+      costLayerService,
+      null,
+      () => testCompanyId,
+    );
+    stockValidationService = StockValidationServiceImpl(
+      invDb,
+      () => testCompanyId,
+    );
+    dependencyDetector = InventoryDependencyDetectorImpl(
+      invDb,
+      () => testCompanyId,
+    );
 
     postingCoordinator = PostingCoordinatorImpl(
       db: invDb,
@@ -156,7 +173,9 @@ void main() {
 
     // Seed test product
     final now = DateTime.now().millisecondsSinceEpoch;
-    await invDb.into(invDb.products).insert(
+    await invDb
+        .into(invDb.products)
+        .insert(
           ProductsCompanion(
             id: const Value(1),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
@@ -179,298 +198,322 @@ void main() {
   });
 
   group('ROOT FIX 17 — Posting Idempotency Durability Test Suite', () {
-    test('1. Sequential Retry (Network Timeout Simulation) creates zero duplicate movements, cost layers, or journals', () async {
-      final receiptUuid = generateUuidV4();
-      final lineUuid = generateUuidV4();
-      final date = DateTime.now();
+    test(
+      '1. Sequential Retry (Network Timeout Simulation) creates zero duplicate movements, cost layers, or journals',
+      () async {
+        final receiptUuid = generateUuidV4();
+        final lineUuid = generateUuidV4();
+        final date = DateTime.now();
 
-      final receipt = StockReceipt(
-        id: receiptUuid,
-        receiptNumber: 'SR-SEQ-001',
-        supplier: 'Supp 1',
-        accountId: cashAccountUuid,
-        currencyCode: 'SAR',
-        exchangeRate: 1.0,
-        receiptDate: date,
-        companyId: testCompanyId,
-        status: InventoryDocumentStatus.draft,
-        lines: [
-          StockMovementLine(
-            id: lineUuid,
-            movementUuid: receiptUuid,
-            movementType: 'receipt',
-            itemCode: 'ITEM-IDEM-01',
-            itemName: 'Idempotency Test Item',
-            mainQuantity: 10,
-            subQuantity: 0,
-            quantity: 10,
-            unitCost: 50.0,
-            totalCost: 500.0,
-          ),
-        ],
-        createdAt: date,
-        updatedAt: date,
-      );
+        final receipt = StockReceipt(
+          id: receiptUuid,
+          receiptNumber: 'SR-SEQ-001',
+          supplier: 'Supp 1',
+          accountId: cashAccountUuid,
+          currencyCode: 'SAR',
+          exchangeRate: 1.0,
+          receiptDate: date,
+          companyId: testCompanyId,
+          status: InventoryDocumentStatus.draft,
+          lines: [
+            StockMovementLine(
+              id: lineUuid,
+              movementUuid: receiptUuid,
+              movementType: 'receipt',
+              itemCode: 'ITEM-IDEM-01',
+              itemName: 'Idempotency Test Item',
+              mainQuantity: 10,
+              subQuantity: 0,
+              quantity: 10,
+              unitCost: 50.0,
+              totalCost: 500.0,
+            ),
+          ],
+          createdAt: date,
+          updatedAt: date,
+        );
 
-      await stockMovementsRepo.saveReceipt(receipt);
+        await stockMovementsRepo.saveReceipt(receipt);
 
-      final docRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        status: InventoryDocumentStatus.draft,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      // FIRST POST
-      final res1 = await postingCoordinator.post(document: docRef);
-      expect(res1, isA<PostSuccess>());
+        // FIRST POST
+        final res1 = await postingCoordinator.post(document: docRef);
+        expect(res1, isA<PostSuccess>());
 
-      // SECOND POST (Simulated Network Timeout / Client Retry)
-      final res2 = await postingCoordinator.post(document: docRef);
-      expect(res2, isA<PostSuccess>());
+        // SECOND POST (Simulated Network Timeout / Client Retry)
+        final res2 = await postingCoordinator.post(document: docRef);
+        expect(res2, isA<PostSuccess>());
 
-      // THIRD POST (Additional Retry)
-      final res3 = await postingCoordinator.post(document: docRef);
-      expect(res3, isA<PostSuccess>());
+        // THIRD POST (Additional Retry)
+        final res3 = await postingCoordinator.post(document: docRef);
+        expect(res3, isA<PostSuccess>());
 
-      // VERIFY IDEMPOTENCY:
-      // A. Product stock increased exactly ONCE (+10, not +30)
-      final prod = await (invDb.select(invDb.products)..where((p) => p.itemCode.equals('ITEM-IDEM-01'))).getSingle();
-      expect(prod.onHandQty, 10.0);
+        // VERIFY IDEMPOTENCY:
+        // A. Product stock increased exactly ONCE (+10, not +30)
+        final prod = await (invDb.select(
+          invDb.products,
+        )..where((p) => p.itemCode.equals('ITEM-IDEM-01'))).getSingle();
+        expect(prod.onHandQty, 10.0);
 
-      // B. Cost layers in DB MUST be exactly 1
-      final costLayers = await invDb.select(invDb.inventoryCostLayers).get();
-      expect(costLayers.length, 1);
-      expect(costLayers.first.receivedQty, 10.0);
+        // B. Cost layers in DB MUST be exactly 1
+        final costLayers = await invDb.select(invDb.inventoryCostLayers).get();
+        expect(costLayers.length, 1);
+        expect(costLayers.first.receivedQty, 10.0);
 
-      // C. Journal entries MUST be exactly 1
-      final journalEntries = await accDb.select(accDb.journalEntries).get();
-      expect(journalEntries.length, 1);
-      expect(journalEntries.first.voucherNumber, 'SR-SEQ-001');
+        // C. Journal entries MUST be exactly 1
+        final journalEntries = await accDb.select(accDb.journalEntries).get();
+        expect(journalEntries.length, 1);
+        expect(journalEntries.first.voucherNumber, 'SR-SEQ-001');
 
-      // D. Audit trail entries MUST be exactly 1
-      final auditTrail = await invDb.select(invDb.inventoryAuditTrail).get();
-      expect(auditTrail.length, 1);
-    });
+        // D. Audit trail entries MUST be exactly 1
+        final auditTrail = await invDb.select(invDb.inventoryAuditTrail).get();
+        expect(auditTrail.length, 1);
+      },
+    );
 
-    test('2. Concurrent Retry (Simultaneous POST Requests) executes atomically with 1 effect', () async {
-      final receiptUuid = generateUuidV4();
-      final lineUuid = generateUuidV4();
-      final date = DateTime.now();
+    test(
+      '2. Concurrent Retry (Simultaneous POST Requests) executes atomically with 1 effect',
+      () async {
+        final receiptUuid = generateUuidV4();
+        final lineUuid = generateUuidV4();
+        final date = DateTime.now();
 
-      final receipt = StockReceipt(
-        id: receiptUuid,
-        receiptNumber: 'SR-CONC-001',
-        supplier: 'Supp 1',
-        accountId: cashAccountUuid,
-        currencyCode: 'SAR',
-        exchangeRate: 1.0,
-        receiptDate: date,
-        companyId: testCompanyId,
-        status: InventoryDocumentStatus.draft,
-        lines: [
-          StockMovementLine(
-            id: lineUuid,
-            movementUuid: receiptUuid,
-            movementType: 'receipt',
-            itemCode: 'ITEM-IDEM-01',
-            itemName: 'Idempotency Test Item',
-            mainQuantity: 20,
-            subQuantity: 0,
-            quantity: 20,
-            unitCost: 50.0,
-            totalCost: 1000.0,
-          ),
-        ],
-        createdAt: date,
-        updatedAt: date,
-      );
+        final receipt = StockReceipt(
+          id: receiptUuid,
+          receiptNumber: 'SR-CONC-001',
+          supplier: 'Supp 1',
+          accountId: cashAccountUuid,
+          currencyCode: 'SAR',
+          exchangeRate: 1.0,
+          receiptDate: date,
+          companyId: testCompanyId,
+          status: InventoryDocumentStatus.draft,
+          lines: [
+            StockMovementLine(
+              id: lineUuid,
+              movementUuid: receiptUuid,
+              movementType: 'receipt',
+              itemCode: 'ITEM-IDEM-01',
+              itemName: 'Idempotency Test Item',
+              mainQuantity: 20,
+              subQuantity: 0,
+              quantity: 20,
+              unitCost: 50.0,
+              totalCost: 1000.0,
+            ),
+          ],
+          createdAt: date,
+          updatedAt: date,
+        );
 
-      await stockMovementsRepo.saveReceipt(receipt);
+        await stockMovementsRepo.saveReceipt(receipt);
 
-      final docRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        status: InventoryDocumentStatus.draft,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      // Execute 3 concurrent post requests simultaneously
-      final results = await Future.wait([
-        postingCoordinator.post(document: docRef),
-        postingCoordinator.post(document: docRef),
-        postingCoordinator.post(document: docRef),
-      ]);
+        // Execute 3 concurrent post requests simultaneously
+        final results = await Future.wait([
+          postingCoordinator.post(document: docRef),
+          postingCoordinator.post(document: docRef),
+          postingCoordinator.post(document: docRef),
+        ]);
 
-      expect(results[0], isA<PostSuccess>());
-      expect(results[1], isA<PostSuccess>());
-      expect(results[2], isA<PostSuccess>());
+        expect(results[0], isA<PostSuccess>());
+        expect(results[1], isA<PostSuccess>());
+        expect(results[2], isA<PostSuccess>());
 
-      // VERIFY CONCURRENCY IDEMPOTENCY:
-      final prod = await (invDb.select(invDb.products)..where((p) => p.itemCode.equals('ITEM-IDEM-01'))).getSingle();
-      expect(prod.onHandQty, 20.0);
+        // VERIFY CONCURRENCY IDEMPOTENCY:
+        final prod = await (invDb.select(
+          invDb.products,
+        )..where((p) => p.itemCode.equals('ITEM-IDEM-01'))).getSingle();
+        expect(prod.onHandQty, 20.0);
 
-      final costLayers = await invDb.select(invDb.inventoryCostLayers).get();
-      expect(costLayers.length, 1);
+        final costLayers = await invDb.select(invDb.inventoryCostLayers).get();
+        expect(costLayers.length, 1);
 
-      final journalEntries = await accDb.select(accDb.journalEntries).get();
-      expect(journalEntries.length, 1);
-    });
+        final journalEntries = await accDb.select(accDb.journalEntries).get();
+        expect(journalEntries.length, 1);
+      },
+    );
 
-    test('3. Crash After Commit Simulation (Fresh PostingCoordinator) detects persisted posted state', () async {
-      final receiptUuid = generateUuidV4();
-      final lineUuid = generateUuidV4();
-      final date = DateTime.now();
+    test(
+      '3. Crash After Commit Simulation (Fresh PostingCoordinator) detects persisted posted state',
+      () async {
+        final receiptUuid = generateUuidV4();
+        final lineUuid = generateUuidV4();
+        final date = DateTime.now();
 
-      final receipt = StockReceipt(
-        id: receiptUuid,
-        receiptNumber: 'SR-CRASH-001',
-        supplier: 'Supp 1',
-        accountId: cashAccountUuid,
-        currencyCode: 'SAR',
-        exchangeRate: 1.0,
-        receiptDate: date,
-        companyId: testCompanyId,
-        status: InventoryDocumentStatus.draft,
-        lines: [
-          StockMovementLine(
-            id: lineUuid,
-            movementUuid: receiptUuid,
-            movementType: 'receipt',
-            itemCode: 'ITEM-IDEM-01',
-            itemName: 'Idempotency Test Item',
-            mainQuantity: 15,
-            subQuantity: 0,
-            quantity: 15,
-            unitCost: 50.0,
-            totalCost: 750.0,
-          ),
-        ],
-        createdAt: date,
-        updatedAt: date,
-      );
+        final receipt = StockReceipt(
+          id: receiptUuid,
+          receiptNumber: 'SR-CRASH-001',
+          supplier: 'Supp 1',
+          accountId: cashAccountUuid,
+          currencyCode: 'SAR',
+          exchangeRate: 1.0,
+          receiptDate: date,
+          companyId: testCompanyId,
+          status: InventoryDocumentStatus.draft,
+          lines: [
+            StockMovementLine(
+              id: lineUuid,
+              movementUuid: receiptUuid,
+              movementType: 'receipt',
+              itemCode: 'ITEM-IDEM-01',
+              itemName: 'Idempotency Test Item',
+              mainQuantity: 15,
+              subQuantity: 0,
+              quantity: 15,
+              unitCost: 50.0,
+              totalCost: 750.0,
+            ),
+          ],
+          createdAt: date,
+          updatedAt: date,
+        );
 
-      await stockMovementsRepo.saveReceipt(receipt);
+        await stockMovementsRepo.saveReceipt(receipt);
 
-      final docRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        status: InventoryDocumentStatus.draft,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      // Post with initial coordinator
-      final res1 = await postingCoordinator.post(document: docRef);
-      expect(res1, isA<PostSuccess>());
+        // Post with initial coordinator
+        final res1 = await postingCoordinator.post(document: docRef);
+        expect(res1, isA<PostSuccess>());
 
-      // Instantiate a FRESH PostingCoordinatorImpl instance (simulating process restart)
-      final freshCoordinator = PostingCoordinatorImpl(
-        db: invDb,
-        stockValidationService: stockValidationService,
-        dependencyDetector: dependencyDetector,
-        postingEngine: postingEngine,
-        accountingPoster: accountingPoster,
-        readCompanyId: () => testCompanyId,
-        syncQueue: syncQueue,
-      );
+        // Instantiate a FRESH PostingCoordinatorImpl instance (simulating process restart)
+        final freshCoordinator = PostingCoordinatorImpl(
+          db: invDb,
+          stockValidationService: stockValidationService,
+          dependencyDetector: dependencyDetector,
+          postingEngine: postingEngine,
+          accountingPoster: accountingPoster,
+          readCompanyId: () => testCompanyId,
+          syncQueue: syncQueue,
+        );
 
-      // Attempt post on fresh coordinator instance
-      final res2 = await freshCoordinator.post(document: docRef);
-      expect(res2, isA<PostSuccess>());
+        // Attempt post on fresh coordinator instance
+        final res2 = await freshCoordinator.post(document: docRef);
+        expect(res2, isA<PostSuccess>());
 
-      // Verify DB data remains non-duplicated
-      final prod = await (invDb.select(invDb.products)..where((p) => p.itemCode.equals('ITEM-IDEM-01'))).getSingle();
-      expect(prod.onHandQty, 15.0);
+        // Verify DB data remains non-duplicated
+        final prod = await (invDb.select(
+          invDb.products,
+        )..where((p) => p.itemCode.equals('ITEM-IDEM-01'))).getSingle();
+        expect(prod.onHandQty, 15.0);
 
-      final costLayers = await invDb.select(invDb.inventoryCostLayers).get();
-      expect(costLayers.length, 1);
+        final costLayers = await invDb.select(invDb.inventoryCostLayers).get();
+        expect(costLayers.length, 1);
 
-      final journalEntries = await accDb.select(accDb.journalEntries).get();
-      expect(journalEntries.length, 1);
-    });
+        final journalEntries = await accDb.select(accDb.journalEntries).get();
+        expect(journalEntries.length, 1);
+      },
+    );
 
-    test('4. Sequential & Concurrent Reversal Retry is safely idempotent', () async {
-      final receiptUuid = generateUuidV4();
-      final lineUuid = generateUuidV4();
-      final date = DateTime.now();
+    test(
+      '4. Sequential & Concurrent Reversal Retry is safely idempotent',
+      () async {
+        final receiptUuid = generateUuidV4();
+        final lineUuid = generateUuidV4();
+        final date = DateTime.now();
 
-      final receipt = StockReceipt(
-        id: receiptUuid,
-        receiptNumber: 'SR-UNP-IDEM',
-        supplier: 'Supp 1',
-        accountId: cashAccountUuid,
-        currencyCode: 'SAR',
-        exchangeRate: 1.0,
-        receiptDate: date,
-        companyId: testCompanyId,
-        status: InventoryDocumentStatus.draft,
-        lines: [
-          StockMovementLine(
-            id: lineUuid,
-            movementUuid: receiptUuid,
-            movementType: 'receipt',
-            itemCode: 'ITEM-IDEM-01',
-            itemName: 'Idempotency Test Item',
-            mainQuantity: 10,
-            subQuantity: 0,
-            quantity: 10,
-            unitCost: 50.0,
-            totalCost: 500.0,
-          ),
-        ],
-        createdAt: date,
-        updatedAt: date,
-      );
+        final receipt = StockReceipt(
+          id: receiptUuid,
+          receiptNumber: 'SR-UNP-IDEM',
+          supplier: 'Supp 1',
+          accountId: cashAccountUuid,
+          currencyCode: 'SAR',
+          exchangeRate: 1.0,
+          receiptDate: date,
+          companyId: testCompanyId,
+          status: InventoryDocumentStatus.draft,
+          lines: [
+            StockMovementLine(
+              id: lineUuid,
+              movementUuid: receiptUuid,
+              movementType: 'receipt',
+              itemCode: 'ITEM-IDEM-01',
+              itemName: 'Idempotency Test Item',
+              mainQuantity: 10,
+              subQuantity: 0,
+              quantity: 10,
+              unitCost: 50.0,
+              totalCost: 500.0,
+            ),
+          ],
+          createdAt: date,
+          updatedAt: date,
+        );
 
-      await stockMovementsRepo.saveReceipt(receipt);
+        await stockMovementsRepo.saveReceipt(receipt);
 
-      final docRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        status: InventoryDocumentStatus.draft,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          status: InventoryDocumentStatus.draft,
+        );
 
-      // Post
-      await postingCoordinator.post(document: docRef);
+        // Post
+        await postingCoordinator.post(document: docRef);
 
-      final postedDocRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        status: InventoryDocumentStatus.posted,
-      );
+        final postedDocRef = InventoryDocumentRef(
+          documentId: receipt.id,
+          documentNumber: receipt.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          status: InventoryDocumentStatus.posted,
+        );
 
-      // UNPOST 1
-      final unpostRes1 = await postingCoordinator.unpost(document: postedDocRef);
-      expect(unpostRes1, isA<UnpostSuccess>());
+        // UNPOST 1
+        final unpostRes1 = await postingCoordinator.unpost(
+          document: postedDocRef,
+        );
+        expect(unpostRes1, isA<UnpostSuccess>());
 
-      // UNPOST 2 (Sequential retry)
-      final unpostRes2 = await postingCoordinator.unpost(document: postedDocRef);
-      expect(unpostRes2, isA<UnpostSuccess>());
+        // UNPOST 2 (Sequential retry)
+        final unpostRes2 = await postingCoordinator.unpost(
+          document: postedDocRef,
+        );
+        expect(unpostRes2, isA<UnpostSuccess>());
 
-      // UNPOST CONCURRENT RETRY
-      final unpostResults = await Future.wait([
-        postingCoordinator.unpost(document: postedDocRef),
-        postingCoordinator.unpost(document: postedDocRef),
-      ]);
-      expect(unpostResults[0], isA<UnpostSuccess>());
-      expect(unpostResults[1], isA<UnpostSuccess>());
+        // UNPOST CONCURRENT RETRY
+        final unpostResults = await Future.wait([
+          postingCoordinator.unpost(document: postedDocRef),
+          postingCoordinator.unpost(document: postedDocRef),
+        ]);
+        expect(unpostResults[0], isA<UnpostSuccess>());
+        expect(unpostResults[1], isA<UnpostSuccess>());
 
-      // VERIFY UNPOST IDEMPOTENCY:
-      // A. Document is draft in DB
-      final dbReceipt = await stockMovementsRepo.getReceiptById(receipt.id);
-      expect(dbReceipt?.status, InventoryDocumentStatus.draft);
+        // VERIFY UNPOST IDEMPOTENCY:
+        // A. Document is draft in DB
+        final dbReceipt = await stockMovementsRepo.getReceiptById(receipt.id);
+        expect(dbReceipt?.status, InventoryDocumentStatus.draft);
 
-      // B. Offsetting reversal journal entry created EXACTLY ONCE
-      final journalEntries = await accDb.select(accDb.journalEntries).get();
-      final reversalEntries = journalEntries.where((e) => e.voucherNumber == 'SR-UNP-IDEM-R').toList();
-      expect(reversalEntries.length, 1);
-    });
+        // B. Offsetting reversal journal entry created EXACTLY ONCE
+        final journalEntries = await accDb.select(accDb.journalEntries).get();
+        final reversalEntries = journalEntries
+            .where((e) => e.voucherNumber == 'SR-UNP-IDEM-R')
+            .toList();
+        expect(reversalEntries.length, 1);
+      },
+    );
   });
 }

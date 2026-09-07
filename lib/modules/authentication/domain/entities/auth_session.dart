@@ -20,7 +20,9 @@ class AuthSessionSnapshot {
     this.deviceId,
     this.sessionId,
     this.mustChangePassword = false,
-  }) : _effectiveCompanyContext = activeCompanyContext ?? _buildContextFallback(user, activeMembership, currentCompanyId);
+  }) : _effectiveCompanyContext =
+           activeCompanyContext ??
+           _buildContextFallback(user, activeMembership, currentCompanyId);
 
   final AuthUser user;
   final List<AuthCompany> companies;
@@ -46,10 +48,14 @@ class AuthSessionSnapshot {
     UserCompanyMembership? membership,
     String? currentCompanyId,
   ) {
-    if (membership == null || !membership.isActive || membership.userId != user.id) {
+    if (membership == null ||
+        !membership.isActive ||
+        membership.userId != user.id) {
       return null;
     }
-    if (currentCompanyId != null && currentCompanyId.isNotEmpty && membership.companyId != currentCompanyId) {
+    if (currentCompanyId != null &&
+        currentCompanyId.isNotEmpty &&
+        membership.companyId != currentCompanyId) {
       return null;
     }
     try {
@@ -72,6 +78,7 @@ class AuthSessionSnapshot {
     }
     return currentCompanyId;
   }
+
   List<String> get availableCompanyIds => companies.map((c) => c.id).toList();
 
   String? get membershipId => activeMembership != null
@@ -106,11 +113,11 @@ class AuthSessionSnapshot {
     final m = activeMembership;
     if (m != null) {
       if (m.userId != user.id) return false; // Cross-user membership rejected
-      if (!m.isActive) return false;        // Inactive/revoked membership rejected
+      if (!m.isActive) return false; // Inactive/revoked membership rejected
       if (currentCompanyId != null &&
           currentCompanyId!.isNotEmpty &&
           m.companyId != currentCompanyId) {
-        return false;                       // Company ID mismatch rejected
+        return false; // Company ID mismatch rejected
       }
     }
 
@@ -137,8 +144,7 @@ class AuthSessionSnapshot {
     return ctx.hasPermission(code);
   }
 
-  bool hasAnyPermission(Iterable<String> codes) =>
-      codes.any(hasPermission);
+  bool hasAnyPermission(Iterable<String> codes) => codes.any(hasPermission);
 
   AuthCompany? get currentCompany {
     final id = activeCompanyId;
@@ -208,7 +214,9 @@ class AuthSessionSnapshot {
       Map<String, dynamic>.from(json['user'] as Map? ?? const {}),
     );
     final membership = membershipRaw is Map
-        ? UserCompanyMembership.fromJson(Map<String, dynamic>.from(membershipRaw))
+        ? UserCompanyMembership.fromJson(
+            Map<String, dynamic>.from(membershipRaw),
+          )
         : null;
     final context = contextRaw is Map
         ? ActiveCompanyContext.fromJson(Map<String, dynamic>.from(contextRaw))
@@ -224,10 +232,16 @@ class AuthSessionSnapshot {
             ]
           : const [],
       roles: rolesRaw is List
-          ? [for (final r in rolesRaw) if (r is String) r]
+          ? [
+              for (final r in rolesRaw)
+                if (r is String) r,
+            ]
           : const [],
       permissions: permsRaw is List
-          ? {for (final p in permsRaw) if (p is String) p}
+          ? {
+              for (final p in permsRaw)
+                if (p is String) p,
+            }
           : {},
       capturedAt:
           DateTime.tryParse(json['capturedAt'] as String? ?? '')?.toUtc() ??
@@ -241,7 +255,6 @@ class AuthSessionSnapshot {
     );
   }
 }
-
 
 class AuthTokens {
   const AuthTokens({

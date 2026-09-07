@@ -33,11 +33,7 @@ class AppFormSection extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 18,
-                  color: scheme.primary,
-                ),
+                Icon(icon, size: 18, color: scheme.primary),
                 const SizedBox(width: AppSpacing.xs + 2),
               ],
               Text(

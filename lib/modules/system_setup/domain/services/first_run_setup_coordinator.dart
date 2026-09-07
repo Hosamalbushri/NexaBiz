@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/settings/settings_repository.dart';
 import '../../../authentication/data/local_auth_store.dart';
 import '../../domain/ports/system_setup_seed_port.dart';
@@ -147,28 +148,47 @@ class FirstRunSetupCoordinator {
       // 1. Language persistence
       await settingsRepository.saveLocale(Locale(payload.language.trim()));
 
-      // 2. Pure System Administrator Identity Creation (0 companies, 0 memberships)
-      await authStore.createInitialSystemAdmin(
-        name: payload.adminName.trim(),
-        email: payload.adminEmail.trim(),
-        password: payload.adminPassword.trim(),
-      );
+      // 2. Identity & Company Creation (Owner + Company if companyName supplied, or System Admin)
+      final companyId = LocalAuthDefaults.companyId;
+      final hasCompany = payload.companyName.trim().isNotEmpty;
+      if (hasCompany) {
+        final compCode =
+            (payload.companyCode != null &&
+                payload.companyCode!.trim().isNotEmpty)
+            ? payload.companyCode!.trim()
+            : 'COMP_01';
+        await authStore.createOwnerAndCompany(
+          companyId: companyId,
+          companyName: payload.companyName.trim(),
+          companyCode: compCode,
+          ownerName: payload.adminName.trim(),
+          ownerEmail: payload.adminEmail.trim(),
+          ownerPassword: payload.adminPassword.trim(),
+        );
+        await settingsRepository.saveCompanyProfile(
+          CompanyProfile(name: payload.companyName.trim()),
+          companyId,
+        );
+      } else {
+        await authStore.createInitialSystemAdmin(
+          name: payload.adminName.trim(),
+          email: payload.adminEmail.trim(),
+          password: payload.adminPassword.trim(),
+        );
+      }
 
       // 3. Record device initialization mode
       await settingsRepository.saveDeviceInitialization(
         mode: DeviceInitializationMode.local,
         initialized: true,
-        companyId: '',
+        companyId: hasCompany ? companyId : '',
         initializedAt: DateTime.now().toUtc(),
       );
 
-      // 4. Seed accounting, warehouse, currency, and system defaults if seedPort available
+      // 4. Seed accounting, currency, and system defaults if seedPort available
       try {
         if (seedPort != null) {
-          await seedPort!.ensureLocalDefaults(
-            defaultWarehouseName: 'المستودع الرئيسي',
-            defaultWarehouseCode: 'WH-01',
-          );
+          await seedPort!.ensureLocalDefaults();
         }
       } catch (seedErr) {
         if (kDebugMode) {
@@ -182,6 +202,8 @@ class FirstRunSetupCoordinator {
         final state = await initRepository!.getState();
         await initRepository!.saveState(
           state.copyWith(
+            companyId: hasCompany ? companyId : '',
+            companyCreated: hasCompany,
             accountingConfigured: true,
             inventoryCurrencyConfigured: true,
             warehouseConfigured: true,

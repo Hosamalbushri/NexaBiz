@@ -17,7 +17,6 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
   final AccountValidationService _validationService;
   final CompanyInitializationRepository? _initRepository;
 
-
   AccountRoleRef _toRoleRef(AccountRole role, Account account) {
     return AccountRoleRef(
       role: role,
@@ -43,10 +42,12 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
     for (final role in AccountRole.values) {
       Account? resolvedAcc;
       final target = companyConfig?.bindingTargets[role];
-      final configuredKey = target?.activeUuid ?? companyMappings?[role]?.trim();
+      final configuredKey =
+          target?.activeUuid ?? companyMappings?[role]?.trim();
 
       if (configuredKey != null && configuredKey.isNotEmpty) {
-        resolvedAcc = await _accountRepository.getByUuid(configuredKey) ??
+        resolvedAcc =
+            await _accountRepository.getByUuid(configuredKey) ??
             await _accountRepository.getByAccountCode(configuredKey) ??
             (int.tryParse(configuredKey) != null
                 ? await _accountRepository.getById(int.parse(configuredKey))
@@ -58,9 +59,6 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
       }
     }
 
-
-
-
     // Process overrides & validate
     if (overrides != null) {
       for (final entry in overrides.entries) {
@@ -69,11 +67,14 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
 
         final key = targetUuidOrCode.trim();
         if (key.isEmpty) continue;
-        
+
         await _validationService.assertCanPost(key);
-        final acc = await _accountRepository.getByUuid(key) ??
+        final acc =
+            await _accountRepository.getByUuid(key) ??
             await _accountRepository.getByAccountCode(key) ??
-            (int.tryParse(key) != null ? await _accountRepository.getById(int.parse(key)) : null);
+            (int.tryParse(key) != null
+                ? await _accountRepository.getById(int.parse(key))
+                : null);
         if (acc != null) {
           mapped[role] = _toRoleRef(role, acc);
         } else {
@@ -81,7 +82,8 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
             accountRole: role.name,
             expectedCode: key,
             systemKey: role.name,
-            message: 'خطأ محاسبي: الحساب المخصص ($key) غير موجود في الدليل المحاسبي للشركة الحالية',
+            message:
+                'خطأ محاسبي: الحساب المخصص ($key) غير موجود في الدليل المحاسبي للشركة الحالية',
           );
         }
       }

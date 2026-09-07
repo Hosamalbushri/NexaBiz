@@ -157,8 +157,12 @@ class SystemSetupStepTile extends StatelessWidget {
           Positioned(
             top: 48,
             bottom: 0,
-            left: Localizations.localeOf(context).languageCode == 'ar' ? null : 27,
-            right: Localizations.localeOf(context).languageCode == 'ar' ? 27 : null,
+            left: Localizations.localeOf(context).languageCode == 'ar'
+                ? null
+                : 27,
+            right: Localizations.localeOf(context).languageCode == 'ar'
+                ? 27
+                : null,
             child: Container(
               width: 2.5,
               color: isCompleted
@@ -172,8 +176,8 @@ class SystemSetupStepTile extends StatelessWidget {
             color: selected
                 ? scheme.primary.withValues(alpha: 0.12)
                 : (isCompleted
-                    ? scheme.surfaceContainerLow.withValues(alpha: 0.8)
-                    : scheme.surface),
+                      ? scheme.surfaceContainerLow.withValues(alpha: 0.8)
+                      : scheme.surface),
             borderRadius: BorderRadius.circular(AppRadius.md),
             clipBehavior: Clip.antiAlias,
             child: Container(
@@ -183,8 +187,8 @@ class SystemSetupStepTile extends StatelessWidget {
                   color: selected
                       ? scheme.primary
                       : (isCompleted
-                          ? scheme.primary.withValues(alpha: 0.35)
-                          : scheme.outlineVariant.withValues(alpha: 0.3)),
+                            ? scheme.primary.withValues(alpha: 0.35)
+                            : scheme.outlineVariant.withValues(alpha: 0.3)),
                   width: selected ? 2.0 : 1.0,
                 ),
                 boxShadow: selected
@@ -198,94 +202,110 @@ class SystemSetupStepTile extends StatelessWidget {
                     : [],
               ),
               child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: 4,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            leading: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: isCompleted
-                    ? scheme.primary
-                    : (selected
-                        ? scheme.primary.withValues(alpha: 0.2)
-                        : scheme.surfaceContainerHighest),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected
-                      ? scheme.primary
-                      : (isCompleted ? scheme.primary : scheme.outlineVariant.withValues(alpha: 0.5)),
-                  width: selected ? 2.2 : 1.2,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: 4,
                 ),
-                boxShadow: isCompleted || selected
-                    ? [
-                        BoxShadow(
-                          color: scheme.primary.withValues(alpha: 0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Center(
-                child: isCompleted
-                    ? Icon(Icons.check_rounded, color: scheme.onPrimary, size: 22)
-                    : Text(
-                        stepNumber,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                leading: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: isCompleted
+                        ? scheme.primary
+                        : (selected
+                              ? scheme.primary.withValues(alpha: 0.2)
+                              : scheme.surfaceContainerHighest),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: selected
+                          ? scheme.primary
+                          : (isCompleted
+                                ? scheme.primary
+                                : scheme.outlineVariant.withValues(alpha: 0.5)),
+                      width: selected ? 2.2 : 1.2,
+                    ),
+                    boxShadow: isCompleted || selected
+                        ? [
+                            BoxShadow(
+                              color: scheme.primary.withValues(alpha: 0.25),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Center(
+                    child: isCompleted
+                        ? Icon(
+                            Icons.check_rounded,
+                            color: scheme.onPrimary,
+                            size: 22,
+                          )
+                        : Text(
+                            stepNumber,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: selected
+                                  ? scheme.primary
+                                  : scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+                title: Row(
+                  children: [
+                    Icon(
+                      stepIcon,
+                      size: 18,
+                      color: selected
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: AppSpacing.xs + 2),
+                    Expanded(
+                      child: Text(
+                        setupStepTitle(l10n, step.id),
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: selected ? scheme.primary : scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: selected
+                              ? FontWeight.bold
+                              : FontWeight.w600,
+                          color: selected ? scheme.primary : scheme.onSurface,
                         ),
                       ),
-              ),
-            ),
-            title: Row(
-              children: [
-                Icon(
-                  stepIcon,
-                  size: 18,
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.xs + 2),
-                Expanded(
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    setupStepTitle(l10n, step.id),
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                      color: selected ? scheme.primary : scheme.onSurface,
+                    setupStepStatusLabel(l10n, step.status),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isCompleted
+                          ? scheme.primary
+                          : (selected
+                                ? scheme.primary
+                                : scheme.onSurfaceVariant),
+                      fontWeight: selected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ),
-              ],
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                setupStepStatusLabel(l10n, step.status),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isCompleted
-                      ? scheme.primary
-                      : (selected ? scheme.primary : scheme.onSurfaceVariant),
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: selected ? scheme.primary : scheme.outline,
                 ),
+                onTap: onTap,
               ),
             ),
-            trailing: Icon(
-              Icons.chevron_right_rounded,
-              color: selected ? scheme.primary : scheme.outline,
-            ),
-            onTap: onTap,
           ),
         ),
-      ),
-    ),
-  ],
-);
+      ],
+    );
   }
 }

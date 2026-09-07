@@ -204,10 +204,9 @@ class FiscalYearDetailsPage extends ConsumerWidget {
       return;
     }
     try {
-      await ref.read(openAccountingPeriodUseCaseProvider).call(
-            periodUuid: period.uuid,
-            openedBy: _actor(ref),
-          );
+      await ref
+          .read(openAccountingPeriodUseCaseProvider)
+          .call(periodUuid: period.uuid, openedBy: _actor(ref));
       _invalidate(ref);
       if (!context.mounted) {
         return;
@@ -274,7 +273,9 @@ class FiscalYearDetailsPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   l10n.accountingPeriodCloseBlocked,
-                  style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
+                  style: TextStyle(
+                    color: Theme.of(dialogContext).colorScheme.error,
+                  ),
                 ),
               ],
             ],
@@ -359,7 +360,9 @@ class FiscalYearDetailsPage extends ConsumerWidget {
       return;
     }
     try {
-      await ref.read(reopenAccountingPeriodUseCaseProvider).call(
+      await ref
+          .read(reopenAccountingPeriodUseCaseProvider)
+          .call(
             periodUuid: period.uuid,
             reopenedBy: _actor(ref),
             reason: reason,
@@ -383,11 +386,7 @@ class FiscalYearDetailsPage extends ConsumerWidget {
 }
 
 class _FxRow extends StatelessWidget {
-  const _FxRow({
-    required this.label,
-    required this.value,
-    this.bold = false,
-  });
+  const _FxRow({required this.label, required this.value, this.bold = false});
 
   final String label;
   final String value;
@@ -396,8 +395,8 @@ class _FxRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-        );
+      fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -442,8 +441,8 @@ class _PeriodTile extends StatelessWidget {
       AccountingPeriodStatus.reopened => l10n.accountingPeriodStatusReopened,
     };
     final tone = switch (period.status) {
-      AccountingPeriodStatus.open || AccountingPeriodStatus.reopened =>
-        AppStatusTone.success,
+      AccountingPeriodStatus.open ||
+      AccountingPeriodStatus.reopened => AppStatusTone.success,
       AccountingPeriodStatus.closing => AppStatusTone.warning,
       AccountingPeriodStatus.closed => AppStatusTone.neutral,
     };
@@ -467,7 +466,11 @@ class _PeriodTile extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  AppStatusBadge(label: statusLabel, tone: tone, animate: false),
+                  AppStatusBadge(
+                    label: statusLabel,
+                    tone: tone,
+                    animate: false,
+                  ),
                 ],
               ),
               const SizedBox(height: 4),

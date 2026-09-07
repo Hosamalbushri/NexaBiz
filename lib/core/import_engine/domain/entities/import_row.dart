@@ -2,14 +2,7 @@ import 'import_error.dart';
 import 'import_value.dart';
 
 /// Processing status of an individual import row.
-enum ImportRowStatus {
-  pending,
-  valid,
-  invalid,
-  skipped,
-  persisted,
-  failed,
-}
+enum ImportRowStatus { pending, valid, invalid, skipped, persisted, failed }
 
 /// Represents a single row of imported data throughout pipeline processing.
 class ImportRow {

@@ -44,11 +44,7 @@ class AppMetaInfoChip extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            Icon(
-              icon,
-              size: 18,
-              color: valueColor ?? scheme.primary,
-            ),
+            Icon(icon, size: 18, color: valueColor ?? scheme.primary),
             const SizedBox(width: AppSpacing.xs),
           ],
           Expanded(

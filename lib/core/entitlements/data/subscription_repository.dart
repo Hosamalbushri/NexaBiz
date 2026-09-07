@@ -94,7 +94,9 @@ class UsageMeterSummary {
       meterKey: json['meter_key'] as String? ?? '',
       limit: (json['limit'] as num? ?? 0).toInt(),
       used: (json['used'] as num? ?? 0).toInt(),
-      remaining: json['remaining'] != null ? (json['remaining'] as num).toInt() : null,
+      remaining: json['remaining'] != null
+          ? (json['remaining'] as num).toInt()
+          : null,
     );
   }
 }
@@ -119,7 +121,7 @@ abstract class SubscriptionRepository {
 
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   SubscriptionRepositoryImpl({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+    : _httpClient = httpClient ?? http.Client();
 
   final http.Client _httpClient;
 
@@ -131,7 +133,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         id: 'plan_free',
         name: 'Free Plan',
         code: 'free',
-        description: 'Full local POS & double-entry accounting. 100% offline enabled.',
+        description:
+            'Full local POS & double-entry accounting. 100% offline enabled.',
         price: 0.0,
         currency: 'USD',
         billingInterval: 'forever',
@@ -142,7 +145,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         id: 'plan_starter',
         name: 'Starter Plan',
         code: 'starter',
-        description: 'Cloud sync, multi-device access, and automated cloud backup.',
+        description:
+            'Cloud sync, multi-device access, and automated cloud backup.',
         price: 49.0,
         currency: 'USD',
         billingInterval: 'monthly',
@@ -153,7 +157,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         id: 'plan_business',
         name: 'Business Plan',
         code: 'business',
-        description: 'Full cloud suite, multi-branch management, team users, and advanced analytics.',
+        description:
+            'Full cloud suite, multi-branch management, team users, and advanced analytics.',
         price: 99.0,
         currency: 'USD',
         billingInterval: 'monthly',
@@ -220,18 +225,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         'X-Company-Id': companyId,
         'Idempotency-Key': ?idempotencyKey,
       },
-      body: jsonEncode({
-        'plan_id': planId,
-        'packages': packageCodes,
-      }),
+      body: jsonEncode({'plan_id': planId, 'packages': packageCodes}),
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
-      final rawEntitlement = body['entitlement'] as Map<String, dynamic>? ?? body;
+      final rawEntitlement =
+          body['entitlement'] as Map<String, dynamic>? ?? body;
       return Entitlement.fromJson(rawEntitlement);
     } else {
-      throw Exception('Failed to update subscription: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to update subscription: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -257,7 +262,12 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         final list = body['data'] as List? ?? [];
-        return list.map((item) => UsageMeterSummary.fromJson(item as Map<String, dynamic>)).toList();
+        return list
+            .map(
+              (item) =>
+                  UsageMeterSummary.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
       }
     } catch (_) {}
     return const [];

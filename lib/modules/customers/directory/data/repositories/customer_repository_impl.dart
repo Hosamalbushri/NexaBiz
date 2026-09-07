@@ -220,10 +220,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
     if (id == null) {
       return null;
     }
-    final row =
-        await (_db.select(_db.customers)
-              ..where((t) => t.externalId.equals(id) & _scoped(t)))
-            .getSingleOrNull();
+    final row = await (_db.select(
+      _db.customers,
+    )..where((t) => t.externalId.equals(id) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -384,7 +383,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.customers)..where((t) => t.id.equals(id) & _scoped(t))).write(
+    await (_db.update(
+      _db.customers,
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       CustomersCompanion(
         customerCode: Value(normalized.customerCode),
         name: Value(normalized.name),
@@ -423,7 +424,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.customers)..where((t) => t.id.equals(id) & _scoped(t))).write(
+    await (_db.update(
+      _db.customers,
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       CustomersCompanion(
         deletedAt: Value(now.millisecondsSinceEpoch),
         updatedAt: Value(now.millisecondsSinceEpoch),
@@ -442,9 +445,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   @override
   Future<Customer> restore(int id) async {
-    final row = await (_db.select(_db.customers)
-          ..where((t) => t.id.equals(id) & _tenantScoped(t)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.customers,
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).getSingleOrNull();
     if (row == null) {
       throw const CustomerException(CustomerException.notFound);
     }
@@ -454,9 +457,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.customers)
-          ..where((t) => t.id.equals(id) & _tenantScoped(t)))
-        .write(
+    await (_db.update(
+      _db.customers,
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
       CustomersCompanion(
         deletedAt: const Value(null),
         updatedAt: Value(now.millisecondsSinceEpoch),
@@ -492,7 +495,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
     final normalized = _normalizedDraft(withExternal);
     final extId = normalized.externalId;
     if (extId == null || extId.isEmpty) {
-      throw const CustomerException('External ID is required for external customer');
+      throw const CustomerException(
+        'External ID is required for external customer',
+      );
     }
     final existing = await getByExternalId(extId);
     if (existing != null) {
@@ -517,8 +522,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
     final touched = <Customer>[];
 
     // One preload instead of N+1 lookups per row.
-    final existingRows =
-        await (_db.select(_db.customers)..where(_scoped)).get();
+    final existingRows = await (_db.select(
+      _db.customers,
+    )..where(_scoped)).get();
     final byCode = <String, Customer>{};
     final byExternalId = <String, Customer>{};
     for (final row in existingRows) {
@@ -633,7 +639,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
             final existingCustomer = existing;
             final nextVersion = existingCustomer.version + 1;
-            final nextAccountId = normalized.accountId ?? existingCustomer.accountId;
+            final nextAccountId =
+                normalized.accountId ?? existingCustomer.accountId;
             final nextExternalId =
                 normalized.externalId ?? existingCustomer.externalId;
             await (_db.update(
@@ -728,7 +735,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
     DateTime? syncedAt,
   }) async {
     final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
-    await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    await (_db.update(
+      _db.customers,
+    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       CustomersCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(stamp),
@@ -738,9 +747,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
-      const CustomersCompanion(syncStatus: Value('conflict')),
-    );
+    await (_db.update(_db.customers)
+          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
+        .write(const CustomersCompanion(syncStatus: Value('conflict')));
   }
 
   /// Point customer CoA links at a remapped account UUID after sync merge.
@@ -751,12 +760,14 @@ class CustomerRepositoryImpl implements CustomerRepository {
     if (fromUuid == toUuid) {
       return;
     }
-    await (_db.update(_db.customers)
-          ..where((t) => t.accountId.equals(fromUuid) & _tenantScoped(t)))
-        .write(CustomersCompanion(
-          accountId: Value(toUuid),
-          updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-        ));
+    await (_db.update(
+      _db.customers,
+    )..where((t) => t.accountId.equals(fromUuid) & _tenantScoped(t))).write(
+      CustomersCompanion(
+        accountId: Value(toUuid),
+        updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+      ),
+    );
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
@@ -769,8 +780,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
     final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
     final version = (payload['version'] as num?)?.toInt() ?? 1;
-    final code =
-        (payload['customerCode']?.toString())?.toUpperCase() ?? uuid;
+    final code = (payload['customerCode']?.toString())?.toUpperCase() ?? uuid;
     final dataSource = CustomerDataSourceX.fromStorage(
       payload['dataSource']?.toString(),
     );
@@ -799,32 +809,35 @@ class CustomerRepositoryImpl implements CustomerRepository {
       final byCode = await getByCustomerCode(code);
       if (byCode != null && byCode.uuid != uuid) {
         final oldUuid = byCode.uuid;
-        await (_db.update(_db.customers)..where((t) => t.id.equals(byCode.id)))
-            .write(
-              CustomersCompanion(
-                uuid: Value(uuid),
-                customerCode: Value(code),
-                name: Value(payload['name']?.toString() ?? byCode.name),
-                phone: Value(payload['phone']?.toString()),
-                email: Value(payload['email']?.toString()),
-                address: Value(payload['address']?.toString()),
-                notes: Value(payload['notes']?.toString()),
-                isActive: Value(payload['isActive'] as bool? ?? byCode.isActive),
-                accountId: Value(
-                  payload['accountId']?.toString() ?? byCode.accountId,
-                ),
-                externalId: Value(
-                  payload['externalId']?.toString() ?? byCode.externalId,
-                ),
-                dataSource: Value(dataSource.storageValue),
-                updatedAt: Value(updatedAt),
-                syncStatus: const Value('synced'),
-                lastSyncedAt: Value(nowMs),
-                version: Value(version),
-                deletedAt: const Value(null),
-                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
-              ),
-            );
+        await (_db.update(
+          _db.customers,
+        )..where((t) => t.id.equals(byCode.id))).write(
+          CustomersCompanion(
+            uuid: Value(uuid),
+            customerCode: Value(code),
+            name: Value(payload['name']?.toString() ?? byCode.name),
+            phone: Value(payload['phone']?.toString()),
+            email: Value(payload['email']?.toString()),
+            address: Value(payload['address']?.toString()),
+            notes: Value(payload['notes']?.toString()),
+            isActive: Value(payload['isActive'] as bool? ?? byCode.isActive),
+            accountId: Value(
+              payload['accountId']?.toString() ?? byCode.accountId,
+            ),
+            externalId: Value(
+              payload['externalId']?.toString() ?? byCode.externalId,
+            ),
+            dataSource: Value(dataSource.storageValue),
+            updatedAt: Value(updatedAt),
+            syncStatus: const Value('synced'),
+            lastSyncedAt: Value(nowMs),
+            version: Value(version),
+            deletedAt: const Value(null),
+            companyId: Value(
+              payload['companyId']?.toString() ?? _currentCompanyId,
+            ),
+          ),
+        );
         await _syncQueue?.removeForEntity(
           entityType: entityType,
           entityId: oldUuid,
@@ -865,7 +878,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
               version: Value(version),
-              companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
+              companyId: Value(
+                payload['companyId']?.toString() ?? _currentCompanyId,
+              ),
             ),
           );
       return;
@@ -875,7 +890,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
       CustomersCompanion(
         customerCode: Value(code),
         name: Value(payload['name']?.toString() ?? existingByUuid.name),
-        status: Value(payload['status']?.toString() ?? existingByUuid.status.storageValue),
+        status: Value(
+          payload['status']?.toString() ?? existingByUuid.status.storageValue,
+        ),
         phone: Value(payload['phone']?.toString()),
         email: Value(payload['email']?.toString()),
         address: Value(payload['address']?.toString()),
@@ -885,9 +902,16 @@ class CustomerRepositoryImpl implements CustomerRepository {
         ),
         accountId: Value(payload['accountId']?.toString()),
         externalId: Value(payload['externalId']?.toString()),
-        creditLimit: Value((payload['creditLimit'] as num?)?.toDouble() ?? existingByUuid.creditLimit),
-        currencyCode: Value(payload['currencyCode']?.toString() ?? existingByUuid.currencyCode),
-        taxNumber: Value(payload['taxNumber']?.toString() ?? existingByUuid.taxNumber),
+        creditLimit: Value(
+          (payload['creditLimit'] as num?)?.toDouble() ??
+              existingByUuid.creditLimit,
+        ),
+        currencyCode: Value(
+          payload['currencyCode']?.toString() ?? existingByUuid.currencyCode,
+        ),
+        taxNumber: Value(
+          payload['taxNumber']?.toString() ?? existingByUuid.taxNumber,
+        ),
         dataSource: Value(dataSource.storageValue),
         updatedAt: Value(updatedAt),
         syncStatus: const Value('synced'),

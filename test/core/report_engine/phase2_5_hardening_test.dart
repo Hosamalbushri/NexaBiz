@@ -23,12 +23,20 @@ class MockHardenedProvider implements PagedReportDataProvider<ReportRowData> {
 
   @override
   Future<ReportSummary> fetchSummary(ReportExecutionContext context) async {
-    final filtered = mockDatabase.where((row) =>
-        row['company_id'] == context.companyId &&
-        (context.postingScope == PostingScope.all ||
-            (context.postingScope == PostingScope.postedOnly && row['sale_status'] == 'posted'))).toList();
+    final filtered = mockDatabase
+        .where(
+          (row) =>
+              row['company_id'] == context.companyId &&
+              (context.postingScope == PostingScope.all ||
+                  (context.postingScope == PostingScope.postedOnly &&
+                      row['sale_status'] == 'posted')),
+        )
+        .toList();
 
-    final sumAmount = filtered.fold<double>(0.0, (acc, r) => acc + (r['amount'] as double));
+    final sumAmount = filtered.fold<double>(
+      0.0,
+      (acc, r) => acc + (r['amount'] as double),
+    );
 
     return ReportSummary(
       totalCount: filtered.length,
@@ -44,10 +52,15 @@ class MockHardenedProvider implements PagedReportDataProvider<ReportRowData> {
   }) async {
     final isAscending = context.sorting.ascending;
 
-    final filtered = mockDatabase.where((row) =>
-        row['company_id'] == context.companyId &&
-        (context.postingScope == PostingScope.all ||
-            (context.postingScope == PostingScope.postedOnly && row['sale_status'] == 'posted'))).toList();
+    final filtered = mockDatabase
+        .where(
+          (row) =>
+              row['company_id'] == context.companyId &&
+              (context.postingScope == PostingScope.all ||
+                  (context.postingScope == PostingScope.postedOnly &&
+                      row['sale_status'] == 'posted')),
+        )
+        .toList();
 
     filtered.sort((a, b) {
       final cmpDate = (a['sale_date'] as int).compareTo(b['sale_date'] as int);
@@ -75,12 +88,18 @@ class MockHardenedProvider implements PagedReportDataProvider<ReportRowData> {
     final chunk = paged.take(pageSize).toList();
     final hasNext = paged.length > pageSize;
 
-    final items = chunk.map((r) => ReportRowData(values: {
-      'id': r['id'].toString(),
-      'companyId': r['company_id'].toString(),
-      'saleDate': r['sale_date'].toString(),
-      'amount': r['amount'].toString(),
-    })).toList();
+    final items = chunk
+        .map(
+          (r) => ReportRowData(
+            values: {
+              'id': r['id'].toString(),
+              'companyId': r['company_id'].toString(),
+              'saleDate': r['sale_date'].toString(),
+              'amount': r['amount'].toString(),
+            },
+          ),
+        )
+        .toList();
 
     ReportCursor? nextCursor;
     if (chunk.isNotEmpty && hasNext) {
@@ -111,27 +130,44 @@ void main() {
       contextCompanyB = const ReportExecutionContext(companyId: 'COMPANY_B');
     });
 
-    test('Tenant isolation: Company A queries NEVER contain Company B rows', () async {
-      final summaryA = await provider.fetchSummary(contextCompanyA);
-      final pageA = await provider.fetchPage(contextCompanyA);
+    test(
+      'Tenant isolation: Company A queries NEVER contain Company B rows',
+      () async {
+        final summaryA = await provider.fetchSummary(contextCompanyA);
+        final pageA = await provider.fetchPage(contextCompanyA);
 
-      expect(summaryA.totalCount, equals(50));
-      expect(pageA.items.every((item) => item['companyId'] == 'COMPANY_A'), isTrue);
+        expect(summaryA.totalCount, equals(50));
+        expect(
+          pageA.items.every((item) => item['companyId'] == 'COMPANY_A'),
+          isTrue,
+        );
 
-      final summaryB = await provider.fetchSummary(contextCompanyB);
-      final pageB = await provider.fetchPage(contextCompanyB);
+        final summaryB = await provider.fetchSummary(contextCompanyB);
+        final pageB = await provider.fetchPage(contextCompanyB);
 
-      expect(summaryB.totalCount, equals(50));
-      expect(pageB.items.every((item) => item['companyId'] == 'COMPANY_B'), isTrue);
-    });
+        expect(summaryB.totalCount, equals(50));
+        expect(
+          pageB.items.every((item) => item['companyId'] == 'COMPANY_B'),
+          isTrue,
+        );
+      },
+    );
 
     test('Keyset Pagination overlap exclusion (Page 1 ∩ Page 2 = ∅)', () async {
-      final page1 = await provider.fetchPage(contextCompanyA, cursor: null, pageSize: 25);
+      final page1 = await provider.fetchPage(
+        contextCompanyA,
+        cursor: null,
+        pageSize: 25,
+      );
       expect(page1.items.length, equals(25));
       expect(page1.hasNextPage, isTrue);
       expect(page1.nextCursor, isNotNull);
 
-      final page2 = await provider.fetchPage(contextCompanyA, cursor: page1.nextCursor, pageSize: 25);
+      final page2 = await provider.fetchPage(
+        contextCompanyA,
+        cursor: page1.nextCursor,
+        pageSize: 25,
+      );
       expect(page2.items.length, equals(25));
 
       final set1 = page1.items.map((i) => i['id']).toSet();
@@ -143,8 +179,16 @@ void main() {
 
     test('Summary vs Detail predicate equivalence', () async {
       final summary = await provider.fetchSummary(contextCompanyA);
-      final page1 = await provider.fetchPage(contextCompanyA, cursor: null, pageSize: 25);
-      final page2 = await provider.fetchPage(contextCompanyA, cursor: page1.nextCursor, pageSize: 25);
+      final page1 = await provider.fetchPage(
+        contextCompanyA,
+        cursor: null,
+        pageSize: 25,
+      );
+      final page2 = await provider.fetchPage(
+        contextCompanyA,
+        cursor: page1.nextCursor,
+        pageSize: 25,
+      );
 
       final totalPageItemsCount = page1.items.length + page2.items.length;
       expect(summary.totalCount, equals(totalPageItemsCount));
@@ -156,11 +200,19 @@ void main() {
         sorting: ReportSortSpec(columnKey: 'date', ascending: false),
       );
 
-      final page1 = await provider.fetchPage(descContext, cursor: null, pageSize: 25);
+      final page1 = await provider.fetchPage(
+        descContext,
+        cursor: null,
+        pageSize: 25,
+      );
       expect(page1.items.length, equals(25));
       expect(page1.hasNextPage, isTrue);
 
-      final page2 = await provider.fetchPage(descContext, cursor: page1.nextCursor, pageSize: 25);
+      final page2 = await provider.fetchPage(
+        descContext,
+        cursor: page1.nextCursor,
+        pageSize: 25,
+      );
       expect(page2.items.length, equals(25));
 
       final firstPageLastDate = int.parse(page1.items.last['saleDate']!);

@@ -9,7 +9,8 @@ import '../../domain/services/report_relative_date_evaluator.dart';
 final stockMovementReportSpec = ReportDefinitionSpec(
   id: 'stock_movement',
   name: 'تقرير حركة الأصناف والمخزون',
-  description: 'تقرير تفصيلي وإجمالي لعرض كافة الوارد والمنصرف بالكميات الرئيسية والفرعية ورصيد الحركة ومبالغ التكلفة بأسلوب ERP.',
+  description:
+      'تقرير تفصيلي وإجمالي لعرض كافة الوارد والمنصرف بالكميات الرئيسية والفرعية ورصيد الحركة ومبالغ التكلفة بأسلوب ERP.',
   category: ReportCategory.inventory,
   minTableWidth: 1250,
   groupHeaders: const [

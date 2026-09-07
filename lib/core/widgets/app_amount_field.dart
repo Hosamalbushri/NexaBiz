@@ -184,9 +184,7 @@ class _AppAmountFieldState extends State<AppAmountField> {
         final sel = _controller.selection;
         // Tab-in / default focus often lands at offset 0. Mid taps keep offset.
         if (sel.isCollapsed && sel.baseOffset == 0) {
-          _controller.selection = TextSelection.collapsed(
-            offset: text.length,
-          );
+          _controller.selection = TextSelection.collapsed(offset: text.length);
         }
       });
       return;
@@ -249,7 +247,8 @@ class _AppAmountFieldState extends State<AppAmountField> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
-    final align = widget.textAlign ??
+    final align =
+        widget.textAlign ??
         (widget.variant == AppAmountFieldVariant.compact
             ? TextAlign.center
             : TextAlign.start);
@@ -264,65 +263,64 @@ class _AppAmountFieldState extends State<AppAmountField> {
 
     final decoration = switch (widget.variant) {
       AppAmountFieldVariant.form => InputDecoration(
-          labelText: widget.label,
-          hintText: widget.hint,
-          prefixText: widget.prefixText,
-          suffixText: widget.suffixText,
-          errorText: widget.errorText,
-        ),
+        labelText: widget.label,
+        hintText: widget.hint,
+        prefixText: widget.prefixText,
+        suffixText: widget.suffixText,
+        errorText: widget.errorText,
+      ),
       AppAmountFieldVariant.compact => InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: hasError
-              ? scheme.errorContainer.withValues(alpha: 0.35)
-              : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-          prefixText: widget.prefixText,
-          suffixText: widget.suffixText,
-          errorText: widget.errorText,
-          errorMaxLines: 2,
-          errorStyle: theme.textTheme.labelSmall?.copyWith(
-            color: scheme.error,
-            fontWeight: FontWeight.w700,
-            height: 1.15,
-            fontSize: 10,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            borderSide: BorderSide(
-              color: hasError
-                  ? scheme.error
-                  : scheme.outlineVariant.withValues(alpha: 0.35),
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            borderSide: BorderSide(
-              color: hasError ? scheme.error : scheme.primary,
-              width: 1.4,
-            ),
+        isDense: true,
+        filled: true,
+        fillColor: hasError
+            ? scheme.errorContainer.withValues(alpha: 0.35)
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        prefixText: widget.prefixText,
+        suffixText: widget.suffixText,
+        errorText: widget.errorText,
+        errorMaxLines: 2,
+        errorStyle: theme.textTheme.labelSmall?.copyWith(
+          color: scheme.error,
+          fontWeight: FontWeight.w700,
+          height: 1.15,
+          fontSize: 10,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderSide: BorderSide(
+            color: hasError
+                ? scheme.error
+                : scheme.outlineVariant.withValues(alpha: 0.35),
           ),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderSide: BorderSide(
+            color: hasError ? scheme.error : scheme.primary,
+            width: 1.4,
+          ),
+        ),
+      ),
       AppAmountFieldVariant.bare => InputDecoration(
-          isDense: true,
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          disabledBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedErrorBorder: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
-          hintText: widget.hint,
-          prefixText: widget.prefixText,
-          suffixText: widget.suffixText,
-          errorText: widget.errorText,
-        ),
+        isDense: true,
+        filled: false,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        contentPadding: EdgeInsets.zero,
+        hintText: widget.hint,
+        prefixText: widget.prefixText,
+        suffixText: widget.suffixText,
+        errorText: widget.errorText,
+      ),
     };
 
     return TextField(
@@ -384,7 +382,6 @@ String formatAppAmount(
   int decimalPlaces = 2,
 }) {
   final locale = Localizations.localeOf(context).toString();
-  final pattern =
-      decimalPlaces <= 0 ? '#,##0' : '#,##0.${'0' * decimalPlaces}';
+  final pattern = decimalPlaces <= 0 ? '#,##0' : '#,##0.${'0' * decimalPlaces}';
   return NumberFormat(pattern, locale).format(value);
 }

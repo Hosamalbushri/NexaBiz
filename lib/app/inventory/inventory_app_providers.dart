@@ -15,7 +15,9 @@ import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 
 /// App-level provider that bridges InventoryVoucherBookPort to Accounting implementation.
-final appInventoryVoucherBookPortProvider = Provider<InventoryVoucherBookPort>((ref) {
+final appInventoryVoucherBookPortProvider = Provider<InventoryVoucherBookPort>((
+  ref,
+) {
   final repo = ref.watch(voucherBookRepositoryProvider);
   final deviceId = ref.watch(syncApiConfigProvider).deviceId;
   return AccountingInventoryVoucherBookAdapter(repo, deviceId: deviceId);
@@ -29,20 +31,20 @@ final appInventoryAccountPortProvider = Provider<InventoryAccountPort>((ref) {
 });
 
 /// App-level provider that bridges InventoryAccountingPoster to Accounting implementation.
-final appInventoryAccountingPosterProvider = Provider<InventoryAccountingPoster>((ref) {
-  final db = ref.watch(accountingDatabaseProvider);
-  final postingService = ref.watch(journalPostingServiceProvider);
-  final initRepo = ref.watch(companyInitializationRepositoryProvider);
-  return InventoryAccountingPosterAdapter(
-    db,
-    journalPostingService: postingService,
-    readCompanyId: () => ref.read(currentCompanyIdProvider),
-    initRepository: initRepo,
-  );
-});
+final appInventoryAccountingPosterProvider =
+    Provider<InventoryAccountingPoster>((ref) {
+      final db = ref.watch(accountingDatabaseProvider);
+      final postingService = ref.watch(journalPostingServiceProvider);
+      final initRepo = ref.watch(companyInitializationRepositoryProvider);
+      return InventoryAccountingPosterAdapter(
+        db,
+        journalPostingService: postingService,
+        readCompanyId: () => ref.read(currentCompanyIdProvider),
+        initRepository: initRepo,
+      );
+    });
 
 /// App-level provider that bridges PeriodValidatorPort to AccountingPeriodValidator.
 final appPeriodValidatorPortProvider = Provider<PeriodValidatorPort>((ref) {
   return ref.watch(accountingPeriodValidatorProvider);
 });
-

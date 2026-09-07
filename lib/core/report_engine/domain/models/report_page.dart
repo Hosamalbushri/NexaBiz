@@ -14,9 +14,6 @@ class ReportPage<T> {
   final ReportCursor? nextCursor;
   final bool hasNextPage;
 
-  static ReportPage<T> empty<T>() => ReportPage<T>(
-        items: const [],
-        nextCursor: null,
-        hasNextPage: false,
-      );
+  static ReportPage<T> empty<T>() =>
+      ReportPage<T>(items: const [], nextCursor: null, hasNextPage: false);
 }

@@ -60,71 +60,92 @@ void main() {
       );
     });
 
-    test('1. CentralSetupRegistry discovers Customers setup via module registration', () {
-      CustomersModule.register(setupRegistry: registry);
+    test(
+      '1. CentralSetupRegistry discovers Customers setup via module registration',
+      () {
+        CustomersModule.register(setupRegistry: registry);
 
-      expect(registry.isRegistered('customers'), isTrue);
+        expect(registry.isRegistered('customers'), isTrue);
 
-      final setup = registry.get('customers');
-      expect(setup, isNotNull);
-      expect(setup!.packageId, equals('customers'));
-      expect(setup.displayName('ar'), equals('إعدادات العملاء'));
-      expect(setup.displayName('en'), equals('Customers Setup'));
-      expect(setup.sortOrder, equals(40));
-    });
+        final setup = registry.get('customers');
+        expect(setup, isNotNull);
+        expect(setup!.packageId, equals('customers'));
+        expect(setup.displayName('ar'), equals('إعدادات العملاء'));
+        expect(setup.displayName('en'), equals('Customers Setup'));
+        expect(setup.sortOrder, equals(40));
+      },
+    );
 
-    test('2. Customers setup definition exposes policies and account_requirements sections', () {
-      registerCustomersSetup(registry);
+    test(
+      '2. Customers setup definition exposes policies and account_requirements sections',
+      () {
+        registerCustomersSetup(registry);
 
-      final setup = registry.get('customers')!;
-      final sectionIds = setup.sections.map((s) => s.id).toList();
+        final setup = registry.get('customers')!;
+        final sectionIds = setup.sections.map((s) => s.id).toList();
 
-      expect(sectionIds, containsAll(['policies', 'account_requirements']));
+        expect(sectionIds, containsAll(['policies', 'account_requirements']));
 
-      final policiesSection = setup.sections.firstWhere((s) => s.id == 'policies');
-      expect(
-        policiesSection.fields.map((f) => f.key),
-        containsAll(['defaultCreditLimit', 'autoLinkAccounts', 'requireTaxNumber']),
-      );
-    });
+        final policiesSection = setup.sections.firstWhere(
+          (s) => s.id == 'policies',
+        );
+        expect(
+          policiesSection.fields.map((f) => f.key),
+          containsAll([
+            'defaultCreditLimit',
+            'autoLinkAccounts',
+            'requireTaxNumber',
+          ]),
+        );
+      },
+    );
 
-    test('3. Binds Customers AR account requirement successfully with UUID reference', () async {
-      final binding = await resolver.bindAccount(
-        companyId: companyA,
-        requirement: arAccountRequirement,
-        accountUuid: validArAccount.uuid,
-      );
-
-      expect(binding.status, equals(AccountBindingStatus.bound));
-      expect(binding.accountUuid, equals('uuid_ar_1100'));
-    });
-
-    test('4. Missing account invariant — safe init; controlled exception on transaction attempt', () async {
-      final result = await resolver.resolveRequirement(
-        companyId: companyA,
-        requirement: arAccountRequirement,
-      );
-
-      expect(result.isUnbound, isTrue);
-
-      expect(
-        () async => resolver.resolveAccountForTransaction(
+    test(
+      '3. Binds Customers AR account requirement successfully with UUID reference',
+      () async {
+        final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: arAccountRequirement,
-        ),
-        throwsA(isA<AccountBindingException>()),
-      );
-    });
+          accountUuid: validArAccount.uuid,
+        );
 
-    test('5. Multi-tenant company isolation rejects cross-company account assignment', () async {
-      expect(
-        () async => resolver.bindAccount(
+        expect(binding.status, equals(AccountBindingStatus.bound));
+        expect(binding.accountUuid, equals('uuid_ar_1100'));
+      },
+    );
+
+    test(
+      '4. Missing account invariant — safe init; controlled exception on transaction attempt',
+      () async {
+        final result = await resolver.resolveRequirement(
           companyId: companyA,
           requirement: arAccountRequirement,
-          accountUuid: crossCompanyAccount.uuid,
-        ),
-        throwsA(isA<CrossCompanyAccountBindingException>()),
-      );
-    });
+        );
+
+        expect(result.isUnbound, isTrue);
+
+        expect(
+          () async => resolver.resolveAccountForTransaction(
+            companyId: companyA,
+            requirement: arAccountRequirement,
+          ),
+          throwsA(isA<AccountBindingException>()),
+        );
+      },
+    );
+
+    test(
+      '5. Multi-tenant company isolation rejects cross-company account assignment',
+      () async {
+        expect(
+          () async => resolver.bindAccount(
+            companyId: companyA,
+            requirement: arAccountRequirement,
+            accountUuid: crossCompanyAccount.uuid,
+          ),
+          throwsA(isA<CrossCompanyAccountBindingException>()),
+        );
+      },
+    );
   });
 }

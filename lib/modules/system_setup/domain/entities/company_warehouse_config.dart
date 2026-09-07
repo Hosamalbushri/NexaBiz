@@ -30,10 +30,10 @@ class CompanyWarehouseConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'companyId': companyId,
-        'defaultWarehouseId': defaultWarehouseId,
-        'updatedAt': updatedAt?.toUtc().millisecondsSinceEpoch,
-      };
+    'companyId': companyId,
+    'defaultWarehouseId': defaultWarehouseId,
+    'updatedAt': updatedAt?.toUtc().millisecondsSinceEpoch,
+  };
 
   factory CompanyWarehouseConfig.fromJson(Map<dynamic, dynamic> json) {
     final rawUpdated = json['updatedAt'];

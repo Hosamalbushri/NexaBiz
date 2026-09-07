@@ -53,11 +53,11 @@ class AppLockState {
   });
 
   factory AppLockState.initial() => const AppLockState(
-        enabled: false,
-        policy: AppLockPolicy.disabled,
-        gate: AppLockGate.disabled,
-        hasPin: false,
-      );
+    enabled: false,
+    policy: AppLockPolicy.disabled,
+    gate: AppLockGate.disabled,
+    hasPin: false,
+  );
 
   final bool enabled;
   final AppLockPolicy policy;

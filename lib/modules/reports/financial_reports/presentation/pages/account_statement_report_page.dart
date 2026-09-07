@@ -122,40 +122,44 @@ class _AccountStatementReportPageState
         accountDisplayNameOf: (account) => _displayAccountName(l10n, account),
       );
 
-      final document = await ref.read(loadingControllerProvider).run(
-        message: l10n.reportsGenerating,
-        action: () async {
-          final payload = await ref
-              .read(accountStatementReportDataPortProvider)
-              .load(
-                accountUuid: _account!.accountUuid,
-                currencyCode: _currencyCode,
-                fromDate: _from,
-                toDate: _to,
-                statementType: _statementType,
-                postingFilter: _postingFilter,
-                labels: labels,
+      final document = await ref
+          .read(loadingControllerProvider)
+          .run(
+            message: l10n.reportsGenerating,
+            action: () async {
+              final payload = await ref
+                  .read(accountStatementReportDataPortProvider)
+                  .load(
+                    accountUuid: _account!.accountUuid,
+                    currencyCode: _currencyCode,
+                    fromDate: _from,
+                    toDate: _to,
+                    statementType: _statementType,
+                    postingFilter: _postingFilter,
+                    labels: labels,
+                  );
+              final contextPdf = await ReportPdfContext.create(
+                isRtl: true,
+                localeCode: 'ar',
+                pageFormat: const ReportPageFormat(
+                  pageFormat: PdfPageFormat.a4,
+                  margin: pw.EdgeInsets.fromLTRB(16, 14, 16, 16),
+                ),
               );
-          final contextPdf = await ReportPdfContext.create(
-            isRtl: true,
-            localeCode: 'ar',
-            pageFormat: const ReportPageFormat(
-              pageFormat: PdfPageFormat.a4,
-              margin: pw.EdgeInsets.fromLTRB(16, 14, 16, 16),
-            ),
+              return ref
+                  .read(reportRunnerProvider)
+                  .run(
+                    definition: ref.read(
+                      accountStatementReportDefinitionProvider,
+                    ),
+                    payload: payload,
+                    context: contextPdf,
+                    title: l10n.reportsAccountStatementTitle,
+                    fileName:
+                        'account_statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
+                  );
+            },
           );
-          return ref
-              .read(reportRunnerProvider)
-              .run(
-                definition: ref.read(accountStatementReportDefinitionProvider),
-                payload: payload,
-                context: contextPdf,
-                title: l10n.reportsAccountStatementTitle,
-                fileName:
-                    'account_statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
-              );
-        },
-      );
 
       if (!mounted) {
         return;
@@ -258,20 +262,21 @@ class _AccountStatementReportPageState
 
       if (!mounted) return;
 
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => AccountStatementReportTablePage(
-            payload: payload,
-            onExportPdf: _generate,
-            onPrint: _generate,
-          ),
+      await context.push(
+        ReportsRoutes.accountStatementTable,
+        extra: AccountStatementReportTableArgs(
+          payload: payload,
+          onExportPdf: _generate,
+          onPrint: _generate,
         ),
       );
     } catch (e) {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        message: (e is ReportException ? e.message : null) ?? l10n.reportsErrorGeneric,
+        message:
+            (e is ReportException ? e.message : null) ??
+            l10n.reportsErrorGeneric,
         isSuccess: false,
       );
     } finally {
@@ -281,15 +286,11 @@ class _AccountStatementReportPageState
     }
   }
 
-  String _statementTypeLabel(
-    AppLocalizations l10n,
-    AccountStatementType type,
-  ) {
+  String _statementTypeLabel(AppLocalizations l10n, AccountStatementType type) {
     return switch (type) {
       AccountStatementType.cumulativeAccountCurrency =>
         l10n.reportsAccountStatementTypeCumulative,
-      AccountStatementType.detailed =>
-        l10n.reportsAccountStatementTypeDetailed,
+      AccountStatementType.detailed => l10n.reportsAccountStatementTypeDetailed,
       AccountStatementType.summary => l10n.reportsAccountStatementTypeSummary,
     };
   }
@@ -363,9 +364,12 @@ class _AccountStatementReportPageState
               _from = queryData.fromDate;
               _to = queryData.toDate;
               _postingFilter = switch (queryData.postingStatus) {
-                ReportPostingStatusFilter.all => AccountStatementPostingFilter.all,
-                ReportPostingStatusFilter.posted => AccountStatementPostingFilter.posted,
-                ReportPostingStatusFilter.unposted => AccountStatementPostingFilter.unposted,
+                ReportPostingStatusFilter.all =>
+                  AccountStatementPostingFilter.all,
+                ReportPostingStatusFilter.posted =>
+                  AccountStatementPostingFilter.posted,
+                ReportPostingStatusFilter.unposted =>
+                  AccountStatementPostingFilter.unposted,
               };
               _generate();
             },

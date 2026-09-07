@@ -14,7 +14,13 @@ import 'package:stock_count/modules/reports/shared/domain/services/cash_flow_rep
 import 'package:stock_count/app/settings/company/company_profile.dart';
 
 class AdversarialMockAccountRepo implements AccountRepository {
-  static Account _acc(int id, String uuid, String code, String name, AccountType type) {
+  static Account _acc(
+    int id,
+    String uuid,
+    String code,
+    String name,
+    AccountType type,
+  ) {
     return Account(
       id: id,
       uuid: uuid,
@@ -40,12 +46,15 @@ class AdversarialMockAccountRepo implements AccountRepository {
   ];
 
   @override
-  Future<List<Account>> getAll({bool includeInactive = false}) async => _accounts;
+  Future<List<Account>> getAll({bool includeInactive = false}) async =>
+      _accounts;
 
-  Future<Account?> getByCode(String code) async => _accounts.firstWhere((a) => a.accountCode == code);
+  Future<Account?> getByCode(String code) async =>
+      _accounts.firstWhere((a) => a.accountCode == code);
 
   @override
-  Future<Account?> getByUuid(String uuid) async => _accounts.firstWhere((a) => a.uuid == uuid);
+  Future<Account?> getByUuid(String uuid) async =>
+      _accounts.firstWhere((a) => a.uuid == uuid);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -76,11 +85,41 @@ class AdversarialMockJournalRepo implements JournalRepository {
     // COGS: DR 600
     // Inventory: CR 600
     return const [
-      TrialBalanceRow(accountUuid: 'acc-cash', accountCode: '1101', accountName: 'Cash Register', debit: 1000, credit: 0),
-      TrialBalanceRow(accountUuid: 'acc-ar', accountCode: '1201', accountName: 'Customer AR', debit: 1000, credit: 1000),
-      TrialBalanceRow(accountUuid: 'acc-sales', accountCode: '4101', accountName: 'Sales Revenue', debit: 0, credit: 1000),
-      TrialBalanceRow(accountUuid: 'acc-cogs', accountCode: '5101', accountName: 'COGS', debit: 600, credit: 0),
-      TrialBalanceRow(accountUuid: 'acc-inv', accountCode: '1301', accountName: 'Inventory Asset', debit: 0, credit: 600),
+      TrialBalanceRow(
+        accountUuid: 'acc-cash',
+        accountCode: '1101',
+        accountName: 'Cash Register',
+        debit: 1000,
+        credit: 0,
+      ),
+      TrialBalanceRow(
+        accountUuid: 'acc-ar',
+        accountCode: '1201',
+        accountName: 'Customer AR',
+        debit: 1000,
+        credit: 1000,
+      ),
+      TrialBalanceRow(
+        accountUuid: 'acc-sales',
+        accountCode: '4101',
+        accountName: 'Sales Revenue',
+        debit: 0,
+        credit: 1000,
+      ),
+      TrialBalanceRow(
+        accountUuid: 'acc-cogs',
+        accountCode: '5101',
+        accountName: 'COGS',
+        debit: 600,
+        credit: 0,
+      ),
+      TrialBalanceRow(
+        accountUuid: 'acc-inv',
+        accountCode: '1301',
+        accountName: 'Inventory Asset',
+        debit: 0,
+        credit: 600,
+      ),
     ];
   }
 
@@ -201,139 +240,161 @@ void main() {
       mockJournals = AdversarialMockJournalRepo(activeCompanyId: 'comp-sar');
     });
 
-    test('1. Financial Scenario: Sale 1000, Receipts 400 + 600 => Outstanding 0 & Cash +1000', () async {
-      final arAdapter = ReceivablesPayablesReportDataAdapter(
-        journals: mockJournals,
-        accounts: mockAccounts,
-        loadCompanyProfile: () async => const CompanyProfile(defaultCurrencyCode: 'SAR'),
-      );
+    test(
+      '1. Financial Scenario: Sale 1000, Receipts 400 + 600 => Outstanding 0 & Cash +1000',
+      () async {
+        final arAdapter = ReceivablesPayablesReportDataAdapter(
+          journals: mockJournals,
+          accounts: mockAccounts,
+          loadCompanyProfile: () async =>
+              const CompanyProfile(defaultCurrencyCode: 'SAR'),
+        );
 
-      final filter = ReportQueryFilter(companyId: 'comp-sar');
-      const arLabels = ReceivablesPayablesReportLabels(
-        companyName: 'Test SAR',
-        reportTitle: 'Receivables Statement',
-        generatedAtLabel: 'Generated',
-        periodLabel: 'Period',
-        periodAll: 'All',
-        columnEntityCode: 'Code',
-        columnEntityName: 'Name',
-        columnOpeningBalance: 'Opening',
-        columnInvoices: 'Invoices',
-        columnPayments: 'Payments',
-        columnAdjustments: 'Adjustments',
-        columnEndingBalance: 'Ending',
-        totalsLabel: 'Total',
-        emptyMessage: 'Empty',
-      );
+        final filter = ReportQueryFilter(companyId: 'comp-sar');
+        const arLabels = ReceivablesPayablesReportLabels(
+          companyName: 'Test SAR',
+          reportTitle: 'Receivables Statement',
+          generatedAtLabel: 'Generated',
+          periodLabel: 'Period',
+          periodAll: 'All',
+          columnEntityCode: 'Code',
+          columnEntityName: 'Name',
+          columnOpeningBalance: 'Opening',
+          columnInvoices: 'Invoices',
+          columnPayments: 'Payments',
+          columnAdjustments: 'Adjustments',
+          columnEndingBalance: 'Ending',
+          totalsLabel: 'Total',
+          emptyMessage: 'Empty',
+        );
 
-      final arPayload = await arAdapter.loadFromFilter(
-        filter: filter,
-        type: ReceivablesPayablesType.receivables,
-        labels: arLabels,
-      );
+        final arPayload = await arAdapter.loadFromFilter(
+          filter: filter,
+          type: ReceivablesPayablesType.receivables,
+          labels: arLabels,
+        );
 
-      expect(arPayload.rows.length, 1);
-      expect(arPayload.rows.first.invoicesAmount, 1000.0);
-      expect(arPayload.rows.first.paymentsAmount, 1000.0);
-      expect(arPayload.rows.first.endingBalance, 0.0); // Outstanding = 0 SAR
+        expect(arPayload.rows.length, 1);
+        expect(arPayload.rows.first.invoicesAmount, 1000.0);
+        expect(arPayload.rows.first.paymentsAmount, 1000.0);
+        expect(arPayload.rows.first.endingBalance, 0.0); // Outstanding = 0 SAR
 
-      // Verify Cash Flow matches receipts (+1000 SAR)
-      final cfAdapter = CashFlowReportDataAdapter(
-        journals: mockJournals,
-        accounts: mockAccounts,
-        loadCompanyProfile: () async => const CompanyProfile(defaultCurrencyCode: 'SAR'),
-      );
-      const cfLabels = CashFlowReportLabels(
-        companyName: 'Test SAR',
-        reportTitle: 'Cash Flow',
-        generatedAtLabel: 'Generated',
-        periodLabel: 'Period',
-        periodAll: 'All',
-        operatingActivitiesHeader: 'Operations',
-        investingActivitiesHeader: 'Investing',
-        financingActivitiesHeader: 'Financing',
-        openingCashLabel: 'Opening',
-        netCashMovementLabel: 'Net Change',
-        endingCashLabel: 'Ending',
-        accountCodeLabel: 'Code',
-        accountNameLabel: 'Name',
-        inflowLabel: 'Inflow',
-        outflowLabel: 'Outflow',
-        netFlowLabel: 'Net',
-        totalsLabel: 'Total',
-        emptyMessage: 'Empty',
-      );
+        // Verify Cash Flow matches receipts (+1000 SAR)
+        final cfAdapter = CashFlowReportDataAdapter(
+          journals: mockJournals,
+          accounts: mockAccounts,
+          loadCompanyProfile: () async =>
+              const CompanyProfile(defaultCurrencyCode: 'SAR'),
+        );
+        const cfLabels = CashFlowReportLabels(
+          companyName: 'Test SAR',
+          reportTitle: 'Cash Flow',
+          generatedAtLabel: 'Generated',
+          periodLabel: 'Period',
+          periodAll: 'All',
+          operatingActivitiesHeader: 'Operations',
+          investingActivitiesHeader: 'Investing',
+          financingActivitiesHeader: 'Financing',
+          openingCashLabel: 'Opening',
+          netCashMovementLabel: 'Net Change',
+          endingCashLabel: 'Ending',
+          accountCodeLabel: 'Code',
+          accountNameLabel: 'Name',
+          inflowLabel: 'Inflow',
+          outflowLabel: 'Outflow',
+          netFlowLabel: 'Net',
+          totalsLabel: 'Total',
+          emptyMessage: 'Empty',
+        );
 
-      final cfPayload = await cfAdapter.loadFromFilter(filter: filter, labels: cfLabels);
-      expect(cfPayload.endingCashBalance, 1000.0);
-    });
+        final cfPayload = await cfAdapter.loadFromFilter(
+          filter: filter,
+          labels: cfLabels,
+        );
+        expect(cfPayload.endingCashBalance, 1000.0);
+      },
+    );
 
-    test('2. Inventory Scenario: COGS in P&L matches authoritative cost (600 SAR)', () async {
-      final pnlAdapter = IncomeStatementReportDataAdapter(
-        journals: mockJournals,
-        accounts: mockAccounts,
-        loadCompanyProfile: () async => const CompanyProfile(defaultCurrencyCode: 'SAR'),
-      );
+    test(
+      '2. Inventory Scenario: COGS in P&L matches authoritative cost (600 SAR)',
+      () async {
+        final pnlAdapter = IncomeStatementReportDataAdapter(
+          journals: mockJournals,
+          accounts: mockAccounts,
+          loadCompanyProfile: () async =>
+              const CompanyProfile(defaultCurrencyCode: 'SAR'),
+        );
 
-      final filter = ReportQueryFilter(companyId: 'comp-sar');
-      const pnlLabels = IncomeStatementReportLabels(
-        companyName: 'Test SAR',
-        reportTitle: 'Income Statement',
-        generatedAtLabel: 'Generated',
-        periodLabel: 'Period',
-        periodAll: 'All',
-        revenueHeader: 'Revenue',
-        cogsHeader: 'COGS',
-        grossProfitLabel: 'Gross Profit',
-        operatingExpensesHeader: 'Expenses',
-        operatingProfitLabel: 'Operating Profit',
-        netProfitLabel: 'Net Profit',
-        netLossLabel: 'Net Loss',
-        accountCodeLabel: 'Code',
-        accountNameLabel: 'Name',
-        amountLabel: 'Amount',
-        totalsLabel: 'Total',
-        emptyMessage: 'Empty',
-      );
+        final filter = ReportQueryFilter(companyId: 'comp-sar');
+        const pnlLabels = IncomeStatementReportLabels(
+          companyName: 'Test SAR',
+          reportTitle: 'Income Statement',
+          generatedAtLabel: 'Generated',
+          periodLabel: 'Period',
+          periodAll: 'All',
+          revenueHeader: 'Revenue',
+          cogsHeader: 'COGS',
+          grossProfitLabel: 'Gross Profit',
+          operatingExpensesHeader: 'Expenses',
+          operatingProfitLabel: 'Operating Profit',
+          netProfitLabel: 'Net Profit',
+          netLossLabel: 'Net Loss',
+          accountCodeLabel: 'Code',
+          accountNameLabel: 'Name',
+          amountLabel: 'Amount',
+          totalsLabel: 'Total',
+          emptyMessage: 'Empty',
+        );
 
-      final pnlPayload = await pnlAdapter.loadFromFilter(filter: filter, labels: pnlLabels);
-      expect(pnlPayload.totalRevenue, 1000.0);
-      expect(pnlPayload.totalCogs, 600.0);
-      expect(pnlPayload.grossProfit, 400.0); // 1000 - 600 = 400 SAR
-    });
+        final pnlPayload = await pnlAdapter.loadFromFilter(
+          filter: filter,
+          labels: pnlLabels,
+        );
+        expect(pnlPayload.totalRevenue, 1000.0);
+        expect(pnlPayload.totalCogs, 600.0);
+        expect(pnlPayload.grossProfit, 400.0); // 1000 - 600 = 400 SAR
+      },
+    );
 
-    test('3. Multi-Company Isolation: Querying wrong company returns zero data', () async {
-      final pnlAdapter = IncomeStatementReportDataAdapter(
-        journals: mockJournals,
-        accounts: mockAccounts,
-        loadCompanyProfile: () async => const CompanyProfile(defaultCurrencyCode: 'SAR'),
-      );
+    test(
+      '3. Multi-Company Isolation: Querying wrong company returns zero data',
+      () async {
+        final pnlAdapter = IncomeStatementReportDataAdapter(
+          journals: mockJournals,
+          accounts: mockAccounts,
+          loadCompanyProfile: () async =>
+              const CompanyProfile(defaultCurrencyCode: 'SAR'),
+        );
 
-      final wrongFilter = ReportQueryFilter(companyId: 'comp-unauthorized');
-      const pnlLabels = IncomeStatementReportLabels(
-        companyName: 'Test SAR',
-        reportTitle: 'Income Statement',
-        generatedAtLabel: 'Generated',
-        periodLabel: 'Period',
-        periodAll: 'All',
-        revenueHeader: 'Revenue',
-        cogsHeader: 'COGS',
-        grossProfitLabel: 'Gross Profit',
-        operatingExpensesHeader: 'Expenses',
-        operatingProfitLabel: 'Operating Profit',
-        netProfitLabel: 'Net Profit',
-        netLossLabel: 'Net Loss',
-        accountCodeLabel: 'Code',
-        accountNameLabel: 'Name',
-        amountLabel: 'Amount',
-        totalsLabel: 'Total',
-        emptyMessage: 'Empty',
-      );
+        final wrongFilter = ReportQueryFilter(companyId: 'comp-unauthorized');
+        const pnlLabels = IncomeStatementReportLabels(
+          companyName: 'Test SAR',
+          reportTitle: 'Income Statement',
+          generatedAtLabel: 'Generated',
+          periodLabel: 'Period',
+          periodAll: 'All',
+          revenueHeader: 'Revenue',
+          cogsHeader: 'COGS',
+          grossProfitLabel: 'Gross Profit',
+          operatingExpensesHeader: 'Expenses',
+          operatingProfitLabel: 'Operating Profit',
+          netProfitLabel: 'Net Profit',
+          netLossLabel: 'Net Loss',
+          accountCodeLabel: 'Code',
+          accountNameLabel: 'Name',
+          amountLabel: 'Amount',
+          totalsLabel: 'Total',
+          emptyMessage: 'Empty',
+        );
 
-      final payload = await pnlAdapter.loadFromFilter(filter: wrongFilter, labels: pnlLabels);
-      expect(payload.totalRevenue, 0.0);
-      expect(payload.totalCogs, 0.0);
-      expect(payload.netProfit, 0.0);
-    });
+        final payload = await pnlAdapter.loadFromFilter(
+          filter: wrongFilter,
+          labels: pnlLabels,
+        );
+        expect(payload.totalRevenue, 0.0);
+        expect(payload.totalCogs, 0.0);
+        expect(payload.netProfit, 0.0);
+      },
+    );
   });
 }

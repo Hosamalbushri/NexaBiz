@@ -8,7 +8,9 @@ import '../../data/repositories/stock_transfer_repository_impl.dart';
 import '../../domain/entities/stock_transfer.dart';
 import '../../domain/repositories/stock_transfer_repository.dart';
 
-final stockTransferRepositoryProvider = Provider<StockTransferRepository>((ref) {
+final stockTransferRepositoryProvider = Provider<StockTransferRepository>((
+  ref,
+) {
   final db = ref.watch(inventoryDatabaseProvider);
   final syncQueue = ref.watch(syncQueueProvider);
   final valuationMethod = ref.watch(costValuationMethodProvider);
@@ -22,7 +24,9 @@ final stockTransferRepositoryProvider = Provider<StockTransferRepository>((ref) 
   );
 });
 
-final stockTransfersListStreamProvider = StreamProvider<List<StockTransfer>>((ref) {
+final stockTransfersListStreamProvider = StreamProvider<List<StockTransfer>>((
+  ref,
+) {
   final repo = ref.watch(stockTransferRepositoryProvider);
   return repo.watchAllTransfers();
 });
@@ -57,7 +61,8 @@ class StockTransferController extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final stockTransferControllerProvider = StateNotifierProvider<StockTransferController, AsyncValue<void>>((ref) {
-  final repo = ref.watch(stockTransferRepositoryProvider);
-  return StockTransferController(repo);
-});
+final stockTransferControllerProvider =
+    StateNotifierProvider<StockTransferController, AsyncValue<void>>((ref) {
+      final repo = ref.watch(stockTransferRepositoryProvider);
+      return StockTransferController(repo);
+    });

@@ -76,7 +76,8 @@ class Currency {
   int get hashCode => Object.hash(uuid, code);
 
   @override
-  String toString() => 'Currency($code, $nameAr, isDefault: $isDefault, isActive: $isActive)';
+  String toString() =>
+      'Currency($code, $nameAr, isDefault: $isDefault, isActive: $isActive)';
 }
 
 @immutable

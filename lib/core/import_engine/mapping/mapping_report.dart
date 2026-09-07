@@ -4,10 +4,7 @@ import 'field_mapping_result.dart';
 /// Full dataset mapping status report evaluating mapped fields, unmapped headers,
 /// and missing required target fields.
 class MappingReport {
-  const MappingReport({
-    required this.mappings,
-    required this.targetFields,
-  });
+  const MappingReport({required this.mappings, required this.targetFields});
 
   final List<FieldMappingResult> mappings;
   final List<ImportField> targetFields;
@@ -33,7 +30,8 @@ class MappingReport {
 
     final missing = <ImportField>[];
     for (final target in targetFields) {
-      if (target.isRequired && !mappedTargetKeys.contains(target.key.toLowerCase())) {
+      if (target.isRequired &&
+          !mappedTargetKeys.contains(target.key.toLowerCase())) {
         missing.add(target);
       }
     }

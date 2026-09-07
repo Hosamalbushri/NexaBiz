@@ -76,7 +76,8 @@ class ScalabilityTestEntityHandler implements SyncEntityHandler {
   Future<void> abandonPull() async {}
 
   @override
-  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async => null;
+  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async =>
+      null;
 }
 
 void main() {
@@ -97,68 +98,75 @@ void main() {
   });
 
   group('Phase 7 — Client Scalability & Single-Flight Concurrency Benchmark', () {
-    test('SyncManager single-flight lock coalesces 20 concurrent sync triggers seamlessly', () async {
-      final cursorStore = SyncCursorStore();
-      final queue = SyncQueue();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
+    test(
+      'SyncManager single-flight lock coalesces 20 concurrent sync triggers seamlessly',
+      () async {
+        final cursorStore = SyncCursorStore();
+        final queue = SyncQueue();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.wifi],
+        );
 
-      final api = HttpRemoteSyncApi(
-        config: const SyncApiConfig(
-          baseUrl: 'https://api.nexabiz.test',
-          apiToken: 'token',
-          companyId: 'cmp-1',
-          userId: 'usr-1',
-          deviceId: 'dev-1',
-        ),
-      );
+        final api = HttpRemoteSyncApi(
+          config: const SyncApiConfig(
+            baseUrl: 'https://api.nexabiz.test',
+            apiToken: 'token',
+            companyId: 'cmp-1',
+            userId: 'usr-1',
+            deviceId: 'dev-1',
+          ),
+        );
 
-      final manager = SyncManager(
-        queue: queue,
-        remoteProvider: () => api,
-        connectivity: connectivity,
-        conflictStore: conflictStore,
-      );
+        final manager = SyncManager(
+          queue: queue,
+          remoteProvider: () => api,
+          connectivity: connectivity,
+          conflictStore: conflictStore,
+        );
 
-      final handler = ScalabilityTestEntityHandler(
-        entityType: 'product',
-        cursorStore: cursorStore,
-        totalCount: 100,
-      );
-      manager.registerHandler(handler);
-      await manager.start(enabled: true);
+        final handler = ScalabilityTestEntityHandler(
+          entityType: 'product',
+          cursorStore: cursorStore,
+          totalCount: 100,
+        );
+        manager.registerHandler(handler);
+        await manager.start(enabled: true);
 
-      // Trigger 20 simultaneous syncNow calls
-      final futures = List.generate(
-        20,
-        (_) => manager.syncNow(trigger: SyncPassTrigger.manual),
-      );
+        // Trigger 20 simultaneous syncNow calls
+        final futures = List.generate(
+          20,
+          (_) => manager.syncNow(trigger: SyncPassTrigger.manual),
+        );
 
-      final results = await Future.wait(futures);
+        final results = await Future.wait(futures);
 
-      // Single-flight lock invariant: all callers get safe completed pass results
-      expect(results, hasLength(20));
+        // Single-flight lock invariant: all callers get safe completed pass results
+        expect(results, hasLength(20));
 
-      await manager.dispose();
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
+        await manager.dispose();
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
 
-    test('SyncOverview toDiagnosticReport returns compact payload under load', () {
-      final overview = SyncOverview.initial().copyWith(
-        pendingCount: 50,
-        failedCount: 2,
-      );
+    test(
+      'SyncOverview toDiagnosticReport returns compact payload under load',
+      () {
+        final overview = SyncOverview.initial().copyWith(
+          pendingCount: 50,
+          failedCount: 2,
+        );
 
-      final report = overview.toDiagnosticReport();
+        final report = overview.toDiagnosticReport();
 
-      expect(report['pending_count'], equals(50));
-      expect(report['failed_count'], equals(2));
-      expect(report.containsKey('password'), isFalse);
-    });
+        expect(report['pending_count'], equals(50));
+        expect(report['failed_count'], equals(2));
+        expect(report.containsKey('password'), isFalse);
+      },
+    );
   });
 }

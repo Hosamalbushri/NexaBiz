@@ -140,7 +140,11 @@ void main() {
     );
 
     final session = AuthSessionSnapshot(
-      user: AuthUser(id: 'USER-$companyId', name: 'Admin $companyId', email: 'admin@$companyId.com'),
+      user: AuthUser(
+        id: 'USER-$companyId',
+        name: 'Admin $companyId',
+        email: 'admin@$companyId.com',
+      ),
       companies: [],
       roles: ['admin'],
       permissions: {'system.setup', 'settings.company'},
@@ -155,24 +159,41 @@ void main() {
     );
 
     final currencyService = CompanyCurrencyService(initRepository: initRepo);
-    await currencyService.configureInventoryBaseCurrency(currencyCode: currencyCode);
+    await currencyService.configureInventoryBaseCurrency(
+      currencyCode: currencyCode,
+    );
 
     // Insert accounts into database
     final now = DateTime.now().millisecondsSinceEpoch;
-    final accountRepo = AccountRepositoryImpl(accountingDb, readCompanyId: () => companyId);
+    final accountRepo = AccountRepositoryImpl(
+      accountingDb,
+      readCompanyId: () => companyId,
+    );
 
     for (final entry in accountsMap.entries) {
       final role = entry.key;
       final uuid = entry.value;
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: uuid,
               accountCode: '${role.name}_$companyId',
               name: '${role.name} for $companyId',
-              accountType: role == AccountRole.inventory || role == AccountRole.receivable || role == AccountRole.cash
+              accountType:
+                  role == AccountRole.inventory ||
+                      role == AccountRole.receivable ||
+                      role == AccountRole.cash
                   ? 'asset'
-                  : (role == AccountRole.payable ? 'liability' : (role == AccountRole.revenue ? 'revenue' : 'expense')),
-              normalBalance: role == AccountRole.payable || role == AccountRole.revenue ? 'credit' : 'debit',
+                  : (role == AccountRole.payable
+                        ? 'liability'
+                        : (role == AccountRole.revenue
+                              ? 'revenue'
+                              : 'expense')),
+              normalBalance:
+                  role == AccountRole.payable || role == AccountRole.revenue
+                  ? 'credit'
+                  : 'debit',
               companyId: Value(companyId),
               createdAt: now,
               updatedAt: now,
@@ -187,7 +208,9 @@ void main() {
     await accountService.saveAccountingConfig(mappings: accountsMap);
 
     // Insert Warehouse into database
-    await db.into(db.warehouses).insert(
+    await db
+        .into(db.warehouses)
+        .insert(
           WarehousesCompanion(
             uuid: Value(whId),
             code: Value('WH-$companyId'),
@@ -210,286 +233,302 @@ void main() {
   }
 
   group('Phase 7 — Configuration Becomes the Production Source of Truth', () {
-    test('1. Company A & Company B use independent persisted configurations during posting', () async {
-      // 1. Initialize Company A (Currency: YER)
-      await initializeCompany(
-        companyId: companyAId,
-        box: settingsBoxCompanyA,
-        currencyCode: 'YER',
-        whId: whAId,
-        accountsMap: {
-          AccountRole.inventory: accAInventory,
-          AccountRole.cogs: accACogs,
-          AccountRole.payable: accAPayable,
-          AccountRole.revenue: accARevenue,
-          AccountRole.receivable: accAReceivable,
-          AccountRole.cash: accACash,
-          AccountRole.adjustment: accAAdjustment,
-          AccountRole.fxGainLoss: accAFx,
-        },
-      );
+    test(
+      '1. Company A & Company B use independent persisted configurations during posting',
+      () async {
+        // 1. Initialize Company A (Currency: YER)
+        await initializeCompany(
+          companyId: companyAId,
+          box: settingsBoxCompanyA,
+          currencyCode: 'YER',
+          whId: whAId,
+          accountsMap: {
+            AccountRole.inventory: accAInventory,
+            AccountRole.cogs: accACogs,
+            AccountRole.payable: accAPayable,
+            AccountRole.revenue: accARevenue,
+            AccountRole.receivable: accAReceivable,
+            AccountRole.cash: accACash,
+            AccountRole.adjustment: accAAdjustment,
+            AccountRole.fxGainLoss: accAFx,
+          },
+        );
 
-      // 2. Initialize Company B (Currency: SAR)
-      await initializeCompany(
-        companyId: companyBId,
-        box: settingsBoxCompanyB,
-        currencyCode: 'SAR',
-        whId: whBId,
-        accountsMap: {
-          AccountRole.inventory: accBInventory,
-          AccountRole.cogs: accBCogs,
-          AccountRole.payable: accBPayable,
-          AccountRole.revenue: accBRevenue,
-          AccountRole.receivable: accBReceivable,
-          AccountRole.cash: accBCash,
-          AccountRole.adjustment: accBAdjustment,
-          AccountRole.fxGainLoss: accBFx,
-        },
-      );
+        // 2. Initialize Company B (Currency: SAR)
+        await initializeCompany(
+          companyId: companyBId,
+          box: settingsBoxCompanyB,
+          currencyCode: 'SAR',
+          whId: whBId,
+          accountsMap: {
+            AccountRole.inventory: accBInventory,
+            AccountRole.cogs: accBCogs,
+            AccountRole.payable: accBPayable,
+            AccountRole.revenue: accBRevenue,
+            AccountRole.receivable: accBReceivable,
+            AccountRole.cash: accBCash,
+            AccountRole.adjustment: accBAdjustment,
+            AccountRole.fxGainLoss: accBFx,
+          },
+        );
 
-      // --- Post Stock Receipt for Company A ---
-      final initRepoA = CompanyInitializationRepositoryImpl(
-        box: settingsBoxCompanyA,
-        readCompanyId: () => companyAId,
-      );
-      final initGuardA = InitializationGuard(
-        initRepository: initRepoA,
-        validator: const InitializationValidator(),
-      );
-
-      final posterA = InventoryAccountingPosterImpl(
-        accountingDb,
-        readCompanyId: () => companyAId,
-        initRepository: initRepoA,
-        initializationGuard: initGuardA,
-      );
-
-      const recIdA = '00000000-0000-4000-8000-000000000a10';
-      final docA = InventoryDocumentRef(
-        documentId: recIdA,
-        documentNumber: 'REC-A-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: whAId,
-        currencyCode: 'YER',
-      );
-
-      await posterA.postAccountingEntry(
-        document: docA,
-        totalAmount: 5000,
-      );
-
-      // --- Post Stock Receipt for Company B ---
-      final initRepoB = CompanyInitializationRepositoryImpl(
-        box: settingsBoxCompanyB,
-        readCompanyId: () => companyBId,
-      );
-      final initGuardB = InitializationGuard(
-        initRepository: initRepoB,
-        validator: const InitializationValidator(),
-      );
-
-      final posterB = InventoryAccountingPosterImpl(
-        accountingDb,
-        readCompanyId: () => companyBId,
-        initRepository: initRepoB,
-        initializationGuard: initGuardB,
-      );
-
-      const recIdB = '00000000-0000-4000-8000-000000000b10';
-      final docB = InventoryDocumentRef(
-        documentId: recIdB,
-        documentNumber: 'REC-B-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: whBId,
-        currencyCode: 'SAR',
-      );
-
-      await posterB.postAccountingEntry(
-        document: docB,
-        totalAmount: 1200,
-      );
-
-      // --- Verify Journal Entry for Company A ---
-      final entryA = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((tbl) => tbl.sourceId.equals(recIdA) & tbl.companyId.equals(companyAId)))
-          .getSingle();
-
-      expect(entryA.currencyCode, equals('YER'));
-      expect(entryA.companyId, equals(companyAId));
-
-      final linesA = await (accountingDb.select(accountingDb.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entryA.uuid)))
-          .get();
-
-      expect(linesA.length, equals(2));
-      final debitLineA = linesA.firstWhere((l) => l.debit > 0);
-      final creditLineA = linesA.firstWhere((l) => l.credit > 0);
-
-      expect(debitLineA.accountUuid, equals(accAInventory));
-      expect(debitLineA.debit, equals(5000));
-      expect(creditLineA.accountUuid, equals(accAPayable));
-      expect(creditLineA.credit, equals(5000));
-
-      // Accounting Invariant: Debit == Credit
-      expect(debitLineA.debit, equals(creditLineA.credit));
-
-      // --- Verify Journal Entry for Company B ---
-      final entryB = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((tbl) => tbl.sourceId.equals(recIdB) & tbl.companyId.equals(companyBId)))
-          .getSingle();
-
-      expect(entryB.currencyCode, equals('SAR'));
-      expect(entryB.companyId, equals(companyBId));
-
-      final linesB = await (accountingDb.select(accountingDb.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entryB.uuid)))
-          .get();
-
-      expect(linesB.length, equals(2));
-      final debitLineB = linesB.firstWhere((l) => l.debit > 0);
-      final creditLineB = linesB.firstWhere((l) => l.credit > 0);
-
-      expect(debitLineB.accountUuid, equals(accBInventory));
-      expect(debitLineB.debit, equals(1200));
-      expect(creditLineB.accountUuid, equals(accBPayable));
-      expect(creditLineB.credit, equals(1200));
-
-      // Accounting Invariant: Debit == Credit
-      expect(debitLineB.debit, equals(creditLineB.credit));
-
-      // Verify zero cross-tenant contamination
-      expect(debitLineA.accountUuid, isNot(equals(accBInventory)));
-      expect(debitLineB.accountUuid, isNot(equals(accAInventory)));
-    });
-
-    test('2. Company A & Company B Stock Issues use their respective COGS accounts and base currencies', () async {
-      // 1. Initialize Company A
-      await initializeCompany(
-        companyId: companyAId,
-        box: settingsBoxCompanyA,
-        currencyCode: 'YER',
-        whId: whAId,
-        accountsMap: {
-          AccountRole.inventory: accAInventory,
-          AccountRole.cogs: accACogs,
-          AccountRole.payable: accAPayable,
-          AccountRole.revenue: accARevenue,
-          AccountRole.receivable: accAReceivable,
-          AccountRole.cash: accACash,
-          AccountRole.adjustment: accAAdjustment,
-          AccountRole.fxGainLoss: accAFx,
-        },
-      );
-
-      // 2. Initialize Company B
-      await initializeCompany(
-        companyId: companyBId,
-        box: settingsBoxCompanyB,
-        currencyCode: 'SAR',
-        whId: whBId,
-        accountsMap: {
-          AccountRole.inventory: accBInventory,
-          AccountRole.cogs: accBCogs,
-          AccountRole.payable: accBPayable,
-          AccountRole.revenue: accBRevenue,
-          AccountRole.receivable: accBReceivable,
-          AccountRole.cash: accBCash,
-          AccountRole.adjustment: accBAdjustment,
-          AccountRole.fxGainLoss: accBFx,
-        },
-      );
-
-      final initRepoA = CompanyInitializationRepositoryImpl(
-        box: settingsBoxCompanyA,
-        readCompanyId: () => companyAId,
-      );
-      final posterA = InventoryAccountingPosterImpl(
-        accountingDb,
-        readCompanyId: () => companyAId,
-        initRepository: initRepoA,
-        initializationGuard: InitializationGuard(
+        // --- Post Stock Receipt for Company A ---
+        final initRepoA = CompanyInitializationRepositoryImpl(
+          box: settingsBoxCompanyA,
+          readCompanyId: () => companyAId,
+        );
+        final initGuardA = InitializationGuard(
           initRepository: initRepoA,
           validator: const InitializationValidator(),
-        ),
-      );
+        );
 
-      const issueIdA = '00000000-0000-4000-8000-000000000a20';
-      final docIssueA = InventoryDocumentRef(
-        documentId: issueIdA,
-        documentNumber: 'ISS-A-001',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: DateTime.now(),
-        warehouseId: whAId,
-        currencyCode: 'YER',
-      );
+        final posterA = InventoryAccountingPosterImpl(
+          accountingDb,
+          readCompanyId: () => companyAId,
+          initRepository: initRepoA,
+          initializationGuard: initGuardA,
+        );
 
-      await posterA.postAccountingEntry(
-        document: docIssueA,
-        totalAmount: 3000,
-      );
+        const recIdA = '00000000-0000-4000-8000-000000000a10';
+        final docA = InventoryDocumentRef(
+          documentId: recIdA,
+          documentNumber: 'REC-A-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: whAId,
+          currencyCode: 'YER',
+        );
 
-      final entryIssueA = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((tbl) => tbl.sourceId.equals(issueIdA) & tbl.companyId.equals(companyAId)))
-          .getSingle();
+        await posterA.postAccountingEntry(document: docA, totalAmount: 5000);
 
-      final linesIssueA = await (accountingDb.select(accountingDb.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entryIssueA.uuid)))
-          .get();
-
-      final debitA = linesIssueA.firstWhere((l) => l.debit > 0);
-      final creditA = linesIssueA.firstWhere((l) => l.credit > 0);
-
-      expect(debitA.accountUuid, equals(accACogs));
-      expect(creditA.accountUuid, equals(accAInventory));
-      expect(debitA.debit, equals(3000));
-      expect(creditA.credit, equals(3000));
-
-      final initRepoB = CompanyInitializationRepositoryImpl(
-        box: settingsBoxCompanyB,
-        readCompanyId: () => companyBId,
-      );
-      final posterB = InventoryAccountingPosterImpl(
-        accountingDb,
-        readCompanyId: () => companyBId,
-        initRepository: initRepoB,
-        initializationGuard: InitializationGuard(
+        // --- Post Stock Receipt for Company B ---
+        final initRepoB = CompanyInitializationRepositoryImpl(
+          box: settingsBoxCompanyB,
+          readCompanyId: () => companyBId,
+        );
+        final initGuardB = InitializationGuard(
           initRepository: initRepoB,
           validator: const InitializationValidator(),
-        ),
-      );
+        );
 
-      const issueIdB = '00000000-0000-4000-8000-000000000b20';
-      final docIssueB = InventoryDocumentRef(
-        documentId: issueIdB,
-        documentNumber: 'ISS-B-001',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: DateTime.now(),
-        warehouseId: whBId,
-        currencyCode: 'SAR',
-      );
+        final posterB = InventoryAccountingPosterImpl(
+          accountingDb,
+          readCompanyId: () => companyBId,
+          initRepository: initRepoB,
+          initializationGuard: initGuardB,
+        );
 
-      await posterB.postAccountingEntry(
-        document: docIssueB,
-        totalAmount: 800,
-      );
+        const recIdB = '00000000-0000-4000-8000-000000000b10';
+        final docB = InventoryDocumentRef(
+          documentId: recIdB,
+          documentNumber: 'REC-B-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: whBId,
+          currencyCode: 'SAR',
+        );
 
-      final entryIssueB = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((tbl) => tbl.sourceId.equals(issueIdB) & tbl.companyId.equals(companyBId)))
-          .getSingle();
+        await posterB.postAccountingEntry(document: docB, totalAmount: 1200);
 
-      final linesIssueB = await (accountingDb.select(accountingDb.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entryIssueB.uuid)))
-          .get();
+        // --- Verify Journal Entry for Company A ---
+        final entryA =
+            await (accountingDb.select(accountingDb.journalEntries)..where(
+                  (tbl) =>
+                      tbl.sourceId.equals(recIdA) &
+                      tbl.companyId.equals(companyAId),
+                ))
+                .getSingle();
 
-      final debitB = linesIssueB.firstWhere((l) => l.debit > 0);
-      final creditB = linesIssueB.firstWhere((l) => l.credit > 0);
+        expect(entryA.currencyCode, equals('YER'));
+        expect(entryA.companyId, equals(companyAId));
 
-      expect(debitB.accountUuid, equals(accBCogs));
-      expect(creditB.accountUuid, equals(accBInventory));
-      expect(debitB.debit, equals(800));
-      expect(creditB.credit, equals(800));
-    });
+        final linesA = await (accountingDb.select(
+          accountingDb.journalLines,
+        )..where((tbl) => tbl.entryUuid.equals(entryA.uuid))).get();
+
+        expect(linesA.length, equals(2));
+        final debitLineA = linesA.firstWhere((l) => l.debit > 0);
+        final creditLineA = linesA.firstWhere((l) => l.credit > 0);
+
+        expect(debitLineA.accountUuid, equals(accAInventory));
+        expect(debitLineA.debit, equals(5000));
+        expect(creditLineA.accountUuid, equals(accAPayable));
+        expect(creditLineA.credit, equals(5000));
+
+        // Accounting Invariant: Debit == Credit
+        expect(debitLineA.debit, equals(creditLineA.credit));
+
+        // --- Verify Journal Entry for Company B ---
+        final entryB =
+            await (accountingDb.select(accountingDb.journalEntries)..where(
+                  (tbl) =>
+                      tbl.sourceId.equals(recIdB) &
+                      tbl.companyId.equals(companyBId),
+                ))
+                .getSingle();
+
+        expect(entryB.currencyCode, equals('SAR'));
+        expect(entryB.companyId, equals(companyBId));
+
+        final linesB = await (accountingDb.select(
+          accountingDb.journalLines,
+        )..where((tbl) => tbl.entryUuid.equals(entryB.uuid))).get();
+
+        expect(linesB.length, equals(2));
+        final debitLineB = linesB.firstWhere((l) => l.debit > 0);
+        final creditLineB = linesB.firstWhere((l) => l.credit > 0);
+
+        expect(debitLineB.accountUuid, equals(accBInventory));
+        expect(debitLineB.debit, equals(1200));
+        expect(creditLineB.accountUuid, equals(accBPayable));
+        expect(creditLineB.credit, equals(1200));
+
+        // Accounting Invariant: Debit == Credit
+        expect(debitLineB.debit, equals(creditLineB.credit));
+
+        // Verify zero cross-tenant contamination
+        expect(debitLineA.accountUuid, isNot(equals(accBInventory)));
+        expect(debitLineB.accountUuid, isNot(equals(accAInventory)));
+      },
+    );
+
+    test(
+      '2. Company A & Company B Stock Issues use their respective COGS accounts and base currencies',
+      () async {
+        // 1. Initialize Company A
+        await initializeCompany(
+          companyId: companyAId,
+          box: settingsBoxCompanyA,
+          currencyCode: 'YER',
+          whId: whAId,
+          accountsMap: {
+            AccountRole.inventory: accAInventory,
+            AccountRole.cogs: accACogs,
+            AccountRole.payable: accAPayable,
+            AccountRole.revenue: accARevenue,
+            AccountRole.receivable: accAReceivable,
+            AccountRole.cash: accACash,
+            AccountRole.adjustment: accAAdjustment,
+            AccountRole.fxGainLoss: accAFx,
+          },
+        );
+
+        // 2. Initialize Company B
+        await initializeCompany(
+          companyId: companyBId,
+          box: settingsBoxCompanyB,
+          currencyCode: 'SAR',
+          whId: whBId,
+          accountsMap: {
+            AccountRole.inventory: accBInventory,
+            AccountRole.cogs: accBCogs,
+            AccountRole.payable: accBPayable,
+            AccountRole.revenue: accBRevenue,
+            AccountRole.receivable: accBReceivable,
+            AccountRole.cash: accBCash,
+            AccountRole.adjustment: accBAdjustment,
+            AccountRole.fxGainLoss: accBFx,
+          },
+        );
+
+        final initRepoA = CompanyInitializationRepositoryImpl(
+          box: settingsBoxCompanyA,
+          readCompanyId: () => companyAId,
+        );
+        final posterA = InventoryAccountingPosterImpl(
+          accountingDb,
+          readCompanyId: () => companyAId,
+          initRepository: initRepoA,
+          initializationGuard: InitializationGuard(
+            initRepository: initRepoA,
+            validator: const InitializationValidator(),
+          ),
+        );
+
+        const issueIdA = '00000000-0000-4000-8000-000000000a20';
+        final docIssueA = InventoryDocumentRef(
+          documentId: issueIdA,
+          documentNumber: 'ISS-A-001',
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: DateTime.now(),
+          warehouseId: whAId,
+          currencyCode: 'YER',
+        );
+
+        await posterA.postAccountingEntry(
+          document: docIssueA,
+          totalAmount: 3000,
+        );
+
+        final entryIssueA =
+            await (accountingDb.select(accountingDb.journalEntries)..where(
+                  (tbl) =>
+                      tbl.sourceId.equals(issueIdA) &
+                      tbl.companyId.equals(companyAId),
+                ))
+                .getSingle();
+
+        final linesIssueA = await (accountingDb.select(
+          accountingDb.journalLines,
+        )..where((tbl) => tbl.entryUuid.equals(entryIssueA.uuid))).get();
+
+        final debitA = linesIssueA.firstWhere((l) => l.debit > 0);
+        final creditA = linesIssueA.firstWhere((l) => l.credit > 0);
+
+        expect(debitA.accountUuid, equals(accACogs));
+        expect(creditA.accountUuid, equals(accAInventory));
+        expect(debitA.debit, equals(3000));
+        expect(creditA.credit, equals(3000));
+
+        final initRepoB = CompanyInitializationRepositoryImpl(
+          box: settingsBoxCompanyB,
+          readCompanyId: () => companyBId,
+        );
+        final posterB = InventoryAccountingPosterImpl(
+          accountingDb,
+          readCompanyId: () => companyBId,
+          initRepository: initRepoB,
+          initializationGuard: InitializationGuard(
+            initRepository: initRepoB,
+            validator: const InitializationValidator(),
+          ),
+        );
+
+        const issueIdB = '00000000-0000-4000-8000-000000000b20';
+        final docIssueB = InventoryDocumentRef(
+          documentId: issueIdB,
+          documentNumber: 'ISS-B-001',
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: DateTime.now(),
+          warehouseId: whBId,
+          currencyCode: 'SAR',
+        );
+
+        await posterB.postAccountingEntry(
+          document: docIssueB,
+          totalAmount: 800,
+        );
+
+        final entryIssueB =
+            await (accountingDb.select(accountingDb.journalEntries)..where(
+                  (tbl) =>
+                      tbl.sourceId.equals(issueIdB) &
+                      tbl.companyId.equals(companyBId),
+                ))
+                .getSingle();
+
+        final linesIssueB = await (accountingDb.select(
+          accountingDb.journalLines,
+        )..where((tbl) => tbl.entryUuid.equals(entryIssueB.uuid))).get();
+
+        final debitB = linesIssueB.firstWhere((l) => l.debit > 0);
+        final creditB = linesIssueB.firstWhere((l) => l.credit > 0);
+
+        expect(debitB.accountUuid, equals(accBCogs));
+        expect(creditB.accountUuid, equals(accBInventory));
+        expect(debitB.debit, equals(800));
+        expect(creditB.credit, equals(800));
+      },
+    );
   });
 }

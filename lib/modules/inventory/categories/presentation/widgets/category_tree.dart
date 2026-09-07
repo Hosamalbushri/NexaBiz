@@ -208,10 +208,11 @@ class _CategorySection extends StatelessWidget {
                                     category.name,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.2,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.2,
+                                        ),
                                   ),
                                 ),
                                 if (category.isGroup) ...[
@@ -235,15 +236,17 @@ class _CategorySection extends StatelessWidget {
                                 if (node.hasChildren) ...[
                                   Text(
                                     ' · ',
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
                                   ),
                                   Text(
                                     '${_countDescendants(node)} ${isAr ? 'تصنيف فرعي' : 'subcategories'}',
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
                                   ),
                                 ],
                               ],
@@ -284,8 +287,10 @@ class _CategorySection extends StatelessWidget {
                             value: 'add_child',
                             child: Row(
                               children: [
-                                const Icon(Icons.create_new_folder_outlined,
-                                    size: 18),
+                                const Icon(
+                                  Icons.create_new_folder_outlined,
+                                  size: 18,
+                                ),
                                 const SizedBox(width: AppSpacing.sm),
                                 Text(isAr ? 'إضافة فرعي' : 'Add Subcategory'),
                               ],
@@ -306,8 +311,11 @@ class _CategorySection extends StatelessWidget {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline,
-                                    size: 18, color: colorScheme.error),
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                  color: colorScheme.error,
+                                ),
                                 const SizedBox(width: AppSpacing.sm),
                                 Text(
                                   isAr ? 'حذف' : 'Delete',
@@ -360,11 +368,10 @@ class _CategorySection extends StatelessWidget {
                 if (i < childEntries.length - 1)
                   Divider(
                     height: 1,
-                    indent: AppSpacing.lg +
+                    indent:
+                        AppSpacing.lg +
                         (childEntries[i].depth + 1) * AppSpacing.md,
-                    color: colorScheme.outlineVariant.withValues(
-                      alpha: 0.35,
-                    ),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.35),
                   ),
               ],
             ],
@@ -574,8 +581,11 @@ class _CategoryChildRow extends StatelessWidget {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline,
-                            size: 18, color: colorScheme.error),
+                        Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: colorScheme.error,
+                        ),
                         const SizedBox(width: AppSpacing.sm),
                         Text(
                           isAr ? 'حذف' : 'Delete',

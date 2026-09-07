@@ -19,10 +19,7 @@ import '../../domain/entities/stock_issue.dart';
 import '../providers/stock_movements_providers.dart';
 
 class StockIssuesListPage extends ConsumerWidget {
-  const StockIssuesListPage({
-    super.key,
-    this.embedInTab = false,
-  });
+  const StockIssuesListPage({super.key, this.embedInTab = false});
 
   final bool embedInTab;
 
@@ -52,7 +49,9 @@ class StockIssuesListPage extends ConsumerWidget {
               if (issues.isEmpty)
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xl,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -70,7 +69,8 @@ class StockIssuesListPage extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         ElevatedButton.icon(
-                          onPressed: () => InventoryRoutes.pushStockIssuesNew(context),
+                          onPressed: () =>
+                              InventoryRoutes.pushStockIssuesNew(context),
                           icon: const Icon(Icons.add),
                           label: Text(l10n.stockIssuesEmptyAction),
                         ),
@@ -126,7 +126,8 @@ class _StockIssueCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final dateStr = '${issue.issueDate.year}-${issue.issueDate.month.toString().padLeft(2, '0')}-${issue.issueDate.day.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${issue.issueDate.year}-${issue.issueDate.month.toString().padLeft(2, '0')}-${issue.issueDate.day.toString().padLeft(2, '0')}';
 
     return Card(
       elevation: 0.5,
@@ -169,7 +170,9 @@ class _StockIssueCard extends ConsumerWidget {
           children: [
             if (issue.destination != null && issue.destination!.isNotEmpty)
               Text('${l10n.stockIssueAccountLabel}: ${issue.destination}'),
-            Text('${l10n.stockIssueDateLabel}: $dateStr | ${l10n.stockReceiptItemsHeader(issue.lines.length)}'),
+            Text(
+              '${l10n.stockIssueDateLabel}: $dateStr | ${l10n.stockReceiptItemsHeader(issue.lines.length)}',
+            ),
           ],
         ),
         trailing: Row(
@@ -236,7 +239,11 @@ class _StockIssueCard extends ConsumerWidget {
               onPressed: () async {
                 if (issue.isPosted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('لا يمكن حذف مستند مرحّل. يجب إلغاء ترحيله أولاً.')),
+                    const SnackBar(
+                      content: Text(
+                        'لا يمكن حذف مستند مرحّل. يجب إلغاء ترحيله أولاً.',
+                      ),
+                    ),
                   );
                   return;
                 }
@@ -249,21 +256,28 @@ class _StockIssueCard extends ConsumerWidget {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                        child: Text(
+                          MaterialLocalizations.of(context).cancelButtonLabel,
+                        ),
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                         ),
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: Text(MaterialLocalizations.of(context).deleteButtonTooltip, style: const TextStyle(color: Colors.white)),
+                        child: Text(
+                          MaterialLocalizations.of(context).deleteButtonTooltip,
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
                 );
 
                 if (confirm == true) {
-                  await ref.read(stockMovementUseCasesProvider).deleteIssue(issue.id);
+                  await ref
+                      .read(stockMovementUseCasesProvider)
+                      .deleteIssue(issue.id);
                 }
               },
             ),
@@ -313,11 +327,7 @@ class _SyncStatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: fg,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }

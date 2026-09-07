@@ -17,7 +17,10 @@ class MemoryAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<List<Account>> getAll({bool includeInactive = false, bool includeDeleted = false}) async {
+  Future<List<Account>> getAll({
+    bool includeInactive = false,
+    bool includeDeleted = false,
+  }) async {
     return _accounts.values.where((a) {
       if (!includeInactive && !a.isActive) return false;
       if (!includeDeleted && a.isDeleted) return false;
@@ -65,7 +68,8 @@ class MemoryAccountRepository implements AccountRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class FakeCompanyInitializationRepository implements CompanyInitializationRepository {
+class FakeCompanyInitializationRepository
+    implements CompanyInitializationRepository {
   FakeCompanyInitializationRepository(this._config);
 
   final CompanyAccountingConfig _config;
@@ -84,7 +88,9 @@ class FakeAccountValidationService implements AccountValidationService {
   }
 
   @override
-  Future<AccountValidationResult> validateAccountUuid(String accountUuid) async {
+  Future<AccountValidationResult> validateAccountUuid(
+    String accountUuid,
+  ) async {
     return const AccountValidationResult(isValid: true);
   }
 
@@ -147,31 +153,38 @@ void main() {
       repoCompB = MemoryAccountRepository()..addAccount(compBAccount);
     });
 
-    test('Company A resolves its own bound revenue account without fallback', () async {
-      final configA = CompanyAccountingConfig(
-        companyId: 'company_A',
-        accountMappings: const {
-          AccountRole.revenue: 'comp_a_rev_uuid',
-        },
-      );
+    test(
+      'Company A resolves its own bound revenue account without fallback',
+      () async {
+        final configA = CompanyAccountingConfig(
+          companyId: 'company_A',
+          accountMappings: const {AccountRole.revenue: 'comp_a_rev_uuid'},
+        );
 
-      final resolverA = AccountMappingResolverImpl(
-        accountRepository: repoCompA,
-        validationService: FakeAccountValidationService(),
-        initRepository: FakeCompanyInitializationRepository(configA),
-      );
+        final resolverA = AccountMappingResolverImpl(
+          accountRepository: repoCompA,
+          validationService: FakeAccountValidationService(),
+          initRepository: FakeCompanyInitializationRepository(configA),
+        );
 
-      final mapping = await resolverA.resolveForDocument(documentType: 'sale');
-      expect(mapping.getRole(AccountRole.revenue)?.accountUuid, equals('comp_a_rev_uuid'));
-      expect(mapping.getRole(AccountRole.revenue)?.accountName, equals('إيرادات مبيعات شركة أ'));
-    });
+        final mapping = await resolverA.resolveForDocument(
+          documentType: 'sale',
+        );
+        expect(
+          mapping.getRole(AccountRole.revenue)?.accountUuid,
+          equals('comp_a_rev_uuid'),
+        );
+        expect(
+          mapping.getRole(AccountRole.revenue)?.accountName,
+          equals('إيرادات مبيعات شركة أ'),
+        );
+      },
+    );
 
     test('Company B resolves its distinct bound revenue account', () async {
       final configB = CompanyAccountingConfig(
         companyId: 'company_B',
-        accountMappings: const {
-          AccountRole.revenue: 'comp_b_rev_uuid',
-        },
+        accountMappings: const {AccountRole.revenue: 'comp_b_rev_uuid'},
       );
 
       final resolverB = AccountMappingResolverImpl(
@@ -181,23 +194,37 @@ void main() {
       );
 
       final mapping = await resolverB.resolveForDocument(documentType: 'sale');
-      expect(mapping.getRole(AccountRole.revenue)?.accountUuid, equals('comp_b_rev_uuid'));
-      expect(mapping.getRole(AccountRole.revenue)?.accountName, equals('إيرادات مبيعات شركة ب'));
-    });
-
-    test('Unconfigured account role returns null without silent fallback', () async {
-      final emptyConfig = const CompanyAccountingConfig(companyId: 'company_A', accountMappings: {});
-
-      final resolverEmpty = AccountMappingResolverImpl(
-        accountRepository: repoCompA,
-        validationService: FakeAccountValidationService(),
-        initRepository: FakeCompanyInitializationRepository(emptyConfig),
+      expect(
+        mapping.getRole(AccountRole.revenue)?.accountUuid,
+        equals('comp_b_rev_uuid'),
       );
-
-      final mapping = await resolverEmpty.resolveForDocument(documentType: 'sale');
-      expect(mapping.getRole(AccountRole.revenue), isNull);
-      expect(mapping.getRole(AccountRole.cash), isNull);
-      expect(mapping.getRole(AccountRole.receivable), isNull);
+      expect(
+        mapping.getRole(AccountRole.revenue)?.accountName,
+        equals('إيرادات مبيعات شركة ب'),
+      );
     });
+
+    test(
+      'Unconfigured account role returns null without silent fallback',
+      () async {
+        final emptyConfig = const CompanyAccountingConfig(
+          companyId: 'company_A',
+          accountMappings: {},
+        );
+
+        final resolverEmpty = AccountMappingResolverImpl(
+          accountRepository: repoCompA,
+          validationService: FakeAccountValidationService(),
+          initRepository: FakeCompanyInitializationRepository(emptyConfig),
+        );
+
+        final mapping = await resolverEmpty.resolveForDocument(
+          documentType: 'sale',
+        );
+        expect(mapping.getRole(AccountRole.revenue), isNull);
+        expect(mapping.getRole(AccountRole.cash), isNull);
+        expect(mapping.getRole(AccountRole.receivable), isNull);
+      },
+    );
   });
 }

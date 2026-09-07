@@ -2,10 +2,7 @@ import '../entities/account.dart';
 
 /// Hierarchical view model for Chart of Accounts UI.
 class AccountTreeNode {
-  const AccountTreeNode({
-    required this.account,
-    this.children = const [],
-  });
+  const AccountTreeNode({required this.account, this.children = const []});
 
   final Account account;
   final List<AccountTreeNode> children;
@@ -21,6 +18,7 @@ class AccountTreeNode {
         walk(child);
       }
     }
+
     walk(this);
     return count;
   }

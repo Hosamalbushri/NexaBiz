@@ -112,28 +112,31 @@ void main() {
   });
 
   group('Decentralized Modular Setup Architecture', () {
-    test('ModuleRegistry aggregates setup steps from all modules with order', () {
-      final registry = ModuleRegistry([
-        AccountingModule(),
-        InventoryModule(),
-        SalesModule(),
-      ]);
+    test(
+      'ModuleRegistry aggregates setup steps from all modules with order',
+      () {
+        final registry = ModuleRegistry([
+          AccountingModule(),
+          InventoryModule(),
+          SalesModule(),
+        ]);
 
-      final steps = registry.allSetupSteps;
-      expect(steps.length, greaterThanOrEqualTo(5));
+        final steps = registry.allSetupSteps;
+        expect(steps.length, greaterThanOrEqualTo(5));
 
-      // Check sort order is strictly ascending
-      for (int i = 0; i < steps.length - 1; i++) {
-        expect(steps[i].sortOrder <= steps[i + 1].sortOrder, isTrue);
-      }
+        // Check sort order is strictly ascending
+        for (int i = 0; i < steps.length - 1; i++) {
+          expect(steps[i].sortOrder <= steps[i + 1].sortOrder, isTrue);
+        }
 
-      final stepIds = steps.map((s) => s.id).toList();
-      expect(stepIds, contains('accounting_currencies_setup_step'));
-      expect(stepIds, contains('accounting_role_mapping_setup_step'));
-      expect(stepIds, contains('inventory_base_currency_warehouse_step'));
-      expect(stepIds, contains('inventory_costing_policy_step'));
-      expect(stepIds, contains('sales_defaults_setup_step'));
-    });
+        final stepIds = steps.map((s) => s.id).toList();
+        expect(stepIds, contains('accounting_currencies_setup_step'));
+        expect(stepIds, contains('accounting_role_mapping_setup_step'));
+        expect(stepIds, contains('inventory_base_currency_warehouse_step'));
+        expect(stepIds, contains('inventory_costing_policy_step'));
+        expect(stepIds, contains('sales_defaults_setup_step'));
+      },
+    );
 
     test('Single-choice Inventory Base Currency invariant is preserved', () {
       const config = CompanyInventoryConfig(
@@ -144,43 +147,52 @@ void main() {
       expect(config.inventoryBaseCurrencyId, isA<String>());
     });
 
-    test('Chart of Accounts role mappings link flexibly without pattern restriction', () async {
-      // Create custom accounts in CoA with arbitrary codes
-      final customInv = await accountRepo.insert(
-        AccountDraft(
-          parentId: null,
-          accountCode: '998877',
-          name: 'مخزون خاص حر',
-          accountType: AccountType.asset,
-          isGroup: false,
-        ),
-      );
-      final customRev = await accountRepo.insert(
-        AccountDraft(
-          parentId: null,
-          accountCode: '887766',
-          name: 'إيراد مبيعات خاص',
-          accountType: AccountType.revenue,
-          isGroup: false,
-        ),
-      );
+    test(
+      'Chart of Accounts role mappings link flexibly without pattern restriction',
+      () async {
+        // Create custom accounts in CoA with arbitrary codes
+        final customInv = await accountRepo.insert(
+          AccountDraft(
+            parentId: null,
+            accountCode: '998877',
+            name: 'مخزون خاص حر',
+            accountType: AccountType.asset,
+            isGroup: false,
+          ),
+        );
+        final customRev = await accountRepo.insert(
+          AccountDraft(
+            parentId: null,
+            accountCode: '887766',
+            name: 'إيراد مبيعات خاص',
+            accountType: AccountType.revenue,
+            isGroup: false,
+          ),
+        );
 
-      final accountingConfig = CompanyAccountingConfig(
-        companyId: 'test-tenant-1',
-        accountMappings: {
-          AccountRole.inventory: customInv.uuid,
-          AccountRole.revenue: customRev.uuid,
-        },
-      );
+        final accountingConfig = CompanyAccountingConfig(
+          companyId: 'test-tenant-1',
+          accountMappings: {
+            AccountRole.inventory: customInv.uuid,
+            AccountRole.revenue: customRev.uuid,
+          },
+        );
 
-      expect(accountingConfig.accountMappings[AccountRole.inventory], customInv.uuid);
-      expect(accountingConfig.accountMappings[AccountRole.revenue], customRev.uuid);
+        expect(
+          accountingConfig.accountMappings[AccountRole.inventory],
+          customInv.uuid,
+        );
+        expect(
+          accountingConfig.accountMappings[AccountRole.revenue],
+          customRev.uuid,
+        );
 
-      final invAccount = await accountRepo.getByUuid(
-        accountingConfig.accountMappings[AccountRole.inventory]!,
-      );
-      expect(invAccount?.accountCode, '998877');
-      expect(invAccount?.name, 'مخزون خاص حر');
-    });
+        final invAccount = await accountRepo.getByUuid(
+          accountingConfig.accountMappings[AccountRole.inventory]!,
+        );
+        expect(invAccount?.accountCode, '998877');
+        expect(invAccount?.name, 'مخزون خاص حر');
+      },
+    );
   });
 }

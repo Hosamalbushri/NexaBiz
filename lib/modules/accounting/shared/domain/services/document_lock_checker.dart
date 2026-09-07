@@ -13,9 +13,7 @@ class DocumentLockChecker {
       );
     }
     if (status == InventoryDocumentStatus.cancelled) {
-      throw StateError(
-        'المستند ($documentNumber) ملغى. لا يمكن التعديل عليه.',
-      );
+      throw StateError('المستند ($documentNumber) ملغى. لا يمكن التعديل عليه.');
     }
   }
 

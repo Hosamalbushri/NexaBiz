@@ -59,68 +59,86 @@ void main() {
     }
   });
 
-  test('App Kill During Sync: stuck syncing ops are reclaimed to pending on restart', () async {
-    // Manually place a operation into 'syncing' status simulating app crash during network call
-    final op = SyncOperation.create(
-      entityType: 'inventory_item',
-      entityId: 'crash-sku-1',
-      type: SyncOperationType.create,
-      payload: {'itemCode': 'CRASH-1', 'actualQuantity': 10},
-    ).copyWith(status: SyncStatus.syncing);
+  test(
+    'App Kill During Sync: stuck syncing ops are reclaimed to pending on restart',
+    () async {
+      // Manually place a operation into 'syncing' status simulating app crash during network call
+      final op = SyncOperation.create(
+        entityType: 'inventory_item',
+        entityId: 'crash-sku-1',
+        type: SyncOperationType.create,
+        payload: {'itemCode': 'CRASH-1', 'actualQuantity': 10},
+      ).copyWith(status: SyncStatus.syncing);
 
-    await syncBox.put(op.id, op);
+      await syncBox.put(op.id, op);
 
-    // Initial state before recovery
-    expect(syncBox.get(op.id)?.status, SyncStatus.syncing);
+      // Initial state before recovery
+      expect(syncBox.get(op.id)?.status, SyncStatus.syncing);
 
-    // Simulate app restart by initializing fresh queue & calling reclaimInFlight
-    final recoveredCount = await queue.reclaimInFlight(now: DateTime.utc(2026, 8, 22));
-    expect(recoveredCount, equals(1));
-    expect(syncBox.get(op.id)?.status, SyncStatus.pending);
-    expect(syncBox.get(op.id)?.nextRetryAt, isNull);
-  });
+      // Simulate app restart by initializing fresh queue & calling reclaimInFlight
+      final recoveredCount = await queue.reclaimInFlight(
+        now: DateTime.utc(2026, 8, 22),
+      );
+      expect(recoveredCount, equals(1));
+      expect(syncBox.get(op.id)?.status, SyncStatus.pending);
+      expect(syncBox.get(op.id)?.nextRetryAt, isNull);
+    },
+  );
 
-  test('Concurrent syncNow calls execute safely without duplicate triggers', () async {
-    manager = SyncManager(
-      queue: queue,
-      connectivity: connectivity,
-      clock: () => DateTime.utc(2026, 8, 22),
-    );
-    manager!.registerHandler(
-      InventoryItemSyncHandler(repository: inventoryRepo, remoteProvider: () => remote),
-    );
-    connectivity.debugSetStatus(ConnectivityStatus.online);
-    await manager!.start(enabled: true);
+  test(
+    'Concurrent syncNow calls execute safely without duplicate triggers',
+    () async {
+      manager = SyncManager(
+        queue: queue,
+        connectivity: connectivity,
+        clock: () => DateTime.utc(2026, 8, 22),
+      );
+      manager!.registerHandler(
+        InventoryItemSyncHandler(
+          repository: inventoryRepo,
+          remoteProvider: () => remote,
+        ),
+      );
+      connectivity.debugSetStatus(ConnectivityStatus.online);
+      await manager!.start(enabled: true);
 
-    await inventoryRepo.save(
-      InventoryItem(
-        itemCode: 'CONCUR-1',
-        itemName: 'Concurrent Item',
-        systemQuantity: 5,
-        actualQuantity: 5,
-        mainQuantity: 5,
-        subQuantity: 0,
-      ),
-    );
+      await inventoryRepo.save(
+        InventoryItem(
+          itemCode: 'CONCUR-1',
+          itemName: 'Concurrent Item',
+          systemQuantity: 5,
+          actualQuantity: 5,
+          mainQuantity: 5,
+          subQuantity: 0,
+        ),
+      );
 
-    // Fire 3 simultaneous syncNow calls
-    final futures = Future.wait([
-      manager!.syncNow(notify: false),
-      manager!.syncNow(notify: false),
-      manager!.syncNow(notify: false),
-    ]);
+      // Fire 3 simultaneous syncNow calls
+      final futures = Future.wait([
+        manager!.syncNow(notify: false),
+        manager!.syncNow(notify: false),
+        manager!.syncNow(notify: false),
+      ]);
 
-    final results = await futures;
-    // Exactly one pass should run and complete, others should yield idle/skipped
-    final completedCount = results.where((r) => r.outcome == SyncPassOutcome.completed).length;
-    expect(completedCount, equals(1));
-  });
+      final results = await futures;
+      // Exactly one pass should run and complete, others should yield idle/skipped
+      final completedCount = results
+          .where((r) => r.outcome == SyncPassOutcome.completed)
+          .length;
+      expect(completedCount, equals(1));
+    },
+  );
 
   test('IdParser resilience under malformed and boundary inputs', () {
     expect(IdParser.extractNumericId(123), equals(123));
     expect(IdParser.extractNumericId('456'), equals(456));
     expect(IdParser.extractNumericId('/api/v1/invoices/789'), equals(789));
-    expect(IdParser.extractNumericId('https://nexabiz.app/v1/orders/101112?ref=push#tag'), equals(101112));
+    expect(
+      IdParser.extractNumericId(
+        'https://nexabiz.app/v1/orders/101112?ref=push#tag',
+      ),
+      equals(101112),
+    );
     expect(IdParser.extractNumericId('/api/v1/orders/'), isNull);
     expect(IdParser.extractNumericId('invalid-string'), isNull);
     expect(IdParser.extractNumericId(null), isNull);

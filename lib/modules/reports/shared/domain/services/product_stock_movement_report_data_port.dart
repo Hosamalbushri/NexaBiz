@@ -159,7 +159,6 @@ class ProductStockMovementReportPayload {
   final double totalOutgoingQty;
 }
 
-
 /// Port definition for loading product stock movement data.
 abstract class ProductStockMovementReportDataPort {
   Future<ProductStockMovementReportPayload> load({
@@ -179,7 +178,7 @@ abstract class ProductStockMovementReportDataPort {
 /// Riverpod provider for ProductStockMovementReportDataPort.
 final productStockMovementReportDataPortProvider =
     Provider<ProductStockMovementReportDataPort>((ref) {
-  throw UnimplementedError(
-    'productStockMovementReportDataPortProvider must be overridden in providerOverrides',
-  );
-});
+      throw UnimplementedError(
+        'productStockMovementReportDataPortProvider must be overridden in providerOverrides',
+      );
+    });

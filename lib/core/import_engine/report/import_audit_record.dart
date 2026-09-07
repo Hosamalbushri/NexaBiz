@@ -29,11 +29,17 @@ class ImportAuditRecord {
       userId: json['userId'] as String,
       source: json['source'] as String,
       entityType: json['entityType'] as String,
-      configuration: Map<String, dynamic>.from(json['configuration'] as Map? ?? {}),
+      configuration: Map<String, dynamic>.from(
+        json['configuration'] as Map? ?? {},
+      ),
       mappingProfileId: json['mappingProfileId'] as String?,
-      mappingSummary: Map<String, String>.from(json['mappingSummary'] as Map? ?? {}),
+      mappingSummary: Map<String, String>.from(
+        json['mappingSummary'] as Map? ?? {},
+      ),
       startedAt: DateTime.parse(json['startedAt'] as String),
-      completedAt: json['completedAt'] != null ? DateTime.parse(json['completedAt'] as String) : null,
+      completedAt: json['completedAt'] != null
+          ? DateTime.parse(json['completedAt'] as String)
+          : null,
       totalRows: json['totalRows'] as int,
       createdRows: json['createdRows'] as int,
       updatedRows: json['updatedRows'] as int,
@@ -101,23 +107,23 @@ class ImportAuditRecord {
   bool get isCompleted => completedAt != null;
 
   Map<String, dynamic> toJson() => {
-        'auditId': auditId,
-        'jobId': jobId,
-        'companyId': companyId,
-        'userId': userId,
-        'source': source,
-        'entityType': entityType,
-        'configuration': configuration,
-        'mappingProfileId': mappingProfileId,
-        'mappingSummary': mappingSummary,
-        'startedAt': startedAt.toIso8601String(),
-        'completedAt': completedAt?.toIso8601String(),
-        'totalRows': totalRows,
-        'createdRows': createdRows,
-        'updatedRows': updatedRows,
-        'skippedRows': skippedRows,
-        'failedRows': failedRows,
-        'warningCount': warningCount,
-        'errorCount': errorCount,
-      };
+    'auditId': auditId,
+    'jobId': jobId,
+    'companyId': companyId,
+    'userId': userId,
+    'source': source,
+    'entityType': entityType,
+    'configuration': configuration,
+    'mappingProfileId': mappingProfileId,
+    'mappingSummary': mappingSummary,
+    'startedAt': startedAt.toIso8601String(),
+    'completedAt': completedAt?.toIso8601String(),
+    'totalRows': totalRows,
+    'createdRows': createdRows,
+    'updatedRows': updatedRows,
+    'skippedRows': skippedRows,
+    'failedRows': failedRows,
+    'warningCount': warningCount,
+    'errorCount': errorCount,
+  };
 }

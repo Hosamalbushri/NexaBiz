@@ -26,6 +26,5 @@ class AuthenticateUserUseCase {
 
   Future<void> logout() => _repository.logout();
 
-  Future<AuthSessionSnapshot?> restoreSession() =>
-      _repository.restoreSession();
+  Future<AuthSessionSnapshot?> restoreSession() => _repository.restoreSession();
 }

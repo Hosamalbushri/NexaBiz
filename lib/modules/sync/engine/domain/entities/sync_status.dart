@@ -34,7 +34,9 @@ enum EngineSyncState {
 
 extension SyncStatusX on SyncStatus {
   bool get needsUpload =>
-      this == SyncStatus.pending || this == SyncStatus.failed || this == SyncStatus.quarantined;
+      this == SyncStatus.pending ||
+      this == SyncStatus.failed ||
+      this == SyncStatus.quarantined;
 
   bool get isInFlight => this == SyncStatus.syncing;
 
@@ -55,4 +57,3 @@ extension SyncStatusX on SyncStatus {
     );
   }
 }
-

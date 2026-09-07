@@ -15,14 +15,8 @@ void main() {
 
   setUp(() {
     db = SalesDatabase.memory();
-    repoCompanyA = SaleRepositoryImpl(
-      db,
-      readCompanyId: () => 'company_a',
-    );
-    repoCompanyB = SaleRepositoryImpl(
-      db,
-      readCompanyId: () => 'company_b',
-    );
+    repoCompanyA = SaleRepositoryImpl(db, readCompanyId: () => 'company_a');
+    repoCompanyB = SaleRepositoryImpl(db, readCompanyId: () => 'company_b');
   });
 
   tearDown(() async {
@@ -72,166 +66,182 @@ void main() {
       expect(result.nextCursor, isNull);
     });
 
-    test('Keyset pagination returns items bounded by pageSize with deterministic tie-breaker', () async {
-      final baseDate = DateTime.utc(2026, 9, 1, 10, 0, 0);
+    test(
+      'Keyset pagination returns items bounded by pageSize with deterministic tie-breaker',
+      () async {
+        final baseDate = DateTime.utc(2026, 9, 1, 10, 0, 0);
 
-      // Create 35 sales with same saleDate timestamp to test tie-breaker
-      for (var i = 1; i <= 35; i++) {
+        // Create 35 sales with same saleDate timestamp to test tie-breaker
+        for (var i = 1; i <= 35; i++) {
+          await repoCompanyA.insert(
+            buildDraft(
+              customerName: 'Customer $i',
+              total: i * 10.0,
+              saleDate: baseDate,
+            ),
+            saleNumber: 'INV-${i.toString().padLeft(6, '0')}',
+          );
+        }
+
+        // Fetch Page 1 (pageSize = 20)
+        final page1 = await repoCompanyA.searchKeysetPaged(
+          const SaleListFilter(),
+          pageSize: 20,
+        );
+
+        expect(page1.items.length, 20);
+        expect(page1.hasMore, isTrue);
+        expect(page1.nextCursor, isNotNull);
+
+        // Fetch Page 2 using cursor from Page 1
+        final page2 = await repoCompanyA.searchKeysetPaged(
+          const SaleListFilter(),
+          cursor: page1.nextCursor,
+          pageSize: 20,
+        );
+
+        expect(page2.items.length, 15);
+        expect(page2.hasMore, isFalse);
+        expect(page2.nextCursor, isNull);
+
+        // Verify no duplicate IDs between Page 1 and Page 2
+        final idsPage1 = page1.items.map((e) => e.id).toSet();
+        final idsPage2 = page2.items.map((e) => e.id).toSet();
+        expect(idsPage1.intersection(idsPage2), isEmpty);
+        expect(idsPage1.length + idsPage2.length, 35);
+      },
+    );
+
+    test(
+      'SQL Filtering: Filters by status, date range, and text query in database',
+      () async {
         await repoCompanyA.insert(
           buildDraft(
-            customerName: 'Customer $i',
-            total: i * 10.0,
-            saleDate: baseDate,
+            customerName: 'Acme Corp',
+            total: 100,
+            status: SaleStatus.posted,
+            saleDate: DateTime.utc(2026, 8, 15),
           ),
-          saleNumber: 'INV-${i.toString().padLeft(6, '0')}',
+          saleNumber: 'INV-000101',
         );
-      }
 
-      // Fetch Page 1 (pageSize = 20)
-      final page1 = await repoCompanyA.searchKeysetPaged(
-        const SaleListFilter(),
-        pageSize: 20,
-      );
+        await repoCompanyA.insert(
+          buildDraft(
+            customerName: 'Beta Trading',
+            total: 200,
+            status: SaleStatus.unposted,
+            saleDate: DateTime.utc(2026, 8, 20),
+          ),
+          saleNumber: 'INV-000102',
+        );
 
-      expect(page1.items.length, 20);
-      expect(page1.hasMore, isTrue);
-      expect(page1.nextCursor, isNotNull);
+        // Filter by text search "Acme"
+        final searchResult = await repoCompanyA.searchKeysetPaged(
+          const SaleListFilter(query: 'Acme'),
+        );
+        expect(searchResult.items.length, 1);
+        expect(searchResult.items.first.customerName, 'Acme Corp');
 
-      // Fetch Page 2 using cursor from Page 1
-      final page2 = await repoCompanyA.searchKeysetPaged(
-        const SaleListFilter(),
-        cursor: page1.nextCursor,
-        pageSize: 20,
-      );
+        // Filter by status "posted"
+        final statusResult = await repoCompanyA.searchKeysetPaged(
+          const SaleListFilter(saleStatus: SaleStatus.posted),
+        );
+        expect(statusResult.items.length, 1);
+        expect(statusResult.items.first.customerName, 'Acme Corp');
 
-      expect(page2.items.length, 15);
-      expect(page2.hasMore, isFalse);
-      expect(page2.nextCursor, isNull);
+        // Filter by date range (2026-08-18 to 2026-08-25)
+        final dateResult = await repoCompanyA.searchKeysetPaged(
+          SaleListFilter(
+            fromDate: DateTime.utc(2026, 8, 18),
+            toDate: DateTime.utc(2026, 8, 25),
+          ),
+        );
+        expect(dateResult.items.length, 1);
+        expect(dateResult.items.first.customerName, 'Beta Trading');
+      },
+    );
 
-      // Verify no duplicate IDs between Page 1 and Page 2
-      final idsPage1 = page1.items.map((e) => e.id).toSet();
-      final idsPage2 = page2.items.map((e) => e.id).toSet();
-      expect(idsPage1.intersection(idsPage2), isEmpty);
-      expect(idsPage1.length + idsPage2.length, 35);
-    });
+    test(
+      'Multi-Tenant Isolation: Company A cannot query Company B sales',
+      () async {
+        await repoCompanyA.insert(
+          buildDraft(customerName: 'Company A Customer', total: 150),
+          saleNumber: 'INV-A-001',
+        );
 
-    test('SQL Filtering: Filters by status, date range, and text query in database', () async {
-      await repoCompanyA.insert(
-        buildDraft(
-          customerName: 'Acme Corp',
-          total: 100,
-          status: SaleStatus.posted,
-          saleDate: DateTime.utc(2026, 8, 15),
-        ),
-        saleNumber: 'INV-000101',
-      );
+        await repoCompanyB.insert(
+          buildDraft(customerName: 'Company B Customer', total: 250),
+          saleNumber: 'INV-B-001',
+        );
 
-      await repoCompanyA.insert(
-        buildDraft(
-          customerName: 'Beta Trading',
-          total: 200,
-          status: SaleStatus.unposted,
-          saleDate: DateTime.utc(2026, 8, 20),
-        ),
-        saleNumber: 'INV-000102',
-      );
+        final listA = await repoCompanyA.searchKeysetPaged(
+          const SaleListFilter(),
+        );
+        final listB = await repoCompanyB.searchKeysetPaged(
+          const SaleListFilter(),
+        );
 
-      // Filter by text search "Acme"
-      final searchResult = await repoCompanyA.searchKeysetPaged(
-        const SaleListFilter(query: 'Acme'),
-      );
-      expect(searchResult.items.length, 1);
-      expect(searchResult.items.first.customerName, 'Acme Corp');
+        expect(listA.items.length, 1);
+        expect(listA.items.first.customerName, 'Company A Customer');
 
-      // Filter by status "posted"
-      final statusResult = await repoCompanyA.searchKeysetPaged(
-        const SaleListFilter(saleStatus: SaleStatus.posted),
-      );
-      expect(statusResult.items.length, 1);
-      expect(statusResult.items.first.customerName, 'Acme Corp');
+        expect(listB.items.length, 1);
+        expect(listB.items.first.customerName, 'Company B Customer');
+      },
+    );
 
-      // Filter by date range (2026-08-18 to 2026-08-25)
-      final dateResult = await repoCompanyA.searchKeysetPaged(
-        SaleListFilter(
-          fromDate: DateTime.utc(2026, 8, 18),
-          toDate: DateTime.utc(2026, 8, 25),
-        ),
-      );
-      expect(dateResult.items.length, 1);
-      expect(dateResult.items.first.customerName, 'Beta Trading');
-    });
+    test(
+      'Read-Model Projection & N+1 Prevention: Map rows without child entity queries',
+      () async {
+        // Insert sale with multiple items and payments
+        await repoCompanyA.insert(
+          SaleDraft(
+            saleDate: DateTime.utc(2026, 9, 1),
+            settlementType: SaleSettlementType.cash,
+            voucherBookId: 'VB-01',
+            cashAccountId: 'ACC-CASH-01',
+            customerName: 'Multi Item Customer',
+            currencyCode: 'SAR',
+            baseCurrencyCode: 'SAR',
+            exchangeRate: 1.0,
+            items: [
+              SaleItemDraft(
+                productId: '1',
+                productName: 'Item 1',
+                productCode: 'P1',
+                mainQuantity: 1,
+                unitPrice: 50,
+                baseUnitPrice: 50,
+              ),
+              SaleItemDraft(
+                productId: '2',
+                productName: 'Item 2',
+                productCode: 'P2',
+                mainQuantity: 2,
+                unitPrice: 25,
+                baseUnitPrice: 25,
+              ),
+            ],
+            paymentMethod: PaymentMethod.cash,
+            paidAmount: 100,
+            saleStatus: SaleStatus.unposted,
+          ),
+          saleNumber: 'INV-MULTI-1',
+        );
 
-    test('Multi-Tenant Isolation: Company A cannot query Company B sales', () async {
-      await repoCompanyA.insert(
-        buildDraft(customerName: 'Company A Customer', total: 150),
-        saleNumber: 'INV-A-001',
-      );
+        // Search keyset page
+        final result = await repoCompanyA.searchKeysetPaged(
+          const SaleListFilter(),
+          pageSize: 10,
+        );
 
-      await repoCompanyB.insert(
-        buildDraft(customerName: 'Company B Customer', total: 250),
-        saleNumber: 'INV-B-001',
-      );
+        expect(result.items.length, 1);
+        final item = result.items.first;
 
-      final listA = await repoCompanyA.searchKeysetPaged(const SaleListFilter());
-      final listB = await repoCompanyB.searchKeysetPaged(const SaleListFilter());
-
-      expect(listA.items.length, 1);
-      expect(listA.items.first.customerName, 'Company A Customer');
-
-      expect(listB.items.length, 1);
-      expect(listB.items.first.customerName, 'Company B Customer');
-    });
-
-    test('Read-Model Projection & N+1 Prevention: Map rows without child entity queries', () async {
-      // Insert sale with multiple items and payments
-      await repoCompanyA.insert(
-        SaleDraft(
-          saleDate: DateTime.utc(2026, 9, 1),
-          settlementType: SaleSettlementType.cash,
-          voucherBookId: 'VB-01',
-          cashAccountId: 'ACC-CASH-01',
-          customerName: 'Multi Item Customer',
-          currencyCode: 'SAR',
-          baseCurrencyCode: 'SAR',
-          exchangeRate: 1.0,
-          items: [
-            SaleItemDraft(
-              productId: '1',
-              productName: 'Item 1',
-              productCode: 'P1',
-              mainQuantity: 1,
-              unitPrice: 50,
-              baseUnitPrice: 50,
-            ),
-            SaleItemDraft(
-              productId: '2',
-              productName: 'Item 2',
-              productCode: 'P2',
-              mainQuantity: 2,
-              unitPrice: 25,
-              baseUnitPrice: 25,
-            ),
-          ],
-          paymentMethod: PaymentMethod.cash,
-          paidAmount: 100,
-          saleStatus: SaleStatus.unposted,
-        ),
-        saleNumber: 'INV-MULTI-1',
-      );
-
-      // Search keyset page
-      final result = await repoCompanyA.searchKeysetPaged(
-        const SaleListFilter(),
-        pageSize: 10,
-      );
-
-      expect(result.items.length, 1);
-      final item = result.items.first;
-
-      // Projection assertions
-      expect(item.saleNumber, 'INV-MULTI-1');
-      expect(item.customerName, 'Multi Item Customer');
-      expect(item.total, 100);
-    });
+        // Projection assertions
+        expect(item.saleNumber, 'INV-MULTI-1');
+        expect(item.customerName, 'Multi Item Customer');
+        expect(item.total, 100);
+      },
+    );
   });
 }

@@ -21,10 +21,7 @@ class OrchestrationSuccess extends OrchestrationResult {
 }
 
 class OrchestrationFailure extends OrchestrationResult {
-  const OrchestrationFailure({
-    required this.documentId,
-    required this.reason,
-  });
+  const OrchestrationFailure({required this.documentId, required this.reason});
 
   final String documentId;
   final String reason;
@@ -224,7 +221,9 @@ class DocumentPostingOrchestrator {
   }) async {
     try {
       // 1. Check inventory downstream dependencies first
-      final inventoryResult = await _postingCoordinator.unpost(document: docRef);
+      final inventoryResult = await _postingCoordinator.unpost(
+        document: docRef,
+      );
 
       if (inventoryResult is UnpostBlockedByDependencies) {
         return OrchestrationFailure(
@@ -299,7 +298,8 @@ class DocumentPostingOrchestrator {
 
       return OrchestrationSuccess(
         documentId: sale.uuid,
-        message: 'تم ترحيل فاتورة المبيعات وحركات المخزون والقيود المحاسبية بنجاح',
+        message:
+            'تم ترحيل فاتورة المبيعات وحركات المخزون والقيود المحاسبية بنجاح',
       );
     } catch (e) {
       String compErrorMsg = '';
@@ -308,8 +308,14 @@ class DocumentPostingOrchestrator {
       } catch (compErr) {
         compErrorMsg = ' (فشل إلغاء ترحيل المخزون أثناء التعويض: $compErr)';
       }
-      await _journalPostingService.voidBySource(sourceType: 'sale', sourceId: sale.uuid);
-      await _journalPostingService.voidBySource(sourceType: 'sale_cogs', sourceId: sale.uuid);
+      await _journalPostingService.voidBySource(
+        sourceType: 'sale',
+        sourceId: sale.uuid,
+      );
+      await _journalPostingService.voidBySource(
+        sourceType: 'sale_cogs',
+        sourceId: sale.uuid,
+      );
 
       return OrchestrationFailure(
         documentId: sale.uuid,
@@ -323,7 +329,9 @@ class DocumentPostingOrchestrator {
     required DocumentRef docRef,
   }) async {
     try {
-      final inventoryResult = await _postingCoordinator.unpost(document: docRef);
+      final inventoryResult = await _postingCoordinator.unpost(
+        document: docRef,
+      );
 
       if (inventoryResult is UnpostBlockedByDependencies) {
         return OrchestrationFailure(
@@ -337,18 +345,22 @@ class DocumentPostingOrchestrator {
         );
       }
 
-      await _journalPostingService.voidBySource(sourceType: 'sale', sourceId: sale.uuid);
-      await _journalPostingService.voidBySource(sourceType: 'sale_cogs', sourceId: sale.uuid);
+      await _journalPostingService.voidBySource(
+        sourceType: 'sale',
+        sourceId: sale.uuid,
+      );
+      await _journalPostingService.voidBySource(
+        sourceType: 'sale_cogs',
+        sourceId: sale.uuid,
+      );
 
       return OrchestrationSuccess(
         documentId: sale.uuid,
-        message: 'تم إلغاء ترحيل فاتورة المبيعات وعكس حركات المخزون والقيود المحاسبية بنجاح',
+        message:
+            'تم إلغاء ترحيل فاتورة المبيعات وعكس حركات المخزون والقيود المحاسبية بنجاح',
       );
     } catch (e) {
-      return OrchestrationFailure(
-        documentId: sale.uuid,
-        reason: e.toString(),
-      );
+      return OrchestrationFailure(documentId: sale.uuid, reason: e.toString());
     }
   }
 }

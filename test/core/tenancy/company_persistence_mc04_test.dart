@@ -46,24 +46,48 @@ void main() {
     });
 
     test('TEST 3 — Switching B -> A returns A setting', () async {
-      await repository.saveCustomersParentAccountId('acc_uuid_alpha_99', companyA);
-      await repository.saveCustomersParentAccountId('acc_uuid_beta_88', companyB);
+      await repository.saveCustomersParentAccountId(
+        'acc_uuid_alpha_99',
+        companyA,
+      );
+      await repository.saveCustomersParentAccountId(
+        'acc_uuid_beta_88',
+        companyB,
+      );
 
-      expect(await repository.loadCustomersParentAccountId(companyB), equals('acc_uuid_beta_88'));
-      expect(await repository.loadCustomersParentAccountId(companyA), equals('acc_uuid_alpha_99'));
+      expect(
+        await repository.loadCustomersParentAccountId(companyB),
+        equals('acc_uuid_beta_88'),
+      );
+      expect(
+        await repository.loadCustomersParentAccountId(companyA),
+        equals('acc_uuid_alpha_99'),
+      );
     });
 
     test('TEST 4 — Missing B setting does not return A setting', () async {
-      await repository.saveCustomersParentAccountId('acc_uuid_alpha_99', companyA);
+      await repository.saveCustomersParentAccountId(
+        'acc_uuid_alpha_99',
+        companyA,
+      );
 
       final parentB = await repository.loadCustomersParentAccountId(companyB);
-      expect(parentB, isNull, reason: 'Missing Company B setting MUST NOT leak Company A account ID');
+      expect(
+        parentB,
+        isNull,
+        reason: 'Missing Company B setting MUST NOT leak Company A account ID',
+      );
     });
 
     test('TEST 5 — Company A account ID cannot be loaded in B', () async {
-      await repository.saveCustomersParentAccountId('account_uuid_company_a', companyA);
+      await repository.saveCustomersParentAccountId(
+        'account_uuid_company_a',
+        companyA,
+      );
 
-      final accountIdInB = await repository.loadCustomersParentAccountId(companyB);
+      final accountIdInB = await repository.loadCustomersParentAccountId(
+        companyB,
+      );
       expect(accountIdInB, isNull);
     });
 
@@ -76,25 +100,43 @@ void main() {
 
       await repository.saveProductsViewMode('list', 'cmp_gamma_333');
 
-      expect(await repository.loadProductsViewMode('cmp_gamma_333'), equals('list'));
-      expect(box.get(SettingsKeys.productsViewMode), equals('grid'), reason: 'Global key untouched');
+      expect(
+        await repository.loadProductsViewMode('cmp_gamma_333'),
+        equals('list'),
+      );
+      expect(
+        box.get(SettingsKeys.productsViewMode),
+        equals('grid'),
+        reason: 'Global key untouched',
+      );
     });
 
     test('TEST 7 — Stale configuration does not crash startup', () async {
       final box = await Hive.openBox<dynamic>('app_settings');
-      await box.put('${SettingsKeys.customersParentAccountId}_$companyA', 12345);
+      await box.put(
+        '${SettingsKeys.customersParentAccountId}_$companyA',
+        12345,
+      );
 
       final loaded = await repository.loadCustomersParentAccountId(companyA);
-      expect(loaded, isNull, reason: 'Corrupted / stale configuration must return null cleanly without crashing');
+      expect(
+        loaded,
+        isNull,
+        reason:
+            'Corrupted / stale configuration must return null cleanly without crashing',
+      );
     });
 
-    test('TEST 8 — System-scoped values remain global where appropriate', () async {
-      await repository.saveThemeMode(ThemeMode.dark);
-      await repository.saveLocale(const Locale('ar'));
+    test(
+      'TEST 8 — System-scoped values remain global where appropriate',
+      () async {
+        await repository.saveThemeMode(ThemeMode.dark);
+        await repository.saveLocale(const Locale('ar'));
 
-      expect(await repository.loadThemeMode(), equals(ThemeMode.dark));
-      final locale = await repository.loadLocale();
-      expect(locale?.languageCode, equals('ar'));
-    });
+        expect(await repository.loadThemeMode(), equals(ThemeMode.dark));
+        final locale = await repository.loadLocale();
+        expect(locale?.languageCode, equals('ar'));
+      },
+    );
   });
 }

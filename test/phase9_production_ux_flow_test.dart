@@ -31,12 +31,10 @@ void main() {
       Hive.registerAdapter(SyncOperationAdapter());
     }
 
-    final box = await Hive.openBox<SyncOperation>('test_ux_queue_${DateTime.now().microsecondsSinceEpoch}');
-    queue = SyncQueue(
-      box: box,
-      companyId: companyA,
-      deviceId: deviceA,
+    final box = await Hive.openBox<SyncOperation>(
+      'test_ux_queue_${DateTime.now().microsecondsSinceEpoch}',
     );
+    queue = SyncQueue(box: box, companyId: companyA, deviceId: deviceA);
 
     connectivity = ConnectivityService(internetProbe: () async => true);
   });
@@ -48,7 +46,9 @@ void main() {
   });
 
   group('Phase 9 — Production UX/UI Flow Reconstruction & Alignment', () {
-    testWidgets('1. CapabilityGate renders child when capability is granted', (tester) async {
+    testWidgets('1. CapabilityGate renders child when capability is granted', (
+      tester,
+    ) async {
       final entitlement = Entitlement(
         companyId: companyA,
         tier: EntitlementTier.premium,
@@ -61,7 +61,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            currentEntitlementProvider.overrideWith((ref) => Stream.value(entitlement)),
+            currentEntitlementProvider.overrideWith(
+              (ref) => Stream.value(entitlement),
+            ),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -77,16 +79,25 @@ void main() {
       expect(find.byType(CapabilityGate), findsOneWidget);
     });
 
-    test('2. Sync error classification presents intuitive user message keys', () {
-      final netClass = SyncErrorClassifier.classify(const NetworkFailure('Connection reset'));
-      expect(netClass.userMessage, contains('Connection unavailable'));
+    test(
+      '2. Sync error classification presents intuitive user message keys',
+      () {
+        final netClass = SyncErrorClassifier.classify(
+          const NetworkFailure('Connection reset'),
+        );
+        expect(netClass.userMessage, contains('Connection unavailable'));
 
-      final authClass = SyncErrorClassifier.classify(const AuthenticationFailure('Session expired'));
-      expect(authClass.userMessage, contains('session has expired'));
+        final authClass = SyncErrorClassifier.classify(
+          const AuthenticationFailure('Session expired'),
+        );
+        expect(authClass.userMessage, contains('session has expired'));
 
-      final tenantClass = SyncErrorClassifier.classify(const AuthorizationFailure.withDetails(code: 'tenant_mismatch'));
-      expect(tenantClass.userMessage, contains('mismatch'));
-    });
+        final tenantClass = SyncErrorClassifier.classify(
+          const AuthorizationFailure.withDetails(code: 'tenant_mismatch'),
+        );
+        expect(tenantClass.userMessage, contains('mismatch'));
+      },
+    );
 
     test('3. Free tier login does not require cloud synchronization', () async {
       final manager = SyncManager(
@@ -103,58 +114,76 @@ void main() {
       expect(res.outcome, equals(SyncPassOutcome.skippedDisabled));
     });
 
-    test('4. Company switch clears tenant boundary and invalidates active operations', () async {
-      final opCompA = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-a',
-        type: SyncOperationType.create,
-        payload: {'name': 'Product A'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(opCompA);
+    test(
+      '4. Company switch clears tenant boundary and invalidates active operations',
+      () async {
+        final opCompA = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-a',
+          type: SyncOperationType.create,
+          payload: {'name': 'Product A'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(opCompA);
 
-      final queueCompB = SyncQueue(
-        box: await Hive.openBox<SyncOperation>('test_comp_b_${DateTime.now().microsecondsSinceEpoch}'),
-        companyId: companyB,
-        deviceId: deviceA,
-      );
+        final queueCompB = SyncQueue(
+          box: await Hive.openBox<SyncOperation>(
+            'test_comp_b_${DateTime.now().microsecondsSinceEpoch}',
+          ),
+          companyId: companyB,
+          deviceId: deviceA,
+        );
 
-      final readyCompB = await queueCompB.peekReady();
-      expect(readyCompB.isEmpty, isTrue); // Company B queue cannot see Company A operations
-    });
+        final readyCompB = await queueCompB.peekReady();
+        expect(
+          readyCompB.isEmpty,
+          isTrue,
+        ); // Company B queue cannot see Company A operations
+      },
+    );
 
-    test('5. Logout halts ongoing sync pass and preserves pending queue', () async {
-      var loggedIn = true;
-      final op = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-logout',
-        type: SyncOperationType.create,
-        payload: {'name': 'Product Logout'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op);
+    test(
+      '5. Logout halts ongoing sync pass and preserves pending queue',
+      () async {
+        var loggedIn = true;
+        final op = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-logout',
+          type: SyncOperationType.create,
+          payload: {'name': 'Product Logout'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op);
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => loggedIn,
-        hasSyncPermission: () => loggedIn,
-        readCompanyId: () => loggedIn ? companyA : '',
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-      );
-      await manager.setEnabled(true);
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => loggedIn,
+          hasSyncPermission: () => loggedIn,
+          readCompanyId: () => loggedIn ? companyA : '',
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+        );
+        await manager.setEnabled(true);
 
-      // User clicks logout while sync triggers
-      loggedIn = false;
+        // User clicks logout while sync triggers
+        loggedIn = false;
 
-      final res = await manager.syncNow();
-      expect(res.outcome == SyncPassOutcome.skippedDisabled || res.outcome == SyncPassOutcome.authRequired, isTrue);
+        final res = await manager.syncNow();
+        expect(
+          res.outcome == SyncPassOutcome.skippedDisabled ||
+              res.outcome == SyncPassOutcome.authRequired,
+          isTrue,
+        );
 
-      final all = await queue.all();
-      expect(all.first.status, equals(SyncStatus.pending)); // Pending operation preserved
-    });
+        final all = await queue.all();
+        expect(
+          all.first.status,
+          equals(SyncStatus.pending),
+        ); // Pending operation preserved
+      },
+    );
   });
 }

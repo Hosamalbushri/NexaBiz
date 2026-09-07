@@ -19,6 +19,7 @@ import '../../domain/services/account_labels.dart';
 import '../providers/account_providers.dart';
 import '../widgets/account_exception_messages.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
+import 'package:stock_count/modules/reports/shared/presentation/pages/reports_routes.dart';
 
 /// Account details — prepared for future balance / ledger sections.
 class AccountDetailsPage extends ConsumerWidget {
@@ -185,7 +186,7 @@ class AccountDetailsPage extends ConsumerWidget {
                       title: Text(l10n.reportsAccountStatementTitle),
                       subtitle: Text(l10n.reportsAccountStatementSubtitle),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/module-reports/account-statement'),
+                      onTap: () => ReportsRoutes.pushAccountStatement(context),
                     ),
                     const Divider(height: 1),
                     ListTile(

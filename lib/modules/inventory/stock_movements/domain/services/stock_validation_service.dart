@@ -31,7 +31,13 @@ class StockShortageItem extends Equatable {
   final double shortage;
 
   @override
-  List<Object?> get props => [itemCode, itemName, requested, available, shortage];
+  List<Object?> get props => [
+    itemCode,
+    itemName,
+    requested,
+    available,
+    shortage,
+  ];
 }
 
 abstract class StockValidationService {

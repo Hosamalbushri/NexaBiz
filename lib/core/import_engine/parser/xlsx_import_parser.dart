@@ -14,9 +14,7 @@ import 'import_parser.dart';
 /// XLSX Excel workbook parser supporting multiple worksheets, sheet selection,
 /// headers, empty cells, formula values, numeric/date types, and structured errors.
 class XlsxImportParser extends ImportParser {
-  const XlsxImportParser({
-    this.hasHeader = true,
-  });
+  const XlsxImportParser({this.hasHeader = true});
 
   final bool hasHeader;
 
@@ -141,7 +139,9 @@ class XlsxImportParser extends ImportParser {
       final headerRow = table.rows.first;
       for (var colIdx = 0; colIdx < headerRow.length; colIdx++) {
         final cell = headerRow[colIdx];
-        final headerText = cell?.value != null ? cell!.value.toString().trim() : '';
+        final headerText = cell?.value != null
+            ? cell!.value.toString().trim()
+            : '';
         headers.add(headerText);
       }
       startRowIndex = 1;
@@ -151,7 +151,9 @@ class XlsxImportParser extends ImportParser {
 
     for (var r = startRowIndex; r < table.maxRows; r++) {
       final excelRow = table.rows[r];
-      final isRowEmpty = excelRow.every((c) => c?.value == null || c!.value.toString().trim().isEmpty);
+      final isRowEmpty = excelRow.every(
+        (c) => c?.value == null || c!.value.toString().trim().isEmpty,
+      );
       if (isRowEmpty) continue;
 
       final cells = <ParsedCell>[];
@@ -190,19 +192,18 @@ class XlsxImportParser extends ImportParser {
           }
         }
 
-        cells.add(ParsedCell(
-          columnIndex: c,
-          headerName: headerName,
-          rawValue: rawVal,
-          formattedValue: rawVal?.toString() ?? '',
-          dataType: dataType,
-        ));
+        cells.add(
+          ParsedCell(
+            columnIndex: c,
+            headerName: headerName,
+            rawValue: rawVal,
+            formattedValue: rawVal?.toString() ?? '',
+            dataType: dataType,
+          ),
+        );
       }
 
-      parsedRows.add(ParsedRow(
-        rowIndex: r + 1,
-        cells: cells,
-      ));
+      parsedRows.add(ParsedRow(rowIndex: r + 1, cells: cells));
     }
 
     return ParsedSheet(

@@ -72,13 +72,16 @@ class AppDataCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textStyle = style ??
+    final textStyle =
+        style ??
         theme.textTheme.bodyMedium?.copyWith(
           fontWeight: isNumeric ? FontWeight.w700 : FontWeight.w500,
           fontSize: 13,
         );
 
-    final displayValue = currencySymbol != null ? '$value $currencySymbol' : value;
+    final displayValue = currencySymbol != null
+        ? '$value $currencySymbol'
+        : value;
     final isMobile = AppBreakpoints.isMobile(MediaQuery.of(context).size.width);
 
     Widget content = Container(
@@ -89,8 +92,8 @@ class AppDataCell extends StatelessWidget {
         textAlign: alignment == Alignment.centerRight
             ? TextAlign.right
             : alignment == Alignment.center
-                ? TextAlign.center
-                : TextAlign.left,
+            ? TextAlign.center
+            : TextAlign.left,
         softWrap: true,
       ),
     );

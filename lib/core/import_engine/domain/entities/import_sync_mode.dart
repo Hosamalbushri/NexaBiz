@@ -18,5 +18,6 @@ extension ImportSyncModeX on ImportSyncMode {
   bool get shouldEnqueueSync => this == ImportSyncMode.local;
 
   /// True if imported records are already synchronized with server.
-  bool get isPreSynced => this == ImportSyncMode.synced || this == ImportSyncMode.remote;
+  bool get isPreSynced =>
+      this == ImportSyncMode.synced || this == ImportSyncMode.remote;
 }

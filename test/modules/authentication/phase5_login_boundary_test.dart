@@ -46,7 +46,9 @@ class MockLocalAuthStoreForLoginTest implements LocalAuthStore {
 
     // Resolve user memberships
     final userMemberships = _membershipsByUserId[user.id] ?? const [];
-    final authorizedCompanyIds = userMemberships.map((m) => m.companyId).toSet();
+    final authorizedCompanyIds = userMemberships
+        .map((m) => m.companyId)
+        .toSet();
 
     final companies = <AuthCompany>[];
     for (final cid in authorizedCompanyIds) {
@@ -57,7 +59,8 @@ class MockLocalAuthStoreForLoginTest implements LocalAuthStore {
 
     String? selectedCompanyId = companyId;
     if (selectedCompanyId != null && selectedCompanyId.isNotEmpty) {
-      if (!authorizedCompanyIds.contains(selectedCompanyId) && !user.isSystemAdmin) {
+      if (!authorizedCompanyIds.contains(selectedCompanyId) &&
+          !user.isSystemAdmin) {
         return null; // Mismatched company access
       }
     } else {
@@ -122,31 +125,38 @@ void main() {
       authStore = MockLocalAuthStoreForLoginTest();
     });
 
-    test('1 & 5. Successful System Admin Login with ZERO companies (activeCompanyContext == null)', () async {
-      const admin = AuthUser(
-        id: 'sys_admin_01',
-        name: 'System Admin',
-        email: 'sysadmin@nexabiz.local',
-        systemRole: SystemRole.systemAdmin,
-        status: 'active',
-      );
-      authStore.seedUser(user: admin, password: 'Password123!', memberships: const []);
+    test(
+      '1 & 5. Successful System Admin Login with ZERO companies (activeCompanyContext == null)',
+      () async {
+        const admin = AuthUser(
+          id: 'sys_admin_01',
+          name: 'System Admin',
+          email: 'sysadmin@nexabiz.local',
+          systemRole: SystemRole.systemAdmin,
+          status: 'active',
+        );
+        authStore.seedUser(
+          user: admin,
+          password: 'Password123!',
+          memberships: const [],
+        );
 
-      final session = await authStore.login(
-        email: 'sysadmin@nexabiz.local',
-        password: 'Password123!',
-        deviceId: 'device_01',
-      );
+        final session = await authStore.login(
+          email: 'sysadmin@nexabiz.local',
+          password: 'Password123!',
+          deviceId: 'device_01',
+        );
 
-      expect(session, isNotNull);
-      expect(session!.user.id, equals('sys_admin_01'));
-      expect(session.user.systemRole, equals(SystemRole.systemAdmin));
-      expect(session.user.isSystemAdmin, isTrue);
-      expect(session.companies, isEmpty);
-      expect(session.currentCompanyId, isNull);
-      expect(session.activeCompanyContext, isNull);
-      expect(session.isValidSecuritySession, isTrue);
-    });
+        expect(session, isNotNull);
+        expect(session!.user.id, equals('sys_admin_01'));
+        expect(session.user.systemRole, equals(SystemRole.systemAdmin));
+        expect(session.user.isSystemAdmin, isTrue);
+        expect(session.companies, isEmpty);
+        expect(session.currentCompanyId, isNull);
+        expect(session.activeCompanyContext, isNull);
+        expect(session.isValidSecuritySession, isTrue);
+      },
+    );
 
     test('2. Invalid Password Rejection (Fail Closed)', () async {
       const admin = AuthUser(
@@ -196,79 +206,106 @@ void main() {
       expect(session, isNull);
     });
 
-    test('6. User with ONE company receives automatic default company context', () async {
-      const user = AuthUser(
-        id: 'user_single_comp',
-        name: 'Single Comp User',
-        email: 'user1@nexabiz.local',
-        systemRole: SystemRole.regularUser,
-        status: 'active',
-      );
-      const membership = UserCompanyMembership(
-        userId: 'user_single_comp',
-        companyId: 'company_alpha',
-        role: 'Manager',
-        status: 'active',
-        permissions: ['sales.create', 'sales.read'],
-      );
-      authStore.seedCompany(const AuthCompany(id: 'company_alpha', name: 'Alpha Ltd', code: 'ALP'));
-      authStore.seedUser(user: user, password: 'Password123!', memberships: [membership]);
+    test(
+      '6. User with ONE company receives automatic default company context',
+      () async {
+        const user = AuthUser(
+          id: 'user_single_comp',
+          name: 'Single Comp User',
+          email: 'user1@nexabiz.local',
+          systemRole: SystemRole.regularUser,
+          status: 'active',
+        );
+        const membership = UserCompanyMembership(
+          userId: 'user_single_comp',
+          companyId: 'company_alpha',
+          role: 'Manager',
+          status: 'active',
+          permissions: ['sales.create', 'sales.read'],
+        );
+        authStore.seedCompany(
+          const AuthCompany(
+            id: 'company_alpha',
+            name: 'Alpha Ltd',
+            code: 'ALP',
+          ),
+        );
+        authStore.seedUser(
+          user: user,
+          password: 'Password123!',
+          memberships: [membership],
+        );
 
-      final session = await authStore.login(
-        email: 'user1@nexabiz.local',
-        password: 'Password123!',
-        deviceId: 'device_01',
-      );
+        final session = await authStore.login(
+          email: 'user1@nexabiz.local',
+          password: 'Password123!',
+          deviceId: 'device_01',
+        );
 
-      expect(session, isNotNull);
-      expect(session!.user.id, equals('user_single_comp'));
-      expect(session.currentCompanyId, equals('company_alpha'));
-      expect(session.activeCompanyContext, isNotNull);
-      expect(session.activeCompanyContext!.companyId, equals('company_alpha'));
-      expect(session.activeCompanyContext!.companyRole, equals('Manager'));
-      expect(session.isValidSecuritySession, isTrue);
-    });
+        expect(session, isNotNull);
+        expect(session!.user.id, equals('user_single_comp'));
+        expect(session.currentCompanyId, equals('company_alpha'));
+        expect(session.activeCompanyContext, isNotNull);
+        expect(
+          session.activeCompanyContext!.companyId,
+          equals('company_alpha'),
+        );
+        expect(session.activeCompanyContext!.companyRole, equals('Manager'));
+        expect(session.isValidSecuritySession, isTrue);
+      },
+    );
 
-    test('7. User with MULTIPLE companies authenticates ONCE (currentCompanyId == null)', () async {
-      const user = AuthUser(
-        id: 'user_multi_comp',
-        name: 'Multi Comp User',
-        email: 'multi@nexabiz.local',
-        systemRole: SystemRole.regularUser,
-        status: 'active',
-      );
-      const membershipA = UserCompanyMembership(
-        userId: 'user_multi_comp',
-        companyId: 'comp_a',
-        role: 'Manager',
-        status: 'active',
-        permissions: ['sales.read'],
-      );
-      const membershipB = UserCompanyMembership(
-        userId: 'user_multi_comp',
-        companyId: 'comp_b',
-        role: 'Accountant',
-        status: 'active',
-        permissions: ['accounting.read'],
-      );
+    test(
+      '7. User with MULTIPLE companies authenticates ONCE (currentCompanyId == null)',
+      () async {
+        const user = AuthUser(
+          id: 'user_multi_comp',
+          name: 'Multi Comp User',
+          email: 'multi@nexabiz.local',
+          systemRole: SystemRole.regularUser,
+          status: 'active',
+        );
+        const membershipA = UserCompanyMembership(
+          userId: 'user_multi_comp',
+          companyId: 'comp_a',
+          role: 'Manager',
+          status: 'active',
+          permissions: ['sales.read'],
+        );
+        const membershipB = UserCompanyMembership(
+          userId: 'user_multi_comp',
+          companyId: 'comp_b',
+          role: 'Accountant',
+          status: 'active',
+          permissions: ['accounting.read'],
+        );
 
-      authStore.seedCompany(const AuthCompany(id: 'comp_a', name: 'Company A', code: 'CPA'));
-      authStore.seedCompany(const AuthCompany(id: 'comp_b', name: 'Company B', code: 'CPB'));
-      authStore.seedUser(user: user, password: 'Password123!', memberships: [membershipA, membershipB]);
+        authStore.seedCompany(
+          const AuthCompany(id: 'comp_a', name: 'Company A', code: 'CPA'),
+        );
+        authStore.seedCompany(
+          const AuthCompany(id: 'comp_b', name: 'Company B', code: 'CPB'),
+        );
+        authStore.seedUser(
+          user: user,
+          password: 'Password123!',
+          memberships: [membershipA, membershipB],
+        );
 
-      final session = await authStore.login(
-        email: 'multi@nexabiz.local',
-        password: 'Password123!',
-        deviceId: 'device_01',
-      );
+        final session = await authStore.login(
+          email: 'multi@nexabiz.local',
+          password: 'Password123!',
+          deviceId: 'device_01',
+        );
 
-      expect(session, isNotNull);
-      expect(session!.user.id, equals('user_multi_comp'));
-      expect(session.companies.length, equals(2));
-      expect(session.currentCompanyId, isNull);
-      expect(session.activeCompanyContext, isNull);
-      expect(session.isValidSecuritySession, isTrue);
-    });
+        expect(session, isNotNull);
+        expect(session!.user.id, equals('user_multi_comp'));
+        expect(session.companies.length, equals(2));
+        expect(session.currentCompanyId, isNull);
+        expect(session.activeCompanyContext, isNull);
+        expect(session.isValidSecuritySession, isTrue);
+      },
+    );
 
     test('8. Malformed Identity Rejection (Security Invariant Guard)', () {
       const malformedUser = AuthUser(
@@ -288,31 +325,34 @@ void main() {
       expect(session.isValidSecuritySession, isFalse);
     });
 
-    test('9 & 10. Login Session Creation & Replacement on Repeated Login', () async {
-      const user = AuthUser(
-        id: 'user_repeat',
-        name: 'Repeat Login User',
-        email: 'repeat@nexabiz.local',
-        status: 'active',
-      );
-      authStore.seedUser(user: user, password: 'Password123!');
+    test(
+      '9 & 10. Login Session Creation & Replacement on Repeated Login',
+      () async {
+        const user = AuthUser(
+          id: 'user_repeat',
+          name: 'Repeat Login User',
+          email: 'repeat@nexabiz.local',
+          status: 'active',
+        );
+        authStore.seedUser(user: user, password: 'Password123!');
 
-      final session1 = await authStore.login(
-        email: 'repeat@nexabiz.local',
-        password: 'Password123!',
-        deviceId: 'device_01',
-      );
-      expect(session1, isNotNull);
+        final session1 = await authStore.login(
+          email: 'repeat@nexabiz.local',
+          password: 'Password123!',
+          deviceId: 'device_01',
+        );
+        expect(session1, isNotNull);
 
-      final session2 = await authStore.login(
-        email: 'repeat@nexabiz.local',
-        password: 'Password123!',
-        deviceId: 'device_02',
-      );
+        final session2 = await authStore.login(
+          email: 'repeat@nexabiz.local',
+          password: 'Password123!',
+          deviceId: 'device_02',
+        );
 
-      expect(session2, isNotNull);
-      expect(session2!.sessionId, isNot(equals(session1!.sessionId)));
-      expect(session2.deviceId, equals('device_02'));
-    });
+        expect(session2, isNotNull);
+        expect(session2!.sessionId, isNot(equals(session1!.sessionId)));
+        expect(session2.deviceId, equals('device_02'));
+      },
+    );
   });
 }

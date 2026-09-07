@@ -5,53 +5,62 @@ void main() {
   group('Phase 1 — Core Setup Contracts & Validator Unit Tests', () {
     const validator = PackageSetupDefinitionValidator();
 
-    test('1. Valid setup definition passes validation and localized accessors work', () {
-      const field = SetupField(
-        id: 'costing_method_field',
-        sectionId: 'costing_section',
-        key: 'costing_method',
-        labelAr: 'طريقة التكلفة',
-        labelEn: 'Costing Method',
-        fieldType: SetupFieldType.select,
-        isRequired: true,
-        defaultValue: 'FIFO',
-        allowedValues: ['FIFO', 'WAVG'],
-      );
+    test(
+      '1. Valid setup definition passes validation and localized accessors work',
+      () {
+        const field = SetupField(
+          id: 'costing_method_field',
+          sectionId: 'costing_section',
+          key: 'costing_method',
+          labelAr: 'طريقة التكلفة',
+          labelEn: 'Costing Method',
+          fieldType: SetupFieldType.select,
+          isRequired: true,
+          defaultValue: 'FIFO',
+          allowedValues: ['FIFO', 'WAVG'],
+        );
 
-      const section = SetupSection(
-        id: 'costing_section',
-        packageId: 'inventory',
-        titleAr: 'سياسة التكلفة',
-        titleEn: 'Costing Policy',
-        descriptionAr: 'إعدادات طريقة حساب التكلفة للمخزون',
-        descriptionEn: 'Inventory cost valuation configuration',
-        fields: [field],
-      );
+        const section = SetupSection(
+          id: 'costing_section',
+          packageId: 'inventory',
+          titleAr: 'سياسة التكلفة',
+          titleEn: 'Costing Policy',
+          descriptionAr: 'إعدادات طريقة حساب التكلفة للمخزون',
+          descriptionEn: 'Inventory cost valuation configuration',
+          fields: [field],
+        );
 
-      const dependency = SetupDependency(
-        targetPackageId: 'accounting',
-        dependencyType: SetupDependencyType.required,
-        reasonAr: 'يتطلب إعداد المحاسبة أولاً',
-        reasonEn: 'Requires accounting setup first',
-      );
+        const dependency = SetupDependency(
+          targetPackageId: 'accounting',
+          dependencyType: SetupDependencyType.required,
+          reasonAr: 'يتطلب إعداد المحاسبة أولاً',
+          reasonEn: 'Requires accounting setup first',
+        );
 
-      const inventorySetup = PackageSetupDefinition(
-        packageId: 'inventory',
-        displayNameAr: 'إعدادات المخزون',
-        displayNameEn: 'Inventory Setup',
-        sections: [section],
-        dependencies: [dependency],
-      );
+        const inventorySetup = PackageSetupDefinition(
+          packageId: 'inventory',
+          displayNameAr: 'إعدادات المخزون',
+          displayNameEn: 'Inventory Setup',
+          sections: [section],
+          dependencies: [dependency],
+        );
 
-      expect(() => validator.validateDefinition(inventorySetup), returnsNormally);
-      expect(inventorySetup.displayName('ar'), equals('إعدادات المخزون'));
-      expect(inventorySetup.displayName('en'), equals('Inventory Setup'));
-      expect(section.title('ar'), equals('سياسة التكلفة'));
-      expect(section.description('en'), equals('Inventory cost valuation configuration'));
-      expect(field.label('ar'), equals('طريقة التكلفة'));
-      expect(field.isValidValue('FIFO'), isTrue);
-      expect(field.isValidValue('INVALID_VALUE'), isFalse);
-    });
+        expect(
+          () => validator.validateDefinition(inventorySetup),
+          returnsNormally,
+        );
+        expect(inventorySetup.displayName('ar'), equals('إعدادات المخزون'));
+        expect(inventorySetup.displayName('en'), equals('Inventory Setup'));
+        expect(section.title('ar'), equals('سياسة التكلفة'));
+        expect(
+          section.description('en'),
+          equals('Inventory cost valuation configuration'),
+        );
+        expect(field.label('ar'), equals('طريقة التكلفة'));
+        expect(field.isValidValue('FIFO'), isTrue);
+        expect(field.isValidValue('INVALID_VALUE'), isFalse);
+      },
+    );
 
     test('2. Duplicate package ID in registry is rejected', () {
       const pkg1 = PackageSetupDefinition(
@@ -68,11 +77,13 @@ void main() {
 
       expect(
         () => validator.validateRegistry([pkg1, pkg2]),
-        throwsA(isA<PackageSetupValidationException>().having(
-          (e) => e.message,
-          'message',
-          contains('Duplicate package setup registration'),
-        )),
+        throwsA(
+          isA<PackageSetupValidationException>().having(
+            (e) => e.message,
+            'message',
+            contains('Duplicate package setup registration'),
+          ),
+        ),
       );
     });
 
@@ -104,11 +115,13 @@ void main() {
 
       expect(
         () => validator.validateDefinition(accountingSetup),
-        throwsA(isA<PackageSetupValidationException>().having(
-          (e) => e.message,
-          'message',
-          contains('duplicate section ID "general"'),
-        )),
+        throwsA(
+          isA<PackageSetupValidationException>().having(
+            (e) => e.message,
+            'message',
+            contains('duplicate section ID "general"'),
+          ),
+        ),
       );
     });
 
@@ -121,11 +134,13 @@ void main() {
 
       expect(
         () => validator.validateDefinition(emptyPackageSetup),
-        throwsA(isA<PackageSetupValidationException>().having(
-          (e) => e.message,
-          'message',
-          contains('packageId cannot be empty'),
-        )),
+        throwsA(
+          isA<PackageSetupValidationException>().having(
+            (e) => e.message,
+            'message',
+            contains('packageId cannot be empty'),
+          ),
+        ),
       );
 
       const invalidFieldSection = SetupSection(
@@ -156,11 +171,13 @@ void main() {
 
       expect(
         () => validator.validateDefinition(salesSetup),
-        throwsA(isA<PackageSetupValidationException>().having(
-          (e) => e.message,
-          'message',
-          contains('contains a field with an empty key'),
-        )),
+        throwsA(
+          isA<PackageSetupValidationException>().having(
+            (e) => e.message,
+            'message',
+            contains('contains a field with an empty key'),
+          ),
+        ),
       );
     });
 
@@ -179,26 +196,31 @@ void main() {
 
       expect(
         () => validator.validateDefinition(invalidInventorySetup),
-        throwsA(isA<PackageSetupValidationException>().having(
-          (e) => e.message,
-          'message',
-          contains('cannot declare a setup dependency on itself'),
-        )),
+        throwsA(
+          isA<PackageSetupValidationException>().having(
+            (e) => e.message,
+            'message',
+            contains('cannot declare a setup dependency on itself'),
+          ),
+        ),
       );
     });
 
-    test('6. SetupStatus correctly evaluates operational and attention states', () {
-      expect(SetupStatus.configured.isOperational, isTrue);
-      expect(SetupStatus.configured.requiresAttention, isFalse);
+    test(
+      '6. SetupStatus correctly evaluates operational and attention states',
+      () {
+        expect(SetupStatus.configured.isOperational, isTrue);
+        expect(SetupStatus.configured.requiresAttention, isFalse);
 
-      expect(SetupStatus.notConfigured.isOperational, isFalse);
-      expect(SetupStatus.notConfigured.requiresAttention, isTrue);
+        expect(SetupStatus.notConfigured.isOperational, isFalse);
+        expect(SetupStatus.notConfigured.requiresAttention, isTrue);
 
-      expect(SetupStatus.partiallyConfigured.isOperational, isFalse);
-      expect(SetupStatus.partiallyConfigured.requiresAttention, isTrue);
+        expect(SetupStatus.partiallyConfigured.isOperational, isFalse);
+        expect(SetupStatus.partiallyConfigured.requiresAttention, isTrue);
 
-      expect(SetupStatus.invalid.isOperational, isFalse);
-      expect(SetupStatus.invalid.requiresAttention, isTrue);
-    });
+        expect(SetupStatus.invalid.isOperational, isFalse);
+        expect(SetupStatus.invalid.requiresAttention, isTrue);
+      },
+    );
   });
 }

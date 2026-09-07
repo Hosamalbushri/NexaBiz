@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
+import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
@@ -84,6 +85,13 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
     _hydrated = true;
   }
 
+  bool _hasUnsavedChanges() {
+    if (_saving) return false;
+    return _voucherController.text.trim().isNotEmpty ||
+        _descriptionController.text.trim().isNotEmpty ||
+        _lines.any((l) => l.accountUuid != null || l.debit > 0 || l.credit > 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -108,93 +116,99 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
       });
     }
 
-    return AppResponsiveScaffold(
-      appBar: CustomAppBar(
-        title: widget.isEditing
-            ? l10n.accountingJournalEdit
-            : l10n.accountingJournalAdd,
-        showBackButton: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
-          children: [
-            AppResponsiveForm(
-              maxColumns: 2,
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.accountingJournalFieldDate),
-                  subtitle: Text(
-                    MaterialLocalizations.of(context).formatMediumDate(_entryDate),
-                  ),
-                  trailing: const Icon(Icons.calendar_today_outlined),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _entryDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) {
-                      setState(() => _entryDate = picked);
-                    }
-                  },
-                ),
-                TextFormField(
-                  controller: _voucherController,
-                  decoration: InputDecoration(
-                    labelText: l10n.accountingJournalFieldVoucherNumber,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.accountingJournalFieldVoucherNumber;
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: l10n.accountingJournalFieldDescription,
-                  ),
-                  maxLines: 2,
-                ),
-                TextFormField(
-                  initialValue: _currencyCode,
-                  decoration: InputDecoration(
-                    labelText: l10n.accountingJournalFieldCurrency,
-                  ),
-                  textCapitalization: TextCapitalization.characters,
-                  onChanged: (value) => _currencyCode = value.trim().toUpperCase(),
-                  validator: (value) {
-                    if (value == null || value.trim().length < 3) {
-                      return l10n.accountingJournalFieldCurrency;
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.accountingJournalPosted),
-              value: _isPosted,
-              onChanged: (value) => setState(() => _isPosted = value),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _JournalLinesSection(lines: _lines),
-            const SizedBox(height: AppSpacing.lg),
-          ],
+    return UnsavedChangesScope(
+      hasUnsavedChanges: _hasUnsavedChanges,
+      child: AppResponsiveScaffold(
+        appBar: CustomAppBar(
+          title: widget.isEditing
+              ? l10n.accountingJournalEdit
+              : l10n.accountingJournalAdd,
+          showBackButton: true,
         ),
-      ),
-      bottomActions: AppBottomActions(
-        child: AppButton(
-          label: l10n.accountingJournalSave,
-          expand: true,
-          isLoading: _saving,
-          onPressed: _saving ? null : _save,
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: AppConstants.pageInsets(context),
+            children: [
+              AppResponsiveForm(
+                maxColumns: 2,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.accountingJournalFieldDate),
+                    subtitle: Text(
+                      MaterialLocalizations.of(
+                        context,
+                      ).formatMediumDate(_entryDate),
+                    ),
+                    trailing: const Icon(Icons.calendar_today_outlined),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _entryDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() => _entryDate = picked);
+                      }
+                    },
+                  ),
+                  TextFormField(
+                    controller: _voucherController,
+                    decoration: InputDecoration(
+                      labelText: l10n.accountingJournalFieldVoucherNumber,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.accountingJournalFieldVoucherNumber;
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: l10n.accountingJournalFieldDescription,
+                    ),
+                    maxLines: 2,
+                  ),
+                  TextFormField(
+                    initialValue: _currencyCode,
+                    decoration: InputDecoration(
+                      labelText: l10n.accountingJournalFieldCurrency,
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                    onChanged: (value) =>
+                        _currencyCode = value.trim().toUpperCase(),
+                    validator: (value) {
+                      if (value == null || value.trim().length < 3) {
+                        return l10n.accountingJournalFieldCurrency;
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.accountingJournalPosted),
+                value: _isPosted,
+                onChanged: (value) => setState(() => _isPosted = value),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _JournalLinesSection(lines: _lines),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+          ),
+        ),
+        bottomActions: AppBottomActions(
+          child: AppButton(
+            label: l10n.accountingJournalSave,
+            expand: true,
+            isLoading: _saving,
+            onPressed: _saving ? null : _save,
+          ),
         ),
       ),
     );
@@ -267,7 +281,15 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
         message: l10n.accountingJournalSavedSuccess,
         isSuccess: true,
       );
-      context.go(AccountingRoutes.journalDetails(saved.uuid));
+      if (widget.isEditing) {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(AccountingRoutes.journalDetails(saved.uuid));
+        }
+      } else {
+        context.replace(AccountingRoutes.journalDetails(saved.uuid));
+      }
     } on JournalException catch (e) {
       if (!mounted) {
         return;
@@ -315,9 +337,9 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
       children: [
         Text(
           l10n.accountingJournalLines,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.sm),
         accountsAsync.when(
@@ -387,7 +409,8 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
                           ),
                         ),
                     ],
-                    onChanged: (value) => setState(() => line.accountUuid = value),
+                    onChanged: (value) =>
+                        setState(() => line.accountUuid = value),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return l10n.accountingJournalPickAccount;
@@ -405,7 +428,9 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
                       });
                     },
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    tooltip: l10n.localeName == 'ar' ? 'حذف السطر' : 'Delete line',
+                    tooltip: l10n.localeName == 'ar'
+                        ? 'حذف السطر'
+                        : 'Delete line',
                   ),
                 ],
               ],

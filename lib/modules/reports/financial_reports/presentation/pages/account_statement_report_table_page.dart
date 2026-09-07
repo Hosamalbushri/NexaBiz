@@ -3,14 +3,24 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/core/widgets/app_dynamic_report_table.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/accounting/journals/presentation/pages/journal_entry_details_page.dart';
-import 'package:stock_count/modules/accounting/journals/presentation/pages/journal_entry_form_page.dart';
-import 'package:stock_count/modules/inventory/stock_movements/presentation/pages/stock_issue_form_page.dart';
-import 'package:stock_count/modules/inventory/stock_movements/presentation/pages/stock_receipt_form_page.dart';
-import 'package:stock_count/modules/receipts_payments/exchanges/presentation/pages/currency_exchange_form_page.dart';
-import 'package:stock_count/modules/receipts_payments/transfers/presentation/pages/cash_box_transfer_form_page.dart';
+import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
+import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/account_statement_report_data_port.dart';
-import 'package:stock_count/modules/sales/invoices/presentation/pages/sale_form_page.dart';
+import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
+
+/// Arguments for passing to [AccountStatementReportTablePage] via GoRouter extra.
+class AccountStatementReportTableArgs {
+  const AccountStatementReportTableArgs({
+    required this.payload,
+    this.onExportPdf,
+    this.onPrint,
+  });
+
+  final AccountStatementReportPayload payload;
+  final VoidCallback? onExportPdf;
+  final VoidCallback? onPrint;
+}
 
 /// Standalone Dynamic Report Table Page for Account Statement.
 class AccountStatementReportTablePage extends StatelessWidget {
@@ -31,7 +41,9 @@ class AccountStatementReportTablePage extends StatelessWidget {
 
   String _formatAmount(double amount) {
     if (amount == 0) return '0.00';
-    return amount.toStringAsFixed(2).replaceAllMapped(
+    return amount
+        .toStringAsFixed(2)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]},',
         );
@@ -40,40 +52,58 @@ class AccountStatementReportTablePage extends StatelessWidget {
   Map<String, List<AccountStatementLine>> _groupLinesByCurrency() {
     final Map<String, List<AccountStatementLine>> groups = {};
     for (final line in payload.lines) {
-      final key = line.displayCurrencyCode ?? line.currencyCode ?? payload.currencyLabel;
+      final key =
+          line.displayCurrencyCode ??
+          line.currencyCode ??
+          payload.currencyLabel;
       groups.putIfAbsent(key, () => []).add(line);
     }
     return groups;
   }
 
-  double _getCurrencyTotalDebit(String currencyKey, List<AccountStatementLine> lines) {
+  double _getCurrencyTotalDebit(
+    String currencyKey,
+    List<AccountStatementLine> lines,
+  ) {
     for (final b in payload.balancesByCurrency) {
-      if (b.currencyCode == currencyKey || b.displayCurrencyCode == currencyKey) {
+      if (b.currencyCode == currencyKey ||
+          b.displayCurrencyCode == currencyKey) {
         return b.totalDebit;
       }
     }
     return lines.fold<double>(0, (sum, l) => sum + l.debit);
   }
 
-  double _getCurrencyTotalCredit(String currencyKey, List<AccountStatementLine> lines) {
+  double _getCurrencyTotalCredit(
+    String currencyKey,
+    List<AccountStatementLine> lines,
+  ) {
     for (final b in payload.balancesByCurrency) {
-      if (b.currencyCode == currencyKey || b.displayCurrencyCode == currencyKey) {
+      if (b.currencyCode == currencyKey ||
+          b.displayCurrencyCode == currencyKey) {
         return b.totalCredit;
       }
     }
     return lines.fold<double>(0, (sum, l) => sum + l.credit);
   }
 
-  double _getCurrencyClosingBalance(String currencyKey, List<AccountStatementLine> lines) {
+  double _getCurrencyClosingBalance(
+    String currencyKey,
+    List<AccountStatementLine> lines,
+  ) {
     for (final b in payload.balancesByCurrency) {
-      if (b.currencyCode == currencyKey || b.displayCurrencyCode == currencyKey) {
+      if (b.currencyCode == currencyKey ||
+          b.displayCurrencyCode == currencyKey) {
         return b.closingBalance;
       }
     }
     return lines.isNotEmpty ? lines.last.balance : 0;
   }
 
-  String _resolveActualCurrencySymbol(String currencyKey, List<AccountStatementLine> linesList) {
+  String _resolveActualCurrencySymbol(
+    String currencyKey,
+    List<AccountStatementLine> linesList,
+  ) {
     if (currencyKey.isNotEmpty &&
         currencyKey != payload.currencyLabel &&
         !currencyKey.contains('كل') &&
@@ -81,7 +111,8 @@ class AccountStatementReportTablePage extends StatelessWidget {
       return currencyKey;
     }
     for (final line in linesList) {
-      if (line.displayCurrencyCode != null && line.displayCurrencyCode!.trim().isNotEmpty) {
+      if (line.displayCurrencyCode != null &&
+          line.displayCurrencyCode!.trim().isNotEmpty) {
         return line.displayCurrencyCode!;
       }
       if (line.currencyCode != null && line.currencyCode!.trim().isNotEmpty) {
@@ -100,8 +131,12 @@ class AccountStatementReportTablePage extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    final fromStr = payload.fromDate != null ? _formatDate(payload.fromDate!) : 'البداية';
-    final toStr = payload.toDate != null ? _formatDate(payload.toDate!) : 'الآن';
+    final fromStr = payload.fromDate != null
+        ? _formatDate(payload.fromDate!)
+        : 'البداية';
+    final toStr = payload.toDate != null
+        ? _formatDate(payload.toDate!)
+        : 'الآن';
 
     final currencyGroups = _groupLinesByCurrency();
     final isMultiCurrency = currencyGroups.keys.length > 1;
@@ -236,9 +271,7 @@ class AccountStatementReportTablePage extends StatelessWidget {
             decoration: BoxDecoration(
               color: scheme.surface,
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: scheme.primary.withValues(alpha: 0.25),
-              ),
+              border: Border.all(color: scheme.primary.withValues(alpha: 0.25)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -281,18 +314,12 @@ class AccountStatementReportTablePage extends StatelessWidget {
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: scheme.outlineVariant,
-              ),
+              border: Border.all(color: scheme.outlineVariant),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.swap_vert_rounded,
-                  size: 16,
-                  color: scheme.primary,
-                ),
+                Icon(Icons.swap_vert_rounded, size: 16, color: scheme.primary),
                 const SizedBox(width: 6),
                 Text(
                   'جدول العملة التالية',
@@ -338,7 +365,9 @@ class AccountStatementReportTablePage extends StatelessWidget {
           _buildCurrencyHeaderBanner(
             theme: theme,
             scheme: scheme,
-            currencyKey: actualCurrency.isNotEmpty ? actualCurrency : currencyKey,
+            currencyKey: actualCurrency.isNotEmpty
+                ? actualCurrency
+                : currencyKey,
             itemCount: linesList.length,
           ),
         AppDynamicReportTable<AccountStatementLine>(
@@ -348,8 +377,8 @@ class AccountStatementReportTablePage extends StatelessWidget {
           subtitle: showSectionHeader
               ? 'الفترة من $fromStr إلى $toStr | عملة التقرير: ${actualCurrency.isNotEmpty ? actualCurrency : currencyKey}'
               : (actualCurrency.isNotEmpty
-                  ? 'الفترة من $fromStr إلى $toStr | العملة: $actualCurrency'
-                  : 'الفترة من $fromStr إلى $toStr'),
+                    ? 'الفترة من $fromStr إلى $toStr | العملة: $actualCurrency'
+                    : 'الفترة من $fromStr إلى $toStr'),
           centerTitle: true,
           minTableWidth: 1100,
           columns: [
@@ -372,13 +401,14 @@ class AccountStatementReportTablePage extends StatelessWidget {
                   onTap: () => _navigateToOriginalVoucher(context, line),
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: containerBg,
                       borderRadius: BorderRadius.circular(AppRadius.xs + 2),
-                      border: Border.all(
-                        color: borderColor,
-                      ),
+                      border: Border.all(color: borderColor),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -420,7 +450,9 @@ class AccountStatementReportTablePage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: !line.isPosted ? FontWeight.bold : FontWeight.w500,
+                    fontWeight: !line.isPosted
+                        ? FontWeight.bold
+                        : FontWeight.w500,
                     color: !line.isPosted ? scheme.error : scheme.onSurface,
                   ),
                 );
@@ -431,7 +463,8 @@ class AccountStatementReportTablePage extends StatelessWidget {
               label: 'رقم السند',
               flex: 20,
               alignment: Alignment.center,
-              getValue: (line) => line.voucherNumber.isEmpty ? '—' : line.voucherNumber,
+              getValue: (line) =>
+                  line.voucherNumber.isEmpty ? '—' : line.voucherNumber,
             ),
             ReportColumnSpec<AccountStatementLine>(
               id: 'voucher_type',
@@ -499,135 +532,151 @@ class AccountStatementReportTablePage extends StatelessWidget {
                 );
               },
             ),
-                ReportColumnSpec<AccountStatementLine>(
-                  id: 'balance',
-                  label: 'الرصيد',
-                  flex: 30,
-                  isNumeric: true,
-                  alignment: Alignment.center,
-                  cellBuilder: (context, line) {
-                    return Text(
-                      _formatAmount(line.balance.abs()),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    );
-                  },
-                ),
-                ReportColumnSpec<AccountStatementLine>(
-                  id: 'side',
-                  label: 'الجهة',
-                  flex: 15,
-                  alignment: Alignment.center,
-                  cellBuilder: (context, line) {
-                    final isDebit = line.sideLabel == 'م' || line.balance >= 0;
-                    final sideColor = isDebit ? scheme.primary : const Color(0xFF2E7D32);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: sideColor.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
-                      ),
-                      child: Text(
-                        line.sideLabel.isNotEmpty ? line.sideLabel : (isDebit ? 'م' : 'د'),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 11,
-                          color: sideColor,
-                        ),
-                      ),
-                    );
-                  },
-                  footerCellBuilder: (context) {
-                    final isDebit = closingBalance >= 0;
-                    final sideColor = isDebit ? scheme.primary : const Color(0xFF2E7D32);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: sideColor.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
-                      ),
-                      child: Text(
-                        isDebit ? 'م' : 'د',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 11,
-                          color: sideColor,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-              onRowTap: (line) => _showVoucherDetailsBottomSheet(context, line),
-              items: linesList,
-              footerSummaries: [
-                ReportFooterSummarySpec(
-                  columnId: 'debit',
-                  label: 'إجمالي المدين',
-                  value: '${_formatAmount(totalDebit)}${actualCurrency.isNotEmpty ? ' $actualCurrency' : ''}',
-                  color: scheme.primary,
-                  icon: Icons.arrow_downward_rounded,
-                ),
-                ReportFooterSummarySpec(
-                  columnId: 'credit',
-                  label: 'إجمالي الدائن',
-                  value: '${_formatAmount(totalCredit)}${actualCurrency.isNotEmpty ? ' $actualCurrency' : ''}',
-                  color: scheme.error,
-                  icon: Icons.arrow_upward_rounded,
-                ),
-                ReportFooterSummarySpec(
-                  columnId: 'balance',
-                  label: 'الرصيد النهائي',
-                  value: '${_formatAmount(closingBalance.abs())}${actualCurrency.isNotEmpty ? ' $actualCurrency' : ''}',
-                  color: closingBalance >= 0 ? scheme.primary : scheme.error,
-                  icon: Icons.account_balance_rounded,
-                ),
-                ReportFooterSummarySpec(
-                  columnId: 'side',
-                  label: 'الجهة',
-                  value: closingBalance >= 0 ? 'م' : 'د',
-                  color: closingBalance >= 0 ? scheme.primary : const Color(0xFF2E7D32),
-                ),
-              ],
+            ReportColumnSpec<AccountStatementLine>(
+              id: 'balance',
+              label: 'الرصيد',
+              flex: 30,
+              isNumeric: true,
+              alignment: Alignment.center,
+              cellBuilder: (context, line) {
+                return Text(
+                  _formatAmount(line.balance.abs()),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                );
+              },
+            ),
+            ReportColumnSpec<AccountStatementLine>(
+              id: 'side',
+              label: 'الجهة',
+              flex: 15,
+              alignment: Alignment.center,
+              cellBuilder: (context, line) {
+                final isDebit = line.sideLabel == 'م' || line.balance >= 0;
+                final sideColor = isDebit
+                    ? scheme.primary
+                    : const Color(0xFF2E7D32);
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: sideColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ),
+                  child: Text(
+                    line.sideLabel.isNotEmpty
+                        ? line.sideLabel
+                        : (isDebit ? 'م' : 'د'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      color: sideColor,
+                    ),
+                  ),
+                );
+              },
+              footerCellBuilder: (context) {
+                final isDebit = closingBalance >= 0;
+                final sideColor = isDebit
+                    ? scheme.primary
+                    : const Color(0xFF2E7D32);
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: sideColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ),
+                  child: Text(
+                    isDebit ? 'م' : 'د',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      color: sideColor,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
-        );
-      }
-
-  void _navigateToOriginalVoucher(BuildContext context, AccountStatementLine line) {
-    if (line.entryUuid != null && line.entryUuid!.trim().isNotEmpty) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => JournalEntryDetailsPage(entryUuid: line.entryUuid!),
+          onRowTap: (line) => _showVoucherDetailsBottomSheet(context, line),
+          items: linesList,
+          footerSummaries: [
+            ReportFooterSummarySpec(
+              columnId: 'debit',
+              label: 'إجمالي المدين',
+              value:
+                  '${_formatAmount(totalDebit)}${actualCurrency.isNotEmpty ? ' $actualCurrency' : ''}',
+              color: scheme.primary,
+              icon: Icons.arrow_downward_rounded,
+            ),
+            ReportFooterSummarySpec(
+              columnId: 'credit',
+              label: 'إجمالي الدائن',
+              value:
+                  '${_formatAmount(totalCredit)}${actualCurrency.isNotEmpty ? ' $actualCurrency' : ''}',
+              color: scheme.error,
+              icon: Icons.arrow_upward_rounded,
+            ),
+            ReportFooterSummarySpec(
+              columnId: 'balance',
+              label: 'الرصيد النهائي',
+              value:
+                  '${_formatAmount(closingBalance.abs())}${actualCurrency.isNotEmpty ? ' $actualCurrency' : ''}',
+              color: closingBalance >= 0 ? scheme.primary : scheme.error,
+              icon: Icons.account_balance_rounded,
+            ),
+            ReportFooterSummarySpec(
+              columnId: 'side',
+              label: 'الجهة',
+              value: closingBalance >= 0 ? 'م' : 'د',
+              color: closingBalance >= 0
+                  ? scheme.primary
+                  : const Color(0xFF2E7D32),
+            ),
+          ],
         ),
-      );
+      ],
+    );
+  }
+
+  void _navigateToOriginalVoucher(
+    BuildContext context,
+    AccountStatementLine line,
+  ) {
+    if (line.entryUuid != null && line.entryUuid!.trim().isNotEmpty) {
+      AccountingRoutes.pushJournalDetails(context, line.entryUuid!);
       return;
     }
 
     final type = line.voucherType.toLowerCase();
 
-    Widget targetPage;
-
-    if (type.contains('مبيعات') || type.contains('فاتورة') || type.contains('sale')) {
-      targetPage = const SaleFormPage();
-    } else if (type.contains('صرف') || type.contains('اخراج') || type.contains('issue')) {
-      targetPage = const StockIssueFormPage();
-    } else if (type.contains('استلام') || type.contains('توريد') || type.contains('receipt')) {
-      targetPage = const StockReceiptFormPage();
+    if (type.contains('مبيعات') ||
+        type.contains('فاتورة') ||
+        type.contains('sale')) {
+      SalesRoutes.pushCreate(context);
+    } else if (type.contains('صرف') ||
+        type.contains('اخراج') ||
+        type.contains('issue')) {
+      InventoryRoutes.pushStockIssuesNew(context);
+    } else if (type.contains('استلام') ||
+        type.contains('توريد') ||
+        type.contains('receipt')) {
+      InventoryRoutes.pushStockReceiptsNew(context);
     } else if (type.contains('تحويل') || type.contains('transfer')) {
-      targetPage = const CashBoxTransferFormPage();
-    } else if (type.contains('مصاريف') || type.contains('مصروف') || type.contains('صرفية')) {
-      targetPage = const CurrencyExchangeFormPage();
+      ReceiptsPaymentsRoutes.pushCreateTransfer(context);
+    } else if (type.contains('مصاريف') ||
+        type.contains('مصروف') ||
+        type.contains('صرفية')) {
+      ReceiptsPaymentsRoutes.pushCreateExchange(context);
     } else {
-      targetPage = const JournalEntryFormPage();
+      AccountingRoutes.pushJournalCreate(context);
     }
-
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => targetPage),
-    );
   }
 
   void _showVoucherDetailsBottomSheet(
@@ -696,7 +745,10 @@ class AccountStatementReportTablePage extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: line.isPosted
                           ? scheme.primaryContainer.withValues(alpha: 0.5)
@@ -789,8 +841,12 @@ class AccountStatementReportTablePage extends StatelessWidget {
                       theme,
                       scheme,
                       'الجهة',
-                      line.sideLabel.isNotEmpty ? line.sideLabel : (isDebit ? 'م (مدين)' : 'د (دائن)'),
-                      valueColor: isDebit ? scheme.primary : const Color(0xFF2E7D32),
+                      line.sideLabel.isNotEmpty
+                          ? line.sideLabel
+                          : (isDebit ? 'م (مدين)' : 'د (دائن)'),
+                      valueColor: isDebit
+                          ? scheme.primary
+                          : const Color(0xFF2E7D32),
                     ),
                   ),
                 ],
@@ -814,7 +870,10 @@ class AccountStatementReportTablePage extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           'فتح الحركة الأصل',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -828,7 +887,9 @@ class AccountStatementReportTablePage extends StatelessWidget {
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('طباعة السند: ${line.voucherNumber.isNotEmpty ? line.voucherNumber : line.voucherType}'),
+                                content: Text(
+                                  'طباعة السند: ${line.voucherNumber.isNotEmpty ? line.voucherNumber : line.voucherType}',
+                                ),
                                 duration: const Duration(seconds: 2),
                               ),
                             );
@@ -874,9 +935,7 @@ class AccountStatementReportTablePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHigh.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

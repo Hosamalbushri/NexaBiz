@@ -16,16 +16,25 @@ enum AppFieldDensity {
 
 extension AppFieldDensityX on AppFieldDensity {
   double get height => switch (this) {
-        AppFieldDensity.compact => 38.0,
-        AppFieldDensity.standard => 48.0,
-        AppFieldDensity.large => 56.0,
-      };
+    AppFieldDensity.compact => 38.0,
+    AppFieldDensity.standard => 48.0,
+    AppFieldDensity.large => 56.0,
+  };
 
   EdgeInsetsGeometry get contentPadding => switch (this) {
-        AppFieldDensity.compact => const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        AppFieldDensity.standard => const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        AppFieldDensity.large => const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      };
+    AppFieldDensity.compact => const EdgeInsets.symmetric(
+      horizontal: 10,
+      vertical: 8,
+    ),
+    AppFieldDensity.standard => const EdgeInsets.symmetric(
+      horizontal: 12,
+      vertical: 12,
+    ),
+    AppFieldDensity.large => const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 16,
+    ),
+  };
 }
 
 /// Canonical presentation shell for NexaBiz ERP form fields.
@@ -75,14 +84,14 @@ class AppFieldShell extends StatelessWidget {
     final borderColor = hasError
         ? scheme.error
         : focused
-            ? scheme.primary
-            : scheme.outlineVariant.withValues(alpha: 0.5);
+        ? scheme.primary
+        : scheme.outlineVariant.withValues(alpha: 0.5);
 
     final fillColor = !enabled
         ? scheme.surfaceContainerHighest.withValues(alpha: 0.3)
         : readOnly
-            ? scheme.surfaceContainerHighest.withValues(alpha: 0.15)
-            : scheme.surface;
+        ? scheme.surfaceContainerHighest.withValues(alpha: 0.15)
+        : scheme.surface;
 
     return Semantics(
       label: label,

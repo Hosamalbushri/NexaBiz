@@ -16,7 +16,7 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     AccountingDatabase? db,
     this.settingsBox,
     List<CashRegister>? initialRegisters,
-  })  : _db = db ?? AccountingDatabase.memory() {
+  }) : _db = db ?? AccountingDatabase.memory() {
     if (initialRegisters != null && initialRegisters.isNotEmpty) {
       for (final reg in initialRegisters) {
         _seedRegisterIfMissing(reg);
@@ -68,14 +68,21 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       code: row.code,
       isActive: row.isActive,
       accountingAccountId: row.accountingAccountId,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
     );
   }
 
   CashRegistersCompanion _entityToCompanion(CashRegister entity) {
     final isLinked =
-        entity.accountingAccountId != null && entity.accountingAccountId!.trim().isNotEmpty;
+        entity.accountingAccountId != null &&
+        entity.accountingAccountId!.trim().isNotEmpty;
     return CashRegistersCompanion(
       uuid: Value(_normalizeUuid(entity.id)),
       companyId: Value(entity.companyId),
@@ -83,8 +90,9 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       code: Value(entity.code),
       description: const Value.absent(),
       accountingAccountId: Value(entity.accountingAccountId),
-      accountingLinkStatus:
-          Value(isLinked ? 'ACCOUNTING_READY' : 'ACCOUNTING_NOT_LINKED'),
+      accountingLinkStatus: Value(
+        isLinked ? 'ACCOUNTING_READY' : 'ACCOUNTING_NOT_LINKED',
+      ),
       isActive: Value(entity.isActive),
       createdAt: Value(entity.createdAt.millisecondsSinceEpoch),
       updatedAt: Value(entity.updatedAt.millisecondsSinceEpoch),
@@ -120,7 +128,9 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
       final check = await getDefaultCashRegisterId(companyId);
       if (check != null) {
-        throw const CashRegisterException('Failed to clear default cash register');
+        throw const CashRegisterException(
+          'Failed to clear default cash register',
+        );
       }
       return;
     }
@@ -131,7 +141,10 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     if (!isReady) {
       final reg = await getCashRegisterById(registerId);
       if (reg == null) {
-        throw const CashRegisterException('Cash register not found', code: 'REGISTER_NOT_FOUND');
+        throw const CashRegisterException(
+          'Cash register not found',
+          code: 'REGISTER_NOT_FOUND',
+        );
       }
       if (reg.companyId != companyId) {
         throw const CashRegisterException(
@@ -178,7 +191,10 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   }
 
   @override
-  Future<CashRegister?> getCashRegisterById(String registerId, {String? companyId}) async {
+  Future<CashRegister?> getCashRegisterById(
+    String registerId, {
+    String? companyId,
+  }) async {
     final normalizedId = _normalizeUuid(registerId);
     final query = _db.select(_db.cashRegisters)
       ..where((tbl) => tbl.uuid.equals(normalizedId) & tbl.deletedAt.isNull());
@@ -190,7 +206,9 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   }
 
   @override
-  Future<List<CashRegister>> getAccountingReadyCashRegisters(String companyId) async {
+  Future<List<CashRegister>> getAccountingReadyCashRegisters(
+    String companyId,
+  ) async {
     final registers = await getCashRegisters(companyId);
     final readyList = <CashRegister>[];
 
@@ -199,10 +217,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
         continue;
       }
       final accountId = reg.accountingAccountId!;
-      final account = await accountRepository.getByUuid(accountId) ??
+      final account =
+          await accountRepository.getByUuid(accountId) ??
           await accountRepository.getByAccountCode(accountId);
 
-      final status = reg.evaluateStatus(account, targetCompanyId: companyId.isNotEmpty ? companyId : null);
+      final status = reg.evaluateStatus(
+        account,
+        targetCompanyId: companyId.isNotEmpty ? companyId : null,
+      );
       if (status == CashRegisterAccountingStatus.ready) {
         readyList.add(reg);
       }
@@ -215,12 +237,17 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   @override
   Future<CashRegister> createCashRegister(CashRegister register) async {
     if (register.companyId.trim().isEmpty) {
-      throw const CashRegisterException('Company ID cannot be empty', code: 'INVALID_COMPANY');
+      throw const CashRegisterException(
+        'Company ID cannot be empty',
+        code: 'INVALID_COMPANY',
+      );
     }
 
     final existing = await getCashRegisterById(register.id);
     if (existing != null) {
-      throw CashRegisterException('Cash register with ID ${register.id} already exists');
+      throw CashRegisterException(
+        'Cash register with ID ${register.id} already exists',
+      );
     }
 
     CashRegister created = register;
@@ -242,7 +269,10 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   @override
   Future<CashRegister> updateCashRegister(CashRegister register) async {
     if (register.companyId.trim().isEmpty) {
-      throw const CashRegisterException('Company ID cannot be empty', code: 'INVALID_COMPANY');
+      throw const CashRegisterException(
+        'Company ID cannot be empty',
+        code: 'INVALID_COMPANY',
+      );
     }
 
     final existing = await getCashRegisterById(register.id);
@@ -258,17 +288,21 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     }
 
     CashRegister updated = register;
-    if (updated.isLinked && updated.accountingAccountId != existing.accountingAccountId) {
+    if (updated.isLinked &&
+        updated.accountingAccountId != existing.accountingAccountId) {
       updated = await _validateAndApplyLink(updated);
     }
 
     final normalizedId = _normalizeUuid(register.id);
-    final rowsAffected = await (_db.update(_db.cashRegisters)
-          ..where((tbl) => tbl.uuid.equals(normalizedId)))
-        .write(_entityToCompanion(updated));
+    final rowsAffected =
+        await (_db.update(_db.cashRegisters)
+              ..where((tbl) => tbl.uuid.equals(normalizedId)))
+            .write(_entityToCompanion(updated));
 
     if (rowsAffected == 0) {
-      throw CashRegisterException('Failed to update cash register ${register.id} in database.');
+      throw CashRegisterException(
+        'Failed to update cash register ${register.id} in database.',
+      );
     }
 
     final readBack = await getCashRegisterById(register.id);
@@ -291,14 +325,19 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       throw CashRegisterException('Cash register not found: $registerId');
     }
     if (register.companyId != companyId) {
-      throw CashRegisterException('Cross-company cash register linking rejected for company: $companyId');
+      throw CashRegisterException(
+        'Cross-company cash register linking rejected for company: $companyId',
+      );
     }
 
-    final account = await accountRepository.getByUuid(accountId) ??
+    final account =
+        await accountRepository.getByUuid(accountId) ??
         await accountRepository.getByAccountCode(accountId);
 
     if (account == null) {
-      throw CashRegisterException('Account not found in Chart of Accounts: $accountId');
+      throw CashRegisterException(
+        'Account not found in Chart of Accounts: $accountId',
+      );
     }
 
     if (account.companyId != null &&
@@ -339,12 +378,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     );
 
     final normalizedId = _normalizeUuid(registerId);
-    await (_db.update(_db.cashRegisters)
-          ..where((tbl) => tbl.uuid.equals(normalizedId)))
-        .write(companion);
+    await (_db.update(
+      _db.cashRegisters,
+    )..where((tbl) => tbl.uuid.equals(normalizedId))).write(companion);
 
     final readBack = await getCashRegisterById(registerId);
-    if (readBack == null || !readBack.isLinked || readBack.accountingAccountId != account.uuid) {
+    if (readBack == null ||
+        !readBack.isLinked ||
+        readBack.accountingAccountId != account.uuid) {
       throw CashRegisterException(
         'Database link read-back verification failed for register $registerId and account ${account.uuid}',
       );
@@ -362,12 +403,15 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       throw CashRegisterException('Cash register not found: $registerId');
     }
     if (register.companyId != companyId) {
-      throw CashRegisterException('Cross-company operation rejected for company: $companyId');
+      throw CashRegisterException(
+        'Cross-company operation rejected for company: $companyId',
+      );
     }
 
     final boundAccountId = register.accountingAccountId;
     if (boundAccountId != null && boundAccountId.isNotEmpty) {
-      final account = await accountRepository.getByUuid(boundAccountId) ??
+      final account =
+          await accountRepository.getByUuid(boundAccountId) ??
           await accountRepository.getByAccountCode(boundAccountId);
       final targetUuids = <String>{
         boundAccountId,
@@ -376,11 +420,12 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       };
 
       for (final uuid in targetUuids) {
-        final hasMovements = await (_db.select(_db.journalLines)
-              ..where((tbl) => tbl.accountUuid.equals(uuid))
-              ..limit(1))
-            .get()
-            .then((rows) => rows.isNotEmpty);
+        final hasMovements =
+            await (_db.select(_db.journalLines)
+                  ..where((tbl) => tbl.accountUuid.equals(uuid))
+                  ..limit(1))
+                .get()
+                .then((rows) => rows.isNotEmpty);
 
         if (hasMovements) {
           throw CashRegisterException(
@@ -399,12 +444,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     );
 
     final normalizedId = _normalizeUuid(registerId);
-    await (_db.update(_db.cashRegisters)
-          ..where((tbl) => tbl.uuid.equals(normalizedId)))
-        .write(companion);
+    await (_db.update(
+      _db.cashRegisters,
+    )..where((tbl) => tbl.uuid.equals(normalizedId))).write(companion);
 
     final readBack = await getCashRegisterById(registerId);
-    if (readBack == null || readBack.isLinked || readBack.accountingAccountId != null) {
+    if (readBack == null ||
+        readBack.isLinked ||
+        readBack.accountingAccountId != null) {
       throw CashRegisterException(
         'Database unlink read-back verification failed for register $registerId',
       );
@@ -414,10 +461,13 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
   Future<CashRegister> _validateAndApplyLink(CashRegister register) async {
     final accountId = register.accountingAccountId!;
-    final account = await accountRepository.getByUuid(accountId) ??
+    final account =
+        await accountRepository.getByUuid(accountId) ??
         await accountRepository.getByAccountCode(accountId);
     if (account == null) {
-      throw CashRegisterException('Account not found in Chart of Accounts: $accountId');
+      throw CashRegisterException(
+        'Account not found in Chart of Accounts: $accountId',
+      );
     }
     if (account.companyId != null &&
         account.companyId!.isNotEmpty &&
@@ -451,11 +501,13 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   @override
   Future<void> deleteCashRegister(String registerId) async {
     final normalizedId = _normalizeUuid(registerId);
-    await (_db.update(_db.cashRegisters)
-          ..where((tbl) => tbl.uuid.equals(normalizedId)))
-        .write(CashRegistersCompanion(
-      deletedAt: Value(DateTime.now().millisecondsSinceEpoch),
-    ));
+    await (_db.update(
+      _db.cashRegisters,
+    )..where((tbl) => tbl.uuid.equals(normalizedId))).write(
+      CashRegistersCompanion(
+        deletedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
   }
 
   Future<void> markSynced({
@@ -464,22 +516,24 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     DateTime? syncedAt,
   }) async {
     final normalized = _normalizeUuid(uuid);
-    await (_db.update(_db.cashRegisters)
-          ..where((t) => t.uuid.equals(normalized)))
-        .write(CashRegistersCompanion(
-      syncStatus: const Value('synced'),
-      version: Value(remoteVersion),
-      updatedAt: Value((syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch),
-    ));
+    await (_db.update(
+      _db.cashRegisters,
+    )..where((t) => t.uuid.equals(normalized))).write(
+      CashRegistersCompanion(
+        syncStatus: const Value('synced'),
+        version: Value(remoteVersion),
+        updatedAt: Value(
+          (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch,
+        ),
+      ),
+    );
   }
 
   Future<void> markConflict(String uuid) async {
     final normalized = _normalizeUuid(uuid);
     await (_db.update(_db.cashRegisters)
           ..where((t) => t.uuid.equals(normalized)))
-        .write(const CashRegistersCompanion(
-      syncStatus: Value('conflict'),
-    ));
+        .write(const CashRegistersCompanion(syncStatus: Value('conflict')));
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
@@ -493,7 +547,8 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     final isActive = payload['isActive'] as bool? ?? true;
     final accountId = payload['accountingAccountId'] as String?;
     final version = payload['version'] as int? ?? 1;
-    final updatedAtMs = payload['updatedAt'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+    final updatedAtMs =
+        payload['updatedAt'] as int? ?? DateTime.now().millisecondsSinceEpoch;
     final deletedAtMs = payload['deletedAt'] as int?;
 
     final isLinked = accountId != null && accountId.trim().isNotEmpty;
@@ -505,7 +560,9 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       code: Value(code),
       isActive: Value(isActive),
       accountingAccountId: Value(accountId),
-      accountingLinkStatus: Value(isLinked ? 'ACCOUNTING_READY' : 'ACCOUNTING_NOT_LINKED'),
+      accountingLinkStatus: Value(
+        isLinked ? 'ACCOUNTING_READY' : 'ACCOUNTING_NOT_LINKED',
+      ),
       syncStatus: const Value('synced'),
       version: Value(version),
       createdAt: Value(updatedAtMs),
@@ -513,14 +570,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       deletedAt: Value(deletedAtMs),
     );
 
-    final existing = await (_db.select(_db.cashRegisters)
-          ..where((t) => t.uuid.equals(normalized)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.cashRegisters,
+    )..where((t) => t.uuid.equals(normalized))).getSingleOrNull();
 
     if (existing != null) {
-      await (_db.update(_db.cashRegisters)
-            ..where((t) => t.uuid.equals(normalized)))
-          .write(companion);
+      await (_db.update(
+        _db.cashRegisters,
+      )..where((t) => t.uuid.equals(normalized))).write(companion);
     } else {
       await _db.into(_db.cashRegisters).insert(companion);
     }

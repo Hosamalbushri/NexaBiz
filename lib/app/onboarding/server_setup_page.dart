@@ -96,8 +96,9 @@ class _ServerSetupPageState extends ConsumerState<ServerSetupPage> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         systemNavigationBarColor: colorScheme.surface,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: PopScope(
         canPop: true,
@@ -113,11 +114,7 @@ class _ServerSetupPageState extends ConsumerState<ServerSetupPage> {
             padding: AppConstants.pageInsets(context),
             children: [
               const SizedBox(height: AppSpacing.lg),
-              Icon(
-                Icons.dns_outlined,
-                size: 56,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.dns_outlined, size: 56, color: colorScheme.primary),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 l10n.serverSetupSubtitle,

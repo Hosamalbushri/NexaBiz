@@ -3,7 +3,6 @@ import '../../../widgets/app_account_search_picker.dart';
 import '../../../domain/entities/account_role.dart';
 import '../../setup.dart';
 
-
 /// Dynamic widget renderer for a single [SetupField].
 class SetupFieldRenderer extends StatelessWidget {
   const SetupFieldRenderer({
@@ -32,16 +31,23 @@ class SetupFieldRenderer extends StatelessWidget {
 
     switch (field.fieldType) {
       case SetupFieldType.boolean:
-        final boolVal = (currentValue as bool?) ?? (field.defaultValue as bool? ?? false);
+        final boolVal =
+            (currentValue as bool?) ?? (field.defaultValue as bool? ?? false);
         return SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(label, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          title: Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           value: boolVal,
           onChanged: onChanged,
         );
 
       case SetupFieldType.text:
-        final strVal = currentValue?.toString() ?? field.defaultValue?.toString() ?? '';
+        final strVal =
+            currentValue?.toString() ?? field.defaultValue?.toString() ?? '';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 6.0),
           child: TextFormField(
@@ -55,7 +61,8 @@ class SetupFieldRenderer extends StatelessWidget {
         );
 
       case SetupFieldType.number:
-        final numVal = currentValue?.toString() ?? field.defaultValue?.toString() ?? '';
+        final numVal =
+            currentValue?.toString() ?? field.defaultValue?.toString() ?? '';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 6.0),
           child: TextFormField(
@@ -73,11 +80,14 @@ class SetupFieldRenderer extends StatelessWidget {
         );
 
       case SetupFieldType.select:
-        final options = field.allowedValues?.map((e) => e.toString()).toList() ?? [];
-        final selected = currentValue?.toString() ?? field.defaultValue?.toString();
+        final options =
+            field.allowedValues?.map((e) => e.toString()).toList() ?? [];
+        final selected =
+            currentValue?.toString() ?? field.defaultValue?.toString();
 
         String getOptionLabel(String opt) {
-          if (field.key == 'inventoryValuationCurrencyId' || field.id == 'inventoryValuationCurrencyId') {
+          if (field.key == 'inventoryValuationCurrencyId' ||
+              field.id == 'inventoryValuationCurrencyId') {
             switch (opt.toUpperCase()) {
               case 'YER':
                 return isArabic ? 'ريال يمني (YER)' : 'Yemeni Rial (YER)';
@@ -96,18 +106,25 @@ class SetupFieldRenderer extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 6.0),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            initialValue: options.contains(selected) ? selected : (options.isNotEmpty ? options.first : null),
+            initialValue: options.contains(selected)
+                ? selected
+                : (options.isNotEmpty ? options.first : null),
             decoration: InputDecoration(
               labelText: label + (field.isRequired ? ' *' : ''),
               border: const OutlineInputBorder(),
-              prefixIcon: (field.key == 'inventoryValuationCurrencyId' || field.id == 'inventoryValuationCurrencyId')
+              prefixIcon:
+                  (field.key == 'inventoryValuationCurrencyId' ||
+                      field.id == 'inventoryValuationCurrencyId')
                   ? const Icon(Icons.currency_exchange_rounded)
                   : null,
             ),
             items: options.map((opt) {
               return DropdownMenuItem<String>(
                 value: opt,
-                child: Text(getOptionLabel(opt), overflow: TextOverflow.ellipsis),
+                child: Text(
+                  getOptionLabel(opt),
+                  overflow: TextOverflow.ellipsis,
+                ),
               );
             }).toList(),
             onChanged: onChanged,
@@ -115,8 +132,10 @@ class SetupFieldRenderer extends StatelessWidget {
         );
 
       case SetupFieldType.reference:
-        if (field.key == 'defaultWarehouseId' || field.id == 'defaultWarehouseId') {
-          final warehouseOptions = field.allowedValues?.map((e) => e.toString()).toList() ??
+        if (field.key == 'defaultWarehouseId' ||
+            field.id == 'defaultWarehouseId') {
+          final warehouseOptions =
+              field.allowedValues?.map((e) => e.toString()).toList() ??
               ['wh_main', 'wh_sales', 'wh_central'];
           final selectedWh = currentValue?.toString();
           final isConfiguredWh = selectedWh != null && selectedWh.isNotEmpty;
@@ -125,13 +144,19 @@ class SetupFieldRenderer extends StatelessWidget {
             switch (val) {
               case 'wh_main':
               case 'المستودع الرئيسي (الافتراضي)':
-                return isArabic ? 'المستودع الرئيسي (الافتراضي)' : 'Main Primary Warehouse (Default)';
+                return isArabic
+                    ? 'المستودع الرئيسي (الافتراضي)'
+                    : 'Main Primary Warehouse (Default)';
               case 'wh_sales':
               case 'مستودع المعرض الرئيسي':
-                return isArabic ? 'مستودع المعرض الرئيسي' : 'Main Showroom Warehouse';
+                return isArabic
+                    ? 'مستودع المعرض الرئيسي'
+                    : 'Main Showroom Warehouse';
               case 'wh_central':
               case 'مستودع البضائع المركزي':
-                return isArabic ? 'مستودع البضائع المركزي' : 'Central Goods Warehouse';
+                return isArabic
+                    ? 'مستودع البضائع المركزي'
+                    : 'Central Goods Warehouse';
               default:
                 return val;
             }
@@ -139,7 +164,9 @@ class SetupFieldRenderer extends StatelessWidget {
 
           final initialWh = warehouseOptions.contains(selectedWh)
               ? selectedWh
-              : (selectedWh != null && selectedWh.isNotEmpty ? selectedWh : warehouseOptions.first);
+              : (selectedWh != null && selectedWh.isNotEmpty
+                    ? selectedWh
+                    : warehouseOptions.first);
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -151,7 +178,9 @@ class SetupFieldRenderer extends StatelessWidget {
                   children: [
                     Text(
                       label + (field.isRequired ? ' *' : ''),
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     _buildStatusBadge(theme, isConfiguredWh, field.isRequired),
                   ],
@@ -163,7 +192,10 @@ class SetupFieldRenderer extends StatelessWidget {
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.warehouse_outlined),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                   items: [
                     ...warehouseOptions.map((opt) {
@@ -183,7 +215,8 @@ class SetupFieldRenderer extends StatelessWidget {
                         ),
                       );
                     }),
-                    if (selectedWh != null && !warehouseOptions.contains(selectedWh))
+                    if (selectedWh != null &&
+                        !warehouseOptions.contains(selectedWh))
                       DropdownMenuItem<String>(
                         value: selectedWh,
                         child: Row(
@@ -233,7 +266,9 @@ class SetupFieldRenderer extends StatelessWidget {
                         Flexible(
                           child: Text(
                             label + (field.isRequired ? ' *' : ''),
-                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -259,7 +294,10 @@ class SetupFieldRenderer extends StatelessWidget {
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(8),
@@ -275,7 +313,9 @@ class SetupFieldRenderer extends StatelessWidget {
                       Icon(
                         Icons.account_tree_outlined,
                         size: 20,
-                        color: isConfigured ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                        color: isConfigured
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -291,9 +331,10 @@ class SetupFieldRenderer extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               )
-
                             : Text(
-                                isArabic ? 'اضغط للبحث واختيار حساب من الدليل...' : 'Tap to search & select account...',
+                                isArabic
+                                    ? 'اضغط للبحث واختيار حساب من الدليل...'
+                                    : 'Tap to search & select account...',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -319,7 +360,6 @@ class SetupFieldRenderer extends StatelessWidget {
             ],
           ),
         );
-
     }
   }
 
@@ -327,7 +367,9 @@ class SetupFieldRenderer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: isParent ? Colors.purple.withValues(alpha: 0.12) : Colors.blue.withValues(alpha: 0.12),
+        color: isParent
+            ? Colors.purple.withValues(alpha: 0.12)
+            : Colors.blue.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isParent ? Colors.purple.shade400 : Colors.blue.shade400,
@@ -347,7 +389,11 @@ class SetupFieldRenderer extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(ThemeData theme, bool isConfigured, bool isRequired) {
+  Widget _buildStatusBadge(
+    ThemeData theme,
+    bool isConfigured,
+    bool isRequired,
+  ) {
     if (isConfigured) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -359,7 +405,11 @@ class SetupFieldRenderer extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_outline, size: 14, color: Colors.green.shade700),
+            Icon(
+              Icons.check_circle_outline,
+              size: 14,
+              color: Colors.green.shade700,
+            ),
             const SizedBox(width: 4),
             Text(
               isArabic ? 'مربوط' : 'CONFIGURED',
@@ -423,4 +473,3 @@ class SetupAccountOption {
   final bool isGroup;
   final AccountRole? role;
 }
-

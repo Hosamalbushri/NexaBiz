@@ -77,7 +77,10 @@ void main() {
     saleDb = SalesDatabase(executor: NativeDatabase.memory());
 
     // Accounting Repos
-    accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => activeCompanyId);
+    accountRepo = AccountRepositoryImpl(
+      accDb,
+      readCompanyId: () => activeCompanyId,
+    );
     journalRepo = JournalRepositoryImpl(
       accDb,
       accounts: accountRepo,
@@ -90,12 +93,24 @@ void main() {
     );
 
     // Inventory Repos
-    stockMovementRepo = StockMovementsRepositoryImpl(db: invDb, readCompanyId: () => activeCompanyId);
-    stockTransferRepo = StockTransferRepositoryImpl(db: invDb, readCompanyId: () => activeCompanyId);
-    stockReturnRepo = StockReturnsRepositoryImpl(db: invDb, readCompanyId: () => activeCompanyId);
+    stockMovementRepo = StockMovementsRepositoryImpl(
+      db: invDb,
+      readCompanyId: () => activeCompanyId,
+    );
+    stockTransferRepo = StockTransferRepositoryImpl(
+      db: invDb,
+      readCompanyId: () => activeCompanyId,
+    );
+    stockReturnRepo = StockReturnsRepositoryImpl(
+      db: invDb,
+      readCompanyId: () => activeCompanyId,
+    );
 
     // RP Repo
-    rpRepo = FinancialTransactionRepositoryImpl(rpDb, readCompanyId: () => activeCompanyId);
+    rpRepo = FinancialTransactionRepositoryImpl(
+      rpDb,
+      readCompanyId: () => activeCompanyId,
+    );
 
     // Sale Repo
     saleRepo = SaleRepositoryImpl(saleDb, readCompanyId: () => activeCompanyId);
@@ -105,7 +120,9 @@ void main() {
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
 
     // Seed Accounts for Company A
-    await accDb.into(accDb.accounts).insert(
+    await accDb
+        .into(accDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc1Uuid,
             companyId: Value(companyA),
@@ -121,7 +138,9 @@ void main() {
           ),
         );
 
-    await accDb.into(accDb.accounts).insert(
+    await accDb
+        .into(accDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc2Uuid,
             companyId: Value(companyA),
@@ -146,34 +165,53 @@ void main() {
   });
 
   group('ROOT FIX 22 — Financial Soft Delete Integrity Suite', () {
-    test('1. Posted Journal Entry: Attempted soft delete is rejected (JournalException.postedImmutable)', () async {
-      activeCompanyId = companyA;
-      final draft = JournalEntryDraft(
-        voucherNumber: 'JE-POSTED-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Posted journal entry',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 500, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 500, currencyCode: 'SAR'),
-        ],
-      );
+    test(
+      '1. Posted Journal Entry: Attempted soft delete is rejected (JournalException.postedImmutable)',
+      () async {
+        activeCompanyId = companyA;
+        final draft = JournalEntryDraft(
+          voucherNumber: 'JE-POSTED-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Posted journal entry',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 500,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 500,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
 
-      final posted = await journalPostingService.post(draft);
-      expect(posted.isPosted, isTrue);
+        final posted = await journalPostingService.post(draft);
+        expect(posted.isPosted, isTrue);
 
-      expect(
-        () async => journalRepo.softDeleteByUuid(posted.uuid),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.postedImmutable)),
-      );
+        expect(
+          () async => journalRepo.softDeleteByUuid(posted.uuid),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
+          ),
+        );
 
-      // Verify record is still intact
-      final fetched = await journalRepo.getByUuid(posted.uuid);
-      expect(fetched, isNotNull);
-      expect(fetched!.deletedAt, isNull);
-    });
+        // Verify record is still intact
+        final fetched = await journalRepo.getByUuid(posted.uuid);
+        expect(fetched, isNotNull);
+        expect(fetched!.deletedAt, isNull);
+      },
+    );
 
     test('2. Posted Stock Receipt: Attempted delete is rejected', () async {
       activeCompanyId = companyA;
@@ -273,7 +311,13 @@ void main() {
 
       expect(
         () async => stockTransferRepo.deleteTransfer(transfer.id),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.postedImmutable)),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.postedImmutable,
+          ),
+        ),
       );
 
       final fetched = await stockTransferRepo.getTransferById(transfer.id);
@@ -302,7 +346,13 @@ void main() {
 
       expect(
         () async => stockReturnRepo.deleteReturn(returnDoc.id),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.postedImmutable)),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.postedImmutable,
+          ),
+        ),
       );
 
       final fetched = await stockReturnRepo.getReturnById(returnDoc.id);
@@ -310,37 +360,49 @@ void main() {
       expect(fetched!.deletedAt, isNull);
     });
 
-    test('6. Posted Financial Transaction: Attempted delete is rejected', () async {
-      activeCompanyId = companyA;
-      final draft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.now().toUtc(),
-        amount: 1000,
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        counterAmount: 1000,
-        counterCurrencyCode: 'SAR',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1Uuid,
-        counterAccountId: acc2Uuid,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.posted,
-      );
+    test(
+      '6. Posted Financial Transaction: Attempted delete is rejected',
+      () async {
+        activeCompanyId = companyA;
+        final draft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.now().toUtc(),
+          amount: 1000,
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          counterAmount: 1000,
+          counterCurrencyCode: 'SAR',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1Uuid,
+          counterAccountId: acc2Uuid,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.posted,
+        );
 
-      final inserted = await rpRepo.insert(draft, transactionNumber: 'TX-POSTED-01');
-      expect(inserted.documentStatus, equals(TransactionStatus.posted));
+        final inserted = await rpRepo.insert(
+          draft,
+          transactionNumber: 'TX-POSTED-01',
+        );
+        expect(inserted.documentStatus, equals(TransactionStatus.posted));
 
-      expect(
-        () async => rpRepo.softDelete(inserted.id),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.postedImmutable)),
-      );
+        expect(
+          () async => rpRepo.softDelete(inserted.id),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
+          ),
+        );
 
-      final fetched = await rpRepo.getById(inserted.id);
-      expect(fetched, isNotNull);
-      expect(fetched!.deletedAt, isNull);
-    });
+        final fetched = await rpRepo.getById(inserted.id);
+        expect(fetched, isNotNull);
+        expect(fetched!.deletedAt, isNull);
+      },
+    );
 
     test('7. Posted Sale Invoice: Attempted delete is rejected', () async {
       activeCompanyId = companyA;
@@ -378,7 +440,13 @@ void main() {
 
       expect(
         () async => saleRepo.softDelete(sale.id),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.postedImmutable)),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.postedImmutable,
+          ),
+        ),
       );
 
       final fetched = await saleRepo.getById(sale.id);
@@ -386,175 +454,239 @@ void main() {
       expect(fetched!.deletedAt, isNull);
     });
 
-    test('8. Master Account Protection: Account used in transactions cannot be soft-deleted', () async {
-      activeCompanyId = companyA;
+    test(
+      '8. Master Account Protection: Account used in transactions cannot be soft-deleted',
+      () async {
+        activeCompanyId = companyA;
 
-      // Post journal entry referencing acc1Uuid
-      final draft = JournalEntryDraft(
-        voucherNumber: 'JE-DEP-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Account dependency check',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 100, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 100, currencyCode: 'SAR'),
-        ],
-      );
-      await journalPostingService.post(draft);
-
-      final acc = await accountRepo.getByUuid(acc1Uuid);
-      expect(acc, isNotNull);
-
-      expect(
-        () async => accountRepo.softDelete(acc!.id),
-        throwsA(isA<AccountException>().having((e) => e.code, 'code', AccountException.accountInUse)),
-      );
-    });
-
-    test('9. Master Account Protection: System accounts cannot be soft-deleted', () async {
-      activeCompanyId = companyA;
-      final sysAccUuid = generateUuidV4();
-      final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-
-      final id = await accDb.into(accDb.accounts).insert(
-            AccountsCompanion.insert(
-              uuid: sysAccUuid,
-              companyId: Value(companyA),
-              accountCode: '9999',
-              name: 'System Account',
-              accountType: 'asset',
-              normalBalance: 'debit',
-              level: const Value(1),
-              isGroup: const Value(false),
-              isActive: const Value(true),
-              isSystemAccount: const Value(true),
-              createdAt: nowMs,
-              updatedAt: nowMs,
+        // Post journal entry referencing acc1Uuid
+        final draft = JournalEntryDraft(
+          voucherNumber: 'JE-DEP-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Account dependency check',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'SAR',
             ),
-          );
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 100,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
+        await journalPostingService.post(draft);
 
-      expect(
-        () async => accountRepo.softDelete(id),
-        throwsA(isA<AccountException>().having((e) => e.code, 'code', AccountException.systemAccountProtected)),
-      );
-    });
+        final acc = await accountRepo.getByUuid(acc1Uuid);
+        expect(acc, isNotNull);
 
-    test('10. Draft Record Soft Delete: Draft records can be safely soft-deleted', () async {
-      activeCompanyId = companyA;
+        expect(
+          () async => accountRepo.softDelete(acc!.id),
+          throwsA(
+            isA<AccountException>().having(
+              (e) => e.code,
+              'code',
+              AccountException.accountInUse,
+            ),
+          ),
+        );
+      },
+    );
 
-      // Draft Stock Transfer
-      final transfer = StockTransfer(
-        id: generateUuidV4(),
-        transferNumber: 'TRF-DRAFT-01',
-        fromWarehouseId: 'WH-01',
-        toWarehouseId: 'WH-02',
-        transferDate: DateTime.now().toUtc(),
-        lines: const [],
-        status: InventoryDocumentStatus.draft,
-        createdAt: DateTime.now().toUtc(),
-        updatedAt: DateTime.now().toUtc(),
-        companyId: companyA,
-      );
-      await stockTransferRepo.saveTransfer(transfer);
+    test(
+      '9. Master Account Protection: System accounts cannot be soft-deleted',
+      () async {
+        activeCompanyId = companyA;
+        final sysAccUuid = generateUuidV4();
+        final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
 
-      await stockTransferRepo.deleteTransfer(transfer.id);
-      final deletedTransfer = await stockTransferRepo.getTransferById(transfer.id);
-      expect(deletedTransfer, isNull);
+        final id = await accDb
+            .into(accDb.accounts)
+            .insert(
+              AccountsCompanion.insert(
+                uuid: sysAccUuid,
+                companyId: Value(companyA),
+                accountCode: '9999',
+                name: 'System Account',
+                accountType: 'asset',
+                normalBalance: 'debit',
+                level: const Value(1),
+                isGroup: const Value(false),
+                isActive: const Value(true),
+                isSystemAccount: const Value(true),
+                createdAt: nowMs,
+                updatedAt: nowMs,
+              ),
+            );
 
-      // Draft Financial Transaction
-      final txDraft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.now().toUtc(),
-        amount: 500,
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        counterAmount: 500,
-        counterCurrencyCode: 'SAR',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1Uuid,
-        counterAccountId: acc2Uuid,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-      );
-      final tx = await rpRepo.insert(txDraft, transactionNumber: 'TX-DRAFT-01');
-      await rpRepo.softDelete(tx.id);
-      final deletedTx = await rpRepo.getById(tx.id);
-      expect(deletedTx, isNull);
-    });
+        expect(
+          () async => accountRepo.softDelete(id),
+          throwsA(
+            isA<AccountException>().having(
+              (e) => e.code,
+              'code',
+              AccountException.systemAccountProtected,
+            ),
+          ),
+        );
+      },
+    );
 
-    test('11. Cross-Tenant Deletion Isolation: Company B cannot soft delete Company A records', () async {
-      activeCompanyId = companyA;
+    test(
+      '10. Draft Record Soft Delete: Draft records can be safely soft-deleted',
+      () async {
+        activeCompanyId = companyA;
 
-      final transfer = StockTransfer(
-        id: generateUuidV4(),
-        transferNumber: 'TRF-TENANT-01',
-        fromWarehouseId: 'WH-01',
-        toWarehouseId: 'WH-02',
-        transferDate: DateTime.now().toUtc(),
-        lines: const [],
-        status: InventoryDocumentStatus.draft,
-        createdAt: DateTime.now().toUtc(),
-        updatedAt: DateTime.now().toUtc(),
-        companyId: companyA,
-      );
-      await stockTransferRepo.saveTransfer(transfer);
+        // Draft Stock Transfer
+        final transfer = StockTransfer(
+          id: generateUuidV4(),
+          transferNumber: 'TRF-DRAFT-01',
+          fromWarehouseId: 'WH-01',
+          toWarehouseId: 'WH-02',
+          transferDate: DateTime.now().toUtc(),
+          lines: const [],
+          status: InventoryDocumentStatus.draft,
+          createdAt: DateTime.now().toUtc(),
+          updatedAt: DateTime.now().toUtc(),
+          companyId: companyA,
+        );
+        await stockTransferRepo.saveTransfer(transfer);
 
-      // Switch context to Company B
-      activeCompanyId = companyB;
+        await stockTransferRepo.deleteTransfer(transfer.id);
+        final deletedTransfer = await stockTransferRepo.getTransferById(
+          transfer.id,
+        );
+        expect(deletedTransfer, isNull);
 
-      // Attempt deletion as Company B
-      await stockTransferRepo.deleteTransfer(transfer.id);
+        // Draft Financial Transaction
+        final txDraft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.now().toUtc(),
+          amount: 500,
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          counterAmount: 500,
+          counterCurrencyCode: 'SAR',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1Uuid,
+          counterAccountId: acc2Uuid,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+        );
+        final tx = await rpRepo.insert(
+          txDraft,
+          transactionNumber: 'TX-DRAFT-01',
+        );
+        await rpRepo.softDelete(tx.id);
+        final deletedTx = await rpRepo.getById(tx.id);
+        expect(deletedTx, isNull);
+      },
+    );
 
-      // Switch back to Company A and verify transfer was NOT deleted
-      activeCompanyId = companyA;
-      final checkDoc = await stockTransferRepo.getTransferById(transfer.id);
-      expect(checkDoc, isNotNull);
-      expect(checkDoc!.deletedAt, isNull);
-    });
+    test(
+      '11. Cross-Tenant Deletion Isolation: Company B cannot soft delete Company A records',
+      () async {
+        activeCompanyId = companyA;
 
-    test('12. Historical Report Integrity: Posted financial history is preserved intact in queries', () async {
-      activeCompanyId = companyA;
+        final transfer = StockTransfer(
+          id: generateUuidV4(),
+          transferNumber: 'TRF-TENANT-01',
+          fromWarehouseId: 'WH-01',
+          toWarehouseId: 'WH-02',
+          transferDate: DateTime.now().toUtc(),
+          lines: const [],
+          status: InventoryDocumentStatus.draft,
+          createdAt: DateTime.now().toUtc(),
+          updatedAt: DateTime.now().toUtc(),
+          companyId: companyA,
+        );
+        await stockTransferRepo.saveTransfer(transfer);
 
-      final draft1 = JournalEntryDraft(
-        voucherNumber: 'JE-HIST-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'First posted entry',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 1500, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 1500, currencyCode: 'SAR'),
-        ],
-      );
-      await journalPostingService.post(draft1);
+        // Switch context to Company B
+        activeCompanyId = companyB;
 
-      final draft2 = JournalEntryDraft(
-        voucherNumber: 'JE-HIST-02',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Second posted entry',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 2500, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 2500, currencyCode: 'SAR'),
-        ],
-      );
-      await journalPostingService.post(draft2);
+        // Attempt deletion as Company B
+        await stockTransferRepo.deleteTransfer(transfer.id);
 
-      final headers = await journalRepo.listHeaders();
-      expect(headers.length, equals(2));
+        // Switch back to Company A and verify transfer was NOT deleted
+        activeCompanyId = companyA;
+        final checkDoc = await stockTransferRepo.getTransferById(transfer.id);
+        expect(checkDoc, isNotNull);
+        expect(checkDoc!.deletedAt, isNull);
+      },
+    );
 
-      final netDebit = await journalRepo.sumNetBefore(
-        accountUuid: acc1Uuid,
-        beforeDate: DateTime.now().add(const Duration(days: 1)),
-      );
-      expect(netDebit, equals(4000));
-    });
+    test(
+      '12. Historical Report Integrity: Posted financial history is preserved intact in queries',
+      () async {
+        activeCompanyId = companyA;
+
+        final draft1 = JournalEntryDraft(
+          voucherNumber: 'JE-HIST-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'First posted entry',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 1500,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 1500,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
+        await journalPostingService.post(draft1);
+
+        final draft2 = JournalEntryDraft(
+          voucherNumber: 'JE-HIST-02',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Second posted entry',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 2500,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 2500,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
+        await journalPostingService.post(draft2);
+
+        final headers = await journalRepo.listHeaders();
+        expect(headers.length, equals(2));
+
+        final netDebit = await journalRepo.sumNetBefore(
+          accountUuid: acc1Uuid,
+          beforeDate: DateTime.now().add(const Duration(days: 1)),
+        );
+        expect(netDebit, equals(4000));
+      },
+    );
   });
 }

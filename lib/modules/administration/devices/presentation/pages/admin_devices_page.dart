@@ -28,13 +28,14 @@ class AdminDevicesPage extends ConsumerWidget {
     final auth = ref.watch(authStateProvider);
     final devicesAsync = ref.watch(adminDevicesProvider);
     final requestsAsync = ref.watch(adminSyncDisableRequestsProvider);
-    final canRevoke = auth.hasAnyPermission(const [
+    final canRevoke =
+        auth.hasAnyPermission(const [
           'devices.revoke',
           'platform.users.manage',
         ]) ||
         (auth.session?.user.isSuperAdmin ?? false);
 
-    if (!syncOn || !auth.canUseRemoteSync) {
+    if (auth.needsSessionRenewal) {
       return Scaffold(
         appBar: CustomAppBar(
           title: l10n.adminDevicesTitle,
@@ -43,12 +44,8 @@ class AdminDevicesPage extends ConsumerWidget {
         ),
         body: AppEmptyState(
           icon: Icons.cloud_off_outlined,
-          title: auth.needsSessionRenewal
-              ? l10n.syncSessionExpired
-              : l10n.adminRequiresOnlineTitle,
-          subtitle: auth.needsSessionRenewal
-              ? l10n.syncSessionExpired
-              : l10n.adminRequiresOnlineMessage,
+          title: l10n.syncSessionExpired,
+          subtitle: l10n.syncSessionExpired,
         ),
       );
     }
@@ -80,10 +77,9 @@ class AdminDevicesPage extends ConsumerWidget {
           ]);
         },
         child: ListView(
-          padding: AppConstants.pageInsets(context).copyWith(
-            top: AppSpacing.sm,
-            bottom: AppSpacing.lg,
-          ),
+          padding: AppConstants.pageInsets(
+            context,
+          ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
           children: [
             Text(
               l10n.adminDevicesListIntro,
@@ -116,10 +112,7 @@ class AdminDevicesPage extends ConsumerWidget {
                   children: [
                     for (var i = 0; i < devices.length; i++) ...[
                       if (i > 0) const SizedBox(height: AppSpacing.sm),
-                      _DeviceCard(
-                        device: devices[i],
-                        canRevoke: canRevoke,
-                      ),
+                      _DeviceCard(device: devices[i], canRevoke: canRevoke),
                     ],
                   ],
                 );
@@ -157,10 +150,7 @@ class AdminDevicesPage extends ConsumerWidget {
                   children: [
                     for (var i = 0; i < requests.length; i++) ...[
                       if (i > 0) const SizedBox(height: AppSpacing.sm),
-                      _RequestCard(
-                        request: requests[i],
-                        canDecide: canRevoke,
-                      ),
+                      _RequestCard(request: requests[i], canDecide: canRevoke),
                     ],
                   ],
                 );
@@ -263,10 +253,7 @@ class _InlineError extends StatelessWidget {
 }
 
 class _DeviceCard extends ConsumerStatefulWidget {
-  const _DeviceCard({
-    required this.device,
-    required this.canRevoke,
-  });
+  const _DeviceCard({required this.device, required this.canRevoke});
 
   final AdminDeviceSummary device;
   final bool canRevoke;
@@ -301,9 +288,7 @@ class _DeviceCardState extends ConsumerState<_DeviceCard> {
 
     setState(() => _busy = true);
     try {
-      await ref
-          .read(adminApiRepositoryProvider)
-          .revokeDevice(widget.device.id);
+      await ref.read(adminApiRepositoryProvider).revokeDevice(widget.device.id);
       ref.invalidate(adminDevicesProvider);
       if (!mounted) return;
       showAppSnackBar(
@@ -341,7 +326,9 @@ class _DeviceCardState extends ConsumerState<_DeviceCard> {
     final lastSeen = device.lastSeenAt == null
         ? l10n.adminDevicesLastSeenNever
         : l10n.adminDevicesLastSeen(
-            DateFormat.yMMMd(locale).add_jm().format(device.lastSeenAt!.toLocal()),
+            DateFormat.yMMMd(
+              locale,
+            ).add_jm().format(device.lastSeenAt!.toLocal()),
           );
     final meta = [
       if (device.userEmail != null && device.userEmail != userLabel)
@@ -458,10 +445,7 @@ class _DeviceCardState extends ConsumerState<_DeviceCard> {
 }
 
 class _RequestCard extends ConsumerStatefulWidget {
-  const _RequestCard({
-    required this.request,
-    required this.canDecide,
-  });
+  const _RequestCard({required this.request, required this.canDecide});
 
   final SyncDisableRequestSummary request;
   final bool canDecide;

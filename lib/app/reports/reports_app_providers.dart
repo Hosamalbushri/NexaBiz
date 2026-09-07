@@ -36,21 +36,19 @@ import '../../modules/reports/shared/domain/services/receivables_payables_report
 List<Override> buildReportsAppProviderOverrides() {
   return [
     salesPeriodReportDataPortProvider.overrideWith((ref) {
-      return SalesPeriodReportDataAdapter(
-        ref.watch(saleRepositoryProvider),
-      );
+      return SalesPeriodReportDataAdapter(ref.watch(saleRepositoryProvider));
     }),
     salesPeriodReportEngineDataProvider.overrideWith((ref) {
-      final companyName = ref.watch(companyProfileProvider).valueOrNull?.name ??
-          'NexaBiz ERP';
+      final companyName =
+          ref.watch(companyProfileProvider).valueOrNull?.name ?? 'NexaBiz ERP';
       return SalesPeriodReportDataProvider(
         salesDb: ref.watch(salesDatabaseProvider),
         companyName: companyName,
       );
     }),
     stockMovementReportEngineDataProvider.overrideWith((ref) {
-      final companyName = ref.watch(companyProfileProvider).valueOrNull?.name ??
-          'NexaBiz ERP';
+      final companyName =
+          ref.watch(companyProfileProvider).valueOrNull?.name ?? 'NexaBiz ERP';
       return StockMovementReportDataProvider(
         inventoryDb: ref.watch(inventoryDatabaseProvider),
         salesDb: ref.watch(salesDatabaseProvider),

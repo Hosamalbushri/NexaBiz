@@ -21,5 +21,3 @@ class AppBreakpoints {
     return AppBreakpointTier.wide;
   }
 }
-
-

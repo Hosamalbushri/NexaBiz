@@ -26,23 +26,16 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final syncOn = ref.watch(syncEnabledProvider);
     final auth = ref.watch(authStateProvider);
     final usersAsync = ref.watch(adminUsersProvider);
 
-    if (!syncOn || !auth.canUseRemoteSync) {
+    if (auth.needsSessionRenewal) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.adminUsersTitle),
-        ),
+        appBar: AppBar(title: Text(l10n.adminUsersTitle)),
         body: AppEmptyState(
           icon: Icons.cloud_off_outlined,
-          title: auth.needsSessionRenewal
-              ? l10n.syncSessionExpired
-              : l10n.adminRequiresOnlineTitle,
-          subtitle: auth.needsSessionRenewal
-              ? l10n.syncSessionExpired
-              : l10n.adminRequiresOnlineMessage,
+          title: l10n.syncSessionExpired,
+          subtitle: l10n.syncSessionExpired,
         ),
       );
     }
@@ -105,10 +98,7 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
           trailing: PopupMenuButton<String>(
             onSelected: (value) => _onUserAction(context, user, value),
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'edit',
-                child: Text(l10n.adminEditUser),
-              ),
+              PopupMenuItem(value: 'edit', child: Text(l10n.adminEditUser)),
               if (user.status == 'active')
                 PopupMenuItem(
                   value: 'suspend',
@@ -136,25 +126,29 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
     String action,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final repo = ref.read(adminApiRepositoryProvider);
+    final useCase = ref.read(manageAdminUsersUseCaseProvider);
     try {
       switch (action) {
         case 'edit':
           await _openEditSheet(context, user);
           return;
         case 'suspend':
-          await repo.setUserStatus(userId: user.id, status: 'suspended');
+          await useCase.setUserStatus(userId: user.id, status: 'suspended');
           break;
         case 'activate':
-          await repo.setUserStatus(userId: user.id, status: 'active');
+          await useCase.setUserStatus(userId: user.id, status: 'active');
           break;
         case 'deactivate':
-          await repo.deactivateUser(user.id);
+          await useCase.deactivateUser(user.id);
           break;
       }
       ref.invalidate(adminUsersProvider);
       if (context.mounted) {
-        showAppSnackBar(context, message: l10n.adminUserUpdated, isSuccess: true);
+        showAppSnackBar(
+          context,
+          message: l10n.adminUserUpdated,
+          isSuccess: true,
+        );
       }
     } on AppFailure catch (e) {
       if (context.mounted) {
@@ -258,11 +252,10 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
       _error = null;
     });
     try {
-      final repo = ref.read(adminApiRepositoryProvider);
-      final companyId =
-          ref.read(authStateProvider).session?.currentCompanyId;
+      final useCase = ref.read(manageAdminUsersUseCaseProvider);
+      final companyId = ref.read(authStateProvider).session?.currentCompanyId;
       if (isCreate) {
-        await repo.createUser(
+        await useCase.createUser(
           name: _name.text,
           email: _email.text,
           password: _password.text,
@@ -274,7 +267,7 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
         _password.clear();
         _confirm.clear();
       } else {
-        await repo.updateUser(
+        await useCase.updateUser(
           userId: widget.existing!.id,
           name: _name.text,
           phone: _phone.text,
@@ -335,7 +328,10 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
               initialValue: _status,
               decoration: InputDecoration(labelText: l10n.adminUserStatusLabel),
               items: [
-                DropdownMenuItem(value: 'active', child: Text(l10n.adminStatusActive)),
+                DropdownMenuItem(
+                  value: 'active',
+                  child: Text(l10n.adminStatusActive),
+                ),
                 DropdownMenuItem(
                   value: 'inactive',
                   child: Text(l10n.adminStatusInactive),
@@ -354,14 +350,12 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
                 error: (_, _) => const SizedBox.shrink(),
                 data: (roles) => DropdownButtonFormField<String>(
                   initialValue: _roleId,
-                  decoration:
-                      InputDecoration(labelText: l10n.adminUserRoleLabel),
+                  decoration: InputDecoration(
+                    labelText: l10n.adminUserRoleLabel,
+                  ),
                   items: [
                     for (final role in roles)
-                      DropdownMenuItem(
-                        value: role.id,
-                        child: Text(role.name),
-                      ),
+                      DropdownMenuItem(value: role.id, child: Text(role.name)),
                   ],
                   onChanged: (v) => setState(() => _roleId = v),
                 ),

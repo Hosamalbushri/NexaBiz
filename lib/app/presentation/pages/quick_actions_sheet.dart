@@ -75,9 +75,9 @@ class QuickActionsPanel extends StatelessWidget {
                   child: Text(
                     l10n.quickActionsTitle,
                     textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),

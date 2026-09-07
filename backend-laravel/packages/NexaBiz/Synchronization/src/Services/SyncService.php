@@ -86,7 +86,7 @@ class SyncService implements SyncEngine
         return $query->first();
     }
 
-    public function validateOperation(array $op): void
+    public function validateOperation(array $op, ?string $companyId = null): void
     {
         if (! SupportedEntities::isSupported($op['entity_type'])) {
             throw new ValidationAppException(
@@ -96,6 +96,11 @@ class SyncService implements SyncEngine
         }
         if ((int) $op['base_version'] < 0) {
             throw new ValidationAppException('base_version must be >= 0');
+        }
+        if ($companyId !== null && !empty($op['company_id']) && $op['company_id'] !== $companyId) {
+            throw new ValidationAppException(
+                "Cross-tenant sync mutation rejected: operation company_id {$op['company_id']} does not match session company_id {$companyId}"
+            );
         }
         if ($op['entity_type'] === 'journal_entry' && ($op['type'] === 'create' || $op['type'] === 'update')) {
             $this->validateJournalEntryPayload($op['payload'] ?? []);
@@ -238,7 +243,7 @@ class SyncService implements SyncEngine
         array $op,
     ): array {
         $this->ensureCompany($companyId);
-        $this->validateOperation($op);
+        $this->validateOperation($op, $companyId);
 
         $prior = $this->getPriorOperation($companyId, $op['operation_id']);
         if ($prior !== null) {

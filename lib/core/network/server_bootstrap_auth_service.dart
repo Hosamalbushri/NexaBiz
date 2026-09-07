@@ -12,10 +12,7 @@ import '../errors/app_error_domain.dart';
 ///
 /// Disconnected from application user authorization, RBAC permissions, and [AuthState].
 class ServerBootstrapAuthService {
-  ServerBootstrapAuthService({
-    required this._tokenStorage,
-    this._client,
-  });
+  ServerBootstrapAuthService({required this._tokenStorage, this._client});
 
   final SecureTokenStorage _tokenStorage;
   final http.Client? _client;
@@ -68,7 +65,8 @@ class ServerBootstrapAuthService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = (json['data'] as Map<String, dynamic>?) ?? json;
 
-      final token = (data['access_token'] as String?) ?? (data['token'] as String?);
+      final token =
+          (data['access_token'] as String?) ?? (data['token'] as String?);
       if (token == null || token.isEmpty) {
         throw classifyAppError(
           'Server authentication payload missing access token',
@@ -99,8 +97,10 @@ class ServerBootstrapAuthService {
 }
 
 /// Provider for [ServerBootstrapAuthService].
-final serverBootstrapAuthServiceProvider = Provider<ServerBootstrapAuthService>((ref) {
-  return ServerBootstrapAuthService(
-    tokenStorage: ref.watch(secureTokenStorageProvider),
-  );
-});
+final serverBootstrapAuthServiceProvider = Provider<ServerBootstrapAuthService>(
+  (ref) {
+    return ServerBootstrapAuthService(
+      tokenStorage: ref.watch(secureTokenStorageProvider),
+    );
+  },
+);

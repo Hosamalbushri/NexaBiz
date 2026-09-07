@@ -204,7 +204,10 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
           clipBehavior: Clip.antiAlias,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final tableWidth = math.max(constraints.maxWidth, widget.minTableWidth);
+              final tableWidth = math.max(
+                constraints.maxWidth,
+                widget.minTableWidth,
+              );
               return Scrollbar(
                 controller: _horizontalScrollController,
                 thumbVisibility: true,
@@ -214,7 +217,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                   child: SizedBox(
                     width: tableWidth,
                     child: Column(
-                      mainAxisSize: hasBoundedHeight ? MainAxisSize.max : MainAxisSize.min,
+                      mainAxisSize: hasBoundedHeight
+                          ? MainAxisSize.max
+                          : MainAxisSize.min,
                       children: [
                         // Grouped Row Headers (Level 1)
                         if (widget.groupHeaders.isNotEmpty)
@@ -287,7 +292,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Report Title & Actions Bar
-            if (widget.title != null || widget.onExportPdf != null || widget.onPrint != null)
+            if (widget.title != null ||
+                widget.onExportPdf != null ||
+                widget.onPrint != null)
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
@@ -312,7 +319,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                           if (widget.title != null)
                             Text(
                               widget.title!,
-                              textAlign: widget.centerTitle ? TextAlign.center : TextAlign.left,
+                              textAlign: widget.centerTitle
+                                  ? TextAlign.center
+                                  : TextAlign.left,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 16,
@@ -323,7 +332,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                             const SizedBox(height: 4),
                             Text(
                               widget.subtitle!,
-                              textAlign: widget.centerTitle ? TextAlign.center : TextAlign.left,
+                              textAlign: widget.centerTitle
+                                  ? TextAlign.center
+                                  : TextAlign.left,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
@@ -343,7 +354,10 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                     if (widget.onExportPdf != null)
                       FilledButton.icon(
                         onPressed: widget.onExportPdf,
-                        icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                        icon: const Icon(
+                          Icons.picture_as_pdf_outlined,
+                          size: 18,
+                        ),
                         label: const Text('تصدير PDF'),
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
@@ -376,7 +390,8 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: widget.headerInfoCards.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(width: AppSpacing.sm),
                         itemBuilder: (context, index) {
                           final card = widget.headerInfoCards[index];
                           final accent = card.accentColor ?? scheme.primary;
@@ -402,47 +417,57 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
                                       color: accent.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.xs,
+                                      ),
                                     ),
-                                    child: Icon(card.icon, size: 16, color: accent),
+                                    child: Icon(
+                                      card.icon,
+                                      size: 16,
+                                      color: accent,
+                                    ),
                                   ),
                                   const SizedBox(width: AppSpacing.xs),
                                 ],
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         card.title,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 11,
-                                        ),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: scheme.onSurfaceVariant,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 11,
+                                            ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         card.value,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w900,
-                                          color: accent,
-                                          fontSize: 13,
-                                        ),
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w900,
+                                              color: accent,
+                                              fontSize: 13,
+                                            ),
                                       ),
                                       if (card.subValue != null)
                                         Text(
                                           card.subValue!,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.labelSmall?.copyWith(
-                                            fontSize: 9.5,
-                                            color: scheme.onSurfaceVariant,
-                                          ),
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                fontSize: 9.5,
+                                                color: scheme.onSurfaceVariant,
+                                              ),
                                         ),
                                     ],
                                   ),
@@ -491,7 +516,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: accent.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.xs,
+                                  ),
                                 ),
                                 child: Icon(card.icon, size: 18, color: accent),
                               ),
@@ -526,10 +553,11 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                                       card.subValue!,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        fontSize: 10,
-                                        color: scheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            fontSize: 10,
+                                            color: scheme.onSurfaceVariant,
+                                          ),
                                     ),
                                 ],
                               ),
@@ -559,12 +587,20 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                         decoration: InputDecoration(
                           hintText: 'تصفية نتائج الجدول الحالية...',
                           hintStyle: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                            color: scheme.onSurfaceVariant.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
-                          prefixIcon: const Icon(Icons.filter_alt_outlined, size: 18),
+                          prefixIcon: const Icon(
+                            Icons.filter_alt_outlined,
+                            size: 18,
+                          ),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 16),
+                                  icon: const Icon(
+                                    Icons.clear_rounded,
+                                    size: 16,
+                                  ),
                                   onPressed: () {
                                     _searchController.clear();
                                     setState(() => _searchQuery = '');
@@ -581,7 +617,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                             borderSide: BorderSide(
-                              color: scheme.outlineVariant.withValues(alpha: 0.4),
+                              color: scheme.outlineVariant.withValues(
+                                alpha: 0.4,
+                              ),
                             ),
                           ),
                         ),
@@ -589,7 +627,10 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: scheme.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppRadius.xs + 2),
@@ -630,7 +671,6 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
     );
   }
 
-
   /// Renders top grouped multi-column headers.
   Widget _buildGroupedHeaderRow(ThemeData theme, ColorScheme scheme) {
     return Container(
@@ -665,7 +705,6 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
     );
   }
 
-
   bool _isColumnInsideAnyGroup(int index) {
     for (final group in widget.groupHeaders) {
       if (index >= group.startColumnIndex &&
@@ -690,13 +729,17 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
   ) {
     // Calculate total flex sum for the spanned columns
     int flexSum = 0;
-    for (int c = group.startColumnIndex;
-        c < group.startColumnIndex + group.columnSpan && c < widget.columns.length;
-        c++) {
+    for (
+      int c = group.startColumnIndex;
+      c < group.startColumnIndex + group.columnSpan &&
+          c < widget.columns.length;
+      c++
+    ) {
       flexSum += widget.columns[c].flex;
     }
 
-    final bg = group.backgroundColor ?? scheme.primaryContainer.withValues(alpha: 0.5);
+    final bg =
+        group.backgroundColor ?? scheme.primaryContainer.withValues(alpha: 0.5);
     final fg = group.textColor ?? scheme.onPrimaryContainer;
 
     return Expanded(
@@ -754,23 +797,28 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                   border: i < widget.columns.length - 1
                       ? Border(
                           right: BorderSide(
-                            color: scheme.outlineVariant.withValues(alpha: 0.35),
+                            color: scheme.outlineVariant.withValues(
+                              alpha: 0.35,
+                            ),
                           ),
                         )
                       : null,
                 ),
                 child: Text(
                   widget.columns[i].label,
-                  textAlign: widget.columns[i].alignment == Alignment.centerRight
+                  textAlign:
+                      widget.columns[i].alignment == Alignment.centerRight
                       ? TextAlign.right
                       : widget.columns[i].alignment == Alignment.center
-                          ? TextAlign.center
-                          : TextAlign.left,
+                      ? TextAlign.center
+                      : TextAlign.left,
                   style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     fontSize: 13,
                     letterSpacing: 0.1,
-                    color: widget.columns[i].headerTextColor ?? scheme.onSurfaceVariant,
+                    color:
+                        widget.columns[i].headerTextColor ??
+                        scheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -790,7 +838,8 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
   ) {
     final customBg = widget.rowBackgroundColorBuilder?.call(item);
     final isEven = index % 2 == 0;
-    final rowBg = customBg ?? (isEven ? scheme.surface : scheme.surfaceContainerLowest);
+    final rowBg =
+        customBg ?? (isEven ? scheme.surface : scheme.surfaceContainerLowest);
 
     return InkWell(
       onTap: widget.onRowTap != null ? () => widget.onRowTap!(item) : null,
@@ -812,7 +861,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                       border: i < widget.columns.length - 1
                           ? Border(
                               right: BorderSide(
-                                color: scheme.outlineVariant.withValues(alpha: 0.2),
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: 0.2,
+                                ),
                               ),
                             )
                           : null,
@@ -823,11 +874,14 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                             widget.columns[i].getValue != null
                                 ? widget.columns[i].getValue!(item)
                                 : '',
-                            textAlign: widget.columns[i].alignment == Alignment.centerRight
+                            textAlign:
+                                widget.columns[i].alignment ==
+                                    Alignment.centerRight
                                 ? TextAlign.right
-                                : widget.columns[i].alignment == Alignment.center
-                                    ? TextAlign.center
-                                    : TextAlign.left,
+                                : widget.columns[i].alignment ==
+                                      Alignment.center
+                                ? TextAlign.center
+                                : TextAlign.left,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: widget.columns[i].isNumeric
                                   ? FontWeight.w700
@@ -851,7 +905,9 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
   /// Renders a column-aligned table footer summary row mirroring the column header bar.
   Widget _buildFooterSummaryRow(ThemeData theme, ColorScheme scheme) {
     // Find index of 'description' or first summary column to merge empty preceding cells
-    final mergeUntilIndex = widget.columns.indexWhere((c) => c.id == 'description');
+    final mergeUntilIndex = widget.columns.indexWhere(
+      (c) => c.id == 'description',
+    );
 
     final children = <Widget>[];
 
@@ -947,9 +1003,7 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
         ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Row(
-        children: children,
-      ),
+      child: Row(children: children),
     );
   }
 
@@ -971,8 +1025,8 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
         textAlign: col.alignment == Alignment.centerRight
             ? TextAlign.right
             : col.alignment == Alignment.center
-                ? TextAlign.center
-                : TextAlign.left,
+            ? TextAlign.center
+            : TextAlign.left,
         style: theme.textTheme.labelMedium?.copyWith(
           fontWeight: FontWeight.w900,
           fontSize: 13.5,
@@ -983,24 +1037,30 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
 
     // Try finding matched footer summary by columnId or label match
     final summaryIndex = widget.footerSummaries.indexWhere(
-      (f) => f.columnId == col.id || f.label == col.label || f.label.contains(col.label),
+      (f) =>
+          f.columnId == col.id ||
+          f.label == col.label ||
+          f.label.contains(col.label),
     );
 
     if (summaryIndex != -1) {
       final summary = widget.footerSummaries[summaryIndex];
-      final itemColor = summary.color ?? (col.isNumeric ? scheme.primary : scheme.onSurface);
+      final itemColor =
+          summary.color ?? (col.isNumeric ? scheme.primary : scheme.onSurface);
       return Text(
         summary.value,
         textAlign: col.alignment == Alignment.centerRight
             ? TextAlign.right
             : col.alignment == Alignment.center
-                ? TextAlign.center
-                : TextAlign.left,
+            ? TextAlign.center
+            : TextAlign.left,
         style: theme.textTheme.labelMedium?.copyWith(
           fontWeight: FontWeight.w900,
           fontSize: 13.5,
           color: itemColor,
-          fontFeatures: col.isNumeric ? const [FontFeature.tabularFigures()] : null,
+          fontFeatures: col.isNumeric
+              ? const [FontFeature.tabularFigures()]
+              : null,
         ),
       );
     }
@@ -1012,8 +1072,8 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
         textAlign: col.alignment == Alignment.centerRight
             ? TextAlign.right
             : col.alignment == Alignment.center
-                ? TextAlign.center
-                : TextAlign.left,
+            ? TextAlign.center
+            : TextAlign.left,
         style: theme.textTheme.labelMedium?.copyWith(
           fontWeight: FontWeight.w900,
           fontSize: 13.5,
@@ -1041,7 +1101,8 @@ class _ReportDataRowHoverWidget extends StatefulWidget {
   final Color borderBottomColor;
 
   @override
-  State<_ReportDataRowHoverWidget> createState() => _ReportDataRowHoverWidgetState();
+  State<_ReportDataRowHoverWidget> createState() =>
+      _ReportDataRowHoverWidgetState();
 }
 
 class _ReportDataRowHoverWidgetState extends State<_ReportDataRowHoverWidget> {
@@ -1056,11 +1117,7 @@ class _ReportDataRowHoverWidgetState extends State<_ReportDataRowHoverWidget> {
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
           color: _isHovered ? widget.hoverColor : widget.baseColor,
-          border: Border(
-            bottom: BorderSide(
-              color: widget.borderBottomColor,
-            ),
-          ),
+          border: Border(bottom: BorderSide(color: widget.borderBottomColor)),
         ),
         child: widget.child,
       ),

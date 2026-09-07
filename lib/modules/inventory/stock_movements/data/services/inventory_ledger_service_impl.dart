@@ -5,9 +5,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/stock
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_ledger_service.dart';
 
 class InventoryLedgerServiceImpl implements InventoryLedgerService {
-  InventoryLedgerServiceImpl({
-    required InventoryDatabase db,
-  }) : _db = db;
+  InventoryLedgerServiceImpl({required InventoryDatabase db}) : _db = db;
 
   final InventoryDatabase _db;
 
@@ -18,11 +16,13 @@ class InventoryLedgerServiceImpl implements InventoryLedgerService {
     required String itemCode,
   }) async {
     final query = _db.select(_db.stockMovementLedgers)
-      ..where((tbl) =>
-          tbl.companyId.equals(companyId) &
-          tbl.warehouseId.equals(warehouseId) &
-          tbl.itemCode.equals(itemCode) &
-          tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            tbl.companyId.equals(companyId) &
+            tbl.warehouseId.equals(warehouseId) &
+            tbl.itemCode.equals(itemCode) &
+            tbl.deletedAt.isNull(),
+      );
 
     final rows = await query.get();
     double balance = 0.0;
@@ -42,10 +42,12 @@ class InventoryLedgerServiceImpl implements InventoryLedgerService {
     required String documentId,
   }) async {
     final query = _db.select(_db.stockMovementLedgers)
-      ..where((tbl) =>
-          tbl.companyId.equals(companyId) &
-          tbl.sourceDocumentId.equals(documentId) &
-          tbl.deletedAt.isNull());
+      ..where(
+        (tbl) =>
+            tbl.companyId.equals(companyId) &
+            tbl.sourceDocumentId.equals(documentId) &
+            tbl.deletedAt.isNull(),
+      );
 
     final rows = await query.get();
     return rows.map(_mapRowToEntry).toList();
@@ -94,15 +96,23 @@ class InventoryLedgerServiceImpl implements InventoryLedgerService {
       itemCode: row.itemCode,
       quantity: row.quantity,
       direction: StockLedgerDirection.fromStorageValue(row.direction),
-      movementType: StockLedgerTransactionType.fromStorageValue(row.movementType),
-      postingDate: DateTime.fromMillisecondsSinceEpoch(row.postingDate, isUtc: true),
+      movementType: StockLedgerTransactionType.fromStorageValue(
+        row.movementType,
+      ),
+      postingDate: DateTime.fromMillisecondsSinceEpoch(
+        row.postingDate,
+        isUtc: true,
+      ),
       sourceDocumentId: row.sourceDocumentId,
       sourceDocumentType: row.sourceDocumentType,
       sourceLineUuid: row.sourceLineUuid,
       unitCost: row.unitCost,
       totalCost: row.totalCost,
       costingMethodUsed: row.costingMethodUsed,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
       version: row.version,
       syncStatus: row.syncStatus,
     );

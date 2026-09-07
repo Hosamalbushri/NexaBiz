@@ -61,101 +61,117 @@ class ImportEngineModule extends AppModule {
 
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories => [
-        ModuleSettingsCategoryDefinition(
-          id: 'import_engine_settings_cat',
+    ModuleSettingsCategoryDefinition(
+      id: 'import_engine_settings_cat',
+      moduleId: moduleId,
+      icon: Icons.system_update_alt_rounded,
+      titleBuilder: (l10n) => 'محرك الاستيراد العام | Import Engine',
+      subtitleBuilder: (l10n) =>
+          'إعدادات الاستيراد التكيفي وملفات البيانات وتتبع وظائف الخلفية',
+      items: [
+        ModuleSettingsItemDefinition(
+          id: 'import_engine_universal_console',
           moduleId: moduleId,
-          icon: Icons.system_update_alt_rounded,
-          titleBuilder: (l10n) => 'محرك الاستيراد العام | Import Engine',
-          subtitleBuilder: (l10n) => 'إعدادات الاستيراد التكيفي وملفات البيانات وتتبع وظائف الخلفية',
-          items: [
-            ModuleSettingsItemDefinition(
-              id: 'import_engine_universal_console',
-              moduleId: moduleId,
-              icon: Icons.upload_file_rounded,
-              path: ImportEngineRoutes.universal,
-              titleBuilder: (l10n) => 'منصة الاستيراد الموحدة | Universal Import Console',
-              subtitleBuilder: (l10n) => 'استيراد دليل الحسابات والمنتجات والبيانات خطوة بخطوة',
-            ),
-            ModuleSettingsItemDefinition(
-              id: 'import_engine_jobs_monitor',
-              moduleId: moduleId,
-              icon: Icons.history_rounded,
-              path: ImportEngineRoutes.jobs,
-              titleBuilder: (l10n) => 'سجل ومتابعة الوظائف | Background Jobs Monitor',
-              subtitleBuilder: (l10n) => 'متابعة وظائف الاستيراد في الخلفية ونسب الإنجاز والأخطاء',
-            ),
-            ModuleSettingsItemDefinition(
-              id: 'import_engine_profiles_registry',
-              moduleId: moduleId,
-              icon: Icons.manage_search_rounded,
-              path: ImportProfilesOverviewPage.routePath,
-              titleBuilder: (l10n) => 'ملفات الاستيراد المسجلة | Registered Profiles',
-              subtitleBuilder: (l10n) => 'استعراض هيكل البيانات والمطابقة لكل نوع استيراد',
-            ),
-          ],
+          icon: Icons.upload_file_rounded,
+          path: ImportEngineRoutes.universal,
+          titleBuilder: (l10n) =>
+              'منصة الاستيراد الموحدة | Universal Import Console',
+          subtitleBuilder: (l10n) =>
+              'استيراد دليل الحسابات والمنتجات والبيانات خطوة بخطوة',
         ),
-      ];
+        ModuleSettingsItemDefinition(
+          id: 'import_engine_jobs_monitor',
+          moduleId: moduleId,
+          icon: Icons.history_rounded,
+          path: ImportEngineRoutes.jobs,
+          titleBuilder: (l10n) =>
+              'سجل ومتابعة الوظائف | Background Jobs Monitor',
+          subtitleBuilder: (l10n) =>
+              'متابعة وظائف الاستيراد في الخلفية ونسب الإنجاز والأخطاء',
+        ),
+        ModuleSettingsItemDefinition(
+          id: 'import_engine_profiles_registry',
+          moduleId: moduleId,
+          icon: Icons.manage_search_rounded,
+          path: ImportProfilesOverviewPage.routePath,
+          titleBuilder: (l10n) =>
+              'ملفات الاستيراد المسجلة | Registered Profiles',
+          subtitleBuilder: (l10n) =>
+              'استعراض هيكل البيانات والمطابقة لكل نوع استيراد',
+        ),
+      ],
+    ),
+  ];
 
   @override
   List<RouteBase> get routes => [
+    GoRoute(
+      path: ImportEngineRoutes.universal,
+      name: 'universalImport',
+      builder: (context, state) {
+        final initialProfileId = state.uri.queryParameters['profileId'];
+        return UniversalImportPage(initialProfileId: initialProfileId);
+      },
+    ),
+    GoRoute(
+      path: ImportEngineRoutes.root,
+      name: 'importEngineRoot',
+      redirect: (context, state) => ImportEngineRoutes.universal,
+      routes: [
         GoRoute(
-          path: ImportEngineRoutes.universal,
-          name: 'universalImport',
+          path: 'jobs',
+          name: 'importEngineJobs',
           builder: (context, state) {
-            final initialProfileId = state.uri.queryParameters['profileId'];
-            return UniversalImportPage(initialProfileId: initialProfileId);
+            return Consumer(
+              builder: (context, ref, child) {
+                final companyId = ref
+                    .watch(importJobRepositoryProvider)
+                    .toString();
+                return ImportJobsListPage(companyId: companyId);
+              },
+            );
           },
-        ),
-        GoRoute(
-          path: ImportEngineRoutes.root,
-          name: 'importEngineRoot',
-          redirect: (context, state) => ImportEngineRoutes.universal,
           routes: [
             GoRoute(
-              path: 'jobs',
-              name: 'importEngineJobs',
+              path: ':id',
+              name: 'importEngineJobDetails',
               builder: (context, state) {
-                return Consumer(
-                  builder: (context, ref, child) {
-                    final companyId = ref.watch(importJobRepositoryProvider).toString();
-                    return ImportJobsListPage(companyId: companyId);
+                final jobId = state.pathParameters['id'] ?? '';
+                final repo = refReadJobRepo(context);
+                return FutureBuilder(
+                  future: repo.findById(jobId),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final job = snapshot.data;
+                    if (job == null) {
+                      return const Scaffold(
+                        body: Center(child: Text('الوظيفة غير موجودة')),
+                      );
+                    }
+                    return ImportJobDetailsPage(job: job as dynamic);
                   },
                 );
               },
-              routes: [
-                GoRoute(
-                  path: ':id',
-                  name: 'importEngineJobDetails',
-                  builder: (context, state) {
-                    final jobId = state.pathParameters['id'] ?? '';
-                    final repo = refReadJobRepo(context);
-                    return FutureBuilder(
-                      future: repo.findById(jobId),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-                        }
-                        final job = snapshot.data;
-                        if (job == null) {
-                          return const Scaffold(body: Center(child: Text('الوظيفة غير موجودة')));
-                        }
-                        return ImportJobDetailsPage(job: job as dynamic);
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-            GoRoute(
-              path: 'profiles',
-              name: 'importEngineProfiles',
-              builder: (context, state) => const ImportProfilesOverviewPage(),
             ),
           ],
         ),
-      ];
+        GoRoute(
+          path: 'profiles',
+          name: 'importEngineProfiles',
+          builder: (context, state) => const ImportProfilesOverviewPage(),
+        ),
+      ],
+    ),
+  ];
 
   static dynamic refReadJobRepo(BuildContext context) {
-    return ProviderScope.containerOf(context, listen: false).read(importJobRepositoryProvider);
+    return ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(importJobRepositoryProvider);
   }
 }

@@ -59,7 +59,8 @@ List<InventoryServiceDefinition> inventoryServiceCatalog() {
 }
 
 String _stockMovementsTitle(AppLocalizations l10n) => 'الحركة';
-String _stockMovementsSubtitle(AppLocalizations l10n) => 'أوامر الصرف وأوامر التوريد للمخزون';
+String _stockMovementsSubtitle(AppLocalizations l10n) =>
+    'أوامر الصرف وأوامر التوريد للمخزون';
 
 String _stockCountTitle(AppLocalizations l10n) =>
     l10n.inventoryStockCountService;
@@ -75,10 +76,9 @@ String _productsSubtitle(AppLocalizations l10n) =>
 String _categoriesTitle(AppLocalizations l10n) =>
     l10n.localeName == 'ar' ? 'التصنيفات' : 'Categories';
 
-String _categoriesSubtitle(AppLocalizations l10n) =>
-    l10n.localeName == 'ar'
-        ? 'شجرة التصنيفات المرتبطة بالمستودعات'
-        : 'Warehouse-rooted category tree';
+String _categoriesSubtitle(AppLocalizations l10n) => l10n.localeName == 'ar'
+    ? 'شجرة التصنيفات المرتبطة بالمستودعات'
+    : 'Warehouse-rooted category tree';
 
 InventoryServiceDefinition? findInventoryServiceById(String id) {
   for (final service in inventoryServiceCatalog()) {
@@ -86,7 +86,9 @@ InventoryServiceDefinition? findInventoryServiceById(String id) {
       return service;
     }
   }
-  if (id == 'stock_receipts' || id == 'stock_issues' || id == 'stock_transfers') {
+  if (id == 'stock_receipts' ||
+      id == 'stock_issues' ||
+      id == 'stock_transfers') {
     return findInventoryServiceById('stock_movements');
   }
   return null;

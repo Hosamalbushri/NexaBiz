@@ -73,9 +73,8 @@ final tenantContextProvider = Provider<TenantContext>((ref) {
   if (session == null) {
     return TenantContext.empty;
   }
-  var companyId = session.currentCompanyId?.trim() ??
-      session.activeCompanyId?.trim() ??
-      '';
+  var companyId =
+      session.currentCompanyId?.trim() ?? session.activeCompanyId?.trim() ?? '';
   if (companyId.isEmpty && session.companies.isNotEmpty) {
     companyId = session.companies.first.id.trim();
   }

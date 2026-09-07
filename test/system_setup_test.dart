@@ -16,7 +16,11 @@ class _CountingSeedPort implements SystemSetupSeedPort {
   var fail = false;
 
   @override
-  Future<void> ensureLocalDefaults() async {
+  Future<void> ensureLocalDefaults({
+    String? baseCurrency,
+    String? defaultWarehouseName,
+    String? defaultWarehouseCode,
+  }) async {
     localCalls += 1;
     if (fail) {
       throw StateError('seed failed');

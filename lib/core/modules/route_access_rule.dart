@@ -9,9 +9,9 @@ class RouteAccessRule {
     this.pathPrefix,
     this.pathRegex,
   }) : assert(
-          pathEquals != null || pathPrefix != null || pathRegex != null,
-          'RouteAccessRule needs a path matcher',
-        );
+         pathEquals != null || pathPrefix != null || pathRegex != null,
+         'RouteAccessRule needs a path matcher',
+       );
 
   /// Exact path match (e.g. `/sales/create`).
   final String? pathEquals;
@@ -26,12 +26,13 @@ class RouteAccessRule {
   final List<String> anyOf;
 
   bool matches(String path) {
-    if (pathEquals != null && path == pathEquals) {
+    final cleanPath = path.contains('?') ? path.split('?').first : path;
+    if (pathEquals != null && cleanPath == pathEquals) {
       return true;
     }
     if (pathPrefix != null) {
       final prefix = pathPrefix!;
-      if (path == prefix || path.startsWith('$prefix/')) {
+      if (cleanPath == prefix || cleanPath.startsWith('$prefix/')) {
         return true;
       }
     }

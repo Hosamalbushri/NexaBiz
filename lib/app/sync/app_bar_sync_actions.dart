@@ -64,10 +64,7 @@ class AppBarSyncActions extends ConsumerWidget {
     );
   }
 
-  Future<void> _onSyncTap(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _onSyncTap(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     if (!ref.read(syncEnabledProvider)) {
       showAppSnackBar(
@@ -155,7 +152,9 @@ class AppBarSyncActions extends ConsumerWidget {
           isSuccess: true,
         );
       }
-    } else if (result.failed > 0 || result.conflicts > 0 || result.outcome == SyncPassOutcome.partialFailure) {
+    } else if (result.failed > 0 ||
+        result.conflicts > 0 ||
+        result.outcome == SyncPassOutcome.partialFailure) {
       showAppSnackBar(
         context,
         message: l10n.syncPassCompletedWarnings(
@@ -165,11 +164,7 @@ class AppBarSyncActions extends ConsumerWidget {
         isSuccess: false,
       );
     } else {
-      showAppSnackBar(
-        context,
-        message: l10n.syncPassUpToDate,
-        isSuccess: true,
-      );
+      showAppSnackBar(context, message: l10n.syncPassUpToDate, isSuccess: true);
     }
   }
 }

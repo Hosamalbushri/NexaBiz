@@ -92,7 +92,7 @@ void main() {
               'currencyCode': line.currencyCode,
               'lineDescription': line.lineDescription,
               'sortOrder': line.sortOrder,
-            }
+            },
         ],
       };
 

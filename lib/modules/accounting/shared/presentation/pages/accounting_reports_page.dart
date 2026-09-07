@@ -8,13 +8,11 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
+import 'package:stock_count/modules/reports/shared/presentation/pages/reports_routes.dart';
+
 /// Accounting reports hub — Chart of Accounts statements first.
 class AccountingReportsPage extends StatelessWidget {
   const AccountingReportsPage({super.key});
-
-  /// Deep-link into Reports module account-statement form (no module import).
-  static const String _accountStatementPath =
-      '/module-reports/account-statement';
 
   @override
   Widget build(BuildContext context) {
@@ -26,21 +24,21 @@ class AccountingReportsPage extends StatelessWidget {
         icon: Icons.menu_book_outlined,
         title: l10n.reportsAccountStatementTitle,
         subtitle: l10n.reportsAccountStatementSubtitle,
-        path: _accountStatementPath,
+        path: ReportsRoutes.accountStatement,
         available: true,
       ),
       _ReportEntry(
         icon: Icons.balance_outlined,
         title: l10n.accountingReportTrialBalanceTitle,
         subtitle: l10n.reportsTrialBalanceSubtitle,
-        path: '/module-reports/trial-balance',
+        path: ReportsRoutes.trialBalance,
         available: true,
       ),
       _ReportEntry(
         icon: Icons.receipt_long_outlined,
         title: l10n.accountingReportJournalTitle,
         subtitle: l10n.reportsJournalBookSubtitle,
-        path: '/module-reports/journal-book',
+        path: ReportsRoutes.journalBook,
         available: true,
       ),
     ];
@@ -124,10 +122,11 @@ class _ReportTile extends StatelessWidget {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: (available
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline)
-                        .withValues(alpha: 0.14),
+                    color:
+                        (available
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.outline)
+                            .withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: Icon(

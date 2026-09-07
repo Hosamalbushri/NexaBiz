@@ -9,7 +9,9 @@ import '../../app/sync/sync_enabled_provider.dart';
 import '../../core/modules/module_settings_definition.dart';
 import 'sync.dart';
 
-List<ModuleSettingsCategoryDefinition> buildSyncSettingsCategories(String moduleId) {
+List<ModuleSettingsCategoryDefinition> buildSyncSettingsCategories(
+  String moduleId,
+) {
   return [
     ModuleSettingsCategoryDefinition(
       id: 'sync_settings_cat',

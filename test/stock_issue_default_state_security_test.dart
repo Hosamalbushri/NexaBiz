@@ -37,20 +37,14 @@ void main() {
       readCompanyId: () => testCompanyId,
     );
 
-    productRepo = ProductRepositoryImpl(
-      db,
-      readCompanyId: () => testCompanyId,
-    );
+    productRepo = ProductRepositoryImpl(db, readCompanyId: () => testCompanyId);
 
     costLayerService = CostLayerServiceImpl(
       db: db,
       readCompanyId: () => testCompanyId,
     );
 
-    validationService = StockValidationServiceImpl(
-      db,
-      () => testCompanyId,
-    );
+    validationService = StockValidationServiceImpl(db, () => testCompanyId);
 
     postingEngine = PostingEngineImpl(
       db,
@@ -77,236 +71,258 @@ void main() {
     await db.close();
   });
 
-  test('ROOT FIX 12: Newly created Stock Issue defaults to DRAFT status in DB and domain model', () async {
-    final issueUuid = generateUuidV4();
-    final issue = StockIssue(
-      id: issueUuid,
-      issueNumber: 'ISS-TEST-001',
-      issueDate: DateTime.now().toUtc(),
-      warehouse: 'WH-MAIN',
-      lines: [
-        StockMovementLine(
-          movementUuid: issueUuid,
-          movementType: 'issue',
-          itemCode: 'ITEM-001',
-          itemName: 'Item 001',
-          quantity: 5,
-          unitCost: 10,
-          totalCost: 50,
-        ),
-      ],
-      companyId: testCompanyId,
-    );
+  test(
+    'ROOT FIX 12: Newly created Stock Issue defaults to DRAFT status in DB and domain model',
+    () async {
+      final issueUuid = generateUuidV4();
+      final issue = StockIssue(
+        id: issueUuid,
+        issueNumber: 'ISS-TEST-001',
+        issueDate: DateTime.now().toUtc(),
+        warehouse: 'WH-MAIN',
+        lines: [
+          StockMovementLine(
+            movementUuid: issueUuid,
+            movementType: 'issue',
+            itemCode: 'ITEM-001',
+            itemName: 'Item 001',
+            quantity: 5,
+            unitCost: 10,
+            totalCost: 50,
+          ),
+        ],
+        companyId: testCompanyId,
+      );
 
-    // Initial domain entity status must be draft
-    expect(issue.status, equals(InventoryDocumentStatus.draft));
-    expect(issue.isDraft, isTrue);
-    expect(issue.isPosted, isFalse);
+      // Initial domain entity status must be draft
+      expect(issue.status, equals(InventoryDocumentStatus.draft));
+      expect(issue.isDraft, isTrue);
+      expect(issue.isPosted, isFalse);
 
-    await stockRepo.saveIssue(issue);
+      await stockRepo.saveIssue(issue);
 
-    // Retrieve from repository
-    final savedIssue = await stockRepo.getIssueById(issueUuid);
-    expect(savedIssue, isNotNull);
-    expect(savedIssue!.status, equals(InventoryDocumentStatus.draft));
-    expect(savedIssue.isDraft, isTrue);
-    expect(savedIssue.isPosted, isFalse);
-    expect(savedIssue.postedAt, isNull);
+      // Retrieve from repository
+      final savedIssue = await stockRepo.getIssueById(issueUuid);
+      expect(savedIssue, isNotNull);
+      expect(savedIssue!.status, equals(InventoryDocumentStatus.draft));
+      expect(savedIssue.isDraft, isTrue);
+      expect(savedIssue.isPosted, isFalse);
+      expect(savedIssue.postedAt, isNull);
 
-    // Query raw DB row to confirm default constraint
-    final rawRow = await (db.select(db.stockIssues)..where((t) => t.uuid.equals(issueUuid))).getSingle();
-    expect(rawRow.status, equals('draft'));
-    expect(rawRow.postedAt, isNull);
-  });
+      // Query raw DB row to confirm default constraint
+      final rawRow = await (db.select(
+        db.stockIssues,
+      )..where((t) => t.uuid.equals(issueUuid))).getSingle();
+      expect(rawRow.status, equals('draft'));
+      expect(rawRow.postedAt, isNull);
+    },
+  );
 
-  test('ROOT FIX 12: Draft Stock Issue does NOT perform cost layer consumption or stock deduction', () async {
-    final receiptUuid = generateUuidV4();
+  test(
+    'ROOT FIX 12: Draft Stock Issue does NOT perform cost layer consumption or stock deduction',
+    () async {
+      final receiptUuid = generateUuidV4();
 
-    // 1. Create Inbound Stock Receipt and Post it to create cost layer
-    final receipt = StockReceipt(
-      id: receiptUuid,
-      receiptNumber: 'REC-001',
-      receiptDate: DateTime.now().toUtc(),
-      lines: [
-        StockMovementLine(
-          movementUuid: receiptUuid,
-          movementType: 'receipt',
-          itemCode: 'ITEM-VAL-001',
-          itemName: 'Valuation Item',
-          quantity: 20,
-          unitCost: 15.0,
-          totalCost: 300.0,
-        ),
-      ],
-      companyId: testCompanyId,
-    );
-    await stockRepo.saveReceipt(receipt);
+      // 1. Create Inbound Stock Receipt and Post it to create cost layer
+      final receipt = StockReceipt(
+        id: receiptUuid,
+        receiptNumber: 'REC-001',
+        receiptDate: DateTime.now().toUtc(),
+        lines: [
+          StockMovementLine(
+            movementUuid: receiptUuid,
+            movementType: 'receipt',
+            itemCode: 'ITEM-VAL-001',
+            itemName: 'Valuation Item',
+            quantity: 20,
+            unitCost: 15.0,
+            totalCost: 300.0,
+          ),
+        ],
+        companyId: testCompanyId,
+      );
+      await stockRepo.saveReceipt(receipt);
 
-    final receiptDocRef = InventoryDocumentRef(
-      documentId: receiptUuid,
-      documentNumber: 'REC-001',
-      documentType: InventoryDocumentType.stockReceipt,
-      documentDate: receipt.receiptDate,
-      status: InventoryDocumentStatus.draft,
-    );
-    await postingCoordinator.post(document: receiptDocRef);
-
-    // Verify Cost Layer exists with 20 remaining
-    final layersBefore = await (db.select(db.inventoryCostLayers)..where((t) => t.itemCode.equals('ITEM-VAL-001'))).get();
-    expect(layersBefore.length, equals(1));
-    expect(layersBefore.first.remainingQty, equals(20.0));
-
-    // 2. Create Draft Stock Issue
-    final issueUuid = generateUuidV4();
-    final issue = StockIssue(
-      id: issueUuid,
-      issueNumber: 'ISS-VAL-001',
-      issueDate: DateTime.now().toUtc(),
-      lines: [
-        StockMovementLine(
-          movementUuid: issueUuid,
-          movementType: 'issue',
-          itemCode: 'ITEM-VAL-001',
-          itemName: 'Valuation Item',
-          quantity: 5,
-          unitCost: 15.0,
-          totalCost: 75.0,
-        ),
-      ],
-      companyId: testCompanyId,
-    );
-    await stockRepo.saveIssue(issue);
-
-    // 3. Confirm NO cost layer consumption occurred for DRAFT issue
-    final consumptions = await db.select(db.inventoryCostConsumptions).get();
-    expect(consumptions, isEmpty);
-
-    final layersAfter = await (db.select(db.inventoryCostLayers)..where((t) => t.itemCode.equals('ITEM-VAL-001'))).get();
-    expect(layersAfter.first.remainingQty, equals(20.0));
-  });
-
-  test('ROOT FIX 12: Posting transitions status DRAFT -> POSTED and executes cost layer consumption', () async {
-    final receiptUuid = generateUuidV4();
-
-    // 1. Create and post Receipt
-    final receipt = StockReceipt(
-      id: receiptUuid,
-      receiptNumber: 'REC-POST-001',
-      receiptDate: DateTime.now().toUtc(),
-      lines: [
-        StockMovementLine(
-          movementUuid: receiptUuid,
-          movementType: 'receipt',
-          itemCode: 'ITEM-POST-001',
-          itemName: 'Post Test Item',
-          quantity: 10,
-          unitCost: 20.0,
-          totalCost: 200.0,
-        ),
-      ],
-      companyId: testCompanyId,
-    );
-    await stockRepo.saveReceipt(receipt);
-    await postingCoordinator.post(
-      document: InventoryDocumentRef(
+      final receiptDocRef = InventoryDocumentRef(
         documentId: receiptUuid,
-        documentNumber: 'REC-POST-001',
+        documentNumber: 'REC-001',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: receipt.receiptDate,
         status: InventoryDocumentStatus.draft,
-      ),
-    );
+      );
+      await postingCoordinator.post(document: receiptDocRef);
 
-    // 2. Save Draft Stock Issue
-    final issueUuid = generateUuidV4();
-    final issue = StockIssue(
-      id: issueUuid,
-      issueNumber: 'ISS-POST-001',
-      issueDate: DateTime.now().toUtc(),
-      lines: [
-        StockMovementLine(
-          movementUuid: issueUuid,
-          movementType: 'issue',
-          itemCode: 'ITEM-POST-001',
-          itemName: 'Post Test Item',
-          quantity: 4,
-          unitCost: 20.0,
-          totalCost: 80.0,
+      // Verify Cost Layer exists with 20 remaining
+      final layersBefore = await (db.select(
+        db.inventoryCostLayers,
+      )..where((t) => t.itemCode.equals('ITEM-VAL-001'))).get();
+      expect(layersBefore.length, equals(1));
+      expect(layersBefore.first.remainingQty, equals(20.0));
+
+      // 2. Create Draft Stock Issue
+      final issueUuid = generateUuidV4();
+      final issue = StockIssue(
+        id: issueUuid,
+        issueNumber: 'ISS-VAL-001',
+        issueDate: DateTime.now().toUtc(),
+        lines: [
+          StockMovementLine(
+            movementUuid: issueUuid,
+            movementType: 'issue',
+            itemCode: 'ITEM-VAL-001',
+            itemName: 'Valuation Item',
+            quantity: 5,
+            unitCost: 15.0,
+            totalCost: 75.0,
+          ),
+        ],
+        companyId: testCompanyId,
+      );
+      await stockRepo.saveIssue(issue);
+
+      // 3. Confirm NO cost layer consumption occurred for DRAFT issue
+      final consumptions = await db.select(db.inventoryCostConsumptions).get();
+      expect(consumptions, isEmpty);
+
+      final layersAfter = await (db.select(
+        db.inventoryCostLayers,
+      )..where((t) => t.itemCode.equals('ITEM-VAL-001'))).get();
+      expect(layersAfter.first.remainingQty, equals(20.0));
+    },
+  );
+
+  test(
+    'ROOT FIX 12: Posting transitions status DRAFT -> POSTED and executes cost layer consumption',
+    () async {
+      final receiptUuid = generateUuidV4();
+
+      // 1. Create and post Receipt
+      final receipt = StockReceipt(
+        id: receiptUuid,
+        receiptNumber: 'REC-POST-001',
+        receiptDate: DateTime.now().toUtc(),
+        lines: [
+          StockMovementLine(
+            movementUuid: receiptUuid,
+            movementType: 'receipt',
+            itemCode: 'ITEM-POST-001',
+            itemName: 'Post Test Item',
+            quantity: 10,
+            unitCost: 20.0,
+            totalCost: 200.0,
+          ),
+        ],
+        companyId: testCompanyId,
+      );
+      await stockRepo.saveReceipt(receipt);
+      await postingCoordinator.post(
+        document: InventoryDocumentRef(
+          documentId: receiptUuid,
+          documentNumber: 'REC-POST-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: receipt.receiptDate,
+          status: InventoryDocumentStatus.draft,
         ),
-      ],
-      companyId: testCompanyId,
-    );
-    await stockRepo.saveIssue(issue);
+      );
 
-    // 3. Post Stock Issue via PostingCoordinator
-    final postResult = await postingCoordinator.post(
-      document: InventoryDocumentRef(
-        documentId: issueUuid,
-        documentNumber: 'ISS-POST-001',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        status: InventoryDocumentStatus.draft,
-      ),
-    );
+      // 2. Save Draft Stock Issue
+      final issueUuid = generateUuidV4();
+      final issue = StockIssue(
+        id: issueUuid,
+        issueNumber: 'ISS-POST-001',
+        issueDate: DateTime.now().toUtc(),
+        lines: [
+          StockMovementLine(
+            movementUuid: issueUuid,
+            movementType: 'issue',
+            itemCode: 'ITEM-POST-001',
+            itemName: 'Post Test Item',
+            quantity: 4,
+            unitCost: 20.0,
+            totalCost: 80.0,
+          ),
+        ],
+        companyId: testCompanyId,
+      );
+      await stockRepo.saveIssue(issue);
 
-    expect(postResult, isA<PostSuccess>());
-    expect((postResult as PostSuccess).postedValue, equals(80.0));
-
-    // 4. Verify DB status is updated to POSTED
-    final postedIssue = await stockRepo.getIssueById(issueUuid);
-    expect(postedIssue!.status, equals(InventoryDocumentStatus.posted));
-    expect(postedIssue.isPosted, isTrue);
-    expect(postedIssue.postedAt, isNotNull);
-
-    // 5. Verify Cost Layer remaining quantity deducted
-    final layers = await (db.select(db.inventoryCostLayers)..where((t) => t.itemCode.equals('ITEM-POST-001'))).get();
-    expect(layers.first.remainingQty, equals(6.0));
-  });
-
-  test('ROOT FIX 12: Failed posting (shortage) retains DRAFT status without false POSTED state', () async {
-    // 1. Save Draft Stock Issue for 100 units when stock is 0
-    final issueUuid = generateUuidV4();
-    final issue = StockIssue(
-      id: issueUuid,
-      issueNumber: 'ISS-SHORTAGE-001',
-      issueDate: DateTime.now().toUtc(),
-      lines: [
-        StockMovementLine(
-          movementUuid: issueUuid,
-          movementType: 'issue',
-          itemCode: 'ITEM-SHORTAGE-001',
-          itemName: 'Shortage Item',
-          quantity: 100,
-          unitCost: 50.0,
-          totalCost: 5000.0,
+      // 3. Post Stock Issue via PostingCoordinator
+      final postResult = await postingCoordinator.post(
+        document: InventoryDocumentRef(
+          documentId: issueUuid,
+          documentNumber: 'ISS-POST-001',
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: issue.issueDate,
+          status: InventoryDocumentStatus.draft,
         ),
-      ],
-      companyId: testCompanyId,
-    );
-    await stockRepo.saveIssue(issue);
+      );
 
-    // 2. Attempt to post
-    final result = await postingCoordinator.post(
-      document: InventoryDocumentRef(
-        documentId: issueUuid,
-        documentNumber: 'ISS-SHORTAGE-001',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        status: InventoryDocumentStatus.draft,
-      ),
-    );
+      expect(postResult, isA<PostSuccess>());
+      expect((postResult as PostSuccess).postedValue, equals(80.0));
 
-    expect(result, isA<PostStockShortage>());
+      // 4. Verify DB status is updated to POSTED
+      final postedIssue = await stockRepo.getIssueById(issueUuid);
+      expect(postedIssue!.status, equals(InventoryDocumentStatus.posted));
+      expect(postedIssue.isPosted, isTrue);
+      expect(postedIssue.postedAt, isNotNull);
 
-    // 3. Verify status remains DRAFT in database (NOT falsely POSTED!)
-    final unpostedIssue = await stockRepo.getIssueById(issueUuid);
-    expect(unpostedIssue!.status, equals(InventoryDocumentStatus.draft));
-    expect(unpostedIssue.isDraft, isTrue);
-    expect(unpostedIssue.isPosted, isFalse);
-    expect(unpostedIssue.postedAt, isNull);
+      // 5. Verify Cost Layer remaining quantity deducted
+      final layers = await (db.select(
+        db.inventoryCostLayers,
+      )..where((t) => t.itemCode.equals('ITEM-POST-001'))).get();
+      expect(layers.first.remainingQty, equals(6.0));
+    },
+  );
 
-    final rawRow = await (db.select(db.stockIssues)..where((t) => t.uuid.equals(issueUuid))).getSingle();
-    expect(rawRow.status, equals('draft'));
-    expect(rawRow.postedAt, isNull);
-  });
+  test(
+    'ROOT FIX 12: Failed posting (shortage) retains DRAFT status without false POSTED state',
+    () async {
+      // 1. Save Draft Stock Issue for 100 units when stock is 0
+      final issueUuid = generateUuidV4();
+      final issue = StockIssue(
+        id: issueUuid,
+        issueNumber: 'ISS-SHORTAGE-001',
+        issueDate: DateTime.now().toUtc(),
+        lines: [
+          StockMovementLine(
+            movementUuid: issueUuid,
+            movementType: 'issue',
+            itemCode: 'ITEM-SHORTAGE-001',
+            itemName: 'Shortage Item',
+            quantity: 100,
+            unitCost: 50.0,
+            totalCost: 5000.0,
+          ),
+        ],
+        companyId: testCompanyId,
+      );
+      await stockRepo.saveIssue(issue);
+
+      // 2. Attempt to post
+      final result = await postingCoordinator.post(
+        document: InventoryDocumentRef(
+          documentId: issueUuid,
+          documentNumber: 'ISS-SHORTAGE-001',
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: issue.issueDate,
+          status: InventoryDocumentStatus.draft,
+        ),
+      );
+
+      expect(result, isA<PostStockShortage>());
+
+      // 3. Verify status remains DRAFT in database (NOT falsely POSTED!)
+      final unpostedIssue = await stockRepo.getIssueById(issueUuid);
+      expect(unpostedIssue!.status, equals(InventoryDocumentStatus.draft));
+      expect(unpostedIssue.isDraft, isTrue);
+      expect(unpostedIssue.isPosted, isFalse);
+      expect(unpostedIssue.postedAt, isNull);
+
+      final rawRow = await (db.select(
+        db.stockIssues,
+      )..where((t) => t.uuid.equals(issueUuid))).getSingle();
+      expect(rawRow.status, equals('draft'));
+      expect(rawRow.postedAt, isNull);
+    },
+  );
 }

@@ -98,7 +98,8 @@ class OpeningBalanceExcelDatasource {
           ? 0.0
           : (_cellDouble(row, columns.credit!) ?? 0);
 
-      final empty = code.trim().isEmpty &&
+      final empty =
+          code.trim().isEmpty &&
           accountId.trim().isEmpty &&
           debit <= 0 &&
           credit <= 0;
@@ -217,7 +218,8 @@ class OpeningBalanceExcelDatasource {
       'الرصيد الدائن',
     ]);
 
-    final hasHeader = code != null ||
+    final hasHeader =
+        code != null ||
         accountId != null ||
         currency != null ||
         debit != null ||

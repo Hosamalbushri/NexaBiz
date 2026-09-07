@@ -62,10 +62,7 @@ abstract class RemoteSyncApi {
     return results;
   }
 
-  Future<List<SyncRemoteChange>> pull({
-    String? entityType,
-    DateTime? since,
-  });
+  Future<List<SyncRemoteChange>> pull({String? entityType, DateTime? since});
 
   Future<RemoteEntityMeta?> getMeta({
     required String entityType,

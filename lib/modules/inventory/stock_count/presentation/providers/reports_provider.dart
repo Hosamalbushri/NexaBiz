@@ -81,7 +81,10 @@ class ReportExportNotifier extends StateNotifier<AsyncValue<String?>> {
     if (status == null) {
       return items;
     }
-    return [for (final item in items) if (item.status == status) item];
+    return [
+      for (final item in items)
+        if (item.status == status) item,
+    ];
   }
 
   /// Fast validation before any loading UI is shown.

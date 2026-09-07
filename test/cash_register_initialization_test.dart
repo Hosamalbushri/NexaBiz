@@ -55,7 +55,10 @@ class FakeAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<List<Account>> search(String query, {bool includeInactive = false}) async {
+  Future<List<Account>> search(
+    String query, {
+    bool includeInactive = false,
+  }) async {
     return _accounts.values.where((a) => a.name.contains(query)).toList();
   }
 
@@ -73,10 +76,12 @@ class FakeAccountRepository implements AccountRepository {
   Future<bool> isUsedInTransactions(String uuid) async => false;
 
   @override
-  Future<Account> insert(AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> insert(AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
-  Future<Account> update(int id, AccountDraft draft) async => throw UnimplementedError();
+  Future<Account> update(int id, AccountDraft draft) async =>
+      throw UnimplementedError();
 
   @override
   Future<void> deactivate(int id) async {}
@@ -175,7 +180,10 @@ void main() {
       accountRepo.addAccount(companyBAccount);
       accountRepo.addAccount(inactiveAccount);
 
-      cashRepo = CashRegisterRepositoryImpl(accountRepository: accountRepo, db: db);
+      cashRepo = CashRegisterRepositoryImpl(
+        accountRepository: accountRepo,
+        db: db,
+      );
       resolver = DefaultCashRegisterResolver(
         cashRegisterRepository: cashRepo,
         accountRepository: accountRepo,
@@ -195,223 +203,290 @@ void main() {
       }
     });
 
-    test('1. First initialization: Creates register, links account, sets company default persistantly', () async {
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        accountUuid: validAccountA.uuid,
-      );
+    test(
+      '1. First initialization: Creates register, links account, sets company default persistantly',
+      () async {
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          accountUuid: validAccountA.uuid,
+        );
 
-      expect(res.isSuccess, isTrue);
-      expect(res.isAlreadyInitialized, isFalse);
-      expect(res.register, isNotNull);
-      expect(res.register!.isLinked, isTrue);
-      expect(res.register!.accountingAccountId, equals(validAccountA.uuid));
+        expect(res.isSuccess, isTrue);
+        expect(res.isAlreadyInitialized, isFalse);
+        expect(res.register, isNotNull);
+        expect(res.register!.isLinked, isTrue);
+        expect(res.register!.accountingAccountId, equals(validAccountA.uuid));
 
-      final defaultRes = await resolver.resolveDefaultCashRegister(companyA);
-      expect(defaultRes.isValid, isTrue);
-      expect(defaultRes.register!.id, equals(res.register!.id));
-    });
+        final defaultRes = await resolver.resolveDefaultCashRegister(companyA);
+        expect(defaultRes.isValid, isTrue);
+        expect(defaultRes.register!.id, equals(res.register!.id));
+      },
+    );
 
-    test('2. Second initialization: Idempotent call returns existing ready configuration without duplicates', () async {
-      final res1 = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        accountUuid: validAccountA.uuid,
-      );
+    test(
+      '2. Second initialization: Idempotent call returns existing ready configuration without duplicates',
+      () async {
+        final res1 = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          accountUuid: validAccountA.uuid,
+        );
 
-      final res2 = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        accountUuid: validAccountA.uuid,
-      );
+        final res2 = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          accountUuid: validAccountA.uuid,
+        );
 
-      expect(res2.isSuccess, isTrue);
-      expect(res2.isAlreadyInitialized, isTrue);
-      expect(res2.register!.id, equals(res1.register!.id));
+        expect(res2.isSuccess, isTrue);
+        expect(res2.isAlreadyInitialized, isTrue);
+        expect(res2.register!.id, equals(res1.register!.id));
 
-      final allRegs = await cashRepo.getCashRegisters(companyA);
-      expect(allRegs.length, equals(1)); // Exactly 1 register created
-    });
+        final allRegs = await cashRepo.getCashRegisters(companyA);
+        expect(allRegs.length, equals(1)); // Exactly 1 register created
+      },
+    );
 
-    test('3. Restart persistence: Initialization state survives cold restart of repository and resolver', () async {
-      await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        accountUuid: validAccountA.uuid,
-      );
+    test(
+      '3. Restart persistence: Initialization state survives cold restart of repository and resolver',
+      () async {
+        await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          accountUuid: validAccountA.uuid,
+        );
 
-      final freshRepo = CashRegisterRepositoryImpl(accountRepository: accountRepo, db: db);
-      final freshResolver = DefaultCashRegisterResolver(
-        cashRegisterRepository: freshRepo,
-        accountRepository: accountRepo,
-      );
+        final freshRepo = CashRegisterRepositoryImpl(
+          accountRepository: accountRepo,
+          db: db,
+        );
+        final freshResolver = DefaultCashRegisterResolver(
+          cashRegisterRepository: freshRepo,
+          accountRepository: accountRepo,
+        );
 
-      final defaultRes = await freshResolver.resolveDefaultCashRegister(companyA);
-      expect(defaultRes.isValid, isTrue);
-      expect(defaultRes.linkedAccount!.uuid, equals(validAccountA.uuid));
-    });
+        final defaultRes = await freshResolver.resolveDefaultCashRegister(
+          companyA,
+        );
+        expect(defaultRes.isValid, isTrue);
+        expect(defaultRes.linkedAccount!.uuid, equals(validAccountA.uuid));
+      },
+    );
 
-    test('4. Company switch isolation: Initializing company A does not affect company B', () async {
-      await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        accountUuid: validAccountA.uuid,
-      );
+    test(
+      '4. Company switch isolation: Initializing company A does not affect company B',
+      () async {
+        await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          accountUuid: validAccountA.uuid,
+        );
 
-      final resB = await resolver.resolveDefaultCashRegister(companyB);
-      expect(resB.isValid, isFalse);
-      expect(resB.errorCode, equals(DefaultCashRegisterErrorCode.notConfigured));
+        final resB = await resolver.resolveDefaultCashRegister(companyB);
+        expect(resB.isValid, isFalse);
+        expect(
+          resB.errorCode,
+          equals(DefaultCashRegisterErrorCode.notConfigured),
+        );
 
-      final regsB = await cashRepo.getCashRegisters(companyB);
-      expect(regsB, isEmpty);
-    });
+        final regsB = await cashRepo.getCashRegisters(companyB);
+        expect(regsB, isEmpty);
+      },
+    );
 
-    test('5. Empty database initialization: Creates register with stable non-localized code', () async {
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        registerCode: 'DEF_CASH_REG',
-      );
+    test(
+      '5. Empty database initialization: Creates register with stable non-localized code',
+      () async {
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          registerCode: 'DEF_CASH_REG',
+        );
 
-      expect(res.isSuccess, isTrue);
-      expect(res.register!.code, equals('DEF_CASH_REG'));
-      expect(res.register!.isLinked, isFalse); // Created unlinked when no account provided
-    });
+        expect(res.isSuccess, isTrue);
+        expect(res.register!.code, equals('DEF_CASH_REG'));
+        expect(
+          res.register!.isLinked,
+          isFalse,
+        ); // Created unlinked when no account provided
+      },
+    );
 
-    test('6. Partially initialized database recovery: Completes linking and sets default', () async {
-      // Step A: Create unlinked register manually
-      final unlinked = await cashRepo.createCashRegister(CashRegister(
-        id: 'cr_def_$companyA',
-        companyId: companyA,
-        name: 'Main Cash Register',
-        code: 'DEF_CASH_REG',
-        isActive: true,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
-      expect(unlinked.isLinked, isFalse);
+    test(
+      '6. Partially initialized database recovery: Completes linking and sets default',
+      () async {
+        // Step A: Create unlinked register manually
+        final unlinked = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'cr_def_$companyA',
+            companyId: companyA,
+            name: 'Main Cash Register',
+            code: 'DEF_CASH_REG',
+            isActive: true,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        expect(unlinked.isLinked, isFalse);
 
-      // Step B: Run initializer with account
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        registerId: 'cr_def_$companyA',
-        accountUuid: validAccountA.uuid,
-      );
+        // Step B: Run initializer with account
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          registerId: 'cr_def_$companyA',
+          accountUuid: validAccountA.uuid,
+        );
 
-      expect(res.isSuccess, isTrue);
-      expect(res.register!.isLinked, isTrue);
+        expect(res.isSuccess, isTrue);
+        expect(res.register!.isLinked, isTrue);
 
-      final defaultRes = await resolver.resolveDefaultCashRegister(companyA);
-      expect(defaultRes.isValid, isTrue);
-    });
+        final defaultRes = await resolver.resolveDefaultCashRegister(companyA);
+        expect(defaultRes.isValid, isTrue);
+      },
+    );
 
-    test('7. Account linking failure atomicity: Invalid account rejects initialization without leaving partial state', () async {
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        registerId: 'cr_failed_link',
-        accountUuid: inactiveAccount.uuid, // Inactive account
-      );
+    test(
+      '7. Account linking failure atomicity: Invalid account rejects initialization without leaving partial state',
+      () async {
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          registerId: 'cr_failed_link',
+          accountUuid: inactiveAccount.uuid, // Inactive account
+        );
 
-      expect(res.isSuccess, isFalse);
-      expect(res.errorCode, equals('ACCOUNT_INACTIVE'));
+        expect(res.isSuccess, isFalse);
+        expect(res.errorCode, equals('ACCOUNT_INACTIVE'));
 
-      final reg = await cashRepo.getCashRegisterById('cr_failed_link');
-      expect(reg, isNull); // Rolled back, no partial register left behind
-    });
+        final reg = await cashRepo.getCashRegisterById('cr_failed_link');
+        expect(reg, isNull); // Rolled back, no partial register left behind
+      },
+    );
 
-    test('8. Default setting failure atomicity: Cross-company account is rejected cleanly', () async {
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        registerId: 'cr_failed_company',
-        accountUuid: companyBAccount.uuid, // Belongs to company B
-      );
+    test(
+      '8. Default setting failure atomicity: Cross-company account is rejected cleanly',
+      () async {
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          registerId: 'cr_failed_company',
+          accountUuid: companyBAccount.uuid, // Belongs to company B
+        );
 
-      expect(res.isSuccess, isFalse);
-      expect(res.errorCode, equals('CROSS_COMPANY_ACCOUNT'));
+        expect(res.isSuccess, isFalse);
+        expect(res.errorCode, equals('CROSS_COMPANY_ACCOUNT'));
 
-      final reg = await cashRepo.getCashRegisterById('cr_failed_company');
-      expect(reg, isNull);
-    });
+        final reg = await cashRepo.getCashRegisterById('cr_failed_company');
+        expect(reg, isNull);
+      },
+    );
 
-    test('9. Duplicate register code rejection: Reuses existing register with matching code', () async {
-      final reg1 = await cashRepo.createCashRegister(CashRegister(
-        id: 'cr-existing-code',
-        companyId: companyA,
-        name: 'Existing Code Box',
-        code: 'DEF_CASH_REG',
-        isActive: true,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
+    test(
+      '9. Duplicate register code rejection: Reuses existing register with matching code',
+      () async {
+        final reg1 = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'cr-existing-code',
+            companyId: companyA,
+            name: 'Existing Code Box',
+            code: 'DEF_CASH_REG',
+            isActive: true,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        registerCode: 'DEF_CASH_REG',
-        accountUuid: validAccountA.uuid,
-      );
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          registerCode: 'DEF_CASH_REG',
+          accountUuid: validAccountA.uuid,
+        );
 
-      expect(res.isSuccess, isTrue);
-      expect(res.register!.id, equals(reg1.id)); // Reused existing register
-    });
+        expect(res.isSuccess, isTrue);
+        expect(res.register!.id, equals(reg1.id)); // Reused existing register
+      },
+    );
 
-    test('10. Duplicate account binding prevention: Linking account already linked to another register works correctly', () async {
-      final res1 = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        registerId: 'cr-1',
-        accountUuid: validAccountA.uuid,
-      );
-      expect(res1.isSuccess, isTrue);
+    test(
+      '10. Duplicate account binding prevention: Linking account already linked to another register works correctly',
+      () async {
+        final res1 = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          registerId: 'cr-1',
+          accountUuid: validAccountA.uuid,
+        );
+        expect(res1.isSuccess, isTrue);
 
-      final res2 = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        registerId: 'cr-2',
-        accountUuid: validAccountA.uuid,
-      );
-      expect(res2.isSuccess, isTrue); // Returns existing initialized default cleanly
-    });
+        final res2 = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          registerId: 'cr-2',
+          accountUuid: validAccountA.uuid,
+        );
+        expect(
+          res2.isSuccess,
+          isTrue,
+        ); // Returns existing initialized default cleanly
+      },
+    );
 
-    test('11. Invalid company context rejection: Rejects empty or whitespace companyId', () async {
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: '   ',
-      );
+    test(
+      '11. Invalid company context rejection: Rejects empty or whitespace companyId',
+      () async {
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: '   ',
+        );
 
-      expect(res.isSuccess, isFalse);
-      expect(res.errorCode, equals('INVALID_COMPANY'));
-    });
+        expect(res.isSuccess, isFalse);
+        expect(res.errorCode, equals('INVALID_COMPANY'));
+      },
+    );
 
-    test('12. Offline startup persistence: Reloading state from disk without network succeeds', () async {
-      await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-        accountUuid: validAccountA.uuid,
-      );
+    test(
+      '12. Offline startup persistence: Reloading state from disk without network succeeds',
+      () async {
+        await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+          accountUuid: validAccountA.uuid,
+        );
 
-      // Simulate offline restart
-      final offlineRepo = CashRegisterRepositoryImpl(accountRepository: accountRepo, db: db);
-      final offlineResolver = DefaultCashRegisterResolver(
-        cashRegisterRepository: offlineRepo,
-        accountRepository: accountRepo,
-      );
+        // Simulate offline restart
+        final offlineRepo = CashRegisterRepositoryImpl(
+          accountRepository: accountRepo,
+          db: db,
+        );
+        final offlineResolver = DefaultCashRegisterResolver(
+          cashRegisterRepository: offlineRepo,
+          accountRepository: accountRepo,
+        );
 
-      final defaultRes = await offlineResolver.resolveDefaultCashRegister(companyA);
-      expect(defaultRes.isValid, isTrue);
-    });
+        final defaultRes = await offlineResolver.resolveDefaultCashRegister(
+          companyA,
+        );
+        expect(defaultRes.isValid, isTrue);
+      },
+    );
 
-    test('13. Migration/legacy state preservation: Existing registers retain links during re-initialization', () async {
-      final legacyReg = await cashRepo.createCashRegister(CashRegister(
-        id: 'legacy-reg-1',
-        companyId: companyA,
-        name: 'Legacy Box',
-        code: 'LEGACY_01',
-        isActive: true,
-        accountingAccountId: validAccountA.uuid,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
-      await cashRepo.setDefaultCashRegisterId(companyId: companyA, registerId: legacyReg.id);
+    test(
+      '13. Migration/legacy state preservation: Existing registers retain links during re-initialization',
+      () async {
+        final legacyReg = await cashRepo.createCashRegister(
+          CashRegister(
+            id: 'legacy-reg-1',
+            companyId: companyA,
+            name: 'Legacy Box',
+            code: 'LEGACY_01',
+            isActive: true,
+            accountingAccountId: validAccountA.uuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        await cashRepo.setDefaultCashRegisterId(
+          companyId: companyA,
+          registerId: legacyReg.id,
+        );
 
-      final res = await initializer.initializeDefaultRegisterForCompany(
-        companyId: companyA,
-      );
+        final res = await initializer.initializeDefaultRegisterForCompany(
+          companyId: companyA,
+        );
 
-      expect(res.isSuccess, isTrue);
-      expect(res.isAlreadyInitialized, isTrue);
-      expect(res.register!.id, equals(legacyReg.id));
-      expect(res.register!.accountingAccountId, equals(validAccountA.uuid));
-    });
+        expect(res.isSuccess, isTrue);
+        expect(res.isAlreadyInitialized, isTrue);
+        expect(res.register!.id, equals(legacyReg.id));
+        expect(res.register!.accountingAccountId, equals(validAccountA.uuid));
+      },
+    );
   });
 }

@@ -108,7 +108,9 @@ class SetupDependencyEngine {
   /// Prerequisite packages appear before dependent packages in the returned list.
   /// Secondary sorting respects [PackageSetupDefinition.sortOrder] ascending.
   /// Throws [CircularSetupDependencyException] if a circular dependency is detected.
-  List<PackageSetupDefinition> getExecutionOrder(List<PackageSetupDefinition> definitions) {
+  List<PackageSetupDefinition> getExecutionOrder(
+    List<PackageSetupDefinition> definitions,
+  ) {
     if (definitions.isEmpty) return const [];
 
     // Ensure graph has no cycles
@@ -118,11 +120,14 @@ class SetupDependencyEngine {
 
     // Graph mapping: targetPrerequisite -> Set<dependentPackageIds>
     final inDegree = <String, int>{for (final d in definitions) d.packageId: 0};
-    final dependents = <String, Set<String>>{for (final d in definitions) d.packageId: {}};
+    final dependents = <String, Set<String>>{
+      for (final d in definitions) d.packageId: {},
+    };
 
     for (final def in definitions) {
       for (final dep in def.dependencies) {
-        if (dep.dependencyType == SetupDependencyType.required && defMap.containsKey(dep.targetPackageId)) {
+        if (dep.dependencyType == SetupDependencyType.required &&
+            defMap.containsKey(dep.targetPackageId)) {
           dependents[dep.targetPackageId]!.add(def.packageId);
           inDegree[def.packageId] = (inDegree[def.packageId] ?? 0) + 1;
         }
@@ -130,7 +135,9 @@ class SetupDependencyEngine {
     }
 
     // Kahn's algorithm with priority queue (sortOrder ascending, then packageId)
-    final available = definitions.where((d) => inDegree[d.packageId] == 0).toList();
+    final available = definitions
+        .where((d) => inDegree[d.packageId] == 0)
+        .toList();
 
     void sortAvailable() {
       available.sort((a, b) {
@@ -181,7 +188,8 @@ class SetupDependencyEngine {
         if (!registry.isRegistered(dep.targetPackageId)) {
           missing.add(dep.targetPackageId);
         } else {
-          final targetStatus = packageStatuses[dep.targetPackageId] ?? SetupStatus.notConfigured;
+          final targetStatus =
+              packageStatuses[dep.targetPackageId] ?? SetupStatus.notConfigured;
           if (targetStatus != SetupStatus.configured) {
             unconfigured.add(dep.targetPackageId);
           }

@@ -15,7 +15,10 @@ class CustomerCreditLimitChecker {
     required double proposedExposureAmount,
   }) {
     if (customer.status == CustomerStatus.blocked) {
-      throw const CustomerException('customer_blocked', 'Customer is blocked from new credit transactions.');
+      throw const CustomerException(
+        'customer_blocked',
+        'Customer is blocked from new credit transactions.',
+      );
     }
 
     if (customer.creditLimit == null || customer.creditLimit! <= 0) {

@@ -87,11 +87,11 @@ final ensureDefaultChartUseCaseProvider =
       return EnsureDefaultChartOfAccounts(ref.watch(accountRepositoryProvider));
     });
 
-final seedDefaultChartUseCaseProvider =
-    Provider<SeedDefaultChartOfAccounts>((ref) {
-      return SeedDefaultChartOfAccounts(ref.watch(accountRepositoryProvider));
-    });
-
+final seedDefaultChartUseCaseProvider = Provider<SeedDefaultChartOfAccounts>((
+  ref,
+) {
+  return SeedDefaultChartOfAccounts(ref.watch(accountRepositoryProvider));
+});
 
 final accountsIncludeInactiveProvider = StateProvider.autoDispose<bool>(
   (ref) => false,
@@ -133,9 +133,7 @@ final allAccountsProvider = StreamProvider<List<Account>>((ref) async* {
     yield [];
     return;
   }
-  yield* ref
-      .watch(watchAccountsUseCaseProvider)
-      .call(includeInactive: true);
+  yield* ref.watch(watchAccountsUseCaseProvider).call(includeInactive: true);
 });
 
 final accountSearchQueryProvider = StateProvider.autoDispose<String>(

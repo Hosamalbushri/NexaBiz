@@ -43,7 +43,8 @@ class ChunkedExecutionEngine {
   Future<ImportJob> executeChunked({
     required ImportJob job,
     required List<ParsedRow> rows,
-    required Future<ChunkRowOutcome> Function(ParsedRow row, int index) rowProcessor,
+    required Future<ChunkRowOutcome> Function(ParsedRow row, int index)
+    rowProcessor,
     String Function(ParsedRow row, int index)? idempotencyKeyExtractor,
     int? chunkSize,
     bool Function(int index)? shouldSimulateFailureAtRow,
@@ -53,10 +54,17 @@ class ChunkedExecutionEngine {
     final jobId = job.jobId;
 
     // 1. Fetch existing checkpoint for resume, if present
-    final existingCp = await checkpointRepository.getLatestCheckpoint(jobId, companyId: companyId);
+    final existingCp = await checkpointRepository.getLatestCheckpoint(
+      jobId,
+      companyId: companyId,
+    );
 
-    final int startIndex = existingCp != null ? existingCp.lastProcessedRowIndex + 1 : 0;
-    final Set<String> committedKeys = Set.of(existingCp?.committedKeys ?? <String>{});
+    final int startIndex = existingCp != null
+        ? existingCp.lastProcessedRowIndex + 1
+        : 0;
+    final Set<String> committedKeys = Set.of(
+      existingCp?.committedKeys ?? <String>{},
+    );
     int accumulatedSuccess = existingCp?.successfulRows ?? 0;
     int accumulatedFailed = existingCp?.failedRows ?? 0;
     int accumulatedSkipped = existingCp?.skippedRows ?? 0;
@@ -70,14 +78,19 @@ class ChunkedExecutionEngine {
     // 2. Iterate in bounded chunks
     final totalRows = rows.length;
 
-    for (var chunkStart = startIndex; chunkStart < totalRows; chunkStart += activeChunkSize) {
+    for (
+      var chunkStart = startIndex;
+      chunkStart < totalRows;
+      chunkStart += activeChunkSize
+    ) {
       final chunkEnd = (chunkStart + activeChunkSize < totalRows)
           ? chunkStart + activeChunkSize
           : totalRows;
 
       for (var i = chunkStart; i < chunkEnd; i++) {
         // Failure injection guard for testing
-        if (shouldSimulateFailureAtRow != null && shouldSimulateFailureAtRow(i)) {
+        if (shouldSimulateFailureAtRow != null &&
+            shouldSimulateFailureAtRow(i)) {
           final errorMsg = 'Simulated failure injection at row $i';
           currentJob = currentJob.copyWith(
             status: ImportJobStatus.failed,
@@ -147,10 +160,7 @@ class ChunkedExecutionEngine {
         ? ImportJobStatus.completedWithErrors
         : ImportJobStatus.completed;
 
-    currentJob = currentJob.transitionTo(
-      finalStatus,
-      progress: 1.0,
-    );
+    currentJob = currentJob.transitionTo(finalStatus, progress: 1.0);
     await jobRepository.save(currentJob);
 
     return currentJob;

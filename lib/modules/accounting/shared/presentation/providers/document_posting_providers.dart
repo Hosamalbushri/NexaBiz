@@ -23,19 +23,20 @@ final accountingEntryBuilderProvider = Provider<AccountingEntryBuilder>((ref) {
   );
 });
 
-final documentPostingOrchestratorProvider = Provider<DocumentPostingOrchestrator>((ref) {
-  final postingCoordinator = ref.watch(postingCoordinatorPortProvider);
-  final journalPostingService = ref.watch(journalPostingServiceProvider);
-  final entryBuilder = ref.watch(accountingEntryBuilderProvider);
-  final lockChecker = ref.watch(documentLockCheckerProvider);
+final documentPostingOrchestratorProvider =
+    Provider<DocumentPostingOrchestrator>((ref) {
+      final postingCoordinator = ref.watch(postingCoordinatorPortProvider);
+      final journalPostingService = ref.watch(journalPostingServiceProvider);
+      final entryBuilder = ref.watch(accountingEntryBuilderProvider);
+      final lockChecker = ref.watch(documentLockCheckerProvider);
 
-  return DocumentPostingOrchestrator(
-    postingCoordinator: postingCoordinator,
-    journalPostingService: journalPostingService,
-    entryBuilder: entryBuilder,
-    lockChecker: lockChecker,
-  );
-});
+      return DocumentPostingOrchestrator(
+        postingCoordinator: postingCoordinator,
+        journalPostingService: journalPostingService,
+        entryBuilder: entryBuilder,
+        lockChecker: lockChecker,
+      );
+    });
 
 final documentEntrySyncProvider = Provider<DocumentEntrySync>((ref) {
   final journalRepo = ref.watch(journalRepositoryProvider);

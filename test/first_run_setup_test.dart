@@ -179,76 +179,82 @@ void main() {
       },
     );
 
-    test('4. FirstRunSetupCoordinator: Pure System Admin Atomic Commit & Idempotency', () async {
-      expect(await coordinator.isFirstRunCompleted(), isFalse);
+    test(
+      '4. FirstRunSetupCoordinator: Pure System Admin Atomic Commit & Idempotency',
+      () async {
+        expect(await coordinator.isFirstRunCompleted(), isFalse);
 
-      const payload = FirstRunSetupPayload(
-        language: 'ar',
-        companyName: '',
-        companyCode: '',
-        adminName: 'المدير العام',
-        adminEmail: 'admin@adv-solutions.com',
-        adminPassword: 'StrongAdminPassword2026!',
-      );
+        const payload = FirstRunSetupPayload(
+          language: 'ar',
+          companyName: '',
+          companyCode: '',
+          adminName: 'المدير العام',
+          adminEmail: 'admin@adv-solutions.com',
+          adminPassword: 'StrongAdminPassword2026!',
+        );
 
-      // Execute setup commit
-      await coordinator.commitFirstRunSetup(payload);
+        // Execute setup commit
+        await coordinator.commitFirstRunSetup(payload);
 
-      // 1. Verify First-Run setup completed
-      expect(await coordinator.isFirstRunCompleted(), isTrue);
+        // 1. Verify First-Run setup completed
+        expect(await coordinator.isFirstRunCompleted(), isTrue);
 
-      // 2. Verify persisted locale
-      final locale = await settingsRepository.loadLocale();
-      expect(locale?.languageCode, equals('ar'));
+        // 2. Verify persisted locale
+        final locale = await settingsRepository.loadLocale();
+        expect(locale?.languageCode, equals('ar'));
 
-      // 3. Verify login with newly created admin credentials
-      final session = await authStore.login(
-        email: 'admin@adv-solutions.com',
-        password: 'StrongAdminPassword2026!',
-        deviceId: 'device-1',
-      );
-      expect(session, isNotNull);
-      expect(session!.user.email, equals('admin@adv-solutions.com'));
-      expect(session.user.name, equals('المدير العام'));
+        // 3. Verify login with newly created admin credentials
+        final session = await authStore.login(
+          email: 'admin@adv-solutions.com',
+          password: 'StrongAdminPassword2026!',
+          deviceId: 'device-1',
+        );
+        expect(session, isNotNull);
+        expect(session!.user.email, equals('admin@adv-solutions.com'));
+        expect(session.user.name, equals('المدير العام'));
 
-      // 4. Verify Phase 4 pure System Identity invariants: 0 companies, 0 memberships
-      expect(session.user.isSystemAdmin, isTrue);
-      expect(session.companies, isEmpty);
-      expect(session.activeCompanyContext, isNull);
+        // 4. Verify Phase 4 pure System Identity invariants: 0 companies, 0 memberships
+        expect(session.user.isSystemAdmin, isTrue);
+        expect(session.companies, isEmpty);
+        expect(session.activeCompanyContext, isNull);
 
-      // 5. Verify Idempotency: Re-running throws FirstRunAlreadyCompletedException
-      expect(
-        () => coordinator.commitFirstRunSetup(payload),
-        throwsA(isA<FirstRunAlreadyCompletedException>()),
-      );
+        // 5. Verify Idempotency: Re-running throws FirstRunAlreadyCompletedException
+        expect(
+          () => coordinator.commitFirstRunSetup(payload),
+          throwsA(isA<FirstRunAlreadyCompletedException>()),
+        );
 
-      // 6. Verify System Initialization state steps and status are persisted as ready
-      final systemSetupStatus = await settingsRepository
-          .loadSystemSetupStatus();
-      expect(systemSetupStatus, equals('ready'));
-    });
+        // 6. Verify System Initialization state steps and status are persisted as ready
+        final systemSetupStatus = await settingsRepository
+            .loadSystemSetupStatus();
+        expect(systemSetupStatus, equals('ready'));
+      },
+    );
 
-    test('5. FirstRunSetupCoordinator: Transactional Rollback on Failure', () async {
-      expect(await coordinator.isFirstRunCompleted(), isFalse);
+    test(
+      '5. FirstRunSetupCoordinator: Transactional Rollback on Failure',
+      () async {
+        expect(await coordinator.isFirstRunCompleted(), isFalse);
 
-      // Invalid payload (password too short)
-      const invalidPayload = FirstRunSetupPayload(
-        language: 'ar',
-        companyName: '',
-        companyCode: '',
-        adminName: 'Test Admin',
-        adminEmail: 'invalid@test.com',
-        adminPassword: '123',
-      );
+        // Invalid payload (password too short)
+        const invalidPayload = FirstRunSetupPayload(
+          language: 'ar',
+          companyName: '',
+          companyCode: '',
+          adminName: 'Test Admin',
+          adminEmail: 'invalid@test.com',
+          adminPassword: '123',
+        );
 
-      expect(
-        () => coordinator.commitFirstRunSetup(invalidPayload),
-        throwsA(isA<FirstRunSetupValidationException>()),
-      );
+        expect(
+          () => coordinator.commitFirstRunSetup(invalidPayload),
+          throwsA(isA<FirstRunSetupValidationException>()),
+        );
 
-      // Verify onboarding and auth data remain uninitialized after failure
-      expect(await coordinator.isFirstRunCompleted(), isFalse);
-      expect(await authStore.hasConfiguredAdmin(), isFalse);
-    });
+        // Verify onboarding and auth data remain uninitialized after failure
+        expect(await coordinator.isFirstRunCompleted(), isFalse);
+        expect(await authStore.hasConfiguredAdmin(), isFalse);
+      },
+    );
   });
 }

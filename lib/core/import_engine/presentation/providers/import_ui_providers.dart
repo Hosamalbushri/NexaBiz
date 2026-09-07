@@ -89,10 +89,8 @@ class ImportWizardState {
 
 /// State notifier managing wizard interactions across all 11 import steps.
 class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
-  ImportWizardNotifier({
-    required this.jobRepository,
-    required this.worker,
-  }) : super(const ImportWizardState());
+  ImportWizardNotifier({required this.jobRepository, required this.worker})
+    : super(const ImportWizardState());
 
   final ImportJobRepository jobRepository;
   final ImportBackgroundWorker worker;
@@ -159,8 +157,8 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
       final format = state.sourceType == 'json'
           ? ImportFileFormat.json
           : state.sourceType == 'xlsx'
-              ? ImportFileFormat.xlsx
-              : ImportFileFormat.csv;
+          ? ImportFileFormat.xlsx
+          : ImportFileFormat.csv;
 
       final parser = UniversalParserFactory.forFormat(format);
       final doc = await parser.parseDocument(source);
@@ -276,7 +274,10 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
           for (final field in state.selectedProfile!.fields) {
             if (field.isRequired) {
               final mappedHeader = state.columnMappings.entries
-                  .firstWhere((e) => e.value == field.key, orElse: () => const MapEntry('', ''))
+                  .firstWhere(
+                    (e) => e.value == field.key,
+                    orElse: () => const MapEntry('', ''),
+                  )
                   .key;
 
               final cell = rowCells.firstWhere(
@@ -285,13 +286,16 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
               );
 
               if (cell.isEmpty) {
-                issues.add(ValidationIssue(
-                  row: i + 1,
-                  field: field.key,
-                  code: 'REQUIRED_FIELD_MISSING',
-                  severity: ValidationSeverity.error,
-                  message: 'Required field ${field.label} (${field.key}) is missing or empty.',
-                ));
+                issues.add(
+                  ValidationIssue(
+                    row: i + 1,
+                    field: field.key,
+                    code: 'REQUIRED_FIELD_MISSING',
+                    severity: ValidationSeverity.error,
+                    message:
+                        'Required field ${field.label} (${field.key}) is missing or empty.',
+                  ),
+                );
               }
             }
           }
@@ -303,10 +307,7 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
         totalProcessedRows: rows.length,
       );
 
-      state = state.copyWith(
-        validationReport: report,
-        isProcessing: false,
-      );
+      state = state.copyWith(validationReport: report, isProcessing: false);
     } catch (e) {
       state = state.copyWith(
         isProcessing: false,
@@ -350,10 +351,7 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
         fixedAssignments: state.dynamicAssignments,
       );
 
-      state = state.copyWith(
-        previewSummary: summary,
-        isProcessing: false,
-      );
+      state = state.copyWith(previewSummary: summary, isProcessing: false);
     } catch (e) {
       state = state.copyWith(
         isProcessing: false,
@@ -373,12 +371,16 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
       final profile = state.selectedProfile;
       final profileId = profile?.profileId ?? 'PROF-GENERIC';
 
-      final List<ImportAssignment> assignments = state.dynamicAssignments.entries.map((e) {
-        return ImportAssignment(
-          targetFieldKey: e.key,
-          staticValue: e.value,
-        );
-      }).toList();
+      final List<ImportAssignment> assignments = state
+          .dynamicAssignments
+          .entries
+          .map((e) {
+            return ImportAssignment(
+              targetFieldKey: e.key,
+              staticValue: e.value,
+            );
+          })
+          .toList();
 
       final job = ImportJob(
         jobId: 'JOB-${DateTime.now().millisecondsSinceEpoch}',
@@ -392,19 +394,14 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
         configuration: ImportConfiguration(
           profileId: profileId,
           assignments: assignments,
-          policy: ImportPolicy(
-            duplicateResolution: state.duplicateResolution,
-          ),
+          policy: ImportPolicy(duplicateResolution: state.duplicateResolution),
         ),
       );
 
       await jobRepository.save(job);
       await worker.enqueue(job);
 
-      state = state.copyWith(
-        activeJob: job,
-        isProcessing: false,
-      );
+      state = state.copyWith(activeJob: job, isProcessing: false);
 
       return job;
     } catch (e) {
@@ -433,10 +430,10 @@ final importBackgroundWorkerProvider = Provider<ImportBackgroundWorker>((ref) {
 
 final importWizardProvider =
     StateNotifierProvider<ImportWizardNotifier, ImportWizardState>((ref) {
-  final repo = ref.watch(importJobRepositoryProvider);
-  final worker = ref.watch(importBackgroundWorkerProvider);
-  return ImportWizardNotifier(jobRepository: repo, worker: worker);
-});
+      final repo = ref.watch(importJobRepositoryProvider);
+      final worker = ref.watch(importBackgroundWorkerProvider);
+      return ImportWizardNotifier(jobRepository: repo, worker: worker);
+    });
 
 final importWizardNotifierProvider = importWizardProvider;
 
@@ -444,6 +441,8 @@ final importReportRepositoryProvider = Provider<ImportReportRepository>((ref) {
   return InMemoryImportReportRepository();
 });
 
-final importTemplateRepositoryProvider = Provider<ImportTemplateRepository>((ref) {
+final importTemplateRepositoryProvider = Provider<ImportTemplateRepository>((
+  ref,
+) {
   return InMemoryImportTemplateRepository();
 });

@@ -96,7 +96,9 @@ class _AppDataTextState extends State<AppDataText> {
               style: textStyle,
               textAlign: widget.textAlign,
               maxLines: _isExpanded ? null : limit,
-              overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+              overflow: _isExpanded
+                  ? TextOverflow.visible
+                  : TextOverflow.ellipsis,
             ),
             if (formatted.length > 60 || (widget.text.contains('\n')))
               InkWell(

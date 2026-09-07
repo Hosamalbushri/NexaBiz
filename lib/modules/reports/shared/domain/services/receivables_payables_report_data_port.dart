@@ -1,10 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 
-enum ReceivablesPayablesType {
-  receivables,
-  payables,
-}
+enum ReceivablesPayablesType { receivables, payables }
 
 /// Labels required for localized rendering of Receivables / Payables Statement.
 class ReceivablesPayablesReportLabels {
@@ -104,7 +101,7 @@ abstract class ReceivablesPayablesReportDataPort {
 /// Provider for ReceivablesPayablesReportDataPort.
 final receivablesPayablesReportDataPortProvider =
     Provider<ReceivablesPayablesReportDataPort>((ref) {
-  throw UnimplementedError(
-    'receivablesPayablesReportDataPortProvider must be overridden in providerOverrides',
-  );
-});
+      throw UnimplementedError(
+        'receivablesPayablesReportDataPortProvider must be overridden in providerOverrides',
+      );
+    });

@@ -56,8 +56,12 @@ class FakeAccountRepository implements AccountRepository {
       uuids.map((u) => _accounts[u]).whereType<Account>().toList();
 
   @override
-  Future<List<Account>> getByType(AccountType type, {bool includeInactive = false}) async =>
-      _accounts.values.where((a) => a.accountType == type && (includeInactive || a.isActive)).toList();
+  Future<List<Account>> getByType(
+    AccountType type, {
+    bool includeInactive = false,
+  }) async => _accounts.values
+      .where((a) => a.accountType == type && (includeInactive || a.isActive))
+      .toList();
 }
 
 class FakeJournalRepository implements JournalRepository {
@@ -86,21 +90,23 @@ class FakeJournalRepository implements JournalRepository {
         lineDescription: lDraft.lineDescription,
       );
       lines.add(line);
-      _movements.add(AccountLedgerMovement(
-        entryDate: draft.entryDate,
-        voucherNumber: draft.voucherNumber,
-        voucherType: draft.voucherType,
-        description: lDraft.lineDescription ?? draft.description ?? '',
-        debit: lDraft.debit,
-        credit: lDraft.credit,
-        currencyCode: lDraft.currencyCode,
-        isPosted: draft.isPosted,
-        accountUuid: lDraft.accountUuid,
-        entryUuid: entryUuid,
-        lineUuid: line.uuid,
-        lineId: line.id,
-        sortOrder: lDraft.sortOrder,
-      ));
+      _movements.add(
+        AccountLedgerMovement(
+          entryDate: draft.entryDate,
+          voucherNumber: draft.voucherNumber,
+          voucherType: draft.voucherType,
+          description: lDraft.lineDescription ?? draft.description ?? '',
+          debit: lDraft.debit,
+          credit: lDraft.credit,
+          currencyCode: lDraft.currencyCode,
+          isPosted: draft.isPosted,
+          accountUuid: lDraft.accountUuid,
+          entryUuid: entryUuid,
+          lineUuid: line.uuid,
+          lineId: line.id,
+          sortOrder: lDraft.sortOrder,
+        ),
+      );
     }
     final entry = JournalEntry(
       id: _idSeq++,
@@ -142,7 +148,9 @@ class FakeJournalRepository implements JournalRepository {
     required String sourceType,
     required String sourceId,
   }) async {
-    return _journals.values.where((j) => j.sourceType == sourceType && j.sourceId == sourceId).firstOrNull;
+    return _journals.values
+        .where((j) => j.sourceType == sourceType && j.sourceId == sourceId)
+        .firstOrNull;
   }
 
   @override
@@ -150,7 +158,9 @@ class FakeJournalRepository implements JournalRepository {
     required String sourceType,
     required String sourceId,
   }) async {
-    final toRemove = _journals.values.where((j) => j.sourceType == sourceType && j.sourceId == sourceId).toList();
+    final toRemove = _journals.values
+        .where((j) => j.sourceType == sourceType && j.sourceId == sourceId)
+        .toList();
     for (final j in toRemove) {
       _journals.remove(j.uuid);
       _movements.removeWhere((m) => m.entryUuid == j.uuid);
@@ -165,8 +175,10 @@ class FakeJournalRepository implements JournalRepository {
     }
   }
 
-  Future<List<JournalEntry>> getJournalEntries({bool includeLines = true, bool includeVoided = false}) async =>
-      _journals.values.toList();
+  Future<List<JournalEntry>> getJournalEntries({
+    bool includeLines = true,
+    bool includeVoided = false,
+  }) async => _journals.values.toList();
 }
 
 class FakeJournalPostingService implements JournalPostingService {
@@ -177,14 +189,16 @@ class FakeJournalPostingService implements JournalPostingService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 
   @override
-  Future<JournalEntry> post(JournalEntryDraft draft, {String? userId}) async => repo.post(draft);
+  Future<JournalEntry> post(JournalEntryDraft draft, {String? userId}) async =>
+      repo.post(draft);
 
   @override
   Future<void> voidBySource({
     required String sourceType,
     required String sourceId,
     String? userId,
-  }) async => repo.softDeleteBySource(sourceType: sourceType, sourceId: sourceId);
+  }) async =>
+      repo.softDeleteBySource(sourceType: sourceType, sourceId: sourceId);
 
   @override
   Future<JournalEntry?> findBySource({
@@ -193,13 +207,17 @@ class FakeJournalPostingService implements JournalPostingService {
   }) async => repo.findBySource(sourceType: sourceType, sourceId: sourceId);
 
   @override
-  Future<JournalEntry> reverseByUuid(String uuid, {DateTime? reverseDate}) async => throw UnimplementedError();
+  Future<JournalEntry> reverseByUuid(
+    String uuid, {
+    DateTime? reverseDate,
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> softDeleteBySource({
     required String sourceType,
     required String sourceId,
-  }) async => repo.softDeleteBySource(sourceType: sourceType, sourceId: sourceId);
+  }) async =>
+      repo.softDeleteBySource(sourceType: sourceType, sourceId: sourceId);
 }
 
 void main() {
@@ -308,7 +326,10 @@ void main() {
 
     journalRepo = FakeJournalRepository();
     db = AccountingDatabase.memory();
-    cashRepo = CashRegisterRepositoryImpl(accountRepository: accountRepo, db: db);
+    cashRepo = CashRegisterRepositoryImpl(
+      accountRepository: accountRepo,
+      db: db,
+    );
     final defaultResolver = DefaultCashRegisterResolver(
       cashRegisterRepository: cashRepo,
       accountRepository: accountRepo,
@@ -550,114 +571,126 @@ void main() {
         expect(result, isNull);
       });
 
-      test('2.3 Cross-company register list query returns only tenant data', () async {
-        final regA = CashRegister(
-          id: 'reg_iso_a',
-          companyId: 'company_a',
-          name: 'Register A',
-          code: 'REG_A',
-          isActive: true,
-          createdAt: now,
-          updatedAt: now,
-        );
-        final regB = CashRegister(
-          id: 'reg_iso_b',
-          companyId: 'company_b',
-          name: 'Register B',
-          code: 'REG_B',
-          isActive: true,
-          createdAt: now,
-          updatedAt: now,
-        );
-        await cashRepo.createCashRegister(regA);
-        await cashRepo.createCashRegister(regB);
+      test(
+        '2.3 Cross-company register list query returns only tenant data',
+        () async {
+          final regA = CashRegister(
+            id: 'reg_iso_a',
+            companyId: 'company_a',
+            name: 'Register A',
+            code: 'REG_A',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+          );
+          final regB = CashRegister(
+            id: 'reg_iso_b',
+            companyId: 'company_b',
+            name: 'Register B',
+            code: 'REG_B',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+          );
+          await cashRepo.createCashRegister(regA);
+          await cashRepo.createCashRegister(regB);
 
-        final listA = await cashRepo.getCashRegisters('company_a');
-        expect(listA.length, equals(1));
-        expect(listA.first.id, equals('reg_iso_a'));
-      });
+          final listA = await cashRepo.getCashRegisters('company_a');
+          expect(listA.length, equals(1));
+          expect(listA.first.id, equals('reg_iso_a'));
+        },
+      );
     });
 
     // ------------------------------------------------------------------------
     // 3. INITIALIZATION & RECOVERY ATTACKS
     // ------------------------------------------------------------------------
     group('3. Initialization & Recovery Attacks', () {
-      test('3.1 Duplicate register creation explicitly throws CashRegisterException', () async {
-        final reg1 = CashRegister(
-          id: 'idem_reg_01',
-          companyId: 'company_a',
-          name: 'Idempotent Register',
-          code: 'IDEM_01',
-          isActive: true,
-          createdAt: now,
-          updatedAt: now,
-        );
-        await cashRepo.createCashRegister(reg1);
-        
-        expect(
-          () async => await cashRepo.createCashRegister(reg1),
-          throwsA(isA<CashRegisterException>()),
-        );
+      test(
+        '3.1 Duplicate register creation explicitly throws CashRegisterException',
+        () async {
+          final reg1 = CashRegister(
+            id: 'idem_reg_01',
+            companyId: 'company_a',
+            name: 'Idempotent Register',
+            code: 'IDEM_01',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+          );
+          await cashRepo.createCashRegister(reg1);
 
-        final list = await cashRepo.getCashRegisters('company_a');
-        expect(list.where((r) => r.id == 'idem_reg_01').length, equals(1));
-      });
+          expect(
+            () async => await cashRepo.createCashRegister(reg1),
+            throwsA(isA<CashRegisterException>()),
+          );
 
-      test('3.2 Operations with empty/missing companyId throw exception', () async {
-        final regNoCompany = CashRegister(
-          id: 'no_company_reg',
-          companyId: '',
-          name: 'No Company Register',
-          code: 'NO_COMP',
-          isActive: true,
-          createdAt: now,
-          updatedAt: now,
-        );
+          final list = await cashRepo.getCashRegisters('company_a');
+          expect(list.where((r) => r.id == 'idem_reg_01').length, equals(1));
+        },
+      );
 
-        expect(
-          () async => await cashRepo.createCashRegister(regNoCompany),
-          throwsA(isA<CashRegisterException>()),
-        );
-      });
+      test(
+        '3.2 Operations with empty/missing companyId throw exception',
+        () async {
+          final regNoCompany = CashRegister(
+            id: 'no_company_reg',
+            companyId: '',
+            name: 'No Company Register',
+            code: 'NO_COMP',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+          );
+
+          expect(
+            () async => await cashRepo.createCashRegister(regNoCompany),
+            throwsA(isA<CashRegisterException>()),
+          );
+        },
+      );
     });
 
     // ------------------------------------------------------------------------
     // 4. PERSISTENCE SURVIVAL ATTACKS
     // ------------------------------------------------------------------------
     group('4. Persistence Survival Attacks', () {
-      test('4.1 Full Lifecycle: Create -> Link -> Save -> DB Reopen -> Verify', () async {
-        final reg = CashRegister(
-          id: 'persist_reg_01',
-          companyId: 'company_a',
-          name: 'Persisted Register',
-          code: 'PERSIST_01',
-          isActive: true,
-          createdAt: now,
-          updatedAt: now,
-        );
-        await cashRepo.createCashRegister(reg);
-        await cashRepo.linkAccountingAccount(
-          registerId: 'persist_reg_01',
-          accountId: 'acc_company_a_01',
-          companyId: 'company_a',
-        );
+      test(
+        '4.1 Full Lifecycle: Create -> Link -> Save -> DB Reopen -> Verify',
+        () async {
+          final reg = CashRegister(
+            id: 'persist_reg_01',
+            companyId: 'company_a',
+            name: 'Persisted Register',
+            code: 'PERSIST_01',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+          );
+          await cashRepo.createCashRegister(reg);
+          await cashRepo.linkAccountingAccount(
+            registerId: 'persist_reg_01',
+            accountId: 'acc_company_a_01',
+            companyId: 'company_a',
+          );
 
-        // Simulate application restart by creating a new repository wrapping the same DB
-        final reloadedRepo = CashRegisterRepositoryImpl(
-          accountRepository: accountRepo,
-          db: db,
-        );
+          // Simulate application restart by creating a new repository wrapping the same DB
+          final reloadedRepo = CashRegisterRepositoryImpl(
+            accountRepository: accountRepo,
+            db: db,
+          );
 
-        final loaded = await reloadedRepo.getCashRegisterById(
-          'persist_reg_01',
-          companyId: 'company_a',
-        );
+          final loaded = await reloadedRepo.getCashRegisterById(
+            'persist_reg_01',
+            companyId: 'company_a',
+          );
 
-        expect(loaded, isNotNull);
-        expect(loaded!.name, equals('Persisted Register'));
-        expect(loaded.accountingAccountId, equals('acc_company_a_01'));
-        expect(loaded.isLinked, isTrue);
-      });
+          expect(loaded, isNotNull);
+          expect(loaded!.name, equals('Persisted Register'));
+          expect(loaded.accountingAccountId, equals('acc_company_a_01'));
+          expect(loaded.isLinked, isTrue);
+        },
+      );
     });
 
     // ------------------------------------------------------------------------
@@ -684,27 +717,28 @@ void main() {
         );
       });
 
-      test('5.2 Malformed remote payload does not corrupt database state', () async {
-        final remoteApi = InMemoryRemoteSyncApi();
-        final syncHandler = CashRegisterSyncHandler(
-          repository: cashRepo,
-          remoteProvider: () => remoteApi,
-        );
+      test(
+        '5.2 Malformed remote payload does not corrupt database state',
+        () async {
+          final remoteApi = InMemoryRemoteSyncApi();
+          final syncHandler = CashRegisterSyncHandler(
+            repository: cashRepo,
+            remoteProvider: () => remoteApi,
+          );
 
-        final malformedChange = SyncRemoteChange(
-          entityId: 'malformed_uuid',
-          version: 1,
-          updatedAt: DateTime.now().toUtc(),
-          payload: {
-            'invalidKey': 'Corrupt data',
-          },
-        );
+          final malformedChange = SyncRemoteChange(
+            entityId: 'malformed_uuid',
+            version: 1,
+            updatedAt: DateTime.now().toUtc(),
+            payload: {'invalidKey': 'Corrupt data'},
+          );
 
-        await syncHandler.applyRemoteChange(malformedChange);
+          await syncHandler.applyRemoteChange(malformedChange);
 
-        final list = await cashRepo.getCashRegisters('company_a');
-        expect(list.any((r) => r.id == 'malformed_uuid'), isFalse);
-      });
+          final list = await cashRepo.getCashRegisters('company_a');
+          expect(list.any((r) => r.id == 'malformed_uuid'), isFalse);
+        },
+      );
     });
   });
 }

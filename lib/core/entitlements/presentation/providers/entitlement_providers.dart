@@ -22,7 +22,8 @@ final currentEntitlementProvider = StreamProvider<Entitlement>((ref) async* {
   final service = ref.watch(entitlementServiceProvider);
 
   // If local-only or not cloud-ready, return free local entitlement
-  if (cloudState.isLocalOnly || (!cloudState.isCloudReady && !cloudState.isCloudLinked)) {
+  if (cloudState.isLocalOnly ||
+      (!cloudState.isCloudReady && !cloudState.isCloudLinked)) {
     yield Entitlement.freeLocal(companyId);
     return;
   }

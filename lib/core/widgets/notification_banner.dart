@@ -84,9 +84,7 @@ class NotificationBanner extends StatelessWidget {
           decoration: BoxDecoration(
             color: cardColor.withValues(alpha: 0.98),
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: visuals.accent.withValues(alpha: 0.28),
-            ),
+            border: Border.all(color: visuals.accent.withValues(alpha: 0.28)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.32 : 0.10),

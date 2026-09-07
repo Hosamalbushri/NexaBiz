@@ -73,7 +73,8 @@ class AppCustomerSearchField<T> extends StatelessWidget {
       noResultsText: noResultsText,
       errorText: errorText,
       decoration: decoration,
-      itemBuilder: itemBuilder ??
+      itemBuilder:
+          itemBuilder ??
           (context, item) {
             final theme = Theme.of(context);
             final scheme = theme.colorScheme;

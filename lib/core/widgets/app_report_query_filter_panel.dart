@@ -268,11 +268,7 @@ class _AppReportQueryFilterPanelState
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    scheme.primary,
-                    scheme.secondary,
-                    scheme.tertiary,
-                  ],
+                  colors: [scheme.primary, scheme.secondary, scheme.tertiary],
                 ),
               ),
             ),
@@ -314,7 +310,10 @@ class _AppReportQueryFilterPanelState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.title ?? (isArabic ? 'معايير الاستعلام' : 'Query Filters'),
+                            widget.title ??
+                                (isArabic
+                                    ? 'معايير الاستعلام'
+                                    : 'Query Filters'),
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.1,
@@ -343,7 +342,9 @@ class _AppReportQueryFilterPanelState
                           vertical: AppSpacing.xs + 2,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                          color: scheme.surfaceContainerHighest.withValues(
+                            alpha: 0.6,
+                          ),
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(
                             color: scheme.outlineVariant.withValues(alpha: 0.5),
@@ -443,7 +444,9 @@ class _AppReportQueryFilterPanelState
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
-                            isArabic ? 'نوع الكشف (حالة الترحيل)' : 'Posting Status',
+                            isArabic
+                                ? 'نوع الكشف (حالة الترحيل)'
+                                : 'Posting Status',
                             style: theme.textTheme.labelMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: scheme.onSurface,
@@ -488,39 +491,43 @@ class _AppReportQueryFilterPanelState
                             selected: {_postingStatus},
                             onSelectionChanged: (newSelection) {
                               if (newSelection.isNotEmpty) {
-                                setState(() => _postingStatus = newSelection.first);
+                                setState(
+                                  () => _postingStatus = newSelection.first,
+                                );
                               }
                             },
                             showSelectedIcon: false,
                             style: ButtonStyle(
                               visualDensity: VisualDensity.compact,
-                              backgroundColor: WidgetStateProperty.resolveWith(
-                                (states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return scheme.primary;
-                                  }
-                                  return Colors.transparent;
-                                },
-                              ),
-                              foregroundColor: WidgetStateProperty.resolveWith(
-                                (states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return scheme.onPrimary;
-                                  }
-                                  return scheme.onSurfaceVariant;
-                                },
-                              ),
-                              elevation: WidgetStateProperty.resolveWith(
-                                (states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return 2;
-                                  }
-                                  return 0;
-                                },
-                              ),
+                              backgroundColor: WidgetStateProperty.resolveWith((
+                                states,
+                              ) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return scheme.primary;
+                                }
+                                return Colors.transparent;
+                              }),
+                              foregroundColor: WidgetStateProperty.resolveWith((
+                                states,
+                              ) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return scheme.onPrimary;
+                                }
+                                return scheme.onSurfaceVariant;
+                              }),
+                              elevation: WidgetStateProperty.resolveWith((
+                                states,
+                              ) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return 2;
+                                }
+                                return 0;
+                              }),
                               shape: WidgetStateProperty.all(
                                 RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppRadius.sm + 2),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.sm + 2,
+                                  ),
                                 ),
                               ),
                               side: WidgetStateProperty.all(BorderSide.none),
@@ -550,15 +557,19 @@ class _AppReportQueryFilterPanelState
                           ],
                         ),
                         child: AppButton(
-                          label: widget.applyButtonLabel ??
+                          label:
+                              widget.applyButtonLabel ??
                               (isArabic ? 'عرض التقرير' : 'View Report'),
                           icon: Icons.analytics_rounded,
                           isLoading: widget.isLoading,
-                          onPressed: widget.isLoading ? null : _handlePrimaryAction,
+                          onPressed: widget.isLoading
+                              ? null
+                              : _handlePrimaryAction,
                         ),
                       ),
                     ),
-                    if (widget.onPrint != null && widget.onViewAsTable != null) ...[
+                    if (widget.onPrint != null &&
+                        widget.onViewAsTable != null) ...[
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: OutlinedButton.icon(
@@ -692,7 +703,9 @@ class _ReportDateField extends StatelessWidget {
                     child: Icon(
                       Icons.calendar_today_rounded,
                       size: 15,
-                      color: isSelected ? scheme.primary : scheme.onSurfaceVariant,
+                      color: isSelected
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.xs + 2),
@@ -700,7 +713,9 @@ class _ReportDateField extends StatelessWidget {
                     child: Text(
                       value,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w500,
                         color: isSelected
                             ? scheme.onSurface
                             : scheme.onSurfaceVariant.withValues(alpha: 0.7),

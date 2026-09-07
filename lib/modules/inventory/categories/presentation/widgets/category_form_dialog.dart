@@ -161,7 +161,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                         Text(
                           isEditing
                               ? (isAr ? 'تعديل التصنيف' : 'Edit Category')
-                              : (isAr ? 'إضافة تصنيف جديد' : 'Add New Category'),
+                              : (isAr
+                                    ? 'إضافة تصنيف جديد'
+                                    : 'Add New Category'),
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -178,7 +180,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                     ),
                   ),
                   IconButton(
-                    onPressed: _saving ? null : () => Navigator.of(context).pop(),
+                    onPressed: _saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
                     tooltip: isAr ? 'إغلاق' : 'Close',
                   ),
@@ -203,7 +207,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                           color: colorScheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.4,
+                            ),
                           ),
                         ),
                         padding: const EdgeInsets.all(AppSpacing.xs),
@@ -217,7 +223,10 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.folder_special_outlined, size: 18),
+                                      const Icon(
+                                        Icons.folder_special_outlined,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: AppSpacing.xs),
                                       Text(isAr ? 'رئيسي (تجميعي)' : 'Group'),
                                     ],
@@ -301,7 +310,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                               _autoGenerateCode();
                             },
                             validator: (val) => val == null
-                                ? (isAr ? 'يرجى اختيار المستودع' : 'Select warehouse')
+                                ? (isAr
+                                      ? 'يرجى اختيار المستودع'
+                                      : 'Select warehouse')
                                 : null,
                           );
                         },
@@ -314,7 +325,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                         error: (err, stack) => const SizedBox.shrink(),
                         data: (categories) {
                           final availableParents = categories
-                              .where((c) => c.id != widget.category?.id && c.isGroup)
+                              .where(
+                                (c) => c.id != widget.category?.id && c.isGroup,
+                              )
                               .toList();
 
                           return DropdownButtonFormField<String?>(
@@ -324,8 +337,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                               labelText: isAr
                                   ? 'التصنيف الأب (اختياري)'
                                   : 'Parent Category (Optional)',
-                              prefixIcon:
-                                  const Icon(Icons.account_tree_outlined),
+                              prefixIcon: const Icon(
+                                Icons.account_tree_outlined,
+                              ),
                               helperText: isAr
                                   ? 'اتركه فارغاً ليصبح تصنيفاً رئيسياً تحت المستودع'
                                   : 'Leave empty for root warehouse category',
@@ -372,7 +386,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                           prefixIcon: const Icon(Icons.qr_code_outlined),
                           suffixIcon: IconButton(
                             icon: const Icon(Icons.auto_awesome_rounded),
-                            tooltip: isAr ? 'توليد كود تلقائي' : 'Auto Generate Code',
+                            tooltip: isAr
+                                ? 'توليد كود تلقائي'
+                                : 'Auto Generate Code',
                             onPressed: () {
                               _codeCtrl.clear();
                               _autoGenerateCode();

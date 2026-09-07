@@ -29,8 +29,7 @@ class JournalBookReportPage extends ConsumerStatefulWidget {
       _JournalBookReportPageState();
 }
 
-class _JournalBookReportPageState
-    extends ConsumerState<JournalBookReportPage> {
+class _JournalBookReportPageState extends ConsumerState<JournalBookReportPage> {
   DateTime? _from;
   DateTime? _to;
   var _postedOnly = true;
@@ -87,34 +86,36 @@ class _JournalBookReportPageState
         emptyMessage: l10n.reportsJournalBookEmpty,
       );
 
-      final document = await ref.read(loadingControllerProvider).run(
-        message: l10n.reportsGenerating,
-        action: () async {
-          final payload = await ref
-              .read(journalBookReportDataPortProvider)
-              .load(
-                fromDate: _from,
-                toDate: _to,
-                postedOnly: _postedOnly,
-                labels: labels,
+      final document = await ref
+          .read(loadingControllerProvider)
+          .run(
+            message: l10n.reportsGenerating,
+            action: () async {
+              final payload = await ref
+                  .read(journalBookReportDataPortProvider)
+                  .load(
+                    fromDate: _from,
+                    toDate: _to,
+                    postedOnly: _postedOnly,
+                    labels: labels,
+                  );
+              final contextPdf = await ReportPdfContext.create(
+                isRtl: locale.languageCode == 'ar',
+                localeCode: locale.toLanguageTag(),
+                pageFormat: ReportPageFormat.a4Landscape,
               );
-          final contextPdf = await ReportPdfContext.create(
-            isRtl: locale.languageCode == 'ar',
-            localeCode: locale.toLanguageTag(),
-            pageFormat: ReportPageFormat.a4Landscape,
+              return ref
+                  .read(reportRunnerProvider)
+                  .run(
+                    definition: ref.read(journalBookReportDefinitionProvider),
+                    payload: payload,
+                    context: contextPdf,
+                    title: l10n.reportsJournalBookTitle,
+                    fileName:
+                        'journal_book_${DateTime.now().millisecondsSinceEpoch}.pdf',
+                  );
+            },
           );
-          return ref
-              .read(reportRunnerProvider)
-              .run(
-                definition: ref.read(journalBookReportDefinitionProvider),
-                payload: payload,
-                context: contextPdf,
-                title: l10n.reportsJournalBookTitle,
-                fileName:
-                    'journal_book_${DateTime.now().millisecondsSinceEpoch}.pdf',
-              );
-        },
-      );
 
       if (!mounted) {
         return;
@@ -156,7 +157,9 @@ class _JournalBookReportPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
+    final dateFmt = DateFormat.yMMMd(
+      Localizations.localeOf(context).toString(),
+    );
 
     return Scaffold(
       appBar: CustomAppBar(

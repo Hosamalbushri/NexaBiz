@@ -4,7 +4,9 @@ import 'package:stock_count/core/widgets/app_currency_selector.dart';
 
 void main() {
   group('AppCurrencySelector Widget Tests', () {
-    testWidgets('renders selected currency and handles selection changes', (WidgetTester tester) async {
+    testWidgets('renders selected currency and handles selection changes', (
+      WidgetTester tester,
+    ) async {
       String? selected;
 
       await tester.pumpWidget(

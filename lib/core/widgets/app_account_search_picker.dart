@@ -27,7 +27,8 @@ Future<Account?> showAppAccountPicker(
   String? selectedUuid,
   AccountSelectionContract? contract,
 }) {
-  final effectiveContract = contract ??
+  final effectiveContract =
+      contract ??
       AccountSelectionContract(
         postingOnly: postingOnlyDefault,
         initialTypeFilter: initialTypeFilter,
@@ -39,10 +40,8 @@ Future<Account?> showAppAccountPicker(
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => AppAccountSearchPickerSheet(
-      title: title,
-      contract: effectiveContract,
-    ),
+    builder: (ctx) =>
+        AppAccountSearchPickerSheet(title: title, contract: effectiveContract),
   );
 }
 
@@ -69,7 +68,8 @@ class AppAccountSearchPickerSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final height = MediaQuery.sizeOf(context).height * 0.85;
 
-    final effectiveContract = contract ??
+    final effectiveContract =
+        contract ??
         AccountSelectionContract(
           postingOnly: postingOnlyDefault,
           initialTypeFilter: initialTypeFilter,
@@ -195,7 +195,8 @@ class _AppAccountSearchPickerState
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _contract = widget.contract ??
+    _contract =
+        widget.contract ??
         AccountSelectionContract(
           postingOnly: widget.postingOnlyDefault,
           initialTypeFilter: widget.initialTypeFilter,
@@ -235,12 +236,14 @@ class _AppAccountSearchPickerState
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    final accountsAsync = ref.watch(filteredAccountsProvider((
-      contract: _contract,
-      query: _searchQuery,
-      activeTypeFilter: _selectedType,
-      activePostingOnly: _postingOnly,
-    )));
+    final accountsAsync = ref.watch(
+      filteredAccountsProvider((
+        contract: _contract,
+        query: _searchQuery,
+        activeTypeFilter: _selectedType,
+        activePostingOnly: _postingOnly,
+      )),
+    );
 
     final allAccountsAsync = ref.watch(allAccountsProvider);
 
@@ -267,10 +270,7 @@ class _AppAccountSearchPickerState
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
                   hintText: l10n.accountSearchHint,
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: scheme.primary,
-                  ),
+                  prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.cancel_rounded, size: 18),
@@ -279,7 +279,9 @@ class _AppAccountSearchPickerState
                       : null,
                   isDense: true,
                   filled: true,
-                  fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                  fillColor: scheme.surfaceContainerHighest.withValues(
+                    alpha: 0.4,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: BorderSide.none,
@@ -315,8 +317,8 @@ class _AppAccountSearchPickerState
                             : scheme.onSurfaceVariant,
                       ),
                       selectedColor: scheme.primary,
-                      backgroundColor:
-                          scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      backgroundColor: scheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
                       showCheckmark: false,
                       visualDensity: VisualDensity.compact,
                       onSelected: (_) => setState(() => _selectedType = null),
@@ -432,7 +434,8 @@ class _AppAccountSearchPickerState
                 );
               }
 
-              final selectedUuid = widget.selectedUuid ?? _contract.selectedUuid;
+              final selectedUuid =
+                  widget.selectedUuid ?? _contract.selectedUuid;
 
               return ListView.separated(
                 padding: const EdgeInsets.symmetric(
@@ -447,14 +450,14 @@ class _AppAccountSearchPickerState
                   final isSelected = account.uuid == selectedUuid;
 
                   return _AccountResultCard(
-                    account: account,
-                    isSelected: isSelected,
-                    onTap: () {
-                      if (widget.onAccountSelected != null) {
-                        widget.onAccountSelected!(account);
-                      }
-                    },
-                  )
+                        account: account,
+                        isSelected: isSelected,
+                        onTap: () {
+                          if (widget.onAccountSelected != null) {
+                            widget.onAccountSelected!(account);
+                          }
+                        },
+                      )
                       .animate(delay: (20 * (index % 12)).ms)
                       .fadeIn(duration: 180.ms)
                       .moveY(begin: 6, end: 0, duration: 200.ms);
@@ -490,7 +493,11 @@ class _AccountTypeFilterChip extends StatelessWidget {
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(accountTypeIcon(type), size: 14, color: selected ? Colors.white : color),
+          Icon(
+            accountTypeIcon(type),
+            size: 14,
+            color: selected ? Colors.white : color,
+          ),
           const SizedBox(width: 4),
           Text(AccountLabels.typeLabel(l10n, type)),
         ],
@@ -560,9 +567,7 @@ class _AccountResultCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: typeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.xs),
-                  border: Border.all(
-                    color: typeColor.withValues(alpha: 0.25),
-                  ),
+                  border: Border.all(color: typeColor.withValues(alpha: 0.25)),
                 ),
                 child: Text(
                   account.accountCode,
@@ -642,7 +647,8 @@ class _AppAccountInlineSearchFieldState
     super.initState();
     _controller = TextEditingController(text: widget.initialQuery);
     _searchQuery = normalizeDigitsToWestern(widget.initialQuery).trim();
-    _contract = widget.contract ??
+    _contract =
+        widget.contract ??
         AccountSelectionContract(postingOnly: widget.postingOnly);
 
     if (widget.autofocus) {
@@ -695,12 +701,14 @@ class _AppAccountInlineSearchFieldState
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    final accountsAsync = ref.watch(filteredAccountsProvider((
-      contract: _contract,
-      query: _searchQuery,
-      activeTypeFilter: null,
-      activePostingOnly: null,
-    )));
+    final accountsAsync = ref.watch(
+      filteredAccountsProvider((
+        contract: _contract,
+        query: _searchQuery,
+        activeTypeFilter: null,
+        activePostingOnly: null,
+      )),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -725,10 +733,7 @@ class _AppAccountInlineSearchFieldState
               fontWeight: FontWeight.w600,
               color: scheme.onSurface.withValues(alpha: 0.45),
             ),
-            prefixIcon: Icon(
-              Icons.search_rounded,
-              color: scheme.primary,
-            ),
+            prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
             suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -742,7 +747,9 @@ class _AppAccountInlineSearchFieldState
                   ),
                 if (widget.onCancel != null)
                   IconButton(
-                    tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).cancelButtonLabel,
                     onPressed: widget.onCancel,
                     icon: Icon(
                       Icons.close_rounded,
@@ -763,10 +770,7 @@ class _AppAccountInlineSearchFieldState
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.sm),
-              borderSide: BorderSide(
-                color: scheme.primary,
-                width: 1.4,
-              ),
+              borderSide: BorderSide(color: scheme.primary, width: 1.4),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,

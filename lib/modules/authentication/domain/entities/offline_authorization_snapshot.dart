@@ -88,18 +88,18 @@ class OfflineAuthorizationSnapshot {
   }
 
   Map<String, dynamic> toJson() => {
-        'userId': userId,
-        'companyId': companyId,
-        'email': email,
-        'roles': roles,
-        'permissions': permissions.toList(),
-        'snapshotCreatedAt': snapshotCreatedAt.toIso8601String(),
-        'lastServerAuthenticatedAt': lastServerAuthenticatedAt.toIso8601String(),
-        'serverBaseUrl': serverBaseUrl,
-        'authorizationVersion': authorizationVersion,
-        'snapshotVersion': snapshotVersion,
-        if (deviceId != null) 'deviceId': deviceId,
-      };
+    'userId': userId,
+    'companyId': companyId,
+    'email': email,
+    'roles': roles,
+    'permissions': permissions.toList(),
+    'snapshotCreatedAt': snapshotCreatedAt.toIso8601String(),
+    'lastServerAuthenticatedAt': lastServerAuthenticatedAt.toIso8601String(),
+    'serverBaseUrl': serverBaseUrl,
+    'authorizationVersion': authorizationVersion,
+    'snapshotVersion': snapshotVersion,
+    if (deviceId != null) 'deviceId': deviceId,
+  };
 
   factory OfflineAuthorizationSnapshot.fromJson(Map<String, dynamic> json) {
     final rawPerms = json['permissions'];
@@ -124,10 +124,12 @@ class OfflineAuthorizationSnapshot {
       permissions: permsSet,
       snapshotCreatedAt:
           DateTime.tryParse(json['snapshotCreatedAt'] as String? ?? '') ??
-              DateTime.now(),
+          DateTime.now(),
       lastServerAuthenticatedAt:
-          DateTime.tryParse(json['lastServerAuthenticatedAt'] as String? ?? '') ??
-              DateTime.now(),
+          DateTime.tryParse(
+            json['lastServerAuthenticatedAt'] as String? ?? '',
+          ) ??
+          DateTime.now(),
       serverBaseUrl: json['serverBaseUrl'] as String? ?? '',
       authorizationVersion: json['authorizationVersion'] as int? ?? 1,
       snapshotVersion: json['snapshotVersion'] as int? ?? 1,

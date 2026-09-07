@@ -1,8 +1,5 @@
 class AccountValidationResult {
-  const AccountValidationResult({
-    required this.isValid,
-    this.errorMessage,
-  });
+  const AccountValidationResult({required this.isValid, this.errorMessage});
 
   final bool isValid;
   final String? errorMessage;

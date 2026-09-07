@@ -10,7 +10,10 @@ void main() {
 
       expect(freeEntitlement.tier, equals(EntitlementTier.free));
       expect(freeEntitlement.isActive, isTrue);
-      expect(freeEntitlement.hasCapability(EntitlementCapability.sync), isFalse);
+      expect(
+        freeEntitlement.hasCapability(EntitlementCapability.sync),
+        isFalse,
+      );
       expect(freeEntitlement.source, equals(EntitlementSource.localDefault));
     });
 

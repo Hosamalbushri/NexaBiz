@@ -34,10 +34,7 @@ class SystemSetupStateRepositoryImpl implements SystemSetupStateRepository {
       if (raw != null) {
         steps[id] = SetupStepState.fromMap(id, raw);
       } else {
-        steps[id] = SetupStepState(
-          id: id,
-          status: SetupStepStatus.pending,
-        );
+        steps[id] = SetupStepState(id: id, status: SetupStepStatus.pending);
       }
     }
 
@@ -72,9 +69,10 @@ class SystemSetupStateRepositoryImpl implements SystemSetupStateRepository {
   Future<void> save(SetupProgress progress) async {
     final steps = <String, Map<String, Object?>>{
       for (final id in SetupStepId.allIds)
-        id.storageKey: (progress.steps[id] ??
-                SetupStepState(id: id, status: SetupStepStatus.pending))
-            .toMap(),
+        id.storageKey:
+            (progress.steps[id] ??
+                    SetupStepState(id: id, status: SetupStepStatus.pending))
+                .toMap(),
     };
     await _settings.saveSystemSetupState(
       version: progress.schemaVersion,

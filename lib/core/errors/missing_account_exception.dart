@@ -14,5 +14,6 @@ class MissingAccountException implements Exception {
   final String message;
 
   @override
-  String toString() => 'MissingAccountException($accountRole, code: $expectedCode, key: $systemKey): $message';
+  String toString() =>
+      'MissingAccountException($accountRole, code: $expectedCode, key: $systemKey): $message';
 }

@@ -28,7 +28,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     context.go(SystemSetupRoutes.firstRun);
   }
 
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -41,8 +40,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         systemNavigationBarColor: colorScheme.surface,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: PopScope(
         canPop: false,
@@ -121,17 +121,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             Text(
                                   l10n.onboardingWelcomeTitle,
                                   textAlign: TextAlign.center,
-                                  style: theme.textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.5,
-                                    height: 1.15,
-                                  ),
+                                  style: theme.textTheme.headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                        height: 1.15,
+                                      ),
                                 )
                                 .animate()
-                                .fadeIn(
-                                  delay: 80.ms,
-                                  duration: 400.ms,
-                                )
+                                .fadeIn(delay: 80.ms, duration: 400.ms)
                                 .moveY(
                                   begin: 12,
                                   end: 0,
@@ -148,10 +146,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                                   ),
                                 )
                                 .animate()
-                                .fadeIn(
-                                  delay: 160.ms,
-                                  duration: 400.ms,
-                                )
+                                .fadeIn(delay: 160.ms, duration: 400.ms)
                                 .moveY(
                                   begin: 10,
                                   end: 0,

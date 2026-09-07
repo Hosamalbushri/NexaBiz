@@ -1,4 +1,3 @@
-
 /// Defines the system-level authorization role of a user.
 ///
 /// System roles are distinct from company-level roles (e.g. Owner, Accountant).

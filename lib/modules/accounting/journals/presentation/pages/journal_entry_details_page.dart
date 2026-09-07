@@ -81,10 +81,8 @@ class JournalEntryDetailsPage extends ConsumerWidget {
                 IconButton(
                   tooltip: l10n.accountingJournalEdit,
                   icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => AccountingRoutes.pushJournalEdit(
-                    context,
-                    entry.uuid,
-                  ),
+                  onPressed: () =>
+                      AccountingRoutes.pushJournalEdit(context, entry.uuid),
                 ),
             ],
           ),
@@ -134,9 +132,7 @@ class JournalEntryDetailsPage extends ConsumerWidget {
                     if (linked)
                       _row(
                         l10n.accountingJournalFieldStatus,
-                        l10n.accountingJournalSourceLinked(
-                          entry.sourceType!,
-                        ),
+                        l10n.accountingJournalSourceLinked(entry.sourceType!),
                       ),
                     _row(
                       l10n.accountingJournalTotals,
@@ -154,9 +150,7 @@ class JournalEntryDetailsPage extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               for (final line in entry.lines) ...[
-                AppCard(
-                  child: _LineTile(line: line),
-                ),
+                AppCard(child: _LineTile(line: line)),
                 const SizedBox(height: AppSpacing.sm),
               ],
               const SizedBox(height: AppSpacing.lg),
@@ -179,10 +173,7 @@ class JournalEntryDetailsPage extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(label),
-          ),
+          SizedBox(width: 120, child: Text(label)),
           Expanded(
             child: Text(
               value,
@@ -279,9 +270,9 @@ class _LineTile extends ConsumerWidget {
       children: [
         Text(
           accountLabel,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
         Row(

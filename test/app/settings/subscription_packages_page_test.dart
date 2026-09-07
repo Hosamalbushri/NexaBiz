@@ -10,7 +10,7 @@ import 'package:stock_count/app/settings/subscription_packages_page.dart';
 class TestCompanyCloudStateNotifier extends StateNotifier<CompanyCloudState>
     implements CompanyCloudStateNotifier {
   TestCompanyCloudStateNotifier(CompanyCloudState initialState)
-      : super(initialState);
+    : super(initialState);
 
   @override
   Future<void> setStatus(
@@ -37,37 +37,38 @@ class TestCompanyCloudStateNotifier extends StateNotifier<CompanyCloudState>
 
 void main() {
   testWidgets(
-      'SubscriptionPackagesPage renders Local Company Onboarding for LOCAL_ONLY status',
-      (WidgetTester tester) async {
-    final testState = CompanyCloudState.localDefault('local-comp-test');
+    'SubscriptionPackagesPage renders Local Company Onboarding for LOCAL_ONLY status',
+    (WidgetTester tester) async {
+      final testState = CompanyCloudState.localDefault('local-comp-test');
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          companyCloudStateProvider.overrideWith((ref) {
-            return TestCompanyCloudStateNotifier(testState);
-          }),
-        ],
-        child: const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: SubscriptionPackagesPage(),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            companyCloudStateProvider.overrideWith((ref) {
+              return TestCompanyCloudStateNotifier(testState);
+            }),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: SubscriptionPackagesPage(),
+          ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    expect(find.text('Your company is currently local'), findsOneWidget);
-    expect(find.text('Link Existing Cloud Account'), findsOneWidget);
-    expect(find.text('Create New Cloud Company'), findsOneWidget);
-    expect(find.text('Available Cloud Packages'), findsOneWidget);
+      expect(find.text('Your company is currently local'), findsOneWidget);
+      expect(find.text('Link Existing Cloud Account'), findsOneWidget);
+      expect(find.text('Create New Cloud Company'), findsOneWidget);
+      expect(find.text('Available Cloud Packages'), findsOneWidget);
 
-    final syncPackageFinder = find.text('Cloud Sync Package');
-    await tester.scrollUntilVisible(syncPackageFinder, 200.0);
-    expect(syncPackageFinder, findsOneWidget);
+      final syncPackageFinder = find.text('Cloud Sync Package');
+      await tester.scrollUntilVisible(syncPackageFinder, 200.0);
+      expect(syncPackageFinder, findsOneWidget);
 
-    // Verify dummy "Current Premium Plan" is NOT shown for local company
-    expect(find.text('Plan ID: plan_starter'), findsNothing);
-  });
+      // Verify dummy "Current Premium Plan" is NOT shown for local company
+      expect(find.text('Plan ID: plan_starter'), findsNothing);
+    },
+  );
 }

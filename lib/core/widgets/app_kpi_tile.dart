@@ -38,19 +38,13 @@ class AppKpiTile extends StatelessWidget {
             : scheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: emphasized
-            ? Border.all(
-                color: primaryColor.withValues(alpha: 0.28),
-              )
+            ? Border.all(color: primaryColor.withValues(alpha: 0.28))
             : null,
       ),
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(
-              icon,
-              size: 20,
-              color: primaryColor,
-            ),
+            Icon(icon, size: 20, color: primaryColor),
             const SizedBox(width: AppSpacing.sm),
           ],
           Expanded(

@@ -16,9 +16,9 @@ Future<bool> dnsInternetProbe(String host) async {
     return false;
   }
   try {
-    final result = await InternetAddress.lookup(trimmed).timeout(
-      const Duration(seconds: 3),
-    );
+    final result = await InternetAddress.lookup(
+      trimmed,
+    ).timeout(const Duration(seconds: 3));
     return result.any((address) => address.rawAddress.isNotEmpty);
   } catch (_) {
     return false;

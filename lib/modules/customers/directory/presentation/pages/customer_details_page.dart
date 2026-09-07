@@ -228,4 +228,3 @@ class CustomerDetailsPage extends ConsumerWidget {
     );
   }
 }
-

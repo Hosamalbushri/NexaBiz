@@ -9,10 +9,7 @@ import '../../theme/app_spacing.dart';
 /// Modal bottom sheet displaying real-time synchronization or pull progress,
 /// keeping results visible upon completion until manually dismissed.
 class SyncProgressModal extends ConsumerStatefulWidget {
-  const SyncProgressModal({
-    super.key,
-    required this.isDownloadOnly,
-  });
+  const SyncProgressModal({super.key, required this.isDownloadOnly});
 
   final bool isDownloadOnly;
 
@@ -117,23 +114,23 @@ class _SyncProgressModalState extends ConsumerState<SyncProgressModal> {
                   decoration: BoxDecoration(
                     color: isDone
                         ? (_finalResult!.outcome == SyncPassOutcome.failed
-                            ? colorScheme.errorContainer
-                            : colorScheme.primaryContainer)
+                              ? colorScheme.errorContainer
+                              : colorScheme.primaryContainer)
                         : colorScheme.secondaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     isDone
                         ? (_finalResult!.outcome == SyncPassOutcome.failed
-                            ? Icons.error_outline_rounded
-                            : Icons.check_circle_rounded)
+                              ? Icons.error_outline_rounded
+                              : Icons.check_circle_rounded)
                         : (widget.isDownloadOnly
-                            ? Icons.cloud_download_rounded
-                            : Icons.sync_rounded),
+                              ? Icons.cloud_download_rounded
+                              : Icons.sync_rounded),
                     color: isDone
                         ? (_finalResult!.outcome == SyncPassOutcome.failed
-                            ? colorScheme.onErrorContainer
-                            : colorScheme.onPrimaryContainer)
+                              ? colorScheme.onErrorContainer
+                              : colorScheme.onPrimaryContainer)
                         : colorScheme.onSecondaryContainer,
                     size: 28,
                   ),
@@ -146,13 +143,13 @@ class _SyncProgressModalState extends ConsumerState<SyncProgressModal> {
                       Text(
                         isDone
                             ? (_finalResult!.outcome == SyncPassOutcome.failed
-                                ? l10n.syncServerConnectionFailed
-                                : (widget.isDownloadOnly
-                                    ? l10n.syncCheckingIncoming
-                                    : l10n.syncPassUpToDate))
+                                  ? l10n.syncServerConnectionFailed
+                                  : (widget.isDownloadOnly
+                                        ? l10n.syncCheckingIncoming
+                                        : l10n.syncPassUpToDate))
                             : (widget.isDownloadOnly
-                                ? l10n.syncCheckingIncoming
-                                : l10n.syncStatusSyncing),
+                                  ? l10n.syncCheckingIncoming
+                                  : l10n.syncStatusSyncing),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -161,17 +158,19 @@ class _SyncProgressModalState extends ConsumerState<SyncProgressModal> {
                       Text(
                         isDone
                             ? (widget.isDownloadOnly
-                                ? (_finalResult!.downloaded > 0
-                                    ? l10n.syncIncomingCount(_finalResult!.downloaded)
-                                    : l10n.syncIncomingNone)
-                                : l10n.syncLastPassMetrics(
-                                    _finalResult!.uploaded,
-                                    _finalResult!.downloaded,
-                                    _finalResult!.durationMs,
-                                  ))
+                                  ? (_finalResult!.downloaded > 0
+                                        ? l10n.syncIncomingCount(
+                                            _finalResult!.downloaded,
+                                          )
+                                        : l10n.syncIncomingNone)
+                                  : l10n.syncLastPassMetrics(
+                                      _finalResult!.uploaded,
+                                      _finalResult!.downloaded,
+                                      _finalResult!.durationMs,
+                                    ))
                             : (overview.progress.phaseName.isNotEmpty
-                                ? overview.progress.phaseName
-                                : l10n.syncPreparingOperations),
+                                  ? overview.progress.phaseName
+                                  : l10n.syncPreparingOperations),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -221,7 +220,9 @@ class _SyncProgressModalState extends ConsumerState<SyncProgressModal> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: colorScheme.outlineVariant.withValues(alpha: 0.4),
@@ -246,7 +247,9 @@ class _SyncProgressModalState extends ConsumerState<SyncProgressModal> {
                       label: l10n.syncSummaryFailed,
                       value: '${_finalResult!.failed}',
                       icon: Icons.warning_amber_rounded,
-                      color: _finalResult!.failed > 0 ? Colors.orange : colorScheme.onSurfaceVariant,
+                      color: _finalResult!.failed > 0
+                          ? Colors.orange
+                          : colorScheme.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -258,7 +261,9 @@ class _SyncProgressModalState extends ConsumerState<SyncProgressModal> {
             AppButton(
               label: isDone ? l10n.close : l10n.cancel,
               expand: true,
-              variant: isDone ? AppButtonVariant.filled : AppButtonVariant.outlined,
+              variant: isDone
+                  ? AppButtonVariant.filled
+                  : AppButtonVariant.outlined,
               onPressed: () => Navigator.pop(context, _finalResult),
             ),
           ],
@@ -289,15 +294,15 @@ class _MetricColumn extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );

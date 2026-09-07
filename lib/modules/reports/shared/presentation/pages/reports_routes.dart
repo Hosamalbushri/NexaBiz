@@ -5,28 +5,30 @@ import 'package:go_router/go_router.dart';
 class ReportsRoutes {
   const ReportsRoutes._();
 
-  static const String root = '/module-reports';
-  static const String salesPeriod = '/module-reports/sales-period';
-  static const String accountStatement = '/module-reports/account-statement';
-  static const String trialBalance = '/module-reports/trial-balance';
-  static const String journalBook = '/module-reports/journal-book';
-  static const String generalLedger = '/module-reports/general-ledger';
-  static const String incomeStatement = '/module-reports/income-statement';
-  static const String balanceSheet = '/module-reports/balance-sheet';
-  static const String receivables = '/module-reports/receivables';
-  static const String payables = '/module-reports/payables';
-  static const String cashFlow = '/module-reports/cash-flow';
-  static const String rpReceipts = '/module-reports/rp-receipts';
-  static const String rpPayments = '/module-reports/rp-payments';
-  static const String rpCashMovement = '/module-reports/rp-cash-movement';
-  static const String rpBankMovement = '/module-reports/rp-bank-movement';
+  static const String root = '/reports';
+  static const String salesPeriod = '/reports/sales-period';
+  static const String accountStatement = '/reports/account-statement';
+  static const String accountStatementTable =
+      '/reports/account-statement/table';
+  static const String trialBalance = '/reports/trial-balance';
+  static const String journalBook = '/reports/journal-book';
+  static const String generalLedger = '/reports/general-ledger';
+  static const String incomeStatement = '/reports/income-statement';
+  static const String balanceSheet = '/reports/balance-sheet';
+  static const String receivables = '/reports/receivables';
+  static const String payables = '/reports/payables';
+  static const String cashFlow = '/reports/cash-flow';
+  static const String rpReceipts = '/reports/rp-receipts';
+  static const String rpPayments = '/reports/rp-payments';
+  static const String rpCashMovement = '/reports/rp-cash-movement';
+  static const String rpBankMovement = '/reports/rp-bank-movement';
   static const String rpCustomerReceipts =
-      '/module-reports/rp-customer-receipts';
-  static const String rpDailySummary = '/module-reports/rp-daily-summary';
-  static const String rpPeriodSummary = '/module-reports/rp-period-summary';
+      '/reports/rp-customer-receipts';
+  static const String rpDailySummary = '/reports/rp-daily-summary';
+  static const String rpPeriodSummary = '/reports/rp-period-summary';
   static const String productStockMovement =
-      '/module-reports/product-stock-movement';
-  static const String preview = '/module-reports/preview';
+      '/reports/product-stock-movement';
+  static const String preview = '/reports/preview';
 
   static void goRoot(BuildContext context) => context.go(root);
 
@@ -57,11 +59,9 @@ class ReportsRoutes {
   static void pushReceivables(BuildContext context) =>
       context.push(receivables);
 
-  static void pushPayables(BuildContext context) =>
-      context.push(payables);
+  static void pushPayables(BuildContext context) => context.push(payables);
 
-  static void pushCashFlow(BuildContext context) =>
-      context.push(cashFlow);
+  static void pushCashFlow(BuildContext context) => context.push(cashFlow);
 
   static void pushPreview(BuildContext context) => context.push(preview);
 }

@@ -70,9 +70,7 @@ final openFiscalDateRangeProvider =
 
         final startYear = start.year;
         final endYear = end.year;
-        label = startYear == endYear
-            ? '$startYear'
-            : '$startYear - $endYear';
+        label = startYear == endYear ? '$startYear' : '$startYear - $endYear';
       } else if (openYears.isNotEmpty) {
         openYears.sort((a, b) => a.startDate.compareTo(b.startDate));
         start = openYears.first.startDate;
@@ -81,9 +79,7 @@ final openFiscalDateRangeProvider =
 
         final startYear = start.year;
         final endYear = end.year;
-        label = startYear == endYear
-            ? '$startYear'
-            : '$startYear - $endYear';
+        label = startYear == endYear ? '$startYear' : '$startYear - $endYear';
       } else {
         // Fallback to the latest available fiscal year
         allYears.sort((a, b) => b.startDate.compareTo(a.startDate));

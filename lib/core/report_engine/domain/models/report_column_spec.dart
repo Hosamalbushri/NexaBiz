@@ -14,14 +14,7 @@ enum ReportColumnDataType {
 }
 
 /// Aggregation functions for table column footers & totals.
-enum ReportColumnAggregation {
-  none,
-  sum,
-  count,
-  avg,
-  min,
-  max,
-}
+enum ReportColumnAggregation { none, sum, count, avg, min, max }
 
 /// Specification defining a column in the dynamic Report Engine.
 @immutable
@@ -118,7 +111,8 @@ class ReportColumnSpec {
       isSearchable: isSearchable ?? this.isSearchable,
       isSortable: isSortable ?? this.isSortable,
       isVisible: isVisible ?? this.isVisible,
-      headerBackgroundColor: headerBackgroundColor ?? this.headerBackgroundColor,
+      headerBackgroundColor:
+          headerBackgroundColor ?? this.headerBackgroundColor,
       headerTextColor: headerTextColor ?? this.headerTextColor,
       footerValue: footerValue ?? this.footerValue,
       currencyCode: currencyCode ?? this.currencyCode,

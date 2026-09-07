@@ -33,12 +33,12 @@ class _NotificationBadgeState extends State<NotificationBadge>
       vsync: this,
       duration: const Duration(milliseconds: 320),
     );
-    _scale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1, end: 1.22), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 1.22, end: 1), weight: 60),
-    ]).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _scale = TweenSequence<double>(
+      [
+        TweenSequenceItem(tween: Tween(begin: 1, end: 1.22), weight: 40),
+        TweenSequenceItem(tween: Tween(begin: 1.22, end: 1), weight: 60),
+      ],
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
   }
 
   @override
@@ -83,10 +83,7 @@ class _NotificationBadgeState extends State<NotificationBadge>
                   decoration: BoxDecoration(
                     color: colorScheme.error,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
-                    border: Border.all(
-                      color: colorScheme.surface,
-                      width: 2,
-                    ),
+                    border: Border.all(color: colorScheme.surface, width: 2),
                     boxShadow: [
                       BoxShadow(
                         color: colorScheme.error.withValues(alpha: 0.35),

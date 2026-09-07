@@ -24,21 +24,21 @@ final appLockRouterRefreshProvider = Provider<ValueNotifier<int>>((ref) {
 
 final appLockControllerProvider =
     StateNotifierProvider<AppLockController, AppLockState>((ref) {
-  return AppLockController(
-    repository: ref.watch(appLockRepositoryProvider),
-    biometrics: ref.watch(appLockBiometricsProvider),
-    onChanged: () {
-      ref.read(appLockRouterRefreshProvider).value++;
-    },
-  );
-});
+      return AppLockController(
+        repository: ref.watch(appLockRepositoryProvider),
+        biometrics: ref.watch(appLockBiometricsProvider),
+        onChanged: () {
+          ref.read(appLockRouterRefreshProvider).value++;
+        },
+      );
+    });
 
 class AppLockController extends StateNotifier<AppLockState> {
   AppLockController({
     required this._repository,
     required this._biometrics,
     required this._onChanged,
-  })  : super(AppLockState.initial());
+  }) : super(AppLockState.initial());
 
   final AppLockRepository _repository;
   final AppLockBiometrics _biometrics;
@@ -83,8 +83,7 @@ class AppLockController extends StateNotifier<AppLockState> {
     final biometricAvailable = await _biometrics.isAvailable();
 
     final active = enabled && hasPin && policy != AppLockPolicy.disabled;
-    final shouldLockCold =
-        active && lockOnColdStart && policy.locksOnColdStart;
+    final shouldLockCold = active && lockOnColdStart && policy.locksOnColdStart;
 
     _hydrated = true;
     _emit(
@@ -128,23 +127,13 @@ class AppLockController extends StateNotifier<AppLockState> {
         returnTo != '/splash') {
       returnToLocation = returnTo;
     }
-    _emit(
-      state.copyWith(
-        gate: AppLockGate.locked,
-        clearError: true,
-      ),
-    );
+    _emit(state.copyWith(gate: AppLockGate.locked, clearError: true));
   }
 
   Future<bool> unlock(String pin) async {
     if (!state.enabled) return true;
     if (state.isLockoutActive) {
-      _emit(
-        state.copyWith(
-          errorMessage: 'lockout',
-          busy: false,
-        ),
-      );
+      _emit(state.copyWith(errorMessage: 'lockout', busy: false));
       return false;
     }
 
@@ -237,17 +226,13 @@ class AppLockController extends StateNotifier<AppLockState> {
       return 'unavailable';
     }
 
-    final confirmed =
-        await _biometrics.authenticate(localizedReason: localizedReason);
+    final confirmed = await _biometrics.authenticate(
+      localizedReason: localizedReason,
+    );
     if (!confirmed) return 'cancelled';
 
     await _repository.setBiometricEnabled(true);
-    _emit(
-      state.copyWith(
-        biometricEnabled: true,
-        biometricAvailable: true,
-      ),
-    );
+    _emit(state.copyWith(biometricEnabled: true, biometricAvailable: true));
     return null;
   }
 
@@ -267,6 +252,7 @@ class AppLockController extends StateNotifier<AppLockState> {
     await _repository.saveLockoutUntil(null);
     final biometricAvailable = await _biometrics.isAvailable();
 
+    _hydrated = true;
     _emit(
       AppLockState(
         enabled: true,
@@ -311,11 +297,7 @@ class AppLockController extends StateNotifier<AppLockState> {
     await _repository.saveFailedAttempts(0);
     await _repository.saveLockoutUntil(null);
     _emit(
-      state.copyWith(
-        failedAttempts: 0,
-        clearError: true,
-        clearLockout: true,
-      ),
+      state.copyWith(failedAttempts: 0, clearError: true, clearLockout: true),
     );
     return null;
   }

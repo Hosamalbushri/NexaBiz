@@ -58,7 +58,6 @@ SaleDraft _cashDraft({
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   group('SaleCurrencyConverter', () {
     const converter = SaleCurrencyConverter();
 
@@ -394,56 +393,59 @@ void main() {
       expect(outOfRange.map((s) => s.id), isNot(contains(sale.id)));
     });
 
-    test('searchListPaged returns header rows without loading all sales', () async {
-      final create = CreateSale(
-        repository: repository,
-        numberAllocator: LocalSaleNumberAllocator(
-          nextSequence: repository.nextLocalSequence,
-        ),
-        voucherBookPort: _FakeVoucherBookPort(),
-      );
-      for (var i = 0; i < 5; i++) {
-        await create(
-          _cashDraft(
-            paidAmount: 10,
-            items: [
-              SaleItemDraft(
-                productId: 'p$i',
-                productName: 'Product $i',
-                productCode: 'SKU-$i',
-                mainQuantity: 1,
-                unitPrice: 10,
-                baseUnitPrice: 10,
-              ),
-            ],
+    test(
+      'searchListPaged returns header rows without loading all sales',
+      () async {
+        final create = CreateSale(
+          repository: repository,
+          numberAllocator: LocalSaleNumberAllocator(
+            nextSequence: repository.nextLocalSequence,
           ),
+          voucherBookPort: _FakeVoucherBookPort(),
         );
-      }
+        for (var i = 0; i < 5; i++) {
+          await create(
+            _cashDraft(
+              paidAmount: 10,
+              items: [
+                SaleItemDraft(
+                  productId: 'p$i',
+                  productName: 'Product $i',
+                  productCode: 'SKU-$i',
+                  mainQuantity: 1,
+                  unitPrice: 10,
+                  baseUnitPrice: 10,
+                ),
+              ],
+            ),
+          );
+        }
 
-      final page0 = await repository.searchListPaged(
-        const SaleListFilter(),
-        page: 0,
-        pageSize: 2,
-      );
-      expect(page0.totalCount, 5);
-      expect(page0.items, hasLength(2));
-      expect(page0.hasNext, isTrue);
+        final page0 = await repository.searchListPaged(
+          const SaleListFilter(),
+          page: 0,
+          pageSize: 2,
+        );
+        expect(page0.totalCount, 5);
+        expect(page0.items, hasLength(2));
+        expect(page0.hasNext, isTrue);
 
-      final page1 = await repository.searchListPaged(
-        const SaleListFilter(),
-        page: 1,
-        pageSize: 2,
-      );
-      expect(page1.items, hasLength(2));
+        final page1 = await repository.searchListPaged(
+          const SaleListFilter(),
+          page: 1,
+          pageSize: 2,
+        );
+        expect(page1.items, hasLength(2));
 
-      final byProduct = await repository.searchListPaged(
-        const SaleListFilter(query: 'Product 4'),
-        page: 0,
-        pageSize: 10,
-      );
-      expect(byProduct.totalCount, 1);
-      expect(byProduct.items.single.saleNumber, isNotEmpty);
-    });
+        final byProduct = await repository.searchListPaged(
+          const SaleListFilter(query: 'Product 4'),
+          page: 0,
+          pageSize: 10,
+        );
+        expect(byProduct.totalCount, 1);
+        expect(byProduct.items.single.saleNumber, isNotEmpty);
+      },
+    );
 
     test('post is blocked until inventory tracking is wired', () async {
       final create = CreateSale(
@@ -579,10 +581,7 @@ void main() {
     const workflow = SaleWorkflowService();
     test('post goes posted in both modes', () {
       expect(workflow.nextOnConfirm(integratedMode: true), SaleStatus.posted);
-      expect(
-        workflow.nextOnConfirm(integratedMode: false),
-        SaleStatus.posted,
-      );
+      expect(workflow.nextOnConfirm(integratedMode: false), SaleStatus.posted);
     });
   });
 }

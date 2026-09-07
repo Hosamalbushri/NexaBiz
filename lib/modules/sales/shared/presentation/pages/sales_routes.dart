@@ -22,10 +22,22 @@ class SalesRoutes {
       context.go(details(id));
 
   /// Leaves invoice screens (create / edit) for the sales hub.
-  static void backToHome(BuildContext context) => goRoot(context);
+  static void backToHome(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      goRoot(context);
+    }
+  }
 
   /// Leaves the details screen for the sales list.
-  static void backToList(BuildContext context) => goList(context);
+  static void backToList(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      goList(context);
+    }
+  }
 
   static void pushCreate(BuildContext context) => context.push(create);
 

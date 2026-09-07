@@ -38,7 +38,10 @@ class _FailingAccountingPoster implements InventoryAccountingPoster {
     bool isPosted = true,
   }) async {
     if (shouldFail) {
-      throw const JournalException('missing_account', 'Simulated accounting failure: debit account missing');
+      throw const JournalException(
+        'missing_account',
+        'Simulated accounting failure: debit account missing',
+      );
     }
   }
 
@@ -100,10 +103,24 @@ void main() {
 
       failingAccountingPoster = _FailingAccountingPoster();
 
-      final costLayerService = CostLayerServiceImpl(db: inventoryDb, readCompanyId: () => testCompanyId);
-      final postingEngine = PostingEngineImpl(inventoryDb, costLayerService, null, () => testCompanyId);
-      final stockValidationService = StockValidationServiceImpl(inventoryDb, () => testCompanyId);
-      final dependencyDetector = InventoryDependencyDetectorImpl(inventoryDb, () => testCompanyId);
+      final costLayerService = CostLayerServiceImpl(
+        db: inventoryDb,
+        readCompanyId: () => testCompanyId,
+      );
+      final postingEngine = PostingEngineImpl(
+        inventoryDb,
+        costLayerService,
+        null,
+        () => testCompanyId,
+      );
+      final stockValidationService = StockValidationServiceImpl(
+        inventoryDb,
+        () => testCompanyId,
+      );
+      final dependencyDetector = InventoryDependencyDetectorImpl(
+        inventoryDb,
+        () => testCompanyId,
+      );
 
       postingCoordinator = PostingCoordinatorImpl(
         db: inventoryDb,
@@ -122,267 +139,296 @@ void main() {
     });
 
     Future<double> getStockBalance(String itemCode, String warehouseId) async {
-      final rows = await (inventoryDb.select(inventoryDb.productWarehouseStocks)
-            ..where((t) => t.itemCode.equals(itemCode) & t.warehouseId.equals(warehouseId)))
-          .get();
+      final rows =
+          await (inventoryDb.select(inventoryDb.productWarehouseStocks)..where(
+                (t) =>
+                    t.itemCode.equals(itemCode) &
+                    t.warehouseId.equals(warehouseId),
+              ))
+              .get();
       if (rows.isEmpty) return 0.0;
       return rows.first.onHandQty;
     }
 
-    test('1. Success path atomicity: Composite stock receipt posting commits cleanly', () async {
-      final receiptUuid = generateUuidV4();
+    test(
+      '1. Success path atomicity: Composite stock receipt posting commits cleanly',
+      () async {
+        final receiptUuid = generateUuidV4();
 
-      await stockMovementsRepo.saveReceipt(
-        StockReceipt(
-          id: receiptUuid,
-          receiptNumber: 'REC-001',
-          receiptDate: DateTime.now(),
-          warehouse: 'wh-main',
-          lines: [
-            StockMovementLine(
-              movementUuid: receiptUuid,
-              movementType: 'receipt',
-              itemCode: 'ITEM-A',
-              itemName: 'Item A',
-              quantity: 10,
-              unitCost: 50.0,
-              totalCost: 500.0,
-            ),
-          ],
-        ),
-      );
-
-      final docRef = InventoryDocumentRef(
-        documentId: receiptUuid,
-        documentNumber: 'REC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'wh-main',
-        status: InventoryDocumentStatus.draft,
-      );
-
-      final result = await postingCoordinator.post(document: docRef);
-      expect(result, isA<PostSuccess>());
-
-      final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
-      expect(dbReceipt?.status, InventoryDocumentStatus.posted);
-
-      final stockBalance = await getStockBalance('ITEM-A', 'wh-main');
-      expect(stockBalance, 10.0);
-    });
-
-    test('2. Failure injection on accounting failure: DB transaction rolls back stock movements completely', () async {
-      final receiptUuid = generateUuidV4();
-
-      await stockMovementsRepo.saveReceipt(
-        StockReceipt(
-          id: receiptUuid,
-          receiptNumber: 'REC-002',
-          receiptDate: DateTime.now(),
-          warehouse: 'wh-main',
-          lines: [
-            StockMovementLine(
-              movementUuid: receiptUuid,
-              movementType: 'receipt',
-              itemCode: 'ITEM-B',
-              itemName: 'Item B',
-              quantity: 5,
-              unitCost: 100.0,
-              totalCost: 500.0,
-            ),
-          ],
-        ),
-      );
-
-      final docRef = InventoryDocumentRef(
-        documentId: receiptUuid,
-        documentNumber: 'REC-002',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'wh-main',
-        status: InventoryDocumentStatus.draft,
-      );
-
-      // Inject accounting failure!
-      failingAccountingPoster.shouldFail = true;
-
-      final result = await postingCoordinator.post(document: docRef);
-      expect(result, isA<PostInvalidStatus>());
-
-      // Verify complete rollback in DB
-      final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
-      expect(dbReceipt?.status, InventoryDocumentStatus.draft);
-
-      final stockBalance = await getStockBalance('ITEM-B', 'wh-main');
-      expect(stockBalance, 0.0, reason: 'Stock balance must remain 0 after rolled-back posting');
-    });
-
-    test('3. Idempotency guard: Re-posting an already posted document returns PostSuccess without duplicates', () async {
-      final receiptUuid = generateUuidV4();
-
-      await stockMovementsRepo.saveReceipt(
-        StockReceipt(
-          id: receiptUuid,
-          receiptNumber: 'REC-003',
-          receiptDate: DateTime.now(),
-          warehouse: 'wh-main',
-          lines: [
-            StockMovementLine(
-              movementUuid: receiptUuid,
-              movementType: 'receipt',
-              itemCode: 'ITEM-C',
-              itemName: 'Item C',
-              quantity: 20,
-              unitCost: 25.0,
-              totalCost: 500.0,
-            ),
-          ],
-        ),
-      );
-
-      final docRef = InventoryDocumentRef(
-        documentId: receiptUuid,
-        documentNumber: 'REC-003',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'wh-main',
-        status: InventoryDocumentStatus.draft,
-      );
-
-      // First post
-      final result1 = await postingCoordinator.post(document: docRef);
-      expect(result1, isA<PostSuccess>());
-
-      // Second post (Retry)
-      final result2 = await postingCoordinator.post(document: docRef);
-      expect(result2, isA<PostSuccess>());
-
-      // Verify stock balance was NOT duplicated (should remain 20, not 40)
-      final stockBalance = await getStockBalance('ITEM-C', 'wh-main');
-      expect(stockBalance, 20.0, reason: 'Stock balance must not duplicate on idempotent re-post');
-    });
-
-    test('4. Reversal auditability: Voiding posted journal entry creates offsetting entry without deleting history', () async {
-      final cashAcc = await accountRepo.insert(
-        const AccountDraft(
-          accountCode: '1211',
-          name: 'Cash',
-          accountType: AccountType.asset,
-          isGroup: false,
-        ),
-      );
-
-      final salesAcc = await accountRepo.insert(
-        const AccountDraft(
-          accountCode: '4100',
-          name: 'Sales',
-          accountType: AccountType.revenue,
-          isGroup: false,
-        ),
-      );
-
-      final journalUuid = generateUuidV4();
-
-      final draft = JournalEntryDraft(
-        uuid: journalUuid,
-        entryDate: DateTime.now(),
-        voucherNumber: 'V-1001',
-        voucherType: 'قبض',
-        currencyCode: 'SAR',
-        isPosted: true,
-        sourceType: 'manual',
-        sourceId: 'manual-001',
-        lines: [
-          JournalLineDraft(
-            accountUuid: cashAcc.uuid,
-            debit: 1000.0,
-            credit: 0.0,
-            currencyCode: 'SAR',
+        await stockMovementsRepo.saveReceipt(
+          StockReceipt(
+            id: receiptUuid,
+            receiptNumber: 'REC-001',
+            receiptDate: DateTime.now(),
+            warehouse: 'wh-main',
+            lines: [
+              StockMovementLine(
+                movementUuid: receiptUuid,
+                movementType: 'receipt',
+                itemCode: 'ITEM-A',
+                itemName: 'Item A',
+                quantity: 10,
+                unitCost: 50.0,
+                totalCost: 500.0,
+              ),
+            ],
           ),
-          JournalLineDraft(
-            accountUuid: salesAcc.uuid,
-            debit: 0.0,
-            credit: 1000.0,
-            currencyCode: 'SAR',
+        );
+
+        final docRef = InventoryDocumentRef(
+          documentId: receiptUuid,
+          documentNumber: 'REC-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'wh-main',
+          status: InventoryDocumentStatus.draft,
+        );
+
+        final result = await postingCoordinator.post(document: docRef);
+        expect(result, isA<PostSuccess>());
+
+        final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
+        expect(dbReceipt?.status, InventoryDocumentStatus.posted);
+
+        final stockBalance = await getStockBalance('ITEM-A', 'wh-main');
+        expect(stockBalance, 10.0);
+      },
+    );
+
+    test(
+      '2. Failure injection on accounting failure: DB transaction rolls back stock movements completely',
+      () async {
+        final receiptUuid = generateUuidV4();
+
+        await stockMovementsRepo.saveReceipt(
+          StockReceipt(
+            id: receiptUuid,
+            receiptNumber: 'REC-002',
+            receiptDate: DateTime.now(),
+            warehouse: 'wh-main',
+            lines: [
+              StockMovementLine(
+                movementUuid: receiptUuid,
+                movementType: 'receipt',
+                itemCode: 'ITEM-B',
+                itemName: 'Item B',
+                quantity: 5,
+                unitCost: 100.0,
+                totalCost: 500.0,
+              ),
+            ],
           ),
-        ],
-      );
+        );
 
-      final posted = await journalPostingService.post(draft);
-      expect(posted.isPosted, isTrue);
+        final docRef = InventoryDocumentRef(
+          documentId: receiptUuid,
+          documentNumber: 'REC-002',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'wh-main',
+          status: InventoryDocumentStatus.draft,
+        );
 
-      // Perform void / reversal
-      await journalPostingService.voidByUuid(posted.uuid);
+        // Inject accounting failure!
+        failingAccountingPoster.shouldFail = true;
 
-      // Verify original journal entry is still present and marked posted (not deleted!)
-      final original = await journalRepo.getByUuid(posted.uuid);
-      expect(original, isNotNull);
-      expect(original!.isPosted, isTrue);
-      expect(original.deletedAt, isNull);
+        final result = await postingCoordinator.post(document: docRef);
+        expect(result, isA<PostInvalidStatus>());
 
-      // Verify reversing journal entry exists with swapped debit/credit
-      final reversal = await journalRepo.findBySource(
-        sourceType: JournalPostingService.reverseSourceType,
-        sourceId: posted.uuid,
-      );
-      expect(reversal, isNotNull);
-      expect(reversal!.isPosted, isTrue);
-      expect(reversal.voucherNumber, 'V-1001-R');
+        // Verify complete rollback in DB
+        final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
+        expect(dbReceipt?.status, InventoryDocumentStatus.draft);
 
-      final revCashLine = reversal.lines.firstWhere((l) => l.accountUuid == cashAcc.uuid);
-      expect(revCashLine.credit, 1000.0); // Debit was swapped to Credit
-      expect(revCashLine.debit, 0.0);
-    });
+        final stockBalance = await getStockBalance('ITEM-B', 'wh-main');
+        expect(
+          stockBalance,
+          0.0,
+          reason: 'Stock balance must remain 0 after rolled-back posting',
+        );
+      },
+    );
 
-    test('5. Retry recovery: Retrying post after fixing failure succeeds cleanly', () async {
-      final receiptUuid = generateUuidV4();
+    test(
+      '3. Idempotency guard: Re-posting an already posted document returns PostSuccess without duplicates',
+      () async {
+        final receiptUuid = generateUuidV4();
 
-      await stockMovementsRepo.saveReceipt(
-        StockReceipt(
-          id: receiptUuid,
-          receiptNumber: 'REC-005',
-          receiptDate: DateTime.now(),
-          warehouse: 'wh-main',
+        await stockMovementsRepo.saveReceipt(
+          StockReceipt(
+            id: receiptUuid,
+            receiptNumber: 'REC-003',
+            receiptDate: DateTime.now(),
+            warehouse: 'wh-main',
+            lines: [
+              StockMovementLine(
+                movementUuid: receiptUuid,
+                movementType: 'receipt',
+                itemCode: 'ITEM-C',
+                itemName: 'Item C',
+                quantity: 20,
+                unitCost: 25.0,
+                totalCost: 500.0,
+              ),
+            ],
+          ),
+        );
+
+        final docRef = InventoryDocumentRef(
+          documentId: receiptUuid,
+          documentNumber: 'REC-003',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'wh-main',
+          status: InventoryDocumentStatus.draft,
+        );
+
+        // First post
+        final result1 = await postingCoordinator.post(document: docRef);
+        expect(result1, isA<PostSuccess>());
+
+        // Second post (Retry)
+        final result2 = await postingCoordinator.post(document: docRef);
+        expect(result2, isA<PostSuccess>());
+
+        // Verify stock balance was NOT duplicated (should remain 20, not 40)
+        final stockBalance = await getStockBalance('ITEM-C', 'wh-main');
+        expect(
+          stockBalance,
+          20.0,
+          reason: 'Stock balance must not duplicate on idempotent re-post',
+        );
+      },
+    );
+
+    test(
+      '4. Reversal auditability: Voiding posted journal entry creates offsetting entry without deleting history',
+      () async {
+        final cashAcc = await accountRepo.insert(
+          const AccountDraft(
+            accountCode: '1211',
+            name: 'Cash',
+            accountType: AccountType.asset,
+            isGroup: false,
+          ),
+        );
+
+        final salesAcc = await accountRepo.insert(
+          const AccountDraft(
+            accountCode: '4100',
+            name: 'Sales',
+            accountType: AccountType.revenue,
+            isGroup: false,
+          ),
+        );
+
+        final journalUuid = generateUuidV4();
+
+        final draft = JournalEntryDraft(
+          uuid: journalUuid,
+          entryDate: DateTime.now(),
+          voucherNumber: 'V-1001',
+          voucherType: 'قبض',
+          currencyCode: 'SAR',
+          isPosted: true,
+          sourceType: 'manual',
+          sourceId: 'manual-001',
           lines: [
-            StockMovementLine(
-              movementUuid: receiptUuid,
-              movementType: 'receipt',
-              itemCode: 'ITEM-D',
-              itemName: 'Item D',
-              quantity: 15,
-              unitCost: 10.0,
-              totalCost: 150.0,
+            JournalLineDraft(
+              accountUuid: cashAcc.uuid,
+              debit: 1000.0,
+              credit: 0.0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: salesAcc.uuid,
+              debit: 0.0,
+              credit: 1000.0,
+              currencyCode: 'SAR',
             ),
           ],
-        ),
-      );
+        );
 
-      final docRef = InventoryDocumentRef(
-        documentId: receiptUuid,
-        documentNumber: 'REC-005',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'wh-main',
-        status: InventoryDocumentStatus.draft,
-      );
+        final posted = await journalPostingService.post(draft);
+        expect(posted.isPosted, isTrue);
 
-      // Step A: Failure
-      failingAccountingPoster.shouldFail = true;
-      final failedResult = await postingCoordinator.post(document: docRef);
-      expect(failedResult, isA<PostInvalidStatus>());
+        // Perform void / reversal
+        await journalPostingService.voidByUuid(posted.uuid);
 
-      // Step B: Fix condition
-      failingAccountingPoster.shouldFail = false;
+        // Verify original journal entry is still present and marked posted (not deleted!)
+        final original = await journalRepo.getByUuid(posted.uuid);
+        expect(original, isNotNull);
+        expect(original!.isPosted, isTrue);
+        expect(original.deletedAt, isNull);
 
-      // Step C: Retry
-      final successResult = await postingCoordinator.post(document: docRef);
-      expect(successResult, isA<PostSuccess>());
+        // Verify reversing journal entry exists with swapped debit/credit
+        final reversal = await journalRepo.findBySource(
+          sourceType: JournalPostingService.reverseSourceType,
+          sourceId: posted.uuid,
+        );
+        expect(reversal, isNotNull);
+        expect(reversal!.isPosted, isTrue);
+        expect(reversal.voucherNumber, 'V-1001-R');
 
-      final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
-      expect(dbReceipt?.status, InventoryDocumentStatus.posted);
+        final revCashLine = reversal.lines.firstWhere(
+          (l) => l.accountUuid == cashAcc.uuid,
+        );
+        expect(revCashLine.credit, 1000.0); // Debit was swapped to Credit
+        expect(revCashLine.debit, 0.0);
+      },
+    );
 
-      final stockBalance = await getStockBalance('ITEM-D', 'wh-main');
-      expect(stockBalance, 15.0);
-    });
+    test(
+      '5. Retry recovery: Retrying post after fixing failure succeeds cleanly',
+      () async {
+        final receiptUuid = generateUuidV4();
+
+        await stockMovementsRepo.saveReceipt(
+          StockReceipt(
+            id: receiptUuid,
+            receiptNumber: 'REC-005',
+            receiptDate: DateTime.now(),
+            warehouse: 'wh-main',
+            lines: [
+              StockMovementLine(
+                movementUuid: receiptUuid,
+                movementType: 'receipt',
+                itemCode: 'ITEM-D',
+                itemName: 'Item D',
+                quantity: 15,
+                unitCost: 10.0,
+                totalCost: 150.0,
+              ),
+            ],
+          ),
+        );
+
+        final docRef = InventoryDocumentRef(
+          documentId: receiptUuid,
+          documentNumber: 'REC-005',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'wh-main',
+          status: InventoryDocumentStatus.draft,
+        );
+
+        // Step A: Failure
+        failingAccountingPoster.shouldFail = true;
+        final failedResult = await postingCoordinator.post(document: docRef);
+        expect(failedResult, isA<PostInvalidStatus>());
+
+        // Step B: Fix condition
+        failingAccountingPoster.shouldFail = false;
+
+        // Step C: Retry
+        final successResult = await postingCoordinator.post(document: docRef);
+        expect(successResult, isA<PostSuccess>());
+
+        final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
+        expect(dbReceipt?.status, InventoryDocumentStatus.posted);
+
+        final stockBalance = await getStockBalance('ITEM-D', 'wh-main');
+        expect(stockBalance, 15.0);
+      },
+    );
   });
 }

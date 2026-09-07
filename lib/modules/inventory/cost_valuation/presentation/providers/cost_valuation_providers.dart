@@ -9,6 +9,9 @@ class CostValuationMethodNotifier extends StateNotifier<CostValuationMethod> {
   }
 }
 
-final costValuationMethodProvider = StateNotifierProvider<CostValuationMethodNotifier, CostValuationMethod>((ref) {
-  return CostValuationMethodNotifier();
-});
+final costValuationMethodProvider =
+    StateNotifierProvider<CostValuationMethodNotifier, CostValuationMethod>((
+      ref,
+    ) {
+      return CostValuationMethodNotifier();
+    });

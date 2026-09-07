@@ -4,14 +4,12 @@ import 'package:stock_count/core/widgets/app_view_mode_toggle.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(
-      home: Scaffold(
-        body: child,
-      ),
-    );
+    return MaterialApp(home: Scaffold(body: child));
   }
 
-  testWidgets('renders all options and calls onChanged when clicked', (tester) async {
+  testWidgets('renders all options and calls onChanged when clicked', (
+    tester,
+  ) async {
     String selected = 'list';
     String? changedTo;
 

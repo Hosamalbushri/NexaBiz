@@ -130,8 +130,9 @@ class Customer {
       accountId: clearAccountId ? null : (accountId ?? this.accountId),
       externalId: clearExternalId ? null : (externalId ?? this.externalId),
       creditLimit: clearCreditLimit ? null : (creditLimit ?? this.creditLimit),
-      currencyCode:
-          clearCurrencyCode ? null : (currencyCode ?? this.currencyCode),
+      currencyCode: clearCurrencyCode
+          ? null
+          : (currencyCode ?? this.currencyCode),
       taxNumber: clearTaxNumber ? null : (taxNumber ?? this.taxNumber),
       dataSource: dataSource ?? this.dataSource,
       createdAt: createdAt ?? this.createdAt,
@@ -146,23 +147,22 @@ class Customer {
   }
 
   CustomerDraft toDraft() => CustomerDraft(
-        customerCode: customerCode,
-        name: name,
-        status: status,
-        phone: phone,
-        email: email,
-        address: address,
-        notes: notes,
-        isActive: isActive,
-        accountId: accountId,
-        externalId: externalId,
-        creditLimit: creditLimit,
-        currencyCode: currencyCode,
-        taxNumber: taxNumber,
-        dataSource: dataSource,
-      );
+    customerCode: customerCode,
+    name: name,
+    status: status,
+    phone: phone,
+    email: email,
+    address: address,
+    notes: notes,
+    isActive: isActive,
+    accountId: accountId,
+    externalId: externalId,
+    creditLimit: creditLimit,
+    currencyCode: currencyCode,
+    taxNumber: taxNumber,
+    dataSource: dataSource,
+  );
 }
-
 
 /// Payload for create / update (no id / timestamps required).
 class CustomerDraft {
@@ -221,20 +221,26 @@ class CustomerDraft {
     return CustomerDraft(
       customerCode: customerCode ?? this.customerCode,
       name: name ?? this.name,
-      status: status ?? (isActive != null ? (isActive ? CustomerStatus.active : CustomerStatus.inactive) : this.status),
+      status:
+          status ??
+          (isActive != null
+              ? (isActive ? CustomerStatus.active : CustomerStatus.inactive)
+              : this.status),
       phone: phone ?? this.phone,
       email: email ?? this.email,
       address: address ?? this.address,
       notes: notes ?? this.notes,
-      isActive: isActive ?? (status != null ? status == CustomerStatus.active : this.isActive),
+      isActive:
+          isActive ??
+          (status != null ? status == CustomerStatus.active : this.isActive),
       accountId: clearAccountId ? null : (accountId ?? this.accountId),
       externalId: externalId ?? this.externalId,
       creditLimit: clearCreditLimit ? null : (creditLimit ?? this.creditLimit),
-      currencyCode:
-          clearCurrencyCode ? null : (currencyCode ?? this.currencyCode),
+      currencyCode: clearCurrencyCode
+          ? null
+          : (currencyCode ?? this.currencyCode),
       taxNumber: clearTaxNumber ? null : (taxNumber ?? this.taxNumber),
       dataSource: dataSource ?? this.dataSource,
     );
   }
 }
-

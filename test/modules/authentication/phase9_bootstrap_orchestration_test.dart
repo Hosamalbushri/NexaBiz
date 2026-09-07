@@ -45,36 +45,45 @@ void main() {
   final now = DateTime.now().toUtc();
 
   group('Phase 9: Application Bootstrap Orchestration Tests', () {
-    test('1. Fresh install: Uninitialized state sets status to firstRunRequired', () {
-      const state = AppBootstrapState(
-        status: AppBootstrapStatus.firstRunRequired,
-        stageDetails: 'First-run setup required',
-      );
+    test(
+      '1. Fresh install: Uninitialized state sets status to firstRunRequired',
+      () {
+        const state = AppBootstrapState(
+          status: AppBootstrapStatus.firstRunRequired,
+          stageDetails: 'First-run setup required',
+        );
 
-      expect(state.isFirstRunRequired, isTrue);
-      expect(state.isReady, isFalse);
-      expect(state.isUnauthenticated, isFalse);
-    });
+        expect(state.isFirstRunRequired, isTrue);
+        expect(state.isReady, isFalse);
+        expect(state.isUnauthenticated, isFalse);
+      },
+    );
 
-    test('2. Existing install: Initialized system enters restoringSession state', () {
-      const state = AppBootstrapState(
-        status: AppBootstrapStatus.restoringSession,
-        stageDetails: 'Restoring user session',
-      );
+    test(
+      '2. Existing install: Initialized system enters restoringSession state',
+      () {
+        const state = AppBootstrapState(
+          status: AppBootstrapStatus.restoringSession,
+          stageDetails: 'Restoring user session',
+        );
 
-      expect(state.isRestoringSession, isTrue);
-      expect(state.isReady, isFalse);
-    });
+        expect(state.isRestoringSession, isTrue);
+        expect(state.isReady, isFalse);
+      },
+    );
 
-    test('3. No session: Unauthenticated session resolves status to unauthenticated', () {
-      const state = AppBootstrapState(
-        status: AppBootstrapStatus.unauthenticated,
-        stageDetails: 'Unauthenticated session',
-      );
+    test(
+      '3. No session: Unauthenticated session resolves status to unauthenticated',
+      () {
+        const state = AppBootstrapState(
+          status: AppBootstrapStatus.unauthenticated,
+          stageDetails: 'Unauthenticated session',
+        );
 
-      expect(state.isUnauthenticated, isTrue);
-      expect(state.isAuthenticated, isFalse);
-    });
+        expect(state.isUnauthenticated, isTrue);
+        expect(state.isAuthenticated, isFalse);
+      },
+    );
 
     test('4. Valid session: Authenticated user transitions to ready state', () {
       final activeCtx = ActiveCompanyContext.fromMembership(
@@ -107,121 +116,141 @@ void main() {
       expect(state.isSystemScope, isFalse);
     });
 
-    test('5. Expired session: Expired/invalid token resolves to unauthenticated', () {
-      const state = AppBootstrapState(
-        status: AppBootstrapStatus.unauthenticated,
-        stageDetails: 'Session expired',
-      );
+    test(
+      '5. Expired session: Expired/invalid token resolves to unauthenticated',
+      () {
+        const state = AppBootstrapState(
+          status: AppBootstrapStatus.unauthenticated,
+          stageDetails: 'Session expired',
+        );
 
-      expect(state.isUnauthenticated, isTrue);
-      expect(state.activeCompanyId, isNull);
-    });
+        expect(state.isUnauthenticated, isTrue);
+        expect(state.activeCompanyId, isNull);
+      },
+    );
 
-    test('6. Admin with no companies: System Admin without active company resolves to System Scope ready', () {
-      final sessionAdminNoCompany = AuthSessionSnapshot(
-        user: systemAdmin,
-        companies: [],
-        roles: ['System Admin'],
-        permissions: kSystemLevelPermissions,
-        currentCompanyId: null,
-        capturedAt: now,
-      );
+    test(
+      '6. Admin with no companies: System Admin without active company resolves to System Scope ready',
+      () {
+        final sessionAdminNoCompany = AuthSessionSnapshot(
+          user: systemAdmin,
+          companies: [],
+          roles: ['System Admin'],
+          permissions: kSystemLevelPermissions,
+          currentCompanyId: null,
+          capturedAt: now,
+        );
 
-      final isSystemAdmin = sessionAdminNoCompany.user.isSystemAdmin;
-      final hasActiveCompany = sessionAdminNoCompany.activeCompanyContext != null;
+        final isSystemAdmin = sessionAdminNoCompany.user.isSystemAdmin;
+        final hasActiveCompany =
+            sessionAdminNoCompany.activeCompanyContext != null;
 
-      final state = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        activeCompanyId: sessionAdminNoCompany.activeCompanyContext?.companyId,
-        isSystemScope: isSystemAdmin && !hasActiveCompany,
-        stageDetails: 'System Scope ready (System Admin)',
-      );
+        final state = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          activeCompanyId:
+              sessionAdminNoCompany.activeCompanyContext?.companyId,
+          isSystemScope: isSystemAdmin && !hasActiveCompany,
+          stageDetails: 'System Scope ready (System Admin)',
+        );
 
-      expect(state.isReady, isTrue);
-      expect(state.isSystemScope, isTrue);
-      expect(state.activeCompanyId, isNull);
-    });
+        expect(state.isReady, isTrue);
+        expect(state.isSystemScope, isTrue);
+        expect(state.activeCompanyId, isNull);
+      },
+    );
 
-    test('7. User with company: User with single active company resolves to Company Scope ready', () {
-      final activeCtx = ActiveCompanyContext.fromMembership(
-        membership: membershipComp1,
-        authenticatedUserId: regularUser.id,
-        companyName: company1.name,
-        companyCode: company1.code,
-      );
+    test(
+      '7. User with company: User with single active company resolves to Company Scope ready',
+      () {
+        final activeCtx = ActiveCompanyContext.fromMembership(
+          membership: membershipComp1,
+          authenticatedUserId: regularUser.id,
+          companyName: company1.name,
+          companyCode: company1.code,
+        );
 
-      final session = AuthSessionSnapshot(
-        user: regularUser,
-        companies: [company1],
-        roles: ['SalesManager'],
-        permissions: membershipComp1.permissions.toSet(),
-        currentCompanyId: company1.id,
-        activeMembership: membershipComp1,
-        activeCompanyContext: activeCtx,
-        capturedAt: now,
-      );
+        final session = AuthSessionSnapshot(
+          user: regularUser,
+          companies: [company1],
+          roles: ['SalesManager'],
+          permissions: membershipComp1.permissions.toSet(),
+          currentCompanyId: company1.id,
+          activeMembership: membershipComp1,
+          activeCompanyContext: activeCtx,
+          capturedAt: now,
+        );
 
-      final isSystemAdmin = session.user.isSystemAdmin;
-      final hasActiveCompany = session.activeCompanyContext != null;
+        final isSystemAdmin = session.user.isSystemAdmin;
+        final hasActiveCompany = session.activeCompanyContext != null;
 
-      final state = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        activeCompanyId: session.activeCompanyContext?.companyId,
-        isSystemScope: isSystemAdmin && !hasActiveCompany,
-        stageDetails: 'Company Scope ready (company-1)',
-      );
+        final state = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          activeCompanyId: session.activeCompanyContext?.companyId,
+          isSystemScope: isSystemAdmin && !hasActiveCompany,
+          stageDetails: 'Company Scope ready (company-1)',
+        );
 
-      expect(state.isReady, isTrue);
-      expect(state.isSystemScope, isFalse);
-      expect(state.activeCompanyId, equals('company-1'));
-    });
+        expect(state.isReady, isTrue);
+        expect(state.isSystemScope, isFalse);
+        expect(state.activeCompanyId, equals('company-1'));
+      },
+    );
 
-    test('8. User with multiple companies: User with companies but no active context requires selection', () {
-      final sessionNoContext = AuthSessionSnapshot(
-        user: regularUser,
-        companies: [company1, company2],
-        roles: [],
-        permissions: {},
-        currentCompanyId: null,
-        activeCompanyContext: null,
-        capturedAt: now,
-      );
+    test(
+      '8. User with multiple companies: User with companies but no active context requires selection',
+      () {
+        final sessionNoContext = AuthSessionSnapshot(
+          user: regularUser,
+          companies: [company1, company2],
+          roles: [],
+          permissions: {},
+          currentCompanyId: null,
+          activeCompanyContext: null,
+          capturedAt: now,
+        );
 
-      final isSystemAdmin = sessionNoContext.user.isSystemAdmin;
-      final hasActiveCompany = sessionNoContext.activeCompanyContext != null;
+        final isSystemAdmin = sessionNoContext.user.isSystemAdmin;
+        final hasActiveCompany = sessionNoContext.activeCompanyContext != null;
 
-      final state = AppBootstrapState(
-        status: AppBootstrapStatus.ready,
-        activeCompanyId: sessionNoContext.activeCompanyContext?.companyId,
-        isSystemScope: isSystemAdmin && !hasActiveCompany,
-        stageDetails: 'Company selection required',
-      );
+        final state = AppBootstrapState(
+          status: AppBootstrapStatus.ready,
+          activeCompanyId: sessionNoContext.activeCompanyContext?.companyId,
+          isSystemScope: isSystemAdmin && !hasActiveCompany,
+          stageDetails: 'Company selection required',
+        );
 
-      expect(state.isReady, isTrue);
-      expect(state.isSystemScope, isFalse);
-      expect(state.activeCompanyId, isNull);
-    });
+        expect(state.isReady, isTrue);
+        expect(state.isSystemScope, isFalse);
+        expect(state.activeCompanyId, isNull);
+      },
+    );
 
-    test('9. Initialization failure: Fatal infrastructure error transitions status to failed', () {
-      final state = AppBootstrapState(
-        status: AppBootstrapStatus.failed,
-        error: Exception('Hive storage box initialization failed'),
-        stageDetails: 'Initialization failed',
-      );
+    test(
+      '9. Initialization failure: Fatal infrastructure error transitions status to failed',
+      () {
+        final state = AppBootstrapState(
+          status: AppBootstrapStatus.failed,
+          error: Exception('Hive storage box initialization failed'),
+          stageDetails: 'Initialization failed',
+        );
 
-      expect(state.isFailed, isTrue);
-      expect(state.isReady, isFalse);
-      expect(state.error, isNotNull);
-    });
+        expect(state.isFailed, isTrue);
+        expect(state.isReady, isFalse);
+        expect(state.error, isNotNull);
+      },
+    );
 
-    test('10. Session restoration failure: Exception during session restoration falls back to unauthenticated', () {
-      const state = AppBootstrapState(
-        status: AppBootstrapStatus.unauthenticated,
-        stageDetails: 'Fallback to unauthenticated mode after error',
-      );
+    test(
+      '10. Session restoration failure: Exception during session restoration falls back to unauthenticated',
+      () {
+        const state = AppBootstrapState(
+          status: AppBootstrapStatus.unauthenticated,
+          stageDetails: 'Fallback to unauthenticated mode after error',
+        );
 
-      expect(state.isUnauthenticated, isTrue);
-      expect(state.isFailed, isFalse);
-    });
+        expect(state.isUnauthenticated, isTrue);
+        expect(state.isFailed, isFalse);
+      },
+    );
   });
 }

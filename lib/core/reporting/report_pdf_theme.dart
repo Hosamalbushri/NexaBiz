@@ -23,6 +23,7 @@ class ReportPdfContext {
     required bool isRtl,
     required String localeCode,
     ReportPageFormat pageFormat = ReportPageFormat.a4Portrait,
+
     /// Defaults to Amiri (same family as the sales invoice PDF).
     bool useAmiri = true,
   }) async {

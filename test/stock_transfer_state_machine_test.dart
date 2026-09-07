@@ -78,15 +78,13 @@ void main() {
       readCompanyId: () => activeTenant,
     );
 
-    warehouseRepo = WarehouseRepositoryImpl(
-      invDb,
-      null,
-      () => activeTenant,
-    );
+    warehouseRepo = WarehouseRepositoryImpl(invDb, null, () => activeTenant);
 
     // Setup base product and warehouses
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await invDb.into(invDb.products).insert(
+    await invDb
+        .into(invDb.products)
+        .insert(
           ProductsCompanion.insert(
             uuid: generateUuidV4(),
             itemCode: 'ITEM-TR-1',
@@ -131,7 +129,9 @@ void main() {
     required double unitCost,
   }) async {
     final receiptDate = DateTime.now().toUtc();
-    await invDb.into(invDb.stockReceipts).insert(
+    await invDb
+        .into(invDb.stockReceipts)
+        .insert(
           StockReceiptsCompanion(
             uuid: drift.Value(receiptId),
             receiptNumber: drift.Value('REC-$receiptId'),
@@ -143,7 +143,9 @@ void main() {
           ),
         );
 
-    await invDb.into(invDb.stockMovementLines).insert(
+    await invDb
+        .into(invDb.stockMovementLines)
+        .insert(
           StockMovementLinesCompanion(
             uuid: drift.Value(generateUuidV4()),
             movementUuid: drift.Value(receiptId),
@@ -168,328 +170,354 @@ void main() {
   }
 
   group('ROOT FIX 28 — Stock Transfer State Machine Tests', () {
-    test('1. Valid State Transition: draft -> posted -> draft (unpost)', () async {
-      final recId = generateUuidV4();
-      final trId = generateUuidV4();
-      final lineId = generateUuidV4();
+    test(
+      '1. Valid State Transition: draft -> posted -> draft (unpost)',
+      () async {
+        final recId = generateUuidV4();
+        final trId = generateUuidV4();
+        final lineId = generateUuidV4();
 
-      await _seedReceipt(
-        receiptId: recId,
-        warehouseId: whSourceAId,
-        qty: 100,
-        unitCost: 10.0,
-      );
+        await _seedReceipt(
+          receiptId: recId,
+          warehouseId: whSourceAId,
+          qty: 100,
+          unitCost: 10.0,
+        );
 
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-01',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: whDestBId,
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.draft,
-        companyId: tenantA,
-        lines: [
-          StockTransferLine(
-            id: lineId,
-            transferUuid: trId,
-            itemCode: 'ITEM-TR-1',
-            itemName: 'Transfer Test Item',
-            quantity: 30,
-            unitCost: 10.0,
-            totalCost: 300.0,
-          ),
-        ],
-      );
-
-      await transferRepo.saveTransfer(transfer);
-
-      // Verify draft state
-      final savedDraft = await transferRepo.getTransferById(trId);
-      expect(savedDraft?.status, InventoryDocumentStatus.draft);
-
-      // Post transfer
-      final ref = InventoryDocumentRef(
-        documentId: trId,
-        documentNumber: 'TR-NUM-01',
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transfer.transferDate,
-      );
-
-      final postRes = await coordinator.post(document: ref);
-      expect(postRes, isA<PostSuccess>());
-
-      final postedDoc = await transferRepo.getTransferById(trId);
-      expect(postedDoc?.status, InventoryDocumentStatus.posted);
-
-      // Unpost transfer
-      final unpostRes = await coordinator.unpost(document: ref);
-      expect(unpostRes, isA<UnpostSuccess>());
-
-      final unpostedDoc = await transferRepo.getTransferById(trId);
-      expect(unpostedDoc?.status, InventoryDocumentStatus.draft);
-    });
-
-    test('2. Invalid State Transition: cancelled -> posted is blocked', () async {
-      final trId = generateUuidV4();
-      final lineId = generateUuidV4();
-
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-CANCEL',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: whDestBId,
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.cancelled,
-        companyId: tenantA,
-        lines: [
-          StockTransferLine(
-            id: lineId,
-            transferUuid: trId,
-            itemCode: 'ITEM-TR-1',
-            itemName: 'Transfer Test Item',
-            quantity: 10,
-            unitCost: 10.0,
-            totalCost: 100.0,
-          ),
-        ],
-      );
-
-      await transferRepo.saveTransfer(transfer);
-
-      final ref = InventoryDocumentRef(
-        documentId: trId,
-        documentNumber: 'TR-NUM-CANCEL',
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transfer.transferDate,
-      );
-
-      final res = await coordinator.post(document: ref);
-      expect(res, isA<PostInvalidStatus>());
-      expect((res as PostInvalidStatus).reason, contains('ملغي'));
-    });
-
-    test('3. Invalid State Transition: Editing cancelled transfer is blocked', () async {
-      final trId = generateUuidV4();
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-CANCEL2',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: whDestBId,
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.cancelled,
-        companyId: tenantA,
-      );
-
-      await transferRepo.saveTransfer(transfer);
-
-      final updated = transfer.copyWith(notes: 'Modifying cancelled');
-      expect(
-        () => transferRepo.saveTransfer(updated),
-        throwsA(isA<JournalException>()),
-      );
-    });
-
-    test('4. Invariant: Stock Quantity Conservation (+qty dest, -qty source)', () async {
-      final recId = generateUuidV4();
-      final trId = generateUuidV4();
-      final lineId = generateUuidV4();
-
-      await _seedReceipt(
-        receiptId: recId,
-        warehouseId: whSourceAId,
-        qty: 50,
-        unitCost: 20.0,
-      );
-
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-CONSERVE',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: whDestBId,
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.draft,
-        companyId: tenantA,
-        lines: [
-          StockTransferLine(
-            id: lineId,
-            transferUuid: trId,
-            itemCode: 'ITEM-TR-1',
-            itemName: 'Transfer Test Item',
-            quantity: 20,
-            unitCost: 20.0,
-            totalCost: 400.0,
-          ),
-        ],
-      );
-
-      await transferRepo.saveTransfer(transfer);
-
-      final ref = InventoryDocumentRef(
-        documentId: trId,
-        documentNumber: 'TR-NUM-CONSERVE',
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transfer.transferDate,
-      );
-
-      await coordinator.post(document: ref);
-
-      // Verify warehouse stock conservation
-      final sourceStock = await stockValidationService.getPostedBalance(
-        itemCode: 'ITEM-TR-1',
-        warehouseId: whSourceAId,
-      );
-      final destStock = await stockValidationService.getPostedBalance(
-        itemCode: 'ITEM-TR-1',
-        warehouseId: whDestBId,
-      );
-      final totalStock = await stockValidationService.getPostedBalance(
-        itemCode: 'ITEM-TR-1',
-      );
-
-      expect(sourceStock, equals(30.0));
-      expect(destStock, equals(20.0));
-      expect(totalStock, equals(50.0)); // Total company stock remains 50
-    });
-
-    test('5. Invariant: Same warehouse transfer (WH-A -> WH-A) is blocked', () async {
-      final trId = generateUuidV4();
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-SAME',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: whSourceAId,
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.draft,
-        companyId: tenantA,
-      );
-
-      expect(
-        () => transferRepo.saveTransfer(transfer),
-        throwsA(isA<StateError>()),
-      );
-    });
-
-    test('6. Invariant: Source warehouse shortage blocks transfer posting', () async {
-      final recId = generateUuidV4();
-      final trId = generateUuidV4();
-      final lineId = generateUuidV4();
-
-      await _seedReceipt(
-        receiptId: recId,
-        warehouseId: whSourceAId,
-        qty: 10,
-        unitCost: 15.0,
-      );
-
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-SHORT',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: whDestBId,
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.draft,
-        companyId: tenantA,
-        lines: [
-          StockTransferLine(
-            id: lineId,
-            transferUuid: trId,
-            itemCode: 'ITEM-TR-1',
-            itemName: 'Transfer Test Item',
-            quantity: 50, // Available is only 10
-            unitCost: 15.0,
-            totalCost: 750.0,
-          ),
-        ],
-      );
-
-      await transferRepo.saveTransfer(transfer);
-
-      final ref = InventoryDocumentRef(
-        documentId: trId,
-        documentNumber: 'TR-NUM-SHORT',
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transfer.transferDate,
-      );
-
-      final res = await coordinator.post(document: ref);
-      expect(res, isA<PostStockShortage>());
-    });
-
-    test('7. Tenant Isolation: Transfer to unauthorized company warehouse is blocked', () async {
-      final tenantBWhId = generateUuidV4();
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-
-      // Seed warehouse directly into database owned by tenantB
-      await invDb.into(invDb.warehouses).insert(
-            WarehousesCompanion.insert(
-              uuid: tenantBWhId,
-              code: 'WH-TB',
-              name: 'Warehouse Tenant B',
-              companyId: const drift.Value(tenantB),
-              createdAt: now,
-              updatedAt: now,
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-01',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: whDestBId,
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.draft,
+          companyId: tenantA,
+          lines: [
+            StockTransferLine(
+              id: lineId,
+              transferUuid: trId,
+              itemCode: 'ITEM-TR-1',
+              itemName: 'Transfer Test Item',
+              quantity: 30,
+              unitCost: 10.0,
+              totalCost: 300.0,
             ),
-          );
+          ],
+        );
 
-      final trId = generateUuidV4();
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-CROSS',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: tenantBWhId, // Unauthorized warehouse owned by tenantB
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.draft,
-        companyId: tenantA,
-      );
+        await transferRepo.saveTransfer(transfer);
 
-      expect(
-        () => transferRepo.saveTransfer(transfer),
-        throwsA(isA<StateError>()),
-      );
-    });
+        // Verify draft state
+        final savedDraft = await transferRepo.getTransferById(trId);
+        expect(savedDraft?.status, InventoryDocumentStatus.draft);
 
-    test('8. Draft Deletion Integrity: Soft-deleting draft transfer does not touch cost layers', () async {
-      final recId = generateUuidV4();
-      final trId = generateUuidV4();
-      final lineId = generateUuidV4();
+        // Post transfer
+        final ref = InventoryDocumentRef(
+          documentId: trId,
+          documentNumber: 'TR-NUM-01',
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: transfer.transferDate,
+        );
 
-      await _seedReceipt(
-        receiptId: recId,
-        warehouseId: whSourceAId,
-        qty: 100,
-        unitCost: 5.0,
-      );
+        final postRes = await coordinator.post(document: ref);
+        expect(postRes, isA<PostSuccess>());
 
-      final transfer = StockTransfer(
-        id: trId,
-        transferNumber: 'TR-NUM-DEL',
-        fromWarehouseId: whSourceAId,
-        toWarehouseId: whDestBId,
-        transferDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.draft,
-        companyId: tenantA,
-        lines: [
-          StockTransferLine(
-            id: lineId,
-            transferUuid: trId,
-            itemCode: 'ITEM-TR-1',
-            itemName: 'Transfer Test Item',
-            quantity: 25,
-            unitCost: 5.0,
-            totalCost: 125.0,
-          ),
-        ],
-      );
+        final postedDoc = await transferRepo.getTransferById(trId);
+        expect(postedDoc?.status, InventoryDocumentStatus.posted);
 
-      await transferRepo.saveTransfer(transfer);
-      await transferRepo.deleteTransfer(trId);
+        // Unpost transfer
+        final unpostRes = await coordinator.unpost(document: ref);
+        expect(unpostRes, isA<UnpostSuccess>());
 
-      // Verify stock in whSourceAId is still 100 (unaffected by draft delete)
-      final balance = await stockValidationService.getPostedBalance(
-        itemCode: 'ITEM-TR-1',
-        warehouseId: whSourceAId,
-      );
-      expect(balance, equals(100.0));
-    });
+        final unpostedDoc = await transferRepo.getTransferById(trId);
+        expect(unpostedDoc?.status, InventoryDocumentStatus.draft);
+      },
+    );
+
+    test(
+      '2. Invalid State Transition: cancelled -> posted is blocked',
+      () async {
+        final trId = generateUuidV4();
+        final lineId = generateUuidV4();
+
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-CANCEL',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: whDestBId,
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.cancelled,
+          companyId: tenantA,
+          lines: [
+            StockTransferLine(
+              id: lineId,
+              transferUuid: trId,
+              itemCode: 'ITEM-TR-1',
+              itemName: 'Transfer Test Item',
+              quantity: 10,
+              unitCost: 10.0,
+              totalCost: 100.0,
+            ),
+          ],
+        );
+
+        await transferRepo.saveTransfer(transfer);
+
+        final ref = InventoryDocumentRef(
+          documentId: trId,
+          documentNumber: 'TR-NUM-CANCEL',
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: transfer.transferDate,
+        );
+
+        final res = await coordinator.post(document: ref);
+        expect(res, isA<PostInvalidStatus>());
+        expect((res as PostInvalidStatus).reason, contains('ملغي'));
+      },
+    );
+
+    test(
+      '3. Invalid State Transition: Editing cancelled transfer is blocked',
+      () async {
+        final trId = generateUuidV4();
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-CANCEL2',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: whDestBId,
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.cancelled,
+          companyId: tenantA,
+        );
+
+        await transferRepo.saveTransfer(transfer);
+
+        final updated = transfer.copyWith(notes: 'Modifying cancelled');
+        expect(
+          () => transferRepo.saveTransfer(updated),
+          throwsA(isA<JournalException>()),
+        );
+      },
+    );
+
+    test(
+      '4. Invariant: Stock Quantity Conservation (+qty dest, -qty source)',
+      () async {
+        final recId = generateUuidV4();
+        final trId = generateUuidV4();
+        final lineId = generateUuidV4();
+
+        await _seedReceipt(
+          receiptId: recId,
+          warehouseId: whSourceAId,
+          qty: 50,
+          unitCost: 20.0,
+        );
+
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-CONSERVE',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: whDestBId,
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.draft,
+          companyId: tenantA,
+          lines: [
+            StockTransferLine(
+              id: lineId,
+              transferUuid: trId,
+              itemCode: 'ITEM-TR-1',
+              itemName: 'Transfer Test Item',
+              quantity: 20,
+              unitCost: 20.0,
+              totalCost: 400.0,
+            ),
+          ],
+        );
+
+        await transferRepo.saveTransfer(transfer);
+
+        final ref = InventoryDocumentRef(
+          documentId: trId,
+          documentNumber: 'TR-NUM-CONSERVE',
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: transfer.transferDate,
+        );
+
+        await coordinator.post(document: ref);
+
+        // Verify warehouse stock conservation
+        final sourceStock = await stockValidationService.getPostedBalance(
+          itemCode: 'ITEM-TR-1',
+          warehouseId: whSourceAId,
+        );
+        final destStock = await stockValidationService.getPostedBalance(
+          itemCode: 'ITEM-TR-1',
+          warehouseId: whDestBId,
+        );
+        final totalStock = await stockValidationService.getPostedBalance(
+          itemCode: 'ITEM-TR-1',
+        );
+
+        expect(sourceStock, equals(30.0));
+        expect(destStock, equals(20.0));
+        expect(totalStock, equals(50.0)); // Total company stock remains 50
+      },
+    );
+
+    test(
+      '5. Invariant: Same warehouse transfer (WH-A -> WH-A) is blocked',
+      () async {
+        final trId = generateUuidV4();
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-SAME',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: whSourceAId,
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.draft,
+          companyId: tenantA,
+        );
+
+        expect(
+          () => transferRepo.saveTransfer(transfer),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
+
+    test(
+      '6. Invariant: Source warehouse shortage blocks transfer posting',
+      () async {
+        final recId = generateUuidV4();
+        final trId = generateUuidV4();
+        final lineId = generateUuidV4();
+
+        await _seedReceipt(
+          receiptId: recId,
+          warehouseId: whSourceAId,
+          qty: 10,
+          unitCost: 15.0,
+        );
+
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-SHORT',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: whDestBId,
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.draft,
+          companyId: tenantA,
+          lines: [
+            StockTransferLine(
+              id: lineId,
+              transferUuid: trId,
+              itemCode: 'ITEM-TR-1',
+              itemName: 'Transfer Test Item',
+              quantity: 50, // Available is only 10
+              unitCost: 15.0,
+              totalCost: 750.0,
+            ),
+          ],
+        );
+
+        await transferRepo.saveTransfer(transfer);
+
+        final ref = InventoryDocumentRef(
+          documentId: trId,
+          documentNumber: 'TR-NUM-SHORT',
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: transfer.transferDate,
+        );
+
+        final res = await coordinator.post(document: ref);
+        expect(res, isA<PostStockShortage>());
+      },
+    );
+
+    test(
+      '7. Tenant Isolation: Transfer to unauthorized company warehouse is blocked',
+      () async {
+        final tenantBWhId = generateUuidV4();
+        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+
+        // Seed warehouse directly into database owned by tenantB
+        await invDb
+            .into(invDb.warehouses)
+            .insert(
+              WarehousesCompanion.insert(
+                uuid: tenantBWhId,
+                code: 'WH-TB',
+                name: 'Warehouse Tenant B',
+                companyId: const drift.Value(tenantB),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        final trId = generateUuidV4();
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-CROSS',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: tenantBWhId, // Unauthorized warehouse owned by tenantB
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.draft,
+          companyId: tenantA,
+        );
+
+        expect(
+          () => transferRepo.saveTransfer(transfer),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
+
+    test(
+      '8. Draft Deletion Integrity: Soft-deleting draft transfer does not touch cost layers',
+      () async {
+        final recId = generateUuidV4();
+        final trId = generateUuidV4();
+        final lineId = generateUuidV4();
+
+        await _seedReceipt(
+          receiptId: recId,
+          warehouseId: whSourceAId,
+          qty: 100,
+          unitCost: 5.0,
+        );
+
+        final transfer = StockTransfer(
+          id: trId,
+          transferNumber: 'TR-NUM-DEL',
+          fromWarehouseId: whSourceAId,
+          toWarehouseId: whDestBId,
+          transferDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.draft,
+          companyId: tenantA,
+          lines: [
+            StockTransferLine(
+              id: lineId,
+              transferUuid: trId,
+              itemCode: 'ITEM-TR-1',
+              itemName: 'Transfer Test Item',
+              quantity: 25,
+              unitCost: 5.0,
+              totalCost: 125.0,
+            ),
+          ],
+        );
+
+        await transferRepo.saveTransfer(transfer);
+        await transferRepo.deleteTransfer(trId);
+
+        // Verify stock in whSourceAId is still 100 (unaffected by draft delete)
+        final balance = await stockValidationService.getPostedBalance(
+          itemCode: 'ITEM-TR-1',
+          warehouseId: whSourceAId,
+        );
+        expect(balance, equals(100.0));
+      },
+    );
   });
 }

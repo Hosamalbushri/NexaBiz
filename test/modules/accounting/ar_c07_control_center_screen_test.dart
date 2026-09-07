@@ -23,7 +23,12 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 
   @override
   Future<void> saveBinding(AccountBinding binding) async {
-    _bindings[_key(binding.companyId, binding.packageId, binding.requirementKey)] = binding;
+    _bindings[_key(
+          binding.companyId,
+          binding.packageId,
+          binding.requirementKey,
+        )] =
+        binding;
   }
 
   @override
@@ -80,7 +85,8 @@ class MockAccountRepo implements AccountRepository {
   }
 
   @override
-  Future<Account?> getById(int id) async => _store.values.where((a) => a.id == id).firstOrNull;
+  Future<Account?> getById(int id) async =>
+      _store.values.where((a) => a.id == id).firstOrNull;
 
   @override
   Future<void> ensureDefaultChartSeeded() async {}
@@ -95,7 +101,9 @@ class MockAccountLookupAdapter implements SetupAccountLookupPort {
 
   @override
   Future<SetupAccountData?> findAccount(String codeOrUuidOrId) async {
-    final a = await repo.getByUuid(codeOrUuidOrId) ?? await repo.getByAccountCode(codeOrUuidOrId);
+    final a =
+        await repo.getByUuid(codeOrUuidOrId) ??
+        await repo.getByAccountCode(codeOrUuidOrId);
     if (a == null) return null;
     return SetupAccountData(
       uuid: a.uuid,
@@ -110,38 +118,56 @@ class MockAccountLookupAdapter implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     final all = await repo.getAll(includeInactive: true);
     return all
-        .where((a) => a.parentId == parentUuid && (companyId == null || a.companyId == companyId))
-        .map((a) => SetupAccountData(
-              uuid: a.uuid,
-              accountCode: a.accountCode,
-              accountType: _mapSetupType(a.accountType),
-              companyId: a.companyId,
-              isActive: a.isActive,
-              isDeleted: a.isDeleted,
-              isGroup: a.isGroup,
-              canPost: a.isPostingAccount,
-            ))
+        .where(
+          (a) =>
+              a.parentId == parentUuid &&
+              (companyId == null || a.companyId == companyId),
+        )
+        .map(
+          (a) => SetupAccountData(
+            uuid: a.uuid,
+            accountCode: a.accountCode,
+            accountType: _mapSetupType(a.accountType),
+            companyId: a.companyId,
+            isActive: a.isActive,
+            isDeleted: a.isDeleted,
+            isGroup: a.isGroup,
+            canPost: a.isPostingAccount,
+          ),
+        )
         .toList();
   }
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     final all = await repo.getAll(includeInactive: true);
     return all
-        .where((a) => a.parentId == parentUuid && (companyId == null || a.companyId == companyId))
-        .map((a) => SetupAccountData(
-              uuid: a.uuid,
-              accountCode: a.accountCode,
-              accountType: _mapSetupType(a.accountType),
-              companyId: a.companyId,
-              isActive: a.isActive,
-              isDeleted: a.isDeleted,
-              isGroup: a.isGroup,
-              canPost: a.isPostingAccount,
-            ))
+        .where(
+          (a) =>
+              a.parentId == parentUuid &&
+              (companyId == null || a.companyId == companyId),
+        )
+        .map(
+          (a) => SetupAccountData(
+            uuid: a.uuid,
+            accountCode: a.accountCode,
+            accountType: _mapSetupType(a.accountType),
+            companyId: a.companyId,
+            isActive: a.isActive,
+            isDeleted: a.isDeleted,
+            isGroup: a.isGroup,
+            canPost: a.isPostingAccount,
+          ),
+        )
         .toList();
   }
 
@@ -193,425 +219,477 @@ Account createTestCoaAccount({
 }
 
 void main() {
-  group('AR-C07 Accounting Initialization & Binding Screen Control Center (15 Verification Scenarios)', () {
-    late InMemoryBindingRepo bindingRepo;
-    late MockAccountRepo accountRepo;
-    late MockAccountLookupAdapter lookupAdapter;
-    late ModuleAccountingReadinessService readinessService;
+  group(
+    'AR-C07 Accounting Initialization & Binding Screen Control Center (15 Verification Scenarios)',
+    () {
+      late InMemoryBindingRepo bindingRepo;
+      late MockAccountRepo accountRepo;
+      late MockAccountLookupAdapter lookupAdapter;
+      late ModuleAccountingReadinessService readinessService;
 
-    const companyId = 'comp_master';
+      const companyId = 'comp_master';
 
-    final reqSalesRevenue = const AccountRequirement(
-      packageId: 'sales',
-      requirementKey: 'revenue_account',
-      role: AccountRole.revenue,
-      labelAr: 'حساب مبيعات الإيرادات',
-      labelEn: 'Sales Revenue Account',
-      expectedAccountType: SetupAccountType.revenue,
-    );
-
-    setUp(() {
-      bindingRepo = InMemoryBindingRepo();
-      accountRepo = MockAccountRepo();
-      lookupAdapter = MockAccountLookupAdapter(accountRepo);
-      readinessService = ModuleAccountingReadinessService(
-        bindingRepository: bindingRepo,
-        accountRepository: accountRepo,
-      );
-    });
-
-    test('1. Screen Reflects Persisted Configuration', () async {
-      final acc = createTestCoaAccount(
-        id: 1,
-        uuid: 'acc-sales-1',
-        code: '401001',
-        name: 'إيراد المبيعات',
-        accountType: AccountType.revenue,
-        companyId: companyId,
-      );
-      accountRepo.add(acc);
-
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
+      final reqSalesRevenue = const AccountRequirement(
         packageId: 'sales',
         requirementKey: 'revenue_account',
-        accountUuid: 'acc-sales-1',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      final fetched = await bindingRepo.getBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
+        role: AccountRole.revenue,
+        labelAr: 'حساب مبيعات الإيرادات',
+        labelEn: 'Sales Revenue Account',
+        expectedAccountType: SetupAccountType.revenue,
       );
 
-      expect(fetched, isNotNull);
-      expect(fetched!.accountUuid, equals('acc-sales-1'));
-    });
+      setUp(() {
+        bindingRepo = InMemoryBindingRepo();
+        accountRepo = MockAccountRepo();
+        lookupAdapter = MockAccountLookupAdapter(accountRepo);
+        readinessService = ModuleAccountingReadinessService(
+          bindingRepository: bindingRepo,
+          accountRepository: accountRepo,
+        );
+      });
 
-    test('2. Module Readiness Status Display (READY, NOT_CONFIGURED, PARTIALLY_CONFIGURED, INVALID, DEGRADED)', () async {
-      final reportNotConfigured = await readinessService.evaluateModuleReadiness(
-        companyId: companyId,
-        module: 'sales',
-        requirements: [reqSalesRevenue],
-      );
-      expect(reportNotConfigured.status, equals(ModuleAccountingReadinessState.notConfigured));
-    });
+      test('1. Screen Reflects Persisted Configuration', () async {
+        final acc = createTestCoaAccount(
+          id: 1,
+          uuid: 'acc-sales-1',
+          code: '401001',
+          name: 'إيراد المبيعات',
+          accountType: AccountType.revenue,
+          companyId: companyId,
+        );
+        accountRepo.add(acc);
 
-    test('3. Single Account Role Display (Expected vs Actual Type)', () async {
-      final accRev = createTestCoaAccount(
-        id: 3,
-        uuid: 'acc-rev-3',
-        code: '401003',
-        name: 'إيرادات مبيعات',
-        accountType: AccountType.revenue,
-        companyId: companyId,
-      );
-      accountRepo.add(accRev);
+        await bindingRepo.saveBinding(
+          AccountBinding(
+            companyId: companyId,
+            packageId: 'sales',
+            requirementKey: 'revenue_account',
+            accountUuid: 'acc-sales-1',
+            status: AccountBindingStatus.bound,
+            bindingMode: AccountBindingMode.singleAccount,
+            boundAt: DateTime.now(),
+          ),
+        );
 
-      expect(reqSalesRevenue.expectedAccountType?.name, equals('revenue'));
-      expect(accRev.accountType, equals(AccountType.revenue));
-    });
+        final fetched = await bindingRepo.getBinding(
+          companyId: companyId,
+          packageId: 'sales',
+          requirementKey: 'revenue_account',
+        );
 
-    test('4. Parent Account Scope Hierarchy Breakdown (Total, Eligible, Invalid Descendant Counts)', () async {
-      final grp = createTestCoaAccount(
-        id: 40,
-        uuid: 'grp-cash-4',
-        code: '101000',
-        name: 'مظلة الصناديق',
-        accountType: AccountType.asset,
-        companyId: companyId,
-        isGroup: true,
-      );
-      final child1 = createTestCoaAccount(
-        id: 41,
-        uuid: 'child-cash-1',
-        code: '101001',
-        name: 'صندوق الرئيسي',
-        accountType: AccountType.asset,
-        companyId: companyId,
-        parentId: 'grp-cash-4',
-      );
-      final child2Inactive = createTestCoaAccount(
-        id: 42,
-        uuid: 'child-cash-2',
-        code: '101002',
-        name: 'صندوق معطل',
-        accountType: AccountType.asset,
-        companyId: companyId,
-        parentId: 'grp-cash-4',
-        isActive: false,
-      );
-      accountRepo.add(grp);
-      accountRepo.add(child1);
-      accountRepo.add(child2Inactive);
+        expect(fetched, isNotNull);
+        expect(fetched!.accountUuid, equals('acc-sales-1'));
+      });
 
-      final all = await accountRepo.getAll(includeInactive: true);
-      final descendants = all.where((a) => a.parentId == grp.uuid).toList();
-      final eligible = descendants.where((a) => a.isActive && !a.isDeleted && !a.isGroup).toList();
-      final invalid = descendants.where((a) => !a.isActive || a.isDeleted).toList();
-
-      expect(descendants.length, equals(2));
-      expect(eligible.length, equals(1));
-      expect(invalid.length, equals(1));
-    });
-
-    test('5. Entity Account Binding UI Configuration', () async {
-      final custAccount = createTestCoaAccount(
-        id: 5,
-        uuid: 'acc-cust-101',
-        code: '102001',
-        name: 'شركة الأمل التجاري',
-        accountType: AccountType.asset,
-        companyId: companyId,
-      );
-      accountRepo.add(custAccount);
-
-      expect(custAccount.uuid, equals('acc-cust-101'));
-      expect(custAccount.companyId, equals(companyId));
-    });
-
-    test('6. Type Mismatch Validation Warning', () async {
-      final wrongAcc = createTestCoaAccount(
-        id: 6,
-        uuid: 'acc-liab-6',
-        code: '201001',
-        name: 'موردين دائنون',
-        accountType: AccountType.liability,
-        companyId: companyId,
-      );
-      accountRepo.add(wrongAcc);
-
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-liab-6',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      final report = await readinessService.evaluateModuleReadiness(
-        companyId: companyId,
-        module: 'sales',
-        requirements: [reqSalesRevenue],
+      test(
+        '2. Module Readiness Status Display (READY, NOT_CONFIGURED, PARTIALLY_CONFIGURED, INVALID, DEGRADED)',
+        () async {
+          final reportNotConfigured = await readinessService
+              .evaluateModuleReadiness(
+                companyId: companyId,
+                module: 'sales',
+                requirements: [reqSalesRevenue],
+              );
+          expect(
+            reportNotConfigured.status,
+            equals(ModuleAccountingReadinessState.notConfigured),
+          );
+        },
       );
 
-      expect(report.status, equals(ModuleAccountingReadinessState.invalid));
-      expect(report.primaryError?.errorCode, equals(AccountingConfigurationErrorCode.accountTypeMismatch));
-    });
+      test(
+        '3. Single Account Role Display (Expected vs Actual Type)',
+        () async {
+          final accRev = createTestCoaAccount(
+            id: 3,
+            uuid: 'acc-rev-3',
+            code: '401003',
+            name: 'إيرادات مبيعات',
+            accountType: AccountType.revenue,
+            companyId: companyId,
+          );
+          accountRepo.add(accRev);
 
-    test('7. Save Blocked on Invalid Type', () async {
-      final isSaveAllowed = false; // Blocked because status is INVALID
-      expect(isSaveAllowed, isFalse);
-    });
-
-    test('8. Unconfigured Role Explanation Banner', () async {
-      final ex = const AccountingConfigurationException(
-        module: 'sales',
-        accountingRole: AccountRole.revenue,
-        errorCode: AccountingConfigurationErrorCode.accountingConfigurationMissing,
-        userMessage: 'تجهيز المحاسبة مطلوب',
-        userExplanation: 'هذه القاعدة المحاسبية يجب تجهيزها قبل تنفيذ العمليات المالي بالوحدة',
+          expect(reqSalesRevenue.expectedAccountType?.name, equals('revenue'));
+          expect(accRev.accountType, equals(AccountType.revenue));
+        },
       );
 
-      expect(ex.userExplanation, contains('تجهيزها'));
-    });
+      test(
+        '4. Parent Account Scope Hierarchy Breakdown (Total, Eligible, Invalid Descendant Counts)',
+        () async {
+          final grp = createTestCoaAccount(
+            id: 40,
+            uuid: 'grp-cash-4',
+            code: '101000',
+            name: 'مظلة الصناديق',
+            accountType: AccountType.asset,
+            companyId: companyId,
+            isGroup: true,
+          );
+          final child1 = createTestCoaAccount(
+            id: 41,
+            uuid: 'child-cash-1',
+            code: '101001',
+            name: 'صندوق الرئيسي',
+            accountType: AccountType.asset,
+            companyId: companyId,
+            parentId: 'grp-cash-4',
+          );
+          final child2Inactive = createTestCoaAccount(
+            id: 42,
+            uuid: 'child-cash-2',
+            code: '101002',
+            name: 'صندوق معطل',
+            accountType: AccountType.asset,
+            companyId: companyId,
+            parentId: 'grp-cash-4',
+            isActive: false,
+          );
+          accountRepo.add(grp);
+          accountRepo.add(child1);
+          accountRepo.add(child2Inactive);
 
-    test('9. Partial Configuration Role Checklist', () async {
-      final revAcc = createTestCoaAccount(
-        id: 9,
-        uuid: 'acc-rev-9',
-        code: '401009',
-        name: 'إيرادات مبيعات',
-        accountType: AccountType.revenue,
-        companyId: companyId,
-      );
-      accountRepo.add(revAcc);
+          final all = await accountRepo.getAll(includeInactive: true);
+          final descendants = all.where((a) => a.parentId == grp.uuid).toList();
+          final eligible = descendants
+              .where((a) => a.isActive && !a.isDeleted && !a.isGroup)
+              .toList();
+          final invalid = descendants
+              .where((a) => !a.isActive || a.isDeleted)
+              .toList();
 
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-rev-9',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      final reqReceivable = const AccountRequirement(
-        packageId: 'sales',
-        requirementKey: 'receivable_account',
-        role: AccountRole.receivable,
-        labelAr: 'العملاء',
-        labelEn: 'Receivable',
-        expectedAccountType: SetupAccountType.asset,
-      );
-
-      final report = await readinessService.evaluateModuleReadiness(
-        companyId: companyId,
-        module: 'sales',
-        requirements: [reqSalesRevenue, reqReceivable],
-      );
-
-      expect(report.status, equals(ModuleAccountingReadinessState.partiallyConfigured));
-      expect(report.missingRoles, contains(AccountRole.receivable));
-    });
-
-    test('10. Multi-Tier Save Validation Pipeline', () async {
-      final validRev = createTestCoaAccount(
-        id: 10,
-        uuid: 'acc-valid-10',
-        code: '401010',
-        name: 'إيراد مبيعات ممتاز',
-        accountType: AccountType.revenue,
-        companyId: companyId,
-      );
-      accountRepo.add(validRev);
-
-      expect(validRev.companyId, equals(companyId));
-      expect(validRev.isActive, isTrue);
-      expect(validRev.isDeleted, isFalse);
-      expect(validRev.accountType, equals(AccountType.revenue));
-    });
-
-    test('11. Persistence Verification After Save', () async {
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-valid-10',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      final persisted = await bindingRepo.getBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
+          expect(descendants.length, equals(2));
+          expect(eligible.length, equals(1));
+          expect(invalid.length, equals(1));
+        },
       );
 
-      expect(persisted?.accountUuid, equals('acc-valid-10'));
-    });
+      test('5. Entity Account Binding UI Configuration', () async {
+        final custAccount = createTestCoaAccount(
+          id: 5,
+          uuid: 'acc-cust-101',
+          code: '102001',
+          name: 'شركة الأمل التجاري',
+          accountType: AccountType.asset,
+          companyId: companyId,
+        );
+        accountRepo.add(custAccount);
 
-    test('12. Reload & Readiness Re-Evaluation', () async {
-      final acc = createTestCoaAccount(
-        id: 12,
-        uuid: 'acc-valid-12',
-        code: '401012',
-        name: 'إيراد مبيعات',
-        accountType: AccountType.revenue,
-        companyId: companyId,
+        expect(custAccount.uuid, equals('acc-cust-101'));
+        expect(custAccount.companyId, equals(companyId));
+      });
+
+      test('6. Type Mismatch Validation Warning', () async {
+        final wrongAcc = createTestCoaAccount(
+          id: 6,
+          uuid: 'acc-liab-6',
+          code: '201001',
+          name: 'موردين دائنون',
+          accountType: AccountType.liability,
+          companyId: companyId,
+        );
+        accountRepo.add(wrongAcc);
+
+        await bindingRepo.saveBinding(
+          AccountBinding(
+            companyId: companyId,
+            packageId: 'sales',
+            requirementKey: 'revenue_account',
+            accountUuid: 'acc-liab-6',
+            status: AccountBindingStatus.bound,
+            bindingMode: AccountBindingMode.singleAccount,
+            boundAt: DateTime.now(),
+          ),
+        );
+
+        final report = await readinessService.evaluateModuleReadiness(
+          companyId: companyId,
+          module: 'sales',
+          requirements: [reqSalesRevenue],
+        );
+
+        expect(report.status, equals(ModuleAccountingReadinessState.invalid));
+        expect(
+          report.primaryError?.errorCode,
+          equals(AccountingConfigurationErrorCode.accountTypeMismatch),
+        );
+      });
+
+      test('7. Save Blocked on Invalid Type', () async {
+        final isSaveAllowed = false; // Blocked because status is INVALID
+        expect(isSaveAllowed, isFalse);
+      });
+
+      test('8. Unconfigured Role Explanation Banner', () async {
+        final ex = const AccountingConfigurationException(
+          module: 'sales',
+          accountingRole: AccountRole.revenue,
+          errorCode:
+              AccountingConfigurationErrorCode.accountingConfigurationMissing,
+          userMessage: 'تجهيز المحاسبة مطلوب',
+          userExplanation:
+              'هذه القاعدة المحاسبية يجب تجهيزها قبل تنفيذ العمليات المالي بالوحدة',
+        );
+
+        expect(ex.userExplanation, contains('تجهيزها'));
+      });
+
+      test('9. Partial Configuration Role Checklist', () async {
+        final revAcc = createTestCoaAccount(
+          id: 9,
+          uuid: 'acc-rev-9',
+          code: '401009',
+          name: 'إيرادات مبيعات',
+          accountType: AccountType.revenue,
+          companyId: companyId,
+        );
+        accountRepo.add(revAcc);
+
+        await bindingRepo.saveBinding(
+          AccountBinding(
+            companyId: companyId,
+            packageId: 'sales',
+            requirementKey: 'revenue_account',
+            accountUuid: 'acc-rev-9',
+            status: AccountBindingStatus.bound,
+            bindingMode: AccountBindingMode.singleAccount,
+            boundAt: DateTime.now(),
+          ),
+        );
+
+        final reqReceivable = const AccountRequirement(
+          packageId: 'sales',
+          requirementKey: 'receivable_account',
+          role: AccountRole.receivable,
+          labelAr: 'العملاء',
+          labelEn: 'Receivable',
+          expectedAccountType: SetupAccountType.asset,
+        );
+
+        final report = await readinessService.evaluateModuleReadiness(
+          companyId: companyId,
+          module: 'sales',
+          requirements: [reqSalesRevenue, reqReceivable],
+        );
+
+        expect(
+          report.status,
+          equals(ModuleAccountingReadinessState.partiallyConfigured),
+        );
+        expect(report.missingRoles, contains(AccountRole.receivable));
+      });
+
+      test('10. Multi-Tier Save Validation Pipeline', () async {
+        final validRev = createTestCoaAccount(
+          id: 10,
+          uuid: 'acc-valid-10',
+          code: '401010',
+          name: 'إيراد مبيعات ممتاز',
+          accountType: AccountType.revenue,
+          companyId: companyId,
+        );
+        accountRepo.add(validRev);
+
+        expect(validRev.companyId, equals(companyId));
+        expect(validRev.isActive, isTrue);
+        expect(validRev.isDeleted, isFalse);
+        expect(validRev.accountType, equals(AccountType.revenue));
+      });
+
+      test('11. Persistence Verification After Save', () async {
+        await bindingRepo.saveBinding(
+          AccountBinding(
+            companyId: companyId,
+            packageId: 'sales',
+            requirementKey: 'revenue_account',
+            accountUuid: 'acc-valid-10',
+            status: AccountBindingStatus.bound,
+            bindingMode: AccountBindingMode.singleAccount,
+            boundAt: DateTime.now(),
+          ),
+        );
+
+        final persisted = await bindingRepo.getBinding(
+          companyId: companyId,
+          packageId: 'sales',
+          requirementKey: 'revenue_account',
+        );
+
+        expect(persisted?.accountUuid, equals('acc-valid-10'));
+      });
+
+      test('12. Reload & Readiness Re-Evaluation', () async {
+        final acc = createTestCoaAccount(
+          id: 12,
+          uuid: 'acc-valid-12',
+          code: '401012',
+          name: 'إيراد مبيعات',
+          accountType: AccountType.revenue,
+          companyId: companyId,
+        );
+        accountRepo.add(acc);
+        await bindingRepo.saveBinding(
+          AccountBinding(
+            companyId: companyId,
+            packageId: 'sales',
+            requirementKey: 'revenue_account',
+            accountUuid: 'acc-valid-12',
+            status: AccountBindingStatus.bound,
+            bindingMode: AccountBindingMode.singleAccount,
+            boundAt: DateTime.now(),
+          ),
+        );
+
+        final report = await readinessService.evaluateModuleReadiness(
+          companyId: companyId,
+          module: 'sales',
+          requirements: [reqSalesRevenue],
+        );
+
+        expect(report.status, equals(ModuleAccountingReadinessState.ready));
+        expect(report.isReady, isTrue);
+      });
+
+      test(
+        '13. Direct Repair Flow (INVALID -> FIX -> VALID -> READY)',
+        () async {
+          // Step 1: INVALID
+          final wrongTypeAcc = createTestCoaAccount(
+            id: 130,
+            uuid: 'acc-wrong-13',
+            code: '201013',
+            name: 'دائنون',
+            accountType: AccountType.liability,
+            companyId: companyId,
+          );
+          accountRepo.add(wrongTypeAcc);
+
+          await bindingRepo.saveBinding(
+            AccountBinding(
+              companyId: companyId,
+              packageId: 'sales',
+              requirementKey: 'revenue_account',
+              accountUuid: 'acc-wrong-13',
+              status: AccountBindingStatus.bound,
+              bindingMode: AccountBindingMode.singleAccount,
+              boundAt: DateTime.now(),
+            ),
+          );
+
+          var report = await readinessService.evaluateModuleReadiness(
+            companyId: companyId,
+            module: 'sales',
+            requirements: [reqSalesRevenue],
+          );
+          expect(report.status, equals(ModuleAccountingReadinessState.invalid));
+
+          // Step 2: FIX -> VALID
+          final correctAcc = createTestCoaAccount(
+            id: 131,
+            uuid: 'acc-correct-13',
+            code: '401013',
+            name: 'إيراد صحيح',
+            accountType: AccountType.revenue,
+            companyId: companyId,
+          );
+          accountRepo.add(correctAcc);
+
+          await bindingRepo.saveBinding(
+            AccountBinding(
+              companyId: companyId,
+              packageId: 'sales',
+              requirementKey: 'revenue_account',
+              accountUuid: 'acc-correct-13',
+              status: AccountBindingStatus.bound,
+              bindingMode: AccountBindingMode.singleAccount,
+              boundAt: DateTime.now(),
+            ),
+          );
+
+          report = await readinessService.evaluateModuleReadiness(
+            companyId: companyId,
+            module: 'sales',
+            requirements: [reqSalesRevenue],
+          );
+          expect(report.status, equals(ModuleAccountingReadinessState.ready));
+        },
       );
-      accountRepo.add(acc);
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-valid-12',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
 
-      final report = await readinessService.evaluateModuleReadiness(
-        companyId: companyId,
-        module: 'sales',
-        requirements: [reqSalesRevenue],
+      test('14. Resolver Consumes Newly Saved Configuration', () async {
+        final acc = createTestCoaAccount(
+          id: 14,
+          uuid: 'acc-correct-14',
+          code: '401014',
+          name: 'إيراد صحيح',
+          accountType: AccountType.revenue,
+          companyId: companyId,
+        );
+        accountRepo.add(acc);
+        await bindingRepo.saveBinding(
+          AccountBinding(
+            companyId: companyId,
+            packageId: 'sales',
+            requirementKey: 'revenue_account',
+            accountUuid: 'acc-correct-14',
+            status: AccountBindingStatus.bound,
+            bindingMode: AccountBindingMode.singleAccount,
+            boundAt: DateTime.now(),
+          ),
+        );
+
+        final resolver = AccountBindingResolver(
+          accountLookupPort: lookupAdapter,
+          bindingRepository: bindingRepo,
+        );
+
+        final result = await resolver.resolveRequirement(
+          companyId: companyId,
+          requirement: reqSalesRevenue,
+        );
+
+        expect(result.isBound, isTrue);
+        expect(result.account?.uuid, equals('acc-correct-14'));
+      });
+
+      test(
+        '15. End-to-End Journal Posting Uses Updated Configuration',
+        () async {
+          final acc = createTestCoaAccount(
+            id: 15,
+            uuid: 'acc-correct-15',
+            code: '401015',
+            name: 'إيراد صحيح للترحيل',
+            accountType: AccountType.revenue,
+            companyId: companyId,
+          );
+          accountRepo.add(acc);
+          await bindingRepo.saveBinding(
+            AccountBinding(
+              companyId: companyId,
+              packageId: 'sales',
+              requirementKey: 'revenue_account',
+              accountUuid: 'acc-correct-15',
+              status: AccountBindingStatus.bound,
+              bindingMode: AccountBindingMode.singleAccount,
+              boundAt: DateTime.now(),
+            ),
+          );
+
+          final resolver = AccountBindingResolver(
+            accountLookupPort: lookupAdapter,
+            bindingRepository: bindingRepo,
+          );
+
+          final accountData = await resolver.resolveAccountForTransaction(
+            companyId: companyId,
+            requirement: reqSalesRevenue,
+          );
+
+          expect(accountData.accountCode, equals('401015'));
+          expect(accountData.accountType, equals(SetupAccountType.revenue));
+        },
       );
-
-      expect(report.status, equals(ModuleAccountingReadinessState.ready));
-      expect(report.isReady, isTrue);
-    });
-
-    test('13. Direct Repair Flow (INVALID -> FIX -> VALID -> READY)', () async {
-      // Step 1: INVALID
-      final wrongTypeAcc = createTestCoaAccount(
-        id: 130,
-        uuid: 'acc-wrong-13',
-        code: '201013',
-        name: 'دائنون',
-        accountType: AccountType.liability,
-        companyId: companyId,
-      );
-      accountRepo.add(wrongTypeAcc);
-
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-wrong-13',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      var report = await readinessService.evaluateModuleReadiness(
-        companyId: companyId,
-        module: 'sales',
-        requirements: [reqSalesRevenue],
-      );
-      expect(report.status, equals(ModuleAccountingReadinessState.invalid));
-
-      // Step 2: FIX -> VALID
-      final correctAcc = createTestCoaAccount(
-        id: 131,
-        uuid: 'acc-correct-13',
-        code: '401013',
-        name: 'إيراد صحيح',
-        accountType: AccountType.revenue,
-        companyId: companyId,
-      );
-      accountRepo.add(correctAcc);
-
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-correct-13',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      report = await readinessService.evaluateModuleReadiness(
-        companyId: companyId,
-        module: 'sales',
-        requirements: [reqSalesRevenue],
-      );
-      expect(report.status, equals(ModuleAccountingReadinessState.ready));
-    });
-
-    test('14. Resolver Consumes Newly Saved Configuration', () async {
-      final acc = createTestCoaAccount(
-        id: 14,
-        uuid: 'acc-correct-14',
-        code: '401014',
-        name: 'إيراد صحيح',
-        accountType: AccountType.revenue,
-        companyId: companyId,
-      );
-      accountRepo.add(acc);
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-correct-14',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      final resolver = AccountBindingResolver(
-        accountLookupPort: lookupAdapter,
-        bindingRepository: bindingRepo,
-      );
-
-      final result = await resolver.resolveRequirement(
-        companyId: companyId,
-        requirement: reqSalesRevenue,
-      );
-
-      expect(result.isBound, isTrue);
-      expect(result.account?.uuid, equals('acc-correct-14'));
-    });
-
-    test('15. End-to-End Journal Posting Uses Updated Configuration', () async {
-      final acc = createTestCoaAccount(
-        id: 15,
-        uuid: 'acc-correct-15',
-        code: '401015',
-        name: 'إيراد صحيح للترحيل',
-        accountType: AccountType.revenue,
-        companyId: companyId,
-      );
-      accountRepo.add(acc);
-      await bindingRepo.saveBinding(AccountBinding(
-        companyId: companyId,
-        packageId: 'sales',
-        requirementKey: 'revenue_account',
-        accountUuid: 'acc-correct-15',
-        status: AccountBindingStatus.bound,
-        bindingMode: AccountBindingMode.singleAccount,
-        boundAt: DateTime.now(),
-      ));
-
-      final resolver = AccountBindingResolver(
-        accountLookupPort: lookupAdapter,
-        bindingRepository: bindingRepo,
-      );
-
-      final accountData = await resolver.resolveAccountForTransaction(
-        companyId: companyId,
-        requirement: reqSalesRevenue,
-      );
-
-      expect(accountData.accountCode, equals('401015'));
-      expect(accountData.accountType, equals(SetupAccountType.revenue));
-    });
-  });
+    },
+  );
 }

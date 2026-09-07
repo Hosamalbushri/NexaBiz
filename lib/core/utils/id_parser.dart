@@ -19,7 +19,9 @@ abstract final class IdParser {
     }
 
     if (rawInput is double) {
-      return rawInput.isFinite && rawInput > 0 && rawInput == rawInput.truncateToDouble()
+      return rawInput.isFinite &&
+              rawInput > 0 &&
+              rawInput == rawInput.truncateToDouble()
           ? rawInput.toInt()
           : null;
     }

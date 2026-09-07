@@ -6,7 +6,10 @@ abstract class ImportCheckpointRepository {
   Future<void> save(ImportCheckpoint checkpoint);
 
   /// Retrieves the latest checkpoint for [jobId] scoped to [companyId].
-  Future<ImportCheckpoint?> getLatestCheckpoint(String jobId, {required String companyId});
+  Future<ImportCheckpoint?> getLatestCheckpoint(
+    String jobId, {
+    required String companyId,
+  });
 
   /// Deletes checkpoint for [jobId] scoped to [companyId].
   Future<void> deleteCheckpoint(String jobId, {required String companyId});
@@ -28,7 +31,10 @@ class InMemoryImportCheckpointRepository implements ImportCheckpointRepository {
   }
 
   @override
-  Future<ImportCheckpoint?> getLatestCheckpoint(String jobId, {required String companyId}) async {
+  Future<ImportCheckpoint?> getLatestCheckpoint(
+    String jobId, {
+    required String companyId,
+  }) async {
     if (companyId.trim().isEmpty) return null;
     final cp = _store[jobId];
     if (cp == null || cp.companyId != companyId) return null;
@@ -36,7 +42,10 @@ class InMemoryImportCheckpointRepository implements ImportCheckpointRepository {
   }
 
   @override
-  Future<void> deleteCheckpoint(String jobId, {required String companyId}) async {
+  Future<void> deleteCheckpoint(
+    String jobId, {
+    required String companyId,
+  }) async {
     final cp = _store[jobId];
     if (cp != null && cp.companyId == companyId) {
       _store.remove(jobId);

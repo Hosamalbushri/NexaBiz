@@ -1,12 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../trusted_clock.dart';
 
-enum ClockIntegrityState {
-  trusted,
-  unverified,
-  suspicious,
-  tampered,
-}
+enum ClockIntegrityState { trusted, unverified, suspicious, tampered }
 
 class ClockIntegrityService {
   ClockIntegrityService({required this._clock});
@@ -28,7 +23,9 @@ class ClockIntegrityService {
     }
 
     // 3. Monitor drift: compare wall-clock elapsed time vs monotonic elapsed time
-    final wallDelta = currentWallClock.difference(checkpoint.localWallClock).inMilliseconds;
+    final wallDelta = currentWallClock
+        .difference(checkpoint.localWallClock)
+        .inMilliseconds;
     final monoDelta = _clock.currentMonotonicMs - checkpoint.monotonicMs;
 
     // A drift is suspicious if wall clock changed significantly compared to monotonic clock

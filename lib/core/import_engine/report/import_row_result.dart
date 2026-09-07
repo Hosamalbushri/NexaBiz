@@ -1,10 +1,5 @@
 /// Post-import execution outcome for an individual dataset row.
-enum ImportRowOutcome {
-  created,
-  updated,
-  skipped,
-  failed,
-}
+enum ImportRowOutcome { created, updated, skipped, failed }
 
 /// Execution outcome report for an individual dataset row.
 class ImportRowResult {
@@ -46,14 +41,17 @@ class ImportRowResult {
   /// Additional execution metadata.
   final Map<String, dynamic> metadata;
 
-  bool get isSuccess => outcome == ImportRowOutcome.created || outcome == ImportRowOutcome.updated || outcome == ImportRowOutcome.skipped;
+  bool get isSuccess =>
+      outcome == ImportRowOutcome.created ||
+      outcome == ImportRowOutcome.updated ||
+      outcome == ImportRowOutcome.skipped;
 
   Map<String, dynamic> toJson() => {
-        'rowIndex': rowIndex,
-        'outcome': outcome.name,
-        'entityId': entityId,
-        'errors': errors,
-        'warnings': warnings,
-        'metadata': metadata,
-      };
+    'rowIndex': rowIndex,
+    'outcome': outcome.name,
+    'entityId': entityId,
+    'errors': errors,
+    'warnings': warnings,
+    'metadata': metadata,
+  };
 }

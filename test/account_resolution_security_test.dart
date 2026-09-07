@@ -8,6 +8,7 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/inve
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/core/errors/missing_account_exception.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
@@ -65,7 +66,9 @@ void main() {
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
 
     // Company A: Active leaf accounts
-    await db.into(db.accounts).insert(
+    await db
+        .into(db.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: compA_inventoryUuid,
             companyId: Value(companyA),
@@ -82,7 +85,9 @@ void main() {
           ),
         );
 
-    await db.into(db.accounts).insert(
+    await db
+        .into(db.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: compA_cogsUuid,
             companyId: Value(companyA),
@@ -100,7 +105,9 @@ void main() {
         );
 
     // Company A: Group account
-    await db.into(db.accounts).insert(
+    await db
+        .into(db.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: compA_groupUuid,
             companyId: Value(companyA),
@@ -117,7 +124,9 @@ void main() {
         );
 
     // Company A: Inactive account
-    await db.into(db.accounts).insert(
+    await db
+        .into(db.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: compA_inactiveUuid,
             companyId: Value(companyA),
@@ -135,7 +144,9 @@ void main() {
 
     // Seed test accounts for Company B
     compB_inventoryUuid = generateUuidV4();
-    await db.into(db.accounts).insert(
+    await db
+        .into(db.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: compB_inventoryUuid,
             companyId: Value(companyB),
@@ -158,187 +169,214 @@ void main() {
   });
 
   group('Account Resolution Security Tests', () {
-    test('1. Non-existent account requested -> fails, 0 journal entries created', () async {
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
+    test(
+      '1. Non-existent account requested -> fails, 0 journal entries created',
+      () async {
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
 
-      expect(
-        () async => poster.postAccountingEntry(
+        expect(
+          () async => poster.postAccountingEntry(
+            document: doc,
+            totalAmount: 500.0,
+            accountId: 'non_existent_account_uuid',
+          ),
+          throwsA(isA<MissingAccountException>()),
+        );
+
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(0));
+      },
+    );
+
+    test(
+      '2. Cross-Company Account (Company A requests Company B account) -> fails, 0 journal entries created',
+      () async {
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-002',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
+
+        // Active company is Company A, but we try to resolve Company B's inventory account UUID
+        expect(
+          () async => poster.postAccountingEntry(
+            document: doc,
+            totalAmount: 500.0,
+            accountId: compB_inventoryUuid,
+          ),
+          throwsA(isA<MissingAccountException>()),
+        );
+
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(0));
+      },
+    );
+
+    test(
+      '3. Unvalidated 36-char string UUID -> fails, 0 journal entries created',
+      () async {
+        final fakeUuid36 =
+            '12345678-1234-1234-1234-123456789012'; // 36 chars but does not exist in DB
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-003',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
+
+        expect(
+          () async => poster.postAccountingEntry(
+            document: doc,
+            totalAmount: 500.0,
+            accountId: fakeUuid36,
+          ),
+          throwsA(isA<MissingAccountException>()),
+        );
+
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(0));
+      },
+    );
+
+    test(
+      '4. Group Account specified -> fails, 0 journal entries created',
+      () async {
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-004',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
+
+        expect(
+          () async => poster.postAccountingEntry(
+            document: doc,
+            totalAmount: 500.0,
+            accountId: compA_groupUuid,
+          ),
+          throwsA(isA<MissingAccountException>()),
+        );
+
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(0));
+      },
+    );
+
+    test(
+      '5. Inactive Account specified -> fails, 0 journal entries created',
+      () async {
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-005',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
+
+        expect(
+          () async => poster.postAccountingEntry(
+            document: doc,
+            totalAmount: 500.0,
+            accountId: compA_inactiveUuid,
+          ),
+          throwsA(isA<MissingAccountException>()),
+        );
+
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(0));
+      },
+    );
+
+    test(
+      '6. Account resolution by Code -> Company A picks ONLY Company A account',
+      () async {
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-006',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
+
+        // Post with accountCode '1230' under Company A
+        await poster.postAccountingEntry(
           document: doc,
-          totalAmount: 500.0,
-          accountId: 'non_existent_account_uuid',
-        ),
-        throwsA(isA<StateError>()),
-      );
+          totalAmount: 1000.0,
+          accountId: '1230',
+        );
 
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(0));
-    });
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(1));
+        expect(entries.first.companyId, equals(companyA));
 
-    test('2. Cross-Company Account (Company A requests Company B account) -> fails, 0 journal entries created', () async {
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-002',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
+        final lines = await (db.select(
+          db.journalLines,
+        )..where((l) => l.entryUuid.equals(entries.first.uuid))).get();
+        expect(lines.length, equals(2));
 
-      // Active company is Company A, but we try to resolve Company B's inventory account UUID
-      expect(
-        () async => poster.postAccountingEntry(
+        final accountUuids = lines.map((l) => l.accountUuid).toList();
+        // Must contain Company A's inventory account, NOT Company B's
+        expect(accountUuids, contains(compA_inventoryUuid));
+        expect(accountUuids, isNot(contains(compB_inventoryUuid)));
+      },
+    );
+
+    test(
+      '7. No arbitrary fallback / No limit(1) when code is missing -> fails',
+      () async {
+        // Delete Company A's COGS account ('5100')
+        await (db.delete(
+          db.accounts,
+        )..where((t) => t.uuid.equals(compA_cogsUuid))).go();
+
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'ISS-007',
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: DateTime.now(),
+        );
+
+        // Stock issue requires cost_of_goods account ('5100'). Since it was deleted and no accountId is specified,
+        // the system MUST NOT arbitrarily pick compA_inventoryUuid via limit(1). It MUST fail!
+        expect(
+          () async => poster.postAccountingEntry(
+            document: doc,
+            totalAmount: 750.0,
+            accountId: null,
+          ),
+          throwsA(isA<MissingAccountException>()),
+        );
+
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(0));
+      },
+    );
+
+    test(
+      '8. Valid Company A account resolution -> posts correctly with scoped companyId',
+      () async {
+        final doc = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-008',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
+
+        await poster.postAccountingEntry(
           document: doc,
-          totalAmount: 500.0,
-          accountId: compB_inventoryUuid,
-        ),
-        throwsA(isA<StateError>()),
-      );
+          totalAmount: 1200.0,
+          accountId: compA_inventoryUuid,
+        );
 
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(0));
-    });
-
-    test('3. Unvalidated 36-char string UUID -> fails, 0 journal entries created', () async {
-      final fakeUuid36 = '12345678-1234-1234-1234-123456789012'; // 36 chars but does not exist in DB
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-003',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
-
-      expect(
-        () async => poster.postAccountingEntry(
-          document: doc,
-          totalAmount: 500.0,
-          accountId: fakeUuid36,
-        ),
-        throwsA(isA<StateError>()),
-      );
-
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(0));
-    });
-
-    test('4. Group Account specified -> fails, 0 journal entries created', () async {
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-004',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
-
-      expect(
-        () async => poster.postAccountingEntry(
-          document: doc,
-          totalAmount: 500.0,
-          accountId: compA_groupUuid,
-        ),
-        throwsA(isA<StateError>()),
-      );
-
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(0));
-    });
-
-    test('5. Inactive Account specified -> fails, 0 journal entries created', () async {
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-005',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
-
-      expect(
-        () async => poster.postAccountingEntry(
-          document: doc,
-          totalAmount: 500.0,
-          accountId: compA_inactiveUuid,
-        ),
-        throwsA(isA<StateError>()),
-      );
-
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(0));
-    });
-
-    test('6. Account resolution by Code -> Company A picks ONLY Company A account', () async {
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-006',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
-
-      // Post with accountCode '1230' under Company A
-      await poster.postAccountingEntry(
-        document: doc,
-        totalAmount: 1000.0,
-        accountId: '1230',
-      );
-
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(1));
-      expect(entries.first.companyId, equals(companyA));
-
-      final lines = await (db.select(db.journalLines)
-            ..where((l) => l.entryUuid.equals(entries.first.uuid)))
-          .get();
-      expect(lines.length, equals(2));
-
-      final accountUuids = lines.map((l) => l.accountUuid).toList();
-      // Must contain Company A's inventory account, NOT Company B's
-      expect(accountUuids, contains(compA_inventoryUuid));
-      expect(accountUuids, isNot(contains(compB_inventoryUuid)));
-    });
-
-    test('7. No arbitrary fallback / No limit(1) when code is missing -> fails', () async {
-      // Delete Company A's COGS account ('5100')
-      await (db.delete(db.accounts)..where((t) => t.uuid.equals(compA_cogsUuid))).go();
-
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'ISS-007',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: DateTime.now(),
-      );
-
-      // Stock issue requires cost_of_goods account ('5100'). Since it was deleted and no accountId is specified,
-      // the system MUST NOT arbitrarily pick compA_inventoryUuid via limit(1). It MUST fail!
-      expect(
-        () async => poster.postAccountingEntry(
-          document: doc,
-          totalAmount: 750.0,
-          accountId: null,
-        ),
-        throwsA(isA<StateError>()),
-      );
-
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(0));
-    });
-
-    test('8. Valid Company A account resolution -> posts correctly with scoped companyId', () async {
-      final doc = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-008',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
-
-      await poster.postAccountingEntry(
-        document: doc,
-        totalAmount: 1200.0,
-        accountId: compA_inventoryUuid,
-      );
-
-      final entries = await db.select(db.journalEntries).get();
-      expect(entries.length, equals(1));
-      expect(entries.first.companyId, equals(companyA));
-      expect(entries.first.voucherNumber, equals('REC-008'));
-    });
+        final entries = await db.select(db.journalEntries).get();
+        expect(entries.length, equals(1));
+        expect(entries.first.companyId, equals(companyA));
+        expect(entries.first.voucherNumber, equals('REC-008'));
+      },
+    );
   });
 }

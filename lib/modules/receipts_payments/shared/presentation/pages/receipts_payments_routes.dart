@@ -80,5 +80,11 @@ abstract final class ReceiptsPaymentsRoutes {
   static void backToList(
     BuildContext context, {
     required TransactionType type,
-  }) => goList(context, type: type);
+  }) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      goList(context, type: type);
+    }
+  }
 }

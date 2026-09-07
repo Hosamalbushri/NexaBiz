@@ -17,15 +17,22 @@ void main() {
       expect(syncPkg.capabilities, contains(EntitlementCapability.sync));
     });
 
-    test('CapabilityRegistry maps capabilities to required package metadata', () {
-      final syncMeta = CapabilityRegistry.getMetadata(EntitlementCapability.sync);
-      expect(syncMeta, isNotNull);
-      expect(syncMeta!.displayName, equals('Cloud Data Synchronization'));
-      expect(syncMeta.requiredPackageCode, equals('cloud_sync'));
+    test(
+      'CapabilityRegistry maps capabilities to required package metadata',
+      () {
+        final syncMeta = CapabilityRegistry.getMetadata(
+          EntitlementCapability.sync,
+        );
+        expect(syncMeta, isNotNull);
+        expect(syncMeta!.displayName, equals('Cloud Data Synchronization'));
+        expect(syncMeta.requiredPackageCode, equals('cloud_sync'));
 
-      final branchMeta = CapabilityRegistry.getMetadata(EntitlementCapability.multiBranch);
-      expect(branchMeta, isNotNull);
-      expect(branchMeta!.requiredPackageCode, equals('multi_branch'));
-    });
+        final branchMeta = CapabilityRegistry.getMetadata(
+          EntitlementCapability.multiBranch,
+        );
+        expect(branchMeta, isNotNull);
+        expect(branchMeta!.requiredPackageCode, equals('multi_branch'));
+      },
+    );
   });
 }

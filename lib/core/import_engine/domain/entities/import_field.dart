@@ -3,10 +3,8 @@ import 'import_row.dart';
 import 'import_value.dart';
 
 /// Function contract for custom field-level validation.
-typedef ImportFieldValidator = ImportError? Function(
-  ImportValue value,
-  ImportRow row,
-);
+typedef ImportFieldValidator =
+    ImportError? Function(ImportValue value, ImportRow row);
 
 /// Function contract for custom field-level normalization.
 typedef ImportFieldNormalizer = ImportValue Function(dynamic rawValue);

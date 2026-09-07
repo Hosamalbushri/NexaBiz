@@ -83,8 +83,8 @@ class AppCollectionView<T> extends StatelessWidget {
       controller: scrollController,
       padding: effectivePadding,
       itemCount: totalCount,
-      separatorBuilder: separatorBuilder ??
-          (_, _) => const SizedBox(height: AppSpacing.sm),
+      separatorBuilder:
+          separatorBuilder ?? (_, _) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
         if (index >= items.length) {
           return footerBuilder?.call(context) ?? const SizedBox.shrink();

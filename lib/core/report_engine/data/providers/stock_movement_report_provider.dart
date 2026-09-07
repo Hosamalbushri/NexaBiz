@@ -33,7 +33,8 @@ class StockMovementReportDataProvider
   @override
   Future<ReportSummary> fetchSummary(ReportExecutionContext context) async {
     final productCode = context.filters['productCode'] as String?;
-    final statementType = context.filters['statementType'] as String? ?? 'detailed';
+    final statementType =
+        context.filters['statementType'] as String? ?? 'detailed';
     final fromDate = context.fromDate;
     final toDate = context.toDate;
 
@@ -51,7 +52,10 @@ class StockMovementReportDataProvider
         toMs: toMs,
       );
       final itemRows = await subQuery.get();
-      final uniqueCount = itemRows.map((r) => r.read(inventoryDb.stockMovementLines.itemCode)).toSet().length;
+      final uniqueCount = itemRows
+          .map((r) => r.read(inventoryDb.stockMovementLines.itemCode))
+          .toSet()
+          .length;
 
       final aggQuery = inventoryDb.selectOnly(inventoryDb.stockMovementLines)
         ..addColumns([
@@ -67,18 +71,15 @@ class StockMovementReportDataProvider
       );
 
       final aggRow = await aggQuery.getSingle();
-      final totalQty = aggRow.read(inventoryDb.stockMovementLines.quantity.sum()) ?? 0.0;
-      final totalCost = aggRow.read(inventoryDb.stockMovementLines.totalCost.sum()) ?? 0.0;
+      final totalQty =
+          aggRow.read(inventoryDb.stockMovementLines.quantity.sum()) ?? 0.0;
+      final totalCost =
+          aggRow.read(inventoryDb.stockMovementLines.totalCost.sum()) ?? 0.0;
 
       return ReportSummary(
         totalCount: uniqueCount,
-        aggregates: {
-          'totalQty': totalQty,
-          'totalValue': totalCost,
-        },
-        kpis: {
-          'totalCount': uniqueCount,
-        },
+        aggregates: {'totalQty': totalQty, 'totalValue': totalCost},
+        kpis: {'totalCount': uniqueCount},
       );
     }
 
@@ -99,18 +100,15 @@ class StockMovementReportDataProvider
 
     final row = await query.getSingle();
     final count = row.read(inventoryDb.stockMovementLines.id.count()) ?? 0;
-    final totalQty = row.read(inventoryDb.stockMovementLines.quantity.sum()) ?? 0.0;
-    final totalCost = row.read(inventoryDb.stockMovementLines.totalCost.sum()) ?? 0.0;
+    final totalQty =
+        row.read(inventoryDb.stockMovementLines.quantity.sum()) ?? 0.0;
+    final totalCost =
+        row.read(inventoryDb.stockMovementLines.totalCost.sum()) ?? 0.0;
 
     return ReportSummary(
       totalCount: count,
-      aggregates: {
-        'totalQty': totalQty,
-        'totalValue': totalCost,
-      },
-      kpis: {
-        'totalCount': count,
-      },
+      aggregates: {'totalQty': totalQty, 'totalValue': totalCost},
+      kpis: {'totalCount': count},
     );
   }
 
@@ -122,7 +120,8 @@ class StockMovementReportDataProvider
     int pageSize = 50,
   }) async {
     final productCode = context.filters['productCode'] as String?;
-    final statementType = context.filters['statementType'] as String? ?? 'detailed';
+    final statementType =
+        context.filters['statementType'] as String? ?? 'detailed';
     final fromDate = context.fromDate;
     final toDate = context.toDate;
 
@@ -148,15 +147,18 @@ class StockMovementReportDataProvider
       final summaryMap = <String, Map<String, dynamic>>{};
       for (final l in allLines) {
         final key = l.itemCode.isNotEmpty ? l.itemCode : l.itemName;
-        final entry = summaryMap.putIfAbsent(key, () => {
-          'itemCode': l.itemCode,
-          'itemName': l.itemName.isNotEmpty ? l.itemName : l.itemCode,
-          'inMain': 0.0,
-          'inSub': 0.0,
-          'outMain': 0.0,
-          'outSub': 0.0,
-          'totalCost': 0.0,
-        });
+        final entry = summaryMap.putIfAbsent(
+          key,
+          () => {
+            'itemCode': l.itemCode,
+            'itemName': l.itemName.isNotEmpty ? l.itemName : l.itemCode,
+            'inMain': 0.0,
+            'inSub': 0.0,
+            'outMain': 0.0,
+            'outSub': 0.0,
+            'totalCost': 0.0,
+          },
+        );
 
         final isIn = l.movementType == 'receipt';
         final mainQty = l.mainQuantity > 0 ? l.mainQuantity : l.quantity;
@@ -169,7 +171,11 @@ class StockMovementReportDataProvider
           entry['outMain'] = (entry['outMain'] as double) + mainQty;
           entry['outSub'] = (entry['outSub'] as double) + subQty;
         }
-        entry['totalCost'] = (entry['totalCost'] as double) + (l.totalCost > 0 ? l.totalCost : l.quantity * (l.postedCost ?? l.unitCost));
+        entry['totalCost'] =
+            (entry['totalCost'] as double) +
+            (l.totalCost > 0
+                ? l.totalCost
+                : l.quantity * (l.postedCost ?? l.unitCost));
       }
 
       final summaryList = summaryMap.values.toList();
@@ -193,24 +199,26 @@ class StockMovementReportDataProvider
         final totalVal = row['totalCost'] as double;
         final unitCost = netMain != 0 ? totalVal / netMain.abs() : 0.0;
 
-        datasetRows.add(ReportRowData(
-          documentType: 'summary_product',
-          documentUuid: row['itemCode'] as String,
-          values: {
-            'transactionDate': '-',
-            'documentTypeLabel': 'كشف إجمالي',
-            'documentNumber': '-',
-            'productName': row['itemName'] as String,
-            'inMainQuantity': qtyFormat.format(inMain),
-            'inSubQuantity': inSub > 0 ? qtyFormat.format(inSub) : '-',
-            'outMainQuantity': qtyFormat.format(outMain),
-            'outSubQuantity': outSub > 0 ? qtyFormat.format(outSub) : '-',
-            'balanceQuantity': qtyFormat.format(netMain),
-            'unitCost': currencyFormat.format(unitCost),
-            'totalValue': currencyFormat.format(totalVal),
-            'id': (offset + i).toString(),
-          },
-        ));
+        datasetRows.add(
+          ReportRowData(
+            documentType: 'summary_product',
+            documentUuid: row['itemCode'] as String,
+            values: {
+              'transactionDate': '-',
+              'documentTypeLabel': 'كشف إجمالي',
+              'documentNumber': '-',
+              'productName': row['itemName'] as String,
+              'inMainQuantity': qtyFormat.format(inMain),
+              'inSubQuantity': inSub > 0 ? qtyFormat.format(inSub) : '-',
+              'outMainQuantity': qtyFormat.format(outMain),
+              'outSubQuantity': outSub > 0 ? qtyFormat.format(outSub) : '-',
+              'balanceQuantity': qtyFormat.format(netMain),
+              'unitCost': currencyFormat.format(unitCost),
+              'totalValue': currencyFormat.format(totalVal),
+              'id': (offset + i).toString(),
+            },
+          ),
+        );
       }
 
       ReportCursor? nextCursor;
@@ -250,7 +258,9 @@ class StockMovementReportDataProvider
     }
 
     query.orderBy([
-      (tbl) => isAscending ? drift.OrderingTerm.asc(tbl.id) : drift.OrderingTerm.desc(tbl.id),
+      (tbl) => isAscending
+          ? drift.OrderingTerm.asc(tbl.id)
+          : drift.OrderingTerm.desc(tbl.id),
     ]);
 
     query.limit(pageSize);
@@ -268,9 +278,9 @@ class StockMovementReportDataProvider
 
     final receiptsMap = <String, StockReceiptRow>{};
     if (receiptUuids.isNotEmpty) {
-      final recRows = await (inventoryDb.select(inventoryDb.stockReceipts)
-            ..where((tbl) => tbl.uuid.isIn(receiptUuids)))
-          .get();
+      final recRows = await (inventoryDb.select(
+        inventoryDb.stockReceipts,
+      )..where((tbl) => tbl.uuid.isIn(receiptUuids))).get();
       for (final r in recRows) {
         receiptsMap[r.uuid] = r;
       }
@@ -278,9 +288,9 @@ class StockMovementReportDataProvider
 
     final issuesMap = <String, StockIssueRow>{};
     if (issueUuids.isNotEmpty) {
-      final issRows = await (inventoryDb.select(inventoryDb.stockIssues)
-            ..where((tbl) => tbl.uuid.isIn(issueUuids)))
-          .get();
+      final issRows = await (inventoryDb.select(
+        inventoryDb.stockIssues,
+      )..where((tbl) => tbl.uuid.isIn(issueUuids))).get();
       for (final i in issRows) {
         issuesMap[i.uuid] = i;
       }
@@ -293,35 +303,47 @@ class StockMovementReportDataProvider
       final rec = receiptsMap[line.movementUuid];
       final iss = issuesMap[line.movementUuid];
 
-      final docNum = rec?.receiptNumber ?? iss?.issueNumber ?? line.movementUuid;
-      final docDateMs = rec?.receiptDate ?? iss?.issueDate ?? line.postedAt ?? 0;
+      final docNum =
+          rec?.receiptNumber ?? iss?.issueNumber ?? line.movementUuid;
+      final docDateMs =
+          rec?.receiptDate ?? iss?.issueDate ?? line.postedAt ?? 0;
       final docDate = DateTime.fromMillisecondsSinceEpoch(
         docDateMs > 0 ? docDateMs : DateTime.now().millisecondsSinceEpoch,
       );
 
       final cost = line.postedCost ?? line.unitCost;
-      final totalLineCost = line.totalCost > 0 ? line.totalCost : line.quantity * cost;
+      final totalLineCost = line.totalCost > 0
+          ? line.totalCost
+          : line.quantity * cost;
       final mainQty = line.mainQuantity > 0 ? line.mainQuantity : line.quantity;
       final subQty = line.subQuantity;
 
-      datasetRows.add(ReportRowData(
-        documentType: isIn ? 'stock_receipt' : 'stock_issue',
-        documentUuid: line.movementUuid,
-        values: {
-          'transactionDate': dateFormat.format(docDate),
-          'documentTypeLabel': isIn ? 'أمر توريد' : 'أمر صرف',
-          'documentNumber': docNum,
-          'productName': line.itemName.isNotEmpty ? line.itemName : line.itemCode,
-          'inMainQuantity': isIn ? qtyFormat.format(mainQty) : '-',
-          'inSubQuantity': isIn && subQty > 0 ? qtyFormat.format(subQty) : '-',
-          'outMainQuantity': !isIn ? qtyFormat.format(mainQty) : '-',
-          'outSubQuantity': !isIn && subQty > 0 ? qtyFormat.format(subQty) : '-',
-          'balanceQuantity': qtyFormat.format(mainQty),
-          'unitCost': currencyFormat.format(cost),
-          'totalValue': currencyFormat.format(totalLineCost),
-          'id': line.id.toString(),
-        },
-      ));
+      datasetRows.add(
+        ReportRowData(
+          documentType: isIn ? 'stock_receipt' : 'stock_issue',
+          documentUuid: line.movementUuid,
+          values: {
+            'transactionDate': dateFormat.format(docDate),
+            'documentTypeLabel': isIn ? 'أمر توريد' : 'أمر صرف',
+            'documentNumber': docNum,
+            'productName': line.itemName.isNotEmpty
+                ? line.itemName
+                : line.itemCode,
+            'inMainQuantity': isIn ? qtyFormat.format(mainQty) : '-',
+            'inSubQuantity': isIn && subQty > 0
+                ? qtyFormat.format(subQty)
+                : '-',
+            'outMainQuantity': !isIn ? qtyFormat.format(mainQty) : '-',
+            'outSubQuantity': !isIn && subQty > 0
+                ? qtyFormat.format(subQty)
+                : '-',
+            'balanceQuantity': qtyFormat.format(mainQty),
+            'unitCost': currencyFormat.format(cost),
+            'totalValue': currencyFormat.format(totalLineCost),
+            'id': line.id.toString(),
+          },
+        ),
+      );
     }
 
     ReportCursor? nextCursor;
@@ -348,14 +370,20 @@ class StockMovementReportDataProvider
   }) {
     query.where(
       inventoryDb.stockMovementLines.movementUuid.isInQuery(
-        inventoryDb.selectOnly(inventoryDb.stockReceipts)
-          ..addColumns([inventoryDb.stockReceipts.uuid])
-          ..where(inventoryDb.stockReceipts.companyId.equals(context.companyId) & inventoryDb.stockReceipts.deletedAt.isNull()),
-      ) |
+            inventoryDb.selectOnly(inventoryDb.stockReceipts)
+              ..addColumns([inventoryDb.stockReceipts.uuid])
+              ..where(
+                inventoryDb.stockReceipts.companyId.equals(context.companyId) &
+                    inventoryDb.stockReceipts.deletedAt.isNull(),
+              ),
+          ) |
           inventoryDb.stockMovementLines.movementUuid.isInQuery(
             inventoryDb.selectOnly(inventoryDb.stockIssues)
               ..addColumns([inventoryDb.stockIssues.uuid])
-              ..where(inventoryDb.stockIssues.companyId.equals(context.companyId) & inventoryDb.stockIssues.deletedAt.isNull()),
+              ..where(
+                inventoryDb.stockIssues.companyId.equals(context.companyId) &
+                    inventoryDb.stockIssues.deletedAt.isNull(),
+              ),
           ),
     );
 
@@ -366,10 +394,14 @@ class StockMovementReportDataProvider
       );
     }
     if (fromMs != null) {
-      query.where(inventoryDb.stockMovementLines.postedAt.isBiggerOrEqualValue(fromMs));
+      query.where(
+        inventoryDb.stockMovementLines.postedAt.isBiggerOrEqualValue(fromMs),
+      );
     }
     if (toMs != null) {
-      query.where(inventoryDb.stockMovementLines.postedAt.isSmallerOrEqualValue(toMs));
+      query.where(
+        inventoryDb.stockMovementLines.postedAt.isSmallerOrEqualValue(toMs),
+      );
     }
 
     switch (context.postingScope) {
@@ -385,7 +417,11 @@ class StockMovementReportDataProvider
   }
 
   void _applySqlFiltersTyped({
-    required drift.SimpleSelectStatement<$StockMovementLinesTable, StockMovementLineRow> query,
+    required drift.SimpleSelectStatement<
+      $StockMovementLinesTable,
+      StockMovementLineRow
+    >
+    query,
     required ReportExecutionContext context,
     String? productCode,
     int? fromMs,
@@ -393,10 +429,16 @@ class StockMovementReportDataProvider
   }) {
     final receiptUuidsQuery = inventoryDb.selectOnly(inventoryDb.stockReceipts)
       ..addColumns([inventoryDb.stockReceipts.uuid])
-      ..where(inventoryDb.stockReceipts.companyId.equals(context.companyId) & inventoryDb.stockReceipts.deletedAt.isNull());
+      ..where(
+        inventoryDb.stockReceipts.companyId.equals(context.companyId) &
+            inventoryDb.stockReceipts.deletedAt.isNull(),
+      );
     final issueUuidsQuery = inventoryDb.selectOnly(inventoryDb.stockIssues)
       ..addColumns([inventoryDb.stockIssues.uuid])
-      ..where(inventoryDb.stockIssues.companyId.equals(context.companyId) & inventoryDb.stockIssues.deletedAt.isNull());
+      ..where(
+        inventoryDb.stockIssues.companyId.equals(context.companyId) &
+            inventoryDb.stockIssues.deletedAt.isNull(),
+      );
 
     query.where(
       (tbl) =>

@@ -39,8 +39,7 @@ class SyncOperation {
     final stamp = (now ?? DateTime.now().toUtc());
     // Creates are "ensure exists" — never based on a prior server version.
     // Passing entity.version here used to trip getMeta conflicts on dual seeds.
-    final resolvedBase =
-        type == SyncOperationType.create ? 0 : baseVersion;
+    final resolvedBase = type == SyncOperationType.create ? 0 : baseVersion;
     return SyncOperation(
       id: generateUuidV4(),
       entityType: entityType,
@@ -113,7 +112,9 @@ class SyncOperation {
       deviceId: deviceId ?? this.deviceId,
       firstFailureAt: firstFailureAt ?? this.firstFailureAt,
       lastFailureAt: lastFailureAt ?? this.lastFailureAt,
-      quarantinedAt: clearQuarantine ? null : (quarantinedAt ?? this.quarantinedAt),
+      quarantinedAt: clearQuarantine
+          ? null
+          : (quarantinedAt ?? this.quarantinedAt),
     );
   }
 }

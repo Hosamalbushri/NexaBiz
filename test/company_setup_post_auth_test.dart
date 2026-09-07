@@ -99,18 +99,14 @@ void main() {
       const draft = CompanyProfile(name: 'Unauthorized Corp');
 
       expect(
-        () async => await setupService.setupCompany(
-          session: null,
-          profile: draft,
-        ),
+        () async =>
+            await setupService.setupCompany(session: null, profile: draft),
         throwsA(isA<CompanySetupException>()),
       );
     });
 
     test('3. Authorized Setup Execution', () async {
-      final session = createTestSession(
-        permissions: ['system.setup'],
-      );
+      final session = createTestSession(permissions: ['system.setup']);
 
       const draft = CompanyProfile(name: 'Authorized Enterprise');
       final result = await setupService.setupCompany(

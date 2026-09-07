@@ -22,12 +22,14 @@ class AppDynamicFilterGenerator extends StatefulWidget {
   final ValueChanged<Map<String, dynamic>> onChanged;
 
   @override
-  State<AppDynamicFilterGenerator> createState() => _AppDynamicFilterGeneratorState();
+  State<AppDynamicFilterGenerator> createState() =>
+      _AppDynamicFilterGeneratorState();
 }
 
 class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
   late Map<String, dynamic> _currentValues;
-  ReportRelativeDateRange _selectedRelativeDate = ReportRelativeDateRange.custom;
+  ReportRelativeDateRange _selectedRelativeDate =
+      ReportRelativeDateRange.custom;
 
   @override
   void initState() {
@@ -75,7 +77,7 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
       case ReportParameterType.postingStatus:
         final currentStatus =
             _currentValues[param.id] as ReportPostingStatusFilter? ??
-                ReportPostingStatusFilter.all;
+            ReportPostingStatusFilter.all;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -166,7 +168,10 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
                         lastDate: DateTime(2100),
                       );
                       if (picked != null) {
-                        setState(() => _selectedRelativeDate = ReportRelativeDateRange.custom);
+                        setState(
+                          () => _selectedRelativeDate =
+                              ReportRelativeDateRange.custom,
+                        );
                         _updateValue('fromDate', picked);
                       }
                     },
@@ -190,7 +195,10 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
                         lastDate: DateTime(2100),
                       );
                       if (picked != null) {
-                        setState(() => _selectedRelativeDate = ReportRelativeDateRange.custom);
+                        setState(
+                          () => _selectedRelativeDate =
+                              ReportRelativeDateRange.custom,
+                        );
                         _updateValue('toDate', picked);
                       }
                     },
@@ -225,7 +233,10 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
               initialValue: selectedVal,
               isExpanded: true,
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
@@ -257,7 +268,10 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
           isRequired: param.isRequired,
           onAccountSelected: (acc) {
             _updateValue(param.id, acc?.uuid);
-            _updateValue('accountName', acc != null ? '${acc.accountCode} — ${acc.name}' : null);
+            _updateValue(
+              'accountName',
+              acc != null ? '${acc.accountCode} — ${acc.name}' : null,
+            );
           },
           onClear: () {
             _updateValue(param.id, null);
@@ -287,7 +301,9 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
         final selectedTitle = _currentValues['${param.id}_name'] as String?;
         return AppReportEntitySearchField(
           label: param.label,
-          hintText: param.placeholder ?? (isAr ? 'اضغط للتحديد...' : 'Tap to select...'),
+          hintText:
+              param.placeholder ??
+              (isAr ? 'اضغط للتحديد...' : 'Tap to select...'),
           icon: param.type == ReportParameterType.customer
               ? Icons.people_outline_rounded
               : Icons.local_shipping_outlined,
@@ -320,7 +336,10 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
               initialValue: _currentValues[param.id]?.toString(),
               decoration: InputDecoration(
                 hintText: param.placeholder,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
@@ -339,13 +358,16 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 600;
-        final columnsCount = isMobile ? 1 : (constraints.maxWidth < 900 ? 2 : 3);
+        final columnsCount = isMobile
+            ? 1
+            : (constraints.maxWidth < 900 ? 2 : 3);
 
         final items = widget.parameters.map((p) {
           return SizedBox(
             width: isMobile
                 ? double.infinity
-                : (constraints.maxWidth - (columnsCount - 1) * 16) / columnsCount,
+                : (constraints.maxWidth - (columnsCount - 1) * 16) /
+                      columnsCount,
             child: Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _buildParameterWidget(p, isAr),
@@ -353,11 +375,7 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
           );
         }).toList();
 
-        return Wrap(
-          spacing: 16,
-          runSpacing: 8,
-          children: items,
-        );
+        return Wrap(spacing: 16, runSpacing: 8, children: items);
       },
     );
   }

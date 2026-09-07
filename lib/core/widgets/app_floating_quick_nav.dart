@@ -9,10 +9,7 @@ import 'app_quick_navigation_sheet.dart';
 ///
 /// Can be used as a [Scaffold.floatingActionButton] or positioned overlay.
 class AppFloatingQuickNav extends StatelessWidget {
-  const AppFloatingQuickNav({
-    super.key,
-    this.compact = false,
-  });
+  const AppFloatingQuickNav({super.key, this.compact = false});
 
   final bool compact;
 

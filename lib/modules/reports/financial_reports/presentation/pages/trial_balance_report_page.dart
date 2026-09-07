@@ -86,34 +86,36 @@ class _TrialBalanceReportPageState
         emptyMessage: l10n.reportsTrialBalanceEmpty,
       );
 
-      final document = await ref.read(loadingControllerProvider).run(
-        message: l10n.reportsGenerating,
-        action: () async {
-          final payload = await ref
-              .read(trialBalanceReportDataPortProvider)
-              .load(
-                fromDate: _from,
-                toDate: _to,
-                postedOnly: _postedOnly,
-                labels: labels,
+      final document = await ref
+          .read(loadingControllerProvider)
+          .run(
+            message: l10n.reportsGenerating,
+            action: () async {
+              final payload = await ref
+                  .read(trialBalanceReportDataPortProvider)
+                  .load(
+                    fromDate: _from,
+                    toDate: _to,
+                    postedOnly: _postedOnly,
+                    labels: labels,
+                  );
+              final contextPdf = await ReportPdfContext.create(
+                isRtl: locale.languageCode == 'ar',
+                localeCode: locale.toLanguageTag(),
+                pageFormat: ReportPageFormat.a4Portrait,
               );
-          final contextPdf = await ReportPdfContext.create(
-            isRtl: locale.languageCode == 'ar',
-            localeCode: locale.toLanguageTag(),
-            pageFormat: ReportPageFormat.a4Portrait,
+              return ref
+                  .read(reportRunnerProvider)
+                  .run(
+                    definition: ref.read(trialBalanceReportDefinitionProvider),
+                    payload: payload,
+                    context: contextPdf,
+                    title: l10n.reportsTrialBalanceTitle,
+                    fileName:
+                        'trial_balance_${DateTime.now().millisecondsSinceEpoch}.pdf',
+                  );
+            },
           );
-          return ref
-              .read(reportRunnerProvider)
-              .run(
-                definition: ref.read(trialBalanceReportDefinitionProvider),
-                payload: payload,
-                context: contextPdf,
-                title: l10n.reportsTrialBalanceTitle,
-                fileName:
-                    'trial_balance_${DateTime.now().millisecondsSinceEpoch}.pdf',
-              );
-        },
-      );
 
       if (!mounted) {
         return;
@@ -155,7 +157,9 @@ class _TrialBalanceReportPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
+    final dateFmt = DateFormat.yMMMd(
+      Localizations.localeOf(context).toString(),
+    );
 
     return Scaffold(
       appBar: CustomAppBar(

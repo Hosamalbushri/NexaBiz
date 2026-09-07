@@ -29,8 +29,9 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         systemNavigationBarColor: colorScheme.surface,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: PopScope(
         canPop: false,
@@ -48,18 +49,18 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     state.isFailed
                         ? Icons.error_outline_rounded
                         : state.isServerNoData
-                            ? Icons.info_outline_rounded
-                            : state.isBootstrapCompleted
-                                ? Icons.task_alt_rounded
-                                : Icons.cloud_download_rounded,
+                        ? Icons.info_outline_rounded
+                        : state.isBootstrapCompleted
+                        ? Icons.task_alt_rounded
+                        : Icons.cloud_download_rounded,
                     size: 68,
                     color: state.isFailed
                         ? colorScheme.error
                         : state.isServerNoData
-                            ? colorScheme.tertiary
-                            : state.isBootstrapCompleted
-                                ? Colors.green
-                                : colorScheme.primary,
+                        ? colorScheme.tertiary
+                        : state.isBootstrapCompleted
+                        ? Colors.green
+                        : colorScheme.primary,
                   ),
                   const SizedBox(height: AppSpacing.md),
 
@@ -68,10 +69,10 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     state.isFailed
                         ? 'Initialization Failed'
                         : state.isServerNoData
-                            ? 'No Server Data Found'
-                            : state.isBootstrapCompleted
-                                ? 'Setup Complete'
-                                : 'Preparing Your Workspace',
+                        ? 'No Server Data Found'
+                        : state.isBootstrapCompleted
+                        ? 'Setup Complete'
+                        : 'Preparing Your Workspace',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
@@ -85,8 +86,8 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     state.isBootstrapCompleted
                         ? 'Your company data has been successfully downloaded and committed to this device.'
                         : (state.stageDetails.isNotEmpty
-                            ? state.stageDetails
-                            : 'Downloading company data and setting up your workspace...'),
+                              ? state.stageDetails
+                              : 'Downloading company data and setting up your workspace...'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
@@ -136,7 +137,8 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                                     label: 'Accounting Ledger & Currencies',
                                   ),
                                   _CompletionCheckTile(
-                                    label: 'Inventory Balances & Sequence Cursor',
+                                    label:
+                                        'Inventory Balances & Sequence Cursor',
                                   ),
                                 ],
                               ),
@@ -212,13 +214,15 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                           ),
                           _ProgressStageTile(
                             title: 'Server Authentication',
-                            subtitle: 'Session token & company context established',
+                            subtitle:
+                                'Session token & company context established',
                             isCompleted: state.currentStep > 2 || state.isReady,
                             isActive: state.isAuthenticating,
                           ),
                           _ProgressStageTile(
                             title: 'Remote Bootstrap Verification',
-                            subtitle: 'Checking existing server initialization snapshot',
+                            subtitle:
+                                'Checking existing server initialization snapshot',
                             isCompleted: state.currentStep > 3 || state.isReady,
                             isActive: state.isCheckingRemote,
                           ),
@@ -238,7 +242,8 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                           ),
                           _ProgressStageTile(
                             title: 'Initial Synchronization',
-                            subtitle: 'Establishing sync cursor and initial pass',
+                            subtitle:
+                                'Establishing sync cursor and initial pass',
                             isCompleted: state.currentStep > 6 || state.isReady,
                             isActive: state.isSynchronizing,
                           ),
@@ -253,7 +258,9 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
-                        color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                        color: colorScheme.tertiaryContainer.withValues(
+                          alpha: 0.3,
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: colorScheme.tertiary.withValues(alpha: 0.3),
@@ -301,7 +308,9 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
-                        color: colorScheme.errorContainer.withValues(alpha: 0.3),
+                        color: colorScheme.errorContainer.withValues(
+                          alpha: 0.3,
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: colorScheme.error.withValues(alpha: 0.3),
@@ -375,11 +384,7 @@ class _CompletionCheckTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
         children: [
-          const Icon(
-            Icons.check_circle_rounded,
-            color: Colors.green,
-            size: 22,
-          ),
+          const Icon(Icons.check_circle_rounded, color: Colors.green, size: 22),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -416,15 +421,15 @@ class _ProgressStageTile extends StatelessWidget {
     final leadingIcon = isCompleted
         ? const Icon(Icons.check_circle, color: Colors.green)
         : isActive
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: colorScheme.primary,
-                ),
-              )
-            : Icon(Icons.radio_button_unchecked, color: colorScheme.outline);
+        ? SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: colorScheme.primary,
+            ),
+          )
+        : Icon(Icons.radio_button_unchecked, color: colorScheme.outline);
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
@@ -435,7 +440,9 @@ class _ProgressStageTile extends StatelessWidget {
       title: Text(
         title,
         style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: isActive || isCompleted ? FontWeight.w700 : FontWeight.w500,
+          fontWeight: isActive || isCompleted
+              ? FontWeight.w700
+              : FontWeight.w500,
           color: isActive || isCompleted
               ? colorScheme.onSurface
               : colorScheme.onSurfaceVariant,

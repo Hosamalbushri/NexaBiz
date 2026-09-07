@@ -29,7 +29,9 @@ class GeneralLedgerReportDataAdapter implements GeneralLedgerReportDataPort {
         : (filter.postingScope == PostingScope.unpostedOnly ? false : null);
 
     double openingBalance = 0.0;
-    if (filter.accountUuid != null && filter.accountUuid!.isNotEmpty && filter.fromDate != null) {
+    if (filter.accountUuid != null &&
+        filter.accountUuid!.isNotEmpty &&
+        filter.fromDate != null) {
       openingBalance = await journals.sumNetBefore(
         accountUuid: filter.accountUuid!,
         beforeDate: filter.fromDate!,

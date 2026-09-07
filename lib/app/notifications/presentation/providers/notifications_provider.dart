@@ -41,10 +41,7 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 class FloatingToast {
-  const FloatingToast({
-    required this.notification,
-    this.duration,
-  });
+  const FloatingToast({required this.notification, this.duration});
 
   final AppNotification notification;
 

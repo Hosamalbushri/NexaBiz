@@ -11,12 +11,12 @@ class ParsedCell {
   });
 
   factory ParsedCell.empty(int columnIndex, {String? headerName}) => ParsedCell(
-        columnIndex: columnIndex,
-        headerName: headerName,
-        rawValue: null,
-        formattedValue: '',
-        dataType: ImportDataType.text,
-      );
+    columnIndex: columnIndex,
+    headerName: headerName,
+    rawValue: null,
+    formattedValue: '',
+    dataType: ImportDataType.text,
+  );
 
   final int columnIndex;
   final String? headerName;

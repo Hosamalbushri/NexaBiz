@@ -20,22 +20,24 @@ import 'tables/stock_movement_ledgers_table.dart';
 
 part 'inventory_database.g.dart';
 
-@DriftDatabase(tables: [
-  Products,
-  StockReceipts,
-  StockIssues,
-  StockMovementLines,
-  InventoryCostLayers,
-  InventoryCostConsumptions,
-  StockReturns,
-  Warehouses,
-  ProductWarehouseStocks,
-  StockTransfers,
-  InventoryAuditTrail,
-  Categories,
-  WarehouseAccountingBindings,
-  StockMovementLedgers,
-])
+@DriftDatabase(
+  tables: [
+    Products,
+    StockReceipts,
+    StockIssues,
+    StockMovementLines,
+    InventoryCostLayers,
+    InventoryCostConsumptions,
+    StockReturns,
+    Warehouses,
+    ProductWarehouseStocks,
+    StockTransfers,
+    InventoryAuditTrail,
+    Categories,
+    WarehouseAccountingBindings,
+    StockMovementLedgers,
+  ],
+)
 class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase({String? name, QueryExecutor? executor})
     : super(executor ?? _openConnection(name ?? 'inventory_products'));

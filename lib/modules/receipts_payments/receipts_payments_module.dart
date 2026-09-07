@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:stock_count/core/navigation/app_route_param_parser.dart';
+
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
@@ -220,7 +222,7 @@ class ReceiptsPaymentsModule extends AppModule {
               path: ':id/edit',
               name: 'transfersEdit',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
                 return CashBoxTransferFormPage(transactionId: id ?? -1);
               },
             ),
@@ -248,7 +250,7 @@ class ReceiptsPaymentsModule extends AppModule {
               path: ':id/edit',
               name: 'exchangesEdit',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
                 return CurrencyExchangeFormPage(transactionId: id ?? -1);
               },
             ),
@@ -263,7 +265,7 @@ class ReceiptsPaymentsModule extends AppModule {
           path: ':id',
           name: 'receiptsPaymentsDetails',
           builder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '');
+            final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
             return FinancialTransactionDetailsPage(transactionId: id ?? -1);
           },
           routes: [
@@ -271,7 +273,7 @@ class ReceiptsPaymentsModule extends AppModule {
               path: 'edit',
               name: 'receiptsPaymentsEdit',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
                 return FinancialTransactionFormPage(transactionId: id ?? -1);
               },
             ),

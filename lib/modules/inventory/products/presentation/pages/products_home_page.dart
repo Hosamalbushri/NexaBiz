@@ -35,8 +35,12 @@ class ProductsHomePage extends ConsumerWidget {
       if (auth.hasAnyPermission(InventoryPermissions.productsView))
         _ProductsFeature(
           icon: Icons.account_tree_outlined,
-          title: l10n.localeName == 'ar' ? 'تصنيفات المنتجات' : 'Product Categories',
-          subtitle: l10n.localeName == 'ar' ? 'شجرة التصنيفات المرتبطة بالمستودعات وطرق التكلفة' : 'Warehouse-rooted categories & valuation methods',
+          title: l10n.localeName == 'ar'
+              ? 'تصنيفات المنتجات'
+              : 'Product Categories',
+          subtitle: l10n.localeName == 'ar'
+              ? 'شجرة التصنيفات المرتبطة بالمستودعات وطرق التكلفة'
+              : 'Warehouse-rooted categories & valuation methods',
           path: InventoryRoutes.categoriesSettings,
         ),
       if (auth.hasAnyPermission(InventoryPermissions.productsBarcode))
@@ -56,10 +60,7 @@ class ProductsHomePage extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.productsHubTitle,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: l10n.productsHubTitle, showBackButton: true),
       body: AppContentConstraint(
         child: ListView(
           padding: AppConstants.pageInsets(context),
@@ -193,7 +194,11 @@ class _ProductsFeatureCard extends StatelessWidget {
                         child: SizedBox(
                           width: circleSize,
                           height: circleSize,
-                          child: Icon(icon, color: colorScheme.primary, size: iconSize),
+                          child: Icon(
+                            icon,
+                            color: colorScheme.primary,
+                            size: iconSize,
+                          ),
                         ),
                       ),
                       SizedBox(height: spacing),
@@ -202,14 +207,15 @@ class _ProductsFeatureCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: (isCompact
-                                ? theme.textTheme.titleSmall
-                                : theme.textTheme.titleMedium)
-                            ?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                          height: 1.15,
-                        ),
+                        style:
+                            (isCompact
+                                    ? theme.textTheme.titleSmall
+                                    : theme.textTheme.titleMedium)
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.2,
+                                  height: 1.15,
+                                ),
                       ),
                       const SizedBox(height: 2),
                       Flexible(

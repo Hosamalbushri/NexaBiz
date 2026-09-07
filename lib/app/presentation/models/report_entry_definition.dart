@@ -172,8 +172,7 @@ String _accountStatementReportTitle(AppLocalizations l10n) =>
 String _accountStatementReportSubtitle(AppLocalizations l10n) =>
     l10n.reportsAccountStatementSubtitle;
 
-String _reportsCatalogTitle(AppLocalizations l10n) =>
-    l10n.reportsCatalogTitle;
+String _reportsCatalogTitle(AppLocalizations l10n) => l10n.reportsCatalogTitle;
 
 String _reportsCatalogSubtitle(AppLocalizations l10n) =>
     l10n.reportsCatalogSubtitle;

@@ -15,7 +15,8 @@ class ProductStockMovementReportPage extends ConsumerWidget {
     final currencyCode = companyAsync.valueOrNull?.defaultCurrencyCode ?? 'SAR';
     final companyName = companyAsync.valueOrNull?.name ?? 'NexaBiz ERP';
 
-    final provider = ref.watch(stockMovementReportEngineDataProvider) ??
+    final provider =
+        ref.watch(stockMovementReportEngineDataProvider) ??
         StockMovementReportDataProvider(
           inventoryDb: null as dynamic,
           salesDb: null as dynamic,

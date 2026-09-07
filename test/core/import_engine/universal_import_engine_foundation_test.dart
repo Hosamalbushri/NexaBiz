@@ -40,33 +40,42 @@ void main() {
       expect(profile.findField('non_existent'), isNull);
     });
 
-    test('2. Configuration creation and mapping assignments resolve correctly', () {
-      final assignment1 = const ImportAssignment(
-        targetFieldKey: 'code',
-        sourceHeader: 'كود المنتج',
-      );
-      final assignment2 = const ImportAssignment(
-        targetFieldKey: 'status',
-        staticValue: 'active',
-      );
+    test(
+      '2. Configuration creation and mapping assignments resolve correctly',
+      () {
+        final assignment1 = const ImportAssignment(
+          targetFieldKey: 'code',
+          sourceHeader: 'كود المنتج',
+        );
+        final assignment2 = const ImportAssignment(
+          targetFieldKey: 'status',
+          staticValue: 'active',
+        );
 
-      final config = ImportConfiguration(
-        profileId: 'generic_item_profile',
-        assignments: [assignment1, assignment2],
-        executionMode: ImportExecutionMode.commit,
-        policy: const ImportPolicy(batchSize: 250),
-      );
+        final config = ImportConfiguration(
+          profileId: 'generic_item_profile',
+          assignments: [assignment1, assignment2],
+          executionMode: ImportExecutionMode.commit,
+          policy: const ImportPolicy(batchSize: 250),
+        );
 
-      expect(config.profileId, equals('generic_item_profile'));
-      expect(config.hasAssignmentFor('code'), isTrue);
-      expect(config.hasAssignmentFor('status'), isTrue);
-      expect(config.hasAssignmentFor('price'), isFalse);
+        expect(config.profileId, equals('generic_item_profile'));
+        expect(config.hasAssignmentFor('code'), isTrue);
+        expect(config.hasAssignmentFor('status'), isTrue);
+        expect(config.hasAssignmentFor('price'), isFalse);
 
-      expect(config.getAssignmentFor('code')?.sourceHeader, equals('كود المنتج'));
-      expect(config.getAssignmentFor('status')?.isStatic, isTrue);
-      expect(config.getAssignmentFor('status')?.staticValue, equals('active'));
-      expect(config.policy.batchSize, equals(250));
-    });
+        expect(
+          config.getAssignmentFor('code')?.sourceHeader,
+          equals('كود المنتج'),
+        );
+        expect(config.getAssignmentFor('status')?.isStatic, isTrue);
+        expect(
+          config.getAssignmentFor('status')?.staticValue,
+          equals('active'),
+        );
+        expect(config.policy.batchSize, equals(250));
+      },
+    );
 
     test('3. Company context requirement is enforced strictly', () {
       const validContext = ImportContext(
@@ -82,11 +91,13 @@ void main() {
       expect(emptyContext.hasValidCompanyContext, isFalse);
       expect(
         () => emptyContext.requireCompanyContext(),
-        throwsA(isA<ImportContextException>().having(
-          (e) => e.code,
-          'code',
-          equals('MISSING_COMPANY_CONTEXT'),
-        )),
+        throwsA(
+          isA<ImportContextException>().having(
+            (e) => e.code,
+            'code',
+            equals('MISSING_COMPANY_CONTEXT'),
+          ),
+        ),
       );
 
       // Verify ImportJob enforces valid company context at instantiation
@@ -101,26 +112,29 @@ void main() {
       );
     });
 
-    test('4. ImportJobStatus transitions follow valid lifecycle progression', () {
-      var job = ImportJob(
-        jobId: 'job_test_1',
-        companyId: 'comp_001',
-        userId: 'user_01',
-        source: 'test.csv',
-      );
+    test(
+      '4. ImportJobStatus transitions follow valid lifecycle progression',
+      () {
+        var job = ImportJob(
+          jobId: 'job_test_1',
+          companyId: 'comp_001',
+          userId: 'user_01',
+          source: 'test.csv',
+        );
 
-      expect(job.status, equals(ImportJobStatus.queued));
+        expect(job.status, equals(ImportJobStatus.queued));
 
-      job = job.transitionTo(ImportJobStatus.preparing);
-      expect(job.status, equals(ImportJobStatus.preparing));
+        job = job.transitionTo(ImportJobStatus.preparing);
+        expect(job.status, equals(ImportJobStatus.preparing));
 
-      job = job.transitionTo(ImportJobStatus.processing);
-      expect(job.status, equals(ImportJobStatus.processing));
+        job = job.transitionTo(ImportJobStatus.processing);
+        expect(job.status, equals(ImportJobStatus.processing));
 
-      job = job.transitionTo(ImportJobStatus.completed);
-      expect(job.status, equals(ImportJobStatus.completed));
-      expect(job.status.isTerminal, isTrue);
-    });
+        job = job.transitionTo(ImportJobStatus.completed);
+        expect(job.status, equals(ImportJobStatus.completed));
+        expect(job.status.isTerminal, isTrue);
+      },
+    );
 
     test('5. Invalid status transitions are rejected', () {
       final job = ImportJob(
@@ -151,11 +165,13 @@ void main() {
           label: 'Label',
           fields: [],
         ),
-        throwsA(isA<ImportProfileValidationException>().having(
-          (e) => e.code,
-          'code',
-          equals('EMPTY_PROFILE_ID'),
-        )),
+        throwsA(
+          isA<ImportProfileValidationException>().having(
+            (e) => e.code,
+            'code',
+            equals('EMPTY_PROFILE_ID'),
+          ),
+        ),
       );
 
       expect(
@@ -165,11 +181,13 @@ void main() {
           label: 'Label',
           fields: [],
         ),
-        throwsA(isA<ImportProfileValidationException>().having(
-          (e) => e.code,
-          'code',
-          equals('EMPTY_ENTITY_TYPE'),
-        )),
+        throwsA(
+          isA<ImportProfileValidationException>().having(
+            (e) => e.code,
+            'code',
+            equals('EMPTY_ENTITY_TYPE'),
+          ),
+        ),
       );
 
       final dupField1 = const ImportField(key: 'code', label: 'Code');
@@ -182,11 +200,13 @@ void main() {
           label: 'Label',
           fields: [dupField1, dupField2],
         ),
-        throwsA(isA<ImportProfileValidationException>().having(
-          (e) => e.code,
-          'code',
-          equals('DUPLICATE_FIELD_KEY'),
-        )),
+        throwsA(
+          isA<ImportProfileValidationException>().having(
+            (e) => e.code,
+            'code',
+            equals('DUPLICATE_FIELD_KEY'),
+          ),
+        ),
       );
     });
   });

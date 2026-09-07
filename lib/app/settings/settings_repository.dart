@@ -29,31 +29,44 @@ class SettingsKeys {
   static const String systemSetupStatus = 'system_setup_status';
   static const String systemSetupSteps = 'system_setup_steps';
   static const String systemSetupLastUpdated = 'system_setup_last_updated';
+
   /// When true, company default currency cannot be changed.
   static const String systemBaseCurrencyLocked = 'system_base_currency_locked';
+
   /// Stable per-install device id for experimental multi-device sync.
   static const String syncDeviceId = 'sync_device_id';
+
   /// When false (default), the app runs fully local — no auto/manual sync.
   static const String syncEnabled = 'sync_enabled';
+
   /// User-entered sync server base URL (e.g. http://192.168.1.10:8000).
   static const String syncServerBaseUrl = 'sync_server_base_url';
+
   /// Optional API token for the sync server.
   static const String syncServerToken = 'sync_server_token';
+
   /// When true, sync runs automatically in the background (queue / interval).
   static const String syncAutoEnabled = 'sync_auto_enabled';
+
   /// Auto-sync interval in minutes (`0` = on pending changes / online only).
   static const String syncAutoIntervalMinutes = 'sync_auto_interval_minutes';
+
   /// Welcome / product tour completed before first System Setup.
   static const String onboardingCompleted = 'onboarding_completed';
+
   /// When true, do not locally seed CoA — awaiting remote pull (joining device).
   static const String chartBootstrapPreferRemote =
       'chart_bootstrap_prefer_remote';
+
   /// Device initialization mode ('server' or 'local').
   static const String deviceInitMode = 'device_init_mode';
+
   /// Whether the device has completed primary initialization.
   static const String deviceInitialized = 'device_initialized';
+
   /// Company ID associated with server initialization.
   static const String deviceInitCompanyId = 'device_init_company_id';
+
   /// UTC timestamp of initialization completion.
   static const String deviceInitAt = 'device_init_at';
 }
@@ -102,6 +115,8 @@ class SettingsRepository {
   SettingsRepository({this._box});
 
   Box<dynamic>? _box;
+
+  Future<Box<dynamic>> get settingsBox => _settingsBox;
 
   Future<Box<dynamic>> get _settingsBox async {
     if (_box != null && _box!.isOpen) {
@@ -158,8 +173,12 @@ class SettingsRepository {
   /// Returns `null` when the user has never customized the dashboard.
   Future<List<String>?> loadDashboardServiceIds([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.dashboardServiceIds, companyId);
-    final value = box.get(scopedKey) ??
+    final scopedKey = companyScopedKey(
+      SettingsKeys.dashboardServiceIds,
+      companyId,
+    );
+    final value =
+        box.get(scopedKey) ??
         (companyId != null ? box.get(SettingsKeys.dashboardServiceIds) : null);
     if (value == null) {
       return null;
@@ -173,17 +192,27 @@ class SettingsRepository {
     return const [];
   }
 
-  Future<void> saveDashboardServiceIds(List<String> ids, [String? companyId]) async {
+  Future<void> saveDashboardServiceIds(
+    List<String> ids, [
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.dashboardServiceIds, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.dashboardServiceIds,
+      companyId,
+    );
     await box.put(scopedKey, ids);
   }
 
   /// Returns `null` when the user has never customized inventory services.
   Future<List<String>?> loadInventoryServiceIds([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.inventoryServiceIds, companyId);
-    final value = box.get(scopedKey) ??
+    final scopedKey = companyScopedKey(
+      SettingsKeys.inventoryServiceIds,
+      companyId,
+    );
+    final value =
+        box.get(scopedKey) ??
         (companyId != null ? box.get(SettingsKeys.inventoryServiceIds) : null);
     if (value == null) {
       return null;
@@ -197,17 +226,27 @@ class SettingsRepository {
     return const [];
   }
 
-  Future<void> saveInventoryServiceIds(List<String> ids, [String? companyId]) async {
+  Future<void> saveInventoryServiceIds(
+    List<String> ids, [
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.inventoryServiceIds, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.inventoryServiceIds,
+      companyId,
+    );
     await box.put(scopedKey, ids);
   }
 
   /// `list` (default) or `grid`.
   Future<String> loadProductsViewMode([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.productsViewMode, companyId);
-    final value = box.get(scopedKey) ??
+    final scopedKey = companyScopedKey(
+      SettingsKeys.productsViewMode,
+      companyId,
+    );
+    final value =
+        box.get(scopedKey) ??
         (companyId != null ? box.get(SettingsKeys.productsViewMode) : null);
     if (value is String && (value == 'grid' || value == 'list')) {
       return value;
@@ -217,7 +256,10 @@ class SettingsRepository {
 
   Future<void> saveProductsViewMode(String mode, [String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.productsViewMode, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.productsViewMode,
+      companyId,
+    );
     await box.put(scopedKey, mode);
   }
 
@@ -225,7 +267,8 @@ class SettingsRepository {
   Future<List<String>?> loadQuickActionIds([String? companyId]) async {
     final box = await _settingsBox;
     final scopedKey = companyScopedKey(SettingsKeys.quickActionIds, companyId);
-    final value = box.get(scopedKey) ??
+    final value =
+        box.get(scopedKey) ??
         (companyId != null ? box.get(SettingsKeys.quickActionIds) : null);
     if (value == null) {
       return null;
@@ -252,9 +295,14 @@ class SettingsRepository {
   Future<void> saveAccountingMode(String mode) async {}
 
   /// Last closed fiscal business day (UTC date-only epoch ms), or null if none.
-  Future<DateTime?> loadAccountingFiscalClosedThrough([String? companyId]) async {
+  Future<DateTime?> loadAccountingFiscalClosedThrough([
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.accountingFiscalClosedThrough, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.accountingFiscalClosedThrough,
+      companyId,
+    );
     final value = box.get(scopedKey);
     if (value is! int) {
       return null;
@@ -262,18 +310,21 @@ class SettingsRepository {
     return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
   }
 
-  Future<void> saveAccountingFiscalClosedThrough(DateTime? day, [String? companyId]) async {
+  Future<void> saveAccountingFiscalClosedThrough(
+    DateTime? day, [
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.accountingFiscalClosedThrough, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.accountingFiscalClosedThrough,
+      companyId,
+    );
     if (day == null) {
       await box.delete(scopedKey);
       return;
     }
     final utcDay = DateTime.utc(day.year, day.month, day.day);
-    await box.put(
-      scopedKey,
-      utcDay.millisecondsSinceEpoch,
-    );
+    await box.put(scopedKey, utcDay.millisecondsSinceEpoch);
   }
 
   /// Opaque Account.uuid for the Chart of Accounts parent of customer accounts.
@@ -281,7 +332,10 @@ class SettingsRepository {
   /// `null` means “use the system Customers account when available”.
   Future<String?> loadCustomersParentAccountId([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.customersParentAccountId, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.customersParentAccountId,
+      companyId,
+    );
     // Does NOT fall back to legacy global key when companyId is specified
     // to prevent cross-tenant Account UUID leakage.
     final value = box.get(scopedKey);
@@ -295,9 +349,15 @@ class SettingsRepository {
     return trimmed;
   }
 
-  Future<void> saveCustomersParentAccountId(String? accountId, [String? companyId]) async {
+  Future<void> saveCustomersParentAccountId(
+    String? accountId, [
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.customersParentAccountId, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.customersParentAccountId,
+      companyId,
+    );
     final trimmed = accountId?.trim();
     if (trimmed == null || trimmed.isEmpty) {
       await box.delete(scopedKey);
@@ -310,18 +370,30 @@ class SettingsRepository {
   /// auto-creates a posting CoA account under the customers parent group.
   Future<bool> loadCustomersAutoLinkAccount([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.customersAutoLinkAccount, companyId);
-    final value = box.get(scopedKey) ??
-        (companyId != null ? box.get(SettingsKeys.customersAutoLinkAccount) : null);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.customersAutoLinkAccount,
+      companyId,
+    );
+    final value =
+        box.get(scopedKey) ??
+        (companyId != null
+            ? box.get(SettingsKeys.customersAutoLinkAccount)
+            : null);
     if (value is bool) {
       return value;
     }
     return true;
   }
 
-  Future<void> saveCustomersAutoLinkAccount(bool enabled, [String? companyId]) async {
+  Future<void> saveCustomersAutoLinkAccount(
+    bool enabled, [
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.customersAutoLinkAccount, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.customersAutoLinkAccount,
+      companyId,
+    );
     await box.put(scopedKey, enabled);
   }
 
@@ -349,23 +421,34 @@ class SettingsRepository {
     final map = profile.toMap();
     if (companyId != null && companyId.trim().isNotEmpty) {
       await box.put('company_profile_${companyId.trim()}', map);
-    } else {
-      await box.put(SettingsKeys.companyProfile, map);
     }
+    await box.put(SettingsKeys.companyProfile, map);
   }
 
   /// Base/system currency chosen during System Setup — immutable once locked.
   Future<bool> loadSystemBaseCurrencyLocked([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.systemBaseCurrencyLocked, companyId);
-    final value = box.get(scopedKey) ??
-        (companyId != null ? box.get(SettingsKeys.systemBaseCurrencyLocked) : null);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.systemBaseCurrencyLocked,
+      companyId,
+    );
+    final value =
+        box.get(scopedKey) ??
+        (companyId != null
+            ? box.get(SettingsKeys.systemBaseCurrencyLocked)
+            : null);
     return value == true;
   }
 
-  Future<void> saveSystemBaseCurrencyLocked(bool locked, [String? companyId]) async {
+  Future<void> saveSystemBaseCurrencyLocked(
+    bool locked, [
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.systemBaseCurrencyLocked, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.systemBaseCurrencyLocked,
+      companyId,
+    );
     await box.put(scopedKey, locked);
   }
 
@@ -484,29 +567,48 @@ class SettingsRepository {
   /// Raw System Setup persistence (owned conceptually by System Setup module).
   Future<bool> hasSystemSetupState([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.systemSetupVersion, companyId);
-    return box.containsKey(scopedKey) || box.containsKey(SettingsKeys.systemSetupVersion);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.systemSetupVersion,
+      companyId,
+    );
+    return box.containsKey(scopedKey) ||
+        box.containsKey(SettingsKeys.systemSetupVersion);
   }
 
   Future<int?> loadSystemSetupVersion([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.systemSetupVersion, companyId);
-    final value = box.get(scopedKey) ??
+    final scopedKey = companyScopedKey(
+      SettingsKeys.systemSetupVersion,
+      companyId,
+    );
+    final value =
+        box.get(scopedKey) ??
         (companyId != null ? box.get(SettingsKeys.systemSetupVersion) : null);
     return value is int ? value : null;
   }
 
   Future<String?> loadSystemSetupStatus([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.systemSetupStatus, companyId);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.systemSetupStatus,
+      companyId,
+    );
     return box.get(scopedKey) as String? ??
-        (companyId != null ? box.get(SettingsKeys.systemSetupStatus) as String? : null);
+        (companyId != null
+            ? box.get(SettingsKeys.systemSetupStatus) as String?
+            : null);
   }
 
-  Future<Map<String, Map<String, Object?>>> loadSystemSetupSteps([String? companyId]) async {
+  Future<Map<String, Map<String, Object?>>> loadSystemSetupSteps([
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.systemSetupSteps, companyId);
-    final raw = box.get(scopedKey) ??
+    final scopedKey = companyScopedKey(
+      SettingsKeys.systemSetupSteps,
+      companyId,
+    );
+    final raw =
+        box.get(scopedKey) ??
         (companyId != null ? box.get(SettingsKeys.systemSetupSteps) : null);
     if (raw is! Map) {
       return const {};
@@ -518,8 +620,7 @@ class SettingsRepository {
       }
       result[key] = {
         for (final entry in value.entries)
-          if (entry.key is String)
-            entry.key as String: entry.value as Object?,
+          if (entry.key is String) entry.key as String: entry.value as Object?,
       };
     });
     return result;
@@ -527,9 +628,15 @@ class SettingsRepository {
 
   Future<DateTime?> loadSystemSetupLastUpdated([String? companyId]) async {
     final box = await _settingsBox;
-    final scopedKey = companyScopedKey(SettingsKeys.systemSetupLastUpdated, companyId);
-    final value = box.get(scopedKey) ??
-        (companyId != null ? box.get(SettingsKeys.systemSetupLastUpdated) : null);
+    final scopedKey = companyScopedKey(
+      SettingsKeys.systemSetupLastUpdated,
+      companyId,
+    );
+    final value =
+        box.get(scopedKey) ??
+        (companyId != null
+            ? box.get(SettingsKeys.systemSetupLastUpdated)
+            : null);
     if (value is! int) {
       return null;
     }
@@ -544,18 +651,24 @@ class SettingsRepository {
     String? companyId,
   }) async {
     final box = await _settingsBox;
-    final versionKey = companyScopedKey(SettingsKeys.systemSetupVersion, companyId);
-    final statusKey = companyScopedKey(SettingsKeys.systemSetupStatus, companyId);
+    final versionKey = companyScopedKey(
+      SettingsKeys.systemSetupVersion,
+      companyId,
+    );
+    final statusKey = companyScopedKey(
+      SettingsKeys.systemSetupStatus,
+      companyId,
+    );
     final stepsKey = companyScopedKey(SettingsKeys.systemSetupSteps, companyId);
-    final lastUpdatedKey = companyScopedKey(SettingsKeys.systemSetupLastUpdated, companyId);
+    final lastUpdatedKey = companyScopedKey(
+      SettingsKeys.systemSetupLastUpdated,
+      companyId,
+    );
 
     await box.put(versionKey, version);
     await box.put(statusKey, status);
     await box.put(stepsKey, steps);
-    await box.put(
-      lastUpdatedKey,
-      lastUpdated.toUtc().millisecondsSinceEpoch,
-    );
+    await box.put(lastUpdatedKey, lastUpdated.toUtc().millisecondsSinceEpoch);
   }
 
   /// Joining device: skip local CoA seed until remote accounts arrive.
@@ -627,7 +740,9 @@ class SettingsRepository {
   /// Loads persisted [CompanyCloudState] for the given [localCompanyId].
   Future<CompanyCloudState> loadCompanyCloudState(String localCompanyId) async {
     final box = await _settingsBox;
-    final raw = box.get('${SettingsKeys.companyCloudStatePrefix}$localCompanyId');
+    final raw = box.get(
+      '${SettingsKeys.companyCloudStatePrefix}$localCompanyId',
+    );
     if (raw is Map) {
       return CompanyCloudState.fromMap(raw, localCompanyId);
     }

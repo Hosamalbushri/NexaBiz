@@ -77,7 +77,8 @@ class _RpTransactionReportPageState
   Future<void> _generate() async {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
-    final from = _from ?? DateTime(DateTime.now().year, DateTime.now().month, 1);
+    final from =
+        _from ?? DateTime(DateTime.now().year, DateTime.now().month, 1);
     final to = _to ?? DateTime.now();
     setState(() => _generating = true);
     try {
@@ -85,7 +86,9 @@ class _RpTransactionReportPageState
           ref.read(companyProfileProvider).valueOrNull ??
           const CompanyProfile();
       const rowLimit = 5000;
-      final data = await ref.read(rpReportDataPortProvider).load(
+      final data = await ref
+          .read(rpReportDataPortProvider)
+          .load(
             RpReportQuery(
               kind: widget.kind,
               from: from,
@@ -137,7 +140,9 @@ class _RpTransactionReportPageState
         localeCode: locale.toLanguageTag(),
         pageFormat: ReportPageFormat.a4Portrait,
       );
-      final document = await ref.read(reportRunnerProvider).run(
+      final document = await ref
+          .read(reportRunnerProvider)
+          .run(
             definition: ref.read(rpTransactionReportDefinitionProvider),
             payload: payload,
             context: contextPdf,
@@ -198,4 +203,3 @@ class _RpTransactionReportPageState
     );
   }
 }
-

@@ -10,14 +10,15 @@ import '../../domain/entities/currency_rate.dart';
 import '../../domain/repositories/currency_rate_repository.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 
-final currencyRateRepositoryImplProvider =
-    Provider<CurrencyRateRepositoryImpl>((ref) {
-  return CurrencyRateRepositoryImpl(
-    ref.watch(accountingDatabaseProvider),
-    syncQueue: ref.watch(syncQueueProvider),
-    readCompanyId: () => ref.read(currentCompanyIdProvider),
-  );
-});
+final currencyRateRepositoryImplProvider = Provider<CurrencyRateRepositoryImpl>(
+  (ref) {
+    return CurrencyRateRepositoryImpl(
+      ref.watch(accountingDatabaseProvider),
+      syncQueue: ref.watch(syncQueueProvider),
+      readCompanyId: () => ref.read(currentCompanyIdProvider),
+    );
+  },
+);
 
 final currencyRateRepositoryProvider = Provider<CurrencyRateRepository>((ref) {
   return ref.watch(currencyRateRepositoryImplProvider);

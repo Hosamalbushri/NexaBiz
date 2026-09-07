@@ -76,7 +76,9 @@ void main() {
     acc2Uuid = generateUuidV4();
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
 
-    await accDb.into(accDb.accounts).insert(
+    await accDb
+        .into(accDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc1Uuid,
             companyId: Value(companyA),
@@ -92,7 +94,9 @@ void main() {
           ),
         );
 
-    await accDb.into(accDb.accounts).insert(
+    await accDb
+        .into(accDb.accounts)
+        .insert(
           AccountsCompanion.insert(
             uuid: acc2Uuid,
             companyId: Value(companyA),
@@ -117,344 +121,417 @@ void main() {
   });
 
   group('ROOT FIX 23 — Financial Authorization Model Test Suite', () {
-    test('1. Direct Service Call (JournalPostingService.post): Denies user without POST permission', () async {
-      // Create user guard with VIEW-only permission
-      final userGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'accounting.journals.view'),
-      );
+    test(
+      '1. Direct Service Call (JournalPostingService.post): Denies user without POST permission',
+      () async {
+        // Create user guard with VIEW-only permission
+        final userGuard = CallbackPermissionGuard(
+          (codes) => codes.any((c) => c == 'accounting.journals.view'),
+        );
 
-      final postingService = JournalPostingService(
-        journals: journalRepo,
-        periodValidator: legacyPeriodValidator(),
-        permissionGuard: userGuard,
-      );
+        final postingService = JournalPostingService(
+          journals: journalRepo,
+          periodValidator: legacyPeriodValidator(),
+          permissionGuard: userGuard,
+        );
 
-      final draft = JournalEntryDraft(
-        voucherNumber: 'JE-AUTH-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Unauthorized post attempt',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 500, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 500, currencyCode: 'SAR'),
-        ],
-      );
+        final draft = JournalEntryDraft(
+          voucherNumber: 'JE-AUTH-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Unauthorized post attempt',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 500,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 500,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
 
-      // Direct service call must throw PermissionDeniedException
-      expect(
-        () async => postingService.post(draft),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+        // Direct service call must throw PermissionDeniedException
+        expect(
+          () async => postingService.post(draft),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
-    test('2. Direct Service Call (JournalPostingService.reverseByUuid): Denies user without REVERSE permission', () async {
-      // First post entry using admin guard
-      const adminGuard = AllowAllPermissionGuard();
-      final adminPostingService = JournalPostingService(
-        journals: journalRepo,
-        periodValidator: legacyPeriodValidator(),
-        permissionGuard: adminGuard,
-      );
+    test(
+      '2. Direct Service Call (JournalPostingService.reverseByUuid): Denies user without REVERSE permission',
+      () async {
+        // First post entry using admin guard
+        const adminGuard = AllowAllPermissionGuard();
+        final adminPostingService = JournalPostingService(
+          journals: journalRepo,
+          periodValidator: legacyPeriodValidator(),
+          permissionGuard: adminGuard,
+        );
 
-      final draft = JournalEntryDraft(
-        voucherNumber: 'JE-AUTH-02',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'Posted entry',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 500, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 500, currencyCode: 'SAR'),
-        ],
-      );
-      final posted = await adminPostingService.post(draft);
+        final draft = JournalEntryDraft(
+          voucherNumber: 'JE-AUTH-02',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'Posted entry',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 500,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 500,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
+        final posted = await adminPostingService.post(draft);
 
-      // Now create restricted guard with CREATE only, but NO REVERSE permission
-      final restrictedGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'accounting.journals.create'),
-      );
+        // Now create restricted guard with CREATE only, but NO REVERSE permission
+        final restrictedGuard = CallbackPermissionGuard(
+          (codes) => codes.any((c) => c == 'accounting.journals.create'),
+        );
 
-      final restrictedPostingService = JournalPostingService(
-        journals: journalRepo,
-        periodValidator: legacyPeriodValidator(),
-        permissionGuard: restrictedGuard,
-      );
+        final restrictedPostingService = JournalPostingService(
+          journals: journalRepo,
+          periodValidator: legacyPeriodValidator(),
+          permissionGuard: restrictedGuard,
+        );
 
-      expect(
-        () async => restrictedPostingService.reverseByUuid(posted.uuid),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+        expect(
+          () async => restrictedPostingService.reverseByUuid(posted.uuid),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
-    test('3. Direct Service Call (PostingCoordinator.post): Denies user without Inventory POST permission', () async {
-      final viewOnlyGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'inventory.receipts.view'),
-      );
+    test(
+      '3. Direct Service Call (PostingCoordinator.post): Denies user without Inventory POST permission',
+      () async {
+        final viewOnlyGuard = CallbackPermissionGuard(
+          (codes) => codes.any((c) => c == 'inventory.receipts.view'),
+        );
 
-      final coordinator = PostingCoordinatorImpl(
-        db: invDb,
-        stockValidationService: StockValidationServiceImpl(invDb),
-        dependencyDetector: InventoryDependencyDetectorImpl(invDb),
-        postingEngine: PostingEngineImpl(invDb, CostLayerServiceImpl(db: invDb)),
-
-        periodValidator: legacyPeriodValidator(),
-        permissionGuard: viewOnlyGuard,
-        readCompanyId: () => companyA,
-      );
-
-      final docRef = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-AUTH-01',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'WH-01',
-        status: InventoryDocumentStatus.draft,
-      );
-
-      expect(
-        () async => coordinator.post(document: docRef),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
-
-    test('4. Direct Service Call (PostingCoordinator.unpost): Denies user without Inventory REVERSE permission', () async {
-      final postOnlyGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'inventory.receipts.post' || c == 'inventory.receipts.create'),
-      );
-
-      final coordinator = PostingCoordinatorImpl(
-        db: invDb,
-        stockValidationService: StockValidationServiceImpl(invDb),
-        dependencyDetector: InventoryDependencyDetectorImpl(invDb),
-        postingEngine: PostingEngineImpl(invDb, CostLayerServiceImpl(db: invDb)),
-
-        periodValidator: legacyPeriodValidator(),
-        permissionGuard: postOnlyGuard,
-        readCompanyId: () => companyA,
-      );
-
-      final docRef = InventoryDocumentRef(
-        documentId: generateUuidV4(),
-        documentNumber: 'REC-AUTH-02',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'WH-01',
-        status: InventoryDocumentStatus.posted,
-      );
-
-      expect(
-        () async => coordinator.unpost(document: docRef),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
-
-    test('5. Direct Repository Call (FinancialTransactionRepositoryImpl.insert posted): Denies unauthorized user', () async {
-      final viewOnlyGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'receipts.view'),
-      );
-
-      final rpRepo = FinancialTransactionRepositoryImpl(
-        rpDb,
-        permissionGuard: viewOnlyGuard,
-        readCompanyId: () => companyA,
-      );
-
-      final draft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.now().toUtc(),
-        amount: 1000,
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        counterAmount: 1000,
-        counterCurrencyCode: 'SAR',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1Uuid,
-        counterAccountId: acc2Uuid,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.posted,
-      );
-
-      expect(
-        () async => rpRepo.insert(draft, transactionNumber: 'TX-AUTH-01'),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
-
-    test('6. Direct Repository Call (FinancialTransactionRepositoryImpl.softDelete): Denies unauthorized user', () async {
-      const adminGuard = AllowAllPermissionGuard();
-      final adminRepo = FinancialTransactionRepositoryImpl(
-        rpDb,
-        permissionGuard: adminGuard,
-        readCompanyId: () => companyA,
-      );
-
-      final draft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.now().toUtc(),
-        amount: 500,
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        counterAmount: 500,
-        counterCurrencyCode: 'SAR',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1Uuid,
-        counterAccountId: acc2Uuid,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-      );
-      final tx = await adminRepo.insert(draft, transactionNumber: 'TX-AUTH-02');
-
-      final viewOnlyGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'receipts.view'),
-      );
-
-      final restrictedRepo = FinancialTransactionRepositoryImpl(
-        rpDb,
-        permissionGuard: viewOnlyGuard,
-        readCompanyId: () => companyA,
-      );
-
-      expect(
-        () async => restrictedRepo.softDelete(tx.id),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
-
-    test('7. Direct Repository Call (SaleRepositoryImpl.insert posted): Denies unauthorized user', () async {
-      final viewOnlyGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'sales.documents.view'),
-      );
-
-      final saleRepo = SaleRepositoryImpl(
-        saleDb,
-        permissionGuard: viewOnlyGuard,
-        readCompanyId: () => companyA,
-      );
-
-      final draft = SaleDraft(
-        voucherBookId: 'VB-01',
-        cashAccountId: acc1Uuid,
-        saleDate: DateTime.now().toUtc(),
-        settlementType: SaleSettlementType.cash,
-        customerId: 'CUST-01',
-        customerName: 'Customer One',
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        items: const [
-          SaleItemDraft(
-            productId: 'PROD-01',
-            productName: 'Product 1',
-            productCode: 'P01',
-            mainQuantity: 2,
-            subQuantity: 0,
-            unitPrice: 100,
-            baseUnitPrice: 100,
+        final coordinator = PostingCoordinatorImpl(
+          db: invDb,
+          stockValidationService: StockValidationServiceImpl(invDb),
+          dependencyDetector: InventoryDependencyDetectorImpl(invDb),
+          postingEngine: PostingEngineImpl(
+            invDb,
+            CostLayerServiceImpl(db: invDb),
           ),
-        ],
-        discountType: DiscountType.fixed,
-        discountValue: 0,
-        taxRate: 0,
-        paidAmount: 200,
-        paymentMethod: PaymentMethod.cash,
-        saleStatus: SaleStatus.posted,
-      );
 
-      expect(
-        () async => saleRepo.insert(draft, saleNumber: 'INV-AUTH-01'),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+          periodValidator: legacyPeriodValidator(),
+          permissionGuard: viewOnlyGuard,
+          readCompanyId: () => companyA,
+        );
 
-    test('8. Direct Repository Call (SaleRepositoryImpl.softDelete): Denies unauthorized user', () async {
-      const adminGuard = AllowAllPermissionGuard();
-      final adminSaleRepo = SaleRepositoryImpl(
-        saleDb,
-        permissionGuard: adminGuard,
-        readCompanyId: () => companyA,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-AUTH-01',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'WH-01',
+          status: InventoryDocumentStatus.draft,
+        );
 
-      final draft = SaleDraft(
-        voucherBookId: 'VB-01',
-        cashAccountId: acc1Uuid,
-        saleDate: DateTime.now().toUtc(),
-        settlementType: SaleSettlementType.cash,
-        customerId: 'CUST-01',
-        customerName: 'Customer One',
-        currencyCode: 'SAR',
-        baseCurrencyCode: 'SAR',
-        exchangeRate: 1.0,
-        items: const [
-          SaleItemDraft(
-            productId: 'PROD-01',
-            productName: 'Product 1',
-            productCode: 'P01',
-            mainQuantity: 2,
-            subQuantity: 0,
-            unitPrice: 100,
-            baseUnitPrice: 100,
+        expect(
+          () async => coordinator.post(document: docRef),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
+
+    test(
+      '4. Direct Service Call (PostingCoordinator.unpost): Denies user without Inventory REVERSE permission',
+      () async {
+        final postOnlyGuard = CallbackPermissionGuard(
+          (codes) => codes.any(
+            (c) =>
+                c == 'inventory.receipts.post' ||
+                c == 'inventory.receipts.create',
           ),
-        ],
-        discountType: DiscountType.fixed,
-        discountValue: 0,
-        taxRate: 0,
-        paidAmount: 200,
-        paymentMethod: PaymentMethod.cash,
-        saleStatus: SaleStatus.unposted,
-      );
+        );
 
-      final sale = await adminSaleRepo.insert(draft, saleNumber: 'INV-AUTH-02');
+        final coordinator = PostingCoordinatorImpl(
+          db: invDb,
+          stockValidationService: StockValidationServiceImpl(invDb),
+          dependencyDetector: InventoryDependencyDetectorImpl(invDb),
+          postingEngine: PostingEngineImpl(
+            invDb,
+            CostLayerServiceImpl(db: invDb),
+          ),
 
-      final viewOnlyGuard = CallbackPermissionGuard(
-        (codes) => codes.any((c) => c == 'sales.documents.view'),
-      );
+          periodValidator: legacyPeriodValidator(),
+          permissionGuard: postOnlyGuard,
+          readCompanyId: () => companyA,
+        );
 
-      final restrictedSaleRepo = SaleRepositoryImpl(
-        saleDb,
-        permissionGuard: viewOnlyGuard,
-        readCompanyId: () => companyA,
-      );
+        final docRef = InventoryDocumentRef(
+          documentId: generateUuidV4(),
+          documentNumber: 'REC-AUTH-02',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'WH-01',
+          status: InventoryDocumentStatus.posted,
+        );
 
-      expect(
-        () async => restrictedSaleRepo.softDelete(sale.id),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+        expect(
+          () async => coordinator.unpost(document: docRef),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
-    test('9. Background Sync & System Operations: AllowAllPermissionGuard permits system jobs', () async {
-      const systemGuard = AllowAllPermissionGuard();
+    test(
+      '5. Direct Repository Call (FinancialTransactionRepositoryImpl.insert posted): Denies unauthorized user',
+      () async {
+        final viewOnlyGuard = CallbackPermissionGuard(
+          (codes) => codes.any((c) => c == 'receipts.view'),
+        );
 
-      final postingService = JournalPostingService(
-        journals: journalRepo,
-        periodValidator: legacyPeriodValidator(),
-        permissionGuard: systemGuard,
-      );
+        final rpRepo = FinancialTransactionRepositoryImpl(
+          rpDb,
+          permissionGuard: viewOnlyGuard,
+          readCompanyId: () => companyA,
+        );
 
-      final draft = JournalEntryDraft(
-        voucherNumber: 'JE-SYSTEM-01',
-        voucherType: 'journal',
-        currencyCode: 'SAR',
-        description: 'System background sync entry',
-        isPosted: true,
-        entryDate: DateTime.now(),
-        lines: [
-          JournalLineDraft(accountUuid: acc1Uuid, debit: 100, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: acc2Uuid, debit: 0, credit: 100, currencyCode: 'SAR'),
-        ],
-      );
+        final draft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.now().toUtc(),
+          amount: 1000,
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          counterAmount: 1000,
+          counterCurrencyCode: 'SAR',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1Uuid,
+          counterAccountId: acc2Uuid,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.posted,
+        );
 
-      final posted = await postingService.post(draft);
-      expect(posted.isPosted, isTrue);
+        expect(
+          () async => rpRepo.insert(draft, transactionNumber: 'TX-AUTH-01'),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
-      final reversed = await postingService.reverseByUuid(posted.uuid);
-      expect(reversed, isNotNull);
-    });
+    test(
+      '6. Direct Repository Call (FinancialTransactionRepositoryImpl.softDelete): Denies unauthorized user',
+      () async {
+        const adminGuard = AllowAllPermissionGuard();
+        final adminRepo = FinancialTransactionRepositoryImpl(
+          rpDb,
+          permissionGuard: adminGuard,
+          readCompanyId: () => companyA,
+        );
+
+        final draft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.now().toUtc(),
+          amount: 500,
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          counterAmount: 500,
+          counterCurrencyCode: 'SAR',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1Uuid,
+          counterAccountId: acc2Uuid,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+        );
+        final tx = await adminRepo.insert(
+          draft,
+          transactionNumber: 'TX-AUTH-02',
+        );
+
+        final viewOnlyGuard = CallbackPermissionGuard(
+          (codes) => codes.any((c) => c == 'receipts.view'),
+        );
+
+        final restrictedRepo = FinancialTransactionRepositoryImpl(
+          rpDb,
+          permissionGuard: viewOnlyGuard,
+          readCompanyId: () => companyA,
+        );
+
+        expect(
+          () async => restrictedRepo.softDelete(tx.id),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
+
+    test(
+      '7. Direct Repository Call (SaleRepositoryImpl.insert posted): Denies unauthorized user',
+      () async {
+        final viewOnlyGuard = CallbackPermissionGuard(
+          (codes) => codes.any((c) => c == 'sales.documents.view'),
+        );
+
+        final saleRepo = SaleRepositoryImpl(
+          saleDb,
+          permissionGuard: viewOnlyGuard,
+          readCompanyId: () => companyA,
+        );
+
+        final draft = SaleDraft(
+          voucherBookId: 'VB-01',
+          cashAccountId: acc1Uuid,
+          saleDate: DateTime.now().toUtc(),
+          settlementType: SaleSettlementType.cash,
+          customerId: 'CUST-01',
+          customerName: 'Customer One',
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          items: const [
+            SaleItemDraft(
+              productId: 'PROD-01',
+              productName: 'Product 1',
+              productCode: 'P01',
+              mainQuantity: 2,
+              subQuantity: 0,
+              unitPrice: 100,
+              baseUnitPrice: 100,
+            ),
+          ],
+          discountType: DiscountType.fixed,
+          discountValue: 0,
+          taxRate: 0,
+          paidAmount: 200,
+          paymentMethod: PaymentMethod.cash,
+          saleStatus: SaleStatus.posted,
+        );
+
+        expect(
+          () async => saleRepo.insert(draft, saleNumber: 'INV-AUTH-01'),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
+
+    test(
+      '8. Direct Repository Call (SaleRepositoryImpl.softDelete): Denies unauthorized user',
+      () async {
+        const adminGuard = AllowAllPermissionGuard();
+        final adminSaleRepo = SaleRepositoryImpl(
+          saleDb,
+          permissionGuard: adminGuard,
+          readCompanyId: () => companyA,
+        );
+
+        final draft = SaleDraft(
+          voucherBookId: 'VB-01',
+          cashAccountId: acc1Uuid,
+          saleDate: DateTime.now().toUtc(),
+          settlementType: SaleSettlementType.cash,
+          customerId: 'CUST-01',
+          customerName: 'Customer One',
+          currencyCode: 'SAR',
+          baseCurrencyCode: 'SAR',
+          exchangeRate: 1.0,
+          items: const [
+            SaleItemDraft(
+              productId: 'PROD-01',
+              productName: 'Product 1',
+              productCode: 'P01',
+              mainQuantity: 2,
+              subQuantity: 0,
+              unitPrice: 100,
+              baseUnitPrice: 100,
+            ),
+          ],
+          discountType: DiscountType.fixed,
+          discountValue: 0,
+          taxRate: 0,
+          paidAmount: 200,
+          paymentMethod: PaymentMethod.cash,
+          saleStatus: SaleStatus.unposted,
+        );
+
+        final sale = await adminSaleRepo.insert(
+          draft,
+          saleNumber: 'INV-AUTH-02',
+        );
+
+        final viewOnlyGuard = CallbackPermissionGuard(
+          (codes) => codes.any((c) => c == 'sales.documents.view'),
+        );
+
+        final restrictedSaleRepo = SaleRepositoryImpl(
+          saleDb,
+          permissionGuard: viewOnlyGuard,
+          readCompanyId: () => companyA,
+        );
+
+        expect(
+          () async => restrictedSaleRepo.softDelete(sale.id),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
+
+    test(
+      '9. Background Sync & System Operations: AllowAllPermissionGuard permits system jobs',
+      () async {
+        const systemGuard = AllowAllPermissionGuard();
+
+        final postingService = JournalPostingService(
+          journals: journalRepo,
+          periodValidator: legacyPeriodValidator(),
+          permissionGuard: systemGuard,
+        );
+
+        final draft = JournalEntryDraft(
+          voucherNumber: 'JE-SYSTEM-01',
+          voucherType: 'journal',
+          currencyCode: 'SAR',
+          description: 'System background sync entry',
+          isPosted: true,
+          entryDate: DateTime.now(),
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1Uuid,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2Uuid,
+              debit: 0,
+              credit: 100,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
+
+        final posted = await postingService.post(draft);
+        expect(posted.isPosted, isTrue);
+
+        final reversed = await postingService.reverseByUuid(posted.uuid);
+        expect(reversed, isNotNull);
+      },
+    );
   });
 }

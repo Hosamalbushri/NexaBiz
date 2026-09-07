@@ -1,10 +1,6 @@
 /// One editable account row on the Chart of Accounts import step (structure only).
 class AccountImportRow {
-  const AccountImportRow({
-    required this.id,
-    this.code = '',
-    this.name = '',
-  });
+  const AccountImportRow({required this.id, this.code = '', this.name = ''});
 
   /// Stable local id for Flutter list keys / edits.
   final String id;
@@ -13,10 +9,7 @@ class AccountImportRow {
 
   bool get hasName => name.trim().isNotEmpty;
 
-  AccountImportRow copyWith({
-    String? code,
-    String? name,
-  }) {
+  AccountImportRow copyWith({String? code, String? name}) {
     return AccountImportRow(
       id: id,
       code: code ?? this.code,

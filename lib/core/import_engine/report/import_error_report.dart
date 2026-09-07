@@ -49,13 +49,13 @@ class ImportErrorReport {
   final DateTime timestamp;
 
   Map<String, dynamic> toJson() => {
-        'jobId': jobId,
-        'rowIndex': rowIndex,
-        'fieldKey': fieldKey,
-        'errorCode': errorCode,
-        'message': message,
-        'severity': severity,
-        'rawValue': rawValue?.toString(),
-        'timestamp': timestamp.toIso8601String(),
-      };
+    'jobId': jobId,
+    'rowIndex': rowIndex,
+    'fieldKey': fieldKey,
+    'errorCode': errorCode,
+    'message': message,
+    'severity': severity,
+    'rawValue': rawValue?.toString(),
+    'timestamp': timestamp.toIso8601String(),
+  };
 }

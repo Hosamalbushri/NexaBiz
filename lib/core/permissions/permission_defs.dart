@@ -41,8 +41,8 @@ class PermissionServiceDef {
   String subtitle(BuildContext context) => subtitleBuilder(context);
 
   List<String> get allCodes => [
-        for (final op in operations) ...[op.code, ...op.legacyCodes],
-      ];
+    for (final op in operations) ...[op.code, ...op.legacyCodes],
+  ];
 }
 
 /// A top-level permission package contributed by a module (or platform).
@@ -72,7 +72,5 @@ class PermissionPackageDef {
   String title(BuildContext context) => titleBuilder(context);
   String subtitle(BuildContext context) => subtitleBuilder(context);
 
-  List<String> get allCodes => [
-        for (final s in services) ...s.allCodes,
-      ];
+  List<String> get allCodes => [for (final s in services) ...s.allCodes];
 }

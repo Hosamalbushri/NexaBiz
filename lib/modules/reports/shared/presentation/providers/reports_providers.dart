@@ -27,33 +27,33 @@ final reportRunnerProvider = Provider<ReportRunner>((ref) {
 
 final salesPeriodReportDefinitionProvider =
     Provider<SalesPeriodReportDefinition>((ref) {
-  return const SalesPeriodReportDefinition();
-});
+      return const SalesPeriodReportDefinition();
+    });
 
 final accountStatementReportDefinitionProvider =
     Provider<AccountStatementReportDefinition>((ref) {
-  return const AccountStatementReportDefinition();
-});
+      return const AccountStatementReportDefinition();
+    });
 
 final trialBalanceReportDefinitionProvider =
     Provider<TrialBalanceReportDefinition>((ref) {
-  return const TrialBalanceReportDefinition();
-});
+      return const TrialBalanceReportDefinition();
+    });
 
 final journalBookReportDefinitionProvider =
     Provider<JournalBookReportDefinition>((ref) {
-  return const JournalBookReportDefinition();
-});
+      return const JournalBookReportDefinition();
+    });
 
 final rpTransactionReportDefinitionProvider =
     Provider<RpTransactionReportDefinition>((ref) {
-  return const RpTransactionReportDefinition();
-});
+      return const RpTransactionReportDefinition();
+    });
 
 final productStockMovementReportDefinitionProvider =
     Provider<ProductStockMovementReportDefinition>((ref) {
-  return const ProductStockMovementReportDefinition();
-});
+      return const ProductStockMovementReportDefinition();
+    });
 
 /// Override in App with Sales-backed adapter.
 final salesPeriodReportDataPortProvider = Provider<SalesPeriodReportDataPort>((
@@ -65,18 +65,20 @@ final salesPeriodReportDataPortProvider = Provider<SalesPeriodReportDataPort>((
 /// Override in App with Accounting-backed adapter.
 final accountStatementReportDataPortProvider =
     Provider<AccountStatementReportDataPort>((ref) {
-  return const NoOpAccountStatementReportDataPort();
-});
+      return const NoOpAccountStatementReportDataPort();
+    });
 
 /// Override in App with Accounting journal adapter.
-final trialBalanceReportDataPortProvider =
-    Provider<TrialBalanceReportDataPort>((ref) {
-  return const NoOpTrialBalanceReportDataPort();
-});
+final trialBalanceReportDataPortProvider = Provider<TrialBalanceReportDataPort>(
+  (ref) {
+    return const NoOpTrialBalanceReportDataPort();
+  },
+);
 
 /// Override in App with Accounting journal-book adapter.
-final journalBookReportDataPortProvider =
-    Provider<JournalBookReportDataPort>((ref) {
+final journalBookReportDataPortProvider = Provider<JournalBookReportDataPort>((
+  ref,
+) {
   return const NoOpJournalBookReportDataPort();
 });
 
@@ -86,12 +88,14 @@ final rpReportDataPortProvider = Provider<RpReportDataPort>((ref) {
 });
 
 /// Override in App with SalesPeriodReportDataProvider instance.
-final salesPeriodReportEngineDataProvider =
-    Provider<ReportDataProvider?>((ref) => null);
+final salesPeriodReportEngineDataProvider = Provider<ReportDataProvider?>(
+  (ref) => null,
+);
 
 /// Override in App with StockMovementReportDataProvider instance.
-final stockMovementReportEngineDataProvider =
-    Provider<ReportDataProvider?>((ref) => null);
+final stockMovementReportEngineDataProvider = Provider<ReportDataProvider?>(
+  (ref) => null,
+);
 
 final reportCatalogProvider = Provider<List<ReportDescriptor>>((ref) {
   return const [

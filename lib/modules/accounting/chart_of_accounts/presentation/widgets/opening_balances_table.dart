@@ -62,7 +62,8 @@ class OpeningBalancesTables extends StatelessWidget {
     required String accountId,
     required String accountCode,
     required String accountName,
-  }) onAddCurrencyLine;
+  })
+  onAddCurrencyLine;
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +138,8 @@ class _AccountBalanceTable extends StatefulWidget {
     required String accountId,
     required String accountCode,
     required String accountName,
-  }) onAddCurrencyLine;
+  })
+  onAddCurrencyLine;
 
   @override
   State<_AccountBalanceTable> createState() => _AccountBalanceTableState();
@@ -161,8 +163,7 @@ class _AccountBalanceTableState extends State<_AccountBalanceTable> {
     final tableWidth = math.max(_Cols.width, viewportWidth - 48);
     final group = widget.group;
     final usedCurrencies = {
-      for (final line in group.lines)
-        line.currencyCode.trim().toUpperCase(),
+      for (final line in group.lines) line.currencyCode.trim().toUpperCase(),
     };
     final canAddCurrency = widget.configuredCurrencies.any(
       (c) => !usedCurrencies.contains(c.code),
@@ -172,9 +173,7 @@ class _AccountBalanceTableState extends State<_AccountBalanceTable> {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: scheme.shadow.withValues(alpha: 0.05),
@@ -220,8 +219,7 @@ class _AccountBalanceTableState extends State<_AccountBalanceTable> {
               controller: _horizontalScroll,
               thumbVisibility: true,
               radius: const Radius.circular(8),
-              notificationPredicate: (n) =>
-                  n.metrics.axis == Axis.horizontal,
+              notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
               child: SingleChildScrollView(
                 controller: _horizontalScroll,
                 scrollDirection: Axis.horizontal,
@@ -261,10 +259,10 @@ class _AccountBalanceTableState extends State<_AccountBalanceTable> {
               child: TextButton.icon(
                 onPressed: widget.enabled && canAddCurrency
                     ? () => widget.onAddCurrencyLine(
-                          accountId: group.accountId,
-                          accountCode: group.accountCode,
-                          accountName: group.accountName,
-                        )
+                        accountId: group.accountId,
+                        accountCode: group.accountCode,
+                        accountName: group.accountName,
+                      )
                     : null,
                 icon: const Icon(Icons.add_rounded, size: 20),
                 label: Text(l10n.accountingOpeningSetupAddCurrencyLine),
@@ -402,8 +400,8 @@ class _CurrencyDataRow extends StatelessWidget {
                 value: currencyItems.any((c) => c.code == selectedCurrency)
                     ? selectedCurrency
                     : (currencyItems.isNotEmpty
-                        ? currencyItems.first.code
-                        : null),
+                          ? currencyItems.first.code
+                          : null),
                 isExpanded: true,
                 decoration: const InputDecoration(
                   isDense: true,
@@ -451,10 +449,7 @@ class _CurrencyDataRow extends StatelessWidget {
                 variant: AppAmountFieldVariant.compact,
                 emptyWhenZero: true,
                 onChanged: (value) => onChanged(
-                  row.copyWith(
-                    credit: value,
-                    debit: value > 0 ? 0 : row.debit,
-                  ),
+                  row.copyWith(credit: value, debit: value > 0 ? 0 : row.debit),
                 ),
               ),
             ),

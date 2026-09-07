@@ -18,7 +18,8 @@ class CapabilityMetadata {
   final String requiredPermission;
   final String iconName;
 
-  PackageDefinition? get requiredPackage => PackageRegistry.findByCode(requiredPackageCode);
+  PackageDefinition? get requiredPackage =>
+      PackageRegistry.findByCode(requiredPackageCode);
 }
 
 class CapabilityRegistry {
@@ -28,7 +29,8 @@ class CapabilityRegistry {
     EntitlementCapability.sync: CapabilityMetadata(
       capability: EntitlementCapability.sync,
       displayName: 'Cloud Data Synchronization',
-      description: 'Synchronize your business data seamlessly across all your devices and branches.',
+      description:
+          'Synchronize your business data seamlessly across all your devices and branches.',
       requiredPackageCode: 'cloud_sync',
       requiredPermission: 'sync.execute',
       iconName: 'cloud_sync',
@@ -36,7 +38,8 @@ class CapabilityRegistry {
     EntitlementCapability.multiDevice: CapabilityMetadata(
       capability: EntitlementCapability.multiDevice,
       displayName: 'Multi-Device Access',
-      description: 'Connect and synchronize multiple active terminal devices simultaneously.',
+      description:
+          'Connect and synchronize multiple active terminal devices simultaneously.',
       requiredPackageCode: 'multi_device',
       requiredPermission: 'devices.manage',
       iconName: 'devices',
@@ -44,7 +47,8 @@ class CapabilityRegistry {
     EntitlementCapability.multiBranch: CapabilityMetadata(
       capability: EntitlementCapability.multiBranch,
       displayName: 'Multi-Branch Management',
-      description: 'Manage inventory, transfers, and sales across multiple physical branch locations.',
+      description:
+          'Manage inventory, transfers, and sales across multiple physical branch locations.',
       requiredPackageCode: 'multi_branch',
       requiredPermission: 'branches.view',
       iconName: 'store',
@@ -52,7 +56,8 @@ class CapabilityRegistry {
     EntitlementCapability.cloudBackup: CapabilityMetadata(
       capability: EntitlementCapability.cloudBackup,
       displayName: 'Automated Cloud Backup',
-      description: 'Automatic encrypted cloud snapshot backups for complete business peace of mind.',
+      description:
+          'Automatic encrypted cloud snapshot backups for complete business peace of mind.',
       requiredPackageCode: 'cloud_sync',
       requiredPermission: 'backup.execute',
       iconName: 'cloud_done',

@@ -27,7 +27,10 @@ class FakeSettingsRepository implements SettingsRepository {
   }
 
   @override
-  Future<void> saveCompanyProfile(CompanyProfile profile, [String? companyId]) async {}
+  Future<void> saveCompanyProfile(
+    CompanyProfile profile, [
+    String? companyId,
+  ]) async {}
 
   @override
   Future<void> saveDeviceInitialization({
@@ -83,21 +86,24 @@ void main() {
       adminPassword: 'Password123!',
     );
 
-    test('1. First-run initialization creates Company A + Owner User + Membership', () async {
-      expect(await setupCoordinator.isFirstRunCompleted(), isFalse);
+    test(
+      '1. First-run initialization creates Company A + Owner User + Membership',
+      () async {
+        expect(await setupCoordinator.isFirstRunCompleted(), isFalse);
 
-      await setupCoordinator.commitFirstRunSetup(testPayload);
+        await setupCoordinator.commitFirstRunSetup(testPayload);
 
-      expect(await setupCoordinator.isFirstRunCompleted(), isTrue);
+        expect(await setupCoordinator.isFirstRunCompleted(), isTrue);
 
-      final company = await authStore.getPrimaryCompany();
-      expect(company, isNotNull);
-      expect(company!.name, equals('شركة الاختبار الأولى'));
+        final company = await authStore.getPrimaryCompany();
+        expect(company, isNotNull);
+        expect(company!.name, equals('شركة الاختبار الأولى'));
 
-      final owner = await authStore.getPrimaryOwnerUser();
-      expect(owner, isNotNull);
-      expect(owner!.email, equals('owner@testcompany.com'));
-    });
+        final owner = await authStore.getPrimaryOwnerUser();
+        expect(owner, isNotNull);
+        expect(owner!.email, equals('owner@testcompany.com'));
+      },
+    );
 
     test('2. Initialization cannot rerun after completion', () async {
       await setupCoordinator.commitFirstRunSetup(testPayload);
@@ -115,13 +121,16 @@ void main() {
       expect(isDone, isTrue);
     });
 
-    test('4. First Owner creation assigns explicit Owner role and permissions', () async {
-      await setupCoordinator.commitFirstRunSetup(testPayload);
+    test(
+      '4. First Owner creation assigns explicit Owner role and permissions',
+      () async {
+        await setupCoordinator.commitFirstRunSetup(testPayload);
 
-      final owner = await authStore.getPrimaryOwnerUser();
-      expect(owner, isNotNull);
-      expect(owner!.rolesByCompany.values.contains('Owner'), isTrue);
-    });
+        final owner = await authStore.getPrimaryOwnerUser();
+        expect(owner, isNotNull);
+        expect(owner!.rolesByCompany.values.contains('Owner'), isTrue);
+      },
+    );
 
     test('5. Local login authenticates credentials offline', () async {
       await setupCoordinator.commitFirstRunSetup(testPayload);
@@ -136,78 +145,87 @@ void main() {
       expect(session!.user.email, equals('owner@testcompany.com'));
     });
 
-    test('6. One-company login automatically selects the single company', () async {
-      await setupCoordinator.commitFirstRunSetup(testPayload);
+    test(
+      '6. One-company login automatically selects the single company',
+      () async {
+        await setupCoordinator.commitFirstRunSetup(testPayload);
 
-      final session = await authStore.login(
-        email: 'owner@testcompany.com',
-        password: 'Password123!',
-        deviceId: 'device_001',
-      );
+        final session = await authStore.login(
+          email: 'owner@testcompany.com',
+          password: 'Password123!',
+          deviceId: 'device_001',
+        );
 
-      expect(session, isNotNull);
-      expect(session!.companies.length, equals(1));
-      expect(session.currentCompanyId, isNotNull);
-      expect(session.currentCompanyId, equals(session.companies.first.id));
-    });
+        expect(session, isNotNull);
+        expect(session!.companies.length, equals(1));
+        expect(session.currentCompanyId, isNotNull);
+        expect(session.currentCompanyId, equals(session.companies.first.id));
+      },
+    );
 
-    test('7. Multi-company login with no companyId selected leaves currentCompanyId null for selection UI', () async {
-      await setupCoordinator.commitFirstRunSetup(testPayload);
+    test(
+      '7. Multi-company login with no companyId selected leaves currentCompanyId null for selection UI',
+      () async {
+        await setupCoordinator.commitFirstRunSetup(testPayload);
 
-      final company2 = await authStore.createCompany(
-        name: 'شركة الاختبار الثانية',
-        code: 'COMP_B',
-      );
+        final company2 = await authStore.createCompany(
+          name: 'شركة الاختبار الثانية',
+          code: 'COMP_B',
+        );
 
-      final owner = await authStore.getPrimaryOwnerUser();
-      await authStore.addMembership(
-        UserCompanyMembership(
-          userId: owner!.id,
+        final owner = await authStore.getPrimaryOwnerUser();
+        await authStore.addMembership(
+          UserCompanyMembership(
+            userId: owner!.id,
+            companyId: company2.id,
+            role: 'Admin',
+            status: 'active',
+          ),
+        );
+
+        final session = await authStore.login(
+          email: 'owner@testcompany.com',
+          password: 'Password123!',
+          deviceId: 'device_001',
+        );
+
+        expect(session, isNotNull);
+        expect(session!.companies.length, equals(2));
+        expect(session.currentCompanyId, isNull);
+      },
+    );
+
+    test(
+      '8. Company selection explicitly sets active company context',
+      () async {
+        await setupCoordinator.commitFirstRunSetup(testPayload);
+
+        final company2 = await authStore.createCompany(
+          name: 'شركة الاختبار الثانية',
+          code: 'COMP_B',
+        );
+
+        final owner = await authStore.getPrimaryOwnerUser();
+        await authStore.addMembership(
+          UserCompanyMembership(
+            userId: owner!.id,
+            companyId: company2.id,
+            role: 'Admin',
+            status: 'active',
+          ),
+        );
+
+        final session = await authStore.login(
+          email: 'owner@testcompany.com',
+          password: 'Password123!',
+          deviceId: 'device_001',
           companyId: company2.id,
-          role: 'Admin',
-          status: 'active',
-        ),
-      );
+        );
 
-      final session = await authStore.login(
-        email: 'owner@testcompany.com',
-        password: 'Password123!',
-        deviceId: 'device_001',
-      );
-
-      expect(session, isNotNull);
-      expect(session!.companies.length, equals(2));
-      expect(session.currentCompanyId, isNull);
-    });
-
-    test('8. Company selection explicitly sets active company context', () async {
-      await setupCoordinator.commitFirstRunSetup(testPayload);
-
-      final company2 = await authStore.createCompany(
-        name: 'شركة الاختبار الثانية',
-        code: 'COMP_B',
-      );
-
-      final owner = await authStore.getPrimaryOwnerUser();
-      await authStore.addMembership(
-        UserCompanyMembership(
-          userId: owner!.id,
-          companyId: company2.id,
-          role: 'Admin',
-          status: 'active',
-        ),
-      );
-
-      final session = await authStore.login(
-        email: 'owner@testcompany.com',
-        password: 'Password123!',
-        deviceId: 'device_001',
-        companyId: company2.id,
-      );
-
-      expect(session, isNotNull);
-      expect(session!.currentCompanyId, equals(company2.id));
-    });
+        expect(session, isNotNull);
+        expect(session!.currentCompanyId, equals(company2.id));
+      },
+    );
 
     test('9. Company switching updates active company and roles', () async {
       await setupCoordinator.commitFirstRunSetup(testPayload);
@@ -245,22 +263,25 @@ void main() {
       expect(switched.roles.contains('Admin'), isTrue);
     });
 
-    test('10. Unauthorized company access fails closed (returns null)', () async {
-      await setupCoordinator.commitFirstRunSetup(testPayload);
+    test(
+      '10. Unauthorized company access fails closed (returns null)',
+      () async {
+        await setupCoordinator.commitFirstRunSetup(testPayload);
 
-      final session = await authStore.login(
-        email: 'owner@testcompany.com',
-        password: 'Password123!',
-        deviceId: 'device_001',
-      );
+        final session = await authStore.login(
+          email: 'owner@testcompany.com',
+          password: 'Password123!',
+          deviceId: 'device_001',
+        );
 
-      final unauthorized = await authStore.switchCompany(
-        current: session!,
-        companyId: 'unauthorized_company_999',
-      );
+        final unauthorized = await authStore.switchCompany(
+          current: session!,
+          companyId: 'unauthorized_company_999',
+        );
 
-      expect(unauthorized, isNull);
-    });
+        expect(unauthorized, isNull);
+      },
+    );
 
     test('11. Removed membership revokes access to company', () async {
       await setupCoordinator.commitFirstRunSetup(testPayload);
@@ -292,38 +313,38 @@ void main() {
       expect(session, isNull);
     });
 
-    test('12. Missing company context throws MissingCompanyContextException', () {
-      final adapter = InventoryAccountingPosterAdapter(
-        null,
-        readCompanyId: () => '',
-      );
+    test(
+      '12. Missing company context throws MissingCompanyContextException',
+      () {
+        final adapter = InventoryAccountingPosterAdapter(
+          null,
+          readCompanyId: () => '',
+        );
 
-      final doc = InventoryDocumentRef(
-        documentId: 'doc_123',
-        documentNumber: 'DOC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
+        final doc = InventoryDocumentRef(
+          documentId: 'doc_123',
+          documentNumber: 'DOC-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
 
-      expect(
-        () => adapter.postAccountingEntry(
-          document: doc,
-          totalAmount: 100.0,
-        ),
-        throwsA(isA<MissingCompanyContextException>()),
-      );
-    });
+        expect(
+          () => adapter.postAccountingEntry(document: doc, totalAmount: 100.0),
+          throwsA(isA<MissingCompanyContextException>()),
+        );
+      },
+    );
 
-    test('13. Cross-company data isolation is enforced by companyId matching', () async {
-      await setupCoordinator.commitFirstRunSetup(testPayload);
-      final comp1 = await authStore.getPrimaryCompany();
-      final comp2 = await authStore.createCompany(
-        name: 'شركة 2',
-        code: 'C2',
-      );
+    test(
+      '13. Cross-company data isolation is enforced by companyId matching',
+      () async {
+        await setupCoordinator.commitFirstRunSetup(testPayload);
+        final comp1 = await authStore.getPrimaryCompany();
+        final comp2 = await authStore.createCompany(name: 'شركة 2', code: 'C2');
 
-      expect(comp1!.id, isNot(equals(comp2.id)));
-    });
+        expect(comp1!.id, isNot(equals(comp2.id)));
+      },
+    );
 
     test('14. No remote login required for startup', () async {
       await setupCoordinator.commitFirstRunSetup(testPayload);

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-
 import '../../app/settings/settings_repository.dart';
 import 'package:stock_count/modules/inventory/shared/data/inventory_hive.dart';
 import 'package:stock_count/modules/inventory/stock_count/domain/entities/inventory_item.dart';
@@ -13,9 +12,7 @@ import 'package:stock_count/modules/sync/sync.dart';
 /// are written in a single staged operation. If writing fails, any partial writes
 /// are rolled back or cleared, leaving local storage uncorrupted.
 class AtomicBootstrapInstaller {
-  const AtomicBootstrapInstaller({
-    this._cursorStore,
-  });
+  const AtomicBootstrapInstaller({this._cursorStore});
 
   final SyncCursorStore? _cursorStore;
 
@@ -32,7 +29,9 @@ class AtomicBootstrapInstaller {
       final inventoryBox = await InventoryHive.openBox();
 
       // Backup current state for rollback on error.
-      final existingInventory = Map<dynamic, InventoryItem>.from(inventoryBox.toMap());
+      final existingInventory = Map<dynamic, InventoryItem>.from(
+        inventoryBox.toMap(),
+      );
 
       try {
         // 2. Stage Inventory Items (if provided in snapshot).
@@ -41,8 +40,13 @@ class AtomicBootstrapInstaller {
           final itemsToStore = <String, InventoryItem>{};
 
           for (final itemPayload in itemsPayload) {
-            final payload = (itemPayload['payload'] as Map<String, dynamic>?) ?? itemPayload;
-            final entityId = (itemPayload['entity_id'] as String?) ?? (payload['id'] as String?) ?? '';
+            final payload =
+                (itemPayload['payload'] as Map<String, dynamic>?) ??
+                itemPayload;
+            final entityId =
+                (itemPayload['entity_id'] as String?) ??
+                (payload['id'] as String?) ??
+                '';
             final itemCode = (payload['itemCode'] as String?) ?? entityId;
 
             if (itemCode.isEmpty) continue;
@@ -53,7 +57,8 @@ class AtomicBootstrapInstaller {
               itemName: (payload['itemName'] as String?) ?? '',
               barcode: payload['barcode'] as String?,
               packSize: (payload['packSize'] as num?)?.toInt(),
-              systemQuantity: (payload['systemQuantity'] as num?)?.toDouble() ?? 0.0,
+              systemQuantity:
+                  (payload['systemQuantity'] as num?)?.toDouble() ?? 0.0,
               actualQuantity: (payload['actualQuantity'] as num?)?.toDouble(),
               mainQuantity: (payload['mainQuantity'] as num?)?.toDouble(),
               subQuantity: (payload['subQuantity'] as num?)?.toDouble(),
@@ -90,12 +95,15 @@ class AtomicBootstrapInstaller {
         if (entitiesByType.containsKey('company_profile')) {
           final profiles = entitiesByType['company_profile'] ?? [];
           for (final profile in profiles) {
-            final payload = (profile['payload'] as Map<String, dynamic>?) ?? profile;
+            final payload =
+                (profile['payload'] as Map<String, dynamic>?) ?? profile;
             final name = (payload['name'] as String?)?.trim();
             if (name != null && name.isNotEmpty) {
               profileName = name;
             }
-            final code = (payload['defaultCurrencyCode'] as String?)?.trim().toUpperCase();
+            final code = (payload['defaultCurrencyCode'] as String?)
+                ?.trim()
+                .toUpperCase();
             if (code != null && code.isNotEmpty) {
               currencyCode = code;
             }
@@ -119,7 +127,8 @@ class AtomicBootstrapInstaller {
           if (entitiesByType.containsKey('currency_rate')) {
             final rates = entitiesByType['currency_rate'] ?? [];
             for (final rate in rates) {
-              final payload = (rate['payload'] as Map<String, dynamic>?) ?? rate;
+              final payload =
+                  (rate['payload'] as Map<String, dynamic>?) ?? rate;
               final code = (payload['currencyCode'] as String?)?.toUpperCase();
               if (code != null && code.isNotEmpty) {
                 currencyCode = code;
@@ -129,8 +138,10 @@ class AtomicBootstrapInstaller {
           } else if (entitiesByType.containsKey('fiscal_year')) {
             final years = entitiesByType['fiscal_year'] ?? [];
             for (final year in years) {
-              final payload = (year['payload'] as Map<String, dynamic>?) ?? year;
-              final code = (payload['baseCurrencyCode'] as String?)?.toUpperCase();
+              final payload =
+                  (year['payload'] as Map<String, dynamic>?) ?? year;
+              final code = (payload['baseCurrencyCode'] as String?)
+                  ?.toUpperCase();
               if (code != null && code.isNotEmpty) {
                 currencyCode = code;
                 break;

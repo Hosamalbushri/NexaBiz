@@ -39,7 +39,9 @@ final secureTokenStorageProvider = Provider<SecureTokenStorage>((ref) {
   return SecureTokenStorage();
 });
 
-final offlineAuthorizationStoreProvider = Provider<OfflineAuthorizationStore>((ref) {
+final offlineAuthorizationStoreProvider = Provider<OfflineAuthorizationStore>((
+  ref,
+) {
   return OfflineAuthorizationStore();
 });
 
@@ -232,18 +234,20 @@ class AuthState {
       session: session ?? this.session,
       errorMessage: errorMessage ?? this.errorMessage,
       backend: backend ?? this.backend,
-      isOfflineAuthorizationRestored: isOfflineAuthorizationRestored ?? this.isOfflineAuthorizationRestored,
-      isOfflineAuthorizationUnavailable: isOfflineAuthorizationUnavailable ?? this.isOfflineAuthorizationUnavailable,
-      offlineAuthorizationSnapshot: offlineAuthorizationSnapshot ?? this.offlineAuthorizationSnapshot,
+      isOfflineAuthorizationRestored:
+          isOfflineAuthorizationRestored ?? this.isOfflineAuthorizationRestored,
+      isOfflineAuthorizationUnavailable:
+          isOfflineAuthorizationUnavailable ??
+          this.isOfflineAuthorizationUnavailable,
+      offlineAuthorizationSnapshot:
+          offlineAuthorizationSnapshot ?? this.offlineAuthorizationSnapshot,
     );
   }
 }
 
 class AuthController extends StateNotifier<AuthState> {
-  AuthController({
-    required this._local,
-    required this._remote,
-  }) : super(const AuthState.uninitialized());
+  AuthController({required this._local, required this._remote})
+    : super(const AuthState.uninitialized());
 
   final LocalAuthRepository _local;
   final AuthRepositoryImpl _remote;
@@ -288,10 +292,12 @@ class AuthController extends StateNotifier<AuthState> {
         completer.complete(session);
       }
     } catch (e) {
-      _set(AuthState(
-        status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
-      ));
+      _set(
+        AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: e.toString(),
+        ),
+      );
       completer.completeError(e);
     } finally {
       _restoreCompleter = null;
@@ -309,7 +315,6 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (_) {}
     _set(const AuthState(status: AuthStatus.unauthenticated));
   }
-
 
   /// Mandatory authentication on application startup: require sign in on launch.
   Future<void> bootstrap({bool preferRemote = false}) async {
@@ -488,7 +493,9 @@ class AuthController extends StateNotifier<AuthState> {
     final currentSession = state.session;
 
     if (currentSession == null) {
-      return CompanySwitchResult.failure('No active session to switch company from');
+      return CompanySwitchResult.failure(
+        'No active session to switch company from',
+      );
     }
 
     final previousCompanyId = currentSession.currentCompanyId ?? '';
@@ -576,7 +583,6 @@ class AuthController extends StateNotifier<AuthState> {
       session: session,
     );
   }
-
 
   Future<void> logoutRemote() async {
     try {
@@ -755,4 +761,3 @@ final permissionGuardProvider = Provider<PermissionGuard>((ref) {
     return ref.read(authStateProvider).hasAnyPermission(codes);
   });
 });
-

@@ -37,10 +37,10 @@ class DashboardServicesController
     required SettingsRepository repository,
     required ModuleRegistry registry,
     String companyId = '',
-  })  : _repository = repository,
-        _registry = registry,
-        _companyId = companyId,
-        super(AsyncValue.data(_defaultIdsForRegistry(registry))) {
+  }) : _repository = repository,
+       _registry = registry,
+       _companyId = companyId,
+       super(AsyncValue.data(_defaultIdsForRegistry(registry))) {
     _load();
   }
 

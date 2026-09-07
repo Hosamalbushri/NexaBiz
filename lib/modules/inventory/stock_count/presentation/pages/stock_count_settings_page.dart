@@ -13,10 +13,12 @@ class StockCountSettingsPage extends ConsumerStatefulWidget {
   const StockCountSettingsPage({super.key});
 
   @override
-  ConsumerState<StockCountSettingsPage> createState() => _StockCountSettingsPageState();
+  ConsumerState<StockCountSettingsPage> createState() =>
+      _StockCountSettingsPageState();
 }
 
-class _StockCountSettingsPageState extends ConsumerState<StockCountSettingsPage> {
+class _StockCountSettingsPageState
+    extends ConsumerState<StockCountSettingsPage> {
   bool _requireVarianceApproval = true;
   bool _continuousBarcodeMode = false;
   bool _allowNegativeStockAdjust = false;
@@ -47,7 +49,9 @@ class _StockCountSettingsPageState extends ConsumerState<StockCountSettingsPage>
             ),
           ),
           SettingsGroupLabel(
-            l10n.localeName == 'ar' ? 'سياسات الجرد والتسوية' : 'Counting & Adjustment Policies',
+            l10n.localeName == 'ar'
+                ? 'سياسات الجرد والتسوية'
+                : 'Counting & Adjustment Policies',
           ),
           SettingsGroup(
             children: [
@@ -58,7 +62,11 @@ class _StockCountSettingsPageState extends ConsumerState<StockCountSettingsPage>
                   _showSavedMessage(context, l10n);
                 },
                 secondary: const Icon(Icons.fact_check_outlined),
-                title: Text(l10n.localeName == 'ar' ? 'اشتراط واعتماد الفوارق' : 'Require Variance Approval'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'اشتراط واعتماد الفوارق'
+                      : 'Require Variance Approval',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'يتطلب اعتماد المشرف عند وجود فارق بين الكمية الفعلية والدفترية'
@@ -72,7 +80,11 @@ class _StockCountSettingsPageState extends ConsumerState<StockCountSettingsPage>
                   _showSavedMessage(context, l10n);
                 },
                 secondary: const Icon(Icons.warning_amber_rounded),
-                title: Text(l10n.localeName == 'ar' ? 'السماح بتسوية الفروق السالبة' : 'Allow Negative Adjustments'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'السماح بتسوية الفروق السالبة'
+                      : 'Allow Negative Adjustments',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'السماح بتسوية الأصناف حتى وإن تسببت برصيد مخزون بالسالب'
@@ -83,7 +95,9 @@ class _StockCountSettingsPageState extends ConsumerState<StockCountSettingsPage>
           ),
           const SizedBox(height: AppSpacing.md),
           SettingsGroupLabel(
-            l10n.localeName == 'ar' ? 'خيارات الماسح والحفظ' : 'Scanner & Auto-Save Options',
+            l10n.localeName == 'ar'
+                ? 'خيارات الماسح والحفظ'
+                : 'Scanner & Auto-Save Options',
           ),
           SettingsGroup(
             children: [
@@ -94,7 +108,11 @@ class _StockCountSettingsPageState extends ConsumerState<StockCountSettingsPage>
                   _showSavedMessage(context, l10n);
                 },
                 secondary: const Icon(Icons.qr_code_scanner_rounded),
-                title: Text(l10n.localeName == 'ar' ? 'وضع المسح المستمر للباركود' : 'Continuous Barcode Scanning'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'وضع المسح المستمر للباركود'
+                      : 'Continuous Barcode Scanning',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'زيادة الكمية تلقائياً بقيمة 1 عند كل عملية مسح دون إغلاق الماسح'
@@ -103,7 +121,11 @@ class _StockCountSettingsPageState extends ConsumerState<StockCountSettingsPage>
               ),
               ListTile(
                 leading: const Icon(Icons.timer_outlined),
-                title: Text(l10n.localeName == 'ar' ? 'فترة الحفظ التلقائي المسودات' : 'Draft Auto-Save Interval'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'فترة الحفظ التلقائي المسودات'
+                      : 'Draft Auto-Save Interval',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'حفظ تلقائي كل $_autoSaveIntervalSeconds ثانية أثناء إجراء الجرد'

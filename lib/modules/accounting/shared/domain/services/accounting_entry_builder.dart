@@ -202,7 +202,9 @@ class AccountingEntryBuilder {
       }
 
       final taxRef = mapping.getRole(AccountRole.tax);
-      final taxAmount = (taxRef != null && sale.taxAmount > 0) ? sale.taxAmount : 0.0;
+      final taxAmount = (taxRef != null && sale.taxAmount > 0)
+          ? sale.taxAmount
+          : 0.0;
 
       if (taxAmount > 0 && taxRef != null) {
         await _validationService.assertCanPost(taxRef.accountUuid);

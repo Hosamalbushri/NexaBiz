@@ -86,7 +86,9 @@ class TypeInferrer {
     if (intMatches == total) {
       return TypeInferenceResult(
         inferredType: InferredPrimitiveType.integer,
-        confidence: total >= 3 ? DetectionConfidence.high : DetectionConfidence.medium,
+        confidence: total >= 3
+            ? DetectionConfidence.high
+            : DetectionConfidence.medium,
         sampleValues: representativeSamples,
         nullCount: nullCount,
         distinctCount: distinctCount,
@@ -96,7 +98,9 @@ class TypeInferrer {
     if (decMatches == total || (intMatches + decMatches == total)) {
       return TypeInferenceResult(
         inferredType: InferredPrimitiveType.decimal,
-        confidence: total >= 3 ? DetectionConfidence.high : DetectionConfidence.medium,
+        confidence: total >= 3
+            ? DetectionConfidence.high
+            : DetectionConfidence.medium,
         sampleValues: representativeSamples,
         nullCount: nullCount,
         distinctCount: distinctCount,
@@ -106,7 +110,9 @@ class TypeInferrer {
     if (boolMatches == total) {
       return TypeInferenceResult(
         inferredType: InferredPrimitiveType.boolean,
-        confidence: total >= 3 ? DetectionConfidence.high : DetectionConfidence.medium,
+        confidence: total >= 3
+            ? DetectionConfidence.high
+            : DetectionConfidence.medium,
         sampleValues: representativeSamples,
         nullCount: nullCount,
         distinctCount: distinctCount,
@@ -116,7 +122,9 @@ class TypeInferrer {
     if (dateTimeMatches == total) {
       return TypeInferenceResult(
         inferredType: InferredPrimitiveType.datetime,
-        confidence: total >= 3 ? DetectionConfidence.high : DetectionConfidence.medium,
+        confidence: total >= 3
+            ? DetectionConfidence.high
+            : DetectionConfidence.medium,
         sampleValues: representativeSamples,
         nullCount: nullCount,
         distinctCount: distinctCount,
@@ -126,7 +134,9 @@ class TypeInferrer {
     if (dateMatches == total || (dateMatches + dateTimeMatches == total)) {
       return TypeInferenceResult(
         inferredType: InferredPrimitiveType.date,
-        confidence: total >= 3 ? DetectionConfidence.high : DetectionConfidence.medium,
+        confidence: total >= 3
+            ? DetectionConfidence.high
+            : DetectionConfidence.medium,
         sampleValues: representativeSamples,
         nullCount: nullCount,
         distinctCount: distinctCount,
@@ -134,7 +144,10 @@ class TypeInferrer {
     }
 
     // Mixed/conflicting primitive types
-    if (intMatches > 0 || decMatches > 0 || dateMatches > 0 || boolMatches > 0) {
+    if (intMatches > 0 ||
+        decMatches > 0 ||
+        dateMatches > 0 ||
+        boolMatches > 0) {
       return TypeInferenceResult(
         inferredType: InferredPrimitiveType.nullOrMixed,
         confidence: DetectionConfidence.low,

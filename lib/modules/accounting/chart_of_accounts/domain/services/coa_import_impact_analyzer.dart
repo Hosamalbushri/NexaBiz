@@ -48,13 +48,13 @@ class CoaImportImpactAnalyzer {
     Map<String, int> postedUsageCounts = const {},
   }) {
     final Map<String, Account> existingByUuid = {
-      for (final a in existingAccounts) a.uuid: a
+      for (final a in existingAccounts) a.uuid: a,
     };
     final Map<String, Account> candidateByUuid = {
-      for (final a in candidateAccounts) a.uuid: a
+      for (final a in candidateAccounts) a.uuid: a,
     };
     final Map<String, Account> existingByCode = {
-      for (final a in existingAccounts) a.accountCode: a
+      for (final a in existingAccounts) a.accountCode: a,
     };
 
     final List<Account> accountsAdded = [];
@@ -72,7 +72,9 @@ class CoaImportImpactAnalyzer {
     // Tenant boundary validation
     for (final cand in candidateAccounts) {
       if (cand.companyId != companyId) {
-        blockingReasons.add('خطأ أمان: الحساب (${cand.accountCode} - ${cand.name}) يتبع شركة أخرى (${cand.companyId}).');
+        blockingReasons.add(
+          'خطأ أمان: الحساب (${cand.accountCode} - ${cand.name}) يتبع شركة أخرى (${cand.companyId}).',
+        );
       }
     }
 

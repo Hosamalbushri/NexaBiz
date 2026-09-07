@@ -16,11 +16,9 @@ class StockIssues extends Table {
 
   TextColumn get accountName => text().nullable()();
 
-  TextColumn get currencyCode =>
-      text().withDefault(const Constant('SAR'))();
+  TextColumn get currencyCode => text().withDefault(const Constant('SAR'))();
 
-  RealColumn get exchangeRate =>
-      real().withDefault(const Constant(1))();
+  RealColumn get exchangeRate => real().withDefault(const Constant(1))();
 
   IntColumn get voucherBookId => integer().nullable()();
 
@@ -35,8 +33,7 @@ class StockIssues extends Table {
   IntColumn get updatedAt => integer()();
 
   /// [SyncStatus.name] string.
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant('synced'))();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
 
   IntColumn get lastSyncedAt => integer().nullable()();
 

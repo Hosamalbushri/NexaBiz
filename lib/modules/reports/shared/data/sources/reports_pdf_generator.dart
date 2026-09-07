@@ -16,10 +16,6 @@ class ReportsPdfGenerator {
     required pw.Document document,
   }) async {
     final bytes = await renderPdf(document);
-    return ReportDocument(
-      title: title,
-      fileName: fileName,
-      bytes: bytes,
-    );
+    return ReportDocument(title: title, fileName: fileName, bytes: bytes);
   }
 }

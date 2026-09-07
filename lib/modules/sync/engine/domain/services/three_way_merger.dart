@@ -99,7 +99,8 @@ class ThreeWayMerger {
         isSuccess: false,
         mergeStatus: 'requires_user_resolution',
         conflictingFields: conflictingFields,
-        message: 'True field conflict detected in fields: ${conflictingFields.join(', ')}',
+        message:
+            'True field conflict detected in fields: ${conflictingFields.join(', ')}',
       );
     }
 

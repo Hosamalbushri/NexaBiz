@@ -53,10 +53,7 @@ class CreateFiscalYear {
   Future<void> _assertPostingAccount(String uuid) async {
     final account = await _accounts.getByUuid(uuid);
     if (account == null || !account.canPost) {
-      throw FiscalYearException(
-        FiscalYearException.fxAccountInvalid,
-        uuid,
-      );
+      throw FiscalYearException(FiscalYearException.fxAccountInvalid, uuid);
     }
   }
 }
@@ -241,15 +238,16 @@ class PeriodClosingService {
       if (gainUuid.isEmpty || lossUuid.isEmpty) {
         fxSkip = FiscalYearException.fxAccountsRequired;
       } else {
-        final plan = await FxRevaluationService(
-          journals: _journals,
-          rates: _rates,
-        ).build(
-          asOfInclusive: period.endDate,
-          baseCurrencyCode: fy.baseCurrencyCode,
-          fxGainAccountUuid: gainUuid,
-          fxLossAccountUuid: lossUuid,
-        );
+        final plan =
+            await FxRevaluationService(
+              journals: _journals,
+              rates: _rates,
+            ).build(
+              asOfInclusive: period.endDate,
+              baseCurrencyCode: fy.baseCurrencyCode,
+              fxGainAccountUuid: gainUuid,
+              fxLossAccountUuid: lossUuid,
+            );
         if (plan.hasDifferences) {
           final entry = await _posting.post(
             JournalEntryDraft(

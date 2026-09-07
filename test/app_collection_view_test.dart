@@ -4,11 +4,7 @@ import 'package:stock_count/core/widgets/app_collection_view.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(
-      home: Scaffold(
-        body: child,
-      ),
-    );
+    return MaterialApp(home: Scaffold(body: child));
   }
 
   testWidgets('renders ListView in list mode', (tester) async {

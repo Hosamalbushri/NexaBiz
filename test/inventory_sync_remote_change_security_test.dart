@@ -32,61 +32,74 @@ void main() {
   }
 
   group('ROOT FIX 10 — Inventory Synchronization Remote Change Security Tests', () {
-    test('1. Normal Remote Stock Receipt Application & Lines Persistence', () async {
-      final handler = createHandler('stock_receipt');
-      const receiptUuid = '00000000-0000-0000-0000-0000000000r1';
+    test(
+      '1. Normal Remote Stock Receipt Application & Lines Persistence',
+      () async {
+        final handler = createHandler('stock_receipt');
+        const receiptUuid = '00000000-0000-0000-0000-0000000000r1';
 
-      final change = SyncRemoteChange(
-        entityType: 'stock_receipt',
-        entityId: receiptUuid,
-        version: 1,
-        updatedAt: DateTime.utc(2026, 8, 30),
-        deleted: false,
-        payload: {
-          'companyId': currentCompany,
-          'receiptNumber': 'REC-REMOTE-001',
-          'supplier': 'Supplier Alpha',
-          'receiptDate': DateTime.utc(2026, 8, 30).millisecondsSinceEpoch,
-          'status': 'posted',
-          'postedAt': DateTime.utc(2026, 8, 30, 10, 0).millisecondsSinceEpoch,
-          'lines': [
-            {
-              'id': '00000000-0000-0000-0000-000000line01',
-              'itemCode': 'ITEM-R1',
-              'itemName': 'Remote Item 1',
-              'quantity': 100.0,
-              'unitCost': 15.0,
-              'totalCost': 1500.0,
-              'postedCost': 15.0,
-              'postedAt': DateTime.utc(2026, 8, 30, 10, 0).millisecondsSinceEpoch,
-            }
-          ]
-        },
-      );
+        final change = SyncRemoteChange(
+          entityType: 'stock_receipt',
+          entityId: receiptUuid,
+          version: 1,
+          updatedAt: DateTime.utc(2026, 8, 30),
+          deleted: false,
+          payload: {
+            'companyId': currentCompany,
+            'receiptNumber': 'REC-REMOTE-001',
+            'supplier': 'Supplier Alpha',
+            'receiptDate': DateTime.utc(2026, 8, 30).millisecondsSinceEpoch,
+            'status': 'posted',
+            'postedAt': DateTime.utc(2026, 8, 30, 10, 0).millisecondsSinceEpoch,
+            'lines': [
+              {
+                'id': '00000000-0000-0000-0000-000000line01',
+                'itemCode': 'ITEM-R1',
+                'itemName': 'Remote Item 1',
+                'quantity': 100.0,
+                'unitCost': 15.0,
+                'totalCost': 1500.0,
+                'postedCost': 15.0,
+                'postedAt': DateTime.utc(
+                  2026,
+                  8,
+                  30,
+                  10,
+                  0,
+                ).millisecondsSinceEpoch,
+              },
+            ],
+          },
+        );
 
-      await handler.applyRemoteChange(change);
+        await handler.applyRemoteChange(change);
 
-      // Verify header persisted in database
-      final receipt = await (db.select(db.stockReceipts)
-            ..where((t) => t.uuid.equals(receiptUuid) & t.companyId.equals(currentCompany)))
-          .getSingleOrNull();
+        // Verify header persisted in database
+        final receipt =
+            await (db.select(db.stockReceipts)..where(
+                  (t) =>
+                      t.uuid.equals(receiptUuid) &
+                      t.companyId.equals(currentCompany),
+                ))
+                .getSingleOrNull();
 
-      expect(receipt, isNotNull);
-      expect(receipt!.receiptNumber, equals('REC-REMOTE-001'));
-      expect(receipt.syncStatus, equals('synced'));
-      expect(receipt.version, equals(1));
-      expect(receipt.companyId, equals(currentCompany));
+        expect(receipt, isNotNull);
+        expect(receipt!.receiptNumber, equals('REC-REMOTE-001'));
+        expect(receipt.syncStatus, equals('synced'));
+        expect(receipt.version, equals(1));
+        expect(receipt.companyId, equals(currentCompany));
 
-      // Verify lines persisted
-      final lines = await (db.select(db.stockMovementLines)
-            ..where((t) => t.movementUuid.equals(receiptUuid)))
-          .get();
+        // Verify lines persisted
+        final lines = await (db.select(
+          db.stockMovementLines,
+        )..where((t) => t.movementUuid.equals(receiptUuid))).get();
 
-      expect(lines.length, equals(1));
-      expect(lines.first.itemCode, equals('ITEM-R1'));
-      expect(lines.first.quantity, equals(100.0));
-      expect(lines.first.totalCost, equals(1500.0));
-    });
+        expect(lines.length, equals(1));
+        expect(lines.first.itemCode, equals('ITEM-R1'));
+        expect(lines.first.quantity, equals(100.0));
+        expect(lines.first.totalCost, equals(1500.0));
+      },
+    );
 
     test('2. Cross-Tenant Remote Change Payload Rejection', () async {
       final handler = createHandler('stock_receipt');
@@ -102,24 +115,26 @@ void main() {
           'companyId': otherCompany, // Mismatched tenant
           'receiptNumber': 'REC-MALICIOUS-001',
           'supplier': 'Evil Corp',
-          'lines': []
+          'lines': [],
         },
       );
 
       // Must throw ArgumentError due to cross-tenant rejection
       expect(
         () => handler.applyRemoteChange(maliciousChange),
-        throwsA(isA<ArgumentError>().having(
-          (e) => e.message,
-          'message',
-          contains('Cross-tenant sync change rejected'),
-        )),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('Cross-tenant sync change rejected'),
+          ),
+        ),
       );
 
       // Verify DB was NOT touched
-      final receipt = await (db.select(db.stockReceipts)
-            ..where((t) => t.uuid.equals(receiptUuid)))
-          .getSingleOrNull();
+      final receipt = await (db.select(
+        db.stockReceipts,
+      )..where((t) => t.uuid.equals(receiptUuid))).getSingleOrNull();
       expect(receipt, isNull);
     });
 
@@ -145,17 +160,17 @@ void main() {
               'quantity': 50.0,
               'unitCost': 10.0,
               'totalCost': 500.0,
-            }
-          ]
+            },
+          ],
         },
       );
 
       // Apply first time
       await handler.applyRemoteChange(changeV1);
 
-      var lines = await (db.select(db.stockMovementLines)
-            ..where((t) => t.movementUuid.equals(issueUuid)))
-          .get();
+      var lines = await (db.select(
+        db.stockMovementLines,
+      )..where((t) => t.movementUuid.equals(issueUuid))).get();
       expect(lines.length, equals(1));
       expect(lines.first.quantity, equals(50.0));
 
@@ -178,24 +193,28 @@ void main() {
               'quantity': 999.0,
               'unitCost': 10.0,
               'totalCost': 9990.0,
-            }
-          ]
+            },
+          ],
         },
       );
 
       await handler.applyRemoteChange(duplicateChangeV1);
 
       // Verify original issue document was preserved and duplicate payload was ignored
-      final issue = await (db.select(db.stockIssues)
-            ..where((t) => t.uuid.equals(issueUuid) & t.companyId.equals(currentCompany)))
-          .getSingle();
+      final issue =
+          await (db.select(db.stockIssues)..where(
+                (t) =>
+                    t.uuid.equals(issueUuid) &
+                    t.companyId.equals(currentCompany),
+              ))
+              .getSingle();
 
       expect(issue.issueNumber, equals('ISS-IDEM-001'));
       expect(issue.destination, equals('Store A'));
 
-      lines = await (db.select(db.stockMovementLines)
-            ..where((t) => t.movementUuid.equals(issueUuid)))
-          .get();
+      lines = await (db.select(
+        db.stockMovementLines,
+      )..where((t) => t.movementUuid.equals(issueUuid))).get();
       expect(lines.length, equals(1));
       expect(lines.first.quantity, equals(50.0));
     });
@@ -206,7 +225,9 @@ void main() {
 
       // Seed local record with version = 5
       final now = DateTime.now().millisecondsSinceEpoch;
-      await db.into(db.stockTransfers).insert(
+      await db
+          .into(db.stockTransfers)
+          .insert(
             StockTransfersCompanion.insert(
               uuid: transferUuid,
               transferNumber: 'TR-LOCAL-V5',
@@ -239,9 +260,13 @@ void main() {
       await handler.applyRemoteChange(olderChange);
 
       // Verify version 5 remains untouched
-      final transfer = await (db.select(db.stockTransfers)
-            ..where((t) => t.uuid.equals(transferUuid) & t.companyId.equals(currentCompany)))
-          .getSingle();
+      final transfer =
+          await (db.select(db.stockTransfers)..where(
+                (t) =>
+                    t.uuid.equals(transferUuid) &
+                    t.companyId.equals(currentCompany),
+              ))
+              .getSingle();
 
       expect(transfer.transferNumber, equals('TR-LOCAL-V5'));
       expect(transfer.version, equals(5));
@@ -272,16 +297,20 @@ void main() {
               'quantity': 5.0,
               'unitCost': 10.0,
               'totalCost': 50.0,
-            }
-          ]
+            },
+          ],
         },
       );
 
       await handler.applyRemoteChange(change);
 
-      final retDoc = await (db.select(db.stockReturns)
-            ..where((t) => t.uuid.equals(returnUuid) & t.companyId.equals(currentCompany)))
-          .getSingleOrNull();
+      final retDoc =
+          await (db.select(db.stockReturns)..where(
+                (t) =>
+                    t.uuid.equals(returnUuid) &
+                    t.companyId.equals(currentCompany),
+              ))
+              .getSingleOrNull();
 
       expect(retDoc, isNotNull);
       expect(retDoc!.returnNumber, equals('RET-REMOTE-001'));
@@ -289,49 +318,62 @@ void main() {
       expect(retDoc.syncStatus, equals('synced'));
     });
 
-    test('6. markLocalSynced & markLocalConflict Updates Database Header Correctly', () async {
-      final handler = createHandler('stock_receipt');
-      const receiptUuid = '00000000-0000-0000-0000-0000000000m1';
+    test(
+      '6. markLocalSynced & markLocalConflict Updates Database Header Correctly',
+      () async {
+        final handler = createHandler('stock_receipt');
+        const receiptUuid = '00000000-0000-0000-0000-0000000000m1';
 
-      final now = DateTime.now().millisecondsSinceEpoch;
-      await db.into(db.stockReceipts).insert(
-            StockReceiptsCompanion.insert(
-              uuid: receiptUuid,
-              receiptNumber: 'REC-MARK-001',
-              receiptDate: now,
-              companyId: const Value(currentCompany),
-              syncStatus: const Value('pending'),
-              version: const Value(1),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
+        final now = DateTime.now().millisecondsSinceEpoch;
+        await db
+            .into(db.stockReceipts)
+            .insert(
+              StockReceiptsCompanion.insert(
+                uuid: receiptUuid,
+                receiptNumber: 'REC-MARK-001',
+                receiptDate: now,
+                companyId: const Value(currentCompany),
+                syncStatus: const Value('pending'),
+                version: const Value(1),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
 
-      // Test markLocalSynced
-      await handler.markLocalSynced(
-        entityId: receiptUuid,
-        remoteVersion: 2,
-        syncedAt: DateTime.utc(2026, 8, 30),
-      );
+        // Test markLocalSynced
+        await handler.markLocalSynced(
+          entityId: receiptUuid,
+          remoteVersion: 2,
+          syncedAt: DateTime.utc(2026, 8, 30),
+        );
 
-      var receipt = await (db.select(db.stockReceipts)
-            ..where((t) => t.uuid.equals(receiptUuid) & t.companyId.equals(currentCompany)))
-          .getSingle();
+        var receipt =
+            await (db.select(db.stockReceipts)..where(
+                  (t) =>
+                      t.uuid.equals(receiptUuid) &
+                      t.companyId.equals(currentCompany),
+                ))
+                .getSingle();
 
-      expect(receipt.syncStatus, equals('synced'));
-      expect(receipt.version, equals(2));
+        expect(receipt.syncStatus, equals('synced'));
+        expect(receipt.version, equals(2));
 
-      // Test markLocalConflict
-      await handler.markLocalConflict(
-        entityId: receiptUuid,
-        message: 'Version mismatch detected during sync',
-      );
+        // Test markLocalConflict
+        await handler.markLocalConflict(
+          entityId: receiptUuid,
+          message: 'Version mismatch detected during sync',
+        );
 
-      receipt = await (db.select(db.stockReceipts)
-            ..where((t) => t.uuid.equals(receiptUuid) & t.companyId.equals(currentCompany)))
-          .getSingle();
+        receipt =
+            await (db.select(db.stockReceipts)..where(
+                  (t) =>
+                      t.uuid.equals(receiptUuid) &
+                      t.companyId.equals(currentCompany),
+                ))
+                .getSingle();
 
-      expect(receipt.syncStatus, equals('conflict'));
-    });
+        expect(receipt.syncStatus, equals('conflict'));
+      },
+    );
   });
 }

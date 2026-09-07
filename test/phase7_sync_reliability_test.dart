@@ -74,16 +74,15 @@ class Phase7MockEntityHandler implements SyncEntityHandler {
   Future<void> abandonPull() async {}
 
   @override
-  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async => null;
+  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async =>
+      null;
 }
 
 class Phase7MockRemoteSyncApi implements RemoteSyncApi {
-  Phase7MockRemoteSyncApi({
-    this.batchPushHandler,
-    this.pullHandler,
-  });
+  Phase7MockRemoteSyncApi({this.batchPushHandler, this.pullHandler});
 
-  final Future<List<SyncBatchPushItemResult>> Function(List<SyncOperation> ops)? batchPushHandler;
+  final Future<List<SyncBatchPushItemResult>> Function(List<SyncOperation> ops)?
+  batchPushHandler;
   final Future<List<SyncRemoteChange>> Function()? pullHandler;
 
   @override
@@ -95,7 +94,9 @@ class Phase7MockRemoteSyncApi implements RemoteSyncApi {
   }
 
   @override
-  Future<List<SyncBatchPushItemResult>> pushBatch(List<SyncOperation> operations) async {
+  Future<List<SyncBatchPushItemResult>> pushBatch(
+    List<SyncOperation> operations,
+  ) async {
     if (batchPushHandler != null) {
       return await batchPushHandler!(operations);
     }
@@ -104,7 +105,10 @@ class Phase7MockRemoteSyncApi implements RemoteSyncApi {
           (op) => SyncBatchPushItemResult(
             operationId: op.id,
             status: 'success',
-            ack: SyncUploadAck(entityId: op.entityId, remoteVersion: op.baseVersion + 1),
+            ack: SyncUploadAck(
+              entityId: op.entityId,
+              remoteVersion: op.baseVersion + 1,
+            ),
           ),
         )
         .toList();
@@ -151,12 +155,10 @@ void main() {
       Hive.registerAdapter(SyncOperationAdapter());
     }
 
-    final box = await Hive.openBox<SyncOperation>('test_sync_queue_${DateTime.now().microsecondsSinceEpoch}');
-    queue = SyncQueue(
-      box: box,
-      companyId: companyA,
-      deviceId: deviceA,
+    final box = await Hive.openBox<SyncOperation>(
+      'test_sync_queue_${DateTime.now().microsecondsSinceEpoch}',
     );
+    queue = SyncQueue(box: box, companyId: companyA, deviceId: deviceA);
 
     connectivity = ConnectivityService(internetProbe: () async => true);
   });
@@ -168,315 +170,367 @@ void main() {
   });
 
   group('Phase 7 — Production Synchronization Reliability & Recovery', () {
-    test('1. SyncErrorClassifier maps failures correctly to retryable or quarantine policies', () {
-      final netErr = SyncErrorClassifier.classify(const NetworkFailure());
-      expect(netErr.isRetryable, isTrue);
-      expect(netErr.quarantine, isFalse);
+    test(
+      '1. SyncErrorClassifier maps failures correctly to retryable or quarantine policies',
+      () {
+        final netErr = SyncErrorClassifier.classify(const NetworkFailure());
+        expect(netErr.isRetryable, isTrue);
+        expect(netErr.quarantine, isFalse);
 
-      final tenantErr = SyncErrorClassifier.classify(const AuthorizationFailure.withDetails(code: 'tenant_mismatch'));
-      expect(tenantErr.isRetryable, isFalse);
-      expect(tenantErr.quarantine, isTrue);
+        final tenantErr = SyncErrorClassifier.classify(
+          const AuthorizationFailure.withDetails(code: 'tenant_mismatch'),
+        );
+        expect(tenantErr.isRetryable, isFalse);
+        expect(tenantErr.quarantine, isTrue);
 
-      final authErr = SyncErrorClassifier.classify(const AuthenticationFailure());
-      expect(authErr.requiresAuthentication, isTrue);
-      expect(authErr.quarantine, isFalse);
-    });
+        final authErr = SyncErrorClassifier.classify(
+          const AuthenticationFailure(),
+        );
+        expect(authErr.requiresAuthentication, isTrue);
+        expect(authErr.quarantine, isFalse);
+      },
+    );
 
-    test('2. Lease-based crash recovery ignores active leases and reclaims expired leases (> 5 min)', () async {
-      final now = DateTime.utc(2026, 8, 26, 12, 0);
+    test(
+      '2. Lease-based crash recovery ignores active leases and reclaims expired leases (> 5 min)',
+      () async {
+        final now = DateTime.utc(2026, 8, 26, 12, 0);
 
-      // Active lease op (updated 1 min ago)
-      final activeOp = SyncOperation(
-        id: 'op-active',
-        entityType: 'product',
-        entityId: 'p1',
-        type: SyncOperationType.create,
-        status: SyncStatus.syncing,
-        payload: {'name': 'Active Product'},
-        createdAt: now.subtract(const Duration(minutes: 1)),
-        updatedAt: now.subtract(const Duration(minutes: 1)),
-        companyId: companyA,
-        deviceId: deviceA,
-      );
+        // Active lease op (updated 1 min ago)
+        final activeOp = SyncOperation(
+          id: 'op-active',
+          entityType: 'product',
+          entityId: 'p1',
+          type: SyncOperationType.create,
+          status: SyncStatus.syncing,
+          payload: {'name': 'Active Product'},
+          createdAt: now.subtract(const Duration(minutes: 1)),
+          updatedAt: now.subtract(const Duration(minutes: 1)),
+          companyId: companyA,
+          deviceId: deviceA,
+        );
 
-      // Expired lease op (updated 10 min ago)
-      final expiredOp = SyncOperation(
-        id: 'op-expired',
-        entityType: 'product',
-        entityId: 'p2',
-        type: SyncOperationType.create,
-        status: SyncStatus.syncing,
-        payload: {'name': 'Expired Product'},
-        createdAt: now.subtract(const Duration(minutes: 10)),
-        updatedAt: now.subtract(const Duration(minutes: 10)),
-        companyId: companyA,
-        deviceId: deviceA,
-      );
+        // Expired lease op (updated 10 min ago)
+        final expiredOp = SyncOperation(
+          id: 'op-expired',
+          entityType: 'product',
+          entityId: 'p2',
+          type: SyncOperationType.create,
+          status: SyncStatus.syncing,
+          payload: {'name': 'Expired Product'},
+          createdAt: now.subtract(const Duration(minutes: 10)),
+          updatedAt: now.subtract(const Duration(minutes: 10)),
+          companyId: companyA,
+          deviceId: deviceA,
+        );
 
-      await queue.update(activeOp);
-      await queue.update(expiredOp);
+        await queue.update(activeOp);
+        await queue.update(expiredOp);
 
-      final reclaimed = await queue.reclaimInFlight(now: now, lease: const Duration(minutes: 5));
-      expect(reclaimed, equals(1));
+        final reclaimed = await queue.reclaimInFlight(
+          now: now,
+          lease: const Duration(minutes: 5),
+        );
+        expect(reclaimed, equals(1));
 
-      final all = await queue.all();
-      final op1 = all.firstWhere((o) => o.id == 'op-active');
-      final op2 = all.firstWhere((o) => o.id == 'op-expired');
+        final all = await queue.all();
+        final op1 = all.firstWhere((o) => o.id == 'op-active');
+        final op2 = all.firstWhere((o) => o.id == 'op-expired');
 
-      expect(op1.status, equals(SyncStatus.syncing));
-      expect(op2.status, equals(SyncStatus.pending));
-    });
+        expect(op1.status, equals(SyncStatus.syncing));
+        expect(op2.status, equals(SyncStatus.pending));
+      },
+    );
 
     test('3. Bounded exponential backoff caps at 60 seconds with jitter', () {
       final backoffAttempt1 = syncBackoffForAttempt(1);
       final backoffAttempt10 = syncBackoffForAttempt(10);
 
       expect(backoffAttempt1.inSeconds, lessThanOrEqualTo(3));
-      expect(backoffAttempt10.inSeconds, lessThanOrEqualTo(61)); // 60s base + jitter ms
+      expect(
+        backoffAttempt10.inSeconds,
+        lessThanOrEqualTo(61),
+      ); // 60s base + jitter ms
       expect(backoffAttempt10.inSeconds, greaterThanOrEqualTo(60));
     });
 
-    test('4. Operations reaching max retry attempts (5) are automatically quarantined', () async {
-      final op = SyncOperation(
-        id: 'op-max-retry',
-        entityType: 'product',
-        entityId: 'p-retry',
-        type: SyncOperationType.create,
-        status: SyncStatus.pending,
-        payload: {'sku': 'SKU-RETRY'},
-        createdAt: DateTime.now().toUtc(),
-        updatedAt: DateTime.now().toUtc(),
-        attemptCount: 4, // 5th attempt will fail
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.update(op);
+    test(
+      '4. Operations reaching max retry attempts (5) are automatically quarantined',
+      () async {
+        final op = SyncOperation(
+          id: 'op-max-retry',
+          entityType: 'product',
+          entityId: 'p-retry',
+          type: SyncOperationType.create,
+          status: SyncStatus.pending,
+          payload: {'sku': 'SKU-RETRY'},
+          createdAt: DateTime.now().toUtc(),
+          updatedAt: DateTime.now().toUtc(),
+          attemptCount: 4, // 5th attempt will fail
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.update(op);
 
-      final handler = Phase7MockEntityHandler(entityType: 'product');
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-        remoteProvider: () => Phase7MockRemoteSyncApi(
-          batchPushHandler: (ops) async => [
-            SyncBatchPushItemResult(
-              operationId: ops.first.id,
-              status: 'error',
-              failure: const ServerFailure('Internal Server Error 500'),
-            ),
-          ],
-        ),
-      );
-      manager.registerHandler(handler);
-      await manager.setEnabled(true);
+        final handler = Phase7MockEntityHandler(entityType: 'product');
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+          remoteProvider: () => Phase7MockRemoteSyncApi(
+            batchPushHandler: (ops) async => [
+              SyncBatchPushItemResult(
+                operationId: ops.first.id,
+                status: 'error',
+                failure: const ServerFailure('Internal Server Error 500'),
+              ),
+            ],
+          ),
+        );
+        manager.registerHandler(handler);
+        await manager.setEnabled(true);
 
-      final result = await manager.syncNow();
-      expect(result.failed, equals(1));
+        final result = await manager.syncNow();
+        expect(result.failed, equals(1));
 
-      final all = await queue.all();
-      final updated = all.firstWhere((o) => o.id == 'op-max-retry');
-      expect(updated.status, equals(SyncStatus.quarantined));
-      expect(updated.lastError, contains('Exceeded max retry attempts'));
-    });
+        final all = await queue.all();
+        final updated = all.firstWhere((o) => o.id == 'op-max-retry');
+        expect(updated.status, equals(SyncStatus.quarantined));
+        expect(updated.lastError, contains('Exceeded max retry attempts'));
+      },
+    );
 
-    test('5. Quarantine isolation & resetQuarantine controlled recovery', () async {
-      await queue.quarantine('op-quarantine-test', error: 'Manual Quarantine Test');
-      
-      final op = SyncOperation(
-        id: 'op-quarantine-test',
-        entityType: 'product',
-        entityId: 'p-q',
-        type: SyncOperationType.create,
-        status: SyncStatus.quarantined,
-        payload: {'name': 'Quarantined Product'},
-        createdAt: DateTime.now().toUtc(),
-        updatedAt: DateTime.now().toUtc(),
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.update(op);
+    test(
+      '5. Quarantine isolation & resetQuarantine controlled recovery',
+      () async {
+        await queue.quarantine(
+          'op-quarantine-test',
+          error: 'Manual Quarantine Test',
+        );
 
-      final readyBefore = await queue.peekReady();
-      expect(readyBefore.any((o) => o.id == 'op-quarantine-test'), isFalse);
+        final op = SyncOperation(
+          id: 'op-quarantine-test',
+          entityType: 'product',
+          entityId: 'p-q',
+          type: SyncOperationType.create,
+          status: SyncStatus.quarantined,
+          payload: {'name': 'Quarantined Product'},
+          createdAt: DateTime.now().toUtc(),
+          updatedAt: DateTime.now().toUtc(),
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.update(op);
 
-      await queue.resetQuarantine('op-quarantine-test');
+        final readyBefore = await queue.peekReady();
+        expect(readyBefore.any((o) => o.id == 'op-quarantine-test'), isFalse);
 
-      final readyAfter = await queue.peekReady();
-      expect(readyAfter.any((o) => o.id == 'op-quarantine-test'), isTrue);
-      expect(readyAfter.firstWhere((o) => o.id == 'op-quarantine-test').status, equals(SyncStatus.pending));
-    });
+        await queue.resetQuarantine('op-quarantine-test');
 
-    test('6. Concurrent syncNow calls reuses ongoing Future (Sync Mutex)', () async {
-      final completer = Completer<List<SyncBatchPushItemResult>>();
-      final op = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-mutex',
-        type: SyncOperationType.create,
-        payload: {'name': 'Mutex Product'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op);
+        final readyAfter = await queue.peekReady();
+        expect(readyAfter.any((o) => o.id == 'op-quarantine-test'), isTrue);
+        expect(
+          readyAfter.firstWhere((o) => o.id == 'op-quarantine-test').status,
+          equals(SyncStatus.pending),
+        );
+      },
+    );
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-        remoteProvider: () => Phase7MockRemoteSyncApi(
-          batchPushHandler: (ops) => completer.future,
-        ),
-      );
-      manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
-      await manager.setEnabled(true);
+    test(
+      '6. Concurrent syncNow calls reuses ongoing Future (Sync Mutex)',
+      () async {
+        final completer = Completer<List<SyncBatchPushItemResult>>();
+        final op = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-mutex',
+          type: SyncOperationType.create,
+          payload: {'name': 'Mutex Product'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op);
 
-      final f1 = manager.syncNow();
-      final f2 = manager.syncNow(); // Concurrent invocation
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+          remoteProvider: () => Phase7MockRemoteSyncApi(
+            batchPushHandler: (ops) => completer.future,
+          ),
+        );
+        manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
+        await manager.setEnabled(true);
 
-      expect(identical(f1, f2), isTrue);
+        final f1 = manager.syncNow();
+        final f2 = manager.syncNow(); // Concurrent invocation
 
-      completer.complete([
-        SyncBatchPushItemResult(
-          operationId: op.id,
-          status: 'success',
-          ack: SyncUploadAck(entityId: 'p-mutex', remoteVersion: 1),
-        ),
-      ]);
+        expect(identical(f1, f2), isTrue);
 
-      final res1 = await f1;
-      final res2 = await f2;
-      expect(res1.uploaded, equals(1));
-      expect(res2.uploaded, equals(1));
-    });
+        completer.complete([
+          SyncBatchPushItemResult(
+            operationId: op.id,
+            status: 'success',
+            ack: SyncUploadAck(entityId: 'p-mutex', remoteVersion: 1),
+          ),
+        ]);
 
-    test('7. Partial batch failure acknowledges success items and retains failed items', () async {
-      final op1 = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-batch-1',
-        type: SyncOperationType.create,
-        payload: {'sku': 'P1'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      final op2 = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-batch-2',
-        type: SyncOperationType.create,
-        payload: {'sku': 'P2'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op1);
-      await queue.enqueue(op2);
+        final res1 = await f1;
+        final res2 = await f2;
+        expect(res1.uploaded, equals(1));
+        expect(res2.uploaded, equals(1));
+      },
+    );
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-        remoteProvider: () => Phase7MockRemoteSyncApi(
-          batchPushHandler: (ops) async => [
-            SyncBatchPushItemResult(
-              operationId: ops[0].id,
-              status: 'success',
-              ack: SyncUploadAck(entityId: ops[0].entityId, remoteVersion: 1),
-            ),
-            SyncBatchPushItemResult(
-              operationId: ops[1].id,
-              status: 'error',
-              failure: const ServerFailure('Database lock timeout 500'),
-            ),
-          ],
-        ),
-      );
-      manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
-      await manager.setEnabled(true);
+    test(
+      '7. Partial batch failure acknowledges success items and retains failed items',
+      () async {
+        final op1 = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-batch-1',
+          type: SyncOperationType.create,
+          payload: {'sku': 'P1'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        final op2 = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-batch-2',
+          type: SyncOperationType.create,
+          payload: {'sku': 'P2'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op1);
+        await queue.enqueue(op2);
 
-      final res = await manager.syncNow();
-      expect(res.uploaded, equals(1));
-      expect(res.failed, equals(1));
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+          remoteProvider: () => Phase7MockRemoteSyncApi(
+            batchPushHandler: (ops) async => [
+              SyncBatchPushItemResult(
+                operationId: ops[0].id,
+                status: 'success',
+                ack: SyncUploadAck(entityId: ops[0].entityId, remoteVersion: 1),
+              ),
+              SyncBatchPushItemResult(
+                operationId: ops[1].id,
+                status: 'error',
+                failure: const ServerFailure('Database lock timeout 500'),
+              ),
+            ],
+          ),
+        );
+        manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
+        await manager.setEnabled(true);
 
-      final remaining = await queue.all();
-      expect(remaining.length, equals(1));
-      expect(remaining.first.id, equals(op2.id));
-      expect(remaining.first.status, equals(SyncStatus.failed));
-    });
+        final res = await manager.syncNow();
+        expect(res.uploaded, equals(1));
+        expect(res.failed, equals(1));
 
-    test('8. Cross-tenant or cross-device operations are immediately quarantined', () async {
-      final box = await Hive.openBox<SyncOperation>('test_phase7_spoof_${DateTime.now().microsecondsSinceEpoch}');
-      final unscopedQueue = SyncQueue(box: box, companyId: null, deviceId: deviceA);
+        final remaining = await queue.all();
+        expect(remaining.length, equals(1));
+        expect(remaining.first.id, equals(op2.id));
+        expect(remaining.first.status, equals(SyncStatus.failed));
+      },
+    );
 
-      final crossTenantOp = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-cross',
-        type: SyncOperationType.create,
-        payload: {'sku': 'CROSS'},
-        companyId: 'company-OTHER',
-        deviceId: deviceA,
-      );
-      await unscopedQueue.update(crossTenantOp);
+    test(
+      '8. Cross-tenant or cross-device operations are immediately quarantined',
+      () async {
+        final box = await Hive.openBox<SyncOperation>(
+          'test_phase7_spoof_${DateTime.now().microsecondsSinceEpoch}',
+        );
+        final unscopedQueue = SyncQueue(
+          box: box,
+          companyId: null,
+          deviceId: deviceA,
+        );
 
-      final manager = SyncManager(
-        queue: unscopedQueue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.trusted,
-        isTimeTrusted: () => true,
-        remoteProvider: () => Phase7MockRemoteSyncApi(),
-      );
-      manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
-      await manager.setEnabled(true);
+        final crossTenantOp = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-cross',
+          type: SyncOperationType.create,
+          payload: {'sku': 'CROSS'},
+          companyId: 'company-OTHER',
+          deviceId: deviceA,
+        );
+        await unscopedQueue.update(crossTenantOp);
 
-      final res = await manager.syncNow();
-      expect(res.failed, equals(1));
+        final manager = SyncManager(
+          queue: unscopedQueue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.trusted,
+          isTimeTrusted: () => true,
+          remoteProvider: () => Phase7MockRemoteSyncApi(),
+        );
+        manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
+        await manager.setEnabled(true);
 
-      final all = await unscopedQueue.all();
-      final item = all.firstWhere((o) => o.id == crossTenantOp.id);
-      expect(item.status, equals(SyncStatus.quarantined));
-      expect(item.lastError, contains('Cross-tenant operation upload blocked'));
-    });
+        final res = await manager.syncNow();
+        expect(res.failed, equals(1));
 
-    test('9. TrustedClock tamper detection blocks sync without quarantining valid queue', () async {
-      final op = SyncOperation.create(
-        entityType: 'product',
-        entityId: 'p-clock',
-        type: SyncOperationType.create,
-        payload: {'sku': 'CLOCK'},
-        companyId: companyA,
-        deviceId: deviceA,
-      );
-      await queue.enqueue(op);
+        final all = await unscopedQueue.all();
+        final item = all.firstWhere((o) => o.id == crossTenantOp.id);
+        expect(item.status, equals(SyncStatus.quarantined));
+        expect(
+          item.lastError,
+          contains('Cross-tenant operation upload blocked'),
+        );
+      },
+    );
 
-      final manager = SyncManager(
-        queue: queue,
-        connectivity: connectivity,
-        hasSyncCapability: () => true,
-        hasSyncPermission: () => true,
-        readCompanyId: () => companyA,
-        readClockState: () => ClockIntegrityState.tampered,
-        isTimeTrusted: () => false,
-        remoteProvider: () => Phase7MockRemoteSyncApi(),
-      );
-      manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
-      await manager.setEnabled(true);
+    test(
+      '9. TrustedClock tamper detection blocks sync without quarantining valid queue',
+      () async {
+        final op = SyncOperation.create(
+          entityType: 'product',
+          entityId: 'p-clock',
+          type: SyncOperationType.create,
+          payload: {'sku': 'CLOCK'},
+          companyId: companyA,
+          deviceId: deviceA,
+        );
+        await queue.enqueue(op);
 
-      final res = await manager.syncNow();
-      expect(res.outcome, equals(SyncPassOutcome.clockTampered));
+        final manager = SyncManager(
+          queue: queue,
+          connectivity: connectivity,
+          hasSyncCapability: () => true,
+          hasSyncPermission: () => true,
+          readCompanyId: () => companyA,
+          readClockState: () => ClockIntegrityState.tampered,
+          isTimeTrusted: () => false,
+          remoteProvider: () => Phase7MockRemoteSyncApi(),
+        );
+        manager.registerHandler(Phase7MockEntityHandler(entityType: 'product'));
+        await manager.setEnabled(true);
 
-      final all = await queue.all();
-      expect(all.first.status, equals(SyncStatus.pending)); // Remained pending, not deleted or quarantined
-    });
+        final res = await manager.syncNow();
+        expect(res.outcome, equals(SyncPassOutcome.clockTampered));
+
+        final all = await queue.all();
+        expect(
+          all.first.status,
+          equals(SyncStatus.pending),
+        ); // Remained pending, not deleted or quarantined
+      },
+    );
   });
 }

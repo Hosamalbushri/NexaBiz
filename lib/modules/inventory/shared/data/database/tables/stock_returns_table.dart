@@ -17,6 +17,7 @@ class StockReturns extends Table {
   IntColumn get lastSyncedAt => integer().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
   TextColumn get companyId => text().nullable()();
+
   /// Document posting status ('draft', 'posted', 'cancelled')
   TextColumn get status => text().withDefault(const Constant('draft'))();
 

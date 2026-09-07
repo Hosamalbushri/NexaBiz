@@ -77,11 +77,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
       return auth.post(path, body: body);
     }
     return _client
-        .post(
-          _uri(path),
-          headers: await _legacyHeaders,
-          body: jsonEncode(body),
-        )
+        .post(_uri(path), headers: await _legacyHeaders, body: jsonEncode(body))
         .timeout(_config.timeout);
   }
 
@@ -105,6 +101,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
         'entity_type': entityType,
         'operation': {
           'operation_id': operation.id,
+          'idempotency_key': operation.id,
           'entity_type': entityType,
           'entity_id': operation.entityId,
           'type': operation.type.name,
@@ -112,6 +109,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
           'base_version': operation.baseVersion,
           'company_id': operation.companyId,
           'device_id': operation.deviceId,
+          'created_at': operation.createdAt.toUtc().toIso8601String(),
         },
       };
 
@@ -154,6 +152,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
           for (final op in operations)
             {
               'operation_id': op.id,
+              'idempotency_key': op.id,
               'entity_type': op.entityType,
               'entity_id': op.entityId,
               'type': op.type.name,
@@ -161,6 +160,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
               'base_version': op.baseVersion,
               'company_id': op.companyId,
               'device_id': op.deviceId,
+              'created_at': op.createdAt.toUtc().toIso8601String(),
             },
         ],
       };
@@ -204,7 +204,8 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
             entityType: details['entity_type'] as String?,
             entityId: details['entity_id'] as String? ?? operationId,
             serverVersion: (details['server_version'] as num?)?.toInt() ?? 0,
-            clientBaseVersion: (details['client_base_version'] as num?)?.toInt() ?? 0,
+            clientBaseVersion:
+                (details['client_base_version'] as num?)?.toInt() ?? 0,
             serverRecord: details['server_record'] is Map
                 ? Map<String, dynamic>.from(details['server_record'] as Map)
                 : null,
@@ -408,7 +409,8 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
               entityType: details['entity_type'] as String?,
               entityId: details['entity_id'] as String?,
               serverVersion: (details['server_version'] as num?)?.toInt() ?? 0,
-              clientBaseVersion: (details['client_base_version'] as num?)?.toInt() ?? 0,
+              clientBaseVersion:
+                  (details['client_base_version'] as num?)?.toInt() ?? 0,
               serverRecord: details['server_record'] is Map
                   ? Map<String, dynamic>.from(details['server_record'] as Map)
                   : null,
@@ -460,7 +462,8 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
           entityType: details['entity_type'] as String? ?? entityType,
           entityId: details['entity_id'] as String? ?? entityId,
           serverVersion: (details['server_version'] as num?)?.toInt() ?? 0,
-          clientBaseVersion: (details['client_base_version'] as num?)?.toInt() ?? 0,
+          clientBaseVersion:
+              (details['client_base_version'] as num?)?.toInt() ?? 0,
           serverRecord: details['server_record'] is Map
               ? Map<String, dynamic>.from(details['server_record'] as Map)
               : null,

@@ -37,10 +37,7 @@ class DashedBorderPainter extends CustomPainter {
         final len = (distance + dashWidth < metric.length)
             ? dashWidth
             : metric.length - distance;
-        canvas.drawPath(
-          metric.extractPath(distance, distance + len),
-          paint,
-        );
+        canvas.drawPath(metric.extractPath(distance, distance + len), paint);
         distance += dashWidth + dashSpace;
       }
     }
@@ -90,7 +87,8 @@ class AppDocumentLineTableShell<T> extends StatelessWidget {
   final Widget Function(BuildContext context)? headerBuilder;
 
   /// Optional builder for row-level trailing action widgets (e.g. Delete icon button).
-  final Widget Function(BuildContext context, int index, T item)? rowActionsBuilder;
+  final Widget Function(BuildContext context, int index, T item)?
+  rowActionsBuilder;
 
   /// Optional builder for custom empty-state add card.
   final Widget Function(BuildContext context)? emptyAddCardBuilder;
@@ -143,18 +141,14 @@ class AppDocumentLineTableShell<T> extends StatelessWidget {
         ],
 
         // Footer Summary Slot
-        if (footerSummaryBuilder != null)
-          footerSummaryBuilder!(context),
+        if (footerSummaryBuilder != null) footerSummaryBuilder!(context),
       ],
     );
 
     final childScrollView = SingleChildScrollView(
       controller: scrollController,
       scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: minContentWidth,
-        child: tableBody,
-      ),
+      child: SizedBox(width: minContentWidth, child: tableBody),
     );
 
     final scrollableShell = scrollController != null
@@ -165,17 +159,13 @@ class AppDocumentLineTableShell<T> extends StatelessWidget {
             notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
             child: childScrollView,
           )
-        : Scrollbar(
-            child: childScrollView,
-          );
+        : Scrollbar(child: childScrollView);
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: scheme.shadow.withValues(alpha: 0.05),
@@ -316,9 +306,7 @@ class AppDocumentLineTableShell<T> extends StatelessWidget {
               if (onAddRow != null)
                 Row(
                   children: [
-                    Expanded(
-                      child: _buildAddRowGradientButton(context),
-                    ),
+                    Expanded(child: _buildAddRowGradientButton(context)),
                   ],
                 ),
             ],
@@ -428,13 +416,10 @@ class _TableRowWrapperState extends State<_TableRowWrapper> {
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           color: effectiveColor,
-          border: Border(
-            bottom: BorderSide(color: widget.borderBottomColor),
-          ),
+          border: Border(bottom: BorderSide(color: widget.borderBottomColor)),
         ),
         child: widget.child,
       ),
     );
   }
 }
-

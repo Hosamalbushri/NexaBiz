@@ -16,10 +16,7 @@ String generateUuidV4([Random? random]) {
 /// RFC 4122 version-5 UUID from a fixed namespace + [name] (stable across devices).
 ///
 /// Used for system Chart of Accounts seeds so installs share the same UUIDs.
-String generateUuidV5({
-  required String namespaceUuid,
-  required String name,
-}) {
+String generateUuidV5({required String namespaceUuid, required String name}) {
   final namespaceBytes = _parseUuidBytes(namespaceUuid);
   final hash = sha1.convert([...namespaceBytes, ...utf8.encode(name)]).bytes;
   final bytes = List<int>.from(hash.take(16));

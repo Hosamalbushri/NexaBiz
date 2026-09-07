@@ -65,20 +65,20 @@ class AppConfirmationDialog extends StatelessWidget {
 
     final (icon, iconColor, buttonVariant) = switch (tone) {
       AppDialogTone.info => (
-          Icons.info_outline_rounded,
-          scheme.primary,
-          AppButtonVariant.filled,
-        ),
+        Icons.info_outline_rounded,
+        scheme.primary,
+        AppButtonVariant.filled,
+      ),
       AppDialogTone.warning => (
-          Icons.warning_amber_rounded,
-          AppColors.warning,
-          AppButtonVariant.filled,
-        ),
+        Icons.warning_amber_rounded,
+        AppColors.warning,
+        AppButtonVariant.filled,
+      ),
       AppDialogTone.danger => (
-          Icons.error_outline_rounded,
-          scheme.error,
-          AppButtonVariant.filled,
-        ),
+        Icons.error_outline_rounded,
+        scheme.error,
+        AppButtonVariant.filled,
+      ),
     };
 
     return AlertDialog(

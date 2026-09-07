@@ -68,36 +68,39 @@ void main() {
     );
   });
 
-  test('changePassword unlocks the session and invalidates the previous password', () async {
-    await store.updateLocalAdminCredentials(
-      newEmail: LocalAuthDefaults.adminEmail,
-      newPassword: 'InitialPassword123!',
-    );
-    final session = await store.login(
-      email: LocalAuthDefaults.adminEmail,
-      password: 'InitialPassword123!',
-      deviceId: '00000000-0000-4000-8000-0000000000d1',
-    );
-    final updated = await store.changePassword(
-      userId: session!.user.id,
-      currentPassword: 'InitialPassword123!',
-      newPassword: 'NewSafePass!1',
-    );
-    expect(updated.mustChangePassword, isFalse);
+  test(
+    'changePassword unlocks the session and invalidates the previous password',
+    () async {
+      await store.updateLocalAdminCredentials(
+        newEmail: LocalAuthDefaults.adminEmail,
+        newPassword: 'InitialPassword123!',
+      );
+      final session = await store.login(
+        email: LocalAuthDefaults.adminEmail,
+        password: 'InitialPassword123!',
+        deviceId: '00000000-0000-4000-8000-0000000000d1',
+      );
+      final updated = await store.changePassword(
+        userId: session!.user.id,
+        currentPassword: 'InitialPassword123!',
+        newPassword: 'NewSafePass!1',
+      );
+      expect(updated.mustChangePassword, isFalse);
 
-    final rejected = await store.login(
-      email: LocalAuthDefaults.adminEmail,
-      password: 'InitialPassword123!',
-      deviceId: '00000000-0000-4000-8000-0000000000d1',
-    );
-    expect(rejected, isNull);
+      final rejected = await store.login(
+        email: LocalAuthDefaults.adminEmail,
+        password: 'InitialPassword123!',
+        deviceId: '00000000-0000-4000-8000-0000000000d1',
+      );
+      expect(rejected, isNull);
 
-    final next = await store.login(
-      email: LocalAuthDefaults.adminEmail,
-      password: 'NewSafePass!1',
-      deviceId: '00000000-0000-4000-8000-0000000000d1',
-    );
-    expect(next, isNotNull);
-    expect(next!.mustChangePassword, isFalse);
-  });
+      final next = await store.login(
+        email: LocalAuthDefaults.adminEmail,
+        password: 'NewSafePass!1',
+        deviceId: '00000000-0000-4000-8000-0000000000d1',
+      );
+      expect(next, isNotNull);
+      expect(next!.mustChangePassword, isFalse);
+    },
+  );
 }

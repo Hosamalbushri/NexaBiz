@@ -5,7 +5,6 @@ import '../../../chart_of_accounts/domain/entities/account_type.dart';
 import '../../../chart_of_accounts/domain/repositories/account_repository.dart';
 import 'account_usage_analyzer.dart';
 
-
 /// Exception thrown when changing an accounting role binding is prohibited due to historical posted data.
 class AccountBindingChangeProhibitedException implements Exception {
   const AccountBindingChangeProhibitedException({
@@ -64,7 +63,8 @@ class AccountBindingSafetyGate {
     if (candidateAccountUuid.isEmpty) {
       return;
     }
-    if (currentAccountUuid != null && currentAccountUuid == candidateAccountUuid) {
+    if (currentAccountUuid != null &&
+        currentAccountUuid == candidateAccountUuid) {
       return;
     }
 
@@ -80,9 +80,12 @@ class AccountBindingSafetyGate {
           role: role,
           currentAccountUuid: currentAccountUuid,
           postedTransactionCount: usage.postedTransactionCount,
-          message: 'يمنع تغيير ربط الحساب ($currentAccountUuid) للدور المحاسبي "${role.name}" بسبب وجود (${usage.postedTransactionCount}) قيود مالية رحلت سابقاً.',
-          safeAlternativeAr: 'لا ينصح بتعديل الربط التاريخي الحسابي للحفاظ على سلامة التقارير المالية. يمكنك استخدام تسويات القيد اليومي أو فتح دور حساب جديد.',
-          safeAlternativeEn: 'To protect historical reporting integrity, modifying previously posted account bindings is prohibited. Use journal entries or create sub-accounts.',
+          message:
+              'يمنع تغيير ربط الحساب ($currentAccountUuid) للدور المحاسبي "${role.name}" بسبب وجود (${usage.postedTransactionCount}) قيود مالية رحلت سابقاً.',
+          safeAlternativeAr:
+              'لا ينصح بتعديل الربط التاريخي الحسابي للحفاظ على سلامة التقارير المالية. يمكنك استخدام تسويات القيد اليومي أو فتح دور حساب جديد.',
+          safeAlternativeEn:
+              'To protect historical reporting integrity, modifying previously posted account bindings is prohibited. Use journal entries or create sub-accounts.',
         );
       }
     }
@@ -90,22 +93,30 @@ class AccountBindingSafetyGate {
     // Rule 3: Candidate Account Suitability Checks
     final candidate = await accountRepository.getByUuid(candidateAccountUuid);
     if (candidate == null) {
-      throw const AccountBindingValidationException('الحساب المحدد غير موجود في دليل الحسابات.');
+      throw const AccountBindingValidationException(
+        'الحساب المحدد غير موجود في دليل الحسابات.',
+      );
     }
 
     // Tenant Isolation Check
     if (candidate.companyId != companyId) {
-      throw const AccountBindingValidationException('خطأ أمان: لا يمكن اختيار حساب تابع لشركة أخرى.');
+      throw const AccountBindingValidationException(
+        'خطأ أمان: لا يمكن اختيار حساب تابع لشركة أخرى.',
+      );
     }
 
     // Active Status Check
     if (!candidate.isActive) {
-      throw const AccountBindingValidationException('خطأ: الحساب المحدد غير نشط ولا يمكن استخدامه في ربط الإعدادات.');
+      throw const AccountBindingValidationException(
+        'خطأ: الحساب المحدد غير نشط ولا يمكن استخدامه في ربط الإعدادات.',
+      );
     }
 
     // Hierarchy Check (Group Accounts)
     if (bindingMode == AccountBindingMode.exact && candidate.isGroup) {
-      throw const AccountBindingValidationException('خطأ: لا يمكن ربط حساب رئيسي (مجموعة) كحساب تفصيلي للترحيل.');
+      throw const AccountBindingValidationException(
+        'خطأ: لا يمكن ربط حساب رئيسي (مجموعة) كحساب تفصيلي للترحيل.',
+      );
     }
 
     // Classification Compatibility Check
@@ -124,7 +135,11 @@ class AccountBindingSafetyGate {
         final uuid = target.primaryUuid;
         if (uuid == null || uuid.isEmpty) return;
         final account = await accountRepository.getByUuid(uuid);
-        _assertAccountEligible(account: account, companyId: companyId, requirePosting: true);
+        _assertAccountEligible(
+          account: account,
+          companyId: companyId,
+          requirePosting: true,
+        );
         _validateClassification(role: role, candidate: account!);
         break;
       case AccountBindingMode.parentAccountWithDescendants:
@@ -132,9 +147,15 @@ class AccountBindingSafetyGate {
         final parentUuid = target.parentUuid ?? target.primaryUuid;
         if (parentUuid == null || parentUuid.isEmpty) return;
         final parent = await accountRepository.getByUuid(parentUuid);
-        _assertAccountEligible(account: parent, companyId: companyId, requirePosting: false);
+        _assertAccountEligible(
+          account: parent,
+          companyId: companyId,
+          requirePosting: false,
+        );
         if (parent != null && !parent.isGroup) {
-          throw const AccountBindingValidationException('خطأ: ربط مجموعة الحسابات يتطلب اختيار حساب رئيسي (مجموعة).');
+          throw const AccountBindingValidationException(
+            'خطأ: ربط مجموعة الحسابات يتطلب اختيار حساب رئيسي (مجموعة).',
+          );
         }
         if (parent != null) {
           _validateClassification(role: role, candidate: parent);
@@ -143,14 +164,17 @@ class AccountBindingSafetyGate {
       case AccountBindingMode.accountSet:
         for (final uuid in target.setUuids) {
           final account = await accountRepository.getByUuid(uuid);
-          _assertAccountEligible(account: account, companyId: companyId, requirePosting: true);
+          _assertAccountEligible(
+            account: account,
+            companyId: companyId,
+            requirePosting: true,
+          );
           if (account != null) {
             _validateClassification(role: role, candidate: account);
           }
         }
         break;
     }
-
   }
 
   void _assertAccountEligible({
@@ -159,18 +183,26 @@ class AccountBindingSafetyGate {
     required bool requirePosting,
   }) {
     if (account == null) {
-      throw const AccountBindingValidationException('الحساب المحدد غير موجود في دليل الحسابات.');
+      throw const AccountBindingValidationException(
+        'الحساب المحدد غير موجود في دليل الحسابات.',
+      );
     }
     final compId = account.companyId;
     if (compId != null && compId.isNotEmpty && compId != companyId) {
-      throw const AccountBindingValidationException('خطأ أمان: لا يمكن اختيار حساب تابع لشركة أخرى.');
+      throw const AccountBindingValidationException(
+        'خطأ أمان: لا يمكن اختيار حساب تابع لشركة أخرى.',
+      );
     }
 
     if (!account.isActive || account.isDeleted) {
-      throw const AccountBindingValidationException('خطأ: الحساب المحدد غير نشط أو محذوف ولا يمكن استخدامه في الإعدادات.');
+      throw const AccountBindingValidationException(
+        'خطأ: الحساب المحدد غير نشط أو محذوف ولا يمكن استخدامه في الإعدادات.',
+      );
     }
     if (requirePosting && account.isGroup) {
-      throw const AccountBindingValidationException('خطأ: لا يمكن اختيار حساب رئيسي (مجموعة) كحساب تفصيلي للترحيل.');
+      throw const AccountBindingValidationException(
+        'خطأ: لا يمكن اختيار حساب رئيسي (مجموعة) كحساب تفصيلي للترحيل.',
+      );
     }
   }
 
@@ -222,4 +254,3 @@ class AccountBindingSafetyGate {
     }
   }
 }
-

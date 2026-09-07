@@ -148,14 +148,17 @@ class ServiceCard extends StatelessWidget {
                     final gap = compact || walletStyle || !showSubtitle
                         ? 4.0
                         : 10.0;
-                    final availableForIcon =
-                        (maxH - titleReserve - gap).clamp(24.0, preferredIconBox);
-                    final iconBox = availableForIcon.clamp(24.0, maxW).toDouble();
+                    final availableForIcon = (maxH - titleReserve - gap).clamp(
+                      24.0,
+                      preferredIconBox,
+                    );
+                    final iconBox = availableForIcon
+                        .clamp(24.0, maxW)
+                        .toDouble();
                     final iconSize = walletStyle
                         ? iconBox.clamp(24.0, preferredIconSize).toDouble()
-                        : (iconBox *
-                                      (preferredIconSize / preferredIconBox))
-                                  .clamp(14.0, preferredIconSize)
+                        : (iconBox * (preferredIconSize / preferredIconBox))
+                              .clamp(14.0, preferredIconSize)
                               .toDouble();
                     final titleSize = maxH < 90
                         ? (preferredTitleSize - 1.5).clamp(
@@ -304,11 +307,7 @@ class _WalletTileContent extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(
-                  module.icon,
-                  color: primary,
-                  size: iconSize,
-                ),
+                child: Icon(module.icon, color: primary, size: iconSize),
               ),
               const SizedBox(height: 4),
               Flexible(

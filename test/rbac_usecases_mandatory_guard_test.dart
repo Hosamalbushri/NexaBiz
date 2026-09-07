@@ -68,17 +68,27 @@ void main() {
     const denyingGuard = DummyDenyingPermissionGuard();
     const allowingGuard = DummyAllowingPermissionGuard();
 
-    test('CreateProduct rejects unauthorized invocation before repo access', () async {
-      final usecase = CreateProduct(
-        MockProductRepository(),
-        permissionGuard: denyingGuard,
-      );
+    test(
+      'CreateProduct rejects unauthorized invocation before repo access',
+      () async {
+        final usecase = CreateProduct(
+          MockProductRepository(),
+          permissionGuard: denyingGuard,
+        );
 
-      expect(
-        () => usecase.call(const ProductDraft(itemCode: 'P01', name: 'Test', packSize: 1, price: 10)),
-        throwsA(isA<PermissionDeniedException>()),
-      );
-    });
+        expect(
+          () => usecase.call(
+            const ProductDraft(
+              itemCode: 'P01',
+              name: 'Test',
+              packSize: 1,
+              price: 10,
+            ),
+          ),
+          throwsA(isA<PermissionDeniedException>()),
+        );
+      },
+    );
 
     test('UpdateProduct rejects unauthorized invocation', () async {
       final usecase = UpdateProduct(
@@ -87,7 +97,15 @@ void main() {
       );
 
       expect(
-        () => usecase.call(1, const ProductDraft(itemCode: 'P01', name: 'Test', packSize: 1, price: 10)),
+        () => usecase.call(
+          1,
+          const ProductDraft(
+            itemCode: 'P01',
+            name: 'Test',
+            packSize: 1,
+            price: 10,
+          ),
+        ),
         throwsA(isA<PermissionDeniedException>()),
       );
     });
@@ -98,10 +116,7 @@ void main() {
         permissionGuard: denyingGuard,
       );
 
-      expect(
-        () => usecase.call(1),
-        throwsA(isA<PermissionDeniedException>()),
-      );
+      expect(() => usecase.call(1), throwsA(isA<PermissionDeniedException>()));
     });
 
     test('SaveInventoryCount rejects unauthorized invocation', () async {
@@ -111,7 +126,9 @@ void main() {
       );
 
       expect(
-        () => usecase.call(InventoryItem(itemCode: 'I01', itemName: 'Item 1', systemQuantity: 0)),
+        () => usecase.call(
+          InventoryItem(itemCode: 'I01', itemName: 'Item 1', systemQuantity: 0),
+        ),
         throwsA(isA<PermissionDeniedException>()),
       );
     });
@@ -123,7 +140,9 @@ void main() {
       );
 
       expect(
-        () => usecase.call(const CustomerDraft(customerCode: 'C01', name: 'Cust')),
+        () => usecase.call(
+          const CustomerDraft(customerCode: 'C01', name: 'Cust'),
+        ),
         throwsA(isA<PermissionDeniedException>()),
       );
     });
@@ -134,10 +153,7 @@ void main() {
         permissionGuard: denyingGuard,
       );
 
-      expect(
-        () => usecase.call(1),
-        throwsA(isA<PermissionDeniedException>()),
-      );
+      expect(() => usecase.call(1), throwsA(isA<PermissionDeniedException>()));
     });
 
     test('PostJournalEntry rejects unauthorized invocation', () async {
@@ -147,13 +163,15 @@ void main() {
       );
 
       expect(
-        () => usecase.call(JournalEntryDraft(
-          entryDate: DateTime(2026, 8, 30),
-          voucherNumber: 'JV-01',
-          voucherType: 'JV',
-          currencyCode: 'USD',
-          lines: [],
-        )),
+        () => usecase.call(
+          JournalEntryDraft(
+            entryDate: DateTime(2026, 8, 30),
+            voucherNumber: 'JV-01',
+            voucherType: 'JV',
+            currencyCode: 'USD',
+            lines: [],
+          ),
+        ),
         throwsA(isA<PermissionDeniedException>()),
       );
     });

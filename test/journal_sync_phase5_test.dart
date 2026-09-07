@@ -29,7 +29,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
-
   late Directory tempDir;
   late Box<SyncOperation> syncBoxA;
   late Box<SyncOperation> syncBoxB;
@@ -61,174 +60,177 @@ void main() {
     }
   });
 
-  test('Device A sale journal pushes and Device B pulls same UUID+lines', () async {
-    final remote = InMemoryRemoteSyncApi();
+  test(
+    'Device A sale journal pushes and Device B pulls same UUID+lines',
+    () async {
+      final remote = InMemoryRemoteSyncApi();
 
-    final dbA = AccountingDatabase.memory();
-    final queueA = SyncQueue(box: syncBoxA);
-    final accountsA = AccountRepositoryImpl(dbA, syncQueue: queueA);
-    final journalsA = JournalRepositoryImpl(
-      dbA,
-      accounts: accountsA,
-      periodValidator: legacyPeriodValidator(),
-      syncQueue: queueA,
-    );
-    await accountsA.ensureDefaultChartSeeded();
+      final dbA = AccountingDatabase.memory();
+      final queueA = SyncQueue(box: syncBoxA);
+      final accountsA = AccountRepositoryImpl(dbA, syncQueue: queueA);
+      final journalsA = JournalRepositoryImpl(
+        dbA,
+        accounts: accountsA,
+        periodValidator: legacyPeriodValidator(),
+        syncQueue: queueA,
+      );
+      await accountsA.ensureDefaultChartSeeded();
 
-    final dbB = AccountingDatabase.memory();
-    final queueB = SyncQueue(box: syncBoxB);
-    final accountsB = AccountRepositoryImpl(dbB, syncQueue: queueB);
-    final journalsB = JournalRepositoryImpl(
-      dbB,
-      accounts: accountsB,
-      periodValidator: legacyPeriodValidator(),
-      syncQueue: queueB,
-    );
-    await accountsB.ensureDefaultChartSeeded();
+      final dbB = AccountingDatabase.memory();
+      final queueB = SyncQueue(box: syncBoxB);
+      final accountsB = AccountRepositoryImpl(dbB, syncQueue: queueB);
+      final journalsB = JournalRepositoryImpl(
+        dbB,
+        accounts: accountsB,
+        periodValidator: legacyPeriodValidator(),
+        syncQueue: queueB,
+      );
+      await accountsB.ensureDefaultChartSeeded();
 
-    // System CoA seeds may share stable UUIDs; custom cash accounts do not.
-    final revenueA = await accountsA.getByAccountCode('4100');
-    final revenueB = await accountsB.getByAccountCode('4100');
-    expect(revenueA, isNotNull);
-    expect(revenueB, isNotNull);
+      // System CoA seeds may share stable UUIDs; custom cash accounts do not.
+      final revenueA = await accountsA.getByAccountCode('4100');
+      final revenueB = await accountsB.getByAccountCode('4100');
+      expect(revenueA, isNotNull);
+      expect(revenueB, isNotNull);
 
-    final parentA = await accountsA.getByAccountCode('1221');
-    final cashA = await accountsA.insert(
-      AccountDraft(
-        parentId: parentA!.uuid,
-        accountCode: '12210099',
-        name: 'Cash till A',
-        accountType: AccountType.asset,
-        isGroup: false,
-      ),
-    );
-    final parentB = await accountsB.getByAccountCode('1221');
-    final cashBLocal = await accountsB.insert(
-      AccountDraft(
-        parentId: parentB!.uuid,
-        accountCode: '12210099',
-        name: 'Cash till B',
-        accountType: AccountType.asset,
-        isGroup: false,
-      ),
-    );
-    expect(cashA.uuid, isNot(cashBLocal.uuid));
+      final parentA = await accountsA.getByAccountCode('1221');
+      final cashA = await accountsA.insert(
+        AccountDraft(
+          parentId: parentA!.uuid,
+          accountCode: '12210099',
+          name: 'Cash till A',
+          accountType: AccountType.asset,
+          isGroup: false,
+        ),
+      );
+      final parentB = await accountsB.getByAccountCode('1221');
+      final cashBLocal = await accountsB.insert(
+        AccountDraft(
+          parentId: parentB!.uuid,
+          accountCode: '12210099',
+          name: 'Cash till B',
+          accountType: AccountType.asset,
+          isGroup: false,
+        ),
+      );
+      expect(cashA.uuid, isNot(cashBLocal.uuid));
 
-    final postingA = journalPostingWithLegacyPolicy(journals: journalsA);
-    final ledgerA = AccountingSaleLedgerAdapter(
-      posting: postingA,
-      accounts: accountsA,
-    );
+      final postingA = journalPostingWithLegacyPolicy(journals: journalsA);
+      final ledgerA = AccountingSaleLedgerAdapter(
+        posting: postingA,
+        accounts: accountsA,
+      );
 
-    final saleUuid = generateUuidV4();
-    final sale = Sale(
-      id: 1,
-      uuid: saleUuid,
-      saleNumber: 'INV-P5-1',
-      saleDate: DateTime.utc(2026, 8, 15),
-      settlementType: SaleSettlementType.cash,
-      cashAccountId: cashA.uuid,
-      currencyCode: 'SAR',
-      baseCurrencyCode: 'SAR',
-      exchangeRate: 1,
-      items: const [],
-      payments: const [],
-      subtotal: 100,
-      itemDiscountTotal: 0,
-      discountType: DiscountType.fixed,
-      discountValue: 0,
-      discountAmount: 0,
-      taxRate: 0,
-      taxAmount: 0,
-      total: 100,
-      paidAmount: 100,
-      remainingAmount: 0,
-      paymentStatus: PaymentStatus.paid,
-      paymentMethod: PaymentMethod.cash,
-      saleStatus: SaleStatus.posted,
-      dataSource: SaleDataSource.local,
-      createdAt: DateTime.utc(2026, 8, 15),
-      updatedAt: DateTime.utc(2026, 8, 15),
-    );
+      final saleUuid = generateUuidV4();
+      final sale = Sale(
+        id: 1,
+        uuid: saleUuid,
+        saleNumber: 'INV-P5-1',
+        saleDate: DateTime.utc(2026, 8, 15),
+        settlementType: SaleSettlementType.cash,
+        cashAccountId: cashA.uuid,
+        currencyCode: 'SAR',
+        baseCurrencyCode: 'SAR',
+        exchangeRate: 1,
+        items: const [],
+        payments: const [],
+        subtotal: 100,
+        itemDiscountTotal: 0,
+        discountType: DiscountType.fixed,
+        discountValue: 0,
+        discountAmount: 0,
+        taxRate: 0,
+        taxAmount: 0,
+        total: 100,
+        paidAmount: 100,
+        remainingAmount: 0,
+        paymentStatus: PaymentStatus.paid,
+        paymentMethod: PaymentMethod.cash,
+        saleStatus: SaleStatus.posted,
+        dataSource: SaleDataSource.local,
+        createdAt: DateTime.utc(2026, 8, 15),
+        updatedAt: DateTime.utc(2026, 8, 15),
+      );
 
-    await ledgerA.syncSale(sale);
+      await ledgerA.syncSale(sale);
 
-    final localJournal = await journalsA.findBySource(
-      sourceType: 'sale',
-      sourceId: saleUuid,
-    );
-    expect(localJournal, isNotNull);
-    expect(localJournal!.syncStatus, SyncStatus.pending);
-    expect(localJournal.uuid, isNotEmpty);
+      final localJournal = await journalsA.findBySource(
+        sourceType: 'sale',
+        sourceId: saleUuid,
+      );
+      expect(localJournal, isNotNull);
+      expect(localJournal!.syncStatus, SyncStatus.pending);
+      expect(localJournal.uuid, isNotEmpty);
 
-    final pending = await queueA.all();
-    expect(
-      pending.any(
-        (op) =>
-            op.entityType == JournalRepositoryImpl.entityType &&
-            op.entityId == localJournal.uuid,
-      ),
-      isTrue,
-    );
+      final pending = await queueA.all();
+      expect(
+        pending.any(
+          (op) =>
+              op.entityType == JournalRepositoryImpl.entityType &&
+              op.entityId == localJournal.uuid,
+        ),
+        isTrue,
+      );
 
-    final managerA = SyncManager(
-      queue: queueA,
-      connectivity: connectivity,
-      remoteProvider: () => remote,
-    );
-    managerA.registerHandler(
-      AccountSyncHandler(repository: accountsA, remoteProvider: () => remote),
-    );
-    managerA.registerHandler(
-      JournalSyncHandler(repository: journalsA, remoteProvider: () => remote),
-    );
-    await managerA.start(enabled: true);
-    final passA = await managerA.syncNow();
-    expect(passA.uploaded, greaterThan(0));
+      final managerA = SyncManager(
+        queue: queueA,
+        connectivity: connectivity,
+        remoteProvider: () => remote,
+      );
+      managerA.registerHandler(
+        AccountSyncHandler(repository: accountsA, remoteProvider: () => remote),
+      );
+      managerA.registerHandler(
+        JournalSyncHandler(repository: journalsA, remoteProvider: () => remote),
+      );
+      await managerA.start(enabled: true);
+      final passA = await managerA.syncNow();
+      expect(passA.uploaded, greaterThan(0));
 
-    final managerB = SyncManager(
-      queue: queueB,
-      connectivity: connectivity,
-      remoteProvider: () => remote,
-    );
-    managerB.registerHandler(
-      AccountSyncHandler(repository: accountsB, remoteProvider: () => remote),
-    );
-    managerB.registerHandler(
-      JournalSyncHandler(repository: journalsB, remoteProvider: () => remote),
-    );
-    await managerB.start(enabled: true);
-    final passB = await managerB.syncNow();
-    expect(passB.downloaded, greaterThan(0));
+      final managerB = SyncManager(
+        queue: queueB,
+        connectivity: connectivity,
+        remoteProvider: () => remote,
+      );
+      managerB.registerHandler(
+        AccountSyncHandler(repository: accountsB, remoteProvider: () => remote),
+      );
+      managerB.registerHandler(
+        JournalSyncHandler(repository: journalsB, remoteProvider: () => remote),
+      );
+      await managerB.start(enabled: true);
+      final passB = await managerB.syncNow();
+      expect(passB.downloaded, greaterThan(0));
 
-    final remoteJournal = await journalsB.findBySource(
-      sourceType: 'sale',
-      sourceId: saleUuid,
-    );
-    expect(remoteJournal, isNotNull);
-    expect(remoteJournal!.uuid, localJournal.uuid);
-    expect(remoteJournal.voucherNumber, 'INV-P5-1');
-    expect(remoteJournal.isPosted, isTrue);
-    expect(remoteJournal.lines.length, localJournal.lines.length);
+      final remoteJournal = await journalsB.findBySource(
+        sourceType: 'sale',
+        sourceId: saleUuid,
+      );
+      expect(remoteJournal, isNotNull);
+      expect(remoteJournal!.uuid, localJournal.uuid);
+      expect(remoteJournal.voucherNumber, 'INV-P5-1');
+      expect(remoteJournal.isPosted, isTrue);
+      expect(remoteJournal.lines.length, localJournal.lines.length);
 
-    final revenueLineB = remoteJournal.lines.firstWhere((l) => l.credit > 0);
-    expect(revenueLineB.accountUuid, revenueB!.uuid);
-    expect(revenueLineB.credit, 100);
+      final revenueLineB = remoteJournal.lines.firstWhere((l) => l.credit > 0);
+      expect(revenueLineB.accountUuid, revenueB!.uuid);
+      expect(revenueLineB.credit, 100);
 
-    final debitLineB = remoteJournal.lines.firstWhere((l) => l.debit > 0);
-    final cashB = await accountsB.getByAccountCode('12210099');
-    expect(cashB, isNotNull);
-    expect(debitLineB.accountUuid, cashB!.uuid);
-    expect(debitLineB.debit, 100);
+      final debitLineB = remoteJournal.lines.firstWhere((l) => l.debit > 0);
+      final cashB = await accountsB.getByAccountCode('12210099');
+      expect(cashB, isNotNull);
+      expect(debitLineB.accountUuid, cashB!.uuid);
+      expect(debitLineB.debit, 100);
 
-    expect(
-      remoteJournal.lines.map((l) => l.uuid).toSet(),
-      localJournal.lines.map((l) => l.uuid).toSet(),
-    );
+      expect(
+        remoteJournal.lines.map((l) => l.uuid).toSet(),
+        localJournal.lines.map((l) => l.uuid).toSet(),
+      );
 
-    await managerA.dispose();
-    await managerB.dispose();
-    await dbA.close();
-    await dbB.close();
-  });
+      await managerA.dispose();
+      await managerB.dispose();
+      await dbA.close();
+      await dbB.close();
+    },
+  );
 }

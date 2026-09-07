@@ -48,7 +48,10 @@ class _CashRegisterAccountingConfigPageState
     ref.invalidate(defaultCashRegisterResultProvider);
   }
 
-  Future<void> _addRegisterDialog(String companyId, AppLocalizations l10n) async {
+  Future<void> _addRegisterDialog(
+    String companyId,
+    AppLocalizations l10n,
+  ) async {
     _nameController.clear();
     _codeController.clear();
 
@@ -101,7 +104,9 @@ class _CashRegisterAccountingConfigPageState
         id: 'cr-${DateTime.now().millisecondsSinceEpoch}',
         companyId: companyId,
         name: name,
-        code: code.isEmpty ? 'CR-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}' : code,
+        code: code.isEmpty
+            ? 'CR-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}'
+            : code,
         isActive: true,
         accountingAccountId: null, // Initially ACCOUNTING_NOT_LINKED
         createdAt: DateTime.now().toUtc(),
@@ -171,7 +176,10 @@ class _CashRegisterAccountingConfigPageState
       if (mounted) {
         showAppSnackBar(
           context,
-          message: l10n.cashRegisterLinkSuccess(selectedAccount.accountCode, selectedAccount.name),
+          message: l10n.cashRegisterLinkSuccess(
+            selectedAccount.accountCode,
+            selectedAccount.name,
+          ),
           isSuccess: true,
         );
       }
@@ -188,7 +196,11 @@ class _CashRegisterAccountingConfigPageState
     }
   }
 
-  Future<void> _unlinkAccount(CashRegister register, String companyId, AppLocalizations l10n) async {
+  Future<void> _unlinkAccount(
+    CashRegister register,
+    String companyId,
+    AppLocalizations l10n,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -227,7 +239,8 @@ class _CashRegisterAccountingConfigPageState
       }
     } catch (e) {
       if (mounted) {
-        final String errorMessage = e.toString().contains('REGISTER_HAS_MOVEMENTS') ||
+        final String errorMessage =
+            e.toString().contains('REGISTER_HAS_MOVEMENTS') ||
                 e.toString().contains('movements')
             ? 'لا يمكن إلغاء ربط الحساب لأن الصندوق يحتوي على حركات مالية مسجلة.'
             : 'Unlink error: $e';
@@ -238,8 +251,13 @@ class _CashRegisterAccountingConfigPageState
     }
   }
 
-  Future<void> _openDefaultRegisterPicker(String companyId, AppLocalizations l10n) async {
-    final readyRegisters = await ref.read(accountingReadyCashRegistersProvider.future);
+  Future<void> _openDefaultRegisterPicker(
+    String companyId,
+    AppLocalizations l10n,
+  ) async {
+    final readyRegisters = await ref.read(
+      accountingReadyCashRegistersProvider.future,
+    );
 
     if (readyRegisters.isEmpty) {
       if (mounted) {
@@ -283,18 +301,17 @@ class _CashRegisterAccountingConfigPageState
       }
     } catch (e) {
       if (mounted) {
-        showAppSnackBar(
-          context,
-          message: 'Error: $e',
-          isSuccess: false,
-        );
+        showAppSnackBar(context, message: 'Error: $e', isSuccess: false);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _clearDefaultRegister(String companyId, AppLocalizations l10n) async {
+  Future<void> _clearDefaultRegister(
+    String companyId,
+    AppLocalizations l10n,
+  ) async {
     setState(() => _busy = true);
     try {
       final repo = ref.read(cashRegisterRepositoryProvider);
@@ -328,7 +345,9 @@ class _CashRegisterAccountingConfigPageState
     final asyncAccounts = ref.watch(accountsProvider);
     final asyncDefaultResult = ref.watch(defaultCashRegisterResultProvider);
 
-    final companyState = ref.watch(companyInitializationRepositoryProvider).getState();
+    final companyState = ref
+        .watch(companyInitializationRepositoryProvider)
+        .getState();
 
     return FutureBuilder(
       future: companyState,
@@ -349,7 +368,12 @@ class _CashRegisterAccountingConfigPageState
             const SizedBox(height: AppSpacing.md),
 
             // Default Cash Register for New Documents Card
-            _buildDefaultRegisterSection(theme, l10n, asyncDefaultResult, companyId),
+            _buildDefaultRegisterSection(
+              theme,
+              l10n,
+              asyncDefaultResult,
+              companyId,
+            ),
             const SizedBox(height: AppSpacing.md),
 
             // Header Action
@@ -369,7 +393,9 @@ class _CashRegisterAccountingConfigPageState
                   label: l10n.cashRegisterAddAction,
                   icon: Icons.add,
                   variant: AppButtonVariant.outlined,
-                  onPressed: _busy ? null : () => _addRegisterDialog(companyId, l10n),
+                  onPressed: _busy
+                      ? null
+                      : () => _addRegisterDialog(companyId, l10n),
                 ),
               ],
             ),
@@ -378,10 +404,8 @@ class _CashRegisterAccountingConfigPageState
             // Registers List
             asyncRegisters.when(
               loading: () => const AppLoading(style: AppLoadingStyle.circular),
-              error: (err, _) => AppErrorState(
-                message: err.toString(),
-                onRetry: _refresh,
-              ),
+              error: (err, _) =>
+                  AppErrorState(message: err.toString(), onRetry: _refresh),
               data: (registers) {
                 if (registers.isEmpty) {
                   return AppEmptyState(
@@ -389,7 +413,9 @@ class _CashRegisterAccountingConfigPageState
                     subtitle: l10n.cashRegisterEmptySubtitle,
                     icon: Icons.point_of_sale_outlined,
                     actionLabel: l10n.cashRegisterAddAction,
-                    onAction: _busy ? null : () => _addRegisterDialog(companyId, l10n),
+                    onAction: _busy
+                        ? null
+                        : () => _addRegisterDialog(companyId, l10n),
                   );
                 }
 
@@ -400,14 +426,18 @@ class _CashRegisterAccountingConfigPageState
                     Account? linkedAcc;
                     if (reg.isLinked) {
                       for (final acc in accountsList) {
-                        if (acc.uuid == reg.accountingAccountId || acc.accountCode == reg.accountingAccountId) {
+                        if (acc.uuid == reg.accountingAccountId ||
+                            acc.accountCode == reg.accountingAccountId) {
                           linkedAcc = acc;
                           break;
                         }
                       }
                     }
 
-                    final status = reg.evaluateStatus(linkedAcc, targetCompanyId: companyId);
+                    final status = reg.evaluateStatus(
+                      linkedAcc,
+                      targetCompanyId: companyId,
+                    );
 
                     return _buildRegisterCard(
                       context,
@@ -450,7 +480,9 @@ class _CashRegisterAccountingConfigPageState
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: Icon(
-                  summary.isReady ? Icons.check_circle : Icons.warning_amber_rounded,
+                  summary.isReady
+                      ? Icons.check_circle
+                      : Icons.warning_amber_rounded,
                   color: badgeColor,
                   size: 24,
                 ),
@@ -585,7 +617,9 @@ class _CashRegisterAccountingConfigPageState
               Container(
                 padding: const EdgeInsets.all(AppSpacing.xs + 2),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: Icon(
@@ -642,7 +676,9 @@ class _CashRegisterAccountingConfigPageState
           Container(
             padding: const EdgeInsets.all(AppSpacing.xs + 2),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Row(
@@ -685,7 +721,9 @@ class _CashRegisterAccountingConfigPageState
             children: [
               if (reg.isLinked) ...[
                 TextButton.icon(
-                  onPressed: _busy ? null : () => _unlinkAccount(reg, companyId, l10n),
+                  onPressed: _busy
+                      ? null
+                      : () => _unlinkAccount(reg, companyId, l10n),
                   icon: const Icon(Icons.link_off, size: 18, color: Colors.red),
                   label: Text(
                     l10n.cashRegisterUnlinkConfirmAction,
@@ -697,13 +735,17 @@ class _CashRegisterAccountingConfigPageState
                   label: l10n.cashRegisterChangeAccountAction,
                   variant: AppButtonVariant.outlined,
                   icon: Icons.edit_outlined,
-                  onPressed: _busy ? null : () => _openAccountLinkPicker(reg, companyId, l10n),
+                  onPressed: _busy
+                      ? null
+                      : () => _openAccountLinkPicker(reg, companyId, l10n),
                 ),
               ] else ...[
                 AppButton(
                   label: l10n.cashRegisterLinkAccountAction,
                   icon: Icons.link,
-                  onPressed: _busy ? null : () => _openAccountLinkPicker(reg, companyId, l10n),
+                  onPressed: _busy
+                      ? null
+                      : () => _openAccountLinkPicker(reg, companyId, l10n),
                 ),
               ],
             ],
@@ -733,7 +775,9 @@ class _AccountPickerSheet extends StatelessWidget {
 
     final candidateAccounts = accounts.where((a) {
       if (a.isGroup || !a.isActive || a.isDeleted || !a.canPost) return false;
-      if (a.companyId != null && a.companyId!.isNotEmpty && a.companyId != companyId) {
+      if (a.companyId != null &&
+          a.companyId!.isNotEmpty &&
+          a.companyId != companyId) {
         return false;
       }
       return true;
@@ -785,12 +829,17 @@ class _AccountPickerSheet extends StatelessWidget {
                         subtitle: Text(
                           '${acc.accountType.name.toUpperCase()} | ${acc.canPost ? l10n.stockIssueAccountLabel : l10n.accountingUnspecified}',
                           style: TextStyle(
-                            color: isCompatible ? theme.colorScheme.onSurfaceVariant : Colors.red,
+                            color: isCompatible
+                                ? theme.colorScheme.onSurfaceVariant
+                                : Colors.red,
                             fontSize: 12,
                           ),
                         ),
                         trailing: isCompatible
-                            ? const Icon(Icons.check_circle_outline, color: Colors.green)
+                            ? const Icon(
+                                Icons.check_circle_outline,
+                                color: Colors.green,
+                              )
                             : const Icon(Icons.block, color: Colors.red),
                         onTap: () {
                           Navigator.of(ctx).pop(acc);
@@ -806,7 +855,6 @@ class _AccountPickerSheet extends StatelessWidget {
 }
 
 extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
-
   Widget _buildDefaultRegisterSection(
     ThemeData theme,
     AppLocalizations l10n,
@@ -819,7 +867,11 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
         children: [
           Row(
             children: [
-              Icon(Icons.star_outline, color: theme.colorScheme.primary, size: 20),
+              Icon(
+                Icons.star_outline,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
@@ -866,7 +918,10 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.green.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
@@ -899,7 +954,9 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         TextButton(
-                          onPressed: _busy ? null : () => _clearDefaultRegister(companyId, l10n),
+                          onPressed: _busy
+                              ? null
+                              : () => _clearDefaultRegister(companyId, l10n),
                           child: Text(
                             l10n.cashRegisterClearDefaultAction,
                             style: const TextStyle(color: Colors.red),
@@ -908,7 +965,10 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                         AppButton(
                           label: l10n.cashRegisterChangeAccountAction,
                           variant: AppButtonVariant.outlined,
-                          onPressed: _busy ? null : () => _openDefaultRegisterPicker(companyId, l10n),
+                          onPressed: _busy
+                              ? null
+                              : () =>
+                                    _openDefaultRegisterPicker(companyId, l10n),
                         ),
                       ],
                     );
@@ -935,7 +995,8 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                 );
               }
 
-              if (result.errorCode == DefaultCashRegisterErrorCode.notConfigured) {
+              if (result.errorCode ==
+                  DefaultCashRegisterErrorCode.notConfigured) {
                 return LayoutBuilder(
                   builder: (context, constraints) {
                     final isCompact = constraints.maxWidth < 500;
@@ -961,7 +1022,9 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                     final buttonWidget = AppButton(
                       label: l10n.cashRegisterSetDefaultAction,
                       icon: Icons.check_circle_outline,
-                      onPressed: _busy ? null : () => _openDefaultRegisterPicker(companyId, l10n),
+                      onPressed: _busy
+                          ? null
+                          : () => _openDefaultRegisterPicker(companyId, l10n),
                     );
 
                     if (isCompact) {
@@ -992,7 +1055,11 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 18,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -1008,7 +1075,9 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                   const SizedBox(height: 4),
                   Text(
                     result.message ?? "Invalid configuration",
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.red.shade700),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.red.shade700,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Align(
@@ -1016,7 +1085,9 @@ extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
                     child: AppButton(
                       label: l10n.cashRegisterRepairConfigAction,
                       variant: AppButtonVariant.outlined,
-                      onPressed: _busy ? null : () => _openDefaultRegisterPicker(companyId, l10n),
+                      onPressed: _busy
+                          ? null
+                          : () => _openDefaultRegisterPicker(companyId, l10n),
                     ),
                   ),
                 ],
@@ -1080,10 +1151,18 @@ class _DefaultRegisterPickerSheet extends StatelessWidget {
                     itemBuilder: (ctx, index) {
                       final reg = readyRegisters[index];
                       return ListTile(
-                        leading: const Icon(Icons.point_of_sale, color: Colors.green),
+                        leading: const Icon(
+                          Icons.point_of_sale,
+                          color: Colors.green,
+                        ),
                         title: Text(reg.name),
-                        subtitle: Text('${l10n.cashRegisterCodeLabel}: ${reg.code}'),
-                        trailing: const Icon(Icons.check_circle_outline, color: Colors.green),
+                        subtitle: Text(
+                          '${l10n.cashRegisterCodeLabel}: ${reg.code}',
+                        ),
+                        trailing: const Icon(
+                          Icons.check_circle_outline,
+                          color: Colors.green,
+                        ),
                         onTap: () {
                           Navigator.of(ctx).pop(reg);
                         },
@@ -1096,4 +1175,3 @@ class _DefaultRegisterPickerSheet extends StatelessWidget {
     );
   }
 }
-

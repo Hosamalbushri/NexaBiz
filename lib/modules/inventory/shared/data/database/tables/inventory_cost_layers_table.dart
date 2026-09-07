@@ -79,8 +79,7 @@ class InventoryCostLayers extends Table {
   IntColumn get updatedAt => integer()();
 
   /// Sync status ('synced', 'pending', etc.).
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant('synced'))();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
 
   /// Last synced timestamp (UTC epoch ms).
   IntColumn get lastSyncedAt => integer().nullable()();

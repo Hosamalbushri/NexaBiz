@@ -83,7 +83,9 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
       emptyMessage: l10n.customersEmptyMessage,
       emptyIcon: Icons.people_outline,
       emptyActionLabel: canImport ? l10n.customersImportTitle : null,
-      onEmptyAction: canImport ? () => CustomersRoutes.pushImport(context) : null,
+      onEmptyAction: canImport
+          ? () => CustomersRoutes.pushImport(context)
+          : null,
       floatingActionButton: PermissionGate(
         anyOf: CustomersPermissions.create,
         child: FloatingActionButton.extended(
@@ -105,7 +107,9 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
               ),
               child: Padding(
@@ -131,9 +135,7 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
                           ),
                           if (customer.accountId != null) ...[
                             const SizedBox(height: 2),
-                            _LinkedAccountLine(
-                              accountId: customer.accountId!,
-                            ),
+                            _LinkedAccountLine(accountId: customer.accountId!),
                           ],
                           if (customer.phone != null) ...[
                             const SizedBox(height: 2),
@@ -159,10 +161,12 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
                         ),
                         const SizedBox(height: 6),
                         AppStatusBadge(
-                          label: customer.dataSource == CustomerDataSource.external
+                          label:
+                              customer.dataSource == CustomerDataSource.external
                               ? l10n.customersDataSourceExternal
                               : l10n.customersDataSourceLocal,
-                          tone: customer.dataSource == CustomerDataSource.external
+                          tone:
+                              customer.dataSource == CustomerDataSource.external
                               ? AppStatusTone.info
                               : AppStatusTone.neutral,
                           animate: false,

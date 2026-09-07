@@ -19,6 +19,6 @@ class CurrencyRateHistory extends Table {
 
   @override
   List<Set<Column<Object>>>? get uniqueKeys => [
-        {currencyCode, asOfDate},
-      ];
+    {currencyCode, asOfDate},
+  ];
 }

@@ -15,10 +15,13 @@ class EntitlementException implements Exception {
   static const String capabilityDeniedCode = 'capability_denied';
   static const String entitlementExpiredCode = 'entitlement_expired';
 
-  factory EntitlementException.capabilityDenied(EntitlementCapability capability) {
+  factory EntitlementException.capabilityDenied(
+    EntitlementCapability capability,
+  ) {
     return EntitlementException(
       code: capabilityDeniedCode,
-      message: 'Capability "${capability.name}" is not granted under the active entitlement.',
+      message:
+          'Capability "${capability.name}" is not granted under the active entitlement.',
       capability: capability,
     );
   }
@@ -26,7 +29,8 @@ class EntitlementException implements Exception {
   factory EntitlementException.expired(String companyId) {
     return EntitlementException(
       code: entitlementExpiredCode,
-      message: 'Entitlement for company "$companyId" has expired. Online verification required.',
+      message:
+          'Entitlement for company "$companyId" has expired. Online verification required.',
     );
   }
 

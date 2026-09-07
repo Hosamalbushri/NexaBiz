@@ -30,7 +30,6 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.d
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late AccountingDatabase db;
   late AccountRepositoryImpl accounts;
   late JournalRepositoryImpl journals;
@@ -50,7 +49,12 @@ void main() {
     queue = SyncQueue(box: syncBox);
     db = AccountingDatabase.memory();
     accounts = AccountRepositoryImpl(db, syncQueue: queue);
-    journals = JournalRepositoryImpl(db, accounts: accounts, periodValidator: legacyPeriodValidator(), syncQueue: queue);
+    journals = JournalRepositoryImpl(
+      db,
+      accounts: accounts,
+      periodValidator: legacyPeriodValidator(),
+      syncQueue: queue,
+    );
     rates = CurrencyRateRepositoryImpl(db);
     await accounts.ensureDefaultChartSeeded();
     customerCodeSeq = 0;
@@ -299,10 +303,9 @@ void main() {
       );
 
       // Reversed journals still block account soft-delete (audit history).
-      await journalPostingWithLegacyPolicy(journals: journals).voidBySource(
-        sourceType: 'sale',
-        sourceId: 'sale-in-use',
-      );
+      await journalPostingWithLegacyPolicy(
+        journals: journals,
+      ).voidBySource(sourceType: 'sale', sourceId: 'sale-in-use');
       expect(await accounts.isUsedInTransactions(customerUuid), isTrue);
       await expectLater(
         accounts.softDelete(customer.id),
@@ -316,79 +319,81 @@ void main() {
       );
     });
 
-    test('sumNetBefore aggregates in SQL and listCurrencyCodes is distinct',
-        () async {
-      final cash = (await accounts.getByAccountCode('1211'))!;
-      final revenue = (await accounts.getByAccountCode('4100'))!;
+    test(
+      'sumNetBefore aggregates in SQL and listCurrencyCodes is distinct',
+      () async {
+        final cash = (await accounts.getByAccountCode('1211'))!;
+        final revenue = (await accounts.getByAccountCode('4100'))!;
 
-      await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 7, 1),
-          voucherNumber: 'JV-open',
-          voucherType: 'قيود يومية',
-          currencyCode: 'YER',
-          lines: [
-            JournalLineDraft(
-              accountUuid: cash.uuid,
-              debit: 100,
-              credit: 0,
-              currencyCode: 'YER',
-            ),
-            JournalLineDraft(
-              accountUuid: revenue.uuid,
-              debit: 0,
-              credit: 100,
-              currencyCode: 'YER',
-            ),
-          ],
-        ),
-      );
-      await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 8, 5),
-          voucherNumber: 'JV-usd',
-          voucherType: 'قيود يومية',
-          currencyCode: 'USD',
-          lines: [
-            JournalLineDraft(
-              accountUuid: cash.uuid,
-              debit: 10,
-              credit: 0,
-              currencyCode: 'USD',
-            ),
-            JournalLineDraft(
-              accountUuid: revenue.uuid,
-              debit: 0,
-              credit: 10,
-              currencyCode: 'USD',
-            ),
-          ],
-        ),
-      );
+        await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 7, 1),
+            voucherNumber: 'JV-open',
+            voucherType: 'قيود يومية',
+            currencyCode: 'YER',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 100,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 100,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        );
+        await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 5),
+            voucherNumber: 'JV-usd',
+            voucherType: 'قيود يومية',
+            currencyCode: 'USD',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 10,
+                credit: 0,
+                currencyCode: 'USD',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 10,
+                currencyCode: 'USD',
+              ),
+            ],
+          ),
+        );
 
-      expect(
-        await journals.sumNetBefore(
+        expect(
+          await journals.sumNetBefore(
+            accountUuid: cash.uuid,
+            beforeDate: DateTime.utc(2026, 8, 1),
+            currencyCode: 'YER',
+          ),
+          100,
+        );
+        expect(
+          await journals.sumNetBefore(
+            accountUuid: cash.uuid,
+            beforeDate: DateTime.utc(2026, 8, 1),
+            currencyCode: 'USD',
+          ),
+          0,
+        );
+
+        final codes = await journals.listCurrencyCodesForAccount(
           accountUuid: cash.uuid,
-          beforeDate: DateTime.utc(2026, 8, 1),
-          currencyCode: 'YER',
-        ),
-        100,
-      );
-      expect(
-        await journals.sumNetBefore(
-          accountUuid: cash.uuid,
-          beforeDate: DateTime.utc(2026, 8, 1),
-          currencyCode: 'USD',
-        ),
-        0,
-      );
-
-      final codes = await journals.listCurrencyCodesForAccount(
-        accountUuid: cash.uuid,
-        toDate: DateTime.utc(2026, 8, 5),
-      );
-      expect(codes, containsAll(<String>['USD', 'YER']));
-    });
+          toDate: DateTime.utc(2026, 8, 5),
+        );
+        expect(codes, containsAll(<String>['USD', 'YER']));
+      },
+    );
 
     test('listMovementsForAccount supports keyset pagination', () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
@@ -435,104 +440,109 @@ void main() {
       expect(page2.single.debit, 3.0);
     });
 
-    test('keeps same uuid by sourceType + sourceId and replaces lines', () async {
-      final cash = (await accounts.getByAccountCode('1211'))!;
-      final revenue = (await accounts.getByAccountCode('4100'))!;
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.utc(2026, 8, 2),
-        voucherNumber: 'S-1',
-        voucherType: 'بيع آجل',
-        currencyCode: 'YER',
-        isPosted: false,
-        sourceType: 'sale',
-        sourceId: 'sale-uuid-1',
-        lines: [
-          JournalLineDraft(
-            accountUuid: cash.uuid,
-            debit: 20,
-            credit: 0,
-            currencyCode: 'YER',
-          ),
-          JournalLineDraft(
-            accountUuid: revenue.uuid,
-            debit: 0,
-            credit: 20,
-            currencyCode: 'YER',
-          ),
-        ],
-      );
-      final first = await journals.post(draft);
-      final second = await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 8, 3),
-          voucherNumber: 'S-1-upd',
+    test(
+      'keeps same uuid by sourceType + sourceId and replaces lines',
+      () async {
+        final cash = (await accounts.getByAccountCode('1211'))!;
+        final revenue = (await accounts.getByAccountCode('4100'))!;
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 2),
+          voucherNumber: 'S-1',
           voucherType: 'بيع آجل',
           currencyCode: 'YER',
-          isPosted: true,
-          description: 'updated',
+          isPosted: false,
           sourceType: 'sale',
           sourceId: 'sale-uuid-1',
           lines: [
             JournalLineDraft(
               accountUuid: cash.uuid,
-              debit: 35,
+              debit: 20,
               credit: 0,
               currencyCode: 'YER',
             ),
             JournalLineDraft(
               accountUuid: revenue.uuid,
               debit: 0,
-              credit: 35,
+              credit: 20,
               currencyCode: 'YER',
             ),
           ],
-        ),
-      );
-      expect(second.uuid, first.uuid);
-      expect(second.voucherNumber, 'S-1-upd');
-      expect(second.isPosted, isTrue);
-      expect(second.lines.singleWhere((l) => l.debit > 0).debit, 35);
-      final found = await journals.findBySource(
-        sourceType: 'sale',
-        sourceId: 'sale-uuid-1',
-      );
-      expect(found?.uuid, first.uuid);
-      expect(found?.lines, hasLength(2));
-    });
+        );
+        final first = await journals.post(draft);
+        final second = await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 3),
+            voucherNumber: 'S-1-upd',
+            voucherType: 'بيع آجل',
+            currencyCode: 'YER',
+            isPosted: true,
+            description: 'updated',
+            sourceType: 'sale',
+            sourceId: 'sale-uuid-1',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 35,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 35,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        );
+        expect(second.uuid, first.uuid);
+        expect(second.voucherNumber, 'S-1-upd');
+        expect(second.isPosted, isTrue);
+        expect(second.lines.singleWhere((l) => l.debit > 0).debit, 35);
+        final found = await journals.findBySource(
+          sourceType: 'sale',
+          sourceId: 'sale-uuid-1',
+        );
+        expect(found?.uuid, first.uuid);
+        expect(found?.lines, hasLength(2));
+      },
+    );
 
-    test('listHeaders returns lightweight totals without requiring line load',
-        () async {
-      final cash = (await accounts.getByAccountCode('1211'))!;
-      final revenue = (await accounts.getByAccountCode('4100'))!;
-      await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 8, 8),
-          voucherNumber: 'JV-H1',
-          voucherType: 'قيود يومية',
-          currencyCode: 'YER',
-          lines: [
-            JournalLineDraft(
-              accountUuid: cash.uuid,
-              debit: 40,
-              credit: 0,
-              currencyCode: 'YER',
-            ),
-            JournalLineDraft(
-              accountUuid: revenue.uuid,
-              debit: 0,
-              credit: 40,
-              currencyCode: 'YER',
-            ),
-          ],
-        ),
-      );
+    test(
+      'listHeaders returns lightweight totals without requiring line load',
+      () async {
+        final cash = (await accounts.getByAccountCode('1211'))!;
+        final revenue = (await accounts.getByAccountCode('4100'))!;
+        await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 8),
+            voucherNumber: 'JV-H1',
+            voucherType: 'قيود يومية',
+            currencyCode: 'YER',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 40,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 40,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        );
 
-      final headers = await journals.listHeaders(limit: 10);
-      expect(headers, isNotEmpty);
-      final hit = headers.firstWhere((h) => h.voucherNumber == 'JV-H1');
-      expect(hit.totalDebit, 40);
-      expect(hit.totalCredit, 40);
-    });
+        final headers = await journals.listHeaders(limit: 10);
+        expect(headers, isNotEmpty);
+        final hit = headers.firstWhere((h) => h.voucherNumber == 'JV-H1');
+        expect(hit.totalDebit, 40);
+        expect(hit.totalCredit, 40);
+      },
+    );
   });
 
   group('JournalPostingService', () {
@@ -582,35 +592,38 @@ void main() {
       adapter = saleAdapter();
     });
 
-    test('credit sale syncs Dr customer / Cr 4100 linked to sale uuid', () async {
-      final customerAccount = await customerAccountUuid();
-      final sale = _sale(
-        settlement: SaleSettlementType.credit,
-        customerAccountId: customerAccount,
-        total: 150,
-        uuid: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-        saleStatus: SaleStatus.posted,
-      );
+    test(
+      'credit sale syncs Dr customer / Cr 4100 linked to sale uuid',
+      () async {
+        final customerAccount = await customerAccountUuid();
+        final sale = _sale(
+          settlement: SaleSettlementType.credit,
+          customerAccountId: customerAccount,
+          total: 150,
+          uuid: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+          saleStatus: SaleStatus.posted,
+        );
 
-      await adapter.syncSale(sale);
+        await adapter.syncSale(sale);
 
-      final entry = await journals.findBySource(
-        sourceType: 'sale',
-        sourceId: sale.uuid,
-      );
-      expect(entry, isNotNull);
-      expect(entry!.voucherType, 'بيع آجل');
-      expect(entry.voucherNumber, sale.saleNumber);
-      expect(entry.isPosted, isTrue);
-      expect(entry.lines, hasLength(2));
-      final debit = entry.lines.singleWhere((l) => l.debit > 0);
-      final credit = entry.lines.singleWhere((l) => l.credit > 0);
-      expect(debit.accountUuid, customerAccount);
-      expect(debit.debit, 150);
-      expect(credit.credit, 150);
-      final revenue = await accounts.getByAccountCode('4100');
-      expect(credit.accountUuid, revenue!.uuid);
-    });
+        final entry = await journals.findBySource(
+          sourceType: 'sale',
+          sourceId: sale.uuid,
+        );
+        expect(entry, isNotNull);
+        expect(entry!.voucherType, 'بيع آجل');
+        expect(entry.voucherNumber, sale.saleNumber);
+        expect(entry.isPosted, isTrue);
+        expect(entry.lines, hasLength(2));
+        final debit = entry.lines.singleWhere((l) => l.debit > 0);
+        final credit = entry.lines.singleWhere((l) => l.credit > 0);
+        expect(debit.accountUuid, customerAccount);
+        expect(debit.debit, 150);
+        expect(credit.credit, 150);
+        final revenue = await accounts.getByAccountCode('4100');
+        expect(credit.accountUuid, revenue!.uuid);
+      },
+    );
 
     test('unposted credit sale syncs journal with isPosted false', () async {
       final customerAccount = await customerAccountUuid();
@@ -752,43 +765,46 @@ void main() {
       expect(revenueLine.credit, 100);
     });
 
-    test('sale with VAT tax syncs Dr customer / Cr 4100 revenue / Cr 2130 VAT Output', () async {
-      final customerAccount = await customerAccountUuid();
-      final sale = _sale(
-        settlement: SaleSettlementType.credit,
-        customerAccountId: customerAccount,
-        total: 115,
-        taxAmount: 15,
-        uuid: 'eeeeeeee-aaaa-cccc-dddd-eeeeeeeeeeee',
-        saleStatus: SaleStatus.posted,
-      );
-      await adapter.syncSale(sale);
+    test(
+      'sale with VAT tax syncs Dr customer / Cr 4100 revenue / Cr 2130 VAT Output',
+      () async {
+        final customerAccount = await customerAccountUuid();
+        final sale = _sale(
+          settlement: SaleSettlementType.credit,
+          customerAccountId: customerAccount,
+          total: 115,
+          taxAmount: 15,
+          uuid: 'eeeeeeee-aaaa-cccc-dddd-eeeeeeeeeeee',
+          saleStatus: SaleStatus.posted,
+        );
+        await adapter.syncSale(sale);
 
-      final entry = await journals.findBySource(
-        sourceType: 'sale',
-        sourceId: sale.uuid,
-      );
-      expect(entry, isNotNull);
-      expect(entry!.lines, hasLength(3));
+        final entry = await journals.findBySource(
+          sourceType: 'sale',
+          sourceId: sale.uuid,
+        );
+        expect(entry, isNotNull);
+        expect(entry!.lines, hasLength(3));
 
-      final customerLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == customerAccount,
-      );
-      expect(customerLine.debit, 115);
+        final customerLine = entry.lines.singleWhere(
+          (l) => l.accountUuid == customerAccount,
+        );
+        expect(customerLine.debit, 115);
 
-      final revenue = await accounts.getByAccountCode('4100');
-      final revenueLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == revenue!.uuid,
-      );
-      expect(revenueLine.credit, 100);
+        final revenue = await accounts.getByAccountCode('4100');
+        final revenueLine = entry.lines.singleWhere(
+          (l) => l.accountUuid == revenue!.uuid,
+        );
+        expect(revenueLine.credit, 100);
 
-      final vat = await accounts.getByAccountCode('2130');
-      expect(vat, isNotNull);
-      final vatLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == vat!.uuid,
-      );
-      expect(vatLine.credit, 15);
-    });
+        final vat = await accounts.getByAccountCode('2130');
+        expect(vat, isNotNull);
+        final vatLine = entry.lines.singleWhere(
+          (l) => l.accountUuid == vat!.uuid,
+        );
+        expect(vatLine.credit, 15);
+      },
+    );
 
     test('sale with both discount and VAT tax balances perfectly', () async {
       final customerAccount = await customerAccountUuid();
@@ -812,45 +828,58 @@ void main() {
       expect(entry!.lines, hasLength(4));
 
       // Debits: Customer (105) + Discounts (10) = 115
-      final customerLine = entry.lines.singleWhere((l) => l.accountUuid == customerAccount);
+      final customerLine = entry.lines.singleWhere(
+        (l) => l.accountUuid == customerAccount,
+      );
       expect(customerLine.debit, 105);
 
       final discount = await accounts.getByAccountCode('5170');
-      final discountLine = entry.lines.singleWhere((l) => l.accountUuid == discount!.uuid);
+      final discountLine = entry.lines.singleWhere(
+        (l) => l.accountUuid == discount!.uuid,
+      );
       expect(discountLine.debit, 10);
 
       // Credits: Revenue (100) + VAT Output (15) = 115
       final revenue = await accounts.getByAccountCode('4100');
-      final revenueLine = entry.lines.singleWhere((l) => l.accountUuid == revenue!.uuid);
+      final revenueLine = entry.lines.singleWhere(
+        (l) => l.accountUuid == revenue!.uuid,
+      );
       expect(revenueLine.credit, 100);
 
       final vat = await accounts.getByAccountCode('2130');
-      final vatLine = entry.lines.singleWhere((l) => l.accountUuid == vat!.uuid);
+      final vatLine = entry.lines.singleWhere(
+        (l) => l.accountUuid == vat!.uuid,
+      );
       expect(vatLine.credit, 15);
     });
 
-    test('credit sale without customer account falls back to general AR account', () async {
-      final sale = _sale(
-        settlement: SaleSettlementType.credit,
-        customerAccountId: null,
-        total: 200,
-        uuid: 'gggggggg-aaaa-cccc-dddd-eeeeeeeeeeee',
-        saleStatus: SaleStatus.posted,
-      );
-      await adapter.syncSale(sale);
+    test(
+      'credit sale without customer account falls back to general AR account',
+      () async {
+        final sale = _sale(
+          settlement: SaleSettlementType.credit,
+          customerAccountId: null,
+          total: 200,
+          uuid: 'gggggggg-aaaa-cccc-dddd-eeeeeeeeeeee',
+          saleStatus: SaleStatus.posted,
+        );
+        await adapter.syncSale(sale);
 
-      final entry = await journals.findBySource(
-        sourceType: 'sale',
-        sourceId: sale.uuid,
-      );
-      expect(entry, isNotNull);
-      final generalAr = await accounts.getByAccountCode('1220') ?? await accounts.getByAccountCode('1221');
-      expect(generalAr, isNotNull);
+        final entry = await journals.findBySource(
+          sourceType: 'sale',
+          sourceId: sale.uuid,
+        );
+        expect(entry, isNotNull);
+        final generalAr =
+            await accounts.getByAccountCode('1220') ??
+            await accounts.getByAccountCode('1221');
+        expect(generalAr, isNotNull);
 
-      final debit = entry!.lines.singleWhere((l) => l.debit > 0);
-      expect(debit.accountUuid, generalAr!.uuid);
-      expect(debit.debit, 200);
-    });
+        final debit = entry!.lines.singleWhere((l) => l.debit > 0);
+        expect(debit.accountUuid, generalAr!.uuid);
+        expect(debit.debit, 200);
+      },
+    );
   });
 
   group('AccountStatementReportDataAdapter', () {
@@ -895,203 +924,208 @@ void main() {
       expect(payload.balancesByCurrency.single.currencyCode, 'YER');
     });
 
-    test('all currencies keeps separate running balances per currency', () async {
-      final customerAccount = await customerAccountUuid();
-      final revenue = (await accounts.getByAccountCode('4100'))!;
+    test(
+      'all currencies keeps separate running balances per currency',
+      () async {
+        final customerAccount = await customerAccountUuid();
+        final revenue = (await accounts.getByAccountCode('4100'))!;
 
-      await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 8, 5),
-          voucherNumber: 'Y-1',
-          voucherType: 'بيع آجل',
-          currencyCode: 'YER',
-          sourceType: 'sale',
-          sourceId: 'multi-yer',
-          lines: [
-            JournalLineDraft(
-              accountUuid: customerAccount,
-              debit: 100,
-              credit: 0,
-              currencyCode: 'YER',
-            ),
-            JournalLineDraft(
-              accountUuid: revenue.uuid,
-              debit: 0,
-              credit: 100,
-              currencyCode: 'YER',
-            ),
-          ],
-        ),
-      );
-      await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 8, 6),
-          voucherNumber: 'U-1',
-          voucherType: 'بيع آجل',
-          currencyCode: 'USD',
-          sourceType: 'sale',
-          sourceId: 'multi-usd',
-          lines: [
-            JournalLineDraft(
-              accountUuid: customerAccount,
-              debit: 50,
-              credit: 0,
-              currencyCode: 'USD',
-            ),
-            JournalLineDraft(
-              accountUuid: revenue.uuid,
-              debit: 0,
-              credit: 50,
-              currencyCode: 'USD',
-            ),
-          ],
-        ),
-      );
-      await journals.post(
-        JournalEntryDraft(
-          entryDate: DateTime.utc(2026, 8, 7),
-          voucherNumber: 'Y-2',
-          voucherType: 'بيع آجل',
-          currencyCode: 'YER',
-          sourceType: 'sale',
-          sourceId: 'multi-yer-2',
-          lines: [
-            JournalLineDraft(
-              accountUuid: customerAccount,
-              debit: 25,
-              credit: 0,
-              currencyCode: 'YER',
-            ),
-            JournalLineDraft(
-              accountUuid: revenue.uuid,
-              debit: 0,
-              credit: 25,
-              currencyCode: 'YER',
-            ),
-          ],
-        ),
-      );
+        await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 5),
+            voucherNumber: 'Y-1',
+            voucherType: 'بيع آجل',
+            currencyCode: 'YER',
+            sourceType: 'sale',
+            sourceId: 'multi-yer',
+            lines: [
+              JournalLineDraft(
+                accountUuid: customerAccount,
+                debit: 100,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 100,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        );
+        await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 6),
+            voucherNumber: 'U-1',
+            voucherType: 'بيع آجل',
+            currencyCode: 'USD',
+            sourceType: 'sale',
+            sourceId: 'multi-usd',
+            lines: [
+              JournalLineDraft(
+                accountUuid: customerAccount,
+                debit: 50,
+                credit: 0,
+                currencyCode: 'USD',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 50,
+                currencyCode: 'USD',
+              ),
+            ],
+          ),
+        );
+        await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 7),
+            voucherNumber: 'Y-2',
+            voucherType: 'بيع آجل',
+            currencyCode: 'YER',
+            sourceType: 'sale',
+            sourceId: 'multi-yer-2',
+            lines: [
+              JournalLineDraft(
+                accountUuid: customerAccount,
+                debit: 25,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 25,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        );
 
-      final statement = AccountStatementReportDataAdapter(
-        accounts: accounts,
-        currencyRates: rates,
-        journals: journals,
-        loadCompanyProfile: () async =>
-            const CompanyProfile(defaultCurrencyCode: 'YER'),
-      );
+        final statement = AccountStatementReportDataAdapter(
+          accounts: accounts,
+          currencyRates: rates,
+          journals: journals,
+          loadCompanyProfile: () async =>
+              const CompanyProfile(defaultCurrencyCode: 'YER'),
+        );
 
-      final payload = await statement.load(
-        accountUuid: customerAccount,
-        currencyCode: null, // كل العملات
-        fromDate: DateTime.utc(2026, 8, 1),
-        toDate: DateTime.utc(2026, 8, 31),
-        statementType: AccountStatementType.cumulativeAccountCurrency,
-        postingFilter: AccountStatementPostingFilter.posted,
-        labels: _labels(),
-      );
-
-      expect(payload.balancesByCurrency, hasLength(2));
-      expect(payload.balancesByCurrency.first.currencyCode, 'YER');
-      expect(payload.baseCurrencyCode, 'YER');
-      expect(payload.balancesByCurrency.first.displayCurrencyCode, 'ر.ي');
-      expect(
-        payload.balancesByCurrency.first.amountInWords,
-        contains('ريال يمني'),
-      );
-      final usd = payload.balancesByCurrency.singleWhere(
-        (b) => b.currencyCode == 'USD',
-      );
-      expect(usd.displayCurrencyCode, '\$');
-      expect(usd.amountInWords, contains('دولار أمريكي'));
-      final yer = payload.balancesByCurrency.singleWhere(
-        (b) => b.currencyCode == 'YER',
-      );
-      expect(usd.closingBalance, 50);
-      expect(yer.closingBalance, 125);
-
-      final yerLines = payload.lines
-          .where((l) => l.currencyCode == 'YER')
-          .toList();
-      expect(yerLines, hasLength(2));
-      expect(yerLines.first.balance, 100);
-      expect(yerLines.last.balance, 125);
-
-      final usdLines = payload.lines
-          .where((l) => l.currencyCode == 'USD')
-          .toList();
-      expect(usdLines, hasLength(1));
-      expect(usdLines.single.balance, 50);
-
-      // Default currency (YER) block appears first.
-      expect(payload.lines.first.currencyCode, 'YER');
-      expect(payload.lines.last.currencyCode, 'USD');
-    });
-    test('shows unposted credit sale on statement with all/unposted filters',
-        () async {
-      final customerAccount = await customerAccountUuid();
-      final adapter = saleAdapter();
-      // Mimic composer DateTime.now() (local wall clock with time-of-day).
-      final nowLocal = DateTime.now();
-      final sale = _sale(
-        settlement: SaleSettlementType.credit,
-        customerAccountId: customerAccount,
-        total: 75,
-        uuid: 'eeeeeeee-bbbb-cccc-dddd-eeeeeeeeeeee',
-        saleDate: nowLocal,
-        saleStatus: SaleStatus.unposted,
-      );
-      await adapter.syncSale(sale);
-
-      final statement = AccountStatementReportDataAdapter(
-        accounts: accounts,
-        currencyRates: rates,
-        journals: journals,
-        loadCompanyProfile: () async => const CompanyProfile(),
-      );
-
-      final todayLocal = DateTime(
-        nowLocal.year,
-        nowLocal.month,
-        nowLocal.day,
-      );
-      for (final filter in [
-        AccountStatementPostingFilter.all,
-        AccountStatementPostingFilter.unposted,
-      ]) {
         final payload = await statement.load(
+          accountUuid: customerAccount,
+          currencyCode: null, // كل العملات
+          fromDate: DateTime.utc(2026, 8, 1),
+          toDate: DateTime.utc(2026, 8, 31),
+          statementType: AccountStatementType.cumulativeAccountCurrency,
+          postingFilter: AccountStatementPostingFilter.posted,
+          labels: _labels(),
+        );
+
+        expect(payload.balancesByCurrency, hasLength(2));
+        expect(payload.balancesByCurrency.first.currencyCode, 'YER');
+        expect(payload.baseCurrencyCode, 'YER');
+        expect(payload.balancesByCurrency.first.displayCurrencyCode, 'ر.ي');
+        expect(
+          payload.balancesByCurrency.first.amountInWords,
+          contains('ريال يمني'),
+        );
+        final usd = payload.balancesByCurrency.singleWhere(
+          (b) => b.currencyCode == 'USD',
+        );
+        expect(usd.displayCurrencyCode, '\$');
+        expect(usd.amountInWords, contains('دولار أمريكي'));
+        final yer = payload.balancesByCurrency.singleWhere(
+          (b) => b.currencyCode == 'YER',
+        );
+        expect(usd.closingBalance, 50);
+        expect(yer.closingBalance, 125);
+
+        final yerLines = payload.lines
+            .where((l) => l.currencyCode == 'YER')
+            .toList();
+        expect(yerLines, hasLength(2));
+        expect(yerLines.first.balance, 100);
+        expect(yerLines.last.balance, 125);
+
+        final usdLines = payload.lines
+            .where((l) => l.currencyCode == 'USD')
+            .toList();
+        expect(usdLines, hasLength(1));
+        expect(usdLines.single.balance, 50);
+
+        // Default currency (YER) block appears first.
+        expect(payload.lines.first.currencyCode, 'YER');
+        expect(payload.lines.last.currencyCode, 'USD');
+      },
+    );
+    test(
+      'shows unposted credit sale on statement with all/unposted filters',
+      () async {
+        final customerAccount = await customerAccountUuid();
+        final adapter = saleAdapter();
+        // Mimic composer DateTime.now() (local wall clock with time-of-day).
+        final nowLocal = DateTime.now();
+        final sale = _sale(
+          settlement: SaleSettlementType.credit,
+          customerAccountId: customerAccount,
+          total: 75,
+          uuid: 'eeeeeeee-bbbb-cccc-dddd-eeeeeeeeeeee',
+          saleDate: nowLocal,
+          saleStatus: SaleStatus.unposted,
+        );
+        await adapter.syncSale(sale);
+
+        final statement = AccountStatementReportDataAdapter(
+          accounts: accounts,
+          currencyRates: rates,
+          journals: journals,
+          loadCompanyProfile: () async => const CompanyProfile(),
+        );
+
+        final todayLocal = DateTime(
+          nowLocal.year,
+          nowLocal.month,
+          nowLocal.day,
+        );
+        for (final filter in [
+          AccountStatementPostingFilter.all,
+          AccountStatementPostingFilter.unposted,
+        ]) {
+          final payload = await statement.load(
+            accountUuid: customerAccount,
+            fromDate: todayLocal,
+            toDate: todayLocal,
+            statementType: AccountStatementType.cumulativeAccountCurrency,
+            postingFilter: filter,
+            labels: _labels(),
+          );
+          expect(
+            payload.lines.any((l) => l.voucherNumber == sale.saleNumber),
+            isTrue,
+            reason: 'filter=$filter should include unposted same-day sale',
+          );
+          expect(
+            payload.lines
+                .where((l) => l.voucherNumber == sale.saleNumber)
+                .every((l) => l.isPosted == false),
+            isTrue,
+          );
+        }
+
+        final postedOnly = await statement.load(
           accountUuid: customerAccount,
           fromDate: todayLocal,
           toDate: todayLocal,
           statementType: AccountStatementType.cumulativeAccountCurrency,
-          postingFilter: filter,
+          postingFilter: AccountStatementPostingFilter.posted,
           labels: _labels(),
         );
         expect(
-          payload.lines.any((l) => l.voucherNumber == sale.saleNumber),
-          isTrue,
-          reason: 'filter=$filter should include unposted same-day sale',
+          postedOnly.lines.any((l) => l.voucherNumber == sale.saleNumber),
+          isFalse,
         );
-        expect(
-          payload.lines
-              .where((l) => l.voucherNumber == sale.saleNumber)
-              .every((l) => l.isPosted == false),
-          isTrue,
-        );
-      }
-
-      final postedOnly = await statement.load(
-        accountUuid: customerAccount,
-        fromDate: todayLocal,
-        toDate: todayLocal,
-        statementType: AccountStatementType.cumulativeAccountCurrency,
-        postingFilter: AccountStatementPostingFilter.posted,
-        labels: _labels(),
-      );
-      expect(
-        postedOnly.lines.any((l) => l.voucherNumber == sale.saleNumber),
-        isFalse,
-      );
-    });
+      },
+    );
 
     test('shows unposted credit sale on statement after sync', () async {
       final customerAccount = await customerAccountUuid();

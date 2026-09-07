@@ -136,10 +136,7 @@ class ModuleListScaffold<T> extends StatelessWidget {
         }
 
         if (onRefresh != null) {
-          content = RefreshIndicator(
-            onRefresh: onRefresh!,
-            child: content,
-          );
+          content = RefreshIndicator(onRefresh: onRefresh!, child: content);
         }
 
         return content;

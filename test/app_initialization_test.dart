@@ -70,7 +70,9 @@ void main() {
     });
 
     test('Classifies TLS error as recoverable', () {
-      final error = classifyAppError('HandshakeException: TLS certificate error');
+      final error = classifyAppError(
+        'HandshakeException: TLS certificate error',
+      );
       expect(error.category, equals(AppErrorCategory.tlsCertificate));
       expect(error.isRecoverable, isTrue);
     });

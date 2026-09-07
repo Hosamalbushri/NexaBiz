@@ -37,10 +37,12 @@ class NoOpInventoryVoucherBookPort implements InventoryVoucherBookPort {
   const NoOpInventoryVoucherBookPort();
 
   @override
-  Future<List<InventoryVoucherBookRef>> listActiveIssueBooks() async => const [];
+  Future<List<InventoryVoucherBookRef>> listActiveIssueBooks() async =>
+      const [];
 
   @override
-  Future<List<InventoryVoucherBookRef>> listActiveReceiptBooks() async => const [];
+  Future<List<InventoryVoucherBookRef>> listActiveReceiptBooks() async =>
+      const [];
 
   @override
   Future<InventoryVoucherBookRef?> findById(String bookId) async => null;

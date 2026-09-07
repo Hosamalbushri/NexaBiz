@@ -9,59 +9,65 @@ import 'package:stock_count/core/entitlements/presentation/providers/entitlement
 
 void main() {
   group('Phase 11 — Subscription UI Flow Tests', () {
-    testWidgets('SubscriptionPackagesPage renders Free plan details and Manage button', (tester) async {
-      final container = ProviderContainer(
-        overrides: [
-          currentEntitlementProvider.overrideWith(
-            (ref) => Stream.value(Entitlement.freeLocal('company_1')),
+    testWidgets(
+      'SubscriptionPackagesPage renders Free plan details and Manage button',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            currentEntitlementProvider.overrideWith(
+              (ref) => Stream.value(Entitlement.freeLocal('company_1')),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: SubscriptionPackagesPage(),
+            ),
           ),
-        ],
-      );
+        );
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: SubscriptionPackagesPage(),
+        await tester.pumpAndSettle();
+
+        expect(find.text('Subscription & Packages'), findsOneWidget);
+        expect(find.text('FREE'), findsOneWidget);
+        expect(find.text('Manage Subscription & Packages'), findsOneWidget);
+        expect(find.text('Cloud Data Synchronization'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'SubscriptionPackagesPage renders Premium plan details when active',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            currentEntitlementProvider.overrideWith(
+              (ref) => Stream.value(Entitlement.premiumActive('company_1')),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: SubscriptionPackagesPage(),
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('Subscription & Packages'), findsOneWidget);
-      expect(find.text('FREE'), findsOneWidget);
-      expect(find.text('Manage Subscription & Packages'), findsOneWidget);
-      expect(find.text('Cloud Data Synchronization'), findsOneWidget);
-    });
-
-    testWidgets('SubscriptionPackagesPage renders Premium plan details when active', (tester) async {
-      final container = ProviderContainer(
-        overrides: [
-          currentEntitlementProvider.overrideWith(
-            (ref) => Stream.value(Entitlement.premiumActive('company_1')),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: SubscriptionPackagesPage(),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      expect(find.text('PREMIUM'), findsOneWidget);
-      expect(find.text('ACTIVE'), findsOneWidget);
-      expect(find.byIcon(Icons.check_circle), findsWidgets);
-    });
+        expect(find.text('PREMIUM'), findsOneWidget);
+        expect(find.text('ACTIVE'), findsOneWidget);
+        expect(find.byIcon(Icons.check_circle), findsWidgets);
+      },
+    );
   });
 }

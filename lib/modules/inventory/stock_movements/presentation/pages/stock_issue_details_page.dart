@@ -19,15 +19,13 @@ import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
 
 class StockIssueDetailsPage extends ConsumerStatefulWidget {
-  const StockIssueDetailsPage({
-    super.key,
-    required this.issueId,
-  });
+  const StockIssueDetailsPage({super.key, required this.issueId});
 
   final String issueId;
 
   @override
-  ConsumerState<StockIssueDetailsPage> createState() => _StockIssueDetailsPageState();
+  ConsumerState<StockIssueDetailsPage> createState() =>
+      _StockIssueDetailsPageState();
 }
 
 class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
@@ -77,7 +75,10 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
       }
     } catch (e) {
       if (mounted) {
-        final errorMsg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+        final errorMsg = e.toString().replaceFirst(
+          RegExp(r'^Exception:\s*'),
+          '',
+        );
         final details = StockPostingErrorDetails.fromReason(
           context: context,
           reason: errorMsg,
@@ -125,7 +126,10 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ أثناء إلغاء الترحيل: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('خطأ أثناء إلغاء الترحيل: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -177,7 +181,10 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
             child: const Text('إلغاء'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('حذف'),
           ),
@@ -230,12 +237,18 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
           );
         }
 
-        final dateStr = '${issue.issueDate.year}-${issue.issueDate.month.toString().padLeft(2, '0')}-${issue.issueDate.day.toString().padLeft(2, '0')}';
-        final totalCostSum = issue.lines.fold(0.0, (sum, line) => sum + line.totalCost);
-        final destinationName = (issue.destination != null && issue.destination!.trim().isNotEmpty)
+        final dateStr =
+            '${issue.issueDate.year}-${issue.issueDate.month.toString().padLeft(2, '0')}-${issue.issueDate.day.toString().padLeft(2, '0')}';
+        final totalCostSum = issue.lines.fold(
+          0.0,
+          (sum, line) => sum + line.totalCost,
+        );
+        final destinationName =
+            (issue.destination != null && issue.destination!.trim().isNotEmpty)
             ? issue.destination!.trim()
             : 'غير محدد';
-        final warehouseName = (issue.warehouse != null && issue.warehouse!.trim().isNotEmpty)
+        final warehouseName =
+            (issue.warehouse != null && issue.warehouse!.trim().isNotEmpty)
             ? issue.warehouse!.trim()
             : 'المستودع الرئيسي';
 
@@ -246,7 +259,9 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
             showBackButton: true,
             actions: [
               CustomAppBarAction(
-                icon: issue.isPosted ? Icons.lock_outlined : Icons.edit_outlined,
+                icon: issue.isPosted
+                    ? Icons.lock_outlined
+                    : Icons.edit_outlined,
                 tooltip: issue.isPosted ? 'تعديل (مرحّل)' : 'تعديل',
                 onPressed: _isProcessing ? null : () => _handleEdit(issue),
               ),
@@ -273,7 +288,11 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                       value: 'post',
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.green,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text('ترحيل المستند'),
                         ],
@@ -295,7 +314,11 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                          Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text('حذف المستند'),
                         ],
@@ -330,7 +353,9 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                 ),
                 child: issue.isDraft
                     ? FilledButton.icon(
-                        onPressed: _isProcessing ? null : () => _handlePost(issue),
+                        onPressed: _isProcessing
+                            ? null
+                            : () => _handlePost(issue),
                         icon: const Icon(Icons.check_circle_outline),
                         label: const Text('ترحيل أمر الصرف'),
                         style: FilledButton.styleFrom(
@@ -340,7 +365,9 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                         ),
                       )
                     : OutlinedButton.icon(
-                        onPressed: _isProcessing ? null : () => _handleUnpost(issue),
+                        onPressed: _isProcessing
+                            ? null
+                            : () => _handleUnpost(issue),
                         icon: const Icon(Icons.undo),
                         label: const Text('إلغاء ترحيل أمر الصرف'),
                         style: OutlinedButton.styleFrom(
@@ -380,7 +407,10 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.lock_rounded, color: Colors.amber.shade900),
+                          Icon(
+                            Icons.lock_rounded,
+                            color: Colors.amber.shade900,
+                          ),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
@@ -470,7 +500,8 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                                   height: 1.25,
                                 ),
                               ),
-                              if (issue.accountName != null && issue.accountName!.trim().isNotEmpty) ...[
+                              if (issue.accountName != null &&
+                                  issue.accountName!.trim().isNotEmpty) ...[
                                 const SizedBox(height: 4),
                                 Text(
                                   'الحساب: ${issue.accountName}',
@@ -503,7 +534,8 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                   ),
 
                   // Notes Card
-                  if (issue.notes != null && issue.notes!.trim().isNotEmpty) ...[
+                  if (issue.notes != null &&
+                      issue.notes!.trim().isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.md),
                     _SurfaceCard(
                       child: Column(
@@ -568,9 +600,7 @@ class _DocumentHero extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -769,14 +799,17 @@ class _MetaTile extends StatelessWidget {
                   value,
                   maxLines: compact ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
-                  style: (compact
-                          ? theme.textTheme.labelLarge
-                          : theme.textTheme.titleSmall)
-                      ?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: emphasized ? scheme.primary : scheme.onSurface,
-                    height: 1.15,
-                  ),
+                  style:
+                      (compact
+                              ? theme.textTheme.labelLarge
+                              : theme.textTheme.titleSmall)
+                          ?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: emphasized
+                                ? scheme.primary
+                                : scheme.onSurface,
+                            height: 1.15,
+                          ),
                 ),
               ],
             ),
@@ -805,9 +838,7 @@ class _ProductsReadonlyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -889,9 +920,7 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Column(
         children: [

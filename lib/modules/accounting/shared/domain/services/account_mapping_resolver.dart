@@ -38,7 +38,8 @@ class AccountMapping {
         accountRole: roleNames,
         expectedCode: 'N/A',
         systemKey: roleNames,
-        message: 'خطأ محاسبي: لم يتم تحديد الحسابات التالية للعملية: $roleNames',
+        message:
+            'خطأ محاسبي: لم يتم تحديد الحسابات التالية للعملية: $roleNames',
       );
     }
   }

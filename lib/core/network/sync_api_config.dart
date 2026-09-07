@@ -38,10 +38,7 @@ class SyncApiConfig {
       'SYNC_API_BASE_URL',
       defaultValue: '',
     );
-    const token = String.fromEnvironment(
-      'SYNC_API_TOKEN',
-      defaultValue: '',
-    );
+    const token = String.fromEnvironment('SYNC_API_TOKEN', defaultValue: '');
     const companyId = String.fromEnvironment(
       'SYNC_API_COMPANY_ID',
       defaultValue: '00000000-0000-4000-8000-000000000001',
@@ -128,10 +125,10 @@ class SyncApiConfig {
 
   /// True when URL + token satisfy transport rules (HTTPS or allowed HTTP).
   bool get hasUsableHttpEndpoint => isHttpEndpointUsable(
-        baseUrl: baseUrl,
-        apiToken: apiToken,
-        allowInsecureHttp: allowInsecureHttp,
-      );
+    baseUrl: baseUrl,
+    apiToken: apiToken,
+    allowInsecureHttp: allowInsecureHttp,
+  );
 
   String get modeLabel =>
       enabled ? 'HTTP $baseUrl' : 'Local only (HTTP sync off)';

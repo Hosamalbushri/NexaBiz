@@ -20,14 +20,11 @@ enum SyncSessionPhase {
 }
 
 class SyncSessionState {
-  const SyncSessionState({
-    required this.phase,
-    this.message,
-  });
+  const SyncSessionState({required this.phase, this.message});
 
   const SyncSessionState.disabled()
-      : phase = SyncSessionPhase.disabled,
-        message = null;
+    : phase = SyncSessionPhase.disabled,
+      message = null;
 
   final SyncSessionPhase phase;
   final String? message;

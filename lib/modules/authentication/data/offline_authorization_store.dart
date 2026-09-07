@@ -20,10 +20,11 @@ import '../domain/entities/offline_authorization_snapshot.dart';
 ///   stale authorization state.
 class OfflineAuthorizationStore {
   OfflineAuthorizationStore({FlutterSecureStorage? secureStorage})
-      : _secure = secureStorage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+    : _secure =
+          secureStorage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          );
 
   static const _boxName = HiveBoxes.localAuthEncrypted;
   static const _userIndexPrefix = 'offline_user_idx_';
@@ -60,7 +61,10 @@ class OfflineAuthorizationStore {
     required String userId,
   }) {
     final cleanUrl = serverBaseUrl.trim().toLowerCase();
-    final urlHash = sha256.convert(utf8.encode(cleanUrl)).toString().substring(0, 16);
+    final urlHash = sha256
+        .convert(utf8.encode(cleanUrl))
+        .toString()
+        .substring(0, 16);
     return 'offline_auth_${urlHash}_${companyId.trim()}_${userId.trim()}';
   }
 
@@ -69,7 +73,10 @@ class OfflineAuthorizationStore {
     required String companyId,
     required String userId,
   }) {
-    final cleanUrl = serverBaseUrl.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+    final cleanUrl = serverBaseUrl.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '_',
+    );
     return 'offline_perm_snapshot_${cleanUrl}_${companyId.trim()}_${userId.trim()}';
   }
 
@@ -160,12 +167,16 @@ class OfflineAuthorizationStore {
         companyId: companyId,
         serverBaseUrl: serverBaseUrl,
       )) {
-        debugPrint('OfflineAuthorizationStore: Snapshot context mismatch for key $key');
+        debugPrint(
+          'OfflineAuthorizationStore: Snapshot context mismatch for key $key',
+        );
         return null;
       }
       return snapshot;
     } catch (e) {
-      debugPrint('OfflineAuthorizationStore: Failed to decode snapshot for key $key: $e');
+      debugPrint(
+        'OfflineAuthorizationStore: Failed to decode snapshot for key $key: $e',
+      );
       return null;
     }
   }
@@ -200,6 +211,7 @@ class OfflineAuthorizationStore {
       await _removeFromUserIndexHive(box, userId, legacyKey);
     }
   }
+
   /// MUST be called on logout to prevent stale authorization state from being
   /// inherited by the next user who logs in on this device.
   Future<void> deleteAllSnapshotsForUser(String userId) async {
@@ -228,7 +240,9 @@ class OfflineAuthorizationStore {
         await box.delete(indexKey);
       }
     } catch (e) {
-      debugPrint('OfflineAuthorizationStore: deleteAllSnapshotsForUser failed for $userId: $e');
+      debugPrint(
+        'OfflineAuthorizationStore: deleteAllSnapshotsForUser failed for $userId: $e',
+      );
     }
   }
 
@@ -238,7 +252,9 @@ class OfflineAuthorizationStore {
     try {
       final indexKey = _userIndexKey(userId);
       final raw = await _secure.read(key: indexKey);
-      final keys = raw != null && raw.isNotEmpty ? _parseIndex(raw) : <String>{};
+      final keys = raw != null && raw.isNotEmpty
+          ? _parseIndex(raw)
+          : <String>{};
       keys.add(snapshotKey);
       await _secure.write(key: indexKey, value: keys.join(','));
     } catch (_) {}
@@ -254,17 +270,27 @@ class OfflineAuthorizationStore {
     } catch (_) {}
   }
 
-  Future<void> _addToUserIndexHive(Box<dynamic> box, String userId, String snapshotKey) async {
+  Future<void> _addToUserIndexHive(
+    Box<dynamic> box,
+    String userId,
+    String snapshotKey,
+  ) async {
     try {
       final indexKey = _userIndexKey(userId);
       final raw = box.get(indexKey) as String?;
-      final keys = raw != null && raw.isNotEmpty ? _parseIndex(raw) : <String>{};
+      final keys = raw != null && raw.isNotEmpty
+          ? _parseIndex(raw)
+          : <String>{};
       keys.add(snapshotKey);
       await box.put(indexKey, keys.join(','));
     } catch (_) {}
   }
 
-  Future<void> _removeFromUserIndexHive(Box<dynamic> box, String userId, String snapshotKey) async {
+  Future<void> _removeFromUserIndexHive(
+    Box<dynamic> box,
+    String userId,
+    String snapshotKey,
+  ) async {
     try {
       final indexKey = _userIndexKey(userId);
       final raw = box.get(indexKey) as String?;
@@ -278,6 +304,3 @@ class OfflineAuthorizationStore {
     return raw.split(',').where((k) => k.isNotEmpty).toSet();
   }
 }
-
-
-

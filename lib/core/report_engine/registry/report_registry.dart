@@ -20,7 +20,8 @@ class ReportRegistry {
   }
 
   /// Returns all registered report definitions grouped by category.
-  static List<ReportDefinitionSpec> get allDefinitions => _definitions.values.toList();
+  static List<ReportDefinitionSpec> get allDefinitions =>
+      _definitions.values.toList();
 
   /// Gets a specific [ReportDefinitionSpec] by its report ID.
   static ReportDefinitionSpec? getDefinition(String id) => _definitions[id];

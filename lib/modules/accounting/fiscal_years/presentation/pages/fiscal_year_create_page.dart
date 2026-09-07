@@ -126,7 +126,9 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
 
     setState(() => _saving = true);
     try {
-      final fy = await ref.read(createFiscalYearUseCaseProvider).call(
+      final fy = await ref
+          .read(createFiscalYearUseCaseProvider)
+          .call(
             FiscalYearDraft(
               code: _codeController.text.trim(),
               name: _nameController.text.trim(),
@@ -157,8 +159,7 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
       }
       showAppSnackBar(
         context,
-        message:
-            permissionDeniedMessage(l10n, e) ?? l10n.somethingWentWrong,
+        message: permissionDeniedMessage(l10n, e) ?? l10n.somethingWentWrong,
         isSuccess: false,
       );
     } finally {
@@ -218,7 +219,11 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Icon(_step == 3 ? Icons.check_circle_outlined : Icons.arrow_forward),
+                    : Icon(
+                        _step == 3
+                            ? Icons.check_circle_outlined
+                            : Icons.arrow_forward,
+                      ),
                 label: Text(
                   _step == 3
                       ? l10n.accountingFiscalWizardCreate
@@ -248,11 +253,15 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
               children: [
                 TextField(
                   controller: _codeController,
-                  decoration: InputDecoration(labelText: l10n.accountingFiscalYearCode),
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingFiscalYearCode,
+                  ),
                 ),
                 TextField(
                   controller: _nameController,
-                  decoration: InputDecoration(labelText: l10n.accountingFiscalYearName),
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingFiscalYearName,
+                  ),
                 ),
               ],
             ),
@@ -260,9 +269,7 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.accountingFiscalYearStart),
-              subtitle: Text(
-                _start == null ? '—' : dateFmt.format(_start!),
-              ),
+              subtitle: Text(_start == null ? '—' : dateFmt.format(_start!)),
               trailing: const Icon(Icons.calendar_today_outlined),
               onTap: _pickStart,
             ),
@@ -349,9 +356,8 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                         hintText: l10n.accountingSearchHint,
                         accounts: posting,
                         selectedUuid: _fxGainUuid,
-                        onSelected: (account) => setState(
-                          () => _fxGainUuid = account?.uuid,
-                        ),
+                        onSelected: (account) =>
+                            setState(() => _fxGainUuid = account?.uuid),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AccountSearchField(
@@ -359,9 +365,8 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                         hintText: l10n.accountingSearchHint,
                         accounts: posting,
                         selectedUuid: _fxLossUuid,
-                        onSelected: (account) => setState(
-                          () => _fxLossUuid = account?.uuid,
-                        ),
+                        onSelected: (account) =>
+                            setState(() => _fxLossUuid = account?.uuid),
                       ),
                     ],
                   );

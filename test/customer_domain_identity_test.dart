@@ -54,10 +54,7 @@ void main() {
 
     test('1. Identity: UUID is auto-generated and immutable', () async {
       final customer = await repoCompanyA.insert(
-        const CustomerDraft(
-          customerCode: '12210001',
-          name: 'عميل اختبار',
-        ),
+        const CustomerDraft(customerCode: '12210001', name: 'عميل اختبار'),
       );
 
       expect(customer.uuid, isNotEmpty);
@@ -73,198 +70,221 @@ void main() {
       expect(updated.name, equals('عميل معدل'));
     });
 
-    test('2. Tenancy: Company isolation prevents cross-tenant access and mutation', () async {
-      final customerA = await repoCompanyA.insert(
-        const CustomerDraft(
-          customerCode: '12210001',
-          name: 'شركة أ عميل',
-        ),
-      );
+    test(
+      '2. Tenancy: Company isolation prevents cross-tenant access and mutation',
+      () async {
+        final customerA = await repoCompanyA.insert(
+          const CustomerDraft(customerCode: '12210001', name: 'شركة أ عميل'),
+        );
 
-      // Company B cannot read Company A customer by ID or UUID
-      final byIdFromB = await repoCompanyB.getById(customerA.id);
-      expect(byIdFromB, isNull);
+        // Company B cannot read Company A customer by ID or UUID
+        final byIdFromB = await repoCompanyB.getById(customerA.id);
+        expect(byIdFromB, isNull);
 
-      final byUuidFromB = await repoCompanyB.getByUuid(customerA.uuid);
-      expect(byUuidFromB, isNull);
+        final byUuidFromB = await repoCompanyB.getByUuid(customerA.uuid);
+        expect(byUuidFromB, isNull);
 
-      final listB = await repoCompanyB.getAll();
-      expect(listB.where((c) => c.uuid == customerA.uuid), isEmpty);
+        final listB = await repoCompanyB.getAll();
+        expect(listB.where((c) => c.uuid == customerA.uuid), isEmpty);
 
-      // Company B update attempt fails
-      expect(
-        () async => repoCompanyB.update(
-          customerA.id,
-          customerA.toDraft().copyWith(name: 'اختراق'),
-        ),
-        throwsA(isA<CustomerException>().having(
-          (e) => e.code,
-          'code',
-          CustomerException.notFound,
-        )),
-      );
-    });
-
-    test('3. Credit Limit: Negative limits are rejected with invalidCreditLimit', () {
-      expect(
-        () => validator.validate(
-          const CustomerDraft(
-            customerCode: '12210001',
-            name: 'عميل خطة ائتمان',
-            creditLimit: -100.0,
+        // Company B update attempt fails
+        expect(
+          () async => repoCompanyB.update(
+            customerA.id,
+            customerA.toDraft().copyWith(name: 'اختراق'),
           ),
-        ),
-        throwsA(isA<CustomerException>().having(
-          (e) => e.code,
-          'code',
-          CustomerException.invalidCreditLimit,
-        )),
-      );
-
-      // Zero and positive limits pass validation
-      expect(
-        () => validator.validate(
-          const CustomerDraft(
-            customerCode: '12210001',
-            name: 'عميل خطة ائتمان',
-            creditLimit: 0.0,
+          throwsA(
+            isA<CustomerException>().having(
+              (e) => e.code,
+              'code',
+              CustomerException.notFound,
+            ),
           ),
-        ),
-        returnsNormally,
-      );
+        );
+      },
+    );
 
-      expect(
-        () => validator.validate(
-          const CustomerDraft(
-            customerCode: '12210001',
-            name: 'عميل خطة ائتمان',
-            creditLimit: 5000.0,
+    test(
+      '3. Credit Limit: Negative limits are rejected with invalidCreditLimit',
+      () {
+        expect(
+          () => validator.validate(
+            const CustomerDraft(
+              customerCode: '12210001',
+              name: 'عميل خطة ائتمان',
+              creditLimit: -100.0,
+            ),
           ),
-        ),
-        returnsNormally,
-      );
-    });
+          throwsA(
+            isA<CustomerException>().having(
+              (e) => e.code,
+              'code',
+              CustomerException.invalidCreditLimit,
+            ),
+          ),
+        );
 
-    test('4. Currency: Invalid currency codes are rejected with invalidCurrencyCode', () {
-      expect(
-        () => validator.validate(
-          const CustomerDraft(
-            customerCode: '12210001',
-            name: 'عميل عملة',
-            currencyCode: 'US',
+        // Zero and positive limits pass validation
+        expect(
+          () => validator.validate(
+            const CustomerDraft(
+              customerCode: '12210001',
+              name: 'عميل خطة ائتمان',
+              creditLimit: 0.0,
+            ),
           ),
-        ),
-        throwsA(isA<CustomerException>().having(
-          (e) => e.code,
-          'code',
-          CustomerException.invalidCurrencyCode,
-        )),
-      );
+          returnsNormally,
+        );
 
-      expect(
-        () => validator.validate(
-          const CustomerDraft(
-            customerCode: '12210001',
-            name: 'عميل عملة',
-            currencyCode: 'USDD',
+        expect(
+          () => validator.validate(
+            const CustomerDraft(
+              customerCode: '12210001',
+              name: 'عميل خطة ائتمان',
+              creditLimit: 5000.0,
+            ),
           ),
-        ),
-        throwsA(isA<CustomerException>().having(
-          (e) => e.code,
-          'code',
-          CustomerException.invalidCurrencyCode,
-        )),
-      );
+          returnsNormally,
+        );
+      },
+    );
 
-      // Valid 3-letter currency code passes
-      expect(
-        () => validator.validate(
-          const CustomerDraft(
-            customerCode: '12210001',
-            name: 'عميل عملة',
-            currencyCode: 'SAR',
+    test(
+      '4. Currency: Invalid currency codes are rejected with invalidCurrencyCode',
+      () {
+        expect(
+          () => validator.validate(
+            const CustomerDraft(
+              customerCode: '12210001',
+              name: 'عميل عملة',
+              currencyCode: 'US',
+            ),
           ),
-        ),
-        returnsNormally,
-      );
-    });
+          throwsA(
+            isA<CustomerException>().having(
+              (e) => e.code,
+              'code',
+              CustomerException.invalidCurrencyCode,
+            ),
+          ),
+        );
 
-    test('5. Account Linking: Enforces company match, active status, and posting requirements', () {
-      // 5a. Company mismatch
-      expect(
-        () => validator.validateAccountLink(
-          const LinkedAccountRef(
-            accountId: 'acc_1',
-            code: '1221',
-            name: 'حساب شركة ب',
-            companyId: 'comp_B',
+        expect(
+          () => validator.validate(
+            const CustomerDraft(
+              customerCode: '12210001',
+              name: 'عميل عملة',
+              currencyCode: 'USDD',
+            ),
           ),
-          customerCompanyId: 'comp_A',
-        ),
-        throwsA(isA<CustomerException>().having(
-          (e) => e.code,
-          'code',
-          CustomerException.accountCompanyMismatch,
-        )),
-      );
+          throwsA(
+            isA<CustomerException>().having(
+              (e) => e.code,
+              'code',
+              CustomerException.invalidCurrencyCode,
+            ),
+          ),
+        );
 
-      // 5b. Inactive account
-      expect(
-        () => validator.validateAccountLink(
-          const LinkedAccountRef(
-            accountId: 'acc_2',
-            code: '1221',
-            name: 'حساب غير مفعّل',
-            companyId: 'comp_A',
-            isActive: false,
+        // Valid 3-letter currency code passes
+        expect(
+          () => validator.validate(
+            const CustomerDraft(
+              customerCode: '12210001',
+              name: 'عميل عملة',
+              currencyCode: 'SAR',
+            ),
           ),
-          customerCompanyId: 'comp_A',
-        ),
-        throwsA(isA<CustomerException>().having(
-          (e) => e.code,
-          'code',
-          CustomerException.accountInactive,
-        )),
-      );
+          returnsNormally,
+        );
+      },
+    );
 
-      // 5c. Group account (not posting)
-      expect(
-        () => validator.validateAccountLink(
-          const LinkedAccountRef(
-            accountId: 'acc_3',
-            code: '1220',
-            name: 'حساب تجميعي',
-            companyId: 'comp_A',
-            isActive: true,
-            isPosting: false,
-            isGroup: true,
+    test(
+      '5. Account Linking: Enforces company match, active status, and posting requirements',
+      () {
+        // 5a. Company mismatch
+        expect(
+          () => validator.validateAccountLink(
+            const LinkedAccountRef(
+              accountId: 'acc_1',
+              code: '1221',
+              name: 'حساب شركة ب',
+              companyId: 'comp_B',
+            ),
+            customerCompanyId: 'comp_A',
           ),
-          customerCompanyId: 'comp_A',
-        ),
-        throwsA(isA<CustomerException>().having(
-          (e) => e.code,
-          'code',
-          CustomerException.accountNotPosting,
-        )),
-      );
+          throwsA(
+            isA<CustomerException>().having(
+              (e) => e.code,
+              'code',
+              CustomerException.accountCompanyMismatch,
+            ),
+          ),
+        );
 
-      // 5d. Valid account link passes
-      expect(
-        () => validator.validateAccountLink(
-          const LinkedAccountRef(
-            accountId: 'acc_4',
-            code: '12210001',
-            name: 'حساب فرعي صالحة',
-            companyId: 'comp_A',
-            isActive: true,
-            isPosting: true,
-            isGroup: false,
+        // 5b. Inactive account
+        expect(
+          () => validator.validateAccountLink(
+            const LinkedAccountRef(
+              accountId: 'acc_2',
+              code: '1221',
+              name: 'حساب غير مفعّل',
+              companyId: 'comp_A',
+              isActive: false,
+            ),
+            customerCompanyId: 'comp_A',
           ),
-          customerCompanyId: 'comp_A',
-        ),
-        returnsNormally,
-      );
-    });
+          throwsA(
+            isA<CustomerException>().having(
+              (e) => e.code,
+              'code',
+              CustomerException.accountInactive,
+            ),
+          ),
+        );
+
+        // 5c. Group account (not posting)
+        expect(
+          () => validator.validateAccountLink(
+            const LinkedAccountRef(
+              accountId: 'acc_3',
+              code: '1220',
+              name: 'حساب تجميعي',
+              companyId: 'comp_A',
+              isActive: true,
+              isPosting: false,
+              isGroup: true,
+            ),
+            customerCompanyId: 'comp_A',
+          ),
+          throwsA(
+            isA<CustomerException>().having(
+              (e) => e.code,
+              'code',
+              CustomerException.accountNotPosting,
+            ),
+          ),
+        );
+
+        // 5d. Valid account link passes
+        expect(
+          () => validator.validateAccountLink(
+            const LinkedAccountRef(
+              accountId: 'acc_4',
+              code: '12210001',
+              name: 'حساب فرعي صالحة',
+              companyId: 'comp_A',
+              isActive: true,
+              isPosting: true,
+              isGroup: false,
+            ),
+            customerCompanyId: 'comp_A',
+          ),
+          returnsNormally,
+        );
+      },
+    );
 
     test('6. Status: CustomerStatus lifecycle and mapping integrity', () async {
       final customer = await repoCompanyA.insert(

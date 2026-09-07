@@ -54,7 +54,8 @@ class SyncErrorClassifier {
         requiresAuthentication: false,
         requiresEntitlement: false,
         quarantine: false,
-        userMessage: 'Connection unavailable. Your changes are saved locally and will sync automatically.',
+        userMessage:
+            'Connection unavailable. Your changes are saved locally and will sync automatically.',
         securityEvent: null,
       );
     }
@@ -73,8 +74,12 @@ class SyncErrorClassifier {
     }
 
     if (error is AuthorizationFailure) {
-      final isTenant = error.code == 'tenant_mismatch' || error.message.toLowerCase().contains('tenant mismatch');
-      final isDevice = error.code == 'device_mismatch' || error.message.toLowerCase().contains('device mismatch');
+      final isTenant =
+          error.code == 'tenant_mismatch' ||
+          error.message.toLowerCase().contains('tenant mismatch');
+      final isDevice =
+          error.code == 'device_mismatch' ||
+          error.message.toLowerCase().contains('device mismatch');
 
       if (isTenant) {
         return const SyncErrorClassification(
@@ -97,7 +102,8 @@ class SyncErrorClassifier {
           requiresAuthentication: false,
           requiresEntitlement: false,
           quarantine: true,
-          userMessage: 'Security isolation warning: device registration mismatch.',
+          userMessage:
+              'Security isolation warning: device registration mismatch.',
           securityEvent: 'sync.device_mismatch',
         );
       }
@@ -124,7 +130,8 @@ class SyncErrorClassifier {
         requiresAuthentication: false,
         requiresEntitlement: true,
         quarantine: false,
-        userMessage: 'Cloud synchronization is currently unavailable for this company.',
+        userMessage:
+            'Cloud synchronization is currently unavailable for this company.',
         securityEvent: 'sync.entitlement_denied',
       );
     }

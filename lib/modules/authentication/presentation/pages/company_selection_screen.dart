@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/company_details_sheet.dart';
 import '../widgets/company_switch_confirmation_dialog.dart';
+import 'package:stock_count/app/router/app_routes.dart';
 
 class CompanySelectionScreen extends ConsumerWidget {
   const CompanySelectionScreen({super.key});
@@ -26,7 +27,7 @@ class CompanySelectionScreen extends ConsumerWidget {
               const Text('جلسة غير صالحة'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => context.go('/login'),
+                onPressed: () => context.go(AppRoutes.login),
                 child: const Text('تسجيل الدخول'),
               ),
             ],
@@ -46,7 +47,7 @@ class CompanySelectionScreen extends ConsumerWidget {
             onPressed: () async {
               await ref.read(authStateProvider.notifier).logout();
               if (context.mounted) {
-                context.go('/login');
+                context.go(AppRoutes.login);
               }
             },
           ),
@@ -76,7 +77,8 @@ class CompanySelectionScreen extends ConsumerWidget {
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final company = companies[index];
-                          final isSelected = company.id == session.currentCompanyId;
+                          final isSelected =
+                              company.id == session.currentCompanyId;
                           return Card(
                             elevation: isSelected ? 4 : 1,
                             shape: RoundedRectangleBorder(
@@ -90,20 +92,28 @@ class CompanySelectionScreen extends ConsumerWidget {
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                child: Text(company.code.isNotEmpty
-                                    ? company.code.substring(0, 1)
-                                    : 'C'),
+                                child: Text(
+                                  company.code.isNotEmpty
+                                      ? company.code.substring(0, 1)
+                                      : 'C',
+                                ),
                               ),
                               title: Text(
                                 company.name,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              subtitle: Text('الكود: ${company.code} | الدور: ${company.role}'),
+                              subtitle: Text(
+                                'الكود: ${company.code} | الدور: ${company.role}',
+                              ),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.info_outline_rounded),
+                                    icon: const Icon(
+                                      Icons.info_outline_rounded,
+                                    ),
                                     tooltip: 'بيانات الشركة',
                                     onPressed: () => CompanyDetailsSheet.show(
                                       context,
@@ -114,7 +124,8 @@ class CompanySelectionScreen extends ConsumerWidget {
                                   ElevatedButton(
                                     onPressed: () async {
                                       if (isSelected) {
-                                        if (context.mounted && context.canPop()) {
+                                        if (context.mounted &&
+                                            context.canPop()) {
                                           context.pop();
                                         }
                                         return;
@@ -122,10 +133,10 @@ class CompanySelectionScreen extends ConsumerWidget {
 
                                       final success =
                                           await showCompanySwitchConfirmationFlow(
-                                        context,
-                                        ref,
-                                        company,
-                                      );
+                                            context,
+                                            ref,
+                                            company,
+                                          );
 
                                       if (context.mounted &&
                                           success &&
@@ -133,7 +144,9 @@ class CompanySelectionScreen extends ConsumerWidget {
                                         context.pop();
                                       }
                                     },
-                                    child: Text(isSelected ? 'دخول' : 'تغيير وتأكيد'),
+                                    child: Text(
+                                      isSelected ? 'دخول' : 'تغيير وتأكيد',
+                                    ),
                                   ),
                                 ],
                               ),

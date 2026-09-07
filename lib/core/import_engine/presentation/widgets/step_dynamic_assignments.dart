@@ -36,7 +36,11 @@ class StepDynamicAssignments extends StatelessWidget {
                   color: colorScheme.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                child: Icon(Icons.tune_rounded, color: colorScheme.primary, size: 24),
+                child: Icon(
+                  Icons.tune_rounded,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 14.0),
               Expanded(
@@ -72,7 +76,9 @@ class StepDynamicAssignments extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12.0),
-            ...relations.map((rel) => _buildRelationAssignmentCard(context, rel)),
+            ...relations.map(
+              (rel) => _buildRelationAssignmentCard(context, rel),
+            ),
             const SizedBox(height: 24.0),
           ],
 
@@ -84,13 +90,18 @@ class StepDynamicAssignments extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12.0),
-          ...profile.fields.map((field) => _buildFieldAssignmentInput(context, field)),
+          ...profile.fields.map(
+            (field) => _buildFieldAssignmentInput(context, field),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRelationAssignmentCard(BuildContext context, ImportRelation rel) {
+  Widget _buildRelationAssignmentCard(
+    BuildContext context,
+    ImportRelation rel,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final currentVal = assignments[rel.relationKey]?.toString() ?? '';
@@ -100,7 +111,9 @@ class StepDynamicAssignments extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -109,24 +122,35 @@ class StepDynamicAssignments extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.account_tree_outlined, size: 20, color: colorScheme.primary),
+                Icon(
+                  Icons.account_tree_outlined,
+                  size: 20,
+                  color: colorScheme.primary,
+                ),
                 const SizedBox(width: 8.0),
                 Expanded(
                   child: Text(
                     '${rel.relationKey}${rel.isRequired ? ' *' : ''}',
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     rel.targetEntityType,
-                    style: theme.textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -134,7 +158,9 @@ class StepDynamicAssignments extends StatelessWidget {
             const SizedBox(height: 4.0),
             Text(
               'Lookup Field: ${rel.lookupFieldKey}',
-              style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12.0),
             TextFormField(
@@ -143,10 +169,15 @@ class StepDynamicAssignments extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Fixed / Default ${rel.relationKey}',
                 hintText: 'e.g. Main ${rel.relationKey} or Code',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
                 isDense: true,
               ),
-              onChanged: (val) => onAssignmentChanged(rel.relationKey, val.trim().isEmpty ? null : val),
+              onChanged: (val) => onAssignmentChanged(
+                rel.relationKey,
+                val.trim().isEmpty ? null : val,
+              ),
             ),
           ],
         ),
@@ -175,7 +206,8 @@ class StepDynamicAssignments extends StatelessWidget {
             color: colorScheme.primary,
           ),
         ),
-        onChanged: (val) => onAssignmentChanged(field.key, val.trim().isEmpty ? null : val),
+        onChanged: (val) =>
+            onAssignmentChanged(field.key, val.trim().isEmpty ? null : val),
       ),
     );
   }

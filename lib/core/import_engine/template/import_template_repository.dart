@@ -8,7 +8,10 @@ abstract class ImportTemplateRepository {
   Future<void> createTemplate(ImportTemplate template);
 
   /// Retrieves an [ImportTemplate] by [templateId] and [companyId].
-  Future<ImportTemplate?> getTemplate(String templateId, {required String companyId});
+  Future<ImportTemplate?> getTemplate(
+    String templateId, {
+    required String companyId,
+  });
 
   /// Updates an existing [ImportTemplate].
   Future<void> updateTemplate(ImportTemplate template);
@@ -38,21 +41,29 @@ class InMemoryImportTemplateRepository implements ImportTemplateRepository {
   final Map<String, String> _storage = {};
   final Map<String, ImportTemplate> _templates = {};
 
-  Map<String, String> exportStorage() => Map<String, String>.unmodifiable(_storage);
+  Map<String, String> exportStorage() =>
+      Map<String, String>.unmodifiable(_storage);
 
   @override
   Future<void> createTemplate(ImportTemplate template) async {
     if (template.companyId.trim().isEmpty) {
-      throw ArgumentError('Cannot create ImportTemplate without a valid companyId');
+      throw ArgumentError(
+        'Cannot create ImportTemplate without a valid companyId',
+      );
     }
     if (_storage.containsKey(template.templateId)) {
-      throw StateError('ImportTemplate with ID "${template.templateId}" already exists.');
+      throw StateError(
+        'ImportTemplate with ID "${template.templateId}" already exists.',
+      );
     }
     await _persist(template);
   }
 
   @override
-  Future<ImportTemplate?> getTemplate(String templateId, {required String companyId}) async {
+  Future<ImportTemplate?> getTemplate(
+    String templateId, {
+    required String companyId,
+  }) async {
     final template = _templates[templateId] ?? _loadFromStorage(templateId);
     if (template == null) return null;
     // Strict multi-company tenant isolation guard: return null on cross-company query
@@ -64,9 +75,13 @@ class InMemoryImportTemplateRepository implements ImportTemplateRepository {
 
   @override
   Future<void> updateTemplate(ImportTemplate template) async {
-    final existing = _templates[template.templateId] ?? _loadFromStorage(template.templateId);
+    final existing =
+        _templates[template.templateId] ??
+        _loadFromStorage(template.templateId);
     if (existing == null) {
-      throw StateError('ImportTemplate "${template.templateId}" not found for company "${template.companyId}".');
+      throw StateError(
+        'ImportTemplate "${template.templateId}" not found for company "${template.companyId}".',
+      );
     }
     if (existing.companyId != template.companyId) {
       throw TenantIsolationException(
@@ -80,7 +95,10 @@ class InMemoryImportTemplateRepository implements ImportTemplateRepository {
   }
 
   @override
-  Future<void> deleteTemplate(String templateId, {required String companyId}) async {
+  Future<void> deleteTemplate(
+    String templateId, {
+    required String companyId,
+  }) async {
     final existing = _templates[templateId] ?? _loadFromStorage(templateId);
     if (existing != null && existing.companyId != companyId) {
       throw TenantIsolationException(
@@ -90,7 +108,9 @@ class InMemoryImportTemplateRepository implements ImportTemplateRepository {
       );
     }
     if (existing == null) {
-      throw StateError('ImportTemplate "$templateId" not found for company "$companyId".');
+      throw StateError(
+        'ImportTemplate "$templateId" not found for company "$companyId".',
+      );
     }
     _storage.remove(templateId);
     _templates.remove(templateId);
@@ -105,9 +125,7 @@ class InMemoryImportTemplateRepository implements ImportTemplateRepository {
         _loadFromStorage(id);
       }
     }
-    return _templates.values
-        .where((t) => t.companyId == companyId)
-        .toList();
+    return _templates.values.where((t) => t.companyId == companyId).toList();
   }
 
   Future<void> _persist(ImportTemplate template) async {

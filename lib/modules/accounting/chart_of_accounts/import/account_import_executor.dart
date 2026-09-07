@@ -6,7 +6,10 @@ import 'account_hierarchy_sorter.dart';
 
 /// Domain exception for Chart of Accounts import failures.
 class AccountImportException extends ImportEngineException {
-  const AccountImportException(super.message, [super.code = 'ACCOUNT_IMPORT_ERROR']);
+  const AccountImportException(
+    super.message, [
+    super.code = 'ACCOUNT_IMPORT_ERROR',
+  ]);
 }
 
 /// Execution result payload for a single imported account row.
@@ -26,9 +29,7 @@ class AccountImportRowResult {
 
 /// Domain import executor for Chart of Accounts (COA) enforcing multi-company tenant isolation.
 class AccountImportExecutor {
-  AccountImportExecutor({
-    required this.accountRepository,
-  });
+  AccountImportExecutor({required this.accountRepository});
 
   final AccountRepository accountRepository;
 
@@ -41,7 +42,10 @@ class AccountImportExecutor {
   }) async {
     final cleanCompanyId = companyId.trim();
     if (cleanCompanyId.isEmpty) {
-      throw const AccountImportException('Company ID cannot be empty.', 'EMPTY_COMPANY');
+      throw const AccountImportException(
+        'Company ID cannot be empty.',
+        'EMPTY_COMPANY',
+      );
     }
 
     // Topological sorting ensuring parent accounts precede dependent child accounts
@@ -78,12 +82,18 @@ class AccountImportExecutor {
   }) async {
     final code = rowData['accountCode']?.toString().trim() ?? '';
     if (code.isEmpty) {
-      throw const AccountImportException('Account Code cannot be empty.', 'EMPTY_ACCOUNT_CODE');
+      throw const AccountImportException(
+        'Account Code cannot be empty.',
+        'EMPTY_ACCOUNT_CODE',
+      );
     }
 
     final name = rowData['name']?.toString().trim() ?? '';
     if (name.isEmpty) {
-      throw const AccountImportException('Account Name cannot be empty.', 'EMPTY_ACCOUNT_NAME');
+      throw const AccountImportException(
+        'Account Name cannot be empty.',
+        'EMPTY_ACCOUNT_NAME',
+      );
     }
 
     // 1. Parse & Validate AccountType
@@ -94,26 +104,39 @@ class AccountImportExecutor {
     final isGroup = parseBoolean(rowData['isGroup']) ?? false;
 
     // 3. Parse & Validate Opening Balances
-    final debitOpening = double.tryParse(rowData['debitOpening']?.toString() ?? '') ?? 0.0;
-    final creditOpening = double.tryParse(rowData['creditOpening']?.toString() ?? '') ?? 0.0;
+    final debitOpening =
+        double.tryParse(rowData['debitOpening']?.toString() ?? '') ?? 0.0;
+    final creditOpening =
+        double.tryParse(rowData['creditOpening']?.toString() ?? '') ?? 0.0;
     final currencyCode = rowData['currency']?.toString().trim();
     final description = rowData['description']?.toString().trim();
     final isActive = parseBoolean(rowData['isActive']) ?? true;
 
     if (debitOpening < 0 || creditOpening < 0) {
-      throw const AccountImportException('Opening balance amounts cannot be negative.', 'NEGATIVE_OPENING_BALANCE');
+      throw const AccountImportException(
+        'Opening balance amounts cannot be negative.',
+        'NEGATIVE_OPENING_BALANCE',
+      );
     }
 
     if (debitOpening > 0 && creditOpening > 0) {
-      throw const AccountImportException('Account cannot have both debit and credit opening balances on the same row.', 'BOTH_OPENING_SIDES');
+      throw const AccountImportException(
+        'Account cannot have both debit and credit opening balances on the same row.',
+        'BOTH_OPENING_SIDES',
+      );
     }
 
     if (isGroup && (debitOpening > 0 || creditOpening > 0)) {
-      throw const AccountImportException('Group (header) accounts cannot have opening balances.', 'GROUP_OPENING_BALANCE');
+      throw const AccountImportException(
+        'Group (header) accounts cannot have opening balances.',
+        'GROUP_OPENING_BALANCE',
+      );
     }
 
     // 4. Resolve Parent Account with Multi-Company Tenant Isolation
-    final parentTerm = rowData['parentAccount']?.toString().trim() ?? resolvedRelations['parentAccount'];
+    final parentTerm =
+        rowData['parentAccount']?.toString().trim() ??
+        resolvedRelations['parentAccount'];
     Account? parentAccount;
 
     if (parentTerm != null && parentTerm.isNotEmpty) {
@@ -133,8 +156,12 @@ class AccountImportExecutor {
 
     if (existing != null) {
       if (policy.duplicateResolution == DuplicateResolutionStrategy.error) {
-        throw AccountImportException('Account code "$code" already exists.', 'DUPLICATE_CODE');
-      } else if (policy.duplicateResolution == DuplicateResolutionStrategy.skip) {
+        throw AccountImportException(
+          'Account code "$code" already exists.',
+          'DUPLICATE_CODE',
+        );
+      } else if (policy.duplicateResolution ==
+          DuplicateResolutionStrategy.skip) {
         return AccountImportRowResult(
           account: existing,
           debitOpening: debitOpening,
@@ -147,7 +174,8 @@ class AccountImportExecutor {
     // Ambiguity Check: Ensure name isn't conflicting with an existing account of different code
     final allAccounts = await accountRepository.getAll(includeInactive: true);
     for (final acc in allAccounts) {
-      if (acc.name.toLowerCase().trim() == name.toLowerCase() && acc.accountCode != code) {
+      if (acc.name.toLowerCase().trim() == name.toLowerCase() &&
+          acc.accountCode != code) {
         if (policy.duplicateResolution == DuplicateResolutionStrategy.error) {
           throw AccountImportException(
             'Account name "$name" already exists under code "${acc.accountCode}". Silent merge is prohibited.',
@@ -169,7 +197,8 @@ class AccountImportExecutor {
     );
 
     final Account account;
-    if (existing != null && policy.duplicateResolution == DuplicateResolutionStrategy.overwrite) {
+    if (existing != null &&
+        policy.duplicateResolution == DuplicateResolutionStrategy.overwrite) {
       account = await accountRepository.update(existing.id, draft);
     } else {
       account = await accountRepository.insert(draft);
@@ -217,7 +246,8 @@ class AccountImportExecutor {
     // By search / name match
     final search = await accountRepository.search(clean, includeInactive: true);
     for (final acc in search) {
-      if (acc.accountCode == clean || acc.name.toLowerCase().trim() == clean.toLowerCase()) {
+      if (acc.accountCode == clean ||
+          acc.name.toLowerCase().trim() == clean.toLowerCase()) {
         if (acc.companyId != null && acc.companyId != companyId) {
           throw TenantIsolationException(
             'Cross-company parent account resolution violation: Parent account "${acc.name}" belongs to company "${acc.companyId}", attempted by company "$companyId"',
@@ -286,10 +316,20 @@ class AccountImportExecutor {
     if (input == null) return null;
     if (input is bool) return input;
     final str = input.toString().trim().toLowerCase();
-    if (str == 'true' || str == '1' || str == 'yes' || str == 'y' || str == 'نعم' || str == 'صحيح') {
+    if (str == 'true' ||
+        str == '1' ||
+        str == 'yes' ||
+        str == 'y' ||
+        str == 'نعم' ||
+        str == 'صحيح') {
       return true;
     }
-    if (str == 'false' || str == '0' || str == 'no' || str == 'n' || str == 'لا' || str == 'خطأ') {
+    if (str == 'false' ||
+        str == '0' ||
+        str == 'no' ||
+        str == 'n' ||
+        str == 'لا' ||
+        str == 'خطأ') {
       return false;
     }
     return null;

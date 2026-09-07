@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/modules/administration/shared/presentation/admin_localizations_extension.dart';
 import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/sync/sync_enabled_provider.dart';
@@ -32,21 +33,16 @@ class AdministrationHomePage extends ConsumerWidget {
         centerTitle: false,
         showBackButton: true,
       ),
-      body: (!syncOn || !auth.canUseRemoteSync)
+      body: auth.needsSessionRenewal
           ? AppEmptyState(
               icon: Icons.cloud_off_outlined,
-              title: auth.needsSessionRenewal
-                  ? l10n.syncSessionExpired
-                  : l10n.adminRequiresOnlineTitle,
-              subtitle: auth.needsSessionRenewal
-                  ? l10n.syncSessionExpired
-                  : l10n.adminRequiresOnlineMessage,
+              title: l10n.syncSessionExpired,
+              subtitle: l10n.syncSessionExpired,
             )
           : ListView(
-              padding: AppConstants.pageInsets(context).copyWith(
-                top: AppSpacing.sm,
-                bottom: AppSpacing.lg,
-              ),
+              padding: AppConstants.pageInsets(
+                context,
+              ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
               children: [
                 Text(
                   l10n.adminAccessControlIntro,
@@ -96,15 +92,42 @@ class AdministrationHomePage extends ConsumerWidget {
                         title: l10n.adminPermissionsCatalogTitle,
                         subtitle: l10n.adminPermissionsCatalogSubtitle,
                         showChevron: true,
-                        onTap: () => context
-                            .push(AppRoutes.administrationPermissions),
+                        onTap: () =>
+                            context.push(AppRoutes.administrationPermissions),
                       ),
                     ),
                     PermissionGate(
                       anyOf: const [
-                        'devices.view',
-                        'devices.revoke',
+                        'companies.view',
+                        'companies.manage',
+                        'platform.companies.manage',
                       ],
+                      child: SettingsTile(
+                        icon: Icons.business_outlined,
+                        title: l10n.adminCompaniesTitle,
+                        subtitle: 'إدارة الشركات للمؤسسة',
+                        showChevron: true,
+                        onTap: () =>
+                            context.push(AppRoutes.administrationCompanies),
+                      ),
+                    ),
+                    PermissionGate(
+                      anyOf: const [
+                        'branches.view',
+                        'branches.manage',
+                        'platform.companies.manage',
+                      ],
+                      child: SettingsTile(
+                        icon: Icons.account_tree_outlined,
+                        title: l10n.adminBranchesTitle,
+                        subtitle: 'إدارة الفروع والهيكل التنظيمي الإداري',
+                        showChevron: true,
+                        onTap: () =>
+                            context.push(AppRoutes.administrationBranches),
+                      ),
+                    ),
+                    PermissionGate(
+                      anyOf: const ['devices.view', 'devices.revoke'],
                       child: const _DevicesTile(),
                     ),
                   ],

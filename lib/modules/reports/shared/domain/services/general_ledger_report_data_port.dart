@@ -109,8 +109,9 @@ abstract class GeneralLedgerReportDataPort {
 }
 
 /// Riverpod provider for GeneralLedgerReportDataPort.
-final generalLedgerReportDataPortProvider =
-    Provider<GeneralLedgerReportDataPort>((ref) {
+final generalLedgerReportDataPortProvider = Provider<GeneralLedgerReportDataPort>((
+  ref,
+) {
   throw UnimplementedError(
     'generalLedgerReportDataPortProvider must be overridden in providerOverrides',
   );

@@ -34,12 +34,12 @@ class ValidationIssue {
   final dynamic normalizedValue;
 
   Map<String, dynamic> toJson() => {
-        'row': row,
-        'field': field,
-        'code': code,
-        'severity': severity.name,
-        'message': message,
-        'originalValue': originalValue?.toString(),
-        'normalizedValue': normalizedValue?.toString(),
-      };
+    'row': row,
+    'field': field,
+    'code': code,
+    'severity': severity.name,
+    'message': message,
+    'originalValue': originalValue?.toString(),
+    'normalizedValue': normalizedValue?.toString(),
+  };
 }

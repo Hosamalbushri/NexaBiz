@@ -35,9 +35,7 @@ class ConflictEvaluationResult {
 
 /// Deterministic conflict policy shared across features.
 class ConflictResolver {
-  const ConflictResolver({
-    this._merger = const ThreeWayMerger(),
-  });
+  const ConflictResolver({this._merger = const ThreeWayMerger()});
 
   final ThreeWayMerger _merger;
 
@@ -69,7 +67,9 @@ class ConflictResolver {
   }) {
     // Create is ensure-exists: never markConflict against an existing UUID.
     if (localOperation.type == SyncOperationType.create) {
-      return const ConflictEvaluationResult(decision: ConflictDecision.uploadLocal);
+      return const ConflictEvaluationResult(
+        decision: ConflictDecision.uploadLocal,
+      );
     }
 
     final policy = EntityConflictPolicy.getForEntity(localOperation.entityType);
@@ -84,18 +84,24 @@ class ConflictResolver {
 
     // Append-only events (e.g. inventory movements) always upload
     if (policy.strategy == ConflictStrategy.appendOnly) {
-      return const ConflictEvaluationResult(decision: ConflictDecision.uploadLocal);
+      return const ConflictEvaluationResult(
+        decision: ConflictDecision.uploadLocal,
+      );
     }
 
     final localVersion = localOperation.baseVersion;
     if (remoteVersion <= localVersion) {
-      return const ConflictEvaluationResult(decision: ConflictDecision.uploadLocal);
+      return const ConflictEvaluationResult(
+        decision: ConflictDecision.uploadLocal,
+      );
     }
 
     // Remote advanced past local version
     if (preferServerWhenLocalSynced &&
         localOperation.status == SyncStatus.synced) {
-      return const ConflictEvaluationResult(decision: ConflictDecision.applyRemote);
+      return const ConflictEvaluationResult(
+        decision: ConflictDecision.applyRemote,
+      );
     }
 
     // Evaluate 3-way merge if remotePayload and basePayload are available
@@ -125,9 +131,13 @@ class ConflictResolver {
 
     if (remoteUpdatedAt != null &&
         remoteUpdatedAt.isAfter(localOperation.updatedAt)) {
-      return const ConflictEvaluationResult(decision: ConflictDecision.markConflict);
+      return const ConflictEvaluationResult(
+        decision: ConflictDecision.markConflict,
+      );
     }
 
-    return const ConflictEvaluationResult(decision: ConflictDecision.markConflict);
+    return const ConflictEvaluationResult(
+      decision: ConflictDecision.markConflict,
+    );
   }
 }

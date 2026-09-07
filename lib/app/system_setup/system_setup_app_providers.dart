@@ -10,28 +10,34 @@ import 'package:stock_count/modules/system_setup/presentation/providers/system_s
 import 'accounting_setup_account_lookup_adapter.dart';
 import 'inventory_setup_warehouse_lookup_adapter.dart';
 
-final appSetupAccountLookupPortProvider = Provider<SetupAccountLookupPort>((ref) {
+final appSetupAccountLookupPortProvider = Provider<SetupAccountLookupPort>((
+  ref,
+) {
   return AccountingSetupAccountLookupAdapter(
     ref.watch(accountRepositoryProvider),
   );
 });
 
-final appSetupWarehouseLookupPortProvider = Provider<SetupWarehouseLookupPort>((ref) {
+final appSetupWarehouseLookupPortProvider = Provider<SetupWarehouseLookupPort>((
+  ref,
+) {
   return InventorySetupWarehouseLookupAdapter(
     ref.watch(warehouseRepositoryProvider),
   );
 });
 
-final companyAccountingConfigServiceProvider = Provider<CompanyAccountingConfigService>((ref) {
-  return CompanyAccountingConfigService(
-    accountLookupPort: ref.watch(appSetupAccountLookupPortProvider),
-    initRepository: ref.watch(companyInitializationRepositoryProvider),
-  );
-});
+final companyAccountingConfigServiceProvider =
+    Provider<CompanyAccountingConfigService>((ref) {
+      return CompanyAccountingConfigService(
+        accountLookupPort: ref.watch(appSetupAccountLookupPortProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
+      );
+    });
 
-final companyWarehouseConfigServiceProvider = Provider<CompanyWarehouseConfigService>((ref) {
-  return CompanyWarehouseConfigService(
-    warehouseLookupPort: ref.watch(appSetupWarehouseLookupPortProvider),
-    initRepository: ref.watch(companyInitializationRepositoryProvider),
-  );
-});
+final companyWarehouseConfigServiceProvider =
+    Provider<CompanyWarehouseConfigService>((ref) {
+      return CompanyWarehouseConfigService(
+        warehouseLookupPort: ref.watch(appSetupWarehouseLookupPortProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
+      );
+    });

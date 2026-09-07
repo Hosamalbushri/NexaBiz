@@ -115,7 +115,9 @@ class GroupedDecimalInputFormatter extends TextInputFormatter {
         intPart = negative ? '' : '0';
       }
       final grouped = _groupThousands(intPart);
-      final formatted = negative ? '-$grouped' : (grouped.isEmpty ? '0' : grouped);
+      final formatted = negative
+          ? '-$grouped'
+          : (grouped.isEmpty ? '0' : grouped);
       return TextEditingValue(
         text: formatted,
         selection: TextSelection.collapsed(
@@ -155,10 +157,7 @@ class GroupedDecimalInputFormatter extends TextInputFormatter {
 
   /// Strips thousand separators. Comma is never a decimal point.
   static String _stripGrouping(String input) {
-    return input
-        .replaceAll('٬', '')
-        .replaceAll(' ', '')
-        .replaceAll(',', '');
+    return input.replaceAll('٬', '').replaceAll(' ', '').replaceAll(',', '');
   }
 
   static bool _isValidPartial(
@@ -203,9 +202,9 @@ class GroupedDecimalInputFormatter extends TextInputFormatter {
     for (final c in text.codeUnits) {
       if (c >= 0x30 && c <= 0x39) {
         count++;
-      } else if (c == 0x2E /* . */) {
+      } else if (c == 0x2E /* . */ ) {
         count++;
-      } else if (c == 0x2D /* - */) {
+      } else if (c == 0x2D /* - */ ) {
         count++;
       }
     }

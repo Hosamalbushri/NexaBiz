@@ -55,7 +55,8 @@ class ReconciliationReport {
   final double glInventoryBalance;
 
   bool get hasDiscrepancies => discrepancies.isNotEmpty;
-  double get valuationDiscrepancy => (subledgerValuation - glInventoryBalance).abs();
+  double get valuationDiscrepancy =>
+      (subledgerValuation - glInventoryBalance).abs();
 }
 
 class ReconciliationException implements Exception {
@@ -92,33 +93,39 @@ class InventoryAccountingReconciliationEngine {
   /// Calculate total General Ledger inventory account balance (Net Debits - Credits)
   Future<double> calculateGlInventoryBalance({String? companyId}) async {
     final targetCompanyId = companyId ?? _currentCompanyId;
-    final accounts = await (_accountingDb.select(_accountingDb.accounts)
-          ..where((tbl) =>
-              tbl.companyId.equals(targetCompanyId) &
-              tbl.deletedAt.isNull() &
-              (tbl.accountCode.equals('1230') |
-                  tbl.description.equals('system:inventory') |
-                  tbl.name.like('%Inventory%'))))
-        .get();
+    final accounts =
+        await (_accountingDb.select(_accountingDb.accounts)..where(
+              (tbl) =>
+                  tbl.companyId.equals(targetCompanyId) &
+                  tbl.deletedAt.isNull() &
+                  (tbl.accountCode.equals('1230') |
+                      tbl.description.equals('system:inventory') |
+                      tbl.name.like('%Inventory%')),
+            ))
+            .get();
 
     if (accounts.isEmpty) return 0.0;
     final accountUuids = accounts.map((a) => a.uuid).toList();
 
-    final journalEntries = await (_accountingDb.select(_accountingDb.journalEntries)
-          ..where((tbl) =>
-              tbl.companyId.equals(targetCompanyId) &
-              tbl.deletedAt.isNull() &
-              tbl.isPosted.equals(true)))
-        .get();
+    final journalEntries =
+        await (_accountingDb.select(_accountingDb.journalEntries)..where(
+              (tbl) =>
+                  tbl.companyId.equals(targetCompanyId) &
+                  tbl.deletedAt.isNull() &
+                  tbl.isPosted.equals(true),
+            ))
+            .get();
 
     if (journalEntries.isEmpty) return 0.0;
     final entryUuids = journalEntries.map((j) => j.uuid).toList();
 
-    final jLines = await (_accountingDb.select(_accountingDb.journalLines)
-          ..where((tbl) =>
-              tbl.entryUuid.isIn(entryUuids) &
-              tbl.accountUuid.isIn(accountUuids)))
-        .get();
+    final jLines =
+        await (_accountingDb.select(_accountingDb.journalLines)..where(
+              (tbl) =>
+                  tbl.entryUuid.isIn(entryUuids) &
+                  tbl.accountUuid.isIn(accountUuids),
+            ))
+            .get();
 
     double balance = 0.0;
     for (final jl in jLines) {
@@ -133,11 +140,16 @@ class InventoryAccountingReconciliationEngine {
     int scannedCount = 0;
 
     // 1. Compute Subledger Valuation & GL Inventory Account Balance
-    final subledgerValuation = await calculateSubledgerValuation(companyId: targetCompanyId);
-    final glInventoryBalance = await calculateGlInventoryBalance(companyId: targetCompanyId);
+    final subledgerValuation = await calculateSubledgerValuation(
+      companyId: targetCompanyId,
+    );
+    final glInventoryBalance = await calculateGlInventoryBalance(
+      companyId: targetCompanyId,
+    );
 
     // If subledger valuation differs from GL inventory balance beyond tolerance (0.01)
-    if ((subledgerValuation - glInventoryBalance).abs() > 0.01 && (subledgerValuation > 0 || glInventoryBalance > 0)) {
+    if ((subledgerValuation - glInventoryBalance).abs() > 0.01 &&
+        (subledgerValuation > 0 || glInventoryBalance > 0)) {
       discrepancies.add(
         ReconciliationDiscrepancy(
           documentId: 'subledger_gl_summary',
@@ -162,13 +174,15 @@ class InventoryAccountingReconciliationEngine {
       scannedCount++;
       final subledgerCost = r.totalCost;
 
-      final jes = await (_accountingDb.select(_accountingDb.journalEntries)
-            ..where((tbl) =>
-                tbl.sourceType.equals('stock_receipt') &
-                tbl.sourceId.equals(r.uuid) &
-                tbl.deletedAt.isNull() &
-                tbl.isPosted.equals(true)))
-          .get();
+      final jes =
+          await (_accountingDb.select(_accountingDb.journalEntries)..where(
+                (tbl) =>
+                    tbl.sourceType.equals('stock_receipt') &
+                    tbl.sourceId.equals(r.uuid) &
+                    tbl.deletedAt.isNull() &
+                    tbl.isPosted.equals(true),
+              ))
+              .get();
 
       if (jes.isEmpty) {
         discrepancies.add(
@@ -200,9 +214,9 @@ class InventoryAccountingReconciliationEngine {
         }
 
         final jeUuids = jes.map((j) => j.uuid).toList();
-        final jLines = await (_accountingDb.select(_accountingDb.journalLines)
-              ..where((tbl) => tbl.entryUuid.isIn(jeUuids)))
-            .get();
+        final jLines = await (_accountingDb.select(
+          _accountingDb.journalLines,
+        )..where((tbl) => tbl.entryUuid.isIn(jeUuids))).get();
 
         double totalDebit = 0.0;
         for (final jl in jLines) {
@@ -236,13 +250,15 @@ class InventoryAccountingReconciliationEngine {
       scannedCount++;
       final subledgerCost = i.totalCost;
 
-      final jes = await (_accountingDb.select(_accountingDb.journalEntries)
-            ..where((tbl) =>
-                tbl.sourceType.equals('stock_issue') &
-                tbl.sourceId.equals(i.uuid) &
-                tbl.deletedAt.isNull() &
-                tbl.isPosted.equals(true)))
-          .get();
+      final jes =
+          await (_accountingDb.select(_accountingDb.journalEntries)..where(
+                (tbl) =>
+                    tbl.sourceType.equals('stock_issue') &
+                    tbl.sourceId.equals(i.uuid) &
+                    tbl.deletedAt.isNull() &
+                    tbl.isPosted.equals(true),
+              ))
+              .get();
 
       if (jes.isEmpty) {
         discrepancies.add(
@@ -259,9 +275,9 @@ class InventoryAccountingReconciliationEngine {
         );
       } else {
         final jeUuids = jes.map((j) => j.uuid).toList();
-        final jLines = await (_accountingDb.select(_accountingDb.journalLines)
-              ..where((tbl) => tbl.entryUuid.isIn(jeUuids)))
-            .get();
+        final jLines = await (_accountingDb.select(
+          _accountingDb.journalLines,
+        )..where((tbl) => tbl.entryUuid.isIn(jeUuids))).get();
 
         double totalDebit = 0.0;
         for (final jl in jLines) {
@@ -295,13 +311,15 @@ class InventoryAccountingReconciliationEngine {
       scannedCount++;
       final subledgerCost = ret.totalCost;
 
-      final jes = await (_accountingDb.select(_accountingDb.journalEntries)
-            ..where((tbl) =>
-                tbl.sourceType.equals('stock_return') &
-                tbl.sourceId.equals(ret.uuid) &
-                tbl.deletedAt.isNull() &
-                tbl.isPosted.equals(true)))
-          .get();
+      final jes =
+          await (_accountingDb.select(_accountingDb.journalEntries)..where(
+                (tbl) =>
+                    tbl.sourceType.equals('stock_return') &
+                    tbl.sourceId.equals(ret.uuid) &
+                    tbl.deletedAt.isNull() &
+                    tbl.isPosted.equals(true),
+              ))
+              .get();
 
       if (jes.isEmpty && subledgerCost > 0) {
         discrepancies.add(
@@ -320,22 +338,30 @@ class InventoryAccountingReconciliationEngine {
     }
 
     // 5. Audit Orphan Journal Entries
-    final invJournals = await (_accountingDb.select(_accountingDb.journalEntries)
-          ..where((tbl) =>
-              tbl.companyId.equals(targetCompanyId) &
-              tbl.deletedAt.isNull() &
-              tbl.isPosted.equals(true) &
-              tbl.sourceType.isIn(['stock_receipt', 'stock_issue', 'stock_return'])))
-        .get();
+    final invJournals =
+        await (_accountingDb.select(_accountingDb.journalEntries)..where(
+              (tbl) =>
+                  tbl.companyId.equals(targetCompanyId) &
+                  tbl.deletedAt.isNull() &
+                  tbl.isPosted.equals(true) &
+                  tbl.sourceType.isIn([
+                    'stock_receipt',
+                    'stock_issue',
+                    'stock_return',
+                  ]),
+            ))
+            .get();
 
     for (final je in invJournals) {
-      final reversal = await (_accountingDb.select(_accountingDb.journalEntries)
-            ..where((tbl) =>
-                tbl.sourceType.equals('journal_reverse') &
-                tbl.sourceId.equals(je.uuid) &
-                tbl.deletedAt.isNull() &
-                tbl.isPosted.equals(true)))
-          .getSingleOrNull();
+      final reversal =
+          await (_accountingDb.select(_accountingDb.journalEntries)..where(
+                (tbl) =>
+                    tbl.sourceType.equals('journal_reverse') &
+                    tbl.sourceId.equals(je.uuid) &
+                    tbl.deletedAt.isNull() &
+                    tbl.isPosted.equals(true),
+              ))
+              .getSingleOrNull();
 
       if (reversal != null) {
         continue;
@@ -408,7 +434,9 @@ class InventoryAccountingReconciliationEngine {
     );
   }
 
-  Future<ReconciliationReport> verifyReconciliationOrThrow({String? companyId}) async {
+  Future<ReconciliationReport> verifyReconciliationOrThrow({
+    String? companyId,
+  }) async {
     final report = await runReconciliation(companyId: companyId);
     if (report.hasDiscrepancies) {
       throw ReconciliationException(report);

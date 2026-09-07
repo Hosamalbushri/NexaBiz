@@ -53,7 +53,9 @@ class AppDateField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final formatted = value != null ? DateFormat(dateFormat).format(value!) : null;
+    final formatted = value != null
+        ? DateFormat(dateFormat).format(value!)
+        : null;
 
     return AppFieldShell(
       label: label,

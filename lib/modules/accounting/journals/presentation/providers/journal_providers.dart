@@ -38,12 +38,13 @@ final journalRepositoryProvider = Provider<JournalRepository>((ref) {
 });
 
 /// Last closed fiscal day (nullable). Invalidate after settings save.
-final accountingFiscalClosedThroughProvider =
-    FutureProvider<DateTime?>((ref) async {
-      return ref
-          .watch(settingsRepositoryProvider)
-          .loadAccountingFiscalClosedThrough();
-    });
+final accountingFiscalClosedThroughProvider = FutureProvider<DateTime?>((
+  ref,
+) async {
+  return ref
+      .watch(settingsRepositoryProvider)
+      .loadAccountingFiscalClosedThrough();
+});
 
 final fiscalPeriodPolicyProvider = Provider<FiscalPeriodPolicy>((ref) {
   final profile = ref.watch(companyProfileProvider).valueOrNull;
@@ -54,8 +55,9 @@ final fiscalPeriodPolicyProvider = Provider<FiscalPeriodPolicy>((ref) {
   );
 });
 
-final fiscalYearRepositoryImplProvider =
-    Provider<FiscalYearRepositoryImpl>((ref) {
+final fiscalYearRepositoryImplProvider = Provider<FiscalYearRepositoryImpl>((
+  ref,
+) {
   return FiscalYearRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
@@ -67,8 +69,9 @@ final fiscalYearRepositoryProvider = Provider<FiscalYearRepository>((ref) {
   return ref.watch(fiscalYearRepositoryImplProvider);
 });
 
-final accountingPeriodValidatorProvider =
-    Provider<AccountingPeriodValidator>((ref) {
+final accountingPeriodValidatorProvider = Provider<AccountingPeriodValidator>((
+  ref,
+) {
   return AccountingPeriodValidator(
     repository: ref.watch(fiscalYearRepositoryProvider),
     legacyPolicyReader: () => ref.read(fiscalPeriodPolicyProvider),
@@ -166,9 +169,7 @@ final listJournalEntryHeadersUseCaseProvider =
       return ListJournalEntryHeaders(ref.watch(journalRepositoryProvider));
     });
 
-final softDeleteJournalEntryUseCaseProvider = Provider<VoidJournalEntry>((
-  ref,
-) {
+final softDeleteJournalEntryUseCaseProvider = Provider<VoidJournalEntry>((ref) {
   return VoidJournalEntry(
     ref.watch(journalPostingServiceProvider),
     permissionGuard: ref.watch(permissionGuardProvider),

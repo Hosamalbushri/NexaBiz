@@ -136,7 +136,8 @@ class AppAsyncAutocompleteField<T> extends StatefulWidget {
 class _AppAsyncAutocompleteFieldState<T>
     extends State<AppAsyncAutocompleteField<T>> {
   late final TextEditingController _controller =
-      widget.controller ?? TextEditingController(text: widget.initialQuery ?? '');
+      widget.controller ??
+      TextEditingController(text: widget.initialQuery ?? '');
   late final bool _ownsController = widget.controller == null;
 
   late final FocusNode _focusNode =
@@ -154,7 +155,8 @@ class _AppAsyncAutocompleteFieldState<T>
   @override
   void initState() {
     super.initState();
-    if (widget.initialQuery != null && _controller.text != widget.initialQuery) {
+    if (widget.initialQuery != null &&
+        _controller.text != widget.initialQuery) {
       _controller.text = widget.initialQuery!;
     }
     if (widget.autofocus) {
@@ -231,8 +233,10 @@ class _AppAsyncAutocompleteFieldState<T>
       _searchFailed = false;
     });
 
-    _debounceTimer =
-        Timer(widget.debounceDuration, () => _performSearch(query));
+    _debounceTimer = Timer(
+      widget.debounceDuration,
+      () => _performSearch(query),
+    );
   }
 
   Future<void> _performSearch(String query) async {
@@ -287,11 +291,9 @@ class _AppAsyncAutocompleteFieldState<T>
       fillColor: scheme.surface,
       labelText: widget.showLabelAbove ? null : widget.label,
       hintText: widget.hint,
-      prefixIcon: widget.prefixIcon ??
-          Icon(
-            Icons.search_rounded,
-            color: scheme.primary,
-          ),
+      prefixIcon:
+          widget.prefixIcon ??
+          Icon(Icons.search_rounded, color: scheme.primary),
       suffixIcon: _isLoading
           ? const Padding(
               padding: EdgeInsets.all(12),
@@ -341,8 +343,8 @@ class _AppAsyncAutocompleteFieldState<T>
           enabled: widget.enabled,
           autofocus: widget.autofocus,
           textInputAction: widget.textInputAction,
-          inputFormatters: widget.inputFormatters ??
-              const [WesternDigitsInputFormatter()],
+          inputFormatters:
+              widget.inputFormatters ?? const [WesternDigitsInputFormatter()],
           decoration: effectiveDecoration,
           onChanged: _onQueryChanged,
           onEditingComplete: () {
@@ -376,49 +378,46 @@ class _AppAsyncAutocompleteFieldState<T>
                       ),
                     )
                   : _searchFailed
-                      ? (widget.errorBuilder?.call(context) ??
-                          Padding(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Text(
-                              widget.errorText ?? 'Search failed',
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: scheme.error,
-                              ),
+                  ? (widget.errorBuilder?.call(context) ??
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Text(
+                            widget.errorText ?? 'Search failed',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: scheme.error,
                             ),
-                          ))
-                      : _options.isEmpty
-                          ? (widget.emptyBuilder?.call(context) ??
-                              (widget.noResultsText != null
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(
-                                          AppSpacing.md),
-                                      child: Text(
-                                        widget.noResultsText!,
-                                        textAlign: TextAlign.center,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    )
-                                  : const SizedBox.shrink()))
-                          : ListView.separated(
-                              shrinkWrap: true,
-                              itemCount: _options.length,
-                              separatorBuilder: (_, _) => Divider(
-                                height: 1,
-                                color: scheme.outlineVariant
-                                    .withValues(alpha: 0.35),
-                              ),
-                              itemBuilder: (context, index) {
-                                final option = _options[index];
-                                return InkWell(
-                                  onTap: () => _selectOption(option),
-                                  child: widget.itemBuilder(context, option),
-                                );
-                              },
-                            ),
+                          ),
+                        ))
+                  : _options.isEmpty
+                  ? (widget.emptyBuilder?.call(context) ??
+                        (widget.noResultsText != null
+                            ? Padding(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                child: Text(
+                                  widget.noResultsText!,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink()))
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: _options.length,
+                      separatorBuilder: (_, _) => Divider(
+                        height: 1,
+                        color: scheme.outlineVariant.withValues(alpha: 0.35),
+                      ),
+                      itemBuilder: (context, index) {
+                        final option = _options[index];
+                        return InkWell(
+                          onTap: () => _selectOption(option),
+                          child: widget.itemBuilder(context, option),
+                        );
+                      },
+                    ),
             ),
           ),
         ],
@@ -426,4 +425,3 @@ class _AppAsyncAutocompleteFieldState<T>
     );
   }
 }
-

@@ -147,8 +147,7 @@ class _FakeProductRepository implements ProductRepository {
   Future<Product> adjustOnHandByUuid({
     required String uuid,
     required double delta,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 }
 
 class _FakeSettingsRepository extends SettingsRepository {

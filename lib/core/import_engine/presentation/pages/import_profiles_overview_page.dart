@@ -24,9 +24,7 @@ class ImportProfilesOverviewPage extends StatelessWidget {
         showBackButton: true,
       ),
       body: profiles.isEmpty
-          ? const Center(
-              child: Text('لا توجد ملفات استيراد مسجلة حالياً.'),
-            )
+          ? const Center(child: Text('لا توجد ملفات استيراد مسجلة حالياً.'))
           : ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: profiles.length,
@@ -113,7 +111,9 @@ class _ProfileDetailCard extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(AppRadius.xs),
                   border: Border.all(
                     color: field.isRequired
@@ -127,12 +127,20 @@ class _ProfileDetailCard extends StatelessWidget {
                     Text(
                       field.label,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: field.isRequired ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: field.isRequired
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     if (field.isRequired) ...[
                       const SizedBox(width: 2),
-                      Text('*', style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.bold)),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: colorScheme.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                     const SizedBox(width: 4),
                     Text(
@@ -165,8 +173,12 @@ class _ProfileDetailCard extends StatelessWidget {
                 return Chip(
                   visualDensity: VisualDensity.compact,
                   avatar: const Icon(Icons.link_rounded, size: 14),
-                  label: Text('${rel.relationKey} ➔ ${rel.targetEntityType} (${rel.lookupFieldKey})'),
-                  backgroundColor: colorScheme.secondaryContainer.withValues(alpha: 0.3),
+                  label: Text(
+                    '${rel.relationKey} ➔ ${rel.targetEntityType} (${rel.lookupFieldKey})',
+                  ),
+                  backgroundColor: colorScheme.secondaryContainer.withValues(
+                    alpha: 0.3,
+                  ),
                 );
               }).toList(),
             ),

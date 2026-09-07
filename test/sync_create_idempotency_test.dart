@@ -165,47 +165,51 @@ void main() {
     expect(ack.remoteVersion, 2);
   });
 
-  test('legacy create with baseVersion>0 uploads without conflict probe', () async {
-    final now = DateTime.utc(2026, 8, 16, 13);
-    remote.seed(
-      'account',
-      RemoteEntityMeta(
-        entityId: 'sys-cash',
-        version: 2,
-        updatedAt: now,
-        payload: const {'name': 'Cash'},
-      ),
-    );
-    await queue.enqueue(
-      SyncOperation(
-        id: 'legacy-create',
-        entityType: 'account',
-        entityId: 'sys-cash',
-        type: SyncOperationType.create,
-        status: SyncStatus.pending,
-        payload: const {'name': 'Cash'},
-        createdAt: now,
-        updatedAt: now,
-        baseVersion: 1,
-      ),
-    );
+  test(
+    'legacy create with baseVersion>0 uploads without conflict probe',
+    () async {
+      final now = DateTime.utc(2026, 8, 16, 13);
+      remote.seed(
+        'account',
+        RemoteEntityMeta(
+          entityId: 'sys-cash',
+          version: 2,
+          updatedAt: now,
+          payload: const {'name': 'Cash'},
+        ),
+      );
+      await queue.enqueue(
+        SyncOperation(
+          id: 'legacy-create',
+          entityType: 'account',
+          entityId: 'sys-cash',
+          type: SyncOperationType.create,
+          status: SyncStatus.pending,
+          payload: const {'name': 'Cash'},
+          createdAt: now,
+          updatedAt: now,
+          baseVersion: 1,
+        ),
+      );
 
-    final handler = _RecordingHandler(remote);
-    manager = SyncManager(
-      queue: queue,
-      connectivity: connectivity,
-      remoteProvider: () => remote,
-      clock: () => now,
-    );
-    manager!.registerHandler(handler);
-    await manager!.start(enabled: true);
+      final handler = _RecordingHandler(remote);
+      manager = SyncManager(
+        queue: queue,
+        connectivity: connectivity,
+        remoteProvider: () => remote,
+        clock: () => now,
+        readCompanyId: () => 'cmp-1',
+      );
+      manager!.registerHandler(handler);
+      await manager!.start(enabled: true);
 
-    final result = await manager!.syncNow(notify: false, download: false);
-    expect(result.conflicts, 0);
-    expect(result.uploaded, 1);
-    expect(handler.conflictProbes, 0);
-    expect(await queue.all(), isEmpty);
-  });
+      final result = await manager!.syncNow(notify: false, download: false);
+      expect(result.conflicts, 0);
+      expect(result.uploaded, 1);
+      expect(handler.conflictProbes, 0);
+      expect(await queue.all(), isEmpty);
+    },
+  );
 
   test('pull drops redundant local create queue ops', () async {
     final now = DateTime.utc(2026, 8, 16, 14);
@@ -238,6 +242,7 @@ void main() {
       connectivity: connectivity,
       remoteProvider: () => remote,
       clock: () => now,
+      readCompanyId: () => 'cmp-1',
     );
     manager!.registerHandler(handler);
     await manager!.start(enabled: true);

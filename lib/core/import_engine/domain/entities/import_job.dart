@@ -28,9 +28,11 @@ class ImportJob {
     this.progress = 0.0,
     this.errorSummary = const [],
     this.result,
-  })  : createdAt = createdAt ?? DateTime.now().toUtc() {
+  }) : createdAt = createdAt ?? DateTime.now().toUtc() {
     if (companyId.trim().isEmpty) {
-      throw ArgumentError('ImportJob must have a non-empty companyId for strict isolation.');
+      throw ArgumentError(
+        'ImportJob must have a non-empty companyId for strict isolation.',
+      );
     }
   }
 
@@ -113,8 +115,10 @@ class ImportJob {
     status.ensureCanTransitionTo(nextStatus);
     final now = DateTime.now().toUtc();
 
-    final isStartTransition = status == ImportJobStatus.queued &&
-        (nextStatus == ImportJobStatus.preparing || nextStatus == ImportJobStatus.processing);
+    final isStartTransition =
+        status == ImportJobStatus.queued &&
+        (nextStatus == ImportJobStatus.preparing ||
+            nextStatus == ImportJobStatus.processing);
 
     return copyWith(
       status: nextStatus,
@@ -181,9 +185,6 @@ class ImportJob {
   }
 
   /// Helper getter returning an ImportContext for backward compatibility.
-  ImportContext get context => ImportContext(
-        companyId: companyId,
-        tenantId: tenantId,
-        userId: userId,
-      );
+  ImportContext get context =>
+      ImportContext(companyId: companyId, tenantId: tenantId, userId: userId);
 }

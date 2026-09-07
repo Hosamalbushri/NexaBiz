@@ -37,63 +37,7 @@ Future<bool> confirmDiscardChanges(BuildContext context) {
 }
 
 /// Tries the navigator stack hierarchy from innermost to outermost and pops
-/// the first navigator that can pop.  Returns `true` if a pop happened.
-bool _tryPopNavigators(BuildContext context) {
-  final router = GoRouter.maybeOf(context);
-  final path = router?.routerDelegate.currentConfiguration.uri.path;
-  if (path == null) return false;
-
-  final isBranchRoot = path == AppRoutes.dashboard ||
-      path == AppRoutes.services ||
-      path == AppRoutes.reports ||
-      path == AppRoutes.settings;
-
-  // 1. Branch navigator — only pop the branch that owns the current path.
-  GlobalKey<NavigatorState>? activeBranch;
-  if (path.startsWith(AppRoutes.dashboard)) {
-    activeBranch = appDashboardBranchKey;
-  } else if (path.startsWith(AppRoutes.services)) {
-    activeBranch = appServicesBranchKey;
-  } else if (path.startsWith(AppRoutes.reports)) {
-    activeBranch = appReportsBranchKey;
-  } else if (path.startsWith(AppRoutes.settings)) {
-    activeBranch = appSettingsBranchKey;
-  }
-
-  if (activeBranch != null) {
-    final nav = activeBranch.currentState;
-    if (nav != null && nav.canPop()) {
-      nav.pop();
-      return true;
-    }
-  }
-
-  // 2. Shell navigator — only pop if we are NOT on a branch root tab.
-  //    On branch roots the shell navigator holds module routes that should be
-  //    cleaned up by GoRouter (go) rather than popped blindly.
-  if (!isBranchRoot) {
-    final shellNav = appShellNavigatorKey.currentState;
-    if (shellNav != null && shellNav.canPop()) {
-      shellNav.pop();
-      return true;
-    }
-  }
-
-  // 3. Root navigator.
-  final rootNav = appRootNavigatorKey.currentState;
-  if (rootNav != null && rootNav.canPop()) {
-    rootNav.pop();
-    return true;
-  }
-
-  // 4. GoRouter itself (walks the full tree).
-  if (router != null && router.canPop()) {
-    router.pop();
-    return true;
-  }
-
-  return false;
-}
+int _backEventSeq = 0;
 
 /// Tracks visited shell tab locations to allow navigating back through tab history.
 class ShellHistoryNotifier extends Notifier<List<String>> {
@@ -101,7 +45,7 @@ class ShellHistoryNotifier extends Notifier<List<String>> {
   List<String> build() => [AppRoutes.dashboard];
 
   void pushLocation(String path) {
-    if (!isPrimaryShellLocation(path)) {
+    if (!isRootDestination(path)) {
       return;
     }
     if (state.isNotEmpty && state.last == path) {
@@ -119,54 +63,199 @@ class ShellHistoryNotifier extends Notifier<List<String>> {
     state = nextState;
     return state.last;
   }
+
+  void reset() {
+    state = [AppRoutes.dashboard];
+  }
 }
 
 final shellHistoryProvider =
     NotifierProvider<ShellHistoryNotifier, List<String>>(
-  ShellHistoryNotifier.new,
-);
+      ShellHistoryNotifier.new,
+    );
+
+/// Resolves the immediate logical parent route for any given path in the app.
+String getLogicalParentRoute(String path) {
+  if (path == AppRoutes.dashboard) {
+    return AppRoutes.dashboard; // App exit boundary
+  }
+
+  // 1. Module roots & primary shell tab roots -> return Dashboard
+  if (path == AppRoutes.services ||
+      path == AppRoutes.reports ||
+      path == AppRoutes.settings ||
+      path == AppRoutes.notifications ||
+      path == '/inventory' ||
+      path == '/sales' ||
+      path == '/customers' ||
+      path == '/accounting' ||
+      path == '/receipts-payments' ||
+      path == '/administration') {
+    return AppRoutes.dashboard;
+  }
+
+  // 2. Settings sub-routes -> return /settings
+  if (path.startsWith('${AppRoutes.settings}/')) {
+    return AppRoutes.settings;
+  }
+
+  // 3. Reports sub-routes -> return /reports or parent
+  if (path.startsWith('${AppRoutes.reports}/') ||
+      path.startsWith('/module-reports')) {
+    if (path == AppRoutes.reportsModules || path == '/module-reports') {
+      return AppRoutes.reports;
+    }
+    if (path.startsWith('/module-reports/')) {
+      return AppRoutes.reports;
+    }
+    return AppRoutes.reportsModules;
+  }
+
+  // 4. Administration sub-routes -> return /administration
+  if (path.startsWith('/administration/')) {
+    return '/administration';
+  }
+
+  // 5. Inventory sub-routes
+  if (path.startsWith('/inventory/')) {
+    if (path.startsWith('/inventory/products/')) {
+      return '/inventory/products';
+    }
+    if (path == '/inventory/products') return '/inventory';
+    if (path.startsWith('/inventory/stock-count/count/')) {
+      return '/inventory/stock-count/count';
+    }
+    if (path.startsWith('/inventory/stock-count/')) {
+      return '/inventory/stock-count';
+    }
+    if (path == '/inventory/stock-count') return '/inventory';
+    if (path.startsWith('/inventory/stock-movements/receipts/')) {
+      return '/inventory/stock-movements/receipts';
+    }
+    if (path.startsWith('/inventory/stock-movements/issues/')) {
+      return '/inventory/stock-movements/issues';
+    }
+    if (path.startsWith('/inventory/stock-movements/')) {
+      return '/inventory/stock-movements';
+    }
+    if (path == '/inventory/stock-movements') return '/inventory';
+    if (path.startsWith('/inventory/stock-transfers/')) {
+      return '/inventory/stock-transfers';
+    }
+    if (path == '/inventory/stock-transfers') return '/inventory';
+    return '/inventory';
+  }
+
+  // 6. Sales sub-routes
+  if (path.startsWith('/sales/')) {
+    if (path == '/sales/create' ||
+        path == '/sales/list' ||
+        path == '/sales/invoice-preview') {
+      return '/sales';
+    }
+    return '/sales';
+  }
+
+  // 7. Customers sub-routes
+  if (path.startsWith('/customers/')) {
+    return '/customers';
+  }
+
+  // 8. Accounting sub-routes
+  if (path.startsWith('/accounting/')) {
+    if (path.startsWith('/accounting/accounts/')) {
+      return '/accounting/accounts';
+    }
+    if (path.startsWith('/accounting/journals/')) {
+      return '/accounting/journals';
+    }
+    if (path.startsWith('/accounting/voucher-books/')) {
+      return '/accounting/voucher-books';
+    }
+    if (path.startsWith('/accounting/fiscal-years/')) {
+      return '/accounting/fiscal-years';
+    }
+    return '/accounting';
+  }
+
+  // 9. Receipts & Payments sub-routes
+  if (path.startsWith('/receipts-payments/')) {
+    if (path.startsWith('/receipts-payments/receipts/')) {
+      return '/receipts-payments/receipts';
+    }
+    if (path.startsWith('/receipts-payments/payments/')) {
+      return '/receipts-payments/payments';
+    }
+    return '/receipts-payments';
+  }
+
+  // Fallback -> Dashboard
+  return AppRoutes.dashboard;
+}
 
 /// Handles a system-back attempt at the application shell root.
 ///
 /// Walks the navigator stack hierarchy (branches → shell → root → GoRouter)
-/// and pops the deepest possible navigator.  If nothing can pop:
-/// - pops the previous top-level shell tab from history stack if available.
-/// - on the Dashboard, shows the exit-confirmation dialog.
-Future<void> handleRootSystemBack(BuildContext context, WidgetRef ref) async {
-  if (_tryPopNavigators(context)) {
-    return;
-  }
+/// and pops the deepest possible navigator. If nothing can pop:
+/// - if on any root destination other than Dashboard, returns to Dashboard.
+/// - if on the Dashboard, shows the exit-confirmation dialog and exits on confirm.
+Future<void> handleRootSystemBack(
+  BuildContext context,
+  dynamic ref, [
+  int? eventId,
+]) async {
+  final id = eventId ?? ++_backEventSeq;
+  debugPrint('[NAV-BACK][event=$id] === handleRootSystemBack ENTER ===');
 
   final router = GoRouter.maybeOf(context);
   if (router == null) {
+    debugPrint('[NAV-BACK][event=$id] handleRootSystemBack: GoRouter is NULL');
     return;
   }
 
   final path = router.routerDelegate.currentConfiguration.uri.path;
+  debugPrint('[NAV-BACK][event=$id] handleRootSystemBack: current path=$path');
+
   if (path == AppRoutes.splash) {
+    debugPrint(
+      '[NAV-BACK][event=$id] handleRootSystemBack: Splash page, ignoring back',
+    );
     return;
   }
 
-  if (path != AppRoutes.dashboard) {
-    router.go(AppRoutes.dashboard);
+  if (path == AppRoutes.dashboard) {
+    debugPrint(
+      '[NAV-BACK][event=$id] handleRootSystemBack: Dashboard root reached, prompting exit dialog',
+    );
+    final dialogContext = appRootNavigatorKey.currentContext ?? context;
+    if (!dialogContext.mounted) {
+      return;
+    }
+
+    final confirmed = await confirmAppExit(dialogContext);
+    if (confirmed) {
+      debugPrint(
+        '[NAV-BACK][event=$id] handleRootSystemBack: Exit confirmed, calling SystemNavigator.pop()',
+      );
+      await SystemNavigator.pop();
+    } else {
+      debugPrint('[NAV-BACK][event=$id] handleRootSystemBack: Exit cancelled');
+    }
     return;
   }
 
-  final dialogContext = appRootNavigatorKey.currentContext ?? context;
-  if (!dialogContext.mounted) {
-    return;
-  }
-
-  final confirmed = await confirmAppExit(dialogContext);
-  if (confirmed) {
-    await SystemNavigator.pop();
-  }
+  final parentRoute = getLogicalParentRoute(path);
+  debugPrint(
+    '[NAV-BACK][event=$id] handleRootSystemBack: Navigating to logical parent: $parentRoute',
+  );
+  router.go(parentRoute);
 }
 
-/// [PopScope] on the main shell so Android back is handled (not activity finish).
+/// [AppExitPopScope] on the main shell so Android back is handled without activity finish.
 ///
-/// Also intercepts back when the quick-actions panel is open, closing it
-/// instead of navigating.
+/// Combines dynamic [PopScope] for branch navigation with [WidgetsBindingObserver.didPopRoute]
+/// to explicitly consume system back events (`Future<bool> = true`), suppressing native Android
+/// Activity fallback (`Activity$$ExternalSyntheticLambda1`).
 class AppExitPopScope extends ConsumerStatefulWidget {
   const AppExitPopScope({super.key, required this.child});
 
@@ -176,15 +265,72 @@ class AppExitPopScope extends ConsumerStatefulWidget {
   ConsumerState<AppExitPopScope> createState() => _AppExitPopScopeState();
 }
 
-class _AppExitPopScopeState extends ConsumerState<AppExitPopScope> {
+class _AppExitPopScopeState extends ConsumerState<AppExitPopScope>
+    with WidgetsBindingObserver {
   bool _handling = false;
 
-  Future<void> _onPop() async {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  bool get _canPop {
+    if (ref.read(quickActionsOpenProvider)) {
+      return false;
+    }
+
+    final router = GoRouter.maybeOf(context);
+    final path = router?.routerDelegate.currentConfiguration.uri.path;
+    if (path == null) return false;
+
+    if (path == AppRoutes.dashboard) {
+      return false;
+    }
+
+    GlobalKey<NavigatorState>? activeBranch;
+    if (path.startsWith(AppRoutes.dashboard)) {
+      activeBranch = appDashboardBranchKey;
+    } else if (path.startsWith(AppRoutes.services)) {
+      activeBranch = appServicesBranchKey;
+    } else if (path.startsWith(AppRoutes.reports)) {
+      activeBranch = appReportsBranchKey;
+    } else if (path.startsWith(AppRoutes.settings)) {
+      activeBranch = appSettingsBranchKey;
+    }
+
+    if (activeBranch != null && activeBranch.currentState?.canPop() == true) {
+      return true;
+    }
+
+    final isBranchRoot =
+        path == AppRoutes.dashboard ||
+        path == AppRoutes.services ||
+        path == AppRoutes.reports ||
+        path == AppRoutes.settings;
+
+    if (!isBranchRoot && appShellNavigatorKey.currentState?.canPop() == true) {
+      return true;
+    }
+
+    if (appRootNavigatorKey.currentState?.canPop() == true) {
+      return true;
+    }
+
+    return false;
+  }
+
+  Future<void> _onPop(int eventId) async {
     if (_handling) {
       return;
     }
 
-    // If the quick-actions panel is open, just close it.
     if (ref.read(quickActionsOpenProvider)) {
       ref.read(quickActionsOpenProvider.notifier).state = false;
       return;
@@ -192,7 +338,7 @@ class _AppExitPopScopeState extends ConsumerState<AppExitPopScope> {
 
     _handling = true;
     try {
-      await handleRootSystemBack(context, ref);
+      await handleRootSystemBack(context, ref, eventId);
     } finally {
       if (mounted) {
         _handling = false;
@@ -201,14 +347,30 @@ class _AppExitPopScopeState extends ConsumerState<AppExitPopScope> {
   }
 
   @override
+  Future<bool> didPopRoute() async {
+    if (_canPop) {
+      return false; // Native pop will occur cleanly via GoRouter
+    }
+
+    final eventId = ++_backEventSeq;
+    if (_handling) {
+      return true; // Reentrancy guard: consume to prevent duplicate Activity fallback
+    }
+
+    _onPop(eventId);
+    return true; // CONSUMED! Explicitly return true to Flutter Engine & Android OS!
+  }
+
+  @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: _canPop,
       onPopInvokedWithResult: (didPop, result) {
+        final eventId = ++_backEventSeq;
         if (didPop) {
           return;
         }
-        _onPop();
+        _onPop(eventId);
       },
       child: widget.child,
     );
@@ -263,7 +425,7 @@ class _UnsavedChangesScopeState extends State<UnsavedChangesScope> {
     _handling = true;
     try {
       final confirmed = await confirmDiscardChanges(context);
-      if (confirmed && context.mounted) {
+      if (confirmed && mounted && context.mounted) {
         Navigator.of(context).pop();
       }
     } finally {

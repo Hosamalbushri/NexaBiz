@@ -5,12 +5,12 @@ import '../../domain/models/report_definition_spec.dart';
 import '../../domain/models/report_parameter_spec.dart';
 import '../../domain/services/report_relative_date_evaluator.dart';
 
-
 /// Specification for Sales Period Analysis Report (تقرير مبيعات الفترة والعملاء).
 final salesPeriodReportSpec = ReportDefinitionSpec(
   id: 'sales_period',
   name: 'تقرير مبيعات الفترة والعملاء',
-  description: 'تحليل شامل لفواتير المبيعات وصافي المبيعات حسب الفترة والعملاء وحالة التسوية.',
+  description:
+      'تحليل شامل لفواتير المبيعات وصافي المبيعات حسب الفترة والعملاء وحالة التسوية.',
   category: ReportCategory.sales,
   minTableWidth: 1000,
   parameters: const [

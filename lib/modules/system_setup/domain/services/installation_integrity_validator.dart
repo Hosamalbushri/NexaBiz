@@ -36,11 +36,7 @@ class InstallationIntegrityResult {
 
   /// Factory for a clean, fresh, and uninitialized application state.
   const InstallationIntegrityResult.uninitialized()
-    : this._(
-        isValid: false,
-        isUninitialized: true,
-        isCorrupted: false,
-      );
+    : this._(isValid: false, isUninitialized: true, isCorrupted: false);
 
   /// Factory for a corrupted, partially initialized, or inconsistent installation (Fail Closed).
   const InstallationIntegrityResult.corrupted(String reason)
@@ -95,13 +91,11 @@ class InstallationIntegrityValidator {
   /// Inspects and validates the current installation state.
   Future<InstallationIntegrityResult> validate() async {
     try {
-      final onboardingDone =
-          await settingsRepository.loadOnboardingCompleted();
-      final deviceInit =
-          await settingsRepository.loadDeviceInitialization();
+      final onboardingDone = await settingsRepository.loadOnboardingCompleted();
+      final deviceInit = await settingsRepository.loadDeviceInitialization();
       final hasConfiguredAdmin = await authStore.hasConfiguredAdmin();
-      final systemSetupStatus =
-          await settingsRepository.loadSystemSetupStatus();
+      final systemSetupStatus = await settingsRepository
+          .loadSystemSetupStatus();
 
       final isAnyInitMarked =
           onboardingDone ||
@@ -129,8 +123,9 @@ class InstallationIntegrityValidator {
         );
       }
 
-      final companyProfile =
-          await settingsRepository.loadCompanyProfile(companyId);
+      final companyProfile = await settingsRepository.loadCompanyProfile(
+        companyId,
+      );
       final effectiveCompanyName = companyProfile.name.trim().isNotEmpty
           ? companyProfile.name.trim()
           : primaryCompany.name.trim();

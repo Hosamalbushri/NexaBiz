@@ -22,12 +22,14 @@ final warehouseRepositoryProvider = Provider<WarehouseRepository>((ref) {
   );
 });
 
-final warehousesListStreamProvider = StreamProvider<List<Warehouse>>((ref) async* {
+final warehousesListStreamProvider = StreamProvider<List<Warehouse>>((
+  ref,
+) async* {
   final repo = ref.watch(warehouseRepositoryProvider);
-  
+
   // Ensure default warehouse exists prior to emitting stream
   await repo.ensureDefaultWarehouse();
-  
+
   yield* repo.watchAllWarehouses();
 });
 
@@ -36,31 +38,44 @@ final defaultWarehouseProvider = FutureProvider<Warehouse?>((ref) async {
   return repo.ensureDefaultWarehouse();
 });
 
-final warehouseStocksProvider = FutureProvider.family<List<ProductWarehouseStock>, String>((ref, warehouseId) async {
-  final repo = ref.watch(warehouseRepositoryProvider);
-  return repo.getStocksForWarehouse(warehouseId);
-});
+final warehouseStocksProvider =
+    FutureProvider.family<List<ProductWarehouseStock>, String>((
+      ref,
+      warehouseId,
+    ) async {
+      final repo = ref.watch(warehouseRepositoryProvider);
+      return repo.getStocksForWarehouse(warehouseId);
+    });
 
-final warehouseAccountingBindingRepositoryProvider = Provider<WarehouseAccountingBindingRepository>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
-  return WarehouseAccountingBindingRepositoryImpl(
-    db,
-    () => ref.read(currentCompanyIdProvider),
-  );
-});
+final warehouseAccountingBindingRepositoryProvider =
+    Provider<WarehouseAccountingBindingRepository>((ref) {
+      final db = ref.watch(inventoryDatabaseProvider);
+      return WarehouseAccountingBindingRepositoryImpl(
+        db,
+        () => ref.read(currentCompanyIdProvider),
+      );
+    });
 
-final warehouseBindingProvider = FutureProvider.family<WarehouseAccountingBinding?, String>((ref, warehouseId) async {
-  final repo = ref.watch(warehouseAccountingBindingRepositoryProvider);
-  return repo.getBindingForWarehouse(warehouseId);
-});
+final warehouseBindingProvider =
+    FutureProvider.family<WarehouseAccountingBinding?, String>((
+      ref,
+      warehouseId,
+    ) async {
+      final repo = ref.watch(warehouseAccountingBindingRepositoryProvider);
+      return repo.getBindingForWarehouse(warehouseId);
+    });
 
 class WarehouseController extends StateNotifier<AsyncValue<void>> {
-  WarehouseController(this._repo, this._bindingRepo) : super(const AsyncValue.data(null));
+  WarehouseController(this._repo, this._bindingRepo)
+    : super(const AsyncValue.data(null));
 
   final WarehouseRepository _repo;
   final WarehouseAccountingBindingRepository _bindingRepo;
 
-  Future<bool> saveWarehouse(Warehouse warehouse, {WarehouseAccountingBinding? binding}) async {
+  Future<bool> saveWarehouse(
+    Warehouse warehouse, {
+    WarehouseAccountingBinding? binding,
+  }) async {
     state = const AsyncValue.loading();
     try {
       await _repo.saveWarehouse(warehouse);
@@ -89,8 +104,11 @@ class WarehouseController extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final warehouseControllerProvider = StateNotifierProvider<WarehouseController, AsyncValue<void>>((ref) {
-  final repo = ref.watch(warehouseRepositoryProvider);
-  final bindingRepo = ref.watch(warehouseAccountingBindingRepositoryProvider);
-  return WarehouseController(repo, bindingRepo);
-});
+final warehouseControllerProvider =
+    StateNotifierProvider<WarehouseController, AsyncValue<void>>((ref) {
+      final repo = ref.watch(warehouseRepositoryProvider);
+      final bindingRepo = ref.watch(
+        warehouseAccountingBindingRepositoryProvider,
+      );
+      return WarehouseController(repo, bindingRepo);
+    });

@@ -39,13 +39,17 @@ class RelationResolver {
 
     try {
       // 2. Execute Async Candidate Lookup with companyId context
-      final candidates = await definition.lookupFn(rawReference, effectiveStrategy, companyId);
+      final candidates = await definition.lookupFn(
+        rawReference,
+        effectiveStrategy,
+        companyId,
+      );
 
       // 3. Multi-Company Tenant Isolation Check
       if (companyId != null && companyId.trim().isNotEmpty) {
-        final crossTenantCandidates = candidates.where(
-          (c) => c.companyId != null && c.companyId != companyId,
-        ).toList();
+        final crossTenantCandidates = candidates
+            .where((c) => c.companyId != null && c.companyId != companyId)
+            .toList();
 
         if (crossTenantCandidates.isNotEmpty) {
           throw TenantIsolationException(
@@ -79,7 +83,9 @@ class RelationResolver {
       }
 
       // 6. Ambiguous — Multiple Candidates Matched (NEVER SILENTLY SELECT)
-      final candidateNames = candidates.map((c) => '${c.displayName} (${c.id})').join(', ');
+      final candidateNames = candidates
+          .map((c) => '${c.displayName} (${c.id})')
+          .join(', ');
       return ResolutionResult(
         status: ResolutionStatus.ambiguous,
         rawReference: rawReference,

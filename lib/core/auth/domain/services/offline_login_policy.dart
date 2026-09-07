@@ -72,7 +72,8 @@ class OfflineLoginPolicy {
     }
 
     // 2. Expected Server URL matches
-    if (_normalizeUrl(snapshot.serverBaseUrl) != _normalizeUrl(expectedServerUrl)) {
+    if (_normalizeUrl(snapshot.serverBaseUrl) !=
+        _normalizeUrl(expectedServerUrl)) {
       return const OfflineLoginResult(
         outcome: OfflineLoginOutcome.denied,
         message: 'Server URL mismatch.',
@@ -96,7 +97,8 @@ class OfflineLoginPolicy {
     }
 
     // Temporal integrity check for Premium
-    final isPremium = companyEntitlement.tier == EntitlementTier.premium ||
+    final isPremium =
+        companyEntitlement.tier == EntitlementTier.premium ||
         companyEntitlement.tier == EntitlementTier.enterprise;
 
     if (isPremium) {
@@ -104,7 +106,8 @@ class OfflineLoginPolicy {
           clockState == ClockIntegrityState.suspicious) {
         return const OfflineLoginResult(
           outcome: OfflineLoginOutcome.temporalIntegritySuspicious,
-          message: 'Device clock manipulation detected. Premium features locked.',
+          message:
+              'Device clock manipulation detected. Premium features locked.',
         );
       }
     }
@@ -112,19 +115,24 @@ class OfflineLoginPolicy {
     // 5. Expiration Policy
     // Premium grace duration is 14 days. Free is unlimited.
     if (isPremium) {
-      final now = AuthorizationContext.globalClock?.utcNow() ?? DateTime.now().toUtc();
-      final daysSinceAuth = now.difference(snapshot.lastServerAuthenticatedAt).inDays;
+      final now =
+          AuthorizationContext.globalClock?.utcNow() ?? DateTime.now().toUtc();
+      final daysSinceAuth = now
+          .difference(snapshot.lastServerAuthenticatedAt)
+          .inDays;
       if (daysSinceAuth > maxOfflineGraceDays) {
         return const OfflineLoginResult(
           outcome: OfflineLoginOutcome.expired,
-          message: 'Offline authorization has expired. Online verification required.',
+          message:
+              'Offline authorization has expired. Online verification required.',
         );
       }
     }
 
     // 6. Device Identity matches (bound device checking)
     // Standalone default admin can bypass device matching because it runs locally.
-    final isStandaloneAdmin = requestedUserId == '00000000-0000-4000-8000-0000000000a1';
+    final isStandaloneAdmin =
+        requestedUserId == '00000000-0000-4000-8000-0000000000a1';
     if (!isStandaloneAdmin && currentDeviceId.isNotEmpty) {
       if (snapshot.deviceId != null && snapshot.deviceId != currentDeviceId) {
         return const OfflineLoginResult(

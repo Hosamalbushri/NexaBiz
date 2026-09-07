@@ -24,9 +24,7 @@ class DashboardSectionDivider extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          Expanded(
-            child: Container(height: 1, color: lineColor),
-          ),
+          Expanded(child: Container(height: 1, color: lineColor)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             child: Container(
@@ -53,9 +51,7 @@ class DashboardSectionDivider extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Container(height: 1, color: lineColor),
-          ),
+          Expanded(child: Container(height: 1, color: lineColor)),
         ],
       ),
     );

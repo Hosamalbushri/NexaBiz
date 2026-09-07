@@ -71,7 +71,11 @@ void main() {
     db = InventoryDatabase(executor: NativeDatabase.memory());
     activeCompanyId = 'company_A';
     mockBox = MockSyncBox<SyncOperation>([]);
-    syncQueue = SyncQueue(box: mockBox, companyId: activeCompanyId, deviceId: 'DEV-1');
+    syncQueue = SyncQueue(
+      box: mockBox,
+      companyId: activeCompanyId,
+      deviceId: 'DEV-1',
+    );
 
     costLayerService = CostLayerServiceImpl(
       db: db,
@@ -83,10 +87,7 @@ void main() {
       null,
       () => activeCompanyId,
     );
-    validationService = StockValidationServiceImpl(
-      db,
-      () => activeCompanyId,
-    );
+    validationService = StockValidationServiceImpl(db, () => activeCompanyId);
     dependencyDetector = InventoryDependencyDetectorImpl(
       db,
       () => activeCompanyId,
@@ -188,202 +189,321 @@ void main() {
   }
 
   group('WEIGHTED AVERAGE COST (WAC) INTEGRITY REGRESSION SUITE', () {
-    test('Test A — Basic WAC Calculation & Post-Issue Valuation Integrity', () async {
-      // 10@100 + 10@120 = WAC 110. Issue 5 -> COGS = 550, post-issue WAC = 110, remaining val = 1650
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-A-1', qty: 10, unitCost: 100);
-      final r2 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-A-2', qty: 10, unitCost: 120);
+    test(
+      'Test A — Basic WAC Calculation & Post-Issue Valuation Integrity',
+      () async {
+        // 10@100 + 10@120 = WAC 110. Issue 5 -> COGS = 550, post-issue WAC = 110, remaining val = 1650
+        final r1 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-A-1',
+          qty: 10,
+          unitCost: 100,
+        );
+        final r2 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-A-2',
+          qty: 10,
+          unitCost: 120,
+        );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r1.id,
+            documentNumber: r1.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r1.receiptDate,
+            warehouseId: r1.warehouse,
+          ),
+        );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r2.id,
-        documentNumber: r2.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r2.receiptDate,
-        warehouseId: r2.warehouse,
-      ));
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r2.id,
+            documentNumber: r2.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r2.receiptDate,
+            warehouseId: r2.warehouse,
+          ),
+        );
 
-      final wacBefore = await costLayerService.getWeightedAverageCost('ITEM-WAC');
-      expect(wacBefore, 110.0);
+        final wacBefore = await costLayerService.getWeightedAverageCost(
+          'ITEM-WAC',
+        );
+        expect(wacBefore, 110.0);
 
-      final issueLineUuid = generateUuidV4();
-      final consumption = await costLayerService.consumeLayers(
-        itemCode: 'ITEM-WAC',
-        quantity: 5,
-        method: CostValuationMethod.weightedAverage,
-        issueLineUuid: issueLineUuid,
-        movementType: 'stock_issue',
-        companyId: 'company_A',
-      );
+        final issueLineUuid = generateUuidV4();
+        final consumption = await costLayerService.consumeLayers(
+          itemCode: 'ITEM-WAC',
+          quantity: 5,
+          method: CostValuationMethod.weightedAverage,
+          issueLineUuid: issueLineUuid,
+          movementType: 'stock_issue',
+          companyId: 'company_A',
+        );
 
-      expect(consumption.totalCost, 550.0);
-      expect(consumption.effectiveUnitCost, 110.0);
+        expect(consumption.totalCost, 550.0);
+        expect(consumption.effectiveUnitCost, 110.0);
 
-      final wacAfter = await costLayerService.getWeightedAverageCost('ITEM-WAC');
-      expect(wacAfter, 110.0);
+        final wacAfter = await costLayerService.getWeightedAverageCost(
+          'ITEM-WAC',
+        );
+        expect(wacAfter, 110.0);
 
-      final openLayers = await costLayerService.getOpenLayers('ITEM-WAC');
-      final remainingVal = openLayers.fold<double>(0.0, (sum, l) => sum + (l.remainingQty * l.unitCost));
-      expect(remainingVal, 1650.0);
-    });
+        final openLayers = await costLayerService.getOpenLayers('ITEM-WAC');
+        final remainingVal = openLayers.fold<double>(
+          0.0,
+          (sum, l) => sum + (l.remainingQty * l.unitCost),
+        );
+        expect(remainingVal, 1650.0);
+      },
+    );
 
-    test('Test B — Multiple Receipts & Interleaved Issues Math Invariant', () async {
-      // Step 1: Receipt 10@100 -> WAC = 100, Val = 1000
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-B-1', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
+    test(
+      'Test B — Multiple Receipts & Interleaved Issues Math Invariant',
+      () async {
+        // Step 1: Receipt 10@100 -> WAC = 100, Val = 1000
+        final r1 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-B-1',
+          qty: 10,
+          unitCost: 100,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r1.id,
+            documentNumber: r1.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r1.receiptDate,
+            warehouseId: r1.warehouse,
+          ),
+        );
 
-      expect(await costLayerService.getWeightedAverageCost('ITEM-WAC'), 100.0);
+        expect(
+          await costLayerService.getWeightedAverageCost('ITEM-WAC'),
+          100.0,
+        );
 
-      // Step 2: Issue 4 -> COGS = 400, Rem Val = 600, WAC = 100
-      final c1 = await costLayerService.consumeLayers(
-        itemCode: 'ITEM-WAC',
-        quantity: 4,
-        method: CostValuationMethod.weightedAverage,
-        issueLineUuid: generateUuidV4(),
-        movementType: 'stock_issue',
-        companyId: 'company_A',
-      );
-      expect(c1.totalCost, 400.0);
-      expect(await costLayerService.getWeightedAverageCost('ITEM-WAC'), 100.0);
+        // Step 2: Issue 4 -> COGS = 400, Rem Val = 600, WAC = 100
+        final c1 = await costLayerService.consumeLayers(
+          itemCode: 'ITEM-WAC',
+          quantity: 4,
+          method: CostValuationMethod.weightedAverage,
+          issueLineUuid: generateUuidV4(),
+          movementType: 'stock_issue',
+          companyId: 'company_A',
+        );
+        expect(c1.totalCost, 400.0);
+        expect(
+          await costLayerService.getWeightedAverageCost('ITEM-WAC'),
+          100.0,
+        );
 
-      // Step 3: Receipt 14@150 -> Inbound = 2100. New Total Qty = 20, Total Val = 2700, New WAC = 135
-      final r2 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-B-2', qty: 14, unitCost: 150);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r2.id,
-        documentNumber: r2.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r2.receiptDate,
-        warehouseId: r2.warehouse,
-      ));
+        // Step 3: Receipt 14@150 -> Inbound = 2100. New Total Qty = 20, Total Val = 2700, New WAC = 135
+        final r2 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-B-2',
+          qty: 14,
+          unitCost: 150,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r2.id,
+            documentNumber: r2.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r2.receiptDate,
+            warehouseId: r2.warehouse,
+          ),
+        );
 
-      expect(await costLayerService.getWeightedAverageCost('ITEM-WAC'), 135.0);
+        expect(
+          await costLayerService.getWeightedAverageCost('ITEM-WAC'),
+          135.0,
+        );
 
-      // Step 4: Issue 10 -> COGS = 1350, Rem Val = 1350, WAC = 135
-      final c2 = await costLayerService.consumeLayers(
-        itemCode: 'ITEM-WAC',
-        quantity: 10,
-        method: CostValuationMethod.weightedAverage,
-        issueLineUuid: generateUuidV4(),
-        movementType: 'stock_issue',
-        companyId: 'company_A',
-      );
-      expect(c2.totalCost, 1350.0);
-      expect(await costLayerService.getWeightedAverageCost('ITEM-WAC'), 135.0);
+        // Step 4: Issue 10 -> COGS = 1350, Rem Val = 1350, WAC = 135
+        final c2 = await costLayerService.consumeLayers(
+          itemCode: 'ITEM-WAC',
+          quantity: 10,
+          method: CostValuationMethod.weightedAverage,
+          issueLineUuid: generateUuidV4(),
+          movementType: 'stock_issue',
+          companyId: 'company_A',
+        );
+        expect(c2.totalCost, 1350.0);
+        expect(
+          await costLayerService.getWeightedAverageCost('ITEM-WAC'),
+          135.0,
+        );
 
-      final layers = await costLayerService.getOpenLayers('ITEM-WAC');
-      final totalRemVal = layers.fold<double>(0.0, (s, l) => s + (l.remainingQty * l.unitCost));
-      expect(totalRemVal, 1350.0);
-    });
+        final layers = await costLayerService.getOpenLayers('ITEM-WAC');
+        final totalRemVal = layers.fold<double>(
+          0.0,
+          (s, l) => s + (l.remainingQty * l.unitCost),
+        );
+        expect(totalRemVal, 1350.0);
+      },
+    );
 
-    test('Test C — Historical Posted Cost Immutability on Future Receipts', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-C-1', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
+    test(
+      'Test C — Historical Posted Cost Immutability on Future Receipts',
+      () async {
+        final r1 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-C-1',
+          qty: 10,
+          unitCost: 100,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r1.id,
+            documentNumber: r1.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r1.receiptDate,
+            warehouseId: r1.warehouse,
+          ),
+        );
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'WAC-C-ISS1', qty: 5);
-      final refIssue = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-      );
-      await coordinator.post(document: refIssue);
+        final issue = await createIssue(
+          id: generateUuidV4(),
+          docNumber: 'WAC-C-ISS1',
+          qty: 5,
+        );
+        final refIssue = InventoryDocumentRef(
+          documentId: issue.id,
+          documentNumber: issue.issueNumber,
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: issue.issueDate,
+          warehouseId: issue.warehouse,
+        );
+        await coordinator.post(document: refIssue);
 
-      final postedIssueLine = await (db.select(db.stockMovementLines)..where((tbl) => tbl.movementUuid.equals(issue.id))).getSingle();
-      expect(postedIssueLine.unitCost, 100.0);
-      expect(postedIssueLine.totalCost, 500.0);
+        final postedIssueLine = await (db.select(
+          db.stockMovementLines,
+        )..where((tbl) => tbl.movementUuid.equals(issue.id))).getSingle();
+        expect(postedIssueLine.unitCost, 100.0);
+        expect(postedIssueLine.totalCost, 500.0);
 
-      // Future receipt with higher price
-      final r2 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-C-2', qty: 10, unitCost: 200);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r2.id,
-        documentNumber: r2.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r2.receiptDate,
-        warehouseId: r2.warehouse,
-      ));
+        // Future receipt with higher price
+        final r2 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-C-2',
+          qty: 10,
+          unitCost: 200,
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r2.id,
+            documentNumber: r2.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r2.receiptDate,
+            warehouseId: r2.warehouse,
+          ),
+        );
 
-      // New pool WAC changed
-      final newWac = await costLayerService.getWeightedAverageCost('ITEM-WAC');
-      expect(newWac, 166.66666666666666);
+        // New pool WAC changed
+        final newWac = await costLayerService.getWeightedAverageCost(
+          'ITEM-WAC',
+        );
+        expect(newWac, 166.66666666666666);
 
-      // Historical posted issue line cost remains untouched!
-      final reloadedIssueLine = await (db.select(db.stockMovementLines)..where((tbl) => tbl.movementUuid.equals(issue.id))).getSingle();
-      expect(reloadedIssueLine.unitCost, 100.0);
-      expect(reloadedIssueLine.totalCost, 500.0);
-    });
+        // Historical posted issue line cost remains untouched!
+        final reloadedIssueLine = await (db.select(
+          db.stockMovementLines,
+        )..where((tbl) => tbl.movementUuid.equals(issue.id))).getSingle();
+        expect(reloadedIssueLine.unitCost, 100.0);
+        expect(reloadedIssueLine.totalCost, 500.0);
+      },
+    );
 
-    test('Test D — Issue Reversal Restores Exact Layers at Posted Cost', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-D-1', qty: 10, unitCost: 100);
-      final r2 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-D-2', qty: 10, unitCost: 120);
+    test(
+      'Test D — Issue Reversal Restores Exact Layers at Posted Cost',
+      () async {
+        final r1 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-D-1',
+          qty: 10,
+          unitCost: 100,
+        );
+        final r2 = await createReceipt(
+          id: generateUuidV4(),
+          docNumber: 'WAC-D-2',
+          qty: 10,
+          unitCost: 120,
+        );
 
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r2.id,
-        documentNumber: r2.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r2.receiptDate,
-        warehouseId: r2.warehouse,
-      ));
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r1.id,
+            documentNumber: r1.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r1.receiptDate,
+            warehouseId: r1.warehouse,
+          ),
+        );
+        await coordinator.post(
+          document: InventoryDocumentRef(
+            documentId: r2.id,
+            documentNumber: r2.receiptNumber,
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: r2.receiptDate,
+            warehouseId: r2.warehouse,
+          ),
+        );
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'WAC-D-ISS', qty: 6);
-      final refIssue = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-      );
+        final issue = await createIssue(
+          id: generateUuidV4(),
+          docNumber: 'WAC-D-ISS',
+          qty: 6,
+        );
+        final refIssue = InventoryDocumentRef(
+          documentId: issue.id,
+          documentNumber: issue.issueNumber,
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: issue.issueDate,
+          warehouseId: issue.warehouse,
+        );
 
-      await coordinator.post(document: refIssue);
-      expect(await costLayerService.getWeightedAverageCost('ITEM-WAC'), 110.0);
+        await coordinator.post(document: refIssue);
+        expect(
+          await costLayerService.getWeightedAverageCost('ITEM-WAC'),
+          110.0,
+        );
 
-      // Unpost issue
-      final unpostRes = await coordinator.unpost(document: refIssue);
-      expect(unpostRes, isA<UnpostSuccess>());
+        // Unpost issue
+        final unpostRes = await coordinator.unpost(document: refIssue);
+        expect(unpostRes, isA<UnpostSuccess>());
 
-      // Exact layers and WAC restored
-      final wacRestored = await costLayerService.getWeightedAverageCost('ITEM-WAC');
-      expect(wacRestored, 110.0);
+        // Exact layers and WAC restored
+        final wacRestored = await costLayerService.getWeightedAverageCost(
+          'ITEM-WAC',
+        );
+        expect(wacRestored, 110.0);
 
-      final openLayers = await costLayerService.getOpenLayers('ITEM-WAC');
-      final totalQtyRestored = openLayers.fold<double>(0.0, (s, l) => s + l.remainingQty);
-      expect(totalQtyRestored, 20.0);
-    });
+        final openLayers = await costLayerService.getOpenLayers('ITEM-WAC');
+        final totalQtyRestored = openLayers.fold<double>(
+          0.0,
+          (s, l) => s + l.remainingQty,
+        );
+        expect(totalQtyRestored, 20.0);
+      },
+    );
 
     test('Test E — Return Accounting with Purchase & Sales Returns', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-E-1', qty: 10, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
+      final r1 = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'WAC-E-1',
+        qty: 10,
+        unitCost: 100,
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: r1.id,
+          documentNumber: r1.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: r1.receiptDate,
+          warehouseId: r1.warehouse,
+        ),
+      );
 
       // Purchase Return consumes layer
       final prLineId = generateUuidV4();
@@ -401,33 +521,46 @@ void main() {
       expect(layersAfterPR.first.remainingQty, 7.0);
 
       // Sales Return creates new layer
-      await costLayerService.createLayer(CostLayer(
-        id: generateUuidV4(),
-        itemCode: 'ITEM-WAC',
-        movementUuid: generateUuidV4(),
-        movementType: 'sales_return',
-        receivedDate: DateTime.now(),
-        receivedQty: 2,
-        remainingQty: 2,
-        unitCost: 100,
-        totalCost: 200,
-        companyId: 'company_A',
-      ));
+      await costLayerService.createLayer(
+        CostLayer(
+          id: generateUuidV4(),
+          itemCode: 'ITEM-WAC',
+          movementUuid: generateUuidV4(),
+          movementType: 'sales_return',
+          receivedDate: DateTime.now(),
+          receivedQty: 2,
+          remainingQty: 2,
+          unitCost: 100,
+          totalCost: 200,
+          companyId: 'company_A',
+        ),
+      );
 
       final layersAfterSR = await costLayerService.getOpenLayers('ITEM-WAC');
-      final totalQtyAfterSR = layersAfterSR.fold<double>(0.0, (s, l) => s + l.remainingQty);
+      final totalQtyAfterSR = layersAfterSR.fold<double>(
+        0.0,
+        (s, l) => s + l.remainingQty,
+      );
       expect(totalQtyAfterSR, 9.0);
     });
 
     test('Test F — Inter-Warehouse Transfer Cost Preservation', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-F-1', qty: 10, unitCost: 100, warehouse: 'WH-A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: 'WH-A',
-      ));
+      final r1 = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'WAC-F-1',
+        qty: 10,
+        unitCost: 100,
+        warehouse: 'WH-A',
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: r1.id,
+          documentNumber: r1.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: r1.receiptDate,
+          warehouseId: 'WH-A',
+        ),
+      );
 
       final trId = generateUuidV4();
       final transferDoc = StockTransfer(
@@ -453,20 +586,28 @@ void main() {
       );
       await transferRepo.saveTransfer(transferDoc);
 
-      final res = await coordinator.post(document: InventoryDocumentRef(
-        documentId: transferDoc.id,
-        documentNumber: transferDoc.transferNumber,
-        documentType: InventoryDocumentType.stockTransfer,
-        documentDate: transferDoc.transferDate,
-        warehouseId: 'WH-A',
-      ));
+      final res = await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: transferDoc.id,
+          documentNumber: transferDoc.transferNumber,
+          documentType: InventoryDocumentType.stockTransfer,
+          documentDate: transferDoc.transferDate,
+          warehouseId: 'WH-A',
+        ),
+      );
 
       expect(res, isA<PostSuccess>());
 
-      final srcLayers = await costLayerService.getOpenLayers('ITEM-WAC', warehouseId: 'WH-A');
+      final srcLayers = await costLayerService.getOpenLayers(
+        'ITEM-WAC',
+        warehouseId: 'WH-A',
+      );
       expect(srcLayers.first.remainingQty, 6.0);
 
-      final destLayers = await costLayerService.getOpenLayers('ITEM-WAC', warehouseId: 'WH-B');
+      final destLayers = await costLayerService.getOpenLayers(
+        'ITEM-WAC',
+        warehouseId: 'WH-B',
+      );
       expect(destLayers.length, 1);
       expect(destLayers.first.remainingQty, 4.0);
       expect(destLayers.first.unitCost, 100.0);
@@ -474,17 +615,29 @@ void main() {
 
     test('Test G — Multi-Company Tenant Isolation', () async {
       // Company A receipt
-      final rA = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-G-A', qty: 10, unitCost: 100, companyId: 'company_A');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: rA.id,
-        documentNumber: rA.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: rA.receiptDate,
-        warehouseId: rA.warehouse,
-      ));
+      final rA = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'WAC-G-A',
+        qty: 10,
+        unitCost: 100,
+        companyId: 'company_A',
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: rA.id,
+          documentNumber: rA.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: rA.receiptDate,
+          warehouseId: rA.warehouse,
+        ),
+      );
 
       activeCompanyId = 'company_B';
-      syncQueue = SyncQueue(box: mockBox, companyId: 'company_B', deviceId: 'DEV-1');
+      syncQueue = SyncQueue(
+        box: mockBox,
+        companyId: 'company_B',
+        deviceId: 'DEV-1',
+      );
       movementsRepo = StockMovementsRepositoryImpl(
         db: db,
         syncQueue: syncQueue,
@@ -501,14 +654,22 @@ void main() {
       );
 
       // Company B receipt
-      final rB = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-G-B', qty: 10, unitCost: 200, companyId: 'company_B');
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: rB.id,
-        documentNumber: rB.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: rB.receiptDate,
-        warehouseId: rB.warehouse,
-      ));
+      final rB = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'WAC-G-B',
+        qty: 10,
+        unitCost: 200,
+        companyId: 'company_B',
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: rB.id,
+          documentNumber: rB.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: rB.receiptDate,
+          warehouseId: rB.warehouse,
+        ),
+      );
 
       final wacB = await costLayerService.getWeightedAverageCost('ITEM-WAC');
       expect(wacB, 200.0);
@@ -519,16 +680,27 @@ void main() {
     });
 
     test('Test H — Stock Shortage Rejection', () async {
-      final r1 = await createReceipt(id: generateUuidV4(), docNumber: 'WAC-H-1', qty: 5, unitCost: 100);
-      await coordinator.post(document: InventoryDocumentRef(
-        documentId: r1.id,
-        documentNumber: r1.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: r1.receiptDate,
-        warehouseId: r1.warehouse,
-      ));
+      final r1 = await createReceipt(
+        id: generateUuidV4(),
+        docNumber: 'WAC-H-1',
+        qty: 5,
+        unitCost: 100,
+      );
+      await coordinator.post(
+        document: InventoryDocumentRef(
+          documentId: r1.id,
+          documentNumber: r1.receiptNumber,
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: r1.receiptDate,
+          warehouseId: r1.warehouse,
+        ),
+      );
 
-      final issue = await createIssue(id: generateUuidV4(), docNumber: 'WAC-H-ISS', qty: 10);
+      final issue = await createIssue(
+        id: generateUuidV4(),
+        docNumber: 'WAC-H-ISS',
+        qty: 10,
+      );
       final refIssue = InventoryDocumentRef(
         documentId: issue.id,
         documentNumber: issue.issueNumber,

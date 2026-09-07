@@ -73,80 +73,86 @@ void main() {
       expect(resultB.effectiveUnitCost, 0.0);
     });
 
-    test('WarehouseRepository isolates warehouses between Company A and Company B', () async {
-      activeCompanyId = 'company_A';
-      final whRepoA = WarehouseRepositoryImpl(
-        db,
-        null,
-        () => activeCompanyId,
-      );
+    test(
+      'WarehouseRepository isolates warehouses between Company A and Company B',
+      () async {
+        activeCompanyId = 'company_A';
+        final whRepoA = WarehouseRepositoryImpl(
+          db,
+          null,
+          () => activeCompanyId,
+        );
 
-      final whA = Warehouse(
-        id: 'wh_main_a',
-        code: 'WH-MAIN',
-        name: 'المستودع الرئيسي',
-        companyId: 'company_A',
-      );
-      await whRepoA.saveWarehouse(whA);
+        final whA = Warehouse(
+          id: 'wh_main_a',
+          code: 'WH-MAIN',
+          name: 'المستودع الرئيسي',
+          companyId: 'company_A',
+        );
+        await whRepoA.saveWarehouse(whA);
 
-      // Switch to Company B
-      activeCompanyId = 'company_B';
-      final whRepoB = WarehouseRepositoryImpl(
-        db,
-        null,
-        () => activeCompanyId,
-      );
+        // Switch to Company B
+        activeCompanyId = 'company_B';
+        final whRepoB = WarehouseRepositoryImpl(
+          db,
+          null,
+          () => activeCompanyId,
+        );
 
-      final warehousesB = await whRepoB.getAllWarehouses();
-      // Company B should not see Company A's warehouse
-      expect(warehousesB.any((w) => w.id == whA.id), false);
-    });
+        final warehousesB = await whRepoB.getAllWarehouses();
+        // Company B should not see Company A's warehouse
+        expect(warehousesB.any((w) => w.id == whA.id), false);
+      },
+    );
 
-    test('PostingCoordinator blocks document posting across mismatched company contexts', () async {
-      activeCompanyId = 'company_A';
-      final costLayerServiceA = CostLayerServiceImpl(
-        db: db,
-        readCompanyId: () => activeCompanyId,
-      );
-      final validationServiceA = StockValidationServiceImpl(
-        db,
-        () => activeCompanyId,
-      );
-      final dependencyDetectorA = InventoryDependencyDetectorImpl(
-        db,
-        () => activeCompanyId,
-      );
-      final postingEngineA = PostingEngineImpl(
-        db,
-        costLayerServiceA,
-        null,
-        () => activeCompanyId,
-      );
-      final coordinatorA = PostingCoordinatorImpl(
-        db: db,
-        stockValidationService: validationServiceA,
-        dependencyDetector: dependencyDetectorA,
-        postingEngine: postingEngineA,
-        readCompanyId: () => activeCompanyId,
-      );
+    test(
+      'PostingCoordinator blocks document posting across mismatched company contexts',
+      () async {
+        activeCompanyId = 'company_A';
+        final costLayerServiceA = CostLayerServiceImpl(
+          db: db,
+          readCompanyId: () => activeCompanyId,
+        );
+        final validationServiceA = StockValidationServiceImpl(
+          db,
+          () => activeCompanyId,
+        );
+        final dependencyDetectorA = InventoryDependencyDetectorImpl(
+          db,
+          () => activeCompanyId,
+        );
+        final postingEngineA = PostingEngineImpl(
+          db,
+          costLayerServiceA,
+          null,
+          () => activeCompanyId,
+        );
+        final coordinatorA = PostingCoordinatorImpl(
+          db: db,
+          stockValidationService: validationServiceA,
+          dependencyDetector: dependencyDetectorA,
+          postingEngine: postingEngineA,
+          readCompanyId: () => activeCompanyId,
+        );
 
-      // Create a document belonging to Company B
-      final docRefCompanyB = InventoryDocumentRef(
-        documentId: 'doc_b_001',
-        documentNumber: 'REC-B-1',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now().toUtc(),
-        status: InventoryDocumentStatus.draft,
-        companyId: 'company_B',
-      );
+        // Create a document belonging to Company B
+        final docRefCompanyB = InventoryDocumentRef(
+          documentId: 'doc_b_001',
+          documentNumber: 'REC-B-1',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now().toUtc(),
+          status: InventoryDocumentStatus.draft,
+          companyId: 'company_B',
+        );
 
-      // Attempt to post doc of Company B while authenticated under Company A
-      final postResult = await coordinatorA.post(document: docRefCompanyB);
+        // Attempt to post doc of Company B while authenticated under Company A
+        final postResult = await coordinatorA.post(document: docRefCompanyB);
 
-      // Must return invalid status due to company mismatch
-      expect(postResult, isA<PostInvalidStatus>());
-      final invalid = postResult as PostInvalidStatus;
-      expect(invalid.reason, contains('مستند تابع لشركة أخرى'));
-    });
+        // Must return invalid status due to company mismatch
+        expect(postResult, isA<PostInvalidStatus>());
+        final invalid = postResult as PostInvalidStatus;
+        expect(invalid.reason, contains('مستند تابع لشركة أخرى'));
+      },
+    );
   });
 }

@@ -20,7 +20,9 @@ class EncryptedHive {
 
     final resolvedCipher =
         cipher ??
-        HiveAesCipher(await (keyStore ?? HiveEncryptionKeyStore()).getOrCreateKey());
+        HiveAesCipher(
+          await (keyStore ?? HiveEncryptionKeyStore()).getOrCreateKey(),
+        );
 
     final encrypted = await Hive.openBox<T>(
       encryptedBoxName,

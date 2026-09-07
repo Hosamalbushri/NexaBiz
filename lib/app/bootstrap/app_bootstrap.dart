@@ -80,9 +80,9 @@ class AppBootstrap {
     await ref.read(localAuthStoreProvider).ensureSeeded();
     final syncEnabled = await SettingsRepository().loadSyncEnabled();
     try {
-      await ref.read(authStateProvider.notifier).bootstrap(
-            preferRemote: syncEnabled,
-          );
+      await ref
+          .read(authStateProvider.notifier)
+          .bootstrap(preferRemote: syncEnabled);
     } catch (e, stack) {
       AppErrorLog.record(e, stack, source: 'bootstrapAuth');
       // Falling back to unauthenticated / local mode instead of throwing fatal init exception
@@ -129,14 +129,19 @@ class AppBootstrap {
     coordinator.synchronizeRegistration(ref);
 
     final currentCompanyId = ref.read(currentCompanyIdProvider);
-    final cloudState = await SettingsRepository().loadCompanyCloudState(currentCompanyId);
+    final cloudState = await SettingsRepository().loadCompanyCloudState(
+      currentCompanyId,
+    );
 
     final syncEnabled = await SettingsRepository().loadSyncEnabled();
     await ref.read(syncEnabledProvider.notifier).hydrate(syncEnabled);
     final entitlementService = ref.read(entitlementServiceProvider);
-    final hasSyncCapability = entitlementService.hasCapability(EntitlementCapability.sync);
+    final hasSyncCapability = entitlementService.hasCapability(
+      EntitlementCapability.sync,
+    );
     final authState = ref.read(authStateProvider);
-    final syncActuallyEnabled = ref.read(syncEnabledProvider) &&
+    final syncActuallyEnabled =
+        ref.read(syncEnabledProvider) &&
         authState.canUseRemoteSync &&
         hasSyncCapability &&
         cloudState.isCloudReady;
@@ -172,4 +177,3 @@ class AppBootstrap {
   /// Whether the platform settings box is open (bootstrap completed storage step).
   static bool get isStorageReady => Hive.isBoxOpen(HiveBoxes.settings);
 }
-

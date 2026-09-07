@@ -310,8 +310,14 @@ class SyncController extends Controller
             throw new ValidationAppException('operations must not be empty');
         }
 
+        $opId = $op['operation_id'] ?? $op['idempotency_key'] ?? '';
+        if (! $opId) {
+            throw new ValidationAppException('operation_id or idempotency_key is required');
+        }
+
         return [
-            'operation_id' => $op['operation_id'] ?? '',
+            'operation_id' => $opId,
+            'idempotency_key' => $op['idempotency_key'] ?? $opId,
             'entity_type' => $op['entity_type'] ?? '',
             'entity_id' => $op['entity_id'] ?? '',
             'type' => $op['type'],
@@ -319,6 +325,7 @@ class SyncController extends Controller
             'base_version' => (int) ($op['base_version'] ?? 0),
             'company_id' => $op['company_id'] ?? null,
             'device_id' => $op['device_id'] ?? null,
+            'created_at' => $op['created_at'] ?? null,
         ];
     }
 

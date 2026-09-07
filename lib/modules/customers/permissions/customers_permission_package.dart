@@ -67,9 +67,7 @@ PermissionPackageDef customersPermissionPackage() {
             AppLocalizations.of(context).adminPermServiceCustomersAccounts,
         subtitleBuilder: (context) =>
             AppLocalizations.of(context).adminPermServiceCustomersAccountsHint,
-        operations: [
-          StandardPermissionOps.view('customers.accounts.view'),
-        ],
+        operations: [StandardPermissionOps.view('customers.accounts.view')],
       ),
       PermissionServiceDef(
         id: 'settings',

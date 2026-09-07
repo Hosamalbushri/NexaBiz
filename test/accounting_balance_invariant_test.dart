@@ -32,7 +32,10 @@ void main() {
   setUp(() async {
     db = AccountingDatabase(executor: NativeDatabase.memory());
     accountRepo = AccountRepositoryImpl(db, readCompanyId: () => testCompanyId);
-    rateRepo = CurrencyRateRepositoryImpl(db, readCompanyId: () => testCompanyId);
+    rateRepo = CurrencyRateRepositoryImpl(
+      db,
+      readCompanyId: () => testCompanyId,
+    );
     final periodValidator = legacyPeriodValidator();
 
     journalRepo = JournalRepositoryImpl(
@@ -94,8 +97,18 @@ void main() {
         description: 'Balanced Journal Entry',
         isPosted: true,
         lines: [
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: 500.0, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: revAccountUuid, debit: 0, credit: 500.0, currencyCode: 'SAR'),
+          JournalLineDraft(
+            accountUuid: cashAccountUuid,
+            debit: 500.0,
+            credit: 0,
+            currencyCode: 'SAR',
+          ),
+          JournalLineDraft(
+            accountUuid: revAccountUuid,
+            debit: 0,
+            credit: 500.0,
+            currencyCode: 'SAR',
+          ),
         ],
       );
 
@@ -106,167 +119,280 @@ void main() {
 
       final totalDebit = posted.lines.fold<double>(0, (s, l) => s + l.debit);
       final totalCredit = posted.lines.fold<double>(0, (s, l) => s + l.credit);
-      expect(JournalMoney.toCents(totalDebit), JournalMoney.toCents(totalCredit));
-    });
-
-    test('2. Unbalanced Journal Entry fails posting with zero partial posting', () async {
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.now(),
-        voucherNumber: 'JV-UNBAL-001',
-        voucherType: 'JV',
-        currencyCode: 'SAR',
-        description: 'Unbalanced Journal Entry',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: 500.0, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: revAccountUuid, debit: 0, credit: 490.0, currencyCode: 'SAR'), // 10 SAR shortfall
-        ],
-      );
-
       expect(
-        () async => postingService.post(draft),
-        throwsA(
-          isA<JournalException>().having((e) => e.code, 'code', JournalException.unbalanced),
-        ),
-      );
-
-      // Verify zero partial posting in DB
-      final entriesInDb = await db.select(db.journalEntries).get();
-      expect(entriesInDb.isEmpty, isTrue);
-    });
-
-    test('3. Tiny rounding difference (0.01 cent disparity) is strictly rejected', () async {
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.now(),
-        voucherNumber: 'JV-TINY-001',
-        voucherType: 'JV',
-        currencyCode: 'SAR',
-        description: 'Tiny 0.01 imbalance',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: 100.01, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: revAccountUuid, debit: 0, credit: 100.00, currencyCode: 'SAR'),
-        ],
-      );
-
-      expect(
-        () async => postingService.post(draft),
-        throwsA(
-          isA<JournalException>().having((e) => e.code, 'code', JournalException.unbalanced),
-        ),
+        JournalMoney.toCents(totalDebit),
+        JournalMoney.toCents(totalCredit),
       );
     });
 
-    test(r'4. Very large values ($10,000,000.00) balance check passes without float precision loss', () async {
-      const double largeAmount = 10000000.75;
+    test(
+      '2. Unbalanced Journal Entry fails posting with zero partial posting',
+      () async {
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.now(),
+          voucherNumber: 'JV-UNBAL-001',
+          voucherType: 'JV',
+          currencyCode: 'SAR',
+          description: 'Unbalanced Journal Entry',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: cashAccountUuid,
+              debit: 500.0,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: revAccountUuid,
+              debit: 0,
+              credit: 490.0,
+              currencyCode: 'SAR',
+            ), // 10 SAR shortfall
+          ],
+        );
 
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.now(),
-        voucherNumber: 'JV-LARGE-001',
-        voucherType: 'JV',
-        currencyCode: 'SAR',
-        description: 'Large amount journal',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: largeAmount, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: revAccountUuid, debit: 0, credit: largeAmount, currencyCode: 'SAR'),
-        ],
-      );
+        expect(
+          () async => postingService.post(draft),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.unbalanced,
+            ),
+          ),
+        );
 
-      final posted = await postingService.post(draft);
-      expect(posted.isPosted, isTrue);
+        // Verify zero partial posting in DB
+        final entriesInDb = await db.select(db.journalEntries).get();
+        expect(entriesInDb.isEmpty, isTrue);
+      },
+    );
 
-      final totalDebitCents = JournalMoney.toCents(posted.lines.first.debit);
-      final totalCreditCents = JournalMoney.toCents(posted.lines.last.credit);
-      expect(totalDebitCents, 1000000075);
-      expect(totalDebitCents, totalCreditCents);
-    });
+    test(
+      '3. Tiny rounding difference (0.01 cent disparity) is strictly rejected',
+      () async {
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.now(),
+          voucherNumber: 'JV-TINY-001',
+          voucherType: 'JV',
+          currencyCode: 'SAR',
+          description: 'Tiny 0.01 imbalance',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: cashAccountUuid,
+              debit: 100.01,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: revAccountUuid,
+              debit: 0,
+              credit: 100.00,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
 
-    test('5. Multi-currency foreign exchange entry enforces strict base currency balancing', () async {
-      await rateRepo.upsert(const CurrencyRateDraft(currencyCode: 'USD', rateToBase: 3.75));
+        expect(
+          () async => postingService.post(draft),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.unbalanced,
+            ),
+          ),
+        );
+      },
+    );
 
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.now(),
-        voucherNumber: 'JV-FX-001',
-        voucherType: 'JV',
-        currencyCode: 'USD',
-        baseCurrencyCode: 'SAR',
-        description: 'FX Entry',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: 100.0, credit: 0, currencyCode: 'USD', exchangeRateToBase: 3.75),
-          JournalLineDraft(accountUuid: revAccountUuid, debit: 0, credit: 100.0, currencyCode: 'USD', exchangeRateToBase: 3.75),
-        ],
-      );
+    test(
+      r'4. Very large values ($10,000,000.00) balance check passes without float precision loss',
+      () async {
+        const double largeAmount = 10000000.75;
 
-      final posted = await postingService.post(draft);
-      expect(posted.isPosted, isTrue);
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.now(),
+          voucherNumber: 'JV-LARGE-001',
+          voucherType: 'JV',
+          currencyCode: 'SAR',
+          description: 'Large amount journal',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: cashAccountUuid,
+              debit: largeAmount,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: revAccountUuid,
+              debit: 0,
+              credit: largeAmount,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
 
-      final baseDebitCents = JournalMoney.toCents(posted.lines.first.baseDebit ?? 0);
-      final baseCreditCents = JournalMoney.toCents(posted.lines.last.baseCredit ?? 0);
-      expect(baseDebitCents, 37500);
-      expect(baseDebitCents, baseCreditCents);
-    });
+        final posted = await postingService.post(draft);
+        expect(posted.isPosted, isTrue);
 
-    test('6. Reversal entry of balanced journal is strictly balanced', () async {
-      final originalDraft = JournalEntryDraft(
-        entryDate: DateTime.now(),
-        voucherNumber: 'JV-ORIG-001',
-        voucherType: 'JV',
-        currencyCode: 'SAR',
-        description: 'Original Journal',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: expAccountUuid, debit: 250.50, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: 0, credit: 250.50, currencyCode: 'SAR'),
-        ],
-      );
+        final totalDebitCents = JournalMoney.toCents(posted.lines.first.debit);
+        final totalCreditCents = JournalMoney.toCents(posted.lines.last.credit);
+        expect(totalDebitCents, 1000000075);
+        expect(totalDebitCents, totalCreditCents);
+      },
+    );
 
-      final originalPosted = await postingService.post(originalDraft);
-      final reversedEntry = await postingService.reverseByUuid(originalPosted.uuid);
+    test(
+      '5. Multi-currency foreign exchange entry enforces strict base currency balancing',
+      () async {
+        await rateRepo.upsert(
+          const CurrencyRateDraft(currencyCode: 'USD', rateToBase: 3.75),
+        );
 
-      expect(reversedEntry.isPosted, isTrue);
-      expect(reversedEntry.lines.length, 2);
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.now(),
+          voucherNumber: 'JV-FX-001',
+          voucherType: 'JV',
+          currencyCode: 'USD',
+          baseCurrencyCode: 'SAR',
+          description: 'FX Entry',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: cashAccountUuid,
+              debit: 100.0,
+              credit: 0,
+              currencyCode: 'USD',
+              exchangeRateToBase: 3.75,
+            ),
+            JournalLineDraft(
+              accountUuid: revAccountUuid,
+              debit: 0,
+              credit: 100.0,
+              currencyCode: 'USD',
+              exchangeRateToBase: 3.75,
+            ),
+          ],
+        );
 
-      final sumDebitCents = JournalMoney.toCents(reversedEntry.lines.fold<double>(0, (s, l) => s + l.debit));
-      final sumCreditCents = JournalMoney.toCents(reversedEntry.lines.fold<double>(0, (s, l) => s + l.credit));
-      expect(sumDebitCents, sumCreditCents);
-      expect(sumDebitCents, 25050);
-    });
+        final posted = await postingService.post(draft);
+        expect(posted.isPosted, isTrue);
 
-    test('7. Concurrent posting attempts maintain strict balance invariants and atomicity', () async {
-      final draft1 = JournalEntryDraft(
-        entryDate: DateTime.now(),
-        voucherNumber: 'JV-CONC-001',
-        voucherType: 'JV',
-        currencyCode: 'SAR',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: 150.0, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: revAccountUuid, debit: 0, credit: 150.0, currencyCode: 'SAR'),
-        ],
-      );
+        final baseDebitCents = JournalMoney.toCents(
+          posted.lines.first.baseDebit ?? 0,
+        );
+        final baseCreditCents = JournalMoney.toCents(
+          posted.lines.last.baseCredit ?? 0,
+        );
+        expect(baseDebitCents, 37500);
+        expect(baseDebitCents, baseCreditCents);
+      },
+    );
 
-      final draft2 = JournalEntryDraft(
-        entryDate: DateTime.now(),
-        voucherNumber: 'JV-CONC-002',
-        voucherType: 'JV',
-        currencyCode: 'SAR',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: expAccountUuid, debit: 300.0, credit: 0, currencyCode: 'SAR'),
-          JournalLineDraft(accountUuid: cashAccountUuid, debit: 0, credit: 300.0, currencyCode: 'SAR'),
-        ],
-      );
+    test(
+      '6. Reversal entry of balanced journal is strictly balanced',
+      () async {
+        final originalDraft = JournalEntryDraft(
+          entryDate: DateTime.now(),
+          voucherNumber: 'JV-ORIG-001',
+          voucherType: 'JV',
+          currencyCode: 'SAR',
+          description: 'Original Journal',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: expAccountUuid,
+              debit: 250.50,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: cashAccountUuid,
+              debit: 0,
+              credit: 250.50,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
 
-      final results = await Future.wait([
-        postingService.post(draft1),
-        postingService.post(draft2),
-      ]);
+        final originalPosted = await postingService.post(originalDraft);
+        final reversedEntry = await postingService.reverseByUuid(
+          originalPosted.uuid,
+        );
 
-      expect(results.length, 2);
-      expect(results[0].isPosted, isTrue);
-      expect(results[1].isPosted, isTrue);
-    });
+        expect(reversedEntry.isPosted, isTrue);
+        expect(reversedEntry.lines.length, 2);
+
+        final sumDebitCents = JournalMoney.toCents(
+          reversedEntry.lines.fold<double>(0, (s, l) => s + l.debit),
+        );
+        final sumCreditCents = JournalMoney.toCents(
+          reversedEntry.lines.fold<double>(0, (s, l) => s + l.credit),
+        );
+        expect(sumDebitCents, sumCreditCents);
+        expect(sumDebitCents, 25050);
+      },
+    );
+
+    test(
+      '7. Concurrent posting attempts maintain strict balance invariants and atomicity',
+      () async {
+        final draft1 = JournalEntryDraft(
+          entryDate: DateTime.now(),
+          voucherNumber: 'JV-CONC-001',
+          voucherType: 'JV',
+          currencyCode: 'SAR',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: cashAccountUuid,
+              debit: 150.0,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: revAccountUuid,
+              debit: 0,
+              credit: 150.0,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
+
+        final draft2 = JournalEntryDraft(
+          entryDate: DateTime.now(),
+          voucherNumber: 'JV-CONC-002',
+          voucherType: 'JV',
+          currencyCode: 'SAR',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: expAccountUuid,
+              debit: 300.0,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: cashAccountUuid,
+              debit: 0,
+              credit: 300.0,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
+
+        final results = await Future.wait([
+          postingService.post(draft1),
+          postingService.post(draft2),
+        ]);
+
+        expect(results.length, 2);
+        expect(results[0].isPosted, isTrue);
+        expect(results[1].isPosted, isTrue);
+      },
+    );
   });
 }

@@ -4,24 +4,24 @@ import '../domain/entities/import_job_status.dart';
 import '../domain/ports/import_job_repository.dart';
 
 /// Worker execution handler callback signature for processing job batches.
-typedef ImportJobExecutor = Future<void> Function(
-  ImportJob job,
-  Future<void> Function({
-    required int processedRows,
-    required int successfulRows,
-    required int failedRows,
-    required int skippedRows,
-    required double progress,
-  }) reportProgress,
-  bool Function() isCancelledOrPaused,
-);
+typedef ImportJobExecutor =
+    Future<void> Function(
+      ImportJob job,
+      Future<void> Function({
+        required int processedRows,
+        required int successfulRows,
+        required int failedRows,
+        required int skippedRows,
+        required double progress,
+      })
+      reportProgress,
+      bool Function() isCancelledOrPaused,
+    );
 
 /// Decoupled Background Execution Worker for [ImportJob] instances.
 /// Runs independently from UI widgets, periodically persisting progress to [ImportJobRepository].
 class ImportBackgroundWorker {
-  ImportBackgroundWorker({
-    required this.repository,
-  });
+  ImportBackgroundWorker({required this.repository});
 
   final ImportJobRepository repository;
 
@@ -29,7 +29,8 @@ class ImportBackgroundWorker {
   final Set<String> _cancelledJobIds = {};
   final Map<String, Completer<void>> _activeJobCompleters = {};
 
-  final StreamController<ImportJob> _updatesController = StreamController<ImportJob>.broadcast();
+  final StreamController<ImportJob> _updatesController =
+      StreamController<ImportJob>.broadcast();
 
   /// Stream of real-time job update events for optional UI subscriptions.
   Stream<ImportJob> get jobUpdatesStream => _updatesController.stream;
@@ -81,7 +82,8 @@ class ImportBackgroundWorker {
 
     try {
       // 1. Transition to PREPARING if QUEUED
-      var currentJob = await repository.getById(jobId, companyId: companyId) ?? initialJob;
+      var currentJob =
+          await repository.getById(jobId, companyId: companyId) ?? initialJob;
       if (currentJob.status == ImportJobStatus.queued) {
         currentJob = currentJob.transitionTo(ImportJobStatus.preparing);
         await repository.save(currentJob);
@@ -94,7 +96,8 @@ class ImportBackgroundWorker {
       }
 
       // 2. Transition to PROCESSING if PREPARING or PAUSED
-      if (currentJob.status == ImportJobStatus.preparing || currentJob.status == ImportJobStatus.paused) {
+      if (currentJob.status == ImportJobStatus.preparing ||
+          currentJob.status == ImportJobStatus.paused) {
         currentJob = currentJob.transitionTo(ImportJobStatus.processing);
         await repository.save(currentJob);
         _notifyUpdate(currentJob);
@@ -102,32 +105,28 @@ class ImportBackgroundWorker {
 
       // 3. Process Execution Loop
       if (customExecutor != null) {
-        await customExecutor(
-          currentJob,
-          ({
-            required processedRows,
-            required successfulRows,
-            required failedRows,
-            required skippedRows,
-            required progress,
-          }) async {
-            if (_isAborted(jobId)) return;
+        await customExecutor(currentJob, ({
+          required processedRows,
+          required successfulRows,
+          required failedRows,
+          required skippedRows,
+          required progress,
+        }) async {
+          if (_isAborted(jobId)) return;
 
-            final latest = await repository.getById(jobId, companyId: companyId);
-            if (latest == null) return;
+          final latest = await repository.getById(jobId, companyId: companyId);
+          if (latest == null) return;
 
-            final updated = latest.copyWith(
-              processedRows: processedRows,
-              successfulRows: successfulRows,
-              failedRows: failedRows,
-              skippedRows: skippedRows,
-              progress: progress,
-            );
-            await repository.save(updated);
-            _notifyUpdate(updated);
-          },
-          () => _isAborted(jobId),
-        );
+          final updated = latest.copyWith(
+            processedRows: processedRows,
+            successfulRows: successfulRows,
+            failedRows: failedRows,
+            skippedRows: skippedRows,
+            progress: progress,
+          );
+          await repository.save(updated);
+          _notifyUpdate(updated);
+        }, () => _isAborted(jobId));
       } else {
         // Default simulated processing loop for standalone execution
         final total = currentJob.totalRows > 0 ? currentJob.totalRows : 10;
@@ -189,11 +188,13 @@ class ImportBackgroundWorker {
     final finalJob = await repository.getById(jobId, companyId: companyId);
     if (finalJob == null) return;
 
-    if (_cancelledJobIds.contains(jobId) && finalJob.status.canTransitionTo(ImportJobStatus.cancelled)) {
+    if (_cancelledJobIds.contains(jobId) &&
+        finalJob.status.canTransitionTo(ImportJobStatus.cancelled)) {
       final cancelled = finalJob.transitionTo(ImportJobStatus.cancelled);
       await repository.save(cancelled);
       _notifyUpdate(cancelled);
-    } else if (_pausedJobIds.contains(jobId) && finalJob.status.canTransitionTo(ImportJobStatus.paused)) {
+    } else if (_pausedJobIds.contains(jobId) &&
+        finalJob.status.canTransitionTo(ImportJobStatus.paused)) {
       final paused = finalJob.transitionTo(ImportJobStatus.paused);
       await repository.save(paused);
       _notifyUpdate(paused);
@@ -245,7 +246,9 @@ class ImportBackgroundWorker {
     ImportJobExecutor? customExecutor,
   }) async {
     final job = await repository.getById(jobId, companyId: companyId);
-    if (job != null && (job.status == ImportJobStatus.failed || job.status == ImportJobStatus.cancelled)) {
+    if (job != null &&
+        (job.status == ImportJobStatus.failed ||
+            job.status == ImportJobStatus.cancelled)) {
       final resetJob = job.copyWith(
         status: ImportJobStatus.queued,
         processedRows: 0,

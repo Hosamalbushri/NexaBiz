@@ -73,66 +73,78 @@ void main() {
       );
     }
 
-    testWidgets('1. LOCALIZATION & RTL: CustomersListPage renders in Arabic with empty state', (tester) async {
-      await tester.pumpWidget(
-        createTestableWidget(
-          child: const CustomersListPage(),
-          locale: const Locale('ar'),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      '1. LOCALIZATION & RTL: CustomersListPage renders in Arabic with empty state',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestableWidget(
+            child: const CustomersListPage(),
+            locale: const Locale('ar'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byType(CustomersListPage), findsOneWidget);
-    });
+        expect(find.byType(CustomersListPage), findsOneWidget);
+      },
+    );
 
-    testWidgets('2. LOCALIZATION: CustomersListPage renders in English locale', (tester) async {
-      await tester.pumpWidget(
-        createTestableWidget(
-          child: const CustomersListPage(),
-          locale: const Locale('en'),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      '2. LOCALIZATION: CustomersListPage renders in English locale',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestableWidget(
+            child: const CustomersListPage(),
+            locale: const Locale('en'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byType(CustomersListPage), findsOneWidget);
-    });
+        expect(find.byType(CustomersListPage), findsOneWidget);
+      },
+    );
 
-    testWidgets('3. FORM RENDERING: CustomerFormPage renders form sections and fields', (tester) async {
-      await tester.pumpWidget(
-        createTestableWidget(
-          child: const CustomerFormPage(),
-          locale: const Locale('ar'),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 200));
+    testWidgets(
+      '3. FORM RENDERING: CustomerFormPage renders form sections and fields',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestableWidget(
+            child: const CustomerFormPage(),
+            locale: const Locale('ar'),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.byType(CustomerFormPage), findsOneWidget);
-      expect(find.byType(TextFormField), findsAtLeastNWidgets(3));
-    });
+        expect(find.byType(CustomerFormPage), findsOneWidget);
+        expect(find.byType(TextFormField), findsAtLeastNWidgets(3));
+      },
+    );
 
-    testWidgets('4. DETAILS PAGE: CustomerDetailsPage renders customer details', (tester) async {
-      final customer = await repo.insert(
-        const CustomerDraft(
-          customerCode: '12210040',
-          name: 'عميل اختبار الواجهة',
-          phone: '+966504444444',
-          email: 'ui@example.com',
-          status: CustomerStatus.active,
-          creditLimit: 5000.0,
-          currencyCode: 'SAR',
-        ),
-      );
+    testWidgets(
+      '4. DETAILS PAGE: CustomerDetailsPage renders customer details',
+      (tester) async {
+        final customer = await repo.insert(
+          const CustomerDraft(
+            customerCode: '12210040',
+            name: 'عميل اختبار الواجهة',
+            phone: '+966504444444',
+            email: 'ui@example.com',
+            status: CustomerStatus.active,
+            creditLimit: 5000.0,
+            currencyCode: 'SAR',
+          ),
+        );
 
-      await tester.pumpWidget(
-        createTestableWidget(
-          child: CustomerDetailsPage(customerId: customer.id),
-          locale: const Locale('ar'),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 200));
+        await tester.pumpWidget(
+          createTestableWidget(
+            child: CustomerDetailsPage(customerId: customer.id),
+            locale: const Locale('ar'),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.text('عميل اختبار الواجهة'), findsOneWidget);
-      expect(find.text('12210040'), findsOneWidget);
-    });
+        expect(find.text('عميل اختبار الواجهة'), findsOneWidget);
+        expect(find.text('12210040'), findsOneWidget);
+      },
+    );
   });
 }

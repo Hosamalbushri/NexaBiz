@@ -69,80 +69,83 @@ class FiscalYearsPage extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppRadius.lg),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
-                    onTap: () =>
-                        AccountingRoutes.pushFiscalYearDetails(context, fy.uuid),
+                    onTap: () => AccountingRoutes.pushFiscalYearDetails(
+                      context,
+                      fy.uuid,
+                    ),
                     child: Ink(
                       padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant
-                            .withValues(alpha: 0.5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(
+                          color: theme.colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  fy.name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                              AppStatusBadge(
+                                label: fy.status == FiscalYearStatus.open
+                                    ? l10n.accountingPeriodStatusOpen
+                                    : l10n.accountingPeriodStatusClosed,
+                                tone: fy.status == FiscalYearStatus.open
+                                    ? AppStatusTone.success
+                                    : AppStatusTone.neutral,
+                                animate: false,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${fy.code} · ${dateFmt.format(fy.startDate.toLocal())}'
+                            ' – ${dateFmt.format(fy.endDate.toLocal())}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            l10n.accountingFiscalYearOpenPeriods(
+                              item.openPeriodCount,
+                            ),
+                            style: theme.textTheme.labelMedium,
+                          ),
+                          Text(
+                            l10n.accountingFiscalYearClosedPeriods(
+                              item.closedPeriodCount,
+                            ),
+                            style: theme.textTheme.labelMedium,
+                          ),
+                          if (fy.fxRevaluationEnabled)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                fy.name,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
+                                l10n.accountingFiscalYearFxEnabled,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
-                            AppStatusBadge(
-                              label: fy.status == FiscalYearStatus.open
-                                  ? l10n.accountingPeriodStatusOpen
-                                  : l10n.accountingPeriodStatusClosed,
-                              tone: fy.status == FiscalYearStatus.open
-                                  ? AppStatusTone.success
-                                  : AppStatusTone.neutral,
-                              animate: false,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${fy.code} · ${dateFmt.format(fy.startDate.toLocal())}'
-                          ' – ${dateFmt.format(fy.endDate.toLocal())}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          l10n.accountingFiscalYearOpenPeriods(
-                            item.openPeriodCount,
-                          ),
-                          style: theme.textTheme.labelMedium,
-                        ),
-                        Text(
-                          l10n.accountingFiscalYearClosedPeriods(
-                            item.closedPeriodCount,
-                          ),
-                          style: theme.textTheme.labelMedium,
-                        ),
-                        if (fy.fxRevaluationEnabled)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              l10n.accountingFiscalYearFxEnabled,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
           );
         },
       ),

@@ -12,10 +12,7 @@ import '../localization/app_localizations.dart';
 import '../theme/app_spacing.dart';
 
 class PackageStoreSheet extends ConsumerStatefulWidget {
-  const PackageStoreSheet({
-    super.key,
-    this.initialCapability,
-  });
+  const PackageStoreSheet({super.key, this.initialCapability});
 
   final EntitlementCapability? initialCapability;
 
@@ -27,9 +24,12 @@ class PackageStoreSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.lg)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.lg),
+        ),
       ),
-      builder: (context) => PackageStoreSheet(initialCapability: initialCapability),
+      builder: (context) =>
+          PackageStoreSheet(initialCapability: initialCapability),
     );
   }
 
@@ -70,10 +70,14 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
             planId: 'plan_$_selectedPlanCode',
             packageCodes: _selectedPackageCodes,
             capabilities: {
-              if (_selectedPackageCodes.contains('cloud_sync')) EntitlementCapability.sync,
-              if (_selectedPackageCodes.contains('cloud_sync')) EntitlementCapability.cloudBackup,
-              if (_selectedPackageCodes.contains('multi_device')) EntitlementCapability.multiDevice,
-              if (_selectedPackageCodes.contains('multi_branch')) EntitlementCapability.multiBranch,
+              if (_selectedPackageCodes.contains('cloud_sync'))
+                EntitlementCapability.sync,
+              if (_selectedPackageCodes.contains('cloud_sync'))
+                EntitlementCapability.cloudBackup,
+              if (_selectedPackageCodes.contains('multi_device'))
+                EntitlementCapability.multiDevice,
+              if (_selectedPackageCodes.contains('multi_branch'))
+                EntitlementCapability.multiBranch,
             },
           );
   }
@@ -85,7 +89,8 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
     });
 
     try {
-      final currentCompanyId = ref.read(currentEntitlementProvider).value?.companyId ?? 'company-1';
+      final currentCompanyId =
+          ref.read(currentEntitlementProvider).value?.companyId ?? 'company-1';
 
       Entitlement activeEntitlement;
 
@@ -225,7 +230,9 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppSpacing.sm),
                             side: BorderSide(
-                              color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+                              color: isSelected
+                                  ? colorScheme.primary
+                                  : colorScheme.outlineVariant,
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -236,12 +243,16 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
                                 Expanded(
                                   child: Text(
                                     plan.name,
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.sm),
-                                Text('\$${plan.price.toStringAsFixed(2)} / ${plan.billingInterval}'),
+                                Text(
+                                  '\$${plan.price.toStringAsFixed(2)} / ${plan.billingInterval}',
+                                ),
                               ],
                             ),
                             subtitle: Text(plan.description),
@@ -258,7 +269,8 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
                         );
                       }).toList(),
                     ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (err, stack) => Text('Error loading plans: $err'),
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -273,10 +285,17 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
                   packagesAsync.when(
                     data: (packages) => Column(
                       children: packages.map((pkg) {
-                        final isChecked = _selectedPackageCodes.contains(pkg.code);
+                        final isChecked = _selectedPackageCodes.contains(
+                          pkg.code,
+                        );
                         return CheckboxListTile(
-                          title: Text(pkg.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text('${pkg.description} (\$${pkg.price.toStringAsFixed(2)})'),
+                          title: Text(
+                            pkg.name,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            '${pkg.description} (\$${pkg.price.toStringAsFixed(2)})',
+                          ),
                           value: isChecked,
                           onChanged: (val) => _togglePackage(pkg.code),
                         );
@@ -302,7 +321,10 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : Text(l10n.activateSubscriptionButton),
               ),

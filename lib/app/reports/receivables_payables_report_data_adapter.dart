@@ -38,8 +38,12 @@ class ReceivablesPayablesReportDataAdapter
     // Accounts filtering:
     // Receivables: Accounts with code starting 12 (Accounts Receivable / العملاء / Madinun)
     // Payables: Accounts with code starting 21 (Accounts Payable / الموردين / Da'inun)
-    final targetPrefix = type == ReceivablesPayablesType.receivables ? '12' : '21';
-    final targetAccounts = allAccounts.where((a) => a.accountCode.startsWith(targetPrefix)).toList();
+    final targetPrefix = type == ReceivablesPayablesType.receivables
+        ? '12'
+        : '21';
+    final targetAccounts = allAccounts
+        .where((a) => a.accountCode.startsWith(targetPrefix))
+        .toList();
 
     final rows = <ReceivablesPayablesSummaryRow>[];
 

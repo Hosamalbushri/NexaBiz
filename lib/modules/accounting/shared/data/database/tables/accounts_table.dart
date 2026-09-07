@@ -37,8 +37,7 @@ class Accounts extends Table {
   IntColumn get updatedAt => integer()();
 
   /// [SyncStatus.name]
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant('synced'))();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
 
   IntColumn get lastSyncedAt => integer().nullable()();
 

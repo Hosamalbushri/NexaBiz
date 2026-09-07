@@ -59,7 +59,9 @@ class UniversalReportState {
       isLoadingSummary: isLoadingSummary ?? this.isLoadingSummary,
       isLoadingFirstPage: isLoadingFirstPage ?? this.isLoadingFirstPage,
       isLoadingNextPage: isLoadingNextPage ?? this.isLoadingNextPage,
-      summaryError: clearSummaryError ? null : (summaryError ?? this.summaryError),
+      summaryError: clearSummaryError
+          ? null
+          : (summaryError ?? this.summaryError),
       pageError: clearPageError ? null : (pageError ?? this.pageError),
     );
   }
@@ -67,7 +69,8 @@ class UniversalReportState {
 
 /// Execution Controller for NexaBiz Paged Report Engine.
 /// Strictly read-only, context-safe, request-token concurrency protected, and memory efficient.
-class UniversalReportExecutionController extends ValueNotifier<UniversalReportState> {
+class UniversalReportExecutionController
+    extends ValueNotifier<UniversalReportState> {
   UniversalReportExecutionController({
     required this.provider,
     required ReportExecutionContext initialContext,
@@ -137,7 +140,9 @@ class UniversalReportExecutionController extends ValueNotifier<UniversalReportSt
 
   /// Incremental fetch of next page using existing [nextCursor].
   Future<void> fetchNextPage() async {
-    if (!value.hasNextPage || value.isLoadingNextPage || value.nextCursor == null) {
+    if (!value.hasNextPage ||
+        value.isLoadingNextPage ||
+        value.nextCursor == null) {
       return;
     }
 
@@ -165,10 +170,7 @@ class UniversalReportExecutionController extends ValueNotifier<UniversalReportSt
       );
     } catch (e) {
       if (token != _activeRequestToken) return;
-      value = value.copyWith(
-        isLoadingNextPage: false,
-        pageError: e.toString(),
-      );
+      value = value.copyWith(isLoadingNextPage: false, pageError: e.toString());
     }
   }
 

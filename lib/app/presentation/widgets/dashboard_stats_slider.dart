@@ -98,9 +98,7 @@ class _DashboardStatsSliderState extends State<DashboardStatsSlider> {
     required bool isDark,
   }) {
     final primary = scheme.primary;
-    final side = isDark
-        ? const Color(0xFF1C1C1E)
-        : const Color(0xFF2C3440);
+    final side = isDark ? const Color(0xFF1C1C1E) : const Color(0xFF2C3440);
     final teal = AppColors.secondaryTeal;
     final onPrimary = scheme.onPrimary;
     final onSide = Colors.white;
@@ -285,9 +283,7 @@ class _DashboardCoverCard extends StatelessWidget {
               bottom: -18,
               child: CustomPaint(
                 size: const Size(120, 90),
-                painter: _ArcPatternPainter(
-                  color: on.withValues(alpha: 0.14),
-                ),
+                painter: _ArcPatternPainter(color: on.withValues(alpha: 0.14)),
               ),
             ),
             Padding(

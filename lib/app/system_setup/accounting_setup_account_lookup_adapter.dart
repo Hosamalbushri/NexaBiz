@@ -9,7 +9,8 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
 
   @override
   Future<SetupAccountData?> findAccount(String codeOrUuidOrId) async {
-    final account = await _accountRepository.getByUuid(codeOrUuidOrId) ??
+    final account =
+        await _accountRepository.getByUuid(codeOrUuidOrId) ??
         await _accountRepository.getByAccountCode(codeOrUuidOrId) ??
         (int.tryParse(codeOrUuidOrId) != null
             ? await _accountRepository.getById(int.parse(codeOrUuidOrId))
@@ -55,7 +56,12 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
   }) async {
     final children = await _accountRepository.getChildren(parentUuid);
     return children
-        .where((a) => companyId == null || companyId.isEmpty || a.companyId == companyId)
+        .where(
+          (a) =>
+              companyId == null ||
+              companyId.isEmpty ||
+              a.companyId == companyId,
+        )
         .map(_mapToSetupAccountData)
         .toList(growable: false);
   }
@@ -67,7 +73,12 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
   }) async {
     final all = await _accountRepository.getAll(includeInactive: true);
     final tenantAccounts = all
-        .where((a) => companyId == null || companyId.isEmpty || a.companyId == companyId)
+        .where(
+          (a) =>
+              companyId == null ||
+              companyId.isEmpty ||
+              a.companyId == companyId,
+        )
         .toList();
 
     final map = <String, List<dynamic>>{};
@@ -127,4 +138,3 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
     );
   }
 }
-

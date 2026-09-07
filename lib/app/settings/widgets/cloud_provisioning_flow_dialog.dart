@@ -23,7 +23,8 @@ class CloudProvisioningFlowDialog extends ConsumerStatefulWidget {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => CloudProvisioningFlowDialog(initialMode: initialMode),
+      builder: (context) =>
+          CloudProvisioningFlowDialog(initialMode: initialMode),
     );
   }
 
@@ -36,8 +37,9 @@ class _CloudProvisioningFlowDialogState
     extends ConsumerState<CloudProvisioningFlowDialog> {
   late ProvisioningMode _mode;
   String _selectedPlanId = 'plan_starter';
-  final _paymentRefController =
-      TextEditingController(text: 'PAY-ONBOARDING-VERIFIED');
+  final _paymentRefController = TextEditingController(
+    text: 'PAY-ONBOARDING-VERIFIED',
+  );
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _companyCodeController = TextEditingController();
@@ -75,10 +77,10 @@ class _CloudProvisioningFlowDialogState
         child: currentStep != null && currentStep.isProcessing
             ? _buildProgressView(context, currentStep)
             : currentStep != null && currentStep.isSuccess
-                ? _buildSuccessView(context, currentStep)
-                : currentStep != null && currentStep.isFailed
-                    ? _buildErrorView(context, currentStep)
-                    : _buildMainView(context, companyName),
+            ? _buildSuccessView(context, currentStep)
+            : currentStep != null && currentStep.isFailed
+            ? _buildErrorView(context, currentStep)
+            : _buildMainView(context, companyName),
       ),
     );
   }
@@ -99,8 +101,10 @@ class _CloudProvisioningFlowDialogState
                 color: colorScheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.cloud_upload_outlined,
-                  color: colorScheme.onPrimaryContainer),
+              child: Icon(
+                Icons.cloud_upload_outlined,
+                color: colorScheme.onPrimaryContainer,
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -109,13 +113,15 @@ class _CloudProvisioningFlowDialogState
                 children: [
                   Text(
                     'Cloud Linking & Setup',
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     companyName.isEmpty ? 'Local Business' : companyName,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -169,14 +175,16 @@ class _CloudProvisioningFlowDialogState
           children: [
             Text(
               'Enter Admin Credentials for Server Company',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Authenticate with an existing cloud company administrator account to link this local workspace.',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             TextFormField(
@@ -347,7 +355,9 @@ class _CloudProvisioningFlowDialogState
               : colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -366,22 +376,26 @@ class _CloudProvisioningFlowDialogState
                 Expanded(
                   child: Text(
                     title,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (badge != null)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primary,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       badge,
-                      style: theme.textTheme.labelSmall
-                          ?.copyWith(color: colorScheme.onPrimary),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onPrimary,
+                      ),
                     ),
                   ),
               ],
@@ -404,10 +418,15 @@ class _CloudProvisioningFlowDialogState
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       child: Row(
                         children: [
-                          const Icon(Icons.check, size: 14, color: Colors.green),
+                          const Icon(
+                            Icons.check,
+                            size: 14,
+                            color: Colors.green,
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
-                              child: Text(f, style: theme.textTheme.bodySmall)),
+                            child: Text(f, style: theme.textTheme.bodySmall),
+                          ),
                         ],
                       ),
                     ),
@@ -422,7 +441,9 @@ class _CloudProvisioningFlowDialogState
   }
 
   Widget _buildProgressView(
-      BuildContext context, ProvisioningStepProgress progress) {
+    BuildContext context,
+    ProvisioningStepProgress progress,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -436,15 +457,17 @@ class _CloudProvisioningFlowDialogState
           progress.status == CompanyCloudStatus.initialSyncing
               ? 'Migrating Local Data to Cloud...'
               : 'Provisioning Cloud Workspace...',
-          style: theme.textTheme.titleMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           progress.stepMessage,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
         if (progress.migrationProgress != null) ...[
           const SizedBox(height: AppSpacing.md),
@@ -452,7 +475,7 @@ class _CloudProvisioningFlowDialogState
             value: progress.migrationProgress!.totalCount == 0
                 ? 0
                 : progress.migrationProgress!.processedCount /
-                    progress.migrationProgress!.totalCount,
+                      progress.migrationProgress!.totalCount,
           ),
         ],
         const SizedBox(height: AppSpacing.lg),
@@ -461,7 +484,9 @@ class _CloudProvisioningFlowDialogState
   }
 
   Widget _buildSuccessView(
-      BuildContext context, ProvisioningStepProgress progress) {
+    BuildContext context,
+    ProvisioningStepProgress progress,
+  ) {
     final theme = Theme.of(context);
 
     return Column(
@@ -471,8 +496,9 @@ class _CloudProvisioningFlowDialogState
         const SizedBox(height: AppSpacing.md),
         Text(
           'Workspace Successfully Linked!',
-          style: theme.textTheme.titleLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
@@ -490,7 +516,9 @@ class _CloudProvisioningFlowDialogState
   }
 
   Widget _buildErrorView(
-      BuildContext context, ProvisioningStepProgress progress) {
+    BuildContext context,
+    ProvisioningStepProgress progress,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -501,15 +529,15 @@ class _CloudProvisioningFlowDialogState
         const SizedBox(height: AppSpacing.md),
         Text(
           'Cloud setup could not be completed',
-          style: theme.textTheme.titleLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           progress.errorMessage ?? 'An unexpected network error occurred.',
           textAlign: TextAlign.center,
-          style:
-              theme.textTheme.bodyMedium?.copyWith(color: colorScheme.error),
+          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.error),
         ),
         const SizedBox(height: AppSpacing.xl),
         Wrap(
@@ -555,8 +583,9 @@ class _CloudProvisioningFlowDialogState
     setState(() => _isConfirming = true);
     final companyProfileAsync = ref.read(companyProfileProvider);
     final profile = companyProfileAsync.valueOrNull;
-    final companyName =
-        profile == null || profile.name.isEmpty ? 'My Business' : profile.name;
+    final companyName = profile == null || profile.name.isEmpty
+        ? 'My Business'
+        : profile.name;
 
     await ref
         .read(companyProvisioningControllerProvider.notifier)

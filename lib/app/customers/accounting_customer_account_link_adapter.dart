@@ -66,7 +66,8 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     if (account == null) return null;
 
     final parentAccount = scope.parentAccount;
-    final isScoped = scope.accounts.any((a) => a.uuid == account.uuid) ||
+    final isScoped =
+        scope.accounts.any((a) => a.uuid == account.uuid) ||
         (parentAccount != null && parentAccount.uuid == account.uuid);
     if (!isScoped) {
       return null;
@@ -108,12 +109,12 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     final matched = normalized.isEmpty
         ? scopedAccounts
         : scopedAccounts
-            .where(
-              (a) =>
-                  a.accountCode.toLowerCase().contains(normalized) ||
-                  a.name.toLowerCase().contains(normalized),
-            )
-            .toList();
+              .where(
+                (a) =>
+                    a.accountCode.toLowerCase().contains(normalized) ||
+                    a.name.toLowerCase().contains(normalized),
+              )
+              .toList();
 
     return matched
         .take(limit)

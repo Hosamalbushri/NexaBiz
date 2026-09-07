@@ -12487,6 +12487,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No accounting-ready cash registers available. Please link a register first.'**
   String get cashRegisterNoReadyRegisters;
+
+  /// No description provided for @setupAdminSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'System administrator set up successfully'**
+  String get setupAdminSuccess;
+
+  /// No description provided for @setupAlreadyCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup already completed.'**
+  String get setupAlreadyCompleted;
+
+  /// No description provided for @setupAdminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System Admin Setup'**
+  String get setupAdminTitle;
+
+  /// No description provided for @setupStepLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get setupStepLanguage;
+
+  /// No description provided for @setupStepAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'System Admin'**
+  String get setupStepAdmin;
+
+  /// No description provided for @setupStepConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get setupStepConfirm;
+
+  /// No description provided for @setupLanguageArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get setupLanguageArabic;
+
+  /// No description provided for @setupLanguageArabicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic (RTL)'**
+  String get setupLanguageArabicSubtitle;
+
+  /// No description provided for @setupLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get setupLanguageEnglish;
+
+  /// No description provided for @setupLanguageEnglishSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'English (LTR)'**
+  String get setupLanguageEnglishSubtitle;
+
+  /// No description provided for @setupAdminAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System Administrator Account'**
+  String get setupAdminAccountTitle;
+
+  /// No description provided for @setupAdminAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create the primary system administrator account'**
+  String get setupAdminAccountSubtitle;
+
+  /// No description provided for @setupAdminNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Name *'**
+  String get setupAdminNameLabel;
+
+  /// No description provided for @setupAdminNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. System Admin'**
+  String get setupAdminNameHint;
+
+  /// No description provided for @setupAdminNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin name is required'**
+  String get setupAdminNameRequired;
+
+  /// No description provided for @setupEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email *'**
+  String get setupEmailLabel;
+
+  /// No description provided for @setupEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required'**
+  String get setupEmailRequired;
+
+  /// No description provided for @setupEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address'**
+  String get setupEmailInvalid;
+
+  /// No description provided for @setupPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password * (8+ chars)'**
+  String get setupPasswordLabel;
+
+  /// No description provided for @setupPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required'**
+  String get setupPasswordRequired;
+
+  /// No description provided for @setupPasswordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Min 8 characters'**
+  String get setupPasswordMinLength;
+
+  /// No description provided for @setupConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password *'**
+  String get setupConfirmPasswordLabel;
+
+  /// No description provided for @setupConfirmPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password is required'**
+  String get setupConfirmPasswordRequired;
+
+  /// No description provided for @setupPasswordsMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get setupPasswordsMismatch;
+
+  /// No description provided for @setupConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm System Setup'**
+  String get setupConfirmTitle;
+
+  /// No description provided for @setupTargetRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target Role'**
+  String get setupTargetRoleLabel;
+
+  /// No description provided for @setupTargetRoleValue.
+  ///
+  /// In en, this message translates to:
+  /// **'System Administrator'**
+  String get setupTargetRoleValue;
+
+  /// No description provided for @setupConfirmNote.
+  ///
+  /// In en, this message translates to:
+  /// **'System setup will initialize the primary administrator account. No company or membership is created during this step.'**
+  String get setupConfirmNote;
+
+  /// No description provided for @setupInitializeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Initialize System'**
+  String get setupInitializeButton;
+
+  /// No description provided for @setupBackButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get setupBackButton;
+
+  /// No description provided for @setupNextButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get setupNextButton;
 }
 
 class _AppLocalizationsDelegate

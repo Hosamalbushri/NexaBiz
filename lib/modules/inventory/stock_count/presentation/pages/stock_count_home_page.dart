@@ -53,52 +53,52 @@ class StockCountHomePage extends ConsumerWidget {
         showBackButton: true,
       ),
       body: ListView(
-          padding: AppConstants.pageInsets(context),
-          children: [
-            Text(
-              l10n.inventoryStockCountServiceDescription,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.35,
-              ),
+        padding: AppConstants.pageInsets(context),
+        children: [
+          Text(
+            l10n.inventoryStockCountServiceDescription,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.35,
             ),
-            const SizedBox(height: AppSpacing.lg),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                final crossAxisCount = AppBreakpoints.isDesktop(width)
-                    ? 4
-                    : AppBreakpoints.isTablet(width)
-                    ? 3
-                    : 2;
-                final childAspectRatio = AppBreakpoints.isMobile(width)
-                    ? 0.82
-                    : 0.95;
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final crossAxisCount = AppBreakpoints.isDesktop(width)
+                  ? 4
+                  : AppBreakpoints.isTablet(width)
+                  ? 3
+                  : 2;
+              final childAspectRatio = AppBreakpoints.isMobile(width)
+                  ? 0.82
+                  : 0.95;
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: features.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
-                    childAspectRatio: childAspectRatio,
-                  ),
-                  itemBuilder: (context, index) {
-                    final feature = features[index];
-                    return _StockCountFeatureCard(
-                      icon: feature.icon,
-                      title: feature.title,
-                      subtitle: feature.subtitle,
-                      onTap: () => context.push(feature.path),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: features.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
+                  childAspectRatio: childAspectRatio,
+                ),
+                itemBuilder: (context, index) {
+                  final feature = features[index];
+                  return _StockCountFeatureCard(
+                    icon: feature.icon,
+                    title: feature.title,
+                    subtitle: feature.subtitle,
+                    onTap: () => context.push(feature.path),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

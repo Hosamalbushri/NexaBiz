@@ -7,27 +7,36 @@ import 'package:stock_count/core/tenancy/tenant_context.dart';
 
 void main() {
   group('Phase 11 — Company Context Isolation Tests', () {
-    testWidgets('Switching company context invalidates previous company subscription & entitlement state', (tester) async {
-      final container = ProviderContainer(
-        overrides: [
-          currentCompanyIdProvider.overrideWith((ref) => 'company_alpha'),
-        ],
-      );
+    testWidgets(
+      'Switching company context invalidates previous company subscription & entitlement state',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            currentCompanyIdProvider.overrideWith((ref) => 'company_alpha'),
+          ],
+        );
 
-      final service = container.read(entitlementServiceProvider);
-      await service.setEntitlement(
-        Entitlement.premiumActive('company_alpha'),
-      );
+        final service = container.read(entitlementServiceProvider);
+        await service.setEntitlement(
+          Entitlement.premiumActive('company_alpha'),
+        );
 
-      expect(service.currentEntitlement.companyId, equals('company_alpha'));
-      expect(service.currentEntitlement.hasCapability(EntitlementCapability.sync), isTrue);
+        expect(service.currentEntitlement.companyId, equals('company_alpha'));
+        expect(
+          service.currentEntitlement.hasCapability(EntitlementCapability.sync),
+          isTrue,
+        );
 
-      // Invalidate for Company Beta
-      await service.invalidateCache('company_beta');
+        // Invalidate for Company Beta
+        await service.invalidateCache('company_beta');
 
-      expect(service.currentEntitlement.companyId, equals('company_beta'));
-      expect(service.currentEntitlement.tier, equals(EntitlementTier.free));
-      expect(service.currentEntitlement.hasCapability(EntitlementCapability.sync), isFalse);
-    });
+        expect(service.currentEntitlement.companyId, equals('company_beta'));
+        expect(service.currentEntitlement.tier, equals(EntitlementTier.free));
+        expect(
+          service.currentEntitlement.hasCapability(EntitlementCapability.sync),
+          isFalse,
+        );
+      },
+    );
   });
 }

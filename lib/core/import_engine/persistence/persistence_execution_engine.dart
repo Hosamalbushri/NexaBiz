@@ -17,10 +17,10 @@ class PersistenceExecutionEngine {
     required this.checkpointRepository,
     this.defaultChunkSize = 500,
   }) : chunkedEngine = ChunkedExecutionEngine(
-          jobRepository: jobRepository,
-          checkpointRepository: checkpointRepository,
-          defaultChunkSize: defaultChunkSize,
-        );
+         jobRepository: jobRepository,
+         checkpointRepository: checkpointRepository,
+         defaultChunkSize: defaultChunkSize,
+       );
 
   final ImportTransactionRunner transactionRunner;
   final ImportJobRepository jobRepository;
@@ -56,7 +56,8 @@ class PersistenceExecutionEngine {
               if (entity == null) {
                 return ChunkRowOutcome(
                   rowIndex: index,
-                  rowKey: idempotencyKeyExtractor?.call(row, index) ?? 'row_$index',
+                  rowKey:
+                      idempotencyKeyExtractor?.call(row, index) ?? 'row_$index',
                   isSuccess: false,
                   isSkipped: true,
                 );
@@ -64,7 +65,8 @@ class PersistenceExecutionEngine {
               await persistenceHandler.persistRow(entity, companyId: companyId);
               return ChunkRowOutcome(
                 rowIndex: index,
-                rowKey: idempotencyKeyExtractor?.call(row, index) ?? 'row_$index',
+                rowKey:
+                    idempotencyKeyExtractor?.call(row, index) ?? 'row_$index',
                 isSuccess: true,
               );
             },
@@ -83,7 +85,8 @@ class PersistenceExecutionEngine {
           chunkSize: activeChunkSize,
           idempotencyKeyExtractor: idempotencyKeyExtractor,
           rowProcessor: (row, index) async {
-            final key = idempotencyKeyExtractor?.call(row, index) ?? 'row_$index';
+            final key =
+                idempotencyKeyExtractor?.call(row, index) ?? 'row_$index';
             final chunkIndex = index ~/ activeChunkSize;
 
             if (failedChunkIndices.contains(chunkIndex)) {
@@ -96,18 +99,25 @@ class PersistenceExecutionEngine {
             }
 
             if (!pendingChunkOutcomes.containsKey(index)) {
-              final latestCp = await checkpointRepository.getLatestCheckpoint(job.jobId, companyId: companyId);
+              final latestCp = await checkpointRepository.getLatestCheckpoint(
+                job.jobId,
+                companyId: companyId,
+              );
               final committedKeys = latestCp?.committedKeys ?? <String>{};
 
               // Execute the entire chunk transaction block starting at chunk boundary
               final chunkStart = chunkIndex * activeChunkSize;
-              final chunkEnd = min((chunkIndex + 1) * activeChunkSize, rows.length);
+              final chunkEnd = min(
+                (chunkIndex + 1) * activeChunkSize,
+                rows.length,
+              );
 
               try {
                 await transactionRunner.runInTransaction(() async {
                   for (var i = chunkStart; i < chunkEnd; i++) {
                     final cRow = rows[i];
-                    final cKey = idempotencyKeyExtractor?.call(cRow, i) ?? 'row_$i';
+                    final cKey =
+                        idempotencyKeyExtractor?.call(cRow, i) ?? 'row_$i';
 
                     if (committedKeys.contains(cKey)) {
                       pendingChunkOutcomes[i] = ChunkRowOutcome(
@@ -119,14 +129,22 @@ class PersistenceExecutionEngine {
                       continue;
                     }
 
-                    if (shouldSimulateFailureAtRow != null && shouldSimulateFailureAtRow(i)) {
+                    if (shouldSimulateFailureAtRow != null &&
+                        shouldSimulateFailureAtRow(i)) {
                       throw Exception('Simulated chunk failure at row $i');
                     }
 
                     final entity = await rowTransformer(cRow, i);
                     if (entity != null) {
-                      await persistenceHandler.persistRow(entity, companyId: companyId);
-                      pendingChunkOutcomes[i] = ChunkRowOutcome(rowIndex: i, rowKey: cKey, isSuccess: true);
+                      await persistenceHandler.persistRow(
+                        entity,
+                        companyId: companyId,
+                      );
+                      pendingChunkOutcomes[i] = ChunkRowOutcome(
+                        rowIndex: i,
+                        rowKey: cKey,
+                        isSuccess: true,
+                      );
                     } else {
                       pendingChunkOutcomes[i] = ChunkRowOutcome(
                         rowIndex: i,
@@ -141,7 +159,8 @@ class PersistenceExecutionEngine {
                 // Entire chunk failed and rolled back
                 failedChunkIndices.add(chunkIndex);
                 for (var i = chunkStart; i < chunkEnd; i++) {
-                  final cKey = idempotencyKeyExtractor?.call(rows[i], i) ?? 'row_$i';
+                  final cKey =
+                      idempotencyKeyExtractor?.call(rows[i], i) ?? 'row_$i';
                   pendingChunkOutcomes[i] = ChunkRowOutcome(
                     rowIndex: i,
                     rowKey: cKey,
@@ -153,7 +172,12 @@ class PersistenceExecutionEngine {
             }
 
             return pendingChunkOutcomes[index] ??
-                ChunkRowOutcome(rowIndex: index, rowKey: key, isSuccess: false, errorMessage: 'Chunk error');
+                ChunkRowOutcome(
+                  rowIndex: index,
+                  rowKey: key,
+                  isSuccess: false,
+                  errorMessage: 'Chunk error',
+                );
           },
         );
 
@@ -165,9 +189,11 @@ class PersistenceExecutionEngine {
           chunkSize: chunkSize,
           idempotencyKeyExtractor: idempotencyKeyExtractor,
           rowProcessor: (row, index) async {
-            final key = idempotencyKeyExtractor?.call(row, index) ?? 'row_$index';
+            final key =
+                idempotencyKeyExtractor?.call(row, index) ?? 'row_$index';
 
-            if (shouldSimulateFailureAtRow != null && shouldSimulateFailureAtRow(index)) {
+            if (shouldSimulateFailureAtRow != null &&
+                shouldSimulateFailureAtRow(index)) {
               return ChunkRowOutcome(
                 rowIndex: index,
                 rowKey: key,
@@ -180,16 +206,28 @@ class PersistenceExecutionEngine {
               final entity = await transactionRunner.runInTransaction(() async {
                 final transformed = await rowTransformer(row, index);
                 if (transformed != null) {
-                  await persistenceHandler.persistRow(transformed, companyId: companyId);
+                  await persistenceHandler.persistRow(
+                    transformed,
+                    companyId: companyId,
+                  );
                 }
                 return transformed;
               });
 
               if (entity == null) {
-                return ChunkRowOutcome(rowIndex: index, rowKey: key, isSuccess: false, isSkipped: true);
+                return ChunkRowOutcome(
+                  rowIndex: index,
+                  rowKey: key,
+                  isSuccess: false,
+                  isSkipped: true,
+                );
               }
 
-              return ChunkRowOutcome(rowIndex: index, rowKey: key, isSuccess: true);
+              return ChunkRowOutcome(
+                rowIndex: index,
+                rowKey: key,
+                isSuccess: true,
+              );
             } catch (e) {
               return ChunkRowOutcome(
                 rowIndex: index,
@@ -209,9 +247,11 @@ class PersistenceExecutionEngine {
           chunkSize: chunkSize,
           idempotencyKeyExtractor: idempotencyKeyExtractor,
           rowProcessor: (row, index) async {
-            final key = idempotencyKeyExtractor?.call(row, index) ?? 'row_$index';
+            final key =
+                idempotencyKeyExtractor?.call(row, index) ?? 'row_$index';
 
-            if (shouldSimulateFailureAtRow != null && shouldSimulateFailureAtRow(index)) {
+            if (shouldSimulateFailureAtRow != null &&
+                shouldSimulateFailureAtRow(index)) {
               return ChunkRowOutcome(
                 rowIndex: index,
                 rowKey: key,
@@ -223,10 +263,19 @@ class PersistenceExecutionEngine {
             try {
               final entity = await rowTransformer(row, index);
               if (entity == null) {
-                return ChunkRowOutcome(rowIndex: index, rowKey: key, isSuccess: false, isSkipped: true);
+                return ChunkRowOutcome(
+                  rowIndex: index,
+                  rowKey: key,
+                  isSuccess: false,
+                  isSkipped: true,
+                );
               }
               await persistenceHandler.persistRow(entity, companyId: companyId);
-              return ChunkRowOutcome(rowIndex: index, rowKey: key, isSuccess: true);
+              return ChunkRowOutcome(
+                rowIndex: index,
+                rowKey: key,
+                isSuccess: true,
+              );
             } catch (e) {
               return ChunkRowOutcome(
                 rowIndex: index,

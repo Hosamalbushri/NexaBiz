@@ -19,7 +19,8 @@ class ProductImportProfile {
       entityType: entityType,
       label: label,
       requiredPermission: requiredPermission ?? 'inventory.products.import',
-      defaultPolicy: defaultPolicy ??
+      defaultPolicy:
+          defaultPolicy ??
           const ImportPolicy(
             duplicateResolution: DuplicateResolutionStrategy.overwrite,
             createMissingRelations: true,
@@ -31,7 +32,14 @@ class ProductImportProfile {
           label: 'Product Name',
           dataType: ImportDataType.text,
           isRequired: true,
-          aliases: ['Product Name', 'Name', 'Item Name', 'Description', 'اسم المنتج', 'الاسم'],
+          aliases: [
+            'Product Name',
+            'Name',
+            'Item Name',
+            'Description',
+            'اسم المنتج',
+            'الاسم',
+          ],
         ),
         // Item Code / SKU (Required & Unique)
         ImportField(
@@ -40,7 +48,15 @@ class ProductImportProfile {
           dataType: ImportDataType.text,
           isRequired: true,
           isUnique: true,
-          aliases: ['Item Code', 'SKU', 'Product Code', 'Code', 'كود المنتج', 'رمز المنتج', 'الرمز'],
+          aliases: [
+            'Item Code',
+            'SKU',
+            'Product Code',
+            'Code',
+            'كود المنتج',
+            'رمز المنتج',
+            'الرمز',
+          ],
         ),
         // Barcode (Optional)
         ImportField(
@@ -54,7 +70,14 @@ class ProductImportProfile {
           key: 'unitCost',
           label: 'Unit Cost',
           dataType: ImportDataType.number,
-          aliases: ['Unit Cost', 'Cost', 'Purchase Price', 'Cost Price', 'التكلفة', 'سعر التكلفة'],
+          aliases: [
+            'Unit Cost',
+            'Cost',
+            'Purchase Price',
+            'Cost Price',
+            'التكلفة',
+            'سعر التكلفة',
+          ],
         ),
         // Selling Price (Required)
         ImportField(
@@ -62,49 +85,98 @@ class ProductImportProfile {
           label: 'Selling Price',
           dataType: ImportDataType.number,
           isRequired: true,
-          aliases: ['Selling Price', 'Price', 'Retail Price', 'Sale Price', 'السعر', 'سعر البيع'],
+          aliases: [
+            'Selling Price',
+            'Price',
+            'Retail Price',
+            'Sale Price',
+            'السعر',
+            'سعر البيع',
+          ],
         ),
         // On Hand Quantity (Optional, default 0)
         ImportField(
           key: 'onHandQty',
           label: 'On-Hand Quantity',
           dataType: ImportDataType.number,
-          aliases: ['On-Hand Quantity', 'Quantity', 'Qty', 'Stock Qty', 'Initial Qty', 'الكمية', 'الكمية الحالية'],
+          aliases: [
+            'On-Hand Quantity',
+            'Quantity',
+            'Qty',
+            'Stock Qty',
+            'Initial Qty',
+            'الكمية',
+            'الكمية الحالية',
+          ],
         ),
         // Pack Size / Unit (Optional, default 1)
         ImportField(
           key: 'packSize',
           label: 'Pack Size / Unit',
           dataType: ImportDataType.number,
-          aliases: ['Pack Size', 'Unit', 'Box Size', 'Unit Qty', 'حجم العبوة', 'الوحدة'],
+          aliases: [
+            'Pack Size',
+            'Unit',
+            'Box Size',
+            'Unit Qty',
+            'حجم العبوة',
+            'الوحدة',
+          ],
         ),
         // Brand (Optional)
         ImportField(
           key: 'brand',
           label: 'Brand',
           dataType: ImportDataType.text,
-          aliases: ['Brand', 'Manufacturer', 'Make', 'العلامة التجارية', 'الماركة'],
+          aliases: [
+            'Brand',
+            'Manufacturer',
+            'Make',
+            'العلامة التجارية',
+            'الماركة',
+          ],
         ),
         // Tax Rate / Code (Optional)
         ImportField(
           key: 'tax',
           label: 'Tax',
           dataType: ImportDataType.text,
-          aliases: ['Tax', 'Tax Rate', 'VAT', 'Tax Code', 'الضريبة', 'نسبة الضريبة'],
+          aliases: [
+            'Tax',
+            'Tax Rate',
+            'VAT',
+            'Tax Code',
+            'الضريبة',
+            'نسبة الضريبة',
+          ],
         ),
         // Category Name / Code (Optional)
         ImportField(
           key: 'category',
           label: 'Category',
           dataType: ImportDataType.text,
-          aliases: ['Category', 'Category Name', 'Category Code', 'Filing Category', 'التصنيف', 'الفئة'],
+          aliases: [
+            'Category',
+            'Category Name',
+            'Category Code',
+            'Filing Category',
+            'التصنيف',
+            'الفئة',
+          ],
         ),
         // Warehouse (Optional)
         ImportField(
           key: 'warehouse',
           label: 'Warehouse',
           dataType: ImportDataType.text,
-          aliases: ['Warehouse', 'Warehouse Name', 'Warehouse Code', 'Store', 'المستودع', 'المخزن'],
+          aliases: [
+            'Warehouse',
+            'Warehouse Name',
+            'Warehouse Code',
+            'Store',
+            'المستودع',
+            'المخزن',
+          ],
         ),
         // Supplier (Optional)
         ImportField(
@@ -125,17 +197,28 @@ class ProductImportProfile {
           key: 'accountingIncomeAccount',
           label: 'Income Account',
           dataType: ImportDataType.text,
-          aliases: ['Income Account', 'Sales Account', 'Revenue Account', 'حساب المبيعات'],
+          aliases: [
+            'Income Account',
+            'Sales Account',
+            'Revenue Account',
+            'حساب المبيعات',
+          ],
         ),
         // Expense Account Reference
         ImportField(
           key: 'accountingExpenseAccount',
           label: 'Expense Account',
           dataType: ImportDataType.text,
-          aliases: ['Expense Account', 'COGS Account', 'Cost Account', 'حساب المصروفات'],
+          aliases: [
+            'Expense Account',
+            'COGS Account',
+            'Cost Account',
+            'حساب المصروفات',
+          ],
         ),
       ],
-      relations: customRelations ??
+      relations:
+          customRelations ??
           const [
             ImportRelation(
               relationKey: 'category',

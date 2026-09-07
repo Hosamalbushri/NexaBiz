@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/modules/module_settings_definition.dart';
 import 'shared/presentation/pages/accounting_routes.dart';
 
-List<ModuleSettingsCategoryDefinition> buildAccountingSettingsCategories(String moduleId) {
+List<ModuleSettingsCategoryDefinition> buildAccountingSettingsCategories(
+  String moduleId,
+) {
   return [
     ModuleSettingsCategoryDefinition(
       id: 'accounting_settings_cat',

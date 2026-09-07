@@ -62,7 +62,11 @@ class InMemoryAccountBindingRepository implements AccountBindingRepository {
 
   @override
   Future<void> saveBinding(AccountBinding binding) async {
-    final key = _buildKey(binding.companyId, binding.packageId, binding.requirementKey);
+    final key = _buildKey(
+      binding.companyId,
+      binding.packageId,
+      binding.requirementKey,
+    );
     _store[key] = binding;
   }
 

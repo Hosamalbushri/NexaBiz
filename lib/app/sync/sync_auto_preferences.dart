@@ -19,10 +19,7 @@ class SyncAutoPreferences {
 
   static const List<int> intervalChoices = [0, 5, 15, 30, 60];
 
-  SyncAutoPreferences copyWith({
-    bool? enabled,
-    int? intervalMinutes,
-  }) {
+  SyncAutoPreferences copyWith({bool? enabled, int? intervalMinutes}) {
     return SyncAutoPreferences(
       enabled: enabled ?? this.enabled,
       intervalMinutes: intervalMinutes ?? this.intervalMinutes,

@@ -31,7 +31,8 @@ class DataSyncSettingsPage extends ConsumerWidget {
     final auth = ref.watch(authStateProvider);
     final syncSession = ref.watch(syncSessionStateProvider);
     final syncEnabled = ref.watch(syncEnabledProvider);
-    final isServerAuthenticated = syncEnabled &&
+    final isServerAuthenticated =
+        syncEnabled &&
         auth.isAuthenticated &&
         (syncSession.phase == SyncSessionPhase.enabledAuthenticated ||
             auth.isRemoteSession);
@@ -52,10 +53,9 @@ class DataSyncSettingsPage extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: AppConstants.pageInsets(context).copyWith(
-          top: AppSpacing.sm,
-          bottom: AppSpacing.lg,
-        ),
+        padding: AppConstants.pageInsets(
+          context,
+        ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
         children: [
           Text(
             l10n.settingsDataSectionSubtitle,

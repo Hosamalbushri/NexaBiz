@@ -43,7 +43,10 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
       mode: AuthenticationMode.local,
     );
     // Ensure sync biometrics is disabled
-    await store.setBiometricEnabled(enabled: false, mode: AuthenticationMode.sync);
+    await store.setBiometricEnabled(
+      enabled: false,
+      mode: AuthenticationMode.sync,
+    );
     if (mounted) {
       setState(() {
         _localBiometricsEnabled = localEnabled;
@@ -75,17 +78,14 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
 
       if (!authenticated) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.authBiometricFailed)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.authBiometricFailed)));
         }
         return;
       }
 
-      await store.setBiometricEnabled(
-        enabled: true,
-        mode: mode,
-      );
+      await store.setBiometricEnabled(enabled: true, mode: mode);
 
       final user = authState.session?.user;
       if (user != null && mounted) {
@@ -103,10 +103,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                 icon: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer
-                        .withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -118,9 +117,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                 title: Text(
                   l10n.authBiometricPasswordDialogTitle,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.5,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.5,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 content: Column(
@@ -129,9 +128,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                     Text(
                       l10n.authBiometricPasswordDialogContent,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 11.5,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -139,9 +138,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                       controller: pwdController,
                       obscureText: obscurePassword,
                       autofocus: true,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontSize: 13,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 13),
                       decoration: InputDecoration(
                         labelText: l10n.authPasswordLabel,
                         prefixIcon: const Icon(Icons.key_outlined, size: 18),
@@ -175,9 +174,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                     child: Text(
                       l10n.authBiometricPasswordDialogSkip,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                            fontSize: 12,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   ElevatedButton(
@@ -193,10 +192,10 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                     child: Text(
                       l10n.authBiometricPasswordDialogConfirm,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -223,9 +222,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
 
         if (bioToken == null || bioToken.isEmpty) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.authBiometricFailed)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.authBiometricFailed)));
           }
           await store.setBiometricEnabled(enabled: false, mode: mode);
           return;
@@ -238,10 +237,7 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
         );
       }
 
-      await store.setBiometricEnabled(
-        enabled: true,
-        mode: mode,
-      );
+      await store.setBiometricEnabled(enabled: true, mode: mode);
     } else {
       await store.clear(mode: mode);
     }
@@ -268,10 +264,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
         showBackButton: true,
       ),
       body: ListView(
-        padding: AppConstants.pageInsets(context).copyWith(
-          top: AppSpacing.sm,
-          bottom: AppSpacing.lg,
-        ),
+        padding: AppConstants.pageInsets(
+          context,
+        ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
         children: [
           // Section 1: Authentication & Password Security
           SettingsGroupLabel(l10n.authSecuritySectionTitle),
@@ -292,7 +287,8 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                   subtitle: l10n.authBiometricsSettingsSubtitle,
                   trailing: Switch.adaptive(
                     value: _localBiometricsEnabled,
-                    onChanged: (val) => _toggleBiometrics(val, AuthenticationMode.local),
+                    onChanged: (val) =>
+                        _toggleBiometrics(val, AuthenticationMode.local),
                   ),
                 ),
               ],

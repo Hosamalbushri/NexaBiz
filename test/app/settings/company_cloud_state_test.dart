@@ -13,10 +13,22 @@ void main() {
     });
 
     test('CompanyCloudStatus serialization and deserialization', () {
-      expect(CompanyCloudStatus.fromString('LOCAL_ONLY'), equals(CompanyCloudStatus.localOnly));
-      expect(CompanyCloudStatus.fromString('PROVISIONING'), equals(CompanyCloudStatus.provisioning));
-      expect(CompanyCloudStatus.fromString('CLOUD_ADMIN_LINKED'), equals(CompanyCloudStatus.cloudAdminLinked));
-      expect(CompanyCloudStatus.fromString('CLOUD_READY'), equals(CompanyCloudStatus.cloudReady));
+      expect(
+        CompanyCloudStatus.fromString('LOCAL_ONLY'),
+        equals(CompanyCloudStatus.localOnly),
+      );
+      expect(
+        CompanyCloudStatus.fromString('PROVISIONING'),
+        equals(CompanyCloudStatus.provisioning),
+      );
+      expect(
+        CompanyCloudStatus.fromString('CLOUD_ADMIN_LINKED'),
+        equals(CompanyCloudStatus.cloudAdminLinked),
+      );
+      expect(
+        CompanyCloudStatus.fromString('CLOUD_READY'),
+        equals(CompanyCloudStatus.cloudReady),
+      );
 
       expect(CompanyCloudStatus.cloudReady.toDbString(), equals('CLOUD_READY'));
       expect(CompanyCloudStatus.localOnly.toDbString(), equals('LOCAL_ONLY'));

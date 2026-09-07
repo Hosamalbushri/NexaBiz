@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/bootstrap/app_bootstrap.dart';
 import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import 'company_details_sheet.dart';
@@ -111,13 +112,16 @@ class CompanySelectionSheet extends ConsumerWidget {
                   return Material(
                     color: isSelected
                         ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-                        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                        : colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.25,
+                          ),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       onTap: () async {
                         if (isSelected) {
-                          if (context.mounted && Navigator.of(context).canPop()) {
+                          if (context.mounted &&
+                              Navigator.of(context).canPop()) {
                             Navigator.of(context).pop();
                           }
                           return;
@@ -149,7 +153,9 @@ class CompanySelectionSheet extends ConsumerWidget {
                                 color: isSelected
                                     ? colorScheme.primary
                                     : colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.sm,
+                                ),
                               ),
                               alignment: Alignment.center,
                               child: Text(
@@ -182,12 +188,14 @@ class CompanySelectionSheet extends ConsumerWidget {
                                     const SizedBox(height: 2),
                                     Text(
                                       [
-                                        if (company.code.isNotEmpty) company.code,
+                                        if (company.code.isNotEmpty)
+                                          company.code,
                                         if (company.role != null) company.role!,
                                       ].join(' • '),
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
                                     ),
                                   ],
                                 ],
@@ -200,7 +208,8 @@ class CompanySelectionSheet extends ConsumerWidget {
                                 size: 22,
                               ),
                               tooltip: 'بيانات الشركة',
-                              onPressed: () => CompanyDetailsSheet.show(context, company),
+                              onPressed: () =>
+                                  CompanyDetailsSheet.show(context, company),
                             ),
                             if (isSelected)
                               Icon(
@@ -223,7 +232,9 @@ class CompanySelectionSheet extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
@@ -241,7 +252,9 @@ class CompanySelectionSheet extends ConsumerWidget {
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colorScheme.error,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
@@ -259,7 +272,7 @@ class CompanySelectionSheet extends ConsumerWidget {
                     }
                     await AppBootstrap.stopSync(ref);
                     await ref.read(authStateProvider.notifier).logout();
-                    router.go('/login');
+                    router.go(AppRoutes.login);
                   },
                 ),
               ),
@@ -313,10 +326,9 @@ class CompanySelectionSheet extends ConsumerWidget {
                     hintText: 'مثال: شركة التجارة المتقدمة',
                     prefixIcon: Icon(Icons.business_rounded),
                   ),
-                  validator: (val) =>
-                      val == null || val.trim().isEmpty
-                          ? 'يرجى إدخال اسم الشركة'
-                          : null,
+                  validator: (val) => val == null || val.trim().isEmpty
+                      ? 'يرجى إدخال اسم الشركة'
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextFormField(
@@ -326,10 +338,9 @@ class CompanySelectionSheet extends ConsumerWidget {
                     hintText: 'مثال: CMP-02',
                     prefixIcon: Icon(Icons.numbers_rounded),
                   ),
-                  validator: (val) =>
-                      val == null || val.trim().isEmpty
-                          ? 'يرجى إدخال كود الشركة'
-                          : null,
+                  validator: (val) => val == null || val.trim().isEmpty
+                      ? 'يرجى إدخال كود الشركة'
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 const Divider(),
@@ -349,10 +360,9 @@ class CompanySelectionSheet extends ConsumerWidget {
                     hintText: 'مثال: أحمد المحاسب',
                     prefixIcon: Icon(Icons.person_outline),
                   ),
-                  validator: (val) =>
-                      val == null || val.trim().isEmpty
-                          ? 'يرجى إدخال اسم المدير'
-                          : null,
+                  validator: (val) => val == null || val.trim().isEmpty
+                      ? 'يرجى إدخال اسم المدير'
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextFormField(
@@ -436,6 +446,8 @@ class CompanySelectionSheet extends ConsumerWidget {
               await ref
                   .read(authStateProvider.notifier)
                   .switchCompany(newCompany.id);
+
+              performTenantContextReset(ref);
 
               await AppBootstrap.bootstrapSync(ref);
             },

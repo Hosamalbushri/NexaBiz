@@ -5,20 +5,14 @@ import '../../router/app_routes.dart';
 /// Page displayed when a user attempts to access a route or module
 /// for which they lack authorization or required active company context.
 class AccessDeniedPage extends StatelessWidget {
-  const AccessDeniedPage({
-    super.key,
-    this.message,
-  });
+  const AccessDeniedPage({super.key, this.message});
 
   final String? message;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Access Denied'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Access Denied'), centerTitle: true),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -33,20 +27,14 @@ class AccessDeniedPage extends StatelessWidget {
               const SizedBox(height: 24),
               const Text(
                 'Access Restricted',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
                 message ??
                     'You do not have the required permissions or company authorization to access this page.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[700],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(

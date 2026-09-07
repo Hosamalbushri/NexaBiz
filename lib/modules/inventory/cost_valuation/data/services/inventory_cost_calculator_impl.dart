@@ -8,8 +8,8 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
   InventoryCostCalculatorImpl({
     required CostMethodInheritanceResolver inheritanceResolver,
     required CostLayerService costLayerService,
-  })  : _inheritanceResolver = inheritanceResolver,
-        _costLayerService = costLayerService;
+  }) : _inheritanceResolver = inheritanceResolver,
+       _costLayerService = costLayerService;
 
   final CostMethodInheritanceResolver _inheritanceResolver;
   final CostLayerService _costLayerService;
@@ -27,7 +27,9 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
     bool allowZeroCost = false,
   }) async {
     if (quantity <= 0) {
-      throw ArgumentError('Inbound receipt quantity must be greater than zero.');
+      throw ArgumentError(
+        'Inbound receipt quantity must be greater than zero.',
+      );
     }
 
     if (unitCost <= 0.0 && !allowZeroCost) {
@@ -89,7 +91,9 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
       warehouseId: warehouseId,
     );
 
-    final totalCost = MonetaryPrecisionUtils.roundTotal(quantity * unitCostValuation);
+    final totalCost = MonetaryPrecisionUtils.roundTotal(
+      quantity * unitCostValuation,
+    );
     final unitCost = MonetaryPrecisionUtils.roundUnitCost(unitCostValuation);
 
     return InventoryCostCalculationResult(
@@ -145,7 +149,8 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
   }) async {
     if (isSalesReturn) {
       // Inbound return: uses provided or average cost
-      final effectiveUnitCost = unitCost ?? await _costLayerService.getWeightedAverageCost(itemCode);
+      final effectiveUnitCost =
+          unitCost ?? await _costLayerService.getWeightedAverageCost(itemCode);
       return calculateReceiptCost(
         companyId: companyId,
         warehouseId: warehouseId,
@@ -184,7 +189,8 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
     String? sourceLineUuid,
   }) async {
     if (isIncrease) {
-      final effectiveUnitCost = unitCost ?? await _costLayerService.getWeightedAverageCost(itemCode);
+      final effectiveUnitCost =
+          unitCost ?? await _costLayerService.getWeightedAverageCost(itemCode);
       return calculateReceiptCost(
         companyId: companyId,
         warehouseId: warehouseId,

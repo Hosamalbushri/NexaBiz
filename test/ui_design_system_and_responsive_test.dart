@@ -58,7 +58,9 @@ void main() {
   });
 
   group('AppDataTable Responsive Behavior Tests', () {
-    testWidgets('Renders card list on mobile and DataTable on desktop', (tester) async {
+    testWidgets('Renders card list on mobile and DataTable on desktop', (
+      tester,
+    ) async {
       final items = ['Item A', 'Item B'];
 
       // Mobile
@@ -125,5 +127,3 @@ void main() {
     });
   });
 }
-
-

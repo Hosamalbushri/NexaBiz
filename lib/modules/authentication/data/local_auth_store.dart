@@ -30,9 +30,8 @@ class LocalAuthStore {
   LocalAuthStore({
     Box<dynamic>? box,
     LocalBruteForceProtector? bruteForceProtector,
-  })  : _injectedBox = box,
-        _bruteForceProtector =
-            bruteForceProtector ?? LocalBruteForceProtector();
+  }) : _injectedBox = box,
+       _bruteForceProtector = bruteForceProtector ?? LocalBruteForceProtector();
 
   final Box<dynamic>? _injectedBox;
   final LocalBruteForceProtector _bruteForceProtector;
@@ -198,7 +197,8 @@ class LocalAuthStore {
       if (matched.companyIds.isNotEmpty) {
         for (final cid in matched.companyIds) {
           final role = matched.rolesByCompany[cid] ?? 'Owner';
-          final perms = matched.permissionsByCompany[cid] ?? kAllLocalPermissions;
+          final perms =
+              matched.permissionsByCompany[cid] ?? kAllLocalPermissions;
           userMemberships.add(
             UserCompanyMembership(
               userId: matched.id,
@@ -214,19 +214,16 @@ class LocalAuthStore {
     }
 
     final allCompanies = _readCompanies(box);
-    final authorizedCompanyIds = userMemberships.map((m) => m.companyId).toSet();
+    final authorizedCompanyIds = userMemberships
+        .map((m) => m.companyId)
+        .toSet();
     final companies = allCompanies
-        .where((c) => matched.isSuperAdmin || authorizedCompanyIds.contains(c.id))
+        .where(
+          (c) => authorizedCompanyIds.contains(c.id),
+        )
         .map((c) {
           final m = userMemberships.firstWhere(
             (mem) => mem.companyId == c.id,
-            orElse: () => UserCompanyMembership(
-              userId: matched.id,
-              companyId: c.id,
-              role: 'Member',
-              status: 'active',
-              permissions: const [],
-            ),
           );
           return AuthCompany(
             id: c.id,
@@ -239,8 +236,7 @@ class LocalAuthStore {
 
     String? selectedId = companyId;
     if (selectedId != null && selectedId.isNotEmpty) {
-      final hasAccess = authorizedCompanyIds.contains(selectedId) ||
-          (matched.isSuperAdmin && allCompanies.any((c) => c.id == selectedId));
+      final hasAccess = authorizedCompanyIds.contains(selectedId);
       if (!hasAccess) {
         return null;
       }
@@ -269,7 +265,8 @@ class LocalAuthStore {
       );
 
       final stored = matched.permissionsByCompany[selectedId];
-      final isOwnerOrAdmin = matched.isSuperAdmin ||
+      final isOwnerOrAdmin =
+          matched.isSuperAdmin ||
           activeMembership.role == 'Owner' ||
           activeMembership.role == LocalAuthDefaults.adminRole;
 
@@ -277,14 +274,15 @@ class LocalAuthStore {
         isOwnerOrAdmin
             ? {...?stored, ...kAllLocalPermissions}
             : (activeMembership.permissions.isNotEmpty
-                ? activeMembership.permissions
-                : (stored ?? const <String>[])),
+                  ? activeMembership.permissions
+                  : (stored ?? const <String>[])),
       );
 
       roles = [activeMembership.role];
     }
 
-    final activeCompanyContext = (activeMembership != null &&
+    final activeCompanyContext =
+        (activeMembership != null &&
             selectedId != null &&
             activeMembership.companyId == selectedId &&
             activeMembership.status == 'active')
@@ -308,7 +306,9 @@ class LocalAuthStore {
         name: matched.name,
         email: matched.email,
         status: matched.status,
-        systemRole: matched.isSuperAdmin ? SystemRole.systemAdmin : SystemRole.regularUser,
+        systemRole: matched.isSuperAdmin
+            ? SystemRole.systemAdmin
+            : SystemRole.regularUser,
       ),
       companies: companies,
       roles: roles,
@@ -380,7 +380,9 @@ class LocalAuthStore {
 
     final key = 'biometric_token_${matched.id}';
     final storedToken = box.get(key) as String?;
-    if (storedToken == null || storedToken.isEmpty || storedToken != biometricToken) {
+    if (storedToken == null ||
+        storedToken.isEmpty ||
+        storedToken != biometricToken) {
       _bruteForceProtector.recordFailedAttempt(normalized);
       return null;
     }
@@ -396,7 +398,8 @@ class LocalAuthStore {
       if (matched.companyIds.isNotEmpty) {
         for (final cid in matched.companyIds) {
           final role = matched.rolesByCompany[cid] ?? 'Owner';
-          final perms = matched.permissionsByCompany[cid] ?? kAllLocalPermissions;
+          final perms =
+              matched.permissionsByCompany[cid] ?? kAllLocalPermissions;
           userMemberships.add(
             UserCompanyMembership(
               userId: matched.id,
@@ -412,19 +415,16 @@ class LocalAuthStore {
     }
 
     final allCompanies = _readCompanies(box);
-    final authorizedCompanyIds = userMemberships.map((m) => m.companyId).toSet();
+    final authorizedCompanyIds = userMemberships
+        .map((m) => m.companyId)
+        .toSet();
     final companies = allCompanies
-        .where((c) => matched.isSuperAdmin || authorizedCompanyIds.contains(c.id))
+        .where(
+          (c) => authorizedCompanyIds.contains(c.id),
+        )
         .map((c) {
           final m = userMemberships.firstWhere(
             (mem) => mem.companyId == c.id,
-            orElse: () => UserCompanyMembership(
-              userId: matched.id,
-              companyId: c.id,
-              role: 'Member',
-              status: 'active',
-              permissions: const [],
-            ),
           );
           return AuthCompany(
             id: c.id,
@@ -437,8 +437,7 @@ class LocalAuthStore {
 
     String? selectedId = companyId;
     if (selectedId != null && selectedId.isNotEmpty) {
-      final hasAccess = authorizedCompanyIds.contains(selectedId) ||
-          (matched.isSuperAdmin && allCompanies.any((c) => c.id == selectedId));
+      final hasAccess = authorizedCompanyIds.contains(selectedId);
       if (!hasAccess) {
         return null;
       }
@@ -468,7 +467,8 @@ class LocalAuthStore {
       );
 
       final stored = matched.permissionsByCompany[selectedId];
-      final isOwnerOrAdmin = matched.isSuperAdmin ||
+      final isOwnerOrAdmin =
+          matched.isSuperAdmin ||
           activeMembership.role == 'Owner' ||
           activeMembership.role == LocalAuthDefaults.adminRole;
 
@@ -476,19 +476,22 @@ class LocalAuthStore {
         isOwnerOrAdmin
             ? {...?stored, ...kAllLocalPermissions}
             : (activeMembership.permissions.isNotEmpty
-                ? activeMembership.permissions
-                : (stored ?? const <String>[])),
+                  ? activeMembership.permissions
+                  : (stored ?? const <String>[])),
       );
 
       roles = [activeMembership.role];
     }
 
-    final activeCompanyContext = (activeMembership != null &&
+    final activeCompanyContext =
+        (activeMembership != null &&
             selectedId != null &&
             activeMembership.companyId == selectedId &&
             activeMembership.status == 'active')
         ? ActiveCompanyContext.fromMembership(
-            membership: activeMembership.copyWith(permissions: permissions.toList()),
+            membership: activeMembership.copyWith(
+              permissions: permissions.toList(),
+            ),
             authenticatedUserId: matched.id,
             companyName: companies
                 .cast<AuthCompany?>()
@@ -507,7 +510,9 @@ class LocalAuthStore {
         name: matched.name,
         email: matched.email,
         status: matched.status,
-        systemRole: matched.isSuperAdmin ? SystemRole.systemAdmin : SystemRole.regularUser,
+        systemRole: matched.isSuperAdmin
+            ? SystemRole.systemAdmin
+            : SystemRole.regularUser,
       ),
       companies: companies,
       roles: roles,
@@ -550,30 +555,40 @@ class LocalAuthStore {
       var snapshot = AuthSessionSnapshot.fromJson(
         Map<String, dynamic>.from(map),
       );
-      final isOwnerOrAdmin = snapshot.user.isSuperAdmin ||
+      final isOwnerOrAdmin =
+          snapshot.user.isSuperAdmin ||
           snapshot.roles.contains('Owner') ||
           snapshot.roles.contains(LocalAuthDefaults.adminRole) ||
           snapshot.roles.contains(LocalAuthDefaults.ownerRole);
       final allCompanies = _readCompanies(box);
       bool dirty = false;
-      List<AuthCompany> updatedCompanies = _readAuthorizedCompanies(box, snapshot.user);
+      List<AuthCompany> updatedCompanies = _readAuthorizedCompanies(
+        box,
+        snapshot.user,
+      );
 
       if (updatedCompanies.length != snapshot.companies.length) {
         dirty = true;
       }
 
-      if ((snapshot.currentCompanyId == null || snapshot.currentCompanyId!.isEmpty) &&
+      if ((snapshot.currentCompanyId == null ||
+              snapshot.currentCompanyId!.isEmpty) &&
           updatedCompanies.isNotEmpty) {
         final firstCid = updatedCompanies.first.id;
         final memberships = _readMemberships(box);
         final m = memberships.firstWhere(
-          (mem) => mem.userId == snapshot.user.id && mem.companyId == firstCid && mem.isActive,
+          (mem) =>
+              mem.userId == snapshot.user.id &&
+              mem.companyId == firstCid &&
+              mem.isActive,
           orElse: () => UserCompanyMembership(
             userId: snapshot.user.id,
             companyId: firstCid,
             role: snapshot.user.isSuperAdmin ? 'Owner' : 'Member',
             status: 'active',
-            permissions: snapshot.user.isSuperAdmin ? kAllLocalPermissions.toList() : const [],
+            permissions: snapshot.user.isSuperAdmin
+                ? kAllLocalPermissions.toList()
+                : const [],
           ),
         );
         final activeContext = ActiveCompanyContext.fromMembership(
@@ -587,23 +602,33 @@ class LocalAuthStore {
           activeMembership: m,
           activeCompanyContext: activeContext,
           roles: [m.role],
-          permissions: Set<String>.from(m.permissions.isNotEmpty
-              ? m.permissions
-              : (snapshot.user.isSuperAdmin ? kAllLocalPermissions : const [])),
+          permissions: Set<String>.from(
+            m.permissions.isNotEmpty
+                ? m.permissions
+                : (snapshot.user.isSuperAdmin
+                      ? kAllLocalPermissions
+                      : const []),
+          ),
         );
         dirty = true;
       } else if (snapshot.currentCompanyId != null) {
         final cid = snapshot.currentCompanyId!;
         final companyExists = allCompanies.any((c) => c.id == cid);
         final memberships = _readMemberships(box);
-        final hasActiveMembership = snapshot.user.isSuperAdmin ||
-            memberships.any((m) => m.userId == snapshot.user.id && m.companyId == cid && m.isActive);
+        final hasActiveMembership = memberships.any(
+          (m) =>
+              m.userId == snapshot.user.id &&
+              m.companyId == cid &&
+              m.isActive,
+        );
 
         if (!companyExists || !hasActiveMembership) {
           snapshot = snapshot.copyWith(
             clearCompany: true,
             roles: const [],
-            permissions: snapshot.user.isSuperAdmin ? kAllLocalPermissions.toSet() : const {},
+            permissions: snapshot.user.isSuperAdmin
+                ? kAllLocalPermissions.toSet()
+                : const {},
           );
           dirty = true;
         }
@@ -613,7 +638,10 @@ class LocalAuthStore {
         final merged = {...snapshot.permissions, ...kAllLocalPermissions};
         if (merged.length != snapshot.permissions.length ||
             !snapshot.permissions.containsAll(kAllLocalPermissions)) {
-          snapshot = snapshot.copyWith(permissions: merged, companies: updatedCompanies);
+          snapshot = snapshot.copyWith(
+            permissions: merged,
+            companies: updatedCompanies,
+          );
           await saveSession(snapshot);
           dirty = false;
         }
@@ -632,7 +660,9 @@ class LocalAuthStore {
     return !_terminatedSessionIds.contains(sessionId);
   }
 
-  Future<void> terminateCurrentCompanySession(AuthSessionSnapshot? session) async {
+  Future<void> terminateCurrentCompanySession(
+    AuthSessionSnapshot? session,
+  ) async {
     if (session == null) return;
     if (session.sessionId != null && session.sessionId!.isNotEmpty) {
       _terminatedSessionIds.add(session.sessionId!);
@@ -642,7 +672,9 @@ class LocalAuthStore {
 
   Future<void> logout([AuthSessionSnapshot? session]) async {
     final current = session ?? await loadSession();
-    if (current != null && current.sessionId != null && current.sessionId!.isNotEmpty) {
+    if (current != null &&
+        current.sessionId != null &&
+        current.sessionId!.isNotEmpty) {
       _terminatedSessionIds.add(current.sessionId!);
     }
     await saveSession(null);
@@ -652,7 +684,8 @@ class LocalAuthStore {
     final session = await loadSession();
     if (session == null) return null;
 
-    if (session.sessionId != null && _terminatedSessionIds.contains(session.sessionId)) {
+    if (session.sessionId != null &&
+        _terminatedSessionIds.contains(session.sessionId)) {
       await saveSession(null);
       return null;
     }
@@ -686,7 +719,9 @@ class LocalAuthStore {
     }
 
     final companies = _readCompanies(box);
-    final companyExists = companies.any((c) => c.id == session.currentCompanyId);
+    final companyExists = companies.any(
+      (c) => c.id == session.currentCompanyId,
+    );
 
     final memberships = _readMemberships(box);
     final membership = memberships.firstWhere(
@@ -694,14 +729,21 @@ class LocalAuthStore {
           m.userId == session.user.id &&
           m.companyId == session.currentCompanyId &&
           m.isActive,
-      orElse: () => const UserCompanyMembership(userId: '', companyId: '', role: '', status: 'inactive'),
+      orElse: () => const UserCompanyMembership(
+        userId: '',
+        companyId: '',
+        role: '',
+        status: 'inactive',
+      ),
     );
 
-    if (!companyExists || (!membership.isActive && !session.user.isSuperAdmin)) {
+    if (!companyExists || !membership.isActive) {
       final safeSnapshot = session.copyWith(
         clearCompany: true,
         roles: const [],
-        permissions: session.user.isSuperAdmin ? kAllLocalPermissions.toSet() : const {},
+        permissions: session.user.isSuperAdmin
+            ? kAllLocalPermissions.toSet()
+            : const {},
       );
       await saveSession(safeSnapshot);
       return safeSnapshot;
@@ -726,19 +768,15 @@ class LocalAuthStore {
     // 1. Validate Membership in Target Company (Rule 3)
     final memberships = _readMemberships(box);
     var membership = memberships.firstWhere(
-      (m) => m.userId == current.user.id && m.companyId == companyId && m.isActive,
-      orElse: () => const UserCompanyMembership(userId: '', companyId: '', role: '', status: 'inactive'),
+      (m) =>
+          m.userId == current.user.id && m.companyId == companyId && m.isActive,
+      orElse: () => const UserCompanyMembership(
+        userId: '',
+        companyId: '',
+        role: '',
+        status: 'inactive',
+      ),
     );
-
-    if ((!membership.isActive || membership.companyId != companyId) && current.user.isSuperAdmin) {
-      membership = UserCompanyMembership(
-        userId: current.user.id,
-        companyId: companyId,
-        role: 'Owner',
-        status: 'active',
-        permissions: kAllLocalPermissions,
-      );
-    }
 
     if (!membership.isActive || membership.companyId != companyId) {
       // Rule 12: Preserve current session context on failure (no saveSession(null))
@@ -774,19 +812,21 @@ class LocalAuthStore {
 
     // 4. Build Target Company permissions
     final stored = user.permissionsByCompany[companyId];
-    final isOwnerOrAdmin = membership.role == 'Owner' ||
+    final isOwnerOrAdmin =
+        membership.role == 'Owner' ||
         membership.role == LocalAuthDefaults.adminRole;
 
     final permissions = Set<String>.from(
       isOwnerOrAdmin
           ? {...?stored, ...kAllLocalPermissions}
           : (membership.permissions.isNotEmpty
-              ? membership.permissions
-              : (stored ?? const <String>[])),
+                ? membership.permissions
+                : (stored ?? const <String>[])),
     );
 
     // Rules 1 & 2: Preserve existing session identity — sessionIdBefore == sessionIdAfter
-    final stableSessionId = (current.sessionId != null && current.sessionId!.isNotEmpty)
+    final stableSessionId =
+        (current.sessionId != null && current.sessionId!.isNotEmpty)
         ? current.sessionId!
         : generateUuidV4();
 
@@ -841,9 +881,7 @@ class LocalAuthStore {
     }
 
     if (!_verifyAndMigratePassword(user, currentPassword, box, users)) {
-      throw const PasswordChangeException(
-        PasswordChangeException.wrongCurrent,
-      );
+      throw const PasswordChangeException(PasswordChangeException.wrongCurrent);
     }
 
     final salt = generateUuidV4();
@@ -934,7 +972,9 @@ class LocalAuthStore {
     final memberships = _readMemberships(box);
     final updated = [
       for (final m in memberships)
-        if (!(m.userId == membership.userId && m.companyId == membership.companyId)) m,
+        if (!(m.userId == membership.userId &&
+            m.companyId == membership.companyId))
+          m,
       membership,
     ];
     await _writeMemberships(box, updated);
@@ -952,7 +992,8 @@ class LocalAuthStore {
     if (currentSession != null &&
         currentSession.user.id == userId &&
         currentSession.currentCompanyId == companyId) {
-      if (currentSession.sessionId != null && currentSession.sessionId!.isNotEmpty) {
+      if (currentSession.sessionId != null &&
+          currentSession.sessionId!.isNotEmpty) {
         _terminatedSessionIds.add(currentSession.sessionId!);
       }
       await saveSession(null);
@@ -970,17 +1011,23 @@ class LocalAuthStore {
     List<String>? adminPermissions,
   }) async {
     // 1. Authorization Check: Creator must be authenticated and authorized
-    if (!creatorSession.isCompanyBoundSession && !creatorSession.user.isSuperAdmin) {
-      throw const CompanyCreationException('يجب توفر جلسة مصادقة صالحة لإنشاء شركة جديدة.');
+    if (!creatorSession.isCompanyBoundSession &&
+        !creatorSession.user.isSuperAdmin) {
+      throw const CompanyCreationException(
+        'يجب توفر جلسة مصادقة صالحة لإنشاء شركة جديدة.',
+      );
     }
 
-    final canCreateCompany = creatorSession.hasPermission('manage_companies') ||
+    final canCreateCompany =
+        creatorSession.hasPermission('manage_companies') ||
         creatorSession.roles.contains('Owner') ||
         creatorSession.roles.contains('Admin') ||
         creatorSession.user.isSuperAdmin;
 
     if (!canCreateCompany) {
-      throw const CompanyCreationException('ليس لديك صلاحية لإنشاء شركة جديدة.');
+      throw const CompanyCreationException(
+        'ليس لديك صلاحية لإنشاء شركة جديدة.',
+      );
     }
 
     // 2. Credentials Validation: Password must not be default/weak
@@ -989,7 +1036,9 @@ class LocalAuthStore {
         normPassword.toLowerCase() == 'admin123' ||
         normPassword.toLowerCase() == 'password123' ||
         normPassword.toLowerCase() == '12345678') {
-      throw const CompanyCreationException('كلمة مرور مسؤول الشركة غير آمنة أو تستخدم القيمة الافتراضية.');
+      throw const CompanyCreationException(
+        'كلمة مرور مسؤول الشركة غير آمنة أو تستخدم القيمة الافتراضية.',
+      );
     }
 
     final box = await _box();
@@ -1025,7 +1074,9 @@ class LocalAuthStore {
         final updatedCompanyIds = {...adminUser.companyIds, companyId}.toList();
         final updatedRoles = Map<String, String>.from(adminUser.rolesByCompany);
         updatedRoles[companyId] = adminRole;
-        final updatedPerms = Map<String, List<String>>.from(adminUser.permissionsByCompany);
+        final updatedPerms = Map<String, List<String>>.from(
+          adminUser.permissionsByCompany,
+        );
         updatedPerms[companyId] = adminPermissions ?? kAllLocalPermissions;
 
         final updatedRecord = adminUser.copyWith(
@@ -1055,7 +1106,9 @@ class LocalAuthStore {
           mustChangePassword: false,
           companyIds: [companyId],
           rolesByCompany: {companyId: adminRole},
-          permissionsByCompany: {companyId: adminPermissions ?? kAllLocalPermissions},
+          permissionsByCompany: {
+            companyId: adminPermissions ?? kAllLocalPermissions,
+          },
         );
         updatedUsers.add(newUserRecord);
       }
@@ -1085,7 +1138,9 @@ class LocalAuthStore {
       }
 
       final allCompanies = _readCompanies(box);
-      await box.put(_companiesKey, [for (final c in [...allCompanies, newCompany]) c.toJson()]);
+      await box.put(_companiesKey, [
+        for (final c in [...allCompanies, newCompany]) c.toJson(),
+      ]);
       await _writeUsers(box, updatedUsers);
       await _writeMemberships(box, [...memberships, ...addedMemberships]);
 
@@ -1093,11 +1148,14 @@ class LocalAuthStore {
       if (currentSession != null) {
         final isCreatorAdmin = (currentSession.user.id == adminUserId);
         if (isCreatorAdmin) {
-          final hasComp = currentSession.companies.any((c) => c.id == newCompany.id);
+          final hasComp = currentSession.companies.any(
+            (c) => c.id == newCompany.id,
+          );
           final updatedCompanies = hasComp
               ? currentSession.companies
               : [...currentSession.companies, newCompany];
-          final activeId = (currentSession.currentCompanyId != null &&
+          final activeId =
+              (currentSession.currentCompanyId != null &&
                   currentSession.currentCompanyId!.isNotEmpty)
               ? currentSession.currentCompanyId
               : newCompany.id;
@@ -1113,7 +1171,8 @@ class LocalAuthStore {
     } catch (e) {
       if (origCompanies != null) await box.put(_companiesKey, origCompanies);
       if (origUsers != null) await box.put(_usersKey, origUsers);
-      if (origMemberships != null) await box.put(_membershipsKey, origMemberships);
+      if (origMemberships != null)
+        await box.put(_membershipsKey, origMemberships);
       rethrow;
     }
   }
@@ -1152,7 +1211,9 @@ class LocalAuthStore {
     );
 
     final updatedCompanies = [...allCompanies, newCompany];
-    await box.put(_companiesKey, [for (final c in updatedCompanies) c.toJson()]);
+    await box.put(_companiesKey, [
+      for (final c in updatedCompanies) c.toJson(),
+    ]);
     return newCompany;
   }
 
@@ -1238,10 +1299,12 @@ class LocalAuthStore {
       throw ArgumentError('الشركة المطلوبة غير موجودة.');
     }
 
-    final existingMembership = memberships.cast<UserCompanyMembership?>().firstWhere(
-      (m) => m != null && m.userId == userId && m.companyId == companyId,
-      orElse: () => null,
-    );
+    final existingMembership = memberships
+        .cast<UserCompanyMembership?>()
+        .firstWhere(
+          (m) => m != null && m.userId == userId && m.companyId == companyId,
+          orElse: () => null,
+        );
     if (existingMembership != null) {
       throw StateError('يوجد انتماء مسجل بالفعل للمستخدم في هذه الشركة.');
     }
@@ -1261,7 +1324,9 @@ class LocalAuthStore {
     final updatedCompanyIds = {...user.companyIds, companyId}.toList();
     final updatedRoles = Map<String, String>.from(user.rolesByCompany);
     updatedRoles[companyId] = role;
-    final updatedPerms = Map<String, List<String>>.from(user.permissionsByCompany);
+    final updatedPerms = Map<String, List<String>>.from(
+      user.permissionsByCompany,
+    );
     updatedPerms[companyId] = permissions;
 
     final updatedRecord = user.copyWith(
@@ -1379,9 +1444,7 @@ class LocalAuthStore {
       isSuperAdmin: true,
       mustChangePassword: false,
       companyIds: [cleanCompanyId],
-      rolesByCompany: {
-        cleanCompanyId: 'Owner',
-      },
+      rolesByCompany: {cleanCompanyId: 'Owner'},
       permissionsByCompany: {
         cleanCompanyId: List<String>.from(kAllLocalPermissions),
       },
@@ -1514,20 +1577,15 @@ class LocalAuthStore {
     final userMemberships = memberships
         .where((m) => m.userId == user.id && m.isActive)
         .toList();
-    final authorizedCompanyIds = userMemberships.map((m) => m.companyId).toSet();
+    final authorizedCompanyIds = userMemberships
+        .map((m) => m.companyId)
+        .toSet();
 
     return allCompanies
-        .where((c) => user.isSuperAdmin || authorizedCompanyIds.contains(c.id))
+        .where((c) => authorizedCompanyIds.contains(c.id))
         .map((c) {
           final m = userMemberships.firstWhere(
             (mem) => mem.companyId == c.id,
-            orElse: () => UserCompanyMembership(
-              userId: user.id,
-              companyId: c.id,
-              role: user.isSuperAdmin ? 'Owner' : 'Member',
-              status: 'active',
-              permissions: const [],
-            ),
           );
           return AuthCompany(
             id: c.id,
@@ -1550,8 +1608,9 @@ class LocalAuthStore {
         result[j] ^= u[j];
       }
     }
-    final hexDigest =
-        result.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final hexDigest = result
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
     return '\$pbkdf2-sha256\$v=1\$i=100000\$$hexDigest';
   }
 
@@ -1595,8 +1654,10 @@ class LocalAuthStore {
       return true;
     }
 
-    final legacySingleSha256 =
-        _legacySingleSha256HashPassword(rawPassword, user.passwordSalt);
+    final legacySingleSha256 = _legacySingleSha256HashPassword(
+      rawPassword,
+      user.passwordSalt,
+    );
     if (_constantTimeEquals(legacySingleSha256, user.passwordHash)) {
       _rehashAndPersist(user, rawPassword, box, users);
       return true;
@@ -1691,18 +1752,18 @@ class _LocalUserRecord {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'passwordSalt': passwordSalt,
-        'passwordHash': passwordHash,
-        'status': status,
-        'isSuperAdmin': isSuperAdmin,
-        'mustChangePassword': mustChangePassword,
-        'companyIds': companyIds,
-        'rolesByCompany': rolesByCompany,
-        'permissionsByCompany': permissionsByCompany,
-      };
+    'id': id,
+    'name': name,
+    'email': email,
+    'passwordSalt': passwordSalt,
+    'passwordHash': passwordHash,
+    'status': status,
+    'isSuperAdmin': isSuperAdmin,
+    'mustChangePassword': mustChangePassword,
+    'companyIds': companyIds,
+    'rolesByCompany': rolesByCompany,
+    'permissionsByCompany': permissionsByCompany,
+  };
 
   factory _LocalUserRecord.fromJson(Map<String, dynamic> json) {
     final rolesRaw = json['rolesByCompany'];

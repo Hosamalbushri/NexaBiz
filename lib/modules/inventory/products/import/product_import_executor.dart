@@ -6,7 +6,10 @@ import '../../../../../core/import_engine/import_engine.dart';
 
 /// Exception thrown during Product import validation or relation failure.
 class ProductImportException extends ImportEngineException {
-  const ProductImportException(super.message, [super.code = 'PRODUCT_IMPORT_ERROR']);
+  const ProductImportException(
+    super.message, [
+    super.code = 'PRODUCT_IMPORT_ERROR',
+  ]);
 }
 
 /// Resolved Category assignment payload for a product record.
@@ -40,12 +43,7 @@ class ProductImportRowResult {
 }
 
 /// Category assignment strategy configuration options for Product import.
-enum CategoryAssignmentStrategyType {
-  fromFile,
-  fixed,
-  multiple,
-  hybrid,
-}
+enum CategoryAssignmentStrategyType { fromFile, fixed, multiple, hybrid }
 
 /// Category assignment configuration passed to Product import engine execution.
 class CategoryAssignmentConfig {
@@ -104,16 +102,23 @@ class ProductImportExecutor {
   }) async {
     final name = rowData['name']?.toString().trim() ?? '';
     if (name.isEmpty) {
-      throw const ProductImportException('Product Name cannot be empty.', 'EMPTY_NAME');
+      throw const ProductImportException(
+        'Product Name cannot be empty.',
+        'EMPTY_NAME',
+      );
     }
 
     final itemCode = rowData['itemCode']?.toString().trim() ?? '';
     if (itemCode.isEmpty) {
-      throw const ProductImportException('Item Code / SKU cannot be empty.', 'EMPTY_ITEM_CODE');
+      throw const ProductImportException(
+        'Item Code / SKU cannot be empty.',
+        'EMPTY_ITEM_CODE',
+      );
     }
 
     final price = double.tryParse(rowData['price']?.toString() ?? '') ?? 0.0;
-    final unitCost = double.tryParse(rowData['unitCost']?.toString() ?? '') ?? 0.0;
+    final unitCost =
+        double.tryParse(rowData['unitCost']?.toString() ?? '') ?? 0.0;
     final packSize = int.tryParse(rowData['packSize']?.toString() ?? '') ?? 1;
     final barcode = rowData['barcode']?.toString().trim();
 
@@ -126,9 +131,21 @@ class ProductImportExecutor {
     );
 
     // 2. Resolve Accounting Relations with Tenant Isolation
-    final assetAccount = resolveAccount(rowData['accountingAssetAccount'] ?? resolvedRelations['accountingAssetAccount'], companyId);
-    final incomeAccount = resolveAccount(rowData['accountingIncomeAccount'] ?? resolvedRelations['accountingIncomeAccount'], companyId);
-    final expenseAccount = resolveAccount(rowData['accountingExpenseAccount'] ?? resolvedRelations['accountingExpenseAccount'], companyId);
+    final assetAccount = resolveAccount(
+      rowData['accountingAssetAccount'] ??
+          resolvedRelations['accountingAssetAccount'],
+      companyId,
+    );
+    final incomeAccount = resolveAccount(
+      rowData['accountingIncomeAccount'] ??
+          resolvedRelations['accountingIncomeAccount'],
+      companyId,
+    );
+    final expenseAccount = resolveAccount(
+      rowData['accountingExpenseAccount'] ??
+          resolvedRelations['accountingExpenseAccount'],
+      companyId,
+    );
 
     // 3. Upsert or Create Product via ProductRepository
     final existing = await productRepository.getByItemCode(itemCode);
@@ -136,7 +153,9 @@ class ProductImportExecutor {
     final draft = ProductDraft(
       itemCode: itemCode,
       name: name,
-      barcode: barcode != null && barcode.isNotEmpty ? barcode : (existing?.barcode),
+      barcode: barcode != null && barcode.isNotEmpty
+          ? barcode
+          : (existing?.barcode),
       packSize: packSize,
       price: price,
       unitCost: unitCost,
@@ -182,12 +201,16 @@ class ProductImportExecutor {
     required CategoryAssignmentConfig config,
     required Map<String, String> resolvedRelations,
   }) async {
-    String? categoryValue = rowData['category']?.toString().trim() ?? resolvedRelations['category'];
+    String? categoryValue =
+        rowData['category']?.toString().trim() ?? resolvedRelations['category'];
 
     switch (config.strategyType) {
       case CategoryAssignmentStrategyType.fixed:
-        if (config.fixedCategoryId != null && config.fixedCategoryId!.isNotEmpty) {
-          final cat = await categoryRepository.getCategoryById(config.fixedCategoryId!);
+        if (config.fixedCategoryId != null &&
+            config.fixedCategoryId!.isNotEmpty) {
+          final cat = await categoryRepository.getCategoryById(
+            config.fixedCategoryId!,
+          );
           if (cat != null && cat.companyId != companyId) {
             throw TenantIsolationException(
               'Cross-company category assignment violation: Category "${cat.id}" belongs to company "${cat.companyId}", expected "$companyId"',
@@ -224,11 +247,18 @@ class ProductImportExecutor {
 
       case CategoryAssignmentStrategyType.hybrid:
         if (categoryValue != null && categoryValue.isNotEmpty) {
-          final found = await _findOrCreateCategory(categoryValue, companyId, config);
+          final found = await _findOrCreateCategory(
+            categoryValue,
+            companyId,
+            config,
+          );
           if (found != null) return found;
         }
-        if (config.fixedCategoryId != null && config.fixedCategoryId!.isNotEmpty) {
-          final cat = await categoryRepository.getCategoryById(config.fixedCategoryId!);
+        if (config.fixedCategoryId != null &&
+            config.fixedCategoryId!.isNotEmpty) {
+          final cat = await categoryRepository.getCategoryById(
+            config.fixedCategoryId!,
+          );
           if (cat != null && cat.companyId != companyId) {
             throw TenantIsolationException(
               'Cross-company category assignment violation: Category "${cat.id}" belongs to company "${cat.companyId}", expected "$companyId"',
@@ -263,7 +293,9 @@ class ProductImportExecutor {
     final clean = term.toLowerCase().trim();
 
     for (final cat in existingCategories) {
-      if (cat.id.toLowerCase() == clean || cat.code.toLowerCase() == clean || cat.name.toLowerCase() == clean) {
+      if (cat.id.toLowerCase() == clean ||
+          cat.code.toLowerCase() == clean ||
+          cat.name.toLowerCase() == clean) {
         if (cat.companyId != companyId) {
           throw TenantIsolationException(
             'Cross-company category resolution violation: Category "$term" (${cat.id}) belongs to company "${cat.companyId}", attempted by company "$companyId"',
@@ -271,7 +303,10 @@ class ProductImportExecutor {
             attemptedCompanyId: cat.companyId,
           );
         }
-        return ResolvedProductCategory(categoryId: cat.id, categoryName: cat.name);
+        return ResolvedProductCategory(
+          categoryId: cat.id,
+          categoryName: cat.name,
+        );
       }
     }
 
@@ -320,7 +355,9 @@ class ProductImportExecutor {
       }
     }
 
-    if (match != null && match.companyId != null && match.companyId != companyId) {
+    if (match != null &&
+        match.companyId != null &&
+        match.companyId != companyId) {
       throw TenantIsolationException(
         'Cross-company account resolution violation: Account "${match.accountCode}" belongs to company "${match.companyId}", attempted by company "$companyId"',
         expectedCompanyId: companyId,

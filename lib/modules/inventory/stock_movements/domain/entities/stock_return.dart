@@ -32,9 +32,9 @@ class StockReturn {
     this.version = 1,
     this.companyId,
     this.deletedAt,
-  })  : id = id ?? generateUuidV4(),
-        createdAt = createdAt ?? DateTime.now().toUtc(),
-        updatedAt = updatedAt ?? DateTime.now().toUtc();
+  }) : id = id ?? generateUuidV4(),
+       createdAt = createdAt ?? DateTime.now().toUtc(),
+       updatedAt = updatedAt ?? DateTime.now().toUtc();
 
   final String id;
   final String returnNumber;

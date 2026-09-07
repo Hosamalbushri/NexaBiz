@@ -4,11 +4,7 @@ import '../../import_engine.dart';
 
 /// Reusable Import Jobs overview screen displaying active and past import jobs.
 class ImportJobsListPage extends ConsumerWidget {
-  const ImportJobsListPage({
-    super.key,
-    required this.companyId,
-    this.onJobTap,
-  });
+  const ImportJobsListPage({super.key, required this.companyId, this.onJobTap});
 
   final String companyId;
   final void Function(ImportJob job)? onJobTap;
@@ -43,9 +39,16 @@ class ImportJobsListPage extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inbox_outlined, size: 64, color: theme.colorScheme.outline),
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 64,
+                    color: theme.colorScheme.outline,
+                  ),
                   const SizedBox(height: 16.0),
-                  Text('No import jobs found.', style: theme.textTheme.titleMedium),
+                  Text(
+                    'No import jobs found.',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ],
               ),
             );
@@ -87,12 +90,17 @@ class ImportJobsListPage extends ConsumerWidget {
                   child: Text(
                     job.jobId,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8.0),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10.0,
+                    vertical: 4.0,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12.0),
@@ -143,28 +151,33 @@ class ImportJobsListPage extends ConsumerWidget {
                       key: Key('job_pause_btn_${job.jobId}'),
                       icon: const Icon(Icons.pause),
                       label: const Text('Pause'),
-                      onPressed: () async => worker.pause(job.jobId, companyId: job.companyId),
+                      onPressed: () async =>
+                          worker.pause(job.jobId, companyId: job.companyId),
                     ),
                   if (job.status == ImportJobStatus.paused)
                     TextButton.icon(
                       key: Key('job_resume_btn_${job.jobId}'),
                       icon: const Icon(Icons.play_arrow),
                       label: const Text('Resume'),
-                      onPressed: () async => worker.resume(job.jobId, companyId: job.companyId),
+                      onPressed: () async =>
+                          worker.resume(job.jobId, companyId: job.companyId),
                     ),
-                  if (job.status == ImportJobStatus.processing || job.status == ImportJobStatus.queued)
+                  if (job.status == ImportJobStatus.processing ||
+                      job.status == ImportJobStatus.queued)
                     TextButton.icon(
                       key: Key('job_cancel_btn_${job.jobId}'),
                       icon: const Icon(Icons.cancel_outlined),
                       label: const Text('Cancel'),
-                      onPressed: () async => worker.cancel(job.jobId, companyId: job.companyId),
+                      onPressed: () async =>
+                          worker.cancel(job.jobId, companyId: job.companyId),
                     ),
                   if (job.status == ImportJobStatus.failed)
                     TextButton.icon(
                       key: Key('job_retry_btn_${job.jobId}'),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Retry'),
-                      onPressed: () async => worker.retry(job.jobId, companyId: job.companyId),
+                      onPressed: () async =>
+                          worker.retry(job.jobId, companyId: job.companyId),
                     ),
                   TextButton.icon(
                     key: Key('job_details_btn_${job.jobId}'),

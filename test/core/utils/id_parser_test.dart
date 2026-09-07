@@ -26,11 +26,15 @@ void main() {
 
     test('parses full URLs with query parameters and fragments', () {
       expect(
-        IdParser.extractNumericId('https://example.com/api/orders/577?tab=items'),
+        IdParser.extractNumericId(
+          'https://example.com/api/orders/577?tab=items',
+        ),
         equals(577),
       );
       expect(
-        IdParser.extractNumericId('http://localhost:8000/api/v1/invoices/987#section'),
+        IdParser.extractNumericId(
+          'http://localhost:8000/api/v1/invoices/987#section',
+        ),
         equals(987),
       );
     });

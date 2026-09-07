@@ -34,8 +34,10 @@ class JournalMoney {
     return cents / scale;
   }
 
-  static double round(double value, {int decimalPlaces = 2}) =>
-      fromCents(toCents(value, decimalPlaces: decimalPlaces), decimalPlaces: decimalPlaces);
+  static double round(double value, {int decimalPlaces = 2}) => fromCents(
+    toCents(value, decimalPlaces: decimalPlaces),
+    decimalPlaces: decimalPlaces,
+  );
 
   static double clampNonNegative(double value, {int decimalPlaces = 2}) {
     final rounded = round(value, decimalPlaces: decimalPlaces);
@@ -44,12 +46,20 @@ class JournalMoney {
 
   /// Safe addition avoiding floating-point drift.
   static double add(double a, double b, {int decimalPlaces = 2}) {
-    return fromCents(toCents(a, decimalPlaces: decimalPlaces) + toCents(b, decimalPlaces: decimalPlaces), decimalPlaces: decimalPlaces);
+    return fromCents(
+      toCents(a, decimalPlaces: decimalPlaces) +
+          toCents(b, decimalPlaces: decimalPlaces),
+      decimalPlaces: decimalPlaces,
+    );
   }
 
   /// Safe subtraction avoiding floating-point drift.
   static double subtract(double a, double b, {int decimalPlaces = 2}) {
-    return fromCents(toCents(a, decimalPlaces: decimalPlaces) - toCents(b, decimalPlaces: decimalPlaces), decimalPlaces: decimalPlaces);
+    return fromCents(
+      toCents(a, decimalPlaces: decimalPlaces) -
+          toCents(b, decimalPlaces: decimalPlaces),
+      decimalPlaces: decimalPlaces,
+    );
   }
 
   /// High precision quantity rounding.

@@ -36,7 +36,12 @@ class AccountCodeGenerator {
     var maxCode = 0;
 
     for (final account in existing) {
-      if (!_isSibling(account.parentId, account.accountCode, prefix, parentId)) {
+      if (!_isSibling(
+        account.parentId,
+        account.accountCode,
+        prefix,
+        parentId,
+      )) {
         continue;
       }
       final value = int.tryParse(account.accountCode.trim());
@@ -46,7 +51,8 @@ class AccountCodeGenerator {
     }
 
     var next = maxCode == 0
-        ? int.tryParse('$prefix${1.toString().padLeft(sequenceWidth, '0')}') ?? 1
+        ? int.tryParse('$prefix${1.toString().padLeft(sequenceWidth, '0')}') ??
+              1
         : maxCode + 1;
 
     for (var attempt = 0; attempt < 10000; attempt++) {

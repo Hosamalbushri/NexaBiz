@@ -42,9 +42,7 @@ class CashBoxAccounts {
     if (root == null) {
       return false;
     }
-    final byId = <String, Account>{
-      for (final item in all) item.uuid: item,
-    };
+    final byId = <String, Account>{for (final item in all) item.uuid: item};
     return _isDescendantOf(account, rootId: root.uuid, byId: byId);
   }
 
@@ -56,7 +54,6 @@ class CashBoxAccounts {
     }
     return null;
   }
-
 
   static bool _isDescendantOf(
     Account account, {

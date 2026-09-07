@@ -40,11 +40,7 @@ enum InitializationStatus {
 }
 
 /// Operating mode chosen by the user during setup.
-enum ApplicationOperatingMode {
-  none,
-  local,
-  server,
-}
+enum ApplicationOperatingMode { none, local, server }
 
 /// Represents the explicit state of application initialization.
 class InitializationState {
@@ -66,7 +62,7 @@ class InitializationState {
   });
 
   const InitializationState.notStarted()
-      : this(status: InitializationStatus.notStarted);
+    : this(status: InitializationStatus.notStarted);
 
   final InitializationStatus status;
   final InitializationStage stage;
@@ -87,14 +83,19 @@ class InitializationState {
   bool get isUninitialized => status == InitializationStatus.uninitialized;
   bool get isSelectingMode => status == InitializationStatus.selectingMode;
   bool get isInitializing => status == InitializationStatus.initializing;
-  bool get isValidatingServer => status == InitializationStatus.validatingServer;
+  bool get isValidatingServer =>
+      status == InitializationStatus.validatingServer;
   bool get isAuthenticating => status == InitializationStatus.authenticating;
-  bool get isCheckingRemote => status == InitializationStatus.checkingRemoteInitialization;
+  bool get isCheckingRemote =>
+      status == InitializationStatus.checkingRemoteInitialization;
   bool get isServerNoData => status == InitializationStatus.serverNoData;
-  bool get isDownloading => status == InitializationStatus.downloadingInitialization;
-  bool get isWritingDatabase => status == InitializationStatus.initializingLocalDatabase;
+  bool get isDownloading =>
+      status == InitializationStatus.downloadingInitialization;
+  bool get isWritingDatabase =>
+      status == InitializationStatus.initializingLocalDatabase;
   bool get isSynchronizing => status == InitializationStatus.synchronizing;
-  bool get isBootstrapCompleted => status == InitializationStatus.bootstrapCompleted;
+  bool get isBootstrapCompleted =>
+      status == InitializationStatus.bootstrapCompleted;
   bool get isReady => status == InitializationStatus.ready;
   bool get isSetupRequired => status == InitializationStatus.setupRequired;
   bool get isDegraded => status == InitializationStatus.degraded;
@@ -102,7 +103,8 @@ class InitializationState {
   bool get isRetrying => status == InitializationStatus.retrying;
 
   /// Whether the app is functional enough for user interaction (either ready, degraded, setup required, or selecting mode).
-  bool get canOperate => isReady || isDegraded || isSetupRequired || isSelectingMode;
+  bool get canOperate =>
+      isReady || isDegraded || isSetupRequired || isSelectingMode;
 
   InitializationState copyWith({
     InitializationStatus? status,

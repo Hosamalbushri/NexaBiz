@@ -34,7 +34,10 @@ class MockSyncEntityHandler implements SyncEntityHandler {
   }
 
   @override
-  Future<void> markLocalConflict({required String entityId, String? message}) async {}
+  Future<void> markLocalConflict({
+    required String entityId,
+    String? message,
+  }) async {}
 
   @override
   Future<void> markLocalSynced({
@@ -75,7 +78,8 @@ class TestModuleRegistrar implements SyncModuleRegistrar {
   }
 }
 
-class FakeAuthController extends StateNotifier<AuthState> implements AuthController {
+class FakeAuthController extends StateNotifier<AuthState>
+    implements AuthController {
   FakeAuthController(super.initialState);
 
   @override
@@ -123,13 +127,12 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           syncManagerProvider.overrideWithValue(
-            SyncManager(
-              queue: SyncQueue(),
-              connectivity: connectivity,
-            ),
+            SyncManager(queue: SyncQueue(), connectivity: connectivity),
           ),
           authStateProvider.overrideWith(
-            (ref) => FakeAuthController(const AuthState(status: AuthStatus.unauthenticated)),
+            (ref) => FakeAuthController(
+              const AuthState(status: AuthStatus.unauthenticated),
+            ),
           ),
           currentCompanyIdProvider.overrideWithValue(''),
         ],
@@ -144,108 +147,119 @@ void main() {
       container.dispose();
     });
 
-    test('Registers ONLY systemOnly & any scope modules during System Scope', () {
-      final systemAuthState = AuthState(
-        status: AuthStatus.authenticated,
-        backend: AuthBackend.remote,
-        session: AuthSessionSnapshot(
-          user: const AuthUser(
-            id: 'admin_1',
-            name: 'Admin',
-            email: 'admin@nexabiz.com',
-            systemRole: SystemRole.systemAdmin,
-          ),
-          companies: const [],
-          roles: const ['SystemAdmin'],
-          permissions: const {},
-          capturedAt: DateTime.now(),
-          currentCompanyId: null,
-          activeCompanyContext: null, // System scope active!
-        ),
-      );
-
-      final container = ProviderContainer(
-        overrides: [
-          syncManagerProvider.overrideWithValue(
-            SyncManager(
-              queue: SyncQueue(),
-              connectivity: connectivity,
+    test(
+      'Registers ONLY systemOnly & any scope modules during System Scope',
+      () {
+        final systemAuthState = AuthState(
+          status: AuthStatus.authenticated,
+          backend: AuthBackend.remote,
+          session: AuthSessionSnapshot(
+            user: const AuthUser(
+              id: 'admin_1',
+              name: 'Admin',
+              email: 'admin@nexabiz.com',
+              systemRole: SystemRole.systemAdmin,
             ),
+            companies: const [],
+            roles: const ['SystemAdmin'],
+            permissions: const {},
+            capturedAt: DateTime.now(),
+            currentCompanyId: null,
+            activeCompanyContext: null, // System scope active!
           ),
-          authStateProvider.overrideWith((ref) => FakeAuthController(systemAuthState)),
-          currentCompanyIdProvider.overrideWithValue(''),
-        ],
-      );
+        );
 
-      final registeredModules = coordinator.synchronizeRegistration(container);
-      final manager = container.read(syncManagerProvider);
-
-      expect(registeredModules, contains('system_admin'));
-      expect(registeredModules, contains('company_profile'));
-      expect(registeredModules, isNot(contains('inventory')));
-
-      expect(manager.getHandler('system_config'), isNotNull);
-      expect(manager.getHandler('company_profile'), isNotNull);
-      expect(manager.getHandler('product'), isNull); // Company handler PREVENTED!
-
-      container.dispose();
-    });
-
-    test('Registers companyOnly & any scope modules during active Company Scope', () {
-      final companyAuthState = AuthState(
-        status: AuthStatus.authenticated,
-        backend: AuthBackend.remote,
-        session: AuthSessionSnapshot(
-          user: const AuthUser(
-            id: 'user_1',
-            name: 'Owner',
-            email: 'owner@nexabiz.com',
-            systemRole: SystemRole.regularUser,
-          ),
-          companies: const [
-            AuthCompany(id: 'cmp_12345', name: 'Test Company', code: 'TC'),
+        final container = ProviderContainer(
+          overrides: [
+            syncManagerProvider.overrideWithValue(
+              SyncManager(queue: SyncQueue(), connectivity: connectivity),
+            ),
+            authStateProvider.overrideWith(
+              (ref) => FakeAuthController(systemAuthState),
+            ),
+            currentCompanyIdProvider.overrideWithValue(''),
           ],
-          roles: const ['CompanyOwner'],
-          permissions: const {},
-          capturedAt: DateTime.now(),
-          currentCompanyId: 'cmp_12345',
-          activeCompanyContext: const ActiveCompanyContext(
-            companyId: 'cmp_12345',
-            membershipId: 'user1_cmp12345',
-            companyRole: 'Owner',
-            companyPermissions: {},
-            companyName: 'Test Company',
-          ), // Company scope active!
-        ),
-      );
+        );
 
-      final container = ProviderContainer(
-        overrides: [
-          syncManagerProvider.overrideWithValue(
-            SyncManager(
-              queue: SyncQueue(),
-              connectivity: connectivity,
+        final registeredModules = coordinator.synchronizeRegistration(
+          container,
+        );
+        final manager = container.read(syncManagerProvider);
+
+        expect(registeredModules, contains('system_admin'));
+        expect(registeredModules, contains('company_profile'));
+        expect(registeredModules, isNot(contains('inventory')));
+
+        expect(manager.getHandler('system_config'), isNotNull);
+        expect(manager.getHandler('company_profile'), isNotNull);
+        expect(
+          manager.getHandler('product'),
+          isNull,
+        ); // Company handler PREVENTED!
+
+        container.dispose();
+      },
+    );
+
+    test(
+      'Registers companyOnly & any scope modules during active Company Scope',
+      () {
+        final companyAuthState = AuthState(
+          status: AuthStatus.authenticated,
+          backend: AuthBackend.remote,
+          session: AuthSessionSnapshot(
+            user: const AuthUser(
+              id: 'user_1',
+              name: 'Owner',
+              email: 'owner@nexabiz.com',
+              systemRole: SystemRole.regularUser,
             ),
+            companies: const [
+              AuthCompany(id: 'cmp_12345', name: 'Test Company', code: 'TC'),
+            ],
+            roles: const ['CompanyOwner'],
+            permissions: const {},
+            capturedAt: DateTime.now(),
+            currentCompanyId: 'cmp_12345',
+            activeCompanyContext: const ActiveCompanyContext(
+              companyId: 'cmp_12345',
+              membershipId: 'user1_cmp12345',
+              companyRole: 'Owner',
+              companyPermissions: {},
+              companyName: 'Test Company',
+            ), // Company scope active!
           ),
-          authStateProvider.overrideWith((ref) => FakeAuthController(companyAuthState)),
-          currentCompanyIdProvider.overrideWithValue('cmp_12345'),
-        ],
-      );
+        );
 
-      final registeredModules = coordinator.synchronizeRegistration(container);
-      final manager = container.read(syncManagerProvider);
+        final container = ProviderContainer(
+          overrides: [
+            syncManagerProvider.overrideWithValue(
+              SyncManager(queue: SyncQueue(), connectivity: connectivity),
+            ),
+            authStateProvider.overrideWith(
+              (ref) => FakeAuthController(companyAuthState),
+            ),
+            currentCompanyIdProvider.overrideWithValue('cmp_12345'),
+          ],
+        );
 
-      expect(registeredModules, contains('inventory'));
-      expect(registeredModules, contains('company_profile'));
-      expect(registeredModules, isNot(contains('system_admin')));
+        final registeredModules = coordinator.synchronizeRegistration(
+          container,
+        );
+        final manager = container.read(syncManagerProvider);
 
-      expect(manager.getHandler('product'), isNotNull);
-      expect(manager.getHandler('stock_receipt'), isNotNull);
-      expect(manager.getHandler('company_profile'), isNotNull);
-      expect(manager.getHandler('system_config'), isNull);
+        expect(registeredModules, contains('inventory'));
+        expect(registeredModules, contains('company_profile'));
+        expect(registeredModules, isNot(contains('system_admin')));
 
-      container.dispose();
-    });
+        expect(manager.getHandler('product'), isNotNull);
+        expect(manager.getHandler('stock_receipt'), isNotNull);
+        expect(manager.getHandler('company_profile'), isNotNull);
+        expect(manager.getHandler('system_config'), isNull);
+
+        container.dispose();
+      },
+    );
 
     test('Clears handlers on logout', () {
       final companyAuthState = AuthState(
@@ -278,12 +292,11 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           syncManagerProvider.overrideWithValue(
-            SyncManager(
-              queue: SyncQueue(),
-              connectivity: connectivity,
-            ),
+            SyncManager(queue: SyncQueue(), connectivity: connectivity),
           ),
-          authStateProvider.overrideWith((ref) => FakeAuthController(companyAuthState)),
+          authStateProvider.overrideWith(
+            (ref) => FakeAuthController(companyAuthState),
+          ),
           currentCompanyIdProvider.overrideWithValue('cmp_12345'),
         ],
       );
@@ -296,7 +309,9 @@ void main() {
         overrides: [
           syncManagerProvider.overrideWithValue(manager),
           authStateProvider.overrideWith(
-            (ref) => FakeAuthController(const AuthState(status: AuthStatus.unauthenticated)),
+            (ref) => FakeAuthController(
+              const AuthState(status: AuthStatus.unauthenticated),
+            ),
           ),
           currentCompanyIdProvider.overrideWithValue(''),
         ],

@@ -8,7 +8,9 @@ import 'package:stock_count/modules/accounting/shared/domain/services/account_us
 import 'package:stock_count/modules/accounting/shared/domain/services/account_validation_service.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 
-final accountValidationServiceProvider = Provider<AccountValidationService>((ref) {
+final accountValidationServiceProvider = Provider<AccountValidationService>((
+  ref,
+) {
   final repo = ref.watch(accountRepositoryProvider);
   return AccountValidationServiceImpl(repo);
 });
@@ -17,7 +19,9 @@ final accountUsageAnalyzerProvider = Provider<AccountUsageAnalyzer>((ref) {
   return AccountUsageAnalyzerImpl();
 });
 
-final accountBindingSafetyGateProvider = Provider<AccountBindingSafetyGate>((ref) {
+final accountBindingSafetyGateProvider = Provider<AccountBindingSafetyGate>((
+  ref,
+) {
   final repo = ref.watch(accountRepositoryProvider);
   final usageAnalyzer = ref.watch(accountUsageAnalyzerProvider);
   return AccountBindingSafetyGate(
@@ -36,4 +40,3 @@ final accountMappingResolverProvider = Provider<AccountMappingResolver>((ref) {
     initRepository: initRepo,
   );
 });
-

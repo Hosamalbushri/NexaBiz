@@ -6898,4 +6898,99 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cashRegisterNoReadyRegisters =>
       'No accounting-ready cash registers available. Please link a register first.';
+
+  @override
+  String get setupAdminSuccess => 'System administrator set up successfully';
+
+  @override
+  String get setupAlreadyCompleted => 'Setup already completed.';
+
+  @override
+  String get setupAdminTitle => 'System Admin Setup';
+
+  @override
+  String get setupStepLanguage => 'Language';
+
+  @override
+  String get setupStepAdmin => 'System Admin';
+
+  @override
+  String get setupStepConfirm => 'Confirm';
+
+  @override
+  String get setupLanguageArabic => 'Arabic';
+
+  @override
+  String get setupLanguageArabicSubtitle => 'Arabic (RTL)';
+
+  @override
+  String get setupLanguageEnglish => 'English';
+
+  @override
+  String get setupLanguageEnglishSubtitle => 'English (LTR)';
+
+  @override
+  String get setupAdminAccountTitle => 'System Administrator Account';
+
+  @override
+  String get setupAdminAccountSubtitle =>
+      'Create the primary system administrator account';
+
+  @override
+  String get setupAdminNameLabel => 'Admin Name *';
+
+  @override
+  String get setupAdminNameHint => 'e.g. System Admin';
+
+  @override
+  String get setupAdminNameRequired => 'Admin name is required';
+
+  @override
+  String get setupEmailLabel => 'Email *';
+
+  @override
+  String get setupEmailRequired => 'Email is required';
+
+  @override
+  String get setupEmailInvalid => 'Invalid email address';
+
+  @override
+  String get setupPasswordLabel => 'Password * (8+ chars)';
+
+  @override
+  String get setupPasswordRequired => 'Password is required';
+
+  @override
+  String get setupPasswordMinLength => 'Min 8 characters';
+
+  @override
+  String get setupConfirmPasswordLabel => 'Confirm Password *';
+
+  @override
+  String get setupConfirmPasswordRequired => 'Confirm password is required';
+
+  @override
+  String get setupPasswordsMismatch => 'Passwords do not match';
+
+  @override
+  String get setupConfirmTitle => 'Confirm System Setup';
+
+  @override
+  String get setupTargetRoleLabel => 'Target Role';
+
+  @override
+  String get setupTargetRoleValue => 'System Administrator';
+
+  @override
+  String get setupConfirmNote =>
+      'System setup will initialize the primary administrator account. No company or membership is created during this step.';
+
+  @override
+  String get setupInitializeButton => 'Initialize System';
+
+  @override
+  String get setupBackButton => 'Back';
+
+  @override
+  String get setupNextButton => 'Next';
 }

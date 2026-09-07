@@ -42,7 +42,8 @@ class AppReportEntitySearchField extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isArabic = l10n.localeName == 'ar';
 
-    final title = selectedTitle ??
+    final title =
+        selectedTitle ??
         (selectedAccount == null
             ? null
             : '${selectedAccount.accountCode} — ${selectedAccount.name}');
@@ -92,19 +93,21 @@ class AppReportEntitySearchField extends StatelessWidget {
     final title = selectedProduct != null
         ? '${selectedProduct.itemCode} — ${selectedProduct.name}'
         : (selectedProductCode != null && selectedProductCode.isNotEmpty
-            ? (selectedProductName != null && selectedProductName.isNotEmpty
-                ? '$selectedProductCode — $selectedProductName'
-                : selectedProductCode)
-            : null);
+              ? (selectedProductName != null && selectedProductName.isNotEmpty
+                    ? '$selectedProductCode — $selectedProductName'
+                    : selectedProductCode)
+              : null);
 
-    final subtitle = selectedProduct?.barcode == null ||
-            selectedProduct!.barcode!.isEmpty
+    final subtitle =
+        selectedProduct?.barcode == null || selectedProduct!.barcode!.isEmpty
         ? null
         : 'الباركود: ${selectedProduct.barcode}';
 
     return AppReportEntitySearchField(
       key: key,
-      label: customLabel ?? (isArabic ? 'الصنف / المنتج المستهدف' : 'Target Product'),
+      label:
+          customLabel ??
+          (isArabic ? 'الصنف / المنتج المستهدف' : 'Target Product'),
       hintText: isArabic
           ? 'اضغط هنا للبحث والتحديد في دليل المنتجات...'
           : 'Tap to search product catalog...',
@@ -112,7 +115,9 @@ class AppReportEntitySearchField extends StatelessWidget {
       selectedTitle: title,
       selectedSubtitle: subtitle,
       isRequired: isRequired,
-      onClear: (selectedProduct == null && (selectedProductCode == null || selectedProductCode.isEmpty))
+      onClear:
+          (selectedProduct == null &&
+              (selectedProductCode == null || selectedProductCode.isEmpty))
           ? null
           : (onClear ?? () => onProductSelected(null)),
       onTap: () async {
@@ -319,7 +324,9 @@ class AppReportEntitySearchField extends StatelessWidget {
                                 Text(
                                   selectedSubtitle!,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
+                                    color: scheme.onSurfaceVariant.withValues(
+                                      alpha: 0.85,
+                                    ),
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -332,7 +339,9 @@ class AppReportEntitySearchField extends StatelessWidget {
                         : Text(
                             hintText,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                              color: scheme.onSurfaceVariant.withValues(
+                                alpha: 0.8,
+                              ),
                               fontWeight: FontWeight.w600,
                               fontSize: 12.5,
                             ),

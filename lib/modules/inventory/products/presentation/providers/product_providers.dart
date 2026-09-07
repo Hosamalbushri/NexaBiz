@@ -129,9 +129,7 @@ final productExcelImportDatasourceProvider =
 
 /// Lightweight invalidation token — avoids reloading the full catalog stream
 /// on every products list rebuild / scroll frame.
-final productsRevisionProvider = StateProvider.autoDispose<int>(
-  (ref) => 0,
-);
+final productsRevisionProvider = StateProvider.autoDispose<int>((ref) => 0);
 
 void bumpProductsRevision(Ref ref) {
   ref.read(productsRevisionProvider.notifier).state++;
@@ -212,8 +210,8 @@ class ProductsViewModeController
   ProductsViewModeController({
     required SettingsRepository repository,
     this.companyId,
-  })  : _repository = repository,
-        super(const AsyncValue.loading()) {
+  }) : _repository = repository,
+       super(const AsyncValue.loading()) {
     _load();
   }
 

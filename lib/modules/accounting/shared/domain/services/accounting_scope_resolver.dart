@@ -4,12 +4,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
 
-enum AccountingScopeStatus {
-  ready,
-  notConfigured,
-  configuredEmpty,
-  invalid,
-}
+enum AccountingScopeStatus { ready, notConfigured, configuredEmpty, invalid }
 
 class AccountingScopeResult {
   final AccountRole role;
@@ -46,7 +41,8 @@ class AccountingScopeResolver {
     required AccountRole role,
   }) async {
     final companyConfig = await initRepository?.getAccountingConfig();
-    final configuredKey = companyConfig?.bindingTargets[role]?.activeUuid ??
+    final configuredKey =
+        companyConfig?.bindingTargets[role]?.activeUuid ??
         companyConfig?.accountMappings[role]?.trim();
 
     if (configuredKey == null || configuredKey.isEmpty) {
@@ -57,14 +53,16 @@ class AccountingScopeResolver {
       );
     }
 
-    final configuredAccount = await accountRepository.getByUuid(configuredKey) ??
+    final configuredAccount =
+        await accountRepository.getByUuid(configuredKey) ??
         await accountRepository.getByAccountCode(configuredKey);
 
     if (configuredAccount == null) {
       return AccountingScopeResult(
         role: role,
         status: AccountingScopeStatus.invalid,
-        errorMessage: 'Configured account not found in Chart of Accounts: $configuredKey',
+        errorMessage:
+            'Configured account not found in Chart of Accounts: $configuredKey',
       );
     }
 
@@ -74,7 +72,8 @@ class AccountingScopeResolver {
       return AccountingScopeResult(
         role: role,
         status: AccountingScopeStatus.invalid,
-        errorMessage: 'Cross-company account assignment rejected for company: $companyId',
+        errorMessage:
+            'Cross-company account assignment rejected for company: $companyId',
       );
     }
 
@@ -82,7 +81,8 @@ class AccountingScopeResolver {
       return AccountingScopeResult(
         role: role,
         status: AccountingScopeStatus.invalid,
-        errorMessage: 'Configured account is inactive or archived: ${configuredAccount.name}',
+        errorMessage:
+            'Configured account is inactive or archived: ${configuredAccount.name}',
       );
     }
 
@@ -91,12 +91,15 @@ class AccountingScopeResolver {
       return AccountingScopeResult(
         role: role,
         status: AccountingScopeStatus.invalid,
-        errorMessage: 'Account type mismatch for ${role.name}. Expected $expectedType, got ${configuredAccount.accountType}',
+        errorMessage:
+            'Account type mismatch for ${role.name}. Expected $expectedType, got ${configuredAccount.accountType}',
       );
     }
 
     if (configuredAccount.isGroup) {
-      final allAccounts = await accountRepository.getAll(includeInactive: false);
+      final allAccounts = await accountRepository.getAll(
+        includeInactive: false,
+      );
       final byId = <String, Account>{for (final a in allAccounts) a.uuid: a};
       final descendants = <Account>[];
 
@@ -124,7 +127,8 @@ class AccountingScopeResolver {
           role: role,
           status: AccountingScopeStatus.configuredEmpty,
           parentAccount: configuredAccount,
-          errorMessage: 'No active posting accounts found under scope ${configuredAccount.name}',
+          errorMessage:
+              'No active posting accounts found under scope ${configuredAccount.name}',
         );
       }
 

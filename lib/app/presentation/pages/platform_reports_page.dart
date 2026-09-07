@@ -16,7 +16,6 @@ import '../../theme/app_breakpoints.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_shadows.dart';
 import '../../theme/app_spacing.dart';
-import 'module_unit_reports_page.dart';
 
 /// Dynamic platform reports hub — renders module report cards directly.
 ///
@@ -39,7 +38,8 @@ class PlatformReportsPage extends ConsumerWidget {
     final reportsModule = registry.findById('reports');
 
     // Extract unique module IDs configured within ReportsModule
-    final moduleIdsWithReports = (isReportsModuleActive && reportsModule != null)
+    final moduleIdsWithReports =
+        (isReportsModuleActive && reportsModule != null)
         ? reportsModule.reportCategories.map((c) => c.moduleId).toSet()
         : <String>{};
 
@@ -68,52 +68,59 @@ class PlatformReportsPage extends ConsumerWidget {
           : AppContentConstraint(
               child: ListView(
                 padding: AppConstants.pageInsets(context),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: Text(
-                    l10n.selectModuleReportsPrompt,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: Text(
+                      l10n.selectModuleReportsPrompt,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = AppBreakpoints.isTablet(constraints.maxWidth) ||
-                        AppBreakpoints.isDesktop(constraints.maxWidth);
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide =
+                          AppBreakpoints.isTablet(constraints.maxWidth) ||
+                          AppBreakpoints.isDesktop(constraints.maxWidth);
 
-                    if (isWide) {
-                      return GridView.builder(
+                      if (isWide) {
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: AppSpacing.md,
+                                mainAxisSpacing: AppSpacing.md,
+                                childAspectRatio: 2.6,
+                              ),
+                          itemCount: modulesWithReports.length,
+                          itemBuilder: (context, index) {
+                            return _ModuleReportCard(
+                              module: modulesWithReports[index],
+                            );
+                          },
+                        );
+                      }
+
+                      return ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: AppSpacing.md,
-                          mainAxisSpacing: AppSpacing.md,
-                          childAspectRatio: 2.6,
-                        ),
                         itemCount: modulesWithReports.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: AppSpacing.sm),
                         itemBuilder: (context, index) {
-                          return _ModuleReportCard(module: modulesWithReports[index]);
+                          return _ModuleReportCard(
+                            module: modulesWithReports[index],
+                          );
                         },
                       );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: modulesWithReports.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) {
-                        return _ModuleReportCard(module: modulesWithReports[index]);
-                      },
-                    );
-                  },
-                ),
-              ],
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
     );
   }
 }
@@ -131,7 +138,8 @@ class _ModuleReportCard extends ConsumerWidget {
     final title = module.label(context);
 
     final reportsModule = ref.watch(moduleRegistryProvider).findById('reports');
-    final moduleCategories = reportsModule?.reportCategories
+    final moduleCategories =
+        reportsModule?.reportCategories
             .where((c) => c.moduleId == module.id)
             .toList() ??
         const [];
@@ -141,7 +149,8 @@ class _ModuleReportCard extends ConsumerWidget {
       (sum, cat) => sum + cat.reports.length,
     );
 
-    final subtitle = module.description(context) ??
+    final subtitle =
+        module.description(context) ??
         (l10n.localeName == 'ar'
             ? '$totalReports تقارير متاحة'
             : '$totalReports reports available');
@@ -152,11 +161,7 @@ class _ModuleReportCard extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ModuleUnitReportsPage(moduleId: module.id),
-            ),
-          );
+          context.push(AppRoutes.moduleReports(module.id));
         },
         child: Ink(
           decoration: BoxDecoration(
@@ -209,7 +214,10 @@ class _ModuleReportCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.pill),

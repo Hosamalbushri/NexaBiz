@@ -42,7 +42,10 @@ class MockRecoverableEntityHandler implements SyncRecoverableEntityHandler {
   }) async {}
 
   @override
-  Future<void> markLocalConflict({required String entityId, String? message}) async {}
+  Future<void> markLocalConflict({
+    required String entityId,
+    String? message,
+  }) async {}
 
   @override
   Future<void> confirmPull() async {}
@@ -51,14 +54,17 @@ class MockRecoverableEntityHandler implements SyncRecoverableEntityHandler {
   Future<void> abandonPull() async {}
 
   @override
-  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async => null;
+  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async =>
+      null;
 
   @override
   Future<List<SyncOperation>> findOrphanedPendingOperations(
     Set<String> queuedEntityIds,
   ) async {
     return orphanedOps
-        .where((op) => !queuedEntityIds.contains('${op.entityType}:${op.entityId}'))
+        .where(
+          (op) => !queuedEntityIds.contains('${op.entityType}:${op.entityId}'),
+        )
         .toList();
   }
 }
@@ -105,90 +111,116 @@ void main() {
     }
   });
 
-  test('Invariant 1: Remote pull applying payload does NOT mutate outbound SyncQueue', () async {
-    final handler = MockRecoverableEntityHandler(entityType: 'customer', orphanedOps: []);
-    await handler.applyRemoteChange(
-      SyncRemoteChange(
-        entityId: 'cust-100',
-        version: 2,
+  test(
+    'Invariant 1: Remote pull applying payload does NOT mutate outbound SyncQueue',
+    () async {
+      final handler = MockRecoverableEntityHandler(
+        entityType: 'customer',
+        orphanedOps: [],
+      );
+      await handler.applyRemoteChange(
+        SyncRemoteChange(
+          entityId: 'cust-100',
+          version: 2,
+          updatedAt: DateTime.utc(2026, 8, 23),
+          payload: {'name': 'Server Customer'},
+        ),
+      );
+
+      final queueContents = await queue.all();
+      expect(
+        queueContents,
+        isEmpty,
+        reason: 'Remote data must never generate outbound queue entries',
+      );
+    },
+  );
+
+  test(
+    'Joining Device Setup Safety: ChartBootstrapPreferRemote suppresses local default chart seeding',
+    () async {
+      await settingsRepo.saveChartBootstrapPreferRemote(true);
+      await settingsRepo.saveDeviceInitialization(
+        mode: DeviceInitializationMode.server,
+        initialized: false,
+      );
+
+      final preferRemote = await settingsRepo.loadChartBootstrapPreferRemote();
+      final deviceRecord = await settingsRepo.loadDeviceInitialization();
+
+      expect(preferRemote, isTrue);
+      expect(deviceRecord.mode, DeviceInitializationMode.server);
+      expect(await queue.all(), isEmpty);
+    },
+  );
+
+  test(
+    'SyncQueueRecoveryService reconstructs missing operations for orphaned pending records',
+    () async {
+      final orphan = SyncOperation(
+        id: 'op-orphan-1',
+        entityType: 'account',
+        entityId: 'acc-orphaned-uuid',
+        type: SyncOperationType.create,
+        status: SyncStatus.pending,
+        payload: {'uuid': 'acc-orphaned-uuid', 'accountCode': '1001'},
+        createdAt: DateTime.utc(2026, 8, 23),
         updatedAt: DateTime.utc(2026, 8, 23),
-        payload: {'name': 'Server Customer'},
-      ),
-    );
+      );
 
-    final queueContents = await queue.all();
-    expect(queueContents, isEmpty, reason: 'Remote data must never generate outbound queue entries');
-  });
+      final handler = MockRecoverableEntityHandler(
+        entityType: 'account',
+        orphanedOps: [orphan],
+      );
+      final recoveryService = SyncQueueRecoveryService(queue: queue);
 
-  test('Joining Device Setup Safety: ChartBootstrapPreferRemote suppresses local default chart seeding', () async {
-    await settingsRepo.saveChartBootstrapPreferRemote(true);
-    await settingsRepo.saveDeviceInitialization(
-      mode: DeviceInitializationMode.server,
-      initialized: false,
-    );
+      expect(await queue.all(), isEmpty);
+      final count = await recoveryService.recoverOrphanedOperations([handler]);
+      expect(count, equals(1));
 
-    final preferRemote = await settingsRepo.loadChartBootstrapPreferRemote();
-    final deviceRecord = await settingsRepo.loadDeviceInitialization();
+      final queueOps = await queue.all();
+      expect(queueOps.length, equals(1));
+      expect(queueOps.first.id, equals('op-orphan-1'));
+      expect(queueOps.first.entityId, equals('acc-orphaned-uuid'));
+    },
+  );
 
-    expect(preferRemote, isTrue);
-    expect(deviceRecord.mode, DeviceInitializationMode.server);
-    expect(await queue.all(), isEmpty);
-  });
+  test(
+    'Operation Identity: operation_id remains stable across failure retries',
+    () async {
+      final op = SyncOperation(
+        id: 'fixed-op-uuid-1234',
+        entityType: 'product',
+        entityId: 'prod-55',
+        type: SyncOperationType.create,
+        status: SyncStatus.pending,
+        payload: {'uuid': 'prod-55', 'name': 'Widget'},
+        createdAt: DateTime.utc(2026, 8, 23),
+        updatedAt: DateTime.utc(2026, 8, 23),
+      );
+      await queue.enqueue(op);
 
-  test('SyncQueueRecoveryService reconstructs missing operations for orphaned pending records', () async {
-    final orphan = SyncOperation(
-      id: 'op-orphan-1',
-      entityType: 'account',
-      entityId: 'acc-orphaned-uuid',
-      type: SyncOperationType.create,
-      status: SyncStatus.pending,
-      payload: {'uuid': 'acc-orphaned-uuid', 'accountCode': '1001'},
-      createdAt: DateTime.utc(2026, 8, 23),
-      updatedAt: DateTime.utc(2026, 8, 23),
-    );
+      final initial = (await queue.all()).first;
+      expect(initial.id, equals('fixed-op-uuid-1234'));
+      expect(initial.attemptCount, equals(0));
 
-    final handler = MockRecoverableEntityHandler(entityType: 'account', orphanedOps: [orphan]);
-    final recoveryService = SyncQueueRecoveryService(queue: queue);
+      // Simulate retry failure update
+      final failedOp = initial.copyWith(
+        status: SyncStatus.failed,
+        attemptCount: 1,
+        lastError: 'Network timeout',
+      );
+      await queue.update(failedOp);
 
-    expect(await queue.all(), isEmpty);
-    final count = await recoveryService.recoverOrphanedOperations([handler]);
-    expect(count, equals(1));
-
-    final queueOps = await queue.all();
-    expect(queueOps.length, equals(1));
-    expect(queueOps.first.id, equals('op-orphan-1'));
-    expect(queueOps.first.entityId, equals('acc-orphaned-uuid'));
-  });
-
-  test('Operation Identity: operation_id remains stable across failure retries', () async {
-    final op = SyncOperation(
-      id: 'fixed-op-uuid-1234',
-      entityType: 'product',
-      entityId: 'prod-55',
-      type: SyncOperationType.create,
-      status: SyncStatus.pending,
-      payload: {'uuid': 'prod-55', 'name': 'Widget'},
-      createdAt: DateTime.utc(2026, 8, 23),
-      updatedAt: DateTime.utc(2026, 8, 23),
-    );
-    await queue.enqueue(op);
-
-    final initial = (await queue.all()).first;
-    expect(initial.id, equals('fixed-op-uuid-1234'));
-    expect(initial.attemptCount, equals(0));
-
-    // Simulate retry failure update
-    final failedOp = initial.copyWith(
-      status: SyncStatus.failed,
-      attemptCount: 1,
-      lastError: 'Network timeout',
-    );
-    await queue.update(failedOp);
-
-    final retried = (await queue.all()).first;
-    expect(retried.id, equals('fixed-op-uuid-1234'), reason: 'operation_id MUST remain stable on retry');
-    expect(retried.attemptCount, equals(1));
-  });
+      final retried = (await queue.all()).first;
+      expect(
+        retried.id,
+        equals('fixed-op-uuid-1234'),
+        reason: 'operation_id MUST remain stable on retry',
+      );
+      expect(retried.attemptCount, equals(1));
+    },
+  );
 
   test('Cursor Safety: abandonPull does not commit cursor', () async {
     await cursorStore.write('product', 42);
@@ -197,25 +229,36 @@ void main() {
 
     // Simulate failed pull abandoning transaction
     final cursorAfter = await cursorStore.read('product');
-    expect(cursorAfter, equals(42), reason: 'Cursor must not advance on abandoned pull');
-  });
-
-  test('Concurrency Lock: SyncManager single-flight execution prevents duplicate pass', () async {
-    final manager = SyncManager(
-      queue: queue,
-      connectivity: connectivity,
-      clock: () => DateTime.utc(2026, 8, 23, 12),
+    expect(
+      cursorAfter,
+      equals(42),
+      reason: 'Cursor must not advance on abandoned pull',
     );
-    await manager.start(enabled: true);
-
-    final pass1 = manager.syncNow(notify: false);
-    final pass2 = manager.syncNow(notify: false);
-
-    final results = await Future.wait([pass1, pass2]);
-    final outcomes = results.map((r) => r.outcome).toList();
-
-    expect(outcomes.contains(SyncPassOutcome.idle), isTrue,
-        reason: 'Second concurrent syncNow call must return idle');
-    await manager.dispose();
   });
+
+  test(
+    'Concurrency Lock: SyncManager single-flight execution prevents duplicate pass',
+    () async {
+      final manager = SyncManager(
+        queue: queue,
+        connectivity: connectivity,
+        clock: () => DateTime.utc(2026, 8, 23, 12),
+        readCompanyId: () => 'cmp-1',
+      );
+      await manager.start(enabled: true);
+
+      final pass1 = manager.syncNow(notify: false);
+      final pass2 = manager.syncNow(notify: false);
+
+      final results = await Future.wait([pass1, pass2]);
+      final outcomes = results.map((r) => r.outcome).toList();
+
+      expect(
+        outcomes.contains(SyncPassOutcome.idle),
+        isTrue,
+        reason: 'Second concurrent syncNow call must return idle',
+      );
+      await manager.dispose();
+    },
+  );
 }

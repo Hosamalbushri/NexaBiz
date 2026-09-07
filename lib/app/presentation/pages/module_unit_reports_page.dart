@@ -15,10 +15,7 @@ import '../../theme/app_spacing.dart';
 
 /// Screen displaying sub-module unit reports for a selected module.
 class ModuleUnitReportsPage extends ConsumerWidget {
-  const ModuleUnitReportsPage({
-    super.key,
-    required this.moduleId,
-  });
+  const ModuleUnitReportsPage({super.key, required this.moduleId});
 
   final String moduleId;
 
@@ -33,7 +30,8 @@ class ModuleUnitReportsPage extends ConsumerWidget {
 
     // Categories are centrally owned by ReportsModule and filtered by moduleId
     final reportsModule = registry.findById('reports');
-    final categories = reportsModule?.reportCategories
+    final categories =
+        reportsModule?.reportCategories
             .where((c) => c.moduleId == moduleId)
             .toList() ??
         const [];
@@ -43,10 +41,7 @@ class ModuleUnitReportsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: moduleTitle,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: moduleTitle, showBackButton: true),
       body: categories.isEmpty
           ? Center(
               child: AppEmptyState(
@@ -76,7 +71,9 @@ class ModuleUnitReportsPage extends ConsumerWidget {
                         height: 52,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: colorScheme.primaryContainer.withValues(alpha: 0.7),
+                          color: colorScheme.primaryContainer.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                         child: Icon(
                           module?.icon ?? Icons.assessment_outlined,
@@ -95,7 +92,8 @@ class ModuleUnitReportsPage extends ConsumerWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (moduleSubtitle != null && moduleSubtitle.isNotEmpty) ...[
+                            if (moduleSubtitle != null &&
+                                moduleSubtitle.isNotEmpty) ...[
                               const SizedBox(height: 2),
                               Text(
                                 moduleSubtitle,
@@ -148,11 +146,7 @@ class _UnitReportCategorySection extends StatelessWidget {
                 color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.xs),
               ),
-              child: Icon(
-                category.icon,
-                size: 18,
-                color: colorScheme.primary,
-              ),
+              child: Icon(category.icon, size: 18, color: colorScheme.primary),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
@@ -195,7 +189,8 @@ class _UnitReportCategorySection extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         LayoutBuilder(
           builder: (context, constraints) {
-            final isWide = AppBreakpoints.isTablet(constraints.maxWidth) ||
+            final isWide =
+                AppBreakpoints.isTablet(constraints.maxWidth) ||
                 AppBreakpoints.isDesktop(constraints.maxWidth);
 
             if (isWide) {
@@ -278,8 +273,9 @@ class _ReportItemCard extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: (available ? colorScheme.primary : colorScheme.outline)
-                        .withValues(alpha: 0.12),
+                    color:
+                        (available ? colorScheme.primary : colorScheme.outline)
+                            .withValues(alpha: 0.12),
                   ),
                   child: Icon(
                     item.icon,
@@ -325,7 +321,10 @@ class _ReportItemCard extends StatelessWidget {
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(AppRadius.xs),

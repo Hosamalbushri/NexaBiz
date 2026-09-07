@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 
 class InventoryShortageDialog extends StatelessWidget {
-  const InventoryShortageDialog({
-    super.key,
-    required this.shortages,
-  });
+  const InventoryShortageDialog({super.key, required this.shortages});
 
   final List<StockShortageItem> shortages;
 

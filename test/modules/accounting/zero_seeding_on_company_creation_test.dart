@@ -30,29 +30,35 @@ void main() {
     }
   });
 
-  test('ensureDefaultChartSeeded does NOT seed accounts when company has 0 accounts', () async {
-    // 1. Initial state: zero accounts
-    final initialAccounts = await repo.getAll();
-    expect(initialAccounts, isEmpty);
+  test(
+    'ensureDefaultChartSeeded does NOT seed accounts when company has 0 accounts',
+    () async {
+      // 1. Initial state: zero accounts
+      final initialAccounts = await repo.getAll();
+      expect(initialAccounts, isEmpty);
 
-    // 2. Call ensureDefaultChartSeeded (simulates company creation / setup / page load)
-    await repo.ensureDefaultChartSeeded();
+      // 2. Call ensureDefaultChartSeeded (simulates company creation / setup / page load)
+      await repo.ensureDefaultChartSeeded();
 
-    // 3. Accounts MUST still be 0 (no automatic background seeding)
-    final afterEnsure = await repo.getAll();
-    expect(afterEnsure, isEmpty);
-  });
+      // 3. Accounts MUST still be 0 (no automatic background seeding)
+      final afterEnsure = await repo.getAll();
+      expect(afterEnsure, isEmpty);
+    },
+  );
 
-  test('seedDefaultChart ONLY seeds accounts when explicitly invoked by user', () async {
-    // 1. Initial state: zero accounts
-    expect(await repo.getAll(), isEmpty);
+  test(
+    'seedDefaultChart ONLY seeds accounts when explicitly invoked by user',
+    () async {
+      // 1. Initial state: zero accounts
+      expect(await repo.getAll(), isEmpty);
 
-    // 2. Explicit user action: click "Seed Default Chart"
-    await repo.seedDefaultChart();
+      // 2. Explicit user action: click "Seed Default Chart"
+      await repo.seedDefaultChart();
 
-    // 3. Accounts generated only after explicit invocation
-    final accounts = await repo.getAll();
-    expect(accounts.isNotEmpty, true);
-    expect(accounts.length, greaterThanOrEqualTo(40));
-  });
+      // 3. Accounts generated only after explicit invocation
+      final accounts = await repo.getAll();
+      expect(accounts.isNotEmpty, true);
+      expect(accounts.length, greaterThanOrEqualTo(40));
+    },
+  );
 }

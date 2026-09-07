@@ -20,10 +20,8 @@ final quickActionsProvider =
     });
 
 class QuickActionsController extends StateNotifier<AsyncValue<List<String>>> {
-  QuickActionsController({
-    required this._repository,
-    required this._registry,
-  })  : super(const AsyncValue.loading()) {
+  QuickActionsController({required this._repository, required this._registry})
+    : super(const AsyncValue.loading()) {
     _load();
   }
 

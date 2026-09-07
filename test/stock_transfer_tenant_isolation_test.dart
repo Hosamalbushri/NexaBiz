@@ -22,13 +22,19 @@ void main() {
 
     repoCompA = StockTransferRepositoryImpl(
       db: db,
-      costLayerService: CostLayerServiceImpl(db: db, readCompanyId: () => companyA),
+      costLayerService: CostLayerServiceImpl(
+        db: db,
+        readCompanyId: () => companyA,
+      ),
       readCompanyId: () => companyA,
     );
 
     repoCompB = StockTransferRepositoryImpl(
       db: db,
-      costLayerService: CostLayerServiceImpl(db: db, readCompanyId: () => companyB),
+      costLayerService: CostLayerServiceImpl(
+        db: db,
+        readCompanyId: () => companyB,
+      ),
       readCompanyId: () => companyB,
     );
   });
@@ -174,7 +180,9 @@ void main() {
       final now = DateTime.now().toUtc();
 
       // Insert warehouse stock record directly for Company B
-      await db.into(db.productWarehouseStocks).insert(
+      await db
+          .into(db.productWarehouseStocks)
+          .insert(
             ProductWarehouseStocksCompanion(
               uuid: const Value('wh-stock-comp-b'),
               itemCode: const Value('ITEM-001'),
@@ -216,12 +224,14 @@ void main() {
       await repoCompA.saveTransfer(trA);
 
       // Verify Company B's stock record was NOT modified and remains 100.0
-      final stockCompB = await (db.select(db.productWarehouseStocks)
-            ..where((tbl) =>
-                tbl.itemCode.equals('ITEM-001') &
-                tbl.warehouseId.equals('wh-main') &
-                tbl.companyId.equals(companyB)))
-          .getSingle();
+      final stockCompB =
+          await (db.select(db.productWarehouseStocks)..where(
+                (tbl) =>
+                    tbl.itemCode.equals('ITEM-001') &
+                    tbl.warehouseId.equals('wh-main') &
+                    tbl.companyId.equals(companyB),
+              ))
+              .getSingle();
 
       expect(stockCompB.onHandQty, 100.0);
     });
@@ -230,7 +240,9 @@ void main() {
       final now = DateTime.now().toUtc();
 
       // Seed warehouse stocks for both companies with identical itemCode and warehouseId
-      await db.into(db.productWarehouseStocks).insert(
+      await db
+          .into(db.productWarehouseStocks)
+          .insert(
             ProductWarehouseStocksCompanion(
               uuid: const Value('stock-a'),
               itemCode: const Value('SHARED-ITEM-CODE'),
@@ -243,7 +255,9 @@ void main() {
             ),
           );
 
-      await db.into(db.productWarehouseStocks).insert(
+      await db
+          .into(db.productWarehouseStocks)
+          .insert(
             ProductWarehouseStocksCompanion(
               uuid: const Value('stock-b'),
               itemCode: const Value('SHARED-ITEM-CODE'),
@@ -285,22 +299,26 @@ void main() {
       await repoCompA.saveTransfer(trA);
 
       // Verify Company A's balance decreased by 20 (50 -> 30)
-      final stockA = await (db.select(db.productWarehouseStocks)
-            ..where((tbl) =>
-                tbl.itemCode.equals('SHARED-ITEM-CODE') &
-                tbl.warehouseId.equals('WH-SHARED') &
-                tbl.companyId.equals(companyA)))
-          .getSingle();
+      final stockA =
+          await (db.select(db.productWarehouseStocks)..where(
+                (tbl) =>
+                    tbl.itemCode.equals('SHARED-ITEM-CODE') &
+                    tbl.warehouseId.equals('WH-SHARED') &
+                    tbl.companyId.equals(companyA),
+              ))
+              .getSingle();
 
       expect(stockA.onHandQty, 30.0);
 
       // Verify Company B's balance remained completely unchanged at 200.0!
-      final stockB = await (db.select(db.productWarehouseStocks)
-            ..where((tbl) =>
-                tbl.itemCode.equals('SHARED-ITEM-CODE') &
-                tbl.warehouseId.equals('WH-SHARED') &
-                tbl.companyId.equals(companyB)))
-          .getSingle();
+      final stockB =
+          await (db.select(db.productWarehouseStocks)..where(
+                (tbl) =>
+                    tbl.itemCode.equals('SHARED-ITEM-CODE') &
+                    tbl.warehouseId.equals('WH-SHARED') &
+                    tbl.companyId.equals(companyB),
+              ))
+              .getSingle();
 
       expect(stockB.onHandQty, 200.0);
     });

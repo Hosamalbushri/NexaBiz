@@ -25,66 +25,80 @@ void main() {
       registerReceiptsPaymentsSetup(registry);
     });
 
-    Widget createTestableWidget(Widget child, {Locale locale = const Locale('ar'), CentralSetupRegistry? customRegistry}) {
+    Widget createTestableWidget(
+      Widget child, {
+      Locale locale = const Locale('ar'),
+      CentralSetupRegistry? customRegistry,
+    }) {
       return ProviderScope(
         overrides: [
-          centralSetupRegistryProvider.overrideWithValue(customRegistry ?? registry),
+          centralSetupRegistryProvider.overrideWithValue(
+            customRegistry ?? registry,
+          ),
           accountsProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: MaterialApp(
           locale: locale,
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: Scaffold(
-            body: child,
-          ),
+          home: Scaffold(body: child),
         ),
       );
     }
 
-    testWidgets('1. CentralSetupCenterWidget renders registered packages dynamically', (tester) async {
-      await tester.pumpWidget(createTestableWidget(const CentralSetupCenterWidget()));
-      await tester.pumpAndSettle();
+    testWidgets(
+      '1. CentralSetupCenterWidget renders registered packages dynamically',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestableWidget(const CentralSetupCenterWidget()),
+        );
+        await tester.pumpAndSettle();
 
-      // Verify registered packages are displayed
-      expect(find.text('إعدادات المبيعات'), findsWidgets);
-      expect(find.text('sales'), findsWidgets);
-    });
+        // Verify registered packages are displayed
+        expect(find.text('إعدادات المبيعات'), findsWidgets);
+        expect(find.text('sales'), findsWidgets);
+      },
+    );
 
-    testWidgets('2. Displays NOT CONFIGURED status badge for unbound required account fields', (tester) async {
-      const field = SetupField(
-        id: 'sales_account',
-        sectionId: 'account_requirements',
-        key: 'sales_account',
-        labelAr: 'حساب مبيعات البضائع (إيرادات)',
-        labelEn: 'Sales Revenue Account',
-        fieldType: SetupFieldType.reference,
-        isRequired: true,
-      );
+    testWidgets(
+      '2. Displays NOT CONFIGURED status badge for unbound required account fields',
+      (tester) async {
+        const field = SetupField(
+          id: 'sales_account',
+          sectionId: 'account_requirements',
+          key: 'sales_account',
+          labelAr: 'حساب مبيعات البضائع (إيرادات)',
+          labelEn: 'Sales Revenue Account',
+          fieldType: SetupFieldType.reference,
+          isRequired: true,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ar'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: Scaffold(
-            body: SetupFieldRenderer(
-              field: field,
-              currentValue: null,
-              onChanged: (_) {},
-              isArabic: true,
-              availableAccounts: const [],
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ar'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: Scaffold(
+              body: SetupFieldRenderer(
+                field: field,
+                currentValue: null,
+                onChanged: (_) {},
+                isArabic: true,
+                availableAccounts: const [],
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('غير مهيأ'), findsOneWidget);
-      expect(find.text('NOT CONFIGURED'), findsNothing);
-    });
+        expect(find.text('غير مهيأ'), findsOneWidget);
+        expect(find.text('NOT CONFIGURED'), findsNothing);
+      },
+    );
 
-    testWidgets('3. Renders CONFIGURED badge when account reference is bound', (tester) async {
+    testWidgets('3. Renders CONFIGURED badge when account reference is bound', (
+      tester,
+    ) async {
       const field = SetupField(
         id: 'sales_account',
         sectionId: 'account_requirements',
@@ -107,7 +121,11 @@ void main() {
               onChanged: (_) {},
               isArabic: true,
               availableAccounts: const [
-                SetupAccountOption(uuid: 'uuid_account_123', code: '4101', name: 'مبيعات عامة'),
+                SetupAccountOption(
+                  uuid: 'uuid_account_123',
+                  code: '4101',
+                  name: 'مبيعات عامة',
+                ),
               ],
             ),
           ),
@@ -119,7 +137,9 @@ void main() {
       expect(find.text('4101 - مبيعات عامة'), findsOneWidget);
     });
 
-    testWidgets('4. SetupSectionCard renders section fields cleanly', (tester) async {
+    testWidgets('4. SetupSectionCard renders section fields cleanly', (
+      tester,
+    ) async {
       const section = SetupSection(
         id: 'policies',
         packageId: 'sales',
@@ -161,7 +181,9 @@ void main() {
       expect(find.text('السماح بتعديل أسعار البيع للفاتورة'), findsOneWidget);
     });
 
-    testWidgets('5. PackageSetupView displays status badge and section cards', (tester) async {
+    testWidgets('5. PackageSetupView displays status badge and section cards', (
+      tester,
+    ) async {
       final setupDef = salesPackageSetupDefinition;
 
       await tester.pumpWidget(
@@ -188,7 +210,9 @@ void main() {
       expect(find.text('ربط حسابات المبيعات'), findsOneWidget);
     });
 
-    testWidgets('6. Empty registry shows clean empty state without crash', (tester) async {
+    testWidgets('6. Empty registry shows clean empty state without crash', (
+      tester,
+    ) async {
       final emptyRegistry = CentralSetupRegistry();
 
       await tester.pumpWidget(
@@ -199,7 +223,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('لا توجد حزم مسجلة في مركز الإعدادات المركزي'), findsOneWidget);
+      expect(
+        find.text('لا توجد حزم مسجلة في مركز الإعدادات المركزي'),
+        findsOneWidget,
+      );
     });
   });
 }

@@ -13,7 +13,8 @@ class ProductsSettingsPage extends ConsumerStatefulWidget {
   const ProductsSettingsPage({super.key});
 
   @override
-  ConsumerState<ProductsSettingsPage> createState() => _ProductsSettingsPageState();
+  ConsumerState<ProductsSettingsPage> createState() =>
+      _ProductsSettingsPageState();
 }
 
 class _ProductsSettingsPageState extends ConsumerState<ProductsSettingsPage> {
@@ -58,7 +59,11 @@ class _ProductsSettingsPageState extends ConsumerState<ProductsSettingsPage> {
                   _showSavedMessage(context, l10n);
                 },
                 secondary: const Icon(Icons.qr_code_2_rounded),
-                title: Text(l10n.localeName == 'ar' ? 'توليد الباركود تلقائياً' : 'Auto-Generate Barcode'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'توليد الباركود تلقائياً'
+                      : 'Auto-Generate Barcode',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'إنشاء باركود تسلسلي افتراضي عند إضافة منتج جديد بلا باركود'
@@ -69,7 +74,9 @@ class _ProductsSettingsPageState extends ConsumerState<ProductsSettingsPage> {
           ),
           const SizedBox(height: AppSpacing.md),
           SettingsGroupLabel(
-            l10n.localeName == 'ar' ? 'التسعير والكميات والضريبة' : 'Pricing, Quantities & Tax',
+            l10n.localeName == 'ar'
+                ? 'التسعير والكميات والضريبة'
+                : 'Pricing, Quantities & Tax',
           ),
           SettingsGroup(
             children: [
@@ -80,7 +87,11 @@ class _ProductsSettingsPageState extends ConsumerState<ProductsSettingsPage> {
                   _showSavedMessage(context, l10n);
                 },
                 secondary: const Icon(Icons.notifications_active_outlined),
-                title: Text(l10n.localeName == 'ar' ? 'تنبيهات نقص المخزون' : 'Low Stock Alerts'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'تنبيهات نقص المخزون'
+                      : 'Low Stock Alerts',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'إظهار تنبيه عند انخفاض رصيد المنتج عن الحد الأدنى'
@@ -94,7 +105,11 @@ class _ProductsSettingsPageState extends ConsumerState<ProductsSettingsPage> {
                   _showSavedMessage(context, l10n);
                 },
                 secondary: const Icon(Icons.pin_outlined),
-                title: Text(l10n.localeName == 'ar' ? 'السماح بالكميات الكسرية' : 'Allow Fractional Quantities'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'السماح بالكميات الكسرية'
+                      : 'Allow Fractional Quantities',
+                ),
                 subtitle: Text(
                   l10n.localeName == 'ar'
                       ? 'السماح بإدخال كميات كسور (مثل 1.5 كجم أو 2.25 متر)'
@@ -103,7 +118,11 @@ class _ProductsSettingsPageState extends ConsumerState<ProductsSettingsPage> {
               ),
               ListTile(
                 leading: const Icon(Icons.percent_rounded),
-                title: Text(l10n.localeName == 'ar' ? 'نسبة الضريبة الافتراضية' : 'Default Tax Rate'),
+                title: Text(
+                  l10n.localeName == 'ar'
+                      ? 'نسبة الضريبة الافتراضية'
+                      : 'Default Tax Rate',
+                ),
                 subtitle: Text('$_defaultTaxRate%'),
                 trailing: SizedBox(
                   width: 120,

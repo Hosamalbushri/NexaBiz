@@ -25,10 +25,10 @@ final centralSetupRegistryProvider = Provider<CentralSetupRegistry>((ref) {
   return registry;
 });
 
-
 /// Provider exposing all registered package setup definitions, sorted by sortOrder.
-final registeredPackageSetupsProvider =
-    Provider<List<PackageSetupDefinition>>((ref) {
+final registeredPackageSetupsProvider = Provider<List<PackageSetupDefinition>>((
+  ref,
+) {
   final registry = ref.watch(centralSetupRegistryProvider);
   return registry.getAll();
 });

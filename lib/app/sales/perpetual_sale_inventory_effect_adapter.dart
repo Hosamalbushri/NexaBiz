@@ -34,12 +34,15 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
           StockMovementLine(
             movementUuid: sale.uuid,
             movementType: 'issue',
-            itemCode: item.productCode.isNotEmpty ? item.productCode : item.productId,
+            itemCode: item.productCode.isNotEmpty
+                ? item.productCode
+                : item.productId,
             itemName: item.productName,
             mainQuantity: item.mainQuantity,
             subQuantity: item.subQuantity,
             quantity: item.quantity,
-            unitCost: 0.0, // Inventory cost is calculated by domain costing engine, NOT sales price
+            unitCost:
+                0.0, // Inventory cost is calculated by domain costing engine, NOT sales price
             totalCost: 0.0,
           ),
     ];
@@ -78,10 +81,14 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
       cashAccountId: sale.cashAccountId,
     );
 
-    final result = await _orchestrator.postSaleInvoice(sale: postingData, docRef: docRef);
+    final result = await _orchestrator.postSaleInvoice(
+      sale: postingData,
+      docRef: docRef,
+    );
 
     if (result is OrchestrationFailure) {
-      if (result.reason.contains('غير كافية') || result.reason.contains('نقص')) {
+      if (result.reason.contains('غير كافية') ||
+          result.reason.contains('نقص')) {
         throw SaleException(SaleException.insufficientStock, result.reason);
       }
       throw SaleException('posting_failed', result.reason);
@@ -115,7 +122,10 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
       cashAccountId: sale.cashAccountId,
     );
 
-    final result = await _orchestrator.unpostSaleInvoice(sale: postingData, docRef: docRef);
+    final result = await _orchestrator.unpostSaleInvoice(
+      sale: postingData,
+      docRef: docRef,
+    );
 
     if (result is OrchestrationFailure) {
       throw SaleException('unpost_failed', result.reason);

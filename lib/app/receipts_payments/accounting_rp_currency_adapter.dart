@@ -34,11 +34,7 @@ class AccountingRpCurrencyAdapter implements RpCurrencyPort {
       }
       seen.add(code);
       out.add(
-        RpCurrencyRef(
-          code: code,
-          rateToBase: rate.rateToBase,
-          isBase: false,
-        ),
+        RpCurrencyRef(code: code, rateToBase: rate.rateToBase, isBase: false),
       );
     }
     return out;

@@ -3,7 +3,6 @@ import '../ports/setup_account_lookup_port.dart';
 
 export '../../setup/domain/entities/account_binding_mode.dart';
 
-
 enum AccountRole {
   revenue,
   receivable,
@@ -60,8 +59,7 @@ enum AccountRole {
   }
 
   bool get isParentGroupBinding {
-    return defaultBindingMode == AccountBindingMode.parentAccountWithDescendants;
+    return defaultBindingMode ==
+        AccountBindingMode.parentAccountWithDescendants;
   }
 }
-
-

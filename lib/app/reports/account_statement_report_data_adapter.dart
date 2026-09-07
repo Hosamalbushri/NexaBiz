@@ -23,7 +23,9 @@ import '../settings/company/company_profile.dart';
 /// Implements both legacy [AccountStatementReportDataPort] and new SQL-native
 /// [PagedReportDataProvider] for keyset pagination.
 class AccountStatementReportDataAdapter
-    implements AccountStatementReportDataPort, PagedReportDataProvider<ReportRowData> {
+    implements
+        AccountStatementReportDataPort,
+        PagedReportDataProvider<ReportRowData> {
   const AccountStatementReportDataAdapter({
     required this.accounts,
     required this.currencyRates,
@@ -51,7 +53,9 @@ class AccountStatementReportDataAdapter
     final isPosted = context.postingScope == PostingScope.postedOnly
         ? true
         : (context.postingScope == PostingScope.unpostedOnly ? false : null);
-    final singleCurrency = context.currencyScope == 'ALL' ? null : context.currencyScope;
+    final singleCurrency = context.currencyScope == 'ALL'
+        ? null
+        : context.currencyScope;
 
     final moves = await journals.listMovementsForAccount(
       accountUuid: accountUuid,
@@ -100,7 +104,9 @@ class AccountStatementReportDataAdapter
     final isPosted = context.postingScope == PostingScope.postedOnly
         ? true
         : (context.postingScope == PostingScope.unpostedOnly ? false : null);
-    final singleCurrency = context.currencyScope == 'ALL' ? null : context.currencyScope;
+    final singleCurrency = context.currencyScope == 'ALL'
+        ? null
+        : context.currencyScope;
 
     AccountLedgerCursor? afterCursor;
     if (cursor != null) {
@@ -128,23 +134,25 @@ class AccountStatementReportDataAdapter
 
     final items = <ReportRowData>[];
     for (final m in moves) {
-      items.add(ReportRowData(
-        documentType: 'account_statement',
-        documentUuid: m.entryUuid,
-        values: {
-          'entryDate': dateFormat.format(m.entryDate),
-          'voucherNumber': m.voucherNumber,
-          'voucherType': m.voucherType,
-          'description': m.description,
-          'debit': currencyFormat.format(m.debit),
-          'credit': currencyFormat.format(m.credit),
-          'currencyCode': m.currencyCode,
-          'isPosted': m.isPosted ? 'مرحل' : 'غير مرحل',
-          'entryUuid': m.entryUuid,
-          'id': m.lineId.toString(),
-          'dateMs': m.entryDate.toUtc().millisecondsSinceEpoch.toString(),
-        },
-      ));
+      items.add(
+        ReportRowData(
+          documentType: 'account_statement',
+          documentUuid: m.entryUuid,
+          values: {
+            'entryDate': dateFormat.format(m.entryDate),
+            'voucherNumber': m.voucherNumber,
+            'voucherType': m.voucherType,
+            'description': m.description,
+            'debit': currencyFormat.format(m.debit),
+            'credit': currencyFormat.format(m.credit),
+            'currencyCode': m.currencyCode,
+            'isPosted': m.isPosted ? 'مرحل' : 'غير مرحل',
+            'entryUuid': m.entryUuid,
+            'id': m.lineId.toString(),
+            'dateMs': m.entryDate.toUtc().millisecondsSinceEpoch.toString(),
+          },
+        ),
+      );
     }
 
     ReportCursor? nextCursor;
@@ -206,8 +214,8 @@ class AccountStatementReportDataAdapter
       postingFilter: filter.postingScope == PostingScope.postedOnly
           ? AccountStatementPostingFilter.posted
           : (filter.postingScope == PostingScope.unpostedOnly
-              ? AccountStatementPostingFilter.unposted
-              : AccountStatementPostingFilter.all),
+                ? AccountStatementPostingFilter.unposted
+                : AccountStatementPostingFilter.all),
       labels: labels,
     );
   }

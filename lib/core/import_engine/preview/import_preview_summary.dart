@@ -64,7 +64,8 @@ class ImportPreviewSummary {
       for (final issue in r.issues) {
         if (issue.severity == ValidationSeverity.warning) {
           warningCount++;
-        } else if (issue.severity == ValidationSeverity.error || issue.severity == ValidationSeverity.fatal) {
+        } else if (issue.severity == ValidationSeverity.error ||
+            issue.severity == ValidationSeverity.fatal) {
           errorCount++;
         }
       }
@@ -105,15 +106,15 @@ class ImportPreviewSummary {
   }
 
   Map<String, dynamic> toJson() => {
-        'totalRows': totalRows,
-        'validRows': validRows,
-        'warnings': warnings,
-        'errors': errors,
-        'creates': creates,
-        'updates': updates,
-        'skips': skips,
-        'relationProblems': relationProblems,
-        'assignments': assignments,
-        'rows': rows.map((r) => r.toJson()).toList(),
-      };
+    'totalRows': totalRows,
+    'validRows': validRows,
+    'warnings': warnings,
+    'errors': errors,
+    'creates': creates,
+    'updates': updates,
+    'skips': skips,
+    'relationProblems': relationProblems,
+    'assignments': assignments,
+    'rows': rows.map((r) => r.toJson()).toList(),
+  };
 }

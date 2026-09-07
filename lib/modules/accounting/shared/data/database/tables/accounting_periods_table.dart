@@ -38,6 +38,6 @@ class AccountingPeriods extends Table {
 
   @override
   List<Set<Column<Object>>>? get uniqueKeys => [
-        {fiscalYearUuid, periodNumber},
-      ];
+    {fiscalYearUuid, periodNumber},
+  ];
 }

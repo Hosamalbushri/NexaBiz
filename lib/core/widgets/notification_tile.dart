@@ -30,11 +30,7 @@ class NotificationTile extends StatelessWidget {
     final visuals = NotificationVisuals.forType(notification.type);
     final unread = !notification.isRead;
     final locale = Localizations.localeOf(context).toString();
-    final timeLabel = _relativeTime(
-      notification.createdAt,
-      locale,
-      l10n,
-    );
+    final timeLabel = _relativeTime(notification.createdAt, locale, l10n);
     final hasAction =
         notification.actionLabel != null &&
         notification.actionLabel!.trim().isNotEmpty &&
@@ -191,7 +187,8 @@ class NotificationTile extends StatelessWidget {
                                         TextButton(
                                           onPressed: onAction,
                                           style: TextButton.styleFrom(
-                                            visualDensity: VisualDensity.compact,
+                                            visualDensity:
+                                                VisualDensity.compact,
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 8,
                                             ),

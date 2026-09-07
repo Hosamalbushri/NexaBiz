@@ -81,13 +81,14 @@ class AccountBrowseToolbar extends StatelessWidget {
                     children: [
                       Text(
                         l10n.accountingChartOfAccounts,
-                        style: (isCompactLandscape
-                                ? theme.textTheme.labelLarge
-                                : theme.textTheme.titleSmall)
-                            ?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                        ),
+                        style:
+                            (isCompactLandscape
+                                    ? theme.textTheme.labelLarge
+                                    : theme.textTheme.titleSmall)
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                ),
                       ),
                       if (!isCompactLandscape) const SizedBox(height: 2),
                       Text(

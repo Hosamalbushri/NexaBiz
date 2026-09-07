@@ -162,9 +162,7 @@ void main() {
       initializationGuard: initGuard,
     );
 
-    inventoryRepo = InventoryRepositoryImpl(
-      initializationGuard: initGuard,
-    );
+    inventoryRepo = InventoryRepositoryImpl(initializationGuard: initGuard);
 
     setupService = CompanySetupService(
       settingsRepository: _InMemorySettingsRepository(),
@@ -183,58 +181,64 @@ void main() {
   });
 
   group('Phase 6 — Domain-Level Initialization Enforcement Tests', () {
-    test('1. Uninitialized Company -> Direct PostingEngine.applyInboundPosting fails', () async {
-      final docRef = InventoryDocumentRef(
-        documentId: 'REC-001',
-        documentNumber: 'REC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
-
-      final line = InboundLineData(
-        lineUuid: 'LINE-001',
-        itemCode: 'ITEM-01',
-        itemName: 'Item 01',
-        quantity: 10,
-        unitCost: 100,
-      );
-
-      expect(
-        () => postingEngine.applyInboundPosting(
-          document: docRef,
-          lines: [line],
-          warehouseId: 'WH-001',
+    test(
+      '1. Uninitialized Company -> Direct PostingEngine.applyInboundPosting fails',
+      () async {
+        final docRef = InventoryDocumentRef(
+          documentId: 'REC-001',
+          documentNumber: 'REC-001',
+          documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-        ),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
+        );
 
-    test('2. Uninitialized Company -> Direct PostingEngine.applyOutboundPosting fails', () async {
-      final docRef = InventoryDocumentRef(
-        documentId: 'ISS-001',
-        documentNumber: 'ISS-001',
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: DateTime.now(),
-      );
+        final line = InboundLineData(
+          lineUuid: 'LINE-001',
+          itemCode: 'ITEM-01',
+          itemName: 'Item 01',
+          quantity: 10,
+          unitCost: 100,
+        );
 
-      final line = OutboundLineData(
-        lineUuid: 'LINE-002',
-        itemCode: 'ITEM-01',
-        itemName: 'Item 01',
-        quantity: 5,
-      );
+        expect(
+          () => postingEngine.applyInboundPosting(
+            document: docRef,
+            lines: [line],
+            warehouseId: 'WH-001',
+            documentDate: DateTime.now(),
+          ),
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
-      expect(
-        () => postingEngine.applyOutboundPosting(
-          document: docRef,
-          lines: [line],
-          warehouseId: 'WH-001',
-          valuationMethod: CostValuationMethod.fifo,
-        ),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
+    test(
+      '2. Uninitialized Company -> Direct PostingEngine.applyOutboundPosting fails',
+      () async {
+        final docRef = InventoryDocumentRef(
+          documentId: 'ISS-001',
+          documentNumber: 'ISS-001',
+          documentType: InventoryDocumentType.stockIssue,
+          documentDate: DateTime.now(),
+        );
+
+        final line = OutboundLineData(
+          lineUuid: 'LINE-002',
+          itemCode: 'ITEM-01',
+          itemName: 'Item 01',
+          quantity: 5,
+        );
+
+        expect(
+          () => postingEngine.applyOutboundPosting(
+            document: docRef,
+            lines: [line],
+            warehouseId: 'WH-001',
+            valuationMethod: CostValuationMethod.fifo,
+          ),
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
     test('3. Uninitialized Company -> PostingCoordinator.post fails', () async {
       final docRef = InventoryDocumentRef(
@@ -245,81 +249,92 @@ void main() {
       );
 
       expect(
-        () => postingCoordinator.post(
-          document: docRef,
-        ),
+        () => postingCoordinator.post(document: docRef),
         throwsA(isA<UninitializedCompanyException>()),
       );
     });
 
-    test('4. Uninitialized Company -> InventoryAccountingPoster.postAccountingEntry fails', () async {
-      final docRef = InventoryDocumentRef(
-        documentId: 'REC-003',
-        documentNumber: 'REC-003',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-      );
+    test(
+      '4. Uninitialized Company -> InventoryAccountingPoster.postAccountingEntry fails',
+      () async {
+        final docRef = InventoryDocumentRef(
+          documentId: 'REC-003',
+          documentNumber: 'REC-003',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+        );
 
-      expect(
-        () => accountingPoster.postAccountingEntry(
-          document: docRef,
-          totalAmount: 1000,
-        ),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
-
-    test('5. Uninitialized Company -> StockMovementsRepository.saveReceipt fails', () async {
-      final receipt = StockReceipt(
-        id: '00000000-0000-4000-8000-000000000004',
-        receiptNumber: 'REC-004',
-        receiptDate: DateTime.now(),
-        lines: [
-          StockMovementLine(
-            id: '00000000-0000-4000-8000-000000000044',
-            movementUuid: '00000000-0000-4000-8000-000000000004',
-            movementType: 'receipt',
-            itemCode: 'ITEM-01',
-            itemName: 'Item 01',
-            quantity: 10,
-            unitCost: 50,
-            totalCost: 500,
+        expect(
+          () => accountingPoster.postAccountingEntry(
+            document: docRef,
+            totalAmount: 1000,
           ),
-        ],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: testCompanyId,
-      );
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
-      expect(
-        () => movementsRepo.saveReceipt(receipt),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
+    test(
+      '5. Uninitialized Company -> StockMovementsRepository.saveReceipt fails',
+      () async {
+        final receipt = StockReceipt(
+          id: '00000000-0000-4000-8000-000000000004',
+          receiptNumber: 'REC-004',
+          receiptDate: DateTime.now(),
+          lines: [
+            StockMovementLine(
+              id: '00000000-0000-4000-8000-000000000044',
+              movementUuid: '00000000-0000-4000-8000-000000000004',
+              movementType: 'receipt',
+              itemCode: 'ITEM-01',
+              itemName: 'Item 01',
+              quantity: 10,
+              unitCost: 50,
+              totalCost: 500,
+            ),
+          ],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          companyId: testCompanyId,
+        );
 
-    test('6. Uninitialized Company -> StockTransferRepository.saveTransfer fails', () async {
-      final transfer = StockTransfer(
-        id: '00000000-0000-4000-8000-000000000006',
-        transferNumber: 'TR-001',
-        fromWarehouseId: 'WH-001',
-        toWarehouseId: 'WH-002',
-        transferDate: DateTime.now(),
-        lines: [],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        companyId: testCompanyId,
-      );
+        expect(
+          () => movementsRepo.saveReceipt(receipt),
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
-      expect(
-        () => transferRepo.saveTransfer(transfer),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
+    test(
+      '6. Uninitialized Company -> StockTransferRepository.saveTransfer fails',
+      () async {
+        final transfer = StockTransfer(
+          id: '00000000-0000-4000-8000-000000000006',
+          transferNumber: 'TR-001',
+          fromWarehouseId: 'WH-001',
+          toWarehouseId: 'WH-002',
+          transferDate: DateTime.now(),
+          lines: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          companyId: testCompanyId,
+        );
+
+        expect(
+          () => transferRepo.saveTransfer(transfer),
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
     test('7. Initialized Company -> Operations succeed', () async {
       // 1. Setup Company Profile
       final session = AuthSessionSnapshot(
-        user: const AuthUser(id: 'USER-01', name: 'Admin', email: 'admin@test.com'),
+        user: const AuthUser(
+          id: 'USER-01',
+          name: 'Admin',
+          email: 'admin@test.com',
+        ),
         companies: [],
         roles: ['admin'],
         permissions: {'system.setup', 'settings.company'},
@@ -335,12 +350,13 @@ void main() {
 
       // 2. Setup Currency
       final currencyService = CompanyCurrencyService(initRepository: initRepo);
-      await currencyService.configureInventoryBaseCurrency(
-        currencyCode: 'SAR',
-      );
+      await currencyService.configureInventoryBaseCurrency(currencyCode: 'SAR');
 
       // 3. Setup Accounting Accounts
-      final accountRepo = AccountRepositoryImpl(accountingDb, readCompanyId: () => testCompanyId);
+      final accountRepo = AccountRepositoryImpl(
+        accountingDb,
+        readCompanyId: () => testCompanyId,
+      );
       final accountService = CompanyAccountingConfigService(
         accountRepository: accountRepo,
         initRepository: initRepo,
@@ -358,7 +374,9 @@ void main() {
 
       // Insert Accounts into DB first
       final now = DateTime.now().millisecondsSinceEpoch;
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accInv,
               accountCode: '1201',
@@ -370,7 +388,9 @@ void main() {
               updatedAt: now,
             ),
           );
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accCogs,
               accountCode: '5001',
@@ -382,7 +402,9 @@ void main() {
               updatedAt: now,
             ),
           );
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accAdj,
               accountCode: '5002',
@@ -394,7 +416,9 @@ void main() {
               updatedAt: now,
             ),
           );
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accPay,
               accountCode: '2001',
@@ -406,7 +430,9 @@ void main() {
               updatedAt: now,
             ),
           );
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accRev,
               accountCode: '4001',
@@ -418,7 +444,9 @@ void main() {
               updatedAt: now,
             ),
           );
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accRec,
               accountCode: '1101',
@@ -430,7 +458,9 @@ void main() {
               updatedAt: now,
             ),
           );
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accCash,
               accountCode: '1001',
@@ -442,7 +472,9 @@ void main() {
               updatedAt: now,
             ),
           );
-      await accountingDb.into(accountingDb.accounts).insert(
+      await accountingDb
+          .into(accountingDb.accounts)
+          .insert(
             AccountsCompanion.insert(
               uuid: accFx,
               accountCode: '5009',
@@ -469,7 +501,9 @@ void main() {
       );
 
       // 4. Setup Warehouse in DB & Config
-      await db.into(db.warehouses).insert(
+      await db
+          .into(db.warehouses)
+          .insert(
             WarehousesCompanion(
               uuid: const Value(whId),
               code: const Value('WH-01'),
@@ -481,7 +515,11 @@ void main() {
             ),
           );
 
-      final warehouseRepo = WarehouseRepositoryImpl(db, null, () => testCompanyId);
+      final warehouseRepo = WarehouseRepositoryImpl(
+        db,
+        null,
+        () => testCompanyId,
+      );
       final warehouseService = CompanyWarehouseConfigService(
         warehouseRepository: warehouseRepo,
         initRepository: initRepo,
@@ -526,26 +564,35 @@ void main() {
       expect(saved!.receiptNumber, equals('REC-OK-01'));
     });
 
-    test('8. RBAC Authorization Gate -> Configuration mutation rejected for non-admin user', () async {
-      final session = AuthSessionSnapshot(
-        user: const AuthUser(id: 'USER-LIMITED', name: 'User', email: 'user@test.com'),
-        companies: [],
-        roles: ['user'],
-        permissions: {'inventory.view'},
-        capturedAt: DateTime.now(),
-        currentCompanyId: testCompanyId,
-      );
+    test(
+      '8. RBAC Authorization Gate -> Configuration mutation rejected for non-admin user',
+      () async {
+        final session = AuthSessionSnapshot(
+          user: const AuthUser(
+            id: 'USER-LIMITED',
+            name: 'User',
+            email: 'user@test.com',
+          ),
+          companies: [],
+          roles: ['user'],
+          permissions: {'inventory.view'},
+          capturedAt: DateTime.now(),
+          currentCompanyId: testCompanyId,
+        );
 
-      expect(
-        () => setupService.setupCompany(
-          session: session,
-          profile: const CompanyProfile(name: 'Unauthorized Attempt'),
-          userPermissions: ['inventory.view'], // Lacks system.setup or settings.company
-          isSuperAdmin: false,
-        ),
-        throwsA(isA<CompanySetupException>()),
-      );
-    });
+        expect(
+          () => setupService.setupCompany(
+            session: session,
+            profile: const CompanyProfile(name: 'Unauthorized Attempt'),
+            userPermissions: [
+              'inventory.view',
+            ], // Lacks system.setup or settings.company
+            isSuperAdmin: false,
+          ),
+          throwsA(isA<CompanySetupException>()),
+        );
+      },
+    );
   });
 }
 

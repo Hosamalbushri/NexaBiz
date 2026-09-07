@@ -3,9 +3,7 @@ import 'package:stock_count/modules/authentication/domain/entities/auth_session.
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
 
 class CompanyCreationCoordinator {
-  CompanyCreationCoordinator({
-    required this._authStore,
-  });
+  CompanyCreationCoordinator({required this._authStore});
 
   final LocalAuthStore _authStore;
 

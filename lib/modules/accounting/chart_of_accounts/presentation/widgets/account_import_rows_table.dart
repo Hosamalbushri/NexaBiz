@@ -148,9 +148,7 @@ class _SectionHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return Text(
       title,
-      style: theme.textTheme.titleSmall?.copyWith(
-        fontWeight: FontWeight.w700,
-      ),
+      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }

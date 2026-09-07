@@ -38,7 +38,8 @@ class InventoryRoutes {
   /// Stock Movements service (receipts & issues)
   static const String stockMovements = '/inventory/stock-movements';
   static const String stockReceipts = '/inventory/stock-movements/receipts';
-  static const String stockReceiptsNew = '/inventory/stock-movements/receipts/new';
+  static const String stockReceiptsNew =
+      '/inventory/stock-movements/receipts/new';
   static const String stockIssues = '/inventory/stock-movements/issues';
   static const String stockIssuesNew = '/inventory/stock-movements/issues/new';
 
@@ -79,31 +80,44 @@ class InventoryRoutes {
   static void pushStockReceipts(BuildContext context) =>
       context.push(stockReceipts);
 
+  static String stockReceiptDetails(String id) =>
+      '/inventory/stock-movements/receipts/$id';
+
   static void pushStockReceiptDetails(BuildContext context, String id) =>
-      context.push('/inventory/stock-movements/receipts/$id');
+      context.push(stockReceiptDetails(id));
 
   static void pushStockReceiptsNew(BuildContext context) =>
       context.push(stockReceiptsNew);
 
+  static String stockReceiptsEdit(String id) =>
+      '/inventory/stock-movements/receipts/$id/edit';
+
   static void pushStockReceiptsEdit(BuildContext context, String id) =>
-      context.push('/inventory/stock-movements/receipts/$id/edit');
+      context.push(stockReceiptsEdit(id));
 
   static void pushStockIssues(BuildContext context) =>
       context.push(stockIssues);
 
+  static String stockIssueDetails(String id) =>
+      '/inventory/stock-movements/issues/$id';
+
   static void pushStockIssueDetails(BuildContext context, String id) =>
-      context.push('/inventory/stock-movements/issues/$id');
+      context.push(stockIssueDetails(id));
 
   static void pushStockIssuesNew(BuildContext context) =>
       context.push(stockIssuesNew);
 
+  static String stockIssuesEdit(String id) =>
+      '/inventory/stock-movements/issues/$id/edit';
+
   static void pushStockIssuesEdit(BuildContext context, String id) =>
-      context.push('/inventory/stock-movements/issues/$id/edit');
+      context.push(stockIssuesEdit(id));
 
   /// Multi-Warehouse & Inventory Cost Valuation Settings
   static const String warehousesSettings = '/inventory/warehouses/settings';
   static const String categoriesSettings = '/inventory/categories/settings';
-  static const String costValuationSettings = '/inventory/cost-valuation/settings';
+  static const String costValuationSettings =
+      '/inventory/cost-valuation/settings';
 
   /// Inter-Warehouse Stock Transfers
   static const String stockTransfers = '/inventory/stock-transfers';

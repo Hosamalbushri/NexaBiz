@@ -13,10 +13,7 @@ import '../theme/app_spacing.dart';
 
 /// Screen displaying sub-module unit cards for a selected module's settings category.
 class ModuleUnitSettingsPage extends StatelessWidget {
-  const ModuleUnitSettingsPage({
-    super.key,
-    required this.category,
-  });
+  const ModuleUnitSettingsPage({super.key, required this.category});
 
   final ModuleSettingsCategoryDefinition category;
 
@@ -30,10 +27,7 @@ class ModuleUnitSettingsPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: moduleTitle,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: moduleTitle, showBackButton: true),
       body: category.items.isEmpty
           ? Center(
               child: AppEmptyState(
@@ -63,7 +57,9 @@ class ModuleUnitSettingsPage extends StatelessWidget {
                         height: 54,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: colorScheme.primaryContainer.withValues(alpha: 0.7),
+                          color: colorScheme.primaryContainer.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                         child: Icon(
                           category.icon,
@@ -82,7 +78,8 @@ class ModuleUnitSettingsPage extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (moduleSubtitle != null && moduleSubtitle.isNotEmpty) ...[
+                            if (moduleSubtitle != null &&
+                                moduleSubtitle.isNotEmpty) ...[
                               const SizedBox(height: AppSpacing.xs),
                               Text(
                                 moduleSubtitle,
@@ -101,7 +98,9 @@ class ModuleUnitSettingsPage extends StatelessWidget {
 
                 // Section Title
                 Text(
-                  l10n.localeName == 'ar' ? 'بطاقات إعدادات الوحدات' : 'Unit Settings Cards',
+                  l10n.localeName == 'ar'
+                      ? 'بطاقات إعدادات الوحدات'
+                      : 'Unit Settings Cards',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.onSurfaceVariant,
@@ -112,19 +111,21 @@ class ModuleUnitSettingsPage extends StatelessWidget {
                 // Sub-Module Unit Cards Grid/List
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final isWide = AppBreakpoints.isTablet(constraints.maxWidth) ||
+                    final isWide =
+                        AppBreakpoints.isTablet(constraints.maxWidth) ||
                         AppBreakpoints.isDesktop(constraints.maxWidth);
 
                     if (isWide) {
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: AppSpacing.md,
-                          mainAxisSpacing: AppSpacing.md,
-                          childAspectRatio: 2.8,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: AppSpacing.md,
+                              mainAxisSpacing: AppSpacing.md,
+                              childAspectRatio: 2.8,
+                            ),
                         itemCount: category.items.length,
                         itemBuilder: (context, index) {
                           return _UnitSettingCard(item: category.items[index]);
@@ -136,7 +137,8 @@ class ModuleUnitSettingsPage extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: category.items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.sm),
                       itemBuilder: (context, index) {
                         return _UnitSettingCard(item: category.items[index]);
                       },
@@ -191,7 +193,9 @@ class _UnitSettingCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(AppRadius.md),
-                    color: colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                    color: colorScheme.secondaryContainer.withValues(
+                      alpha: 0.5,
+                    ),
                   ),
                   child: Icon(
                     item.icon,

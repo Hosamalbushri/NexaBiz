@@ -59,10 +59,9 @@ class AccountsOpeningSetupPage extends ConsumerWidget {
                   Text(
                     l10n.accountingOpeningSetupSubtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
-                          height: 1.4,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   switch (step) {
@@ -156,13 +155,13 @@ class _StepChip extends StatelessWidget {
     final bg = selected
         ? scheme.primary
         : completed
-            ? scheme.primaryContainer
-            : scheme.surface;
+        ? scheme.primaryContainer
+        : scheme.surface;
     final fg = selected
         ? scheme.onPrimary
         : completed
-            ? scheme.onPrimaryContainer
-            : scheme.onSurfaceVariant;
+        ? scheme.onPrimaryContainer
+        : scheme.onSurfaceVariant;
 
     return Material(
       color: bg,

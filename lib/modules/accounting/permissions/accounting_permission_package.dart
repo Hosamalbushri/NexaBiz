@@ -113,9 +113,7 @@ PermissionPackageDef accountingPermissionPackage() {
             AppLocalizations.of(context).adminPermServiceAccountingReports,
         subtitleBuilder: (context) =>
             AppLocalizations.of(context).adminPermServiceAccountingReportsHint,
-        operations: [
-          StandardPermissionOps.view('accounting.reports.view'),
-        ],
+        operations: [StandardPermissionOps.view('accounting.reports.view')],
       ),
     ],
   );

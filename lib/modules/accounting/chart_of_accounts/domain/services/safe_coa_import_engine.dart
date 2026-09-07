@@ -16,7 +16,8 @@ class UnsafeCoaImportException implements Exception {
   final CoaImportImpactReport impactReport;
 
   @override
-  String toString() => 'UnsafeCoaImportException: $message (${blockingReasons.length} blocking issues)';
+  String toString() =>
+      'UnsafeCoaImportException: $message (${blockingReasons.length} blocking issues)';
 }
 
 /// Transactional engine that validates and executes Chart of Accounts changes and imports safely.
@@ -37,7 +38,9 @@ class SafeCoaImportEngine {
     required List<Account> candidateAccounts,
     Map<String, int> postedUsageCounts = const {},
   }) async {
-    final existingAccounts = await accountRepository.getAll(includeInactive: true);
+    final existingAccounts = await accountRepository.getAll(
+      includeInactive: true,
+    );
     final activeConfig = await initializationRepository?.getAccountingConfig();
 
     return impactAnalyzer.analyzeImpact(
@@ -66,7 +69,8 @@ class SafeCoaImportEngine {
 
     if (!report.isSafeToImport) {
       throw UnsafeCoaImportException(
-        message: 'تم إلغاء عملية استيراد دليل الحسابات لعدم استيفاء شروط الأمان والتركيب المحاسبي.',
+        message:
+            'تم إلغاء عملية استيراد دليل الحسابات لعدم استيفاء شروط الأمان والتركيب المحاسبي.',
         blockingReasons: report.blockingReasons,
         impactReport: report,
       );

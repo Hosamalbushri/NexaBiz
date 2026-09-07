@@ -28,9 +28,9 @@ class StockReceipt {
     this.version = 1,
     this.companyId,
     this.deletedAt,
-  })  : id = id ?? generateUuidV4(),
-        createdAt = createdAt ?? DateTime.now().toUtc(),
-        updatedAt = updatedAt ?? DateTime.now().toUtc();
+  }) : id = id ?? generateUuidV4(),
+       createdAt = createdAt ?? DateTime.now().toUtc(),
+       updatedAt = updatedAt ?? DateTime.now().toUtc();
 
   final String id;
   final String receiptNumber;
@@ -57,21 +57,22 @@ class StockReceipt {
   bool get isPosted => status == InventoryDocumentStatus.posted;
   bool get isDraft => status == InventoryDocumentStatus.draft;
 
-  double get totalQuantity => lines.fold(0.0, (sum, line) => sum + line.quantity);
+  double get totalQuantity =>
+      lines.fold(0.0, (sum, line) => sum + line.quantity);
   double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
 
   StockDocumentPostingData toPostingData() => StockDocumentPostingData(
-        id: id,
-        documentNumber: receiptNumber,
-        documentType: DocumentType.stockReceipt,
-        documentDate: receiptDate,
-        warehouseId: warehouse,
-        status: status,
-        totalAmount: totalCost,
-        offsetAccountId: accountId ?? supplier,
-        currencyCode: currencyCode,
-        exchangeRate: exchangeRate,
-      );
+    id: id,
+    documentNumber: receiptNumber,
+    documentType: DocumentType.stockReceipt,
+    documentDate: receiptDate,
+    warehouseId: warehouse,
+    status: status,
+    totalAmount: totalCost,
+    offsetAccountId: accountId ?? supplier,
+    currencyCode: currencyCode,
+    exchangeRate: exchangeRate,
+  );
 
   StockReceipt copyWith({
     String? id,
@@ -115,7 +116,9 @@ class StockReceipt {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
-      lastSyncedAt: clearLastSyncedAt ? null : (lastSyncedAt ?? this.lastSyncedAt),
+      lastSyncedAt: clearLastSyncedAt
+          ? null
+          : (lastSyncedAt ?? this.lastSyncedAt),
       version: version ?? this.version,
       companyId: companyId ?? this.companyId,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),

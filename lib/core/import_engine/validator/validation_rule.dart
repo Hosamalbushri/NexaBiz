@@ -302,7 +302,8 @@ class CustomValidationRule extends ValidationRule {
     required int row,
     required String field,
     required NormalizedValue normalizedValue,
-  }) validator;
+  })
+  validator;
 
   @override
   ValidationIssue? evaluate({
@@ -310,10 +311,6 @@ class CustomValidationRule extends ValidationRule {
     required String field,
     required NormalizedValue normalizedValue,
   }) {
-    return validator(
-      row: row,
-      field: field,
-      normalizedValue: normalizedValue,
-    );
+    return validator(row: row, field: field, normalizedValue: normalizedValue);
   }
 }

@@ -9,9 +9,9 @@ class CostMethodInheritanceResolverImpl
     required InventoryDatabase db,
     CostValuationMethod systemDefaultMethod = CostValuationMethod.fifo,
     Map<String, CostValuationMethod>? productWarehouseOverrides,
-  })  : _db = db,
-        _systemDefaultMethod = systemDefaultMethod,
-        _productWarehouseOverrides = productWarehouseOverrides ?? {};
+  }) : _db = db,
+       _systemDefaultMethod = systemDefaultMethod,
+       _productWarehouseOverrides = productWarehouseOverrides ?? {};
 
   final InventoryDatabase _db;
   final CostValuationMethod _systemDefaultMethod;
@@ -123,7 +123,8 @@ class CostMethodInheritanceResolverImpl
         ..where((c) {
           var expr = c.uuid.equals(currentCatId) & c.deletedAt.isNull();
           if (companyId != null && companyId.isNotEmpty) {
-            expr = expr & (c.companyId.equals(companyId) | c.companyId.isNull());
+            expr =
+                expr & (c.companyId.equals(companyId) | c.companyId.isNull());
           }
           return expr;
         });

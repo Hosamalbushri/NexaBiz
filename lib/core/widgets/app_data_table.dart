@@ -50,7 +50,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     }
 
     if (widget.items.isEmpty) {
-      return widget.emptyState ?? const AppEmptyState(title: 'No records found');
+      return widget.emptyState ??
+          const AppEmptyState(title: 'No records found');
     }
 
     return LayoutBuilder(
@@ -69,7 +70,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
 
               if (widget.expandableCardBuilder == null) {
                 return InkWell(
-                  onTap: widget.onRowTap != null ? () => widget.onRowTap!(item) : null,
+                  onTap: widget.onRowTap != null
+                      ? () => widget.onRowTap!(item)
+                      : null,
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   child: widget.cardBuilder(context, item),
                 );
@@ -146,7 +149,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.title != null || (widget.actions != null && widget.actions!.isNotEmpty))
+              if (widget.title != null ||
+                  (widget.actions != null && widget.actions!.isNotEmpty))
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Row(
@@ -155,9 +159,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                         Expanded(
                           child: Text(
                             widget.title!,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
                       if (widget.actions != null) ...widget.actions!,
@@ -198,4 +201,3 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     );
   }
 }
-

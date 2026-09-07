@@ -18,9 +18,9 @@ class CentralSetupValidationEngine {
     required SetupAccountLookupPort accountLookupPort,
     required AccountBindingRepository bindingRepository,
     SetupDependencyEngine? dependencyEngine,
-  })  : _accountLookupPort = accountLookupPort,
-        _bindingRepository = bindingRepository,
-        _dependencyEngine = dependencyEngine ?? const SetupDependencyEngine();
+  }) : _accountLookupPort = accountLookupPort,
+       _bindingRepository = bindingRepository,
+       _dependencyEngine = dependencyEngine ?? const SetupDependencyEngine();
 
   final SetupAccountLookupPort _accountLookupPort;
   final AccountBindingRepository _bindingRepository;
@@ -84,7 +84,12 @@ class CentralSetupValidationEngine {
     // 3. Evaluate Package Specific Domain Rules
     if (packageDef.packageId == 'inventory') {
       final costing = fieldValues['costing_method']?.toString() ?? 'FIFO';
-      const validCostingMethods = {'FIFO', 'LIFO', 'AVERAGE', 'WEIGHTED_AVERAGE'};
+      const validCostingMethods = {
+        'FIFO',
+        'LIFO',
+        'AVERAGE',
+        'WEIGHTED_AVERAGE',
+      };
       if (!validCostingMethods.contains(costing.toUpperCase())) {
         hasInvalid = true;
       }
@@ -146,7 +151,8 @@ class CentralSetupValidationEngine {
       }
     }
 
-    if (field.fieldType == SetupFieldType.select && field.allowedValues != null) {
+    if (field.fieldType == SetupFieldType.select &&
+        field.allowedValues != null) {
       final allowedStr = field.allowedValues!.map((e) => e.toString()).toSet();
       if (!allowedStr.contains(val.toString())) {
         return false;

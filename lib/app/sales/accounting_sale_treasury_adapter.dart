@@ -45,19 +45,27 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
     return scope.accounts;
   }
 
-  Future<List<MapEntry<CashRegister, Account>>> _getReadyRegistersWithAccounts() async {
+  Future<List<MapEntry<CashRegister, Account>>>
+  _getReadyRegistersWithAccounts() async {
     final state = await initRepository?.getState();
     final companyId = state?.companyId ?? '';
 
     if (cashRegisterRepository != null) {
-      final readyRegisters = await cashRegisterRepository!.getAccountingReadyCashRegisters(companyId);
+      final readyRegisters = await cashRegisterRepository!
+          .getAccountingReadyCashRegisters(companyId);
       final results = <MapEntry<CashRegister, Account>>[];
       for (final reg in readyRegisters) {
         final accId = reg.accountingAccountId;
         if (accId != null) {
-          final account = await _repository.getByUuid(accId) ??
+          final account =
+              await _repository.getByUuid(accId) ??
               await _repository.getByAccountCode(accId);
-          if (account != null && (companyId.isEmpty || account.companyId == companyId || account.companyId == reg.companyId) && account.canPost && !account.isDeleted) {
+          if (account != null &&
+              (companyId.isEmpty ||
+                  account.companyId == companyId ||
+                  account.companyId == reg.companyId) &&
+              account.canPost &&
+              !account.isDeleted) {
             results.add(MapEntry(reg, account));
           }
         }
@@ -67,19 +75,25 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
 
     // Fallback if cashRegisterRepository is not provided: query scoped accounts
     final scopedAccounts = await _scopedCashAccounts(companyId);
-    return scopedAccounts.map((a) => MapEntry(
-      CashRegister(
-        id: 'cr-${a.uuid}',
-        companyId: companyId.isNotEmpty ? companyId : (a.companyId ?? 'default'),
-        name: a.name,
-        code: a.accountCode,
-        isActive: true,
-        accountingAccountId: a.uuid,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      a,
-    )).toList();
+    return scopedAccounts
+        .map(
+          (a) => MapEntry(
+            CashRegister(
+              id: 'cr-${a.uuid}',
+              companyId: companyId.isNotEmpty
+                  ? companyId
+                  : (a.companyId ?? 'default'),
+              name: a.name,
+              code: a.accountCode,
+              isActive: true,
+              accountingAccountId: a.uuid,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+            a,
+          ),
+        )
+        .toList();
   }
 
   @override
@@ -120,6 +134,8 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
 
     // Fallback only if cashRegisterRepository is completely unavailable
     final entries = await _getReadyRegistersWithAccounts();
-    return entries.isEmpty ? null : _map(entries.first.key, entries.first.value);
+    return entries.isEmpty
+        ? null
+        : _map(entries.first.key, entries.first.value);
   }
 }

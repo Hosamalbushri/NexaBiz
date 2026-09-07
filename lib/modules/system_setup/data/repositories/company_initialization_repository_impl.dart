@@ -13,10 +13,7 @@ import '../../domain/services/initialization_validator.dart';
 /// Enforces mandatory company isolation via `readCompanyId`.
 class CompanyInitializationRepositoryImpl
     implements CompanyInitializationRepository {
-  CompanyInitializationRepositoryImpl({
-    this._box,
-    this._readCompanyId,
-  });
+  CompanyInitializationRepositoryImpl({this._box, this._readCompanyId});
 
   Box<dynamic>? _box;
   final String Function()? _readCompanyId;
@@ -37,7 +34,8 @@ class CompanyInitializationRepositoryImpl
 
   String _stateKey(String companyId) => 'init_state_$companyId';
   String _inventoryKey(String companyId) => 'init_inventory_config_$companyId';
-  String _accountingKey(String companyId) => 'init_accounting_config_$companyId';
+  String _accountingKey(String companyId) =>
+      'init_accounting_config_$companyId';
   String _warehouseKey(String companyId) => 'init_warehouse_config_$companyId';
 
   @override
@@ -45,11 +43,6 @@ class CompanyInitializationRepositoryImpl
     final companyId = _currentCompanyId;
     final box = await _initBox;
     var raw = box.get(_stateKey(companyId));
-
-    // Fallback for primary company if scoped key not found in storage
-    if (raw == null && companyId == LocalAuthDefaults.companyId) {
-      raw = box.get('init_state_') ?? box.get('init_state_comp_main_01');
-    }
 
     CompanyInitializationState state;
     if (raw is Map) {
@@ -73,10 +66,9 @@ class CompanyInitializationRepositoryImpl
       state = CompanyInitializationState(companyId: companyId);
     }
 
-    // Auto-heal companyCreated flag if valid company profile exists in settings box
+    // Auto-heal companyCreated flag only if company-scoped profile exists in settings box
     if (!state.companyCreated) {
-      final profileRaw = box.get('company_profile_$companyId') ??
-          box.get('company_profile');
+      final profileRaw = box.get('company_profile_$companyId');
       if (profileRaw is Map &&
           (profileRaw['name'] as String?)?.trim().isNotEmpty == true) {
         state = state.copyWith(companyCreated: true);
@@ -232,9 +224,7 @@ class CompanyInitializationRepositoryImpl
 
     // Update initialization state flag
     final state = await getState();
-    await saveState(
-      state.copyWith(warehouseConfigured: scopedConfig.isValid),
-    );
+    await saveState(state.copyWith(warehouseConfigured: scopedConfig.isValid));
   }
 
   @override

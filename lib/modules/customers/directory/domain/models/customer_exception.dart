@@ -24,4 +24,3 @@ class CustomerException implements Exception {
   String toString() =>
       'CustomerException($code${message == null ? '' : ': $message'})';
 }
-

@@ -21,12 +21,12 @@ class ReportFilterPreset {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'reportId': reportId,
-        'name': name,
-        'filterValues': filterValues,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'reportId': reportId,
+    'name': name,
+    'filterValues': filterValues,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory ReportFilterPreset.fromJson(Map<String, dynamic> json) =>
       ReportFilterPreset(
@@ -77,7 +77,11 @@ class _AppReportPresetBarState extends State<AppReportPresetBar> {
         final List decoded = jsonDecode(rawList) as List;
         setState(() {
           _presets = decoded
-              .map((e) => ReportFilterPreset.fromJson(Map<String, dynamic>.from(e as Map)))
+              .map(
+                (e) => ReportFilterPreset.fromJson(
+                  Map<String, dynamic>.from(e as Map),
+                ),
+              )
               .toList();
           _loading = false;
         });

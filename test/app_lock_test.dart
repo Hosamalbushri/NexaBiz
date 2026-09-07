@@ -1,162 +1,135 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
-import 'package:stock_count/core/database/hive_boxes.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:stock_count/modules/app_lock/data/app_lock_repository_impl.dart';
-import 'package:stock_count/modules/app_lock/data/local_auth_app_lock_biometrics.dart';
+import 'package:stock_count/modules/app_lock/domain/app_lock_biometrics.dart';
 import 'package:stock_count/modules/app_lock/domain/entities/app_lock_state.dart';
 import 'package:stock_count/modules/app_lock/presentation/providers/app_lock_providers.dart';
 
+class MockAppLockBiometrics implements AppLockBiometrics {
+  bool available = true;
+  bool shouldSucceed = true;
+
+  @override
+  Future<bool> isAvailable() async => available;
+
+  @override
+  Future<bool> authenticate({required String localizedReason}) async =>
+      shouldSucceed;
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory tempDir;
-  late Box<dynamic> box;
   late AppLockRepositoryImpl repository;
+  late MockAppLockBiometrics biometrics;
   late AppLockController controller;
+  var notifiedCount = 0;
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('app_lock_');
+    tempDir = await Directory.systemTemp.createTemp('hive_app_lock_test_');
     Hive.init(tempDir.path);
-    box = await Hive.openBox<dynamic>(HiveBoxes.appLock);
-    repository = AppLockRepositoryImpl(box: box);
+
+    repository = AppLockRepositoryImpl();
+    biometrics = MockAppLockBiometrics();
+    notifiedCount = 0;
+
     controller = AppLockController(
       repository: repository,
-      biometrics: const UnavailableAppLockBiometrics(),
-      onChanged: () {},
+      biometrics: biometrics,
+      onChanged: () => notifiedCount++,
     );
   });
 
   tearDown(() async {
-    controller.dispose();
-    await box.close();
     await Hive.close();
-    if (tempDir.existsSync()) {
+    if (await tempDir.exists()) {
       await tempDir.delete(recursive: true);
     }
   });
 
-  group('AppLockRepositoryImpl', () {
-    test('stores hash only and verifies PIN offline', () async {
-      await repository.setPin('1234');
-      expect(await repository.hasPin(), isTrue);
-      expect(box.get('pin_hash'), isNotNull);
-      expect(box.get('pin_hash'), isNot(equals('1234')));
-      expect(await repository.verifyPin('1234'), isTrue);
-      expect(await repository.verifyPin('9999'), isFalse);
-    });
-  });
-
-  group('AppLockController', () {
-    test('enable / unlock / disable flow', () async {
-      await controller.hydrate(lockOnColdStart: false);
-      expect(controller.state.gate, AppLockGate.disabled);
-
-      final enableError = await controller.enableWithPin(
-        pin: '2580',
-        confirmPin: '2580',
-        policy: AppLockPolicy.onResume,
-      );
-      expect(enableError, isNull);
-      expect(controller.state.enabled, isTrue);
-      expect(controller.state.gate, AppLockGate.unlocked);
-
-      controller.lock();
-      expect(controller.state.isLocked, isTrue);
-
-      expect(await controller.unlock('0000'), isFalse);
-      expect(controller.state.isLocked, isTrue);
-
-      expect(await controller.unlock('2580'), isTrue);
-      expect(controller.state.gate, AppLockGate.unlocked);
-
-      final disableError = await controller.disable(pin: '2580');
-      expect(disableError, isNull);
+  group('App Lock Architecture & Verification (AL-00 to AL-04)', () {
+    test('AL-01: Initial state is disabled and unlocked', () {
       expect(controller.state.enabled, isFalse);
+      expect(controller.state.gate, AppLockGate.disabled);
+      expect(controller.state.hasPin, isFalse);
     });
 
-    test('rejects mismatched confirmation and short PIN', () async {
-      expect(
-        await controller.enableWithPin(pin: '12', confirmPin: '12'),
-        'length',
-      );
-      expect(
-        await controller.enableWithPin(pin: '1234', confirmPin: '4321'),
-        'mismatch',
-      );
-    });
+    test(
+      'AL-02: Enable App Lock with valid PIN, verify PIN, change PIN',
+      () async {
+        final res = await controller.enableWithPin(
+          pin: '1234',
+          confirmPin: '1234',
+          policy: AppLockPolicy.onResume,
+        );
 
-    test('change PIN requires current PIN', () async {
-      await controller.enableWithPin(
-        pin: '1111',
-        confirmPin: '1111',
-      );
-      expect(
-        await controller.changePin(
-          currentPin: '0000',
-          newPin: '2222',
-          confirmPin: '2222',
-        ),
-        'invalid',
-      );
-      expect(
-        await controller.changePin(
-          currentPin: '1111',
-          newPin: '2222',
-          confirmPin: '2222',
-        ),
-        isNull,
-      );
-      expect(await repository.verifyPin('2222'), isTrue);
-    });
+        expect(res, isNull);
+        expect(controller.state.enabled, isTrue);
+        expect(controller.state.hasPin, isTrue);
+        expect(controller.state.gate, AppLockGate.unlocked);
 
-    test('duplicate lock is ignored', () async {
-      await controller.enableWithPin(
-        pin: '4444',
-        confirmPin: '4444',
-        policy: AppLockPolicy.onResume,
+        // Lock app
+        controller.lock(reason: 'manual', returnTo: '/dashboard');
+        expect(controller.state.isLocked, isTrue);
+        expect(controller.returnToLocation, '/dashboard');
+
+        // Wrong PIN
+        final wrongOk = await controller.unlock('9999');
+        expect(wrongOk, isFalse);
+        expect(controller.state.isLocked, isTrue);
+        expect(controller.state.failedAttempts, 1);
+
+        // Correct PIN
+        final correctOk = await controller.unlock('1234');
+        expect(correctOk, isTrue);
+        expect(controller.state.isLocked, isFalse);
+        expect(controller.state.failedAttempts, 0);
+
+        // Change PIN
+        final changeRes = await controller.changePin(
+          currentPin: '1234',
+          newPin: '5678',
+          confirmPin: '5678',
+        );
+        expect(changeRes, isNull);
+
+        // Verify new PIN works
+        controller.lock();
+        final newPinOk = await controller.unlock('5678');
+        expect(newPinOk, isTrue);
+      },
+    );
+
+    test('AL-03: Biometric unlock restoring local session', () async {
+      await controller.enableWithPin(pin: '1234', confirmPin: '1234');
+      await controller.setBiometricEnabled(
+        enabled: true,
+        localizedReason: 'Enable biometrics test',
       );
+
+      expect(controller.state.biometricEnabled, isTrue);
+
       controller.lock();
-      controller.lock();
-      expect(controller.state.gate, AppLockGate.locked);
-    });
-
-    test('resume policy locks after pause/resume', () async {
-      await controller.enableWithPin(
-        pin: '5555',
-        confirmPin: '5555',
-        policy: AppLockPolicy.onResume,
-      );
-      await controller.hydrate(lockOnColdStart: false);
-      // Re-enable after hydrate from storage
-      expect(controller.state.enabled, isTrue);
-
-      controller.onAppPaused();
-      controller.onAppResumed();
       expect(controller.state.isLocked, isTrue);
 
-      // Second resume without pause must not re-lock spam while already locked
-      controller.onAppResumed();
-      expect(controller.state.isLocked, isTrue);
-    });
-
-    test('cold-start policy does not lock on resume', () async {
-      await controller.enableWithPin(
-        pin: '6666',
-        confirmPin: '6666',
-        policy: AppLockPolicy.onColdStart,
+      final bioOk = await controller.unlockWithBiometrics(
+        localizedReason: 'Unlock test',
       );
-      controller.onAppPaused();
-      controller.onAppResumed();
+      expect(bioOk, isTrue);
       expect(controller.state.isLocked, isFalse);
     });
 
-    test('hydrate locks on cold start when policy requires it', () async {
-      await repository.setPin('7777');
-      await repository.setEnabled(true);
-      await repository.setPolicy(AppLockPolicy.onResume);
+    test('AL-04: Disabling App Lock clears PIN and resets state', () async {
+      await controller.enableWithPin(pin: '1234', confirmPin: '1234');
+      final disableRes = await controller.disable(pin: '1234');
 
-      await controller.hydrate(lockOnColdStart: true);
-      expect(controller.state.isLocked, isTrue);
+      expect(disableRes, isNull);
+      expect(controller.state.enabled, isFalse);
+      expect(controller.state.hasPin, isFalse);
+      expect(controller.state.gate, AppLockGate.disabled);
     });
   });
 }

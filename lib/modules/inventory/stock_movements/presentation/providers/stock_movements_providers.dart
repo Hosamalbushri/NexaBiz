@@ -28,7 +28,9 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/st
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 
-final stockMovementsRepositoryProvider = Provider<StockMovementsRepository>((ref) {
+final stockMovementsRepositoryProvider = Provider<StockMovementsRepository>((
+  ref,
+) {
   final db = ref.watch(inventoryDatabaseProvider);
   final accountingPoster = ref.watch(inventoryAccountingPosterProvider);
   return StockMovementsRepositoryImpl(
@@ -49,7 +51,10 @@ final stockReceiptsStreamProvider = StreamProvider<List<StockReceipt>>((ref) {
   return usecases.watchAllReceipts();
 });
 
-final stockReceiptByIdProvider = FutureProvider.family<StockReceipt?, String>((ref, id) async {
+final stockReceiptByIdProvider = FutureProvider.family<StockReceipt?, String>((
+  ref,
+  id,
+) async {
   final usecases = ref.watch(stockMovementUseCasesProvider);
   return usecases.getReceiptById(id);
 });
@@ -59,12 +64,17 @@ final stockIssuesStreamProvider = StreamProvider<List<StockIssue>>((ref) {
   return usecases.watchAllIssues();
 });
 
-final stockIssueByIdProvider = FutureProvider.family<StockIssue?, String>((ref, id) async {
+final stockIssueByIdProvider = FutureProvider.family<StockIssue?, String>((
+  ref,
+  id,
+) async {
   final usecases = ref.watch(stockMovementUseCasesProvider);
   return usecases.getIssueById(id);
 });
 
-final inventoryVoucherBookPortProvider = Provider<InventoryVoucherBookPort>((ref) {
+final inventoryVoucherBookPortProvider = Provider<InventoryVoucherBookPort>((
+  ref,
+) {
   return ref.watch(appInventoryVoucherBookPortProvider);
 });
 
@@ -80,13 +90,14 @@ final stockValidationServiceProvider = Provider<StockValidationService>((ref) {
   );
 });
 
-final inventoryDependencyDetectorProvider = Provider<InventoryDependencyDetector>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
-  return InventoryDependencyDetectorImpl(
-    db,
-    () => ref.read(currentCompanyIdProvider),
-  );
-});
+final inventoryDependencyDetectorProvider =
+    Provider<InventoryDependencyDetector>((ref) {
+      final db = ref.watch(inventoryDatabaseProvider);
+      return InventoryDependencyDetectorImpl(
+        db,
+        () => ref.read(currentCompanyIdProvider),
+      );
+    });
 
 final costLayerServiceProvider = Provider<CostLayerService>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
@@ -109,7 +120,9 @@ final postingEngineProvider = Provider<PostingEngine>((ref) {
   );
 });
 
-final inventoryAccountingPosterProvider = Provider<InventoryAccountingPoster>((ref) {
+final inventoryAccountingPosterProvider = Provider<InventoryAccountingPoster>((
+  ref,
+) {
   return ref.watch(appInventoryAccountingPosterProvider);
 });
 
@@ -138,18 +151,20 @@ final postingCoordinatorProvider = Provider<PostingCoordinator>((ref) {
   );
 });
 
-final activeStockIssueBooksFutureProvider = FutureProvider<List<InventoryVoucherBookRef>>((ref) async {
-  final port = ref.watch(inventoryVoucherBookPortProvider);
-  return port.listActiveIssueBooks();
-});
+final activeStockIssueBooksFutureProvider =
+    FutureProvider<List<InventoryVoucherBookRef>>((ref) async {
+      final port = ref.watch(inventoryVoucherBookPortProvider);
+      return port.listActiveIssueBooks();
+    });
 
-final inventoryPostingAccountsFutureProvider = FutureProvider<List<InventoryAccountRef>>((ref) async {
-  final port = ref.watch(inventoryAccountPortProvider);
-  return port.listPostingAccounts();
-});
+final inventoryPostingAccountsFutureProvider =
+    FutureProvider<List<InventoryAccountRef>>((ref) async {
+      final port = ref.watch(inventoryAccountPortProvider);
+      return port.listPostingAccounts();
+    });
 
-final inventorySubledgerQueryPortProviderImpl = Provider<InventorySubledgerQueryPort>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
-  return InventorySubledgerQueryAdapter(inventoryDb: db);
-});
-
+final inventorySubledgerQueryPortProviderImpl =
+    Provider<InventorySubledgerQueryPort>((ref) {
+      final db = ref.watch(inventoryDatabaseProvider);
+      return InventorySubledgerQueryAdapter(inventoryDb: db);
+    });

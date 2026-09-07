@@ -51,216 +51,243 @@ void main() {
   });
 
   group('ROOT FIX 11 — Tenant Identity Integrity Security Test Suite', () {
-    test('1. Financial Tables — JournalEntry & Account Require & Auto-Bind Company ID', () async {
-      String activeCompany = companyA;
-      final accountRepo = AccountRepositoryImpl(
-        accountingDb,
-        readCompanyId: () => activeCompany,
-      );
-      final journalRepo = JournalRepositoryImpl(
-        accountingDb,
-        accounts: accountRepo,
-        periodValidator: const AlwaysPermissivePeriodValidator(),
-        readCompanyId: () => activeCompany,
-      );
+    test(
+      '1. Financial Tables — JournalEntry & Account Require & Auto-Bind Company ID',
+      () async {
+        String activeCompany = companyA;
+        final accountRepo = AccountRepositoryImpl(
+          accountingDb,
+          readCompanyId: () => activeCompany,
+        );
+        final journalRepo = JournalRepositoryImpl(
+          accountingDb,
+          accounts: accountRepo,
+          periodValidator: const AlwaysPermissivePeriodValidator(),
+          readCompanyId: () => activeCompany,
+        );
 
-      // Create posting account in Company A
-      final draftAccount = AccountDraft(
-        accountCode: '1001',
-        name: 'Cash Account A',
-        accountType: AccountType.asset,
-        isGroup: false,
-        isActive: true,
-      );
-      final accA = await accountRepo.insert(draftAccount);
-      expect(accA, isNotNull);
+        // Create posting account in Company A
+        final draftAccount = AccountDraft(
+          accountCode: '1001',
+          name: 'Cash Account A',
+          accountType: AccountType.asset,
+          isGroup: false,
+          isActive: true,
+        );
+        final accA = await accountRepo.insert(draftAccount);
+        expect(accA, isNotNull);
 
-      // Verify row persisted in DB with companyA
-      final dbAccount = await (accountingDb.select(accountingDb.accounts)
-            ..where((t) => t.uuid.equals(accA.uuid)))
-          .getSingle();
-      expect(dbAccount.companyId, equals(companyA));
+        // Verify row persisted in DB with companyA
+        final dbAccount = await (accountingDb.select(
+          accountingDb.accounts,
+        )..where((t) => t.uuid.equals(accA.uuid))).getSingle();
+        expect(dbAccount.companyId, equals(companyA));
 
-      // Post Journal Entry in Company A
-      final draftJournal = JournalEntryDraft(
-        entryDate: DateTime.utc(2026, 8, 30),
-        voucherNumber: 'JRN-001',
-        voucherType: 'Journal',
-        currencyCode: 'YER',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(
-            accountUuid: accA.uuid,
-            debit: 1000,
-            credit: 0,
-            currencyCode: 'YER',
-          ),
-          JournalLineDraft(
-            accountUuid: accA.uuid,
-            debit: 0,
-            credit: 1000,
-            currencyCode: 'YER',
-          ),
-        ],
-      );
+        // Post Journal Entry in Company A
+        final draftJournal = JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 30),
+          voucherNumber: 'JRN-001',
+          voucherType: 'Journal',
+          currencyCode: 'YER',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: accA.uuid,
+              debit: 1000,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: accA.uuid,
+              debit: 0,
+              credit: 1000,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      final entryA = await journalRepo.post(draftJournal);
-      expect(entryA, isNotNull);
+        final entryA = await journalRepo.post(draftJournal);
+        expect(entryA, isNotNull);
 
-      // Verify Journal Entry persisted with companyA
-      final dbEntry = await (accountingDb.select(accountingDb.journalEntries)
-            ..where((t) => t.uuid.equals(entryA.uuid)))
-          .getSingle();
-      expect(dbEntry.companyId, equals(companyA));
+        // Verify Journal Entry persisted with companyA
+        final dbEntry = await (accountingDb.select(
+          accountingDb.journalEntries,
+        )..where((t) => t.uuid.equals(entryA.uuid))).getSingle();
+        expect(dbEntry.companyId, equals(companyA));
 
-      // Switch context to Company B
-      activeCompany = companyB;
+        // Switch context to Company B
+        activeCompany = companyB;
 
-      // Search or read account under Company B -> MUST BE NULL
-      final searchFromB = await accountRepo.getByUuid(accA.uuid);
-      expect(searchFromB, isNull);
+        // Search or read account under Company B -> MUST BE NULL
+        final searchFromB = await accountRepo.getByUuid(accA.uuid);
+        expect(searchFromB, isNull);
 
-      // Search or read journal entry under Company B -> MUST BE NULL
-      final journalFromB = await journalRepo.getByUuid(entryA.uuid);
-      expect(journalFromB, isNull);
-    });
+        // Search or read journal entry under Company B -> MUST BE NULL
+        final journalFromB = await journalRepo.getByUuid(entryA.uuid);
+        expect(journalFromB, isNull);
+      },
+    );
 
-    test('2. Inventory Master Tables — Category, Warehouse, Product Tenant Identity Enforcement', () async {
-      String activeCompany = companyA;
+    test(
+      '2. Inventory Master Tables — Category, Warehouse, Product Tenant Identity Enforcement',
+      () async {
+        String activeCompany = companyA;
 
-      final categoryRepo = CategoryRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => activeCompany,
-      );
-      final warehouseRepo = WarehouseRepositoryImpl(
-        inventoryDb,
-        null,
-        () => activeCompany,
-      );
-      final productRepo = ProductRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => activeCompany,
-      );
+        final categoryRepo = CategoryRepositoryImpl(
+          inventoryDb,
+          readCompanyId: () => activeCompany,
+        );
+        final warehouseRepo = WarehouseRepositoryImpl(
+          inventoryDb,
+          null,
+          () => activeCompany,
+        );
+        final productRepo = ProductRepositoryImpl(
+          inventoryDb,
+          readCompanyId: () => activeCompany,
+        );
 
-      final catAId = generateUuidV4();
-      final categoryA = Category(
-        id: catAId,
-        code: 'CAT-A',
-        name: 'Electronics A',
-        warehouseId: 'WH-MAIN',
-        companyId: companyA,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await categoryRepo.saveCategory(categoryA);
-      final savedCatA = await categoryRepo.getCategoryById(catAId);
-      expect(savedCatA, isNotNull);
-      expect(savedCatA!.companyId, equals(companyA));
-
-      final whAId = generateUuidV4();
-      final warehouseA = Warehouse(
-        id: whAId,
-        code: 'WH-A',
-        name: 'Main Warehouse A',
-        companyId: companyA,
-      );
-      await warehouseRepo.saveWarehouse(warehouseA);
-      final savedWhA = await warehouseRepo.getWarehouseById(whAId);
-      expect(savedWhA, isNotNull);
-      expect(savedWhA!.companyId, equals(companyA));
-
-      final savedPrdA = await productRepo.insert(
-        const ProductDraft(
-          itemCode: 'ITEM-A',
-          name: 'Product A',
-          packSize: 1,
-          price: 100,
-          unitCost: 50,
-        ),
-      );
-      expect(savedPrdA.uuid.isNotEmpty, isTrue);
-
-      // Switch to Company B
-      activeCompany = companyB;
-
-      // Verify complete tenant isolation across reads
-      expect(await categoryRepo.getCategoryById(catAId), isNull);
-      expect(await warehouseRepo.getWarehouseById(whAId), isNull);
-      expect(await productRepo.getByUuid(savedPrdA.uuid), isNull);
-
-      // Attempt cross-company mutation from Company B -> MUST BE REJECTED (notFound)
-      await expectLater(
-        () => categoryRepo.deleteCategory(catAId),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.notFound)),
-      );
-      await expectLater(
-        () => warehouseRepo.deleteWarehouse(whAId),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.notFound)),
-      );
-      await expectLater(
-        () => productRepo.delete(savedPrdA.id),
-        throwsA(isA<Object>()),
-      );
-    });
-
-    test('3. Inventory Documents — Stock Returns & Transfers Tenant Identity Enforcement', () async {
-      String activeCompany = companyA;
-
-      final returnRepo = StockReturnsRepositoryImpl(
-        db: inventoryDb,
-        readCompanyId: () => activeCompany,
-      );
-      final transferRepo = StockTransferRepositoryImpl(
-        db: inventoryDb,
-        readCompanyId: () => activeCompany,
-      );
-
-      final retAId = generateUuidV4();
-      await returnRepo.saveReturn(
-        StockReturn(
-          id: retAId,
-          returnNumber: 'RET-001',
-          returnType: StockReturnType.salesReturn,
-          returnDate: DateTime.now(),
+        final catAId = generateUuidV4();
+        final categoryA = Category(
+          id: catAId,
+          code: 'CAT-A',
+          name: 'Electronics A',
+          warehouseId: 'WH-MAIN',
           companyId: companyA,
-        ),
-      );
-      final retA = await returnRepo.getReturnById(retAId);
-      expect(retA, isNotNull);
-      expect(retA!.companyId, equals(companyA));
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await categoryRepo.saveCategory(categoryA);
+        final savedCatA = await categoryRepo.getCategoryById(catAId);
+        expect(savedCatA, isNotNull);
+        expect(savedCatA!.companyId, equals(companyA));
 
-      final trfAId = generateUuidV4();
-      await transferRepo.saveTransfer(
-        StockTransfer(
-          id: trfAId,
-          transferNumber: 'TR-001',
-          fromWarehouseId: 'WH-1',
-          toWarehouseId: 'WH-2',
-          transferDate: DateTime.now(),
+        final whAId = generateUuidV4();
+        final warehouseA = Warehouse(
+          id: whAId,
+          code: 'WH-A',
+          name: 'Main Warehouse A',
           companyId: companyA,
-        ),
-      );
-      final trfA = await transferRepo.getTransferById(trfAId);
-      expect(trfA, isNotNull);
-      expect(trfA!.companyId, equals(companyA));
+        );
+        await warehouseRepo.saveWarehouse(warehouseA);
+        final savedWhA = await warehouseRepo.getWarehouseById(whAId);
+        expect(savedWhA, isNotNull);
+        expect(savedWhA!.companyId, equals(companyA));
 
-      // Switch to Company B
-      activeCompany = companyB;
+        final savedPrdA = await productRepo.insert(
+          const ProductDraft(
+            itemCode: 'ITEM-A',
+            name: 'Product A',
+            packSize: 1,
+            price: 100,
+            unitCost: 50,
+          ),
+        );
+        expect(savedPrdA.uuid.isNotEmpty, isTrue);
 
-      // Verify read isolation
-      expect(await returnRepo.getReturnById(retAId), isNull);
-      expect(await transferRepo.getTransferById(trfAId), isNull);
+        // Switch to Company B
+        activeCompany = companyB;
 
-      // Verify cross-tenant mutation rejection
-      expect(
-        () => returnRepo.deleteReturn(retAId),
-        throwsA(isA<JournalException>().having((e) => e.code, 'code', JournalException.notFound)),
-      );
-      expect(
-        () => transferRepo.deleteTransfer(trfAId),
-        returnsNormally, // delete silent no-op or isolated
-      );
-    });
+        // Verify complete tenant isolation across reads
+        expect(await categoryRepo.getCategoryById(catAId), isNull);
+        expect(await warehouseRepo.getWarehouseById(whAId), isNull);
+        expect(await productRepo.getByUuid(savedPrdA.uuid), isNull);
+
+        // Attempt cross-company mutation from Company B -> MUST BE REJECTED (notFound)
+        await expectLater(
+          () => categoryRepo.deleteCategory(catAId),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.notFound,
+            ),
+          ),
+        );
+        await expectLater(
+          () => warehouseRepo.deleteWarehouse(whAId),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.notFound,
+            ),
+          ),
+        );
+        await expectLater(
+          () => productRepo.delete(savedPrdA.id),
+          throwsA(isA<Object>()),
+        );
+      },
+    );
+
+    test(
+      '3. Inventory Documents — Stock Returns & Transfers Tenant Identity Enforcement',
+      () async {
+        String activeCompany = companyA;
+
+        final returnRepo = StockReturnsRepositoryImpl(
+          db: inventoryDb,
+          readCompanyId: () => activeCompany,
+        );
+        final transferRepo = StockTransferRepositoryImpl(
+          db: inventoryDb,
+          readCompanyId: () => activeCompany,
+        );
+
+        final retAId = generateUuidV4();
+        await returnRepo.saveReturn(
+          StockReturn(
+            id: retAId,
+            returnNumber: 'RET-001',
+            returnType: StockReturnType.salesReturn,
+            returnDate: DateTime.now(),
+            companyId: companyA,
+          ),
+        );
+        final retA = await returnRepo.getReturnById(retAId);
+        expect(retA, isNotNull);
+        expect(retA!.companyId, equals(companyA));
+
+        final trfAId = generateUuidV4();
+        await transferRepo.saveTransfer(
+          StockTransfer(
+            id: trfAId,
+            transferNumber: 'TR-001',
+            fromWarehouseId: 'WH-1',
+            toWarehouseId: 'WH-2',
+            transferDate: DateTime.now(),
+            companyId: companyA,
+          ),
+        );
+        final trfA = await transferRepo.getTransferById(trfAId);
+        expect(trfA, isNotNull);
+        expect(trfA!.companyId, equals(companyA));
+
+        // Switch to Company B
+        activeCompany = companyB;
+
+        // Verify read isolation
+        expect(await returnRepo.getReturnById(retAId), isNull);
+        expect(await transferRepo.getTransferById(trfAId), isNull);
+
+        // Verify cross-tenant mutation rejection
+        expect(
+          () => returnRepo.deleteReturn(retAId),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.notFound,
+            ),
+          ),
+        );
+        expect(
+          () => transferRepo.deleteTransfer(trfAId),
+          returnsNormally, // delete silent no-op or isolated
+        );
+      },
+    );
 
     test('4. Cost Layer & Consumption — Tenant Identity Enforcement', () async {
       String activeCompany = companyA;
@@ -317,30 +344,34 @@ void main() {
       expect(consumptionsA.consumptions.first.companyId, equals(companyA));
     });
 
-    test('5. Rejection of Ownerless Record Creation without Fallback Company ID Context', () async {
-      // Simulate null/empty companyId provider with fallback
-      final categoryRepo = CategoryRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => '', // Empty string -> falls back to LocalAuthDefaults.companyId
-      );
+    test(
+      '5. Rejection of Ownerless Record Creation without Fallback Company ID Context',
+      () async {
+        // Simulate null/empty companyId provider with fallback
+        final categoryRepo = CategoryRepositoryImpl(
+          inventoryDb,
+          readCompanyId: () =>
+              '', // Empty string -> falls back to LocalAuthDefaults.companyId
+        );
 
-      final catId = generateUuidV4();
-      await categoryRepo.saveCategory(
-        Category(
-          id: catId,
-          code: 'FALLBACK-01',
-          name: 'Fallback Category',
-          warehouseId: 'WH-MAIN',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
+        final catId = generateUuidV4();
+        await categoryRepo.saveCategory(
+          Category(
+            id: catId,
+            code: 'FALLBACK-01',
+            name: 'Fallback Category',
+            warehouseId: 'WH-MAIN',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      final category = await categoryRepo.getCategoryById(catId);
-      expect(category, isNotNull);
-      // Ensure that record is NEVER ownerless (has a non-empty companyId)
-      expect(category!.companyId, isNotNull);
-      expect(category.companyId!.isNotEmpty, isTrue);
-    });
+        final category = await categoryRepo.getCategoryById(catId);
+        expect(category, isNotNull);
+        // Ensure that record is NEVER ownerless (has a non-empty companyId)
+        expect(category!.companyId, isNotNull);
+        expect(category.companyId!.isNotEmpty, isTrue);
+      },
+    );
   });
 }

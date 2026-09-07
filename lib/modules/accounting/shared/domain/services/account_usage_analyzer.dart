@@ -29,7 +29,8 @@ class AccountUsageRecord {
   final double currentBalance;
   final List<String> referencedDocumentTypes;
 
-  bool get isChangeAllowed => status != AccountUsageStatus.usedInPostedTransactions;
+  bool get isChangeAllowed =>
+      status != AccountUsageStatus.usedInPostedTransactions;
 }
 
 /// Interface for analyzing account historical usage across all business modules.
@@ -43,9 +44,7 @@ abstract class AccountUsageAnalyzer {
 
 /// In-memory / Default implementation of [AccountUsageAnalyzer].
 class AccountUsageAnalyzerImpl implements AccountUsageAnalyzer {
-  AccountUsageAnalyzerImpl({
-    this.postedJournalLinesPort,
-  });
+  AccountUsageAnalyzerImpl({this.postedJournalLinesPort});
 
   final dynamic postedJournalLinesPort;
   final Map<String, List<Map<String, dynamic>>> _recordedTransactions = {};

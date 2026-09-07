@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/modules/module_settings_definition.dart';
 import 'shared/presentation/pages/customers_routes.dart';
 
-List<ModuleSettingsCategoryDefinition> buildCustomersSettingsCategories(String moduleId) {
+List<ModuleSettingsCategoryDefinition> buildCustomersSettingsCategories(
+  String moduleId,
+) {
   return [
     ModuleSettingsCategoryDefinition(
       id: 'customers_settings_cat',

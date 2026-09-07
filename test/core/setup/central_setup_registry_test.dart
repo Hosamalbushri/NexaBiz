@@ -24,38 +24,41 @@ void main() {
       expect(registry.findByPackageId('inventory'), equals(inventorySetup));
     });
 
-    test('2. Enumeration getAll returns items deterministically sorted by sortOrder', () {
-      const salesSetup = PackageSetupDefinition(
-        packageId: 'sales',
-        displayNameAr: 'المبيعات',
-        displayNameEn: 'Sales',
-        sortOrder: 30,
-      );
+    test(
+      '2. Enumeration getAll returns items deterministically sorted by sortOrder',
+      () {
+        const salesSetup = PackageSetupDefinition(
+          packageId: 'sales',
+          displayNameAr: 'المبيعات',
+          displayNameEn: 'Sales',
+          sortOrder: 30,
+        );
 
-      const accountingSetup = PackageSetupDefinition(
-        packageId: 'accounting',
-        displayNameAr: 'المحاسبة',
-        displayNameEn: 'Accounting',
-        sortOrder: 10,
-      );
+        const accountingSetup = PackageSetupDefinition(
+          packageId: 'accounting',
+          displayNameAr: 'المحاسبة',
+          displayNameEn: 'Accounting',
+          sortOrder: 10,
+        );
 
-      const inventorySetup = PackageSetupDefinition(
-        packageId: 'inventory',
-        displayNameAr: 'المخزون',
-        displayNameEn: 'Inventory',
-        sortOrder: 20,
-      );
+        const inventorySetup = PackageSetupDefinition(
+          packageId: 'inventory',
+          displayNameAr: 'المخزون',
+          displayNameEn: 'Inventory',
+          sortOrder: 20,
+        );
 
-      registry.register(salesSetup);
-      registry.register(accountingSetup);
-      registry.register(inventorySetup);
+        registry.register(salesSetup);
+        registry.register(accountingSetup);
+        registry.register(inventorySetup);
 
-      final all = registry.getAll();
-      expect(all.length, equals(3));
-      expect(all[0].packageId, equals('accounting'));
-      expect(all[1].packageId, equals('inventory'));
-      expect(all[2].packageId, equals('sales'));
-    });
+        final all = registry.getAll();
+        expect(all.length, equals(3));
+        expect(all[0].packageId, equals('accounting'));
+        expect(all[1].packageId, equals('inventory'));
+        expect(all[2].packageId, equals('sales'));
+      },
+    );
 
     test('3. Rejects duplicate package ID registration', () {
       const setup1 = PackageSetupDefinition(
@@ -74,11 +77,13 @@ void main() {
 
       expect(
         () => registry.register(setup2),
-        throwsA(isA<PackageSetupValidationException>().having(
-          (e) => e.message,
-          'message',
-          contains('is already registered'),
-        )),
+        throwsA(
+          isA<PackageSetupValidationException>().having(
+            (e) => e.message,
+            'message',
+            contains('is already registered'),
+          ),
+        ),
       );
     });
 
@@ -110,11 +115,13 @@ void main() {
 
       expect(
         () => registry.register(invalidSalesSetup),
-        throwsA(isA<PackageSetupValidationException>().having(
-          (e) => e.message,
-          'message',
-          contains('duplicate section ID "tax_section"'),
-        )),
+        throwsA(
+          isA<PackageSetupValidationException>().having(
+            (e) => e.message,
+            'message',
+            contains('duplicate section ID "tax_section"'),
+          ),
+        ),
       );
     });
 

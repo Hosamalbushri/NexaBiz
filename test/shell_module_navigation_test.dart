@@ -14,18 +14,14 @@ void main() {
         ShellRoute(
           navigatorKey: GlobalKey<NavigatorState>(debugLabel: 'shell'),
           pageBuilder: (context, state, child) {
-            return NoTransitionPage<void>(
-              child: Scaffold(body: child),
-            );
+            return NoTransitionPage<void>(child: Scaffold(body: child));
           },
           routes: [
             StatefulShellRoute.indexedStack(
               builder: (context, state, navigationShell) => navigationShell,
               branches: [
                 StatefulShellBranch(
-                  navigatorKey: GlobalKey<NavigatorState>(
-                    debugLabel: 'branch',
-                  ),
+                  navigatorKey: GlobalKey<NavigatorState>(debugLabel: 'branch'),
                   routes: [
                     GoRoute(
                       path: '/dashboard',

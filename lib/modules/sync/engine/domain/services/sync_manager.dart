@@ -138,14 +138,18 @@ class SyncManager {
     if (_started) {
       _enabled = enabled;
       await _queue.reclaimInFlight(now: _clock());
-      await SyncQueueRecoveryService(queue: _queue).recoverOrphanedOperations(_handlers.values);
+      await SyncQueueRecoveryService(
+        queue: _queue,
+      ).recoverOrphanedOperations(_handlers.values);
       await _refreshOverview();
       return;
     }
     _started = true;
     _enabled = enabled;
     await _queue.reclaimInFlight(now: _clock());
-    await SyncQueueRecoveryService(queue: _queue).recoverOrphanedOperations(_handlers.values);
+    await SyncQueueRecoveryService(
+      queue: _queue,
+    ).recoverOrphanedOperations(_handlers.values);
     await _connectivity.start();
     await _refreshOverview();
 
@@ -216,9 +220,7 @@ class SyncManager {
     Future<SyncPassResult> annotate(SyncPassResult result) async {
       final finished = _clock();
       final duration = finished.difference(started).inMilliseconds;
-      _currentDiagnostics = _currentDiagnostics.copyWith(
-        latencyMs: duration,
-      );
+      _currentDiagnostics = _currentDiagnostics.copyWith(latencyMs: duration);
       final enriched = SyncPassResult(
         outcome: result.outcome,
         uploaded: result.uploaded,
@@ -247,36 +249,56 @@ class SyncManager {
       correlationId: correlationId,
       trigger: trigger,
       body: () async {
-        if (_readClockState != null && _readClockState() == ClockIntegrityState.tampered) {
-          SecurityLogger.logEvent('clock_integrity_tampered', metadata: {'company_id': _readCompanyId?.call()});
+        if (_readClockState != null &&
+            _readClockState() == ClockIntegrityState.tampered) {
+          SecurityLogger.logEvent(
+            'clock_integrity_tampered',
+            metadata: {'company_id': _readCompanyId?.call()},
+          );
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.clockTampered),
           );
         }
         if (_isTimeTrusted != null && !_isTimeTrusted()) {
-          SecurityLogger.logEvent('temporal_authorization_denied', metadata: {'company_id': _readCompanyId?.call()});
+          SecurityLogger.logEvent(
+            'temporal_authorization_denied',
+            metadata: {'company_id': _readCompanyId?.call()},
+          );
           await _refreshOverview();
           return annotate(
-            const SyncPassResult(outcome: SyncPassOutcome.temporalAuthorizationFailed),
+            const SyncPassResult(
+              outcome: SyncPassOutcome.temporalAuthorizationFailed,
+            ),
           );
         }
         if (_requiresReverification != null && _requiresReverification()) {
-          SecurityLogger.logEvent('temporal_reverification_required', metadata: {'company_id': _readCompanyId?.call()});
+          SecurityLogger.logEvent(
+            'temporal_reverification_required',
+            metadata: {'company_id': _readCompanyId?.call()},
+          );
           await _refreshOverview();
           return annotate(
-            const SyncPassResult(outcome: SyncPassOutcome.reverificationRequired),
+            const SyncPassResult(
+              outcome: SyncPassOutcome.reverificationRequired,
+            ),
           );
         }
         if (_isOfflineGraceActive != null && !_isOfflineGraceActive()) {
-          SecurityLogger.logEvent('offline_grace_expired', metadata: {'company_id': _readCompanyId?.call()});
+          SecurityLogger.logEvent(
+            'offline_grace_expired',
+            metadata: {'company_id': _readCompanyId?.call()},
+          );
           await _refreshOverview();
           return annotate(
-            const SyncPassResult(outcome: SyncPassOutcome.temporalAuthorizationFailed),
+            const SyncPassResult(
+              outcome: SyncPassOutcome.temporalAuthorizationFailed,
+            ),
           );
         }
 
-        if (!_enabled || (_hasSyncCapability != null && !_hasSyncCapability())) {
+        if (!_enabled ||
+            (_hasSyncCapability != null && !_hasSyncCapability())) {
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.skippedDisabled),
@@ -434,8 +456,8 @@ class SyncManager {
             outcome == SyncPassOutcome.completed
                 ? EngineSyncState.completed
                 : outcome == SyncPassOutcome.partialFailure
-                    ? EngineSyncState.partiallyCompleted
-                    : EngineSyncState.idle,
+                ? EngineSyncState.partiallyCompleted
+                : EngineSyncState.idle,
           );
           return annotate(
             SyncPassResult(
@@ -455,13 +477,8 @@ class SyncManager {
     );
   }
 
-  Future<
-      ({
-        int uploaded,
-        int failed,
-        int conflicts,
-        bool authRequired,
-      })> _uploadReady() async {
+  Future<({int uploaded, int failed, int conflicts, bool authRequired})>
+  _uploadReady() async {
     var uploaded = 0;
     var failed = 0;
     var conflicts = 0;
@@ -473,18 +490,24 @@ class SyncManager {
     for (final op in ready) {
       // Validate tenant boundary: operation companyId must match current active companyId
       final activeCompanyId = _readCompanyId?.call();
-      if (activeCompanyId != null && op.companyId != null && op.companyId != activeCompanyId) {
+      if (activeCompanyId != null &&
+          op.companyId != null &&
+          op.companyId != activeCompanyId) {
         failed++;
         await _queue.quarantine(
           op.id,
-          error: 'Quarantined: Cross-tenant operation upload blocked. '
+          error:
+              'Quarantined: Cross-tenant operation upload blocked. '
               'Operation company ID "${op.companyId}" does not match active company ID "$activeCompanyId".',
         );
-        SecurityLogger.logEvent('sync.tenant_mismatch', metadata: {
-          'operation_id': op.id,
-          'operation_company_id': op.companyId,
-          'active_company_id': activeCompanyId,
-        });
+        SecurityLogger.logEvent(
+          'sync.tenant_mismatch',
+          metadata: {
+            'operation_id': op.id,
+            'operation_company_id': op.companyId,
+            'active_company_id': activeCompanyId,
+          },
+        );
         continue;
       }
 
@@ -501,7 +524,8 @@ class SyncManager {
       } else {
         try {
           final probed = await handler.evaluateConflict(op);
-          decision = probed ??
+          decision =
+              probed ??
               _conflictResolver.resolve(
                 localOperation: op,
                 remoteVersion: op.baseVersion,
@@ -646,13 +670,12 @@ class SyncManager {
         continue;
       }
 
-      final byId = {
-        for (final r in results) r.operationId: r,
-      };
+      final byId = {for (final r in results) r.operationId: r};
 
       for (final op in chunk) {
         final handler = handlersByOp[op.id]!;
-        final item = byId[op.id] ??
+        final item =
+            byId[op.id] ??
             SyncBatchPushItemResult(
               operationId: op.id,
               status: 'error',
@@ -688,9 +711,13 @@ class SyncManager {
               entityType: op.entityType,
               entityId: op.entityId,
               baseVersion: op.baseVersion,
-              serverVersion: failure is SyncConflictFailure ? failure.serverVersion : op.baseVersion + 1,
+              serverVersion: failure is SyncConflictFailure
+                  ? failure.serverVersion
+                  : op.baseVersion + 1,
               localPayload: op.payload,
-              remotePayload: failure is SyncConflictFailure ? failure.serverRecord : null,
+              remotePayload: failure is SyncConflictFailure
+                  ? failure.serverRecord
+                  : null,
               mergeStatus: 'requires_user_resolution',
               createdAt: _clock(),
             );
@@ -716,8 +743,9 @@ class SyncManager {
               pendingOp.copyWith(
                 status: SyncStatus.pending,
                 updatedAt: _clock(),
-                lastError:
-                    pendingOp.id == op.id ? failure.message : pendingOp.lastError,
+                lastError: pendingOp.id == op.id
+                    ? failure.message
+                    : pendingOp.lastError,
                 clearNextRetryAt: true,
               ),
             );
@@ -735,11 +763,28 @@ class SyncManager {
         final attempts = op.attemptCount + 1;
 
         if (classification.securityEvent != null) {
-          SecurityLogger.logEvent(classification.securityEvent!, metadata: {
-            'operation_id': op.id,
-            'company_id': op.companyId,
-            'error': err.message,
-          });
+          SecurityLogger.logEvent(
+            classification.securityEvent!,
+            metadata: {
+              'operation_id': op.id,
+              'company_id': op.companyId,
+              'error': err.message,
+            },
+          );
+        }
+
+        if (classification.category == SyncErrorCategory.validation) {
+          failed++;
+          await _queue.update(
+            op.copyWith(
+              status: SyncStatus.rejected,
+              attemptCount: attempts,
+              updatedAt: _clock(),
+              lastError: err.message,
+              clearNextRetryAt: true,
+            ),
+          );
+          continue;
         }
 
         if (classification.quarantine || attempts >= 5) {
@@ -754,7 +799,8 @@ class SyncManager {
         }
 
         failed++;
-        final nextRetry = err is RateLimitFailure && err.retryAfterSeconds != null
+        final nextRetry =
+            err is RateLimitFailure && err.retryAfterSeconds != null
             ? _clock().add(Duration(seconds: err.retryAfterSeconds!))
             : _clock().add(syncBackoffForAttempt(attempts));
         await _queue.update(
@@ -778,7 +824,7 @@ class SyncManager {
   }
 
   Future<({int downloaded, int failed, Map<String, int> downloadedByEntity})>
-      _pullAllHandlers() async {
+  _pullAllHandlers() async {
     var downloaded = 0;
     var failed = 0;
     final downloadedByEntity = <String, int>{};
@@ -819,8 +865,9 @@ class SyncManager {
           return (
             downloaded: downloaded,
             failed: failed,
-            downloadedByEntity:
-                Map<String, int>.unmodifiable(downloadedByEntity),
+            downloadedByEntity: Map<String, int>.unmodifiable(
+              downloadedByEntity,
+            ),
           );
         }
       } on AuthenticationFailure {
@@ -996,7 +1043,8 @@ class SyncManager {
     }
     final op = allOps[opIndex];
 
-    final payloadToUse = resolvedPayload ??
+    final payloadToUse =
+        resolvedPayload ??
         (resolutionStrategy == 'server_selected'
             ? (conflictRec?.remotePayload ?? op.payload)
             : op.payload);

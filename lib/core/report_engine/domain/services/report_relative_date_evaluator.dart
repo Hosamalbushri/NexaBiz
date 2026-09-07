@@ -74,8 +74,14 @@ class ReportRelativeDateEvaluator {
         // Week starting Monday (or Sunday)
         final weekday = today.weekday;
         final start = today.subtract(Duration(days: weekday - 1));
-        final end = DateTime(today.year, today.month, today.day, 23, 59, 59)
-            .add(Duration(days: 7 - weekday));
+        final end = DateTime(
+          today.year,
+          today.month,
+          today.day,
+          23,
+          59,
+          59,
+        ).add(Duration(days: 7 - weekday));
         return DateTimeRange(start: start, end: end);
 
       case ReportRelativeDateRange.lastWeek:

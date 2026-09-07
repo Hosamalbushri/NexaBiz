@@ -11,6 +11,7 @@ class AppButton extends StatelessWidget {
     required this.onPressed,
     this.variant = AppButtonVariant.filled,
     this.icon,
+    this.trailingIcon = false,
     this.isLoading = false,
     this.expand = false,
   });
@@ -19,6 +20,7 @@ class AppButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final AppButtonVariant variant;
   final IconData? icon;
+  final bool trailingIcon;
   final bool isLoading;
   final bool expand;
 
@@ -35,11 +37,21 @@ class AppButton extends StatelessWidget {
         ? Text(label)
         : Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 8),
-              Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
-            ],
+            children: trailingIcon
+                ? [
+                    Flexible(
+                      child: Text(label, overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(icon, size: 20),
+                  ]
+                : [
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(label, overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
           );
 
     final button = switch (variant) {

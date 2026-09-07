@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/presentation/pages/module_unit_reports_page.dart';
+
+import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_shadows.dart';
@@ -30,7 +32,8 @@ class ReportsHomePage extends ConsumerWidget {
     final reportsModule = registry.findById('reports');
 
     // Extract unique module IDs configured within ReportsModule
-    final moduleIdsWithReports = (isReportsModuleActive && reportsModule != null)
+    final moduleIdsWithReports =
+        (isReportsModuleActive && reportsModule != null)
         ? reportsModule.reportCategories.map((c) => c.moduleId).toSet()
         : <String>{};
 
@@ -41,10 +44,7 @@ class ReportsHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.moduleReports,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: l10n.moduleReports, showBackButton: true),
       body: (!isReportsModuleActive || modulesWithReports.isEmpty)
           ? Center(
               child: AppEmptyState(
@@ -67,22 +67,26 @@ class ReportsHomePage extends ConsumerWidget {
                 ),
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final isWide = AppBreakpoints.isTablet(constraints.maxWidth) ||
+                    final isWide =
+                        AppBreakpoints.isTablet(constraints.maxWidth) ||
                         AppBreakpoints.isDesktop(constraints.maxWidth);
 
                     if (isWide) {
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: AppSpacing.md,
-                          mainAxisSpacing: AppSpacing.md,
-                          childAspectRatio: 2.6,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: AppSpacing.md,
+                              mainAxisSpacing: AppSpacing.md,
+                              childAspectRatio: 2.6,
+                            ),
                         itemCount: modulesWithReports.length,
                         itemBuilder: (context, index) {
-                          return _ModuleReportCard(module: modulesWithReports[index]);
+                          return _ModuleReportCard(
+                            module: modulesWithReports[index],
+                          );
                         },
                       );
                     }
@@ -91,9 +95,12 @@ class ReportsHomePage extends ConsumerWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: modulesWithReports.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.sm),
                       itemBuilder: (context, index) {
-                        return _ModuleReportCard(module: modulesWithReports[index]);
+                        return _ModuleReportCard(
+                          module: modulesWithReports[index],
+                        );
                       },
                     );
                   },
@@ -117,7 +124,8 @@ class _ModuleReportCard extends ConsumerWidget {
     final title = module.label(context);
 
     final reportsModule = ref.watch(moduleRegistryProvider).findById('reports');
-    final moduleCategories = reportsModule?.reportCategories
+    final moduleCategories =
+        reportsModule?.reportCategories
             .where((c) => c.moduleId == module.id)
             .toList() ??
         const [];
@@ -127,7 +135,8 @@ class _ModuleReportCard extends ConsumerWidget {
       (sum, cat) => sum + cat.reports.length,
     );
 
-    final subtitle = module.description(context) ??
+    final subtitle =
+        module.description(context) ??
         (l10n.localeName == 'ar'
             ? '$totalReports تقارير متاحة'
             : '$totalReports reports available');
@@ -138,11 +147,7 @@ class _ModuleReportCard extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ModuleUnitReportsPage(moduleId: module.id),
-            ),
-          );
+          context.push(AppRoutes.moduleReports(module.id));
         },
         child: Ink(
           decoration: BoxDecoration(
@@ -195,7 +200,10 @@ class _ModuleReportCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.pill),

@@ -16,7 +16,10 @@ abstract class CashRegisterRepository {
   Future<List<CashRegister>> getCashRegisters(String companyId);
 
   /// Gets a single cash register by ID, optionally scoped to [companyId].
-  Future<CashRegister?> getCashRegisterById(String registerId, {String? companyId});
+  Future<CashRegister?> getCashRegisterById(
+    String registerId, {
+    String? companyId,
+  });
 
   /// QUERY-LEVEL ENFORCEMENT: Returns ONLY cash registers that are accounting-ready.
   ///

@@ -6,22 +6,24 @@ import '../../domain/services/account_selection_contract.dart';
 
 /// Parameter family provider that filters accounts based on an [AccountSelectionContract],
 /// current search query, active account type, and posting-only toggle.
-final filteredAccountsProvider = Provider.family<
-    AsyncValue<List<Account>>,
-    ({
-      AccountSelectionContract contract,
-      String query,
-      AccountType? activeTypeFilter,
-      bool? activePostingOnly,
-    })>((ref, args) {
-  final accountsAsync = ref.watch(allAccountsProvider);
+final filteredAccountsProvider =
+    Provider.family<
+      AsyncValue<List<Account>>,
+      ({
+        AccountSelectionContract contract,
+        String query,
+        AccountType? activeTypeFilter,
+        bool? activePostingOnly,
+      })
+    >((ref, args) {
+      final accountsAsync = ref.watch(allAccountsProvider);
 
-  return accountsAsync.whenData((allAccounts) {
-    return args.contract.filterEligibleAccounts(
-      allAccounts,
-      query: args.query,
-      activeTypeFilter: args.activeTypeFilter,
-      activePostingOnly: args.activePostingOnly,
-    );
-  });
-});
+      return accountsAsync.whenData((allAccounts) {
+        return args.contract.filterEligibleAccounts(
+          allAccounts,
+          query: args.query,
+          activeTypeFilter: args.activeTypeFilter,
+          activePostingOnly: args.activePostingOnly,
+        );
+      });
+    });

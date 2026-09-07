@@ -70,7 +70,8 @@ class SetupSectionCard extends StatelessWidget {
           ...section.fields.map((field) {
             final currentValue = fieldValues[field.key];
             final role = accountRoles[field.key];
-            final bindingMode = accountBindingModes[field.key] ?? AccountBindingMode.exact;
+            final bindingMode =
+                accountBindingModes[field.key] ?? AccountBindingMode.exact;
             return Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: SetupFieldRenderer(
@@ -80,7 +81,8 @@ class SetupSectionCard extends StatelessWidget {
                 accountRole: role,
                 bindingMode: bindingMode,
                 availableAccounts: availableAccounts,
-                onChanged: (newValue) => onFieldValueChanged(field.key, newValue),
+                onChanged: (newValue) =>
+                    onFieldValueChanged(field.key, newValue),
               ),
             );
           }),
@@ -89,4 +91,3 @@ class SetupSectionCard extends StatelessWidget {
     );
   }
 }
-

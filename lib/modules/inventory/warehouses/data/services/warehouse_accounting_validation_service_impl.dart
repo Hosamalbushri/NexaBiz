@@ -3,7 +3,8 @@ import 'package:stock_count/modules/accounting/shared/data/database/accounting_d
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
 
-class WarehouseAccountingValidationServiceImpl implements WarehouseAccountingValidationService {
+class WarehouseAccountingValidationServiceImpl
+    implements WarehouseAccountingValidationService {
   WarehouseAccountingValidationServiceImpl({
     required AccountingDatabase accountingDb,
   }) : _accountingDb = accountingDb;
@@ -24,11 +25,12 @@ class WarehouseAccountingValidationServiceImpl implements WarehouseAccountingVal
       );
     }
 
-    final account = await (_accountingDb.select(_accountingDb.accounts)..where(
-          (tbl) =>
-              (tbl.uuid.equals(target) | tbl.accountCode.equals(target)),
-        ))
-        .getSingleOrNull();
+    final account =
+        await (_accountingDb.select(_accountingDb.accounts)..where(
+              (tbl) =>
+                  (tbl.uuid.equals(target) | tbl.accountCode.equals(target)),
+            ))
+            .getSingleOrNull();
 
     // Check 1: Account exists
     if (account == null) {
@@ -78,7 +80,9 @@ class WarehouseAccountingValidationServiceImpl implements WarehouseAccountingVal
       AccountRole.inventory => accountTypeLower == 'asset',
       AccountRole.cogs => accountTypeLower == 'expense',
       AccountRole.payable =>
-        accountTypeLower == 'liability' || accountTypeLower == 'payable' || accountTypeLower == 'asset',
+        accountTypeLower == 'liability' ||
+            accountTypeLower == 'payable' ||
+            accountTypeLower == 'asset',
       AccountRole.receivable =>
         accountTypeLower == 'asset' || accountTypeLower == 'receivable',
       AccountRole.revenue =>

@@ -63,18 +63,33 @@ String _reportsLabel(AppLocalizations l10n) => l10n.navigationReports;
 String _settingsLabel(AppLocalizations l10n) => l10n.settingsTitle;
 
 /// Resolves which bottom-nav destination should appear selected for [path].
-///
-/// Returns `-1` when [path] is not a shell destination (e.g. module pages),
-/// so no tab looks active — including **Services**, which is selected only on
-/// `/services` itself.
 int selectedNavigationIndex(String path) {
+  final cleanPath = path.contains('?') ? path.split('?').first : path;
   final items = appNavigationItems();
+
   for (var i = 0; i < items.length; i++) {
     final itemPath = items[i].path;
-    if (path == itemPath || path.startsWith('$itemPath/')) {
+    if (cleanPath == itemPath || cleanPath.startsWith('$itemPath/')) {
       return i;
     }
   }
+
+  if (cleanPath.startsWith('/module-reports')) {
+    return 2;
+  }
+
+  if (cleanPath.startsWith('/administration')) {
+    return 3;
+  }
+
+  if (cleanPath.startsWith('/inventory') ||
+      cleanPath.startsWith('/sales') ||
+      cleanPath.startsWith('/customers') ||
+      cleanPath.startsWith('/accounting') ||
+      cleanPath.startsWith('/receipts-payments')) {
+    return 1;
+  }
+
   return -1;
 }
 
@@ -89,6 +104,23 @@ bool isPrimaryShellLocation(String path) {
     }
   }
   return false;
+}
+
+/// Whether [path] is a top-level root destination (primary shell tab or module root).
+bool isRootDestination(String path) {
+  final normalized = _normalizePath(path);
+  if (isPrimaryShellLocation(normalized)) {
+    return true;
+  }
+  const moduleRoots = [
+    '/sales',
+    '/inventory',
+    '/customers',
+    '/accounting',
+    '/receipts-payments',
+    '/administration',
+  ];
+  return moduleRoots.contains(normalized);
 }
 
 String _normalizePath(String path) {

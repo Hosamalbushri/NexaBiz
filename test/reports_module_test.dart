@@ -35,10 +35,7 @@ void main() {
         rows: const [
           ['1', '2'],
         ],
-        widths: const {
-          0: pw.FixedColumnWidth(10),
-          1: pw.FixedColumnWidth(20),
-        },
+        widths: const {0: pw.FixedColumnWidth(10), 1: pw.FixedColumnWidth(20)},
         isRtl: false,
       );
       expect(resolved.headers, ['A', 'B']);

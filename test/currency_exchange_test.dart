@@ -57,8 +57,7 @@ class _RecordingJournals implements JournalRepository {
   Future<JournalEntry?> findBySource({
     required String sourceType,
     required String sourceId,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
   Future<void> softDeleteBySource({
@@ -80,8 +79,7 @@ class _RecordingJournals implements JournalRepository {
     String? query,
     int? limit,
     int? afterId,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<AccountLedgerMovement>> listMovementsForAccount({
@@ -92,8 +90,7 @@ class _RecordingJournals implements JournalRepository {
     bool? isPosted,
     int? limit,
     AccountLedgerCursor? after,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<String>> listCurrencyCodesForAccount({
@@ -101,8 +98,7 @@ class _RecordingJournals implements JournalRepository {
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<double> sumNetBefore({
@@ -110,31 +106,27 @@ class _RecordingJournals implements JournalRepository {
     required DateTime beforeDate,
     String? currencyCode,
     bool? isPosted,
-  }) async =>
-      0;
+  }) async => 0;
 
   @override
   Future<List<MonetaryFxPositionRow>> listMonetaryFxPositions({
     required DateTime asOfInclusive,
     required String baseCurrencyCode,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<TrialBalanceRow>> listTrialBalance({
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<JournalBookLineRow>> listJournalBookLines({
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
-  }) async =>
-      const [];
+  }) async => const [];
 }
 
 void main() {
@@ -206,62 +198,64 @@ void main() {
     expect(() => validator.validate(exchangeDraft()), returnsNormally);
   });
 
-  test('ledger posts debit to-currency and credit from-currency on same box',
-      () async {
-    final journals = _RecordingJournals();
-    final adapter = AccountingRpLedgerAdapter(
-      posting: journalPostingWithLegacyPolicy(journals: journals),
-      accounts: FakeAccountRepository.withSystemFx(),
-    );
+  test(
+    'ledger posts debit to-currency and credit from-currency on same box',
+    () async {
+      final journals = _RecordingJournals();
+      final adapter = AccountingRpLedgerAdapter(
+        posting: journalPostingWithLegacyPolicy(journals: journals),
+        accounts: FakeAccountRepository.withSystemFx(),
+      );
 
-    final now = DateTime.utc(2026, 3, 1);
-    final txn = FinancialTransaction(
-      id: 1,
-      uuid: 'fx-1',
-      transactionType: TransactionType.currencyExchange,
-      source: TransactionSource.currencyExchange,
-      transactionNumber: '1',
-      transactionDate: now,
-      amount: 375,
-      currencyCode: 'SAR',
-      baseCurrencyCode: 'SAR',
-      exchangeRate: 1,
-      counterAmount: 100,
-      counterCurrencyCode: 'USD',
-      counterExchangeRate: 3.75,
-      cashAccountId: 'cash-1',
-      cashAccountName: 'Main cash',
-      counterAccountId: 'cash-1',
-      counterAccountName: 'Main cash',
-      paymentMethod: RpPaymentMethod.cash,
-      documentStatus: TransactionStatus.posted,
-      createdAt: now,
-      updatedAt: now,
-      lines: [
-        FinancialTransactionLine(
-          accountId: 'cash-1',
-          accountName: 'Main cash',
-          amount: 100,
-          currencyCode: 'USD',
-          exchangeRate: 3.75,
-          lineOrder: 0,
-        ),
-      ],
-    );
+      final now = DateTime.utc(2026, 3, 1);
+      final txn = FinancialTransaction(
+        id: 1,
+        uuid: 'fx-1',
+        transactionType: TransactionType.currencyExchange,
+        source: TransactionSource.currencyExchange,
+        transactionNumber: '1',
+        transactionDate: now,
+        amount: 375,
+        currencyCode: 'SAR',
+        baseCurrencyCode: 'SAR',
+        exchangeRate: 1,
+        counterAmount: 100,
+        counterCurrencyCode: 'USD',
+        counterExchangeRate: 3.75,
+        cashAccountId: 'cash-1',
+        cashAccountName: 'Main cash',
+        counterAccountId: 'cash-1',
+        counterAccountName: 'Main cash',
+        paymentMethod: RpPaymentMethod.cash,
+        documentStatus: TransactionStatus.posted,
+        createdAt: now,
+        updatedAt: now,
+        lines: [
+          FinancialTransactionLine(
+            accountId: 'cash-1',
+            accountName: 'Main cash',
+            amount: 100,
+            currencyCode: 'USD',
+            exchangeRate: 3.75,
+            lineOrder: 0,
+          ),
+        ],
+      );
 
-    await adapter.syncTransaction(txn);
+      await adapter.syncTransaction(txn);
 
-    final draft = journals.lastDraft!;
-    expect(draft.sourceType, 'currency_exchange');
-    expect(draft.allowUnbalancedMultiCurrency, isTrue);
-    expect(draft.lines, hasLength(2));
-    expect(draft.lines[0].accountUuid, 'cash-1');
-    expect(draft.lines[0].debit, 100);
-    expect(draft.lines[0].currencyCode, 'USD');
-    expect(draft.lines[1].accountUuid, 'cash-1');
-    expect(draft.lines[1].credit, 375);
-    expect(draft.lines[1].currencyCode, 'SAR');
-  });
+      final draft = journals.lastDraft!;
+      expect(draft.sourceType, 'currency_exchange');
+      expect(draft.allowUnbalancedMultiCurrency, isTrue);
+      expect(draft.lines, hasLength(2));
+      expect(draft.lines[0].accountUuid, 'cash-1');
+      expect(draft.lines[0].debit, 100);
+      expect(draft.lines[0].currencyCode, 'USD');
+      expect(draft.lines[1].accountUuid, 'cash-1');
+      expect(draft.lines[1].credit, 375);
+      expect(draft.lines[1].currencyCode, 'SAR');
+    },
+  );
 
   test('ledger posts FX gain when to-base exceeds from-base', () async {
     final journals = _RecordingJournals();

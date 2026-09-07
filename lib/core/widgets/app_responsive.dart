@@ -4,11 +4,12 @@ import '../../app/theme/app_breakpoints.dart';
 import '../../app/theme/app_spacing.dart';
 
 /// Builder signature providing context, layout constraints, and breakpoint tier.
-typedef ResponsiveWidgetBuilder = Widget Function(
-  BuildContext context,
-  BoxConstraints constraints,
-  AppBreakpointTier tier,
-);
+typedef ResponsiveWidgetBuilder =
+    Widget Function(
+      BuildContext context,
+      BoxConstraints constraints,
+      AppBreakpointTier tier,
+    );
 
 /// Lightweight responsive container providing tier context to child builders.
 class ResponsiveBuilder extends StatelessWidget {
@@ -96,17 +97,15 @@ class AppResponsiveForm extends StatelessWidget {
           );
         }
 
-        final itemWidth = (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+        final itemWidth =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
 
         return Wrap(
           spacing: spacing,
           runSpacing: runSpacing,
           children: [
             for (final child in children)
-              SizedBox(
-                width: itemWidth,
-                child: child,
-              ),
+              SizedBox(width: itemWidth, child: child),
           ],
         );
       },
@@ -139,4 +138,3 @@ class AppContentConstraint extends StatelessWidget {
     );
   }
 }
-

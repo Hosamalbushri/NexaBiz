@@ -62,125 +62,123 @@ class AppFilterSheet extends StatelessWidget {
       duration: const Duration(milliseconds: 150),
       curve: Curves.easeOut,
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: media.size.height * 0.85,
-        ),
+        constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
         child: Container(
           decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppRadius.lg),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: scheme.shadow.withValues(alpha: 0.15),
-              blurRadius: 16,
-              offset: const Offset(0, -4),
+            color: scheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.lg),
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Drag Handle Bar
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 4),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.outlineVariant.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(2),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.shadow.withValues(alpha: 0.15),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Drag Handle Bar
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 8, bottom: 4),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            // Header Row
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.filter_list_rounded,
-                    color: scheme.primary,
-                    size: 22,
-                  ),
-                  const SizedBox(width: AppSpacing.xs + 2),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: scheme.onSurface,
-                      ),
+              // Header Row
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.filter_list_rounded,
+                      color: scheme.primary,
+                      size: 22,
                     ),
-                  ),
-                  if (onReset != null)
-                    TextButton(
-                      onPressed: () {
-                        onReset!();
-                        Navigator.of(context).pop();
-                      },
+                    const SizedBox(width: AppSpacing.xs + 2),
+                    Expanded(
                       child: Text(
-                        resetLabel,
-                        style: TextStyle(
-                          color: scheme.error,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: scheme.onSurface,
                         ),
                       ),
                     ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            // Filter Form Fields (Scrollable)
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: children,
+                    if (onReset != null)
+                      TextButton(
+                        onPressed: () {
+                          onReset!();
+                          Navigator.of(context).pop();
+                        },
+                        child: Text(
+                          resetLabel,
+                          style: TextStyle(
+                            color: scheme.error,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            // Apply Actions Bar
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                AppSpacing.sm + (bottomInset > 0 ? 0 : safeBottom),
-              ),
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                border: Border(
-                  top: BorderSide(
-                    color: scheme.outlineVariant.withValues(alpha: 0.35),
+              const Divider(height: 1),
+              // Filter Form Fields (Scrollable)
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: children,
                   ),
                 ),
               ),
-              child: AppButton(
-                label: applyLabel,
-                icon: Icons.check_rounded,
-                expand: true,
-                onPressed: () {
-                  onApply();
-                  Navigator.of(context).pop();
-                },
+              // Apply Actions Bar
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.sm + (bottomInset > 0 ? 0 : safeBottom),
+                ),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  border: Border(
+                    top: BorderSide(
+                      color: scheme.outlineVariant.withValues(alpha: 0.35),
+                    ),
+                  ),
+                ),
+                child: AppButton(
+                  label: applyLabel,
+                  icon: Icons.check_rounded,
+                  expand: true,
+                  onPressed: () {
+                    onApply();
+                    Navigator.of(context).pop();
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

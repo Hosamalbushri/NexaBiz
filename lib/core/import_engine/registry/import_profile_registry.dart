@@ -2,8 +2,6 @@ import '../import_engine.dart';
 import '../../../modules/accounting/chart_of_accounts/import/account_import_profile.dart';
 import '../../../modules/inventory/products/import/product_import_profile.dart';
 
-
-
 /// Registry holding all available [ImportProfile] definitions across NexaBiz.
 class ImportProfileRegistry {
   ImportProfileRegistry._();
@@ -53,20 +51,39 @@ class ImportProfileRegistry {
         label: 'Customer Name',
         dataType: ImportDataType.text,
         isRequired: true,
-        aliases: ['Customer Name', 'Name', 'Company Name', 'اسم العميل', 'العميل'],
+        aliases: [
+          'Customer Name',
+          'Name',
+          'Company Name',
+          'اسم العميل',
+          'العميل',
+        ],
       ),
       ImportField(
         key: 'code',
         label: 'Customer Code',
         dataType: ImportDataType.text,
         isUnique: true,
-        aliases: ['Customer Code', 'Code', 'Account No', 'كود العميل', 'رقم العميل'],
+        aliases: [
+          'Customer Code',
+          'Code',
+          'Account No',
+          'كود العميل',
+          'رقم العميل',
+        ],
       ),
       ImportField(
         key: 'phone',
         label: 'Phone Number',
         dataType: ImportDataType.text,
-        aliases: ['Phone', 'Mobile', 'Telephone', 'الهاتف', 'الجوال', 'رقم الهاتف'],
+        aliases: [
+          'Phone',
+          'Mobile',
+          'Telephone',
+          'الهاتف',
+          'الجوال',
+          'رقم الهاتف',
+        ],
       ),
       ImportField(
         key: 'email',
@@ -110,14 +127,26 @@ class ImportProfileRegistry {
         label: 'Supplier Name',
         dataType: ImportDataType.text,
         isRequired: true,
-        aliases: ['Supplier Name', 'Vendor', 'Vendor Name', 'اسم المورد', 'المورد'],
+        aliases: [
+          'Supplier Name',
+          'Vendor',
+          'Vendor Name',
+          'اسم المورد',
+          'المورد',
+        ],
       ),
       ImportField(
         key: 'code',
         label: 'Supplier Code',
         dataType: ImportDataType.text,
         isUnique: true,
-        aliases: ['Supplier Code', 'Code', 'Vendor Code', 'كود المورد', 'رقم المورد'],
+        aliases: [
+          'Supplier Code',
+          'Code',
+          'Vendor Code',
+          'كود المورد',
+          'رقم المورد',
+        ],
       ),
       ImportField(
         key: 'phone',
@@ -154,7 +183,13 @@ class ImportProfileRegistry {
         label: 'Full Name',
         dataType: ImportDataType.text,
         isRequired: true,
-        aliases: ['Employee Name', 'Full Name', 'Name', 'اسم الموظف', 'الاسم كامل'],
+        aliases: [
+          'Employee Name',
+          'Full Name',
+          'Name',
+          'اسم الموظف',
+          'الاسم كامل',
+        ],
       ),
       ImportField(
         key: 'employeeCode',
@@ -162,7 +197,13 @@ class ImportProfileRegistry {
         dataType: ImportDataType.text,
         isRequired: true,
         isUnique: true,
-        aliases: ['Employee ID', 'Code', 'Staff ID', 'رقم الموظف', 'كود الموظف'],
+        aliases: [
+          'Employee ID',
+          'Code',
+          'Staff ID',
+          'رقم الموظف',
+          'كود الموظف',
+        ],
       ),
       ImportField(
         key: 'department',
@@ -199,14 +240,26 @@ class ImportProfileRegistry {
         label: 'Warehouse Name',
         dataType: ImportDataType.text,
         isRequired: true,
-        aliases: ['Warehouse Name', 'Store Name', 'Name', 'اسم المستودع', 'المخزن'],
+        aliases: [
+          'Warehouse Name',
+          'Store Name',
+          'Name',
+          'اسم المستودع',
+          'المخزن',
+        ],
       ),
       ImportField(
         key: 'code',
         label: 'Warehouse Code',
         dataType: ImportDataType.text,
         isUnique: true,
-        aliases: ['Warehouse Code', 'Code', 'Store Code', 'كود المستودع', 'رمز المخزن'],
+        aliases: [
+          'Warehouse Code',
+          'Code',
+          'Store Code',
+          'كود المستودع',
+          'رمز المخزن',
+        ],
       ),
       ImportField(
         key: 'location',
@@ -245,7 +298,13 @@ class ImportProfileRegistry {
         label: 'Opening Quantity',
         dataType: ImportDataType.number,
         isRequired: true,
-        aliases: ['Quantity', 'Qty', 'Stock Qty', 'الكمية الافتتاحية', 'الكمية'],
+        aliases: [
+          'Quantity',
+          'Qty',
+          'Stock Qty',
+          'الكمية الافتتاحية',
+          'الكمية',
+        ],
       ),
       ImportField(
         key: 'unitCost',

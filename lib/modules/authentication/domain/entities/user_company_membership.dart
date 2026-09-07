@@ -58,10 +58,12 @@ class UserCompanyMembership {
   factory UserCompanyMembership.fromJson(Map<String, dynamic> json) {
     return UserCompanyMembership(
       userId: json['user_id'] as String? ?? json['userId'] as String? ?? '',
-      companyId: json['company_id'] as String? ?? json['companyId'] as String? ?? '',
+      companyId:
+          json['company_id'] as String? ?? json['companyId'] as String? ?? '',
       role: json['role'] as String? ?? 'Member',
       status: json['status'] as String? ?? 'active',
-      permissions: (json['permissions'] as List<dynamic>?)
+      permissions:
+          (json['permissions'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],

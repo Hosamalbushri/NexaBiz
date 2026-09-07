@@ -25,9 +25,6 @@ class AppMoneyText extends StatelessWidget {
     final formatted = formatter.format(amount).trim();
     final text = currencyCode != null ? '$formatted $currencyCode' : formatted;
 
-    return Text(
-      text,
-      style: style,
-    );
+    return Text(text, style: style);
   }
 }

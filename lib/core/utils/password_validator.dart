@@ -141,8 +141,7 @@ class PasswordValidator {
       l10n,
     );
 
-    final isValid =
-        currentErr == null && newErr == null && confirmErr == null;
+    final isValid = currentErr == null && newErr == null && confirmErr == null;
     final strength = calculateStrength(newPassword);
 
     return PasswordValidationResult(

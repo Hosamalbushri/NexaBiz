@@ -45,13 +45,26 @@ class JournalBalanceValidator {
       }
 
       currencies.add(line.currencyCode.trim().toUpperCase());
-      totalDebitCents += JournalMoney.toCents(line.debit, decimalPlaces: decimalPlaces);
-      totalCreditCents += JournalMoney.toCents(line.credit, decimalPlaces: decimalPlaces);
-      totalBaseDebitCents += JournalMoney.toCents(line.baseDebit ?? 0, decimalPlaces: decimalPlaces);
-      totalBaseCreditCents += JournalMoney.toCents(line.baseCredit ?? 0, decimalPlaces: decimalPlaces);
+      totalDebitCents += JournalMoney.toCents(
+        line.debit,
+        decimalPlaces: decimalPlaces,
+      );
+      totalCreditCents += JournalMoney.toCents(
+        line.credit,
+        decimalPlaces: decimalPlaces,
+      );
+      totalBaseDebitCents += JournalMoney.toCents(
+        line.baseDebit ?? 0,
+        decimalPlaces: decimalPlaces,
+      );
+      totalBaseCreditCents += JournalMoney.toCents(
+        line.baseCredit ?? 0,
+        decimalPlaces: decimalPlaces,
+      );
     }
 
-    final skipForeignBalance = allowUnbalancedMultiCurrency && currencies.length > 1;
+    final skipForeignBalance =
+        allowUnbalancedMultiCurrency && currencies.length > 1;
     if (!skipForeignBalance && totalDebitCents != totalCreditCents) {
       throw JournalException(
         JournalException.unbalanced,

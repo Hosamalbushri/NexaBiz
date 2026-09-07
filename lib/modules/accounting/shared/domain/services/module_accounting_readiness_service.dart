@@ -27,7 +27,8 @@ class ModuleAccountingReadinessReport {
   });
 
   bool get isReady => status == ModuleAccountingReadinessState.ready;
-  AccountingConfigurationException? get primaryError => errors.isNotEmpty ? errors.first : null;
+  AccountingConfigurationException? get primaryError =>
+      errors.isNotEmpty ? errors.first : null;
 }
 
 class ModuleAccountingReadinessService {
@@ -62,10 +63,14 @@ class ModuleAccountingReadinessService {
           AccountingConfigurationException(
             module: module,
             accountingRole: req.role,
-            expectedAccountType: _mapSetupTypeToCoaType(req.expectedAccountType),
-            errorCode: AccountingConfigurationErrorCode.accountingConfigurationMissing,
+            expectedAccountType: _mapSetupTypeToCoaType(
+              req.expectedAccountType,
+            ),
+            errorCode:
+                AccountingConfigurationErrorCode.accountingConfigurationMissing,
             userMessage: 'إعدادات الحسابات غير مكتملة',
-            userExplanation: 'لم يتم تحديد الحساب المطلوب لقاعدة: ${req.labelAr}',
+            userExplanation:
+                'لم يتم تحديد الحساب المطلوب لقاعدة: ${req.labelAr}',
             configurationRoute: '/setup',
           ),
         );
@@ -83,7 +88,8 @@ class ModuleAccountingReadinessService {
             configuredAccountId: binding.accountUuid,
             errorCode: AccountingConfigurationErrorCode.accountNotFound,
             userMessage: 'الحساب غير موجود',
-            userExplanation: 'الحساب المعيّن لقاعدة ${req.labelAr} غير موجود في الدليل الحسابي',
+            userExplanation:
+                'الحساب المعيّن لقاعدة ${req.labelAr} غير موجود في الدليل الحسابي',
           ),
         );
         continue;
@@ -111,7 +117,8 @@ class ModuleAccountingReadinessService {
             configuredAccountId: account.uuid,
             errorCode: AccountingConfigurationErrorCode.accountDeleted,
             userMessage: 'الحساب محذوف',
-            userExplanation: 'الحساب ${account.name} محذوف من النظام ويحتاج إلى إعادة إعداد',
+            userExplanation:
+                'الحساب ${account.name} محذوف من النظام ويحتاج إلى إعادة إعداد',
           ),
         );
         continue;
@@ -125,7 +132,8 @@ class ModuleAccountingReadinessService {
             configuredAccountId: account.uuid,
             errorCode: AccountingConfigurationErrorCode.accountInactive,
             userMessage: 'الحساب غير نشط',
-            userExplanation: 'الحساب ${account.name} معطّل في الوقت الحالي ويجب تفعيله أو استبداله',
+            userExplanation:
+                'الحساب ${account.name} معطّل في الوقت الحالي ويجب تفعيله أو استبداله',
           ),
         );
         continue;
@@ -149,10 +157,10 @@ class ModuleAccountingReadinessService {
         continue;
       }
 
-      if (binding.bindingMode == AccountBindingMode.parentAccountWithDescendants ||
+      if (binding.bindingMode ==
+              AccountBindingMode.parentAccountWithDescendants ||
           binding.bindingMode == AccountBindingMode.parent) {
         if (!account.isGroup) {
-
           errors.add(
             AccountingConfigurationException(
               module: module,
@@ -160,7 +168,8 @@ class ModuleAccountingReadinessService {
               configuredAccountId: account.uuid,
               errorCode: AccountingConfigurationErrorCode.parentAccountInvalid,
               userMessage: 'المظلة الحسابية غير صالحة',
-              userExplanation: 'الحساب المحدد ${account.name} ليس حساب مجموعة ولا ينشئ مظلة فرعية',
+              userExplanation:
+                  'الحساب المحدد ${account.name} ليس حساب مجموعة ولا ينشئ مظلة فرعية',
             ),
           );
           continue;
@@ -168,7 +177,13 @@ class ModuleAccountingReadinessService {
 
         final allAccounts = await accountRepository.getAll();
         final descendants = allAccounts
-            .where((a) => a.parentId == account.uuid && a.isActive && !a.isDeleted && !a.isGroup)
+            .where(
+              (a) =>
+                  a.parentId == account.uuid &&
+                  a.isActive &&
+                  !a.isDeleted &&
+                  !a.isGroup,
+            )
             .toList();
 
         if (descendants.isEmpty) {
@@ -177,9 +192,11 @@ class ModuleAccountingReadinessService {
               module: module,
               accountingRole: req.role,
               parentAccountId: account.uuid,
-              errorCode: AccountingConfigurationErrorCode.descendantAccountInvalid,
+              errorCode:
+                  AccountingConfigurationErrorCode.descendantAccountInvalid,
               userMessage: 'لا توجد حسابات فرعية صالحة',
-              userExplanation: 'المظلة الحسابية ${account.name} لا تحتوي على حسابات فرعية نشطة قابلة للترحيل',
+              userExplanation:
+                  'المظلة الحسابية ${account.name} لا تحتوي على حسابات فرعية نشطة قابلة للترحيل',
             ),
           );
         }
@@ -191,9 +208,11 @@ class ModuleAccountingReadinessService {
       state = ModuleAccountingReadinessState.notConfigured;
     } else if (missingRoles.isNotEmpty) {
       state = ModuleAccountingReadinessState.partiallyConfigured;
-    } else if (errors.any((e) =>
-        e.errorCode == AccountingConfigurationErrorCode.accountDeleted ||
-        e.errorCode == AccountingConfigurationErrorCode.accountInactive)) {
+    } else if (errors.any(
+      (e) =>
+          e.errorCode == AccountingConfigurationErrorCode.accountDeleted ||
+          e.errorCode == AccountingConfigurationErrorCode.accountInactive,
+    )) {
       state = ModuleAccountingReadinessState.degraded;
     } else if (errors.isNotEmpty) {
       state = ModuleAccountingReadinessState.invalid;

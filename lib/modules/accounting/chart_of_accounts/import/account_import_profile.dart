@@ -19,7 +19,8 @@ class AccountImportProfile {
       entityType: entityType,
       label: label,
       requiredPermission: requiredPermission ?? 'accounting.coa.import',
-      defaultPolicy: defaultPolicy ??
+      defaultPolicy:
+          defaultPolicy ??
           const ImportPolicy(
             duplicateResolution: DuplicateResolutionStrategy.overwrite,
             createMissingRelations: false,
@@ -32,7 +33,14 @@ class AccountImportProfile {
           dataType: ImportDataType.text,
           isRequired: true,
           isUnique: true,
-          aliases: ['Code', 'Account Code', 'Account Number', 'كود الحساب', 'رمز الحساب', 'رقم الحساب'],
+          aliases: [
+            'Code',
+            'Account Code',
+            'Account Number',
+            'كود الحساب',
+            'رمز الحساب',
+            'رقم الحساب',
+          ],
         ),
         // Account Name (Required)
         ImportField(
@@ -40,14 +48,29 @@ class AccountImportProfile {
           label: 'Account Name',
           dataType: ImportDataType.text,
           isRequired: true,
-          aliases: ['Name', 'Account Name', 'Title', 'اسم الحساب', 'عنوان الحساب', 'الاسم'],
+          aliases: [
+            'Name',
+            'Account Name',
+            'Title',
+            'اسم الحساب',
+            'عنوان الحساب',
+            'الاسم',
+          ],
         ),
         // Parent Account Code / Name / UUID (Optional relation)
         ImportField(
           key: 'parentAccount',
           label: 'Parent Account',
           dataType: ImportDataType.text,
-          aliases: ['Parent', 'Parent Code', 'Parent Name', 'Parent Account', 'Main Account', 'الحساب الرئيسي', 'الأب'],
+          aliases: [
+            'Parent',
+            'Parent Code',
+            'Parent Name',
+            'Parent Account',
+            'Main Account',
+            'الحساب الرئيسي',
+            'الأب',
+          ],
         ),
         // Account Type (Required: asset, liability, equity, revenue, expense)
         ImportField(
@@ -62,21 +85,40 @@ class AccountImportProfile {
           key: 'isGroup',
           label: 'Is Group Account',
           dataType: ImportDataType.boolean,
-          aliases: ['Is Group', 'Group', 'Header Account', 'Is Header', 'حساب رئيسي', 'مجموعة'],
+          aliases: [
+            'Is Group',
+            'Group',
+            'Header Account',
+            'Is Header',
+            'حساب رئيسي',
+            'مجموعة',
+          ],
         ),
         // Debit Opening Balance (Optional, non-negative)
         ImportField(
           key: 'debitOpening',
           label: 'Debit Opening Balance',
           dataType: ImportDataType.number,
-          aliases: ['Opening Debit', 'Debit', 'Debit Balance', 'رصيد افتتاح مدين', 'مدين'],
+          aliases: [
+            'Opening Debit',
+            'Debit',
+            'Debit Balance',
+            'رصيد افتتاح مدين',
+            'مدين',
+          ],
         ),
         // Credit Opening Balance (Optional, non-negative)
         ImportField(
           key: 'creditOpening',
           label: 'Credit Opening Balance',
           dataType: ImportDataType.number,
-          aliases: ['Opening Credit', 'Credit', 'Credit Balance', 'رصيد افتتاح دائن', 'دائن'],
+          aliases: [
+            'Opening Credit',
+            'Credit',
+            'Credit Balance',
+            'رصيد افتتاح دائن',
+            'دائن',
+          ],
         ),
         // Currency Code (Optional, e.g. USD, SAR)
         ImportField(
@@ -100,7 +142,8 @@ class AccountImportProfile {
           aliases: ['Is Active', 'Active', 'Status', 'نشط', 'الحالة'],
         ),
       ],
-      relations: customRelations ??
+      relations:
+          customRelations ??
           const [
             ImportRelation(
               relationKey: 'parentAccount',

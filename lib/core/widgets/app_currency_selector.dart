@@ -23,17 +23,21 @@ class AppCurrencySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return DropdownButtonFormField<String>(
-      initialValue: currencies.contains(selectedCurrency) ? selectedCurrency : null,
+      initialValue: currencies.contains(selectedCurrency)
+          ? selectedCurrency
+          : null,
       items: currencies
-          .map((code) => DropdownMenuItem<String>(
-                value: code,
-                child: Text(
-                  code,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+          .map(
+            (code) => DropdownMenuItem<String>(
+              value: code,
+              child: Text(
+                code,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-              ))
+              ),
+            ),
+          )
           .toList(),
       onChanged: enabled ? onChanged : null,
       decoration: InputDecoration(

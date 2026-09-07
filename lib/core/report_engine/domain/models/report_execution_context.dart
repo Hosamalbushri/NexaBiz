@@ -1,11 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 /// Enum representing the posting filter applied during report execution.
-enum PostingScope {
-  all,
-  postedOnly,
-  unpostedOnly,
-}
+enum PostingScope { all, postedOnly, unpostedOnly }
 
 /// Helper extension on PostingScope for easy string serialization/deserialization.
 extension PostingScopeX on PostingScope {
@@ -28,10 +24,7 @@ extension PostingScopeX on PostingScope {
 /// Specification for sorting report datasets.
 @immutable
 class ReportSortSpec {
-  const ReportSortSpec({
-    required this.columnKey,
-    this.ascending = true,
-  });
+  const ReportSortSpec({required this.columnKey, this.ascending = true});
 
   final String columnKey;
   final bool ascending;

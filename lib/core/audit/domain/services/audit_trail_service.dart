@@ -10,11 +10,7 @@ import '../entities/audit_trail_entry.dart';
 /// Audit logs recorded through this service are strictly immutable: no delete or
 /// update interfaces exist.
 class AuditTrailService {
-  AuditTrailService({
-    required this._db,
-    this._syncQueue,
-    this._readCompanyId,
-  });
+  AuditTrailService({required this._db, this._syncQueue, this._readCompanyId});
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
@@ -50,7 +46,9 @@ class AuditTrailService {
       companyId: effectiveCompanyId,
     );
 
-    await _db.into(_db.inventoryAuditTrail).insert(
+    await _db
+        .into(_db.inventoryAuditTrail)
+        .insert(
           InventoryAuditTrailCompanion(
             uuid: Value(eventUuid),
             documentId: Value(documentId),
@@ -98,23 +96,27 @@ class AuditTrailService {
       ..where((tbl) => tbl.documentId.equals(documentId));
 
     final targetCompany = companyId ?? _currentCompanyId;
-    query.where((tbl) => tbl.companyId.equals(targetCompany) | tbl.companyId.isNull());
+    query.where(
+      (tbl) => tbl.companyId.equals(targetCompany) | tbl.companyId.isNull(),
+    );
     query.orderBy([(tbl) => OrderingTerm.asc(tbl.timestamp)]);
 
     final rows = await query.get();
     return rows
-        .map((r) => AuditTrailEntry.fromStorage(
-              id: r.id,
-              uuid: r.uuid,
-              documentId: r.documentId,
-              documentType: r.documentType,
-              eventType: r.eventType,
-              userId: r.userId,
-              notes: r.notes,
-              timestampMs: r.timestamp,
-              metadataRaw: r.metadata,
-              companyId: r.companyId,
-            ))
+        .map(
+          (r) => AuditTrailEntry.fromStorage(
+            id: r.id,
+            uuid: r.uuid,
+            documentId: r.documentId,
+            documentType: r.documentType,
+            eventType: r.eventType,
+            userId: r.userId,
+            notes: r.notes,
+            timestampMs: r.timestamp,
+            metadataRaw: r.metadata,
+            companyId: r.companyId,
+          ),
+        )
         .toList();
   }
 
@@ -136,18 +138,20 @@ class AuditTrailService {
 
     final rows = await query.get();
     return rows
-        .map((r) => AuditTrailEntry.fromStorage(
-              id: r.id,
-              uuid: r.uuid,
-              documentId: r.documentId,
-              documentType: r.documentType,
-              eventType: r.eventType,
-              userId: r.userId,
-              notes: r.notes,
-              timestampMs: r.timestamp,
-              metadataRaw: r.metadata,
-              companyId: r.companyId,
-            ))
+        .map(
+          (r) => AuditTrailEntry.fromStorage(
+            id: r.id,
+            uuid: r.uuid,
+            documentId: r.documentId,
+            documentType: r.documentType,
+            eventType: r.eventType,
+            userId: r.userId,
+            notes: r.notes,
+            timestampMs: r.timestamp,
+            metadataRaw: r.metadata,
+            companyId: r.companyId,
+          ),
+        )
         .toList();
   }
 }

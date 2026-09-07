@@ -56,14 +56,16 @@ class CashRegisterPostingResolverService {
     // Priority 1: Explicit account override
     if (explicitAccountId != null && explicitAccountId.trim().isNotEmpty) {
       final accId = explicitAccountId.trim();
-      final account = await accountRepository.getByUuid(accId) ??
+      final account =
+          await accountRepository.getByUuid(accId) ??
           await accountRepository.getByAccountCode(accId);
 
       if (account == null) {
         return CashRegisterPostingAccountResult(
           isSuccess: false,
           errorCode: 'ACCOUNT_NOT_FOUND',
-          message: 'Explicitly provided account $accId not found in Chart of Accounts',
+          message:
+              'Explicitly provided account $accId not found in Chart of Accounts',
         );
       }
 
@@ -73,7 +75,9 @@ class CashRegisterPostingResolverService {
       // Check if this account is bound to any register in the company
       CashRegister? matchingRegister;
       if (registerId != null && registerId.trim().isNotEmpty) {
-        matchingRegister = await cashRegisterRepository.getCashRegisterById(registerId.trim());
+        matchingRegister = await cashRegisterRepository.getCashRegisterById(
+          registerId.trim(),
+        );
       }
 
       return CashRegisterPostingAccountResult(
@@ -100,7 +104,8 @@ class CashRegisterPostingResolverService {
         return CashRegisterPostingAccountResult(
           isSuccess: false,
           errorCode: 'CROSS_COMPANY_REGISTER',
-          message: 'Cash register $regId belongs to company ${register.companyId}, expected $trimmedCompanyId',
+          message:
+              'Cash register $regId belongs to company ${register.companyId}, expected $trimmedCompanyId',
         );
       }
 
@@ -123,7 +128,8 @@ class CashRegisterPostingResolverService {
       }
 
       final boundAccountId = register.accountingAccountId!;
-      final account = await accountRepository.getByUuid(boundAccountId) ??
+      final account =
+          await accountRepository.getByUuid(boundAccountId) ??
           await accountRepository.getByAccountCode(boundAccountId);
 
       if (account == null) {
@@ -131,7 +137,8 @@ class CashRegisterPostingResolverService {
           isSuccess: false,
           register: register,
           errorCode: 'ACCOUNT_NOT_FOUND',
-          message: 'Bound account $boundAccountId not found in Chart of Accounts',
+          message:
+              'Bound account $boundAccountId not found in Chart of Accounts',
         );
       }
 
@@ -146,7 +153,8 @@ class CashRegisterPostingResolverService {
     }
 
     // Priority 3: Active company's default Cash Register
-    final defaultResult = await defaultCashRegisterResolver.resolveDefaultCashRegister(trimmedCompanyId);
+    final defaultResult = await defaultCashRegisterResolver
+        .resolveDefaultCashRegister(trimmedCompanyId);
     if (defaultResult.isValid && defaultResult.linkedAccount != null) {
       return CashRegisterPostingAccountResult(
         isSuccess: true,
@@ -157,8 +165,12 @@ class CashRegisterPostingResolverService {
 
     return CashRegisterPostingAccountResult(
       isSuccess: false,
-      errorCode: defaultResult.errorCode?.name.toUpperCase() ?? 'DEFAULT_NOT_CONFIGURED',
-      message: defaultResult.message ?? 'No default cash register configured for company $trimmedCompanyId',
+      errorCode:
+          defaultResult.errorCode?.name.toUpperCase() ??
+          'DEFAULT_NOT_CONFIGURED',
+      message:
+          defaultResult.message ??
+          'No default cash register configured for company $trimmedCompanyId',
     );
   }
 
@@ -173,7 +185,8 @@ class CashRegisterPostingResolverService {
         isSuccess: false,
         account: account,
         errorCode: 'CROSS_COMPANY_ACCOUNT',
-        message: 'Account ${account.accountCode} belongs to company ${account.companyId}, expected $targetCompanyId',
+        message:
+            'Account ${account.accountCode} belongs to company ${account.companyId}, expected $targetCompanyId',
       );
     }
 
@@ -191,7 +204,8 @@ class CashRegisterPostingResolverService {
         isSuccess: false,
         account: account,
         errorCode: 'ACCOUNT_CANNOT_POST',
-        message: 'Account ${account.accountCode} is a parent/group account and cannot accept journal postings',
+        message:
+            'Account ${account.accountCode} is a parent/group account and cannot accept journal postings',
       );
     }
 
@@ -200,7 +214,8 @@ class CashRegisterPostingResolverService {
         isSuccess: false,
         account: account,
         errorCode: 'ACCOUNT_TYPE_MISMATCH',
-        message: 'Account ${account.accountCode} type is ${account.accountType}, expected asset',
+        message:
+            'Account ${account.accountCode} type is ${account.accountType}, expected asset',
       );
     }
 

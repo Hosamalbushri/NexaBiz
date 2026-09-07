@@ -17,10 +17,7 @@ class MockPagedProvider implements PagedReportDataProvider<ReportRowData> {
   @override
   Future<ReportSummary> fetchSummary(ReportExecutionContext context) async {
     fetchSummaryCallCount++;
-    return const ReportSummary(
-      totalCount: 100,
-      aggregates: {'total': 1000.0},
-    );
+    return const ReportSummary(totalCount: 100, aggregates: {'total': 1000.0});
   }
 
   @override
@@ -36,12 +33,16 @@ class MockPagedProvider implements PagedReportDataProvider<ReportRowData> {
 
     final List<ReportRowData> items = List.generate(
       end - start + 1,
-      (i) => ReportRowData(values: {'id': '${start + i}', 'amount': (start + i) * 10.0}),
+      (i) => ReportRowData(
+        values: {'id': '${start + i}', 'amount': (start + i) * 10.0},
+      ),
     );
 
     return ReportPage<ReportRowData>(
       items: items,
-      nextCursor: hasNext ? ReportCursor(primarySortValue: end, uniqueId: '$end') : null,
+      nextCursor: hasNext
+          ? ReportCursor(primarySortValue: end, uniqueId: '$end')
+          : null,
       hasNextPage: hasNext,
     );
   }
@@ -76,36 +77,42 @@ void main() {
       expect(provider.fetchPageCallCount, equals(1));
     });
 
-    test('Incremental fetchNextPage appends second page without duplicates', () async {
-      final controller = UniversalReportExecutionController(
-        provider: provider,
-        initialContext: contextA,
-        pageSize: 50,
-      );
+    test(
+      'Incremental fetchNextPage appends second page without duplicates',
+      () async {
+        final controller = UniversalReportExecutionController(
+          provider: provider,
+          initialContext: contextA,
+          pageSize: 50,
+        );
 
-      await controller.executeNewContext(contextA);
-      await controller.fetchNextPage();
+        await controller.executeNewContext(contextA);
+        await controller.fetchNextPage();
 
-      expect(controller.value.items.length, equals(100));
-      expect(controller.value.hasNextPage, isFalse);
-      expect(controller.value.nextCursor, isNull);
-      expect(provider.fetchPageCallCount, equals(2));
-    });
+        expect(controller.value.items.length, equals(100));
+        expect(controller.value.hasNextPage, isFalse);
+        expect(controller.value.nextCursor, isNull);
+        expect(provider.fetchPageCallCount, equals(2));
+      },
+    );
 
-    test('Context change invalidates existing pagination and cursor state', () async {
-      final controller = UniversalReportExecutionController(
-        provider: provider,
-        initialContext: contextA,
-        pageSize: 50,
-      );
+    test(
+      'Context change invalidates existing pagination and cursor state',
+      () async {
+        final controller = UniversalReportExecutionController(
+          provider: provider,
+          initialContext: contextA,
+          pageSize: 50,
+        );
 
-      await controller.executeNewContext(contextA);
-      expect(controller.value.context.companyId, equals('COMPANY_A'));
+        await controller.executeNewContext(contextA);
+        expect(controller.value.context.companyId, equals('COMPANY_A'));
 
-      await controller.executeNewContext(contextB);
-      expect(controller.value.context.companyId, equals('COMPANY_B'));
-      expect(controller.value.items.length, equals(50));
-      expect(provider.fetchSummaryCallCount, equals(2));
-    });
+        await controller.executeNewContext(contextB);
+        expect(controller.value.context.companyId, equals('COMPANY_B'));
+        expect(controller.value.items.length, equals(50));
+        expect(provider.fetchSummaryCallCount, equals(2));
+      },
+    );
   });
 }

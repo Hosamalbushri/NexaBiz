@@ -29,9 +29,9 @@ class StockIssue {
     this.version = 1,
     this.companyId,
     this.deletedAt,
-  })  : id = id ?? generateUuidV4(),
-        createdAt = createdAt ?? DateTime.now().toUtc(),
-        updatedAt = updatedAt ?? DateTime.now().toUtc();
+  }) : id = id ?? generateUuidV4(),
+       createdAt = createdAt ?? DateTime.now().toUtc(),
+       updatedAt = updatedAt ?? DateTime.now().toUtc();
 
   final String id;
   final String issueNumber;
@@ -59,21 +59,22 @@ class StockIssue {
   bool get isPosted => status == InventoryDocumentStatus.posted;
   bool get isDraft => status == InventoryDocumentStatus.draft;
 
-  double get totalQuantity => lines.fold(0.0, (sum, line) => sum + line.quantity);
+  double get totalQuantity =>
+      lines.fold(0.0, (sum, line) => sum + line.quantity);
   double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
 
   StockDocumentPostingData toPostingData() => StockDocumentPostingData(
-        id: id,
-        documentNumber: issueNumber,
-        documentType: DocumentType.stockIssue,
-        documentDate: issueDate,
-        warehouseId: warehouse,
-        status: status,
-        totalAmount: totalCost,
-        offsetAccountId: accountId ?? destination,
-        currencyCode: currencyCode,
-        exchangeRate: exchangeRate,
-      );
+    id: id,
+    documentNumber: issueNumber,
+    documentType: DocumentType.stockIssue,
+    documentDate: issueDate,
+    warehouseId: warehouse,
+    status: status,
+    totalAmount: totalCost,
+    offsetAccountId: accountId ?? destination,
+    currencyCode: currencyCode,
+    exchangeRate: exchangeRate,
+  );
 
   StockIssue copyWith({
     String? id,
@@ -113,7 +114,9 @@ class StockIssue {
       accountName: clearAccountName ? null : (accountName ?? this.accountName),
       currencyCode: currencyCode ?? this.currencyCode,
       exchangeRate: exchangeRate ?? this.exchangeRate,
-      voucherBookId: clearVoucherBookId ? null : (voucherBookId ?? this.voucherBookId),
+      voucherBookId: clearVoucherBookId
+          ? null
+          : (voucherBookId ?? this.voucherBookId),
       warehouse: clearWarehouse ? null : (warehouse ?? this.warehouse),
       notes: notes ?? this.notes,
       issueDate: issueDate ?? this.issueDate,
@@ -123,7 +126,9 @@ class StockIssue {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
-      lastSyncedAt: clearLastSyncedAt ? null : (lastSyncedAt ?? this.lastSyncedAt),
+      lastSyncedAt: clearLastSyncedAt
+          ? null
+          : (lastSyncedAt ?? this.lastSyncedAt),
       version: version ?? this.version,
       companyId: companyId ?? this.companyId,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),

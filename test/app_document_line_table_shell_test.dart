@@ -4,7 +4,9 @@ import 'package:stock_count/core/widgets/app_document_line_table_shell.dart';
 
 void main() {
   group('AppDocumentLineTableShell Widget Tests', () {
-    testWidgets('renders rows and index column correctly', (WidgetTester tester) async {
+    testWidgets('renders rows and index column correctly', (
+      WidgetTester tester,
+    ) async {
       final items = ['Item 1', 'Item 2', 'Item 3'];
 
       await tester.pumpWidget(
@@ -26,26 +28,29 @@ void main() {
       expect(find.text('3'), findsOneWidget);
     });
 
-    testWidgets('renders empty state when items list is empty and calls onAddRow', (WidgetTester tester) async {
-      var addCalled = false;
+    testWidgets(
+      'renders empty state when items list is empty and calls onAddRow',
+      (WidgetTester tester) async {
+        var addCalled = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AppDocumentLineTableShell<String>(
-              items: const [],
-              rowBuilder: (context, index, item) => Text(item),
-              onAddRow: () {
-                addCalled = true;
-              },
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AppDocumentLineTableShell<String>(
+                items: const [],
+                rowBuilder: (context, index, item) => Text(item),
+                onAddRow: () {
+                  addCalled = true;
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('إضافة سطر جديد'), findsOneWidget);
-      await tester.tap(find.text('إضافة سطر جديد'));
-      expect(addCalled, isTrue);
-    });
+        expect(find.text('إضافة سطر جديد'), findsOneWidget);
+        await tester.tap(find.text('إضافة سطر جديد'));
+        expect(addCalled, isTrue);
+      },
+    );
   });
 }

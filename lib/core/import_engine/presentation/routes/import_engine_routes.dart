@@ -12,4 +12,3 @@ class ImportEngineRoutes {
   static String jobDetailsPath(String jobId) => '$root/jobs/$jobId';
   static String reportPath(String reportId) => '$root/reports/$reportId';
 }
-

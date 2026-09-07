@@ -96,134 +96,156 @@ void main() {
       expect(authResult.user.isSuperAdmin, isTrue);
     });
 
-    test('2. Incomplete System Initialization returns isInitialized == false', () async {
-      final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
-      final guard = InitializationGuard(initRepository: initRepo);
+    test(
+      '2. Incomplete System Initialization returns isInitialized == false',
+      () async {
+        final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
+        final guard = InitializationGuard(initRepository: initRepo);
 
-      final isReady = await guard.isInitialized();
-      expect(isReady, isFalse);
+        final isReady = await guard.isInitialized();
+        expect(isReady, isFalse);
 
-      expect(
-        () async => await guard.assertInitialized(),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
+        expect(
+          () async => await guard.assertInitialized(),
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
-    test('3. Direct Service Bypass (PostingCoordinator) is REJECTED when uninitialized', () async {
-      final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
-      final guard = InitializationGuard(initRepository: initRepo);
+    test(
+      '3. Direct Service Bypass (PostingCoordinator) is REJECTED when uninitialized',
+      () async {
+        final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
+        final guard = InitializationGuard(initRepository: initRepo);
 
-      final dummyDoc = InventoryDocumentRef(
-        documentId: 'doc_100',
-        documentNumber: 'REC-001',
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: DateTime.now(),
-        warehouseId: 'wh_main',
-        status: InventoryDocumentStatus.draft,
-      );
+        final dummyDoc = InventoryDocumentRef(
+          documentId: 'doc_100',
+          documentNumber: 'REC-001',
+          documentType: InventoryDocumentType.stockReceipt,
+          documentDate: DateTime.now(),
+          warehouseId: 'wh_main',
+          status: InventoryDocumentStatus.draft,
+        );
 
-      final postingCoordinator = PostingCoordinatorImpl(
-        db: FakeInventoryDb(),
-        stockValidationService: FakeValidationService(),
-        dependencyDetector: FakeDependencyDetector(),
-        postingEngine: FakePostingEngine(),
-        accountingPoster: FakeAccountingPoster(),
-        permissionGuard: FakePermissionGuard(),
-        initializationGuard: guard,
-      );
+        final postingCoordinator = PostingCoordinatorImpl(
+          db: FakeInventoryDb(),
+          stockValidationService: FakeValidationService(),
+          dependencyDetector: FakeDependencyDetector(),
+          postingEngine: FakePostingEngine(),
+          accountingPoster: FakeAccountingPoster(),
+          permissionGuard: FakePermissionGuard(),
+          initializationGuard: guard,
+        );
 
-      expect(
-        () async => await postingCoordinator.post(document: dummyDoc),
-        throwsA(isA<UninitializedCompanyException>()),
-      );
-    });
+        expect(
+          () async => await postingCoordinator.post(document: dummyDoc),
+          throwsA(isA<UninitializedCompanyException>()),
+        );
+      },
+    );
 
-    test('4. Restart and Re-login while incomplete preserves System Setup Requirement', () async {
-      final settingsRepo = SettingsRepository(box: settingsBox);
-      final authStore = LocalAuthStore(box: authBox);
+    test(
+      '4. Restart and Re-login while incomplete preserves System Setup Requirement',
+      () async {
+        final settingsRepo = SettingsRepository(box: settingsBox);
+        final authStore = LocalAuthStore(box: authBox);
 
-      final coordinator = FirstRunSetupCoordinator(
-        settingsRepository: settingsRepo,
-        authStore: authStore,
-      );
+        final coordinator = FirstRunSetupCoordinator(
+          settingsRepository: settingsRepo,
+          authStore: authStore,
+        );
 
-      await coordinator.commitFirstRunSetup(const FirstRunSetupPayload(
-        language: 'ar',
-        companyName: 'NexaBiz Corp',
-        companyCode: 'NEXA',
-        adminName: 'Admin',
-        adminEmail: 'admin@nexabiz.local',
-        adminPassword: 'Password123!',
-      ));
+        await coordinator.commitFirstRunSetup(
+          const FirstRunSetupPayload(
+            language: 'ar',
+            companyName: 'NexaBiz Corp',
+            companyCode: 'NEXA',
+            adminName: 'Admin',
+            adminEmail: 'admin@nexabiz.local',
+            adminPassword: 'Password123!',
+          ),
+        );
 
-      final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
-      final guard = InitializationGuard(initRepository: initRepo);
+        final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
+        final guard = InitializationGuard(initRepository: initRepo);
 
-      final authRepo = LocalAuthRepository(
-        store: authStore,
-        tokenStorage: SecureTokenStorage(),
-        readConfig: () => SyncApiConfig.fromEnvironment(),
-      );
+        final authRepo = LocalAuthRepository(
+          store: authStore,
+          tokenStorage: SecureTokenStorage(),
+          readConfig: () => SyncApiConfig.fromEnvironment(),
+        );
 
-      final reLoginResult = await authRepo.login(
-        email: 'admin@nexabiz.local',
-        password: 'Password123!',
-        deviceId: 'dev_001',
-        deviceName: 'Test Device',
-        platform: 'linux',
-      );
+        final reLoginResult = await authRepo.login(
+          email: 'admin@nexabiz.local',
+          password: 'Password123!',
+          deviceId: 'dev_001',
+          deviceName: 'Test Device',
+          platform: 'linux',
+        );
 
-      expect(reLoginResult.hasCompany, isTrue);
+        expect(reLoginResult.hasCompany, isTrue);
 
-      final isInitializedAfterRestart = await guard.isInitialized();
-      expect(isInitializedAfterRestart, isFalse);
-    });
+        final isInitializedAfterRestart = await guard.isInitialized();
+        expect(isInitializedAfterRestart, isFalse);
+      },
+    );
 
-    test('5. Completed System Initialization passes InitializationGuard', () async {
-      final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
-      final guard = InitializationGuard(initRepository: initRepo);
+    test(
+      '5. Completed System Initialization passes InitializationGuard',
+      () async {
+        final initRepo = CompanyInitializationRepositoryImpl(box: initBox);
+        final guard = InitializationGuard(initRepository: initRepo);
 
-      await initRepo.saveState(const CompanyInitializationState(
-        companyId: 'company_001',
-        companyCreated: true,
-        inventoryCurrencyConfigured: true,
-        accountingConfigured: true,
-        warehouseConfigured: true,
-        inventorySettingsConfigured: true,
-        initializationCompleted: true,
-      ));
+        await initRepo.saveState(
+          const CompanyInitializationState(
+            companyId: 'company_001',
+            companyCreated: true,
+            inventoryCurrencyConfigured: true,
+            accountingConfigured: true,
+            warehouseConfigured: true,
+            inventorySettingsConfigured: true,
+            initializationCompleted: true,
+          ),
+        );
 
-      await initRepo.saveInventoryConfig(const CompanyInventoryConfig(
-        companyId: 'company_001',
-        inventoryBaseCurrencyId: 'SAR',
-        allowNegativeStock: false,
-      ));
+        await initRepo.saveInventoryConfig(
+          const CompanyInventoryConfig(
+            companyId: 'company_001',
+            inventoryBaseCurrencyId: 'SAR',
+            allowNegativeStock: false,
+          ),
+        );
 
-      await initRepo.saveAccountingConfig(const CompanyAccountingConfig(
-        companyId: 'company_001',
-        accountMappings: {
-          AccountRole.inventory: '1200',
-          AccountRole.cogs: '5100',
-          AccountRole.revenue: '4100',
-          AccountRole.receivable: '1120',
-          AccountRole.payable: '2110',
-          AccountRole.cash: '1110',
-          AccountRole.adjustment: '5200',
-          AccountRole.fxGainLoss: '5300',
-        },
-      ));
+        await initRepo.saveAccountingConfig(
+          const CompanyAccountingConfig(
+            companyId: 'company_001',
+            accountMappings: {
+              AccountRole.inventory: '1200',
+              AccountRole.cogs: '5100',
+              AccountRole.revenue: '4100',
+              AccountRole.receivable: '1120',
+              AccountRole.payable: '2110',
+              AccountRole.cash: '1110',
+              AccountRole.adjustment: '5200',
+              AccountRole.fxGainLoss: '5300',
+            },
+          ),
+        );
 
-      await initRepo.saveWarehouseConfig(const CompanyWarehouseConfig(
-        companyId: 'company_001',
-        defaultWarehouseId: 'wh_main_001',
-      ));
+        await initRepo.saveWarehouseConfig(
+          const CompanyWarehouseConfig(
+            companyId: 'company_001',
+            defaultWarehouseId: 'wh_main_001',
+          ),
+        );
 
-      final isReady = await guard.isInitialized();
-      expect(isReady, isTrue);
+        final isReady = await guard.isInitialized();
+        expect(isReady, isTrue);
 
-      final state = await guard.assertInitialized();
-      expect(state.isFullyConfigured, isTrue);
-    });
+        final state = await guard.assertInitialized();
+        expect(state.isFullyConfigured, isTrue);
+      },
+    );
 
     test('6. Non-admin user without system setup permissions is gated', () {
       final normalUser = AuthUser(
@@ -235,8 +257,15 @@ void main() {
 
       const permissions = <String>{'inventory.view'};
 
-      final isAuthorized = normalUser.isSuperAdmin ||
-          permissions.any((p) => const ['system.setup', 'administration.manage', 'admin'].contains(p));
+      final isAuthorized =
+          normalUser.isSuperAdmin ||
+          permissions.any(
+            (p) => const [
+              'system.setup',
+              'administration.manage',
+              'admin',
+            ].contains(p),
+          );
 
       expect(isAuthorized, isFalse);
     });
@@ -297,9 +326,7 @@ class FakePostingEngine implements PostingEngine {
   }) async => 0.0;
 
   @override
-  Future<void> reversePosting({
-    required InventoryDocumentRef document,
-  }) async {}
+  Future<void> reversePosting({required InventoryDocumentRef document}) async {}
 }
 
 class FakeAccountingPoster implements InventoryAccountingPoster {

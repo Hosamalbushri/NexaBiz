@@ -10,4 +10,3 @@ class InitializeSystemUseCase {
 
   Future<SetupProgress> loadProgress() => _coordinator.loadProgress();
 }
-

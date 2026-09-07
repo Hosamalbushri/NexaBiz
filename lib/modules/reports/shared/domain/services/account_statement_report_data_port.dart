@@ -141,12 +141,10 @@ class AccountStatementCurrencyBalance {
   final String? displayCurrencyCode;
 
   /// Soft2 final table: absolute closing on debit side when balance ≥ 0.
-  double get closingDebitSide =>
-      closingBalance >= 0 ? closingBalance.abs() : 0;
+  double get closingDebitSide => closingBalance >= 0 ? closingBalance.abs() : 0;
 
   /// Soft2 final table: absolute closing on credit side when balance < 0.
-  double get closingCreditSide =>
-      closingBalance < 0 ? closingBalance.abs() : 0;
+  double get closingCreditSide => closingBalance < 0 ? closingBalance.abs() : 0;
 }
 
 class AccountStatementReportPayload {
@@ -312,7 +310,8 @@ class AccountStatementReportLabels {
   final String Function(AccountStatementType type) statementTypeLabelOf;
   final String Function(AccountStatementPostingFilter filter)
   postingFilterLabelOf;
-  final String Function(AccountStatementAccountRef account) accountDisplayNameOf;
+  final String Function(AccountStatementAccountRef account)
+  accountDisplayNameOf;
 }
 
 /// App wires this to Accounting repositories (modules ↛ modules).
@@ -411,20 +410,19 @@ class NoOpAccountStatementReportDataPort
     required ReportQueryFilter filter,
     required AccountStatementType statementType,
     required AccountStatementReportLabels labels,
-  }) =>
-      load(
-        accountUuid: filter.accountUuid ?? '',
-        currencyCode: filter.currencyCode == 'ALL' ? null : filter.currencyCode,
-        fromDate: filter.fromDate,
-        toDate: filter.toDate,
-        statementType: statementType,
-        postingFilter: filter.postingScope == PostingScope.postedOnly
-            ? AccountStatementPostingFilter.posted
-            : (filter.postingScope == PostingScope.unpostedOnly
-                ? AccountStatementPostingFilter.unposted
-                : AccountStatementPostingFilter.all),
-        labels: labels,
-      );
+  }) => load(
+    accountUuid: filter.accountUuid ?? '',
+    currencyCode: filter.currencyCode == 'ALL' ? null : filter.currencyCode,
+    fromDate: filter.fromDate,
+    toDate: filter.toDate,
+    statementType: statementType,
+    postingFilter: filter.postingScope == PostingScope.postedOnly
+        ? AccountStatementPostingFilter.posted
+        : (filter.postingScope == PostingScope.unpostedOnly
+              ? AccountStatementPostingFilter.unposted
+              : AccountStatementPostingFilter.all),
+    labels: labels,
+  );
 }
 
 /// Unused import guard for typed_data in payload consumers.

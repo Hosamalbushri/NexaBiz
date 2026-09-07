@@ -38,13 +38,16 @@ class AccountSelectionContract {
   }) {
     final effectivePostingOnly = activePostingOnly ?? postingOnly;
     final effectiveTypeFilter = activeTypeFilter ?? initialTypeFilter;
-    final normalizedQuery = normalizeDigitsToWestern(query).trim().toLowerCase();
+    final normalizedQuery = normalizeDigitsToWestern(
+      query,
+    ).trim().toLowerCase();
 
     return allAccounts.where((account) {
       if (account.isDeleted) return false;
       if (!account.isActive) return false;
       if (effectivePostingOnly && !account.isPostingAccount) return false;
-      if (effectiveTypeFilter != null && account.accountType != effectiveTypeFilter) {
+      if (effectiveTypeFilter != null &&
+          account.accountType != effectiveTypeFilter) {
         return false;
       }
       if (customPredicate != null && !customPredicate!(account)) {
@@ -52,11 +55,14 @@ class AccountSelectionContract {
       }
 
       if (normalizedQuery.isNotEmpty) {
-        final codeMatch = account.accountCode.toLowerCase().contains(normalizedQuery);
+        final codeMatch = account.accountCode.toLowerCase().contains(
+          normalizedQuery,
+        );
         final nameMatch = l10n != null
             ? AccountLabels.matchesQuery(l10n, account, normalizedQuery)
             : account.name.toLowerCase().contains(normalizedQuery);
-        final descMatch = account.description != null &&
+        final descMatch =
+            account.description != null &&
             account.description!.toLowerCase().contains(normalizedQuery);
 
         if (!codeMatch && !nameMatch && !descMatch) {

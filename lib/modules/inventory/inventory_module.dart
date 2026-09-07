@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:stock_count/core/navigation/app_route_param_parser.dart';
+
 import '../../app/localization/app_localizations.dart';
 import '../../app/sales/inventory_sale_product_catalog_adapter.dart';
 import '../../core/modules/app_module.dart';
@@ -91,7 +93,6 @@ class InventoryModule extends AppModule {
 
   @override
   bool get isEnabled => true;
-
 
   @override
   List<ModuleSetupStepDefinition> get setupSteps => inventorySetupSteps;
@@ -192,24 +193,48 @@ class InventoryModule extends AppModule {
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.warehouse_outlined),
-        title: Text(l10n.localeName == 'ar' ? 'إدارة المستودعات' : 'Warehouses Management'),
-        subtitle: Text(l10n.localeName == 'ar' ? 'تهيئة المستودعات الرئيسية والفروع وتحديد المستودع الافتراضي' : 'Manage main warehouses, branches, and set default location'),
+        title: Text(
+          l10n.localeName == 'ar'
+              ? 'إدارة المستودعات'
+              : 'Warehouses Management',
+        ),
+        subtitle: Text(
+          l10n.localeName == 'ar'
+              ? 'تهيئة المستودعات الرئيسية والفروع وتحديد المستودع الافتراضي'
+              : 'Manage main warehouses, branches, and set default location',
+        ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.push(InventoryRoutes.warehousesSettings),
       ),
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.monetization_on_outlined),
-        title: Text(l10n.localeName == 'ar' ? 'تقييم تكلفة المخزون' : 'Inventory Cost Valuation'),
-        subtitle: Text(l10n.localeName == 'ar' ? 'اختيار طريقة احتساب التكلفة (FIFO, LIFO, المتوسط المرجح)' : 'Select valuation method (FIFO, LIFO, Weighted Average)'),
+        title: Text(
+          l10n.localeName == 'ar'
+              ? 'تقييم تكلفة المخزون'
+              : 'Inventory Cost Valuation',
+        ),
+        subtitle: Text(
+          l10n.localeName == 'ar'
+              ? 'اختيار طريقة احتساب التكلفة (FIFO, LIFO, المتوسط المرجح)'
+              : 'Select valuation method (FIFO, LIFO, Weighted Average)',
+        ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.push(InventoryRoutes.costValuationSettings),
       ),
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.account_tree_outlined),
-        title: Text(l10n.localeName == 'ar' ? 'شجرة تصنيفات المخزون' : 'Inventory Category Tree'),
-        subtitle: Text(l10n.localeName == 'ar' ? 'إدارة شجرة التصنيفات المرتبطة بالمستودعات ووراثة طرق احتساب التكلفة' : 'Manage warehouse-rooted category tree & cost valuation inheritance'),
+        title: Text(
+          l10n.localeName == 'ar'
+              ? 'شجرة تصنيفات المخزون'
+              : 'Inventory Category Tree',
+        ),
+        subtitle: Text(
+          l10n.localeName == 'ar'
+              ? 'إدارة شجرة التصنيفات المرتبطة بالمستودعات ووراثة طرق احتساب التكلفة'
+              : 'Manage warehouse-rooted category tree & cost valuation inheritance',
+        ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.push(InventoryRoutes.categoriesSettings),
       ),
@@ -302,14 +327,19 @@ class InventoryModule extends AppModule {
                   path: ':id',
                   name: 'inventoryStockReceiptsDetails',
                   builder: (context, state) => StockReceiptDetailsPage(
-                    receiptId: state.pathParameters['id'] ?? '',
+                    receiptId: AppRouteParamParser.tryParseString(
+                          state.pathParameters['id'],
+                        ) ??
+                        '',
                   ),
                 ),
                 GoRoute(
                   path: ':id/edit',
                   name: 'inventoryStockReceiptsEdit',
                   builder: (context, state) => StockReceiptFormPage(
-                    receiptId: state.pathParameters['id'],
+                    receiptId: AppRouteParamParser.tryParseString(
+                      state.pathParameters['id'],
+                    ),
                   ),
                 ),
               ],
@@ -329,14 +359,19 @@ class InventoryModule extends AppModule {
                   path: ':id',
                   name: 'inventoryStockIssuesDetails',
                   builder: (context, state) => StockIssueDetailsPage(
-                    issueId: state.pathParameters['id'] ?? '',
+                    issueId: AppRouteParamParser.tryParseString(
+                          state.pathParameters['id'],
+                        ) ??
+                        '',
                   ),
                 ),
                 GoRoute(
                   path: ':id/edit',
                   name: 'inventoryStockIssuesEdit',
                   builder: (context, state) => StockIssueFormPage(
-                    issueId: int.tryParse(state.pathParameters['id'] ?? ''),
+                    issueId: AppRouteParamParser.tryParseInt(
+                      state.pathParameters['id'],
+                    ),
                   ),
                 ),
               ],
@@ -390,7 +425,9 @@ class InventoryModule extends AppModule {
               path: ':id/edit',
               name: 'inventoryProductsEdit',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 if (id == null) {
                   return const ProductFormPage(productId: -1);
                 }

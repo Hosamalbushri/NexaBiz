@@ -37,9 +37,9 @@ class AccountsImportStep extends ConsumerWidget {
         Text(
           l10n.accountingOpeningSetupStepImportHint,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         const _ImportFormatHintCard(),
@@ -50,7 +50,8 @@ class AccountsImportStep extends ConsumerWidget {
           data: (parents) => AppCard(
             child: DropdownButtonFormField<Account>(
               // ignore: deprecated_member_use
-              value: state.parent != null &&
+              value:
+                  state.parent != null &&
                       parents.any((p) => p.uuid == state.parent!.uuid)
                   ? parents.firstWhere((p) => p.uuid == state.parent!.uuid)
                   : null,
@@ -82,9 +83,7 @@ class AccountsImportStep extends ConsumerWidget {
           icon: Icons.upload_file_outlined,
           variant: AppButtonVariant.outlined,
           expand: true,
-          onPressed: state.isBusy
-              ? null
-              : () => _pickFile(context, notifier),
+          onPressed: state.isBusy ? null : () => _pickFile(context, notifier),
         ),
         const SizedBox(height: AppSpacing.md),
         AppCard(
@@ -174,11 +173,7 @@ class AccountsImportStep extends ConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showAppSnackBar(
-        context,
-        message: l10n.invalidFile,
-        isSuccess: false,
-      );
+      showAppSnackBar(context, message: l10n.invalidFile, isSuccess: false);
       return;
     }
     notifier.loadImportExcel(fileName: file.name, bytes: bytes);
@@ -191,8 +186,7 @@ class AccountsImportStep extends ConsumerWidget {
       AccountImportException.parentNotGroup =>
         l10n.accountingImportErrorParentNotGroup,
       AccountImportException.noRows ||
-      AccountImportException.noValidRows =>
-        l10n.accountingImportErrorNoRows,
+      AccountImportException.noValidRows => l10n.accountingImportErrorNoRows,
       AccountImportException.emptyWorkbook => l10n.emptyWorkbook,
       AccountImportException.decodeFailed => l10n.invalidFile,
       AccountException.duplicateAccountCode =>

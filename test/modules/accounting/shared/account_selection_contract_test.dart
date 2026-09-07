@@ -88,7 +88,10 @@ void main() {
       expect(eligible.map((a) => a.uuid), containsAll(['acc-1', 'acc-3']));
       expect(eligible.any((a) => a.uuid == 'acc-2'), false); // Header excluded
       expect(eligible.any((a) => a.uuid == 'acc-4'), false); // Deleted excluded
-      expect(eligible.any((a) => a.uuid == 'acc-5'), false); // Inactive excluded
+      expect(
+        eligible.any((a) => a.uuid == 'acc-5'),
+        false,
+      ); // Inactive excluded
     });
 
     test('postingOnly=false includes non-posting accounts when active', () {
@@ -112,11 +115,17 @@ void main() {
     test('query filtering matches accountCode and name case-insensitively', () {
       const contract = AccountSelectionContract(postingOnly: true);
 
-      final codeMatches = contract.filterEligibleAccounts(sampleAccounts, query: '101');
+      final codeMatches = contract.filterEligibleAccounts(
+        sampleAccounts,
+        query: '101',
+      );
       expect(codeMatches.length, 1);
       expect(codeMatches.first.uuid, 'acc-1');
 
-      final nameMatches = contract.filterEligibleAccounts(sampleAccounts, query: 'الصندوق');
+      final nameMatches = contract.filterEligibleAccounts(
+        sampleAccounts,
+        query: 'الصندوق',
+      );
       expect(nameMatches.length, 1);
       expect(nameMatches.first.uuid, 'acc-1');
     });

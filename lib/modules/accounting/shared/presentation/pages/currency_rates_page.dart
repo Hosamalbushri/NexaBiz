@@ -482,9 +482,9 @@ class _CurrencyRateAddDialogState extends State<_CurrencyRateAddDialog> {
   }
 
   void _submit() {
-    Navigator.of(context).pop(
-      _AddCurrencyResult(currency: _selected, rate: _rate),
-    );
+    Navigator.of(
+      context,
+    ).pop(_AddCurrencyResult(currency: _selected, rate: _rate));
   }
 
   @override

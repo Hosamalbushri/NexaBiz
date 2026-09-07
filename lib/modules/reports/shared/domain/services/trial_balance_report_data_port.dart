@@ -144,11 +144,10 @@ class NoOpTrialBalanceReportDataPort implements TrialBalanceReportDataPort {
   Future<TrialBalanceReportPayload> loadFromFilter({
     required ReportQueryFilter filter,
     required TrialBalanceReportLabels labels,
-  }) =>
-      load(
-        fromDate: filter.fromDate,
-        toDate: filter.toDate,
-        postedOnly: filter.postingScope == PostingScope.postedOnly,
-        labels: labels,
-      );
+  }) => load(
+    fromDate: filter.fromDate,
+    toDate: filter.toDate,
+    postedOnly: filter.postingScope == PostingScope.postedOnly,
+    labels: labels,
+  );
 }

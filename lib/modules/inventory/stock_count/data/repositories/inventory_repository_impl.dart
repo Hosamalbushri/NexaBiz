@@ -12,10 +12,7 @@ import 'package:stock_count/modules/inventory/shared/data/inventory_hive.dart';
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
 class InventoryRepositoryImpl implements InventoryRepository {
-  InventoryRepositoryImpl({
-    this._syncQueue,
-    this._initializationGuard,
-  });
+  InventoryRepositoryImpl({this._syncQueue, this._initializationGuard});
 
   final SyncQueue? _syncQueue;
   final InitializationGuard? _initializationGuard;

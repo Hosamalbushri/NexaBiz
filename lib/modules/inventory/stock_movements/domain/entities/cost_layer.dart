@@ -31,18 +31,20 @@ class CostLayer {
     this.version = 1,
     this.companyId,
     this.deletedAt,
-  })  : id = id ?? generateUuidV4(),
-        remainingQty = remainingQty ?? receivedQty,
-        unitCostInventoryCurrency = unitCostInventoryCurrency ?? unitCost,
-        totalCostInventoryCurrency = totalCostInventoryCurrency ?? totalCost ?? (receivedQty * unitCost),
-        documentCurrencyId = documentCurrencyId ?? inventoryCurrencyId,
-        unitCostDocumentCurrency = unitCostDocumentCurrency ?? unitCost,
-        totalCostDocumentCurrency = totalCostDocumentCurrency ?? totalCost ?? (receivedQty * unitCost),
-        exchangeRate = exchangeRate ?? 1.0,
-        exchangeRateDate = exchangeRateDate ?? receivedDate,
-        totalCost = totalCost ?? (receivedQty * unitCost),
-        createdAt = createdAt ?? DateTime.now().toUtc(),
-        updatedAt = updatedAt ?? DateTime.now().toUtc();
+  }) : id = id ?? generateUuidV4(),
+       remainingQty = remainingQty ?? receivedQty,
+       unitCostInventoryCurrency = unitCostInventoryCurrency ?? unitCost,
+       totalCostInventoryCurrency =
+           totalCostInventoryCurrency ?? totalCost ?? (receivedQty * unitCost),
+       documentCurrencyId = documentCurrencyId ?? inventoryCurrencyId,
+       unitCostDocumentCurrency = unitCostDocumentCurrency ?? unitCost,
+       totalCostDocumentCurrency =
+           totalCostDocumentCurrency ?? totalCost ?? (receivedQty * unitCost),
+       exchangeRate = exchangeRate ?? 1.0,
+       exchangeRateDate = exchangeRateDate ?? receivedDate,
+       totalCost = totalCost ?? (receivedQty * unitCost),
+       createdAt = createdAt ?? DateTime.now().toUtc(),
+       updatedAt = updatedAt ?? DateTime.now().toUtc();
 
   final String id;
   final String itemCode;
@@ -130,11 +132,15 @@ class CostLayer {
     final remQty = remainingQty ?? this.remainingQty;
     final cost = unitCost ?? this.unitCost;
     final invCurr = inventoryCurrencyId ?? this.inventoryCurrencyId;
-    final unitInvCost = unitCostInventoryCurrency ?? this.unitCostInventoryCurrency;
-    final totInvCost = totalCostInventoryCurrency ?? this.totalCostInventoryCurrency;
+    final unitInvCost =
+        unitCostInventoryCurrency ?? this.unitCostInventoryCurrency;
+    final totInvCost =
+        totalCostInventoryCurrency ?? this.totalCostInventoryCurrency;
     final docCurr = documentCurrencyId ?? this.documentCurrencyId;
-    final unitDocCost = unitCostDocumentCurrency ?? this.unitCostDocumentCurrency;
-    final totDocCost = totalCostDocumentCurrency ?? this.totalCostDocumentCurrency;
+    final unitDocCost =
+        unitCostDocumentCurrency ?? this.unitCostDocumentCurrency;
+    final totDocCost =
+        totalCostDocumentCurrency ?? this.totalCostDocumentCurrency;
     final rate = exchangeRate ?? this.exchangeRate;
     final rateDate = exchangeRateDate ?? this.exchangeRateDate;
 
@@ -161,7 +167,9 @@ class CostLayer {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
-      lastSyncedAt: clearLastSyncedAt ? null : (lastSyncedAt ?? this.lastSyncedAt),
+      lastSyncedAt: clearLastSyncedAt
+          ? null
+          : (lastSyncedAt ?? this.lastSyncedAt),
       version: version ?? this.version,
       companyId: companyId ?? this.companyId,
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),

@@ -6,36 +6,42 @@ import 'package:stock_count/core/import_engine/import_engine.dart';
 
 void main() {
   group('Phase 03 — Universal Import Engine Source & Parser Engine Tests', () {
-    test('1. Normal CSV parsing with headers and auto-delimiter detection works', () async {
-      const csvData = '''code,name,price,quantity
+    test(
+      '1. Normal CSV parsing with headers and auto-delimiter detection works',
+      () async {
+        const csvData = '''code,name,price,quantity
 P-001,Laptop,4500.00,10
 P-002,Mouse,150.50,50
 P-003,Keyboard,299.99,25''';
 
-      final source = StringImportSource(
-        sourceId: 'src_csv_1',
-        name: 'products.csv',
-        content: csvData,
-      );
+        final source = StringImportSource(
+          sourceId: 'src_csv_1',
+          name: 'products.csv',
+          content: csvData,
+        );
 
-      final parser = const CsvImportParser();
-      final doc = await parser.parseDocument(source);
+        final parser = const CsvImportParser();
+        final doc = await parser.parseDocument(source);
 
-      expect(doc.format, equals(ImportFileFormat.csv));
-      expect(doc.sheets.length, equals(1));
+        expect(doc.format, equals(ImportFileFormat.csv));
+        expect(doc.sheets.length, equals(1));
 
-      final sheet = doc.activeSheet!;
-      expect(sheet.headers, equals(['code', 'name', 'price', 'quantity']));
-      expect(sheet.totalRows, equals(3));
+        final sheet = doc.activeSheet!;
+        expect(sheet.headers, equals(['code', 'name', 'price', 'quantity']));
+        expect(sheet.totalRows, equals(3));
 
-      expect(sheet.rows[0].toMap(), equals({
-        'code': 'P-001',
-        'name': 'Laptop',
-        'price': '4500.00',
-        'quantity': '10',
-      }));
-      expect(sheet.rows[2].cells[1].textValue, equals('Keyboard'));
-    });
+        expect(
+          sheet.rows[0].toMap(),
+          equals({
+            'code': 'P-001',
+            'name': 'Laptop',
+            'price': '4500.00',
+            'quantity': '10',
+          }),
+        );
+        expect(sheet.rows[2].cells[1].textValue, equals('Keyboard'));
+      },
+    );
 
     test('2. Arabic CSV text with UTF-8 BOM is parsed correctly', () async {
       const arabicCsvWithBom =
@@ -52,7 +58,10 @@ P-003,Keyboard,299.99,25''';
       final parser = const CsvImportParser();
       final sheet = await parser.parseSheet(source);
 
-      expect(sheet.headers, equals(['رمز_العميل', 'اسم_العميل', 'رقم_الهاتف', 'المدينة']));
+      expect(
+        sheet.headers,
+        equals(['رمز_العميل', 'اسم_العميل', 'رقم_الهاتف', 'المدينة']),
+      );
       expect(sheet.totalRows, equals(2));
 
       final row1Map = sheet.rows[0].toMap();
@@ -61,26 +70,32 @@ P-003,Keyboard,299.99,25''';
       expect(row1Map['المدينة'], equals('الرياض'));
     });
 
-    test('3. CSV with escaped quotes, semicolons, and newlines inside quotes', () async {
-      const complexCsv =
-          'id,"description","notes"\n'
-          '101,"Heavy Duty ""Pro"" Scanner","Line 1;\nLine 2"\n'
-          '102,"Standard Printer","No notes"';
+    test(
+      '3. CSV with escaped quotes, semicolons, and newlines inside quotes',
+      () async {
+        const complexCsv =
+            'id,"description","notes"\n'
+            '101,"Heavy Duty ""Pro"" Scanner","Line 1;\nLine 2"\n'
+            '102,"Standard Printer","No notes"';
 
-      final source = StringImportSource(
-        sourceId: 'src_complex_csv',
-        name: 'complex.csv',
-        content: complexCsv,
-      );
+        final source = StringImportSource(
+          sourceId: 'src_complex_csv',
+          name: 'complex.csv',
+          content: complexCsv,
+        );
 
-      final parser = const CsvImportParser();
-      final sheet = await parser.parseSheet(source);
+        final parser = const CsvImportParser();
+        final sheet = await parser.parseSheet(source);
 
-      expect(sheet.headers, equals(['id', 'description', 'notes']));
-      expect(sheet.totalRows, equals(2));
-      expect(sheet.rows[0].toMap()['description'], equals('Heavy Duty "Pro" Scanner'));
-      expect(sheet.rows[0].toMap()['notes'], equals('Line 1;\nLine 2'));
-    });
+        expect(sheet.headers, equals(['id', 'description', 'notes']));
+        expect(sheet.totalRows, equals(2));
+        expect(
+          sheet.rows[0].toMap()['description'],
+          equals('Heavy Duty "Pro" Scanner'),
+        );
+        expect(sheet.rows[0].toMap()['notes'], equals('Line 1;\nLine 2'));
+      },
+    );
 
     test('4. XLSX multi-sheet workbook parsing', () async {
       final excel = Excel.createExcel();
@@ -100,14 +115,8 @@ P-003,Keyboard,299.99,25''';
 
       // Sheet 2: Categories
       final Sheet sheet2 = excel['Categories'];
-      sheet2.appendRow([
-        TextCellValue('cat_id'),
-        TextCellValue('cat_name'),
-      ]);
-      sheet2.appendRow([
-        TextCellValue('CAT-A'),
-        TextCellValue('Electronics'),
-      ]);
+      sheet2.appendRow([TextCellValue('cat_id'), TextCellValue('cat_name')]);
+      sheet2.appendRow([TextCellValue('CAT-A'), TextCellValue('Electronics')]);
 
       final bytes = Uint8List.fromList(excel.encode()!);
       final source = BytesImportSource(
@@ -164,7 +173,15 @@ P-003,Keyboard,299.99,25''';
       );
       final sheet = await parser.parseSheet(source);
 
-      expect(sheet.headers, containsAll(['account_code', 'account_name', 'details.currency', 'details.is_active']));
+      expect(
+        sheet.headers,
+        containsAll([
+          'account_code',
+          'account_name',
+          'details.currency',
+          'details.is_active',
+        ]),
+      );
       expect(sheet.totalRows, equals(2));
 
       final row1 = sheet.rows[0].toMap();
@@ -196,55 +213,70 @@ P-003,Keyboard,299.99,25''';
       expect(sheet.rows[1].toMap()['sku'], equals('SKU-B'));
     });
 
-    test('7. Empty and malformed inputs produce clean error handling', () async {
-      final emptySource = StringImportSource(
-        sourceId: 'src_empty',
-        name: 'empty.csv',
-        content: '',
-      );
+    test(
+      '7. Empty and malformed inputs produce clean error handling',
+      () async {
+        final emptySource = StringImportSource(
+          sourceId: 'src_empty',
+          name: 'empty.csv',
+          content: '',
+        );
 
-      final csvParser = const CsvImportParser();
-      final emptyDoc = await csvParser.parseDocument(emptySource);
-      expect(emptyDoc.isEmpty, isTrue);
+        final csvParser = const CsvImportParser();
+        final emptyDoc = await csvParser.parseDocument(emptySource);
+        expect(emptyDoc.isEmpty, isTrue);
 
-      final malformedJsonSource = StringImportSource(
-        sourceId: 'src_bad_json',
-        name: 'bad.json',
-        content: '{ invalid json structure ...',
-      );
+        final malformedJsonSource = StringImportSource(
+          sourceId: 'src_bad_json',
+          name: 'bad.json',
+          content: '{ invalid json structure ...',
+        );
 
-      final jsonParser = const JsonImportParser();
-      final badJsonSheet = await jsonParser.parseSheet(malformedJsonSource);
-      expect(badJsonSheet.isEmpty, isTrue);
-    });
+        final jsonParser = const JsonImportParser();
+        final badJsonSheet = await jsonParser.parseSheet(malformedJsonSource);
+        expect(badJsonSheet.isEmpty, isTrue);
+      },
+    );
 
     test('8. UniversalParserFactory resolves correct parser per extension', () {
-      expect(UniversalParserFactory.forFileName('test.csv'), isA<CsvImportParser>());
-      expect(UniversalParserFactory.forFileName('test.xlsx'), isA<XlsxImportParser>());
-      expect(UniversalParserFactory.forFileName('test.json'), isA<JsonImportParser>());
+      expect(
+        UniversalParserFactory.forFileName('test.csv'),
+        isA<CsvImportParser>(),
+      );
+      expect(
+        UniversalParserFactory.forFileName('test.xlsx'),
+        isA<XlsxImportParser>(),
+      );
+      expect(
+        UniversalParserFactory.forFileName('test.json'),
+        isA<JsonImportParser>(),
+      );
       expect(
         () => UniversalParserFactory.forFileName('test.pdf'),
         throwsA(isA<ImportEngineException>()),
       );
     });
 
-    test('9. Large dataset simulation parses cleanly without memory explosion', () async {
-      final buffer = StringBuffer('id,code,name,val\n');
-      for (var i = 1; i <= 1000; i++) {
-        buffer.writeln('$i,CODE-$i,Product Item $i,${i * 10.5}');
-      }
+    test(
+      '9. Large dataset simulation parses cleanly without memory explosion',
+      () async {
+        final buffer = StringBuffer('id,code,name,val\n');
+        for (var i = 1; i <= 1000; i++) {
+          buffer.writeln('$i,CODE-$i,Product Item $i,${i * 10.5}');
+        }
 
-      final source = StringImportSource(
-        sourceId: 'src_large_sim',
-        name: 'large.csv',
-        content: buffer.toString(),
-      );
+        final source = StringImportSource(
+          sourceId: 'src_large_sim',
+          name: 'large.csv',
+          content: buffer.toString(),
+        );
 
-      final parser = const CsvImportParser();
-      final sheet = await parser.parseSheet(source);
+        final parser = const CsvImportParser();
+        final sheet = await parser.parseSheet(source);
 
-      expect(sheet.totalRows, equals(1000));
-      expect(sheet.rows.last.toMap()['code'], equals('CODE-1000'));
-    });
+        expect(sheet.totalRows, equals(1000));
+        expect(sheet.rows.last.toMap()['code'], equals('CODE-1000'));
+      },
+    );
   });
 }

@@ -8,7 +8,10 @@
 /// Stored document numbers remain absolute integers (`161000041`) for sync
 /// uniqueness. The UI shows the short local sequence (`41`) via
 /// [DocumentNumberView].
-int deviceDocumentNumberBase(String deviceId, {int stride = kDocumentNumberStride}) {
+int deviceDocumentNumberBase(
+  String deviceId, {
+  int stride = kDocumentNumberStride,
+}) {
   final hex = deviceId.replaceAll('-', '');
   if (hex.isEmpty) {
     return 0;
@@ -42,8 +45,11 @@ int absoluteSaleNumber({
   required String deviceId,
   required int sequence,
   int stride = kSaleNumberStride,
-}) =>
-    absoluteDocumentNumber(deviceId: deviceId, sequence: sequence, stride: stride);
+}) => absoluteDocumentNumber(
+  deviceId: deviceId,
+  sequence: sequence,
+  stride: stride,
+);
 
 /// Parses a numeric document number (plain, legacy INV-n, or old PREFIX-n).
 int? parseDocumentNumberSequence(String raw) {
@@ -154,9 +160,9 @@ DocumentNumberView documentNumberView(
 DocumentNumberView saleNumberView(
   String raw, {
   int stride = kSaleNumberStride,
-}) =>
-    documentNumberView(raw, stride: stride);
+}) => documentNumberView(raw, stride: stride);
 
 /// Short label helper for one-liners.
-String formatDocumentNumberPrimary(String raw) => documentNumberView(raw).primaryLabel;
+String formatDocumentNumberPrimary(String raw) =>
+    documentNumberView(raw).primaryLabel;
 String formatSaleNumberPrimary(String raw) => formatDocumentNumberPrimary(raw);

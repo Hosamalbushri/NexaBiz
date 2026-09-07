@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum BuildEdition {
-  free,
-  premium,
-}
+enum BuildEdition { free, premium }
 
 class BuildEditionInspector {
   const BuildEditionInspector._();

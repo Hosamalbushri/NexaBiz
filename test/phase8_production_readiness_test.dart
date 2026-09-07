@@ -41,7 +41,9 @@ class Phase8TestEntityHandler implements SyncEntityHandler {
   @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {
     if (failOnApply) {
-      throw const ServerFailure('Simulated SQLite local application write failure');
+      throw const ServerFailure(
+        'Simulated SQLite local application write failure',
+      );
     }
     appliedChanges.add(change);
   }
@@ -66,7 +68,8 @@ class Phase8TestEntityHandler implements SyncEntityHandler {
   Future<void> abandonPull() async {}
 
   @override
-  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async => null;
+  Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async =>
+      null;
 }
 
 void main() {
@@ -87,121 +90,134 @@ void main() {
   });
 
   group('Phase 8 — Final Production Readiness & Operational Verification', () {
-    test('Requirement 5 — Authentication Failure Queue Preservation: HTTP 401 preserves pending local queue ops', () async {
-      final queue = SyncQueue();
-      final cursorStore = SyncCursorStore();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
-
-      final op = SyncOperation.create(
-        entityType: 'customer',
-        entityId: 'c-prod-1',
-        type: SyncOperationType.create,
-        payload: {'name': 'Unsynced Customer'},
-      );
-      await queue.enqueue(op);
-
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          jsonEncode({'error': {'code': 'unauthorized', 'message': 'Token expired'}}),
-          401,
+    test(
+      'Requirement 5 — Authentication Failure Queue Preservation: HTTP 401 preserves pending local queue ops',
+      () async {
+        final queue = SyncQueue();
+        final cursorStore = SyncCursorStore();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.wifi],
         );
-      });
 
-      final api = HttpRemoteSyncApi(
-        config: const SyncApiConfig(
-          baseUrl: 'https://api.nexabiz.test',
-          apiToken: 'expired-token',
-          companyId: 'cmp-1',
-          userId: 'usr-1',
-          deviceId: 'dev-1',
-        ),
-        client: mockClient,
-      );
-
-      final manager = SyncManager(
-        queue: queue,
-        remoteProvider: () => api,
-        connectivity: connectivity,
-        conflictStore: conflictStore,
-      );
-      manager.registerHandler(
-        Phase8TestEntityHandler(
+        final op = SyncOperation.create(
           entityType: 'customer',
+          entityId: 'c-prod-1',
+          type: SyncOperationType.create,
+          payload: {'name': 'Unsynced Customer'},
+        );
+        await queue.enqueue(op);
+
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'error': {'code': 'unauthorized', 'message': 'Token expired'},
+            }),
+            401,
+          );
+        });
+
+        final api = HttpRemoteSyncApi(
+          config: const SyncApiConfig(
+            baseUrl: 'https://api.nexabiz.test',
+            apiToken: 'expired-token',
+            companyId: 'cmp-1',
+            userId: 'usr-1',
+            deviceId: 'dev-1',
+          ),
+          client: mockClient,
+        );
+
+        final manager = SyncManager(
+          queue: queue,
+          remoteProvider: () => api,
+          connectivity: connectivity,
+          conflictStore: conflictStore,
+        );
+        manager.registerHandler(
+          Phase8TestEntityHandler(
+            entityType: 'customer',
+            cursorStore: cursorStore,
+          ),
+        );
+        await manager.start(enabled: true);
+
+        final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
+
+        expect(result.outcome, equals(SyncPassOutcome.authRequired));
+
+        // CRITICAL INVARIANT: Queue operations MUST NEVER be deleted on 401 auth failure!
+        final pendingOps = await queue.all();
+        expect(pendingOps, hasLength(1));
+        expect(pendingOps[0].id, equals(op.id));
+
+        await manager.dispose();
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
+
+    test(
+      'Requirement 11 — Cursor Safety: Failed apply preserves cursor invariant (CURSOR <= LAST DURABLY APPLIED)',
+      () async {
+        final cursorStore = SyncCursorStore();
+        final queue = SyncQueue();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.wifi],
+        );
+
+        await cursorStore.write('product', 50);
+
+        final failingHandler = Phase8TestEntityHandler(
+          entityType: 'product',
           cursorStore: cursorStore,
-        ),
-      );
-      await manager.start(enabled: true);
+          failOnApply: true,
+        );
 
-      final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
+        final change = SyncRemoteChange(
+          entityId: 'p-99',
+          version: 1,
+          updatedAt: DateTime.utc(2026, 8, 24),
+          payload: {'sku': 'SKU-99'},
+        );
 
-      expect(result.outcome, equals(SyncPassOutcome.authRequired));
+        try {
+          await failingHandler.applyRemoteChange(change);
+          fail('Should have thrown failure');
+        } catch (e) {
+          // Expected failure
+        }
 
-      // CRITICAL INVARIANT: Queue operations MUST NEVER be deleted on 401 auth failure!
-      final pendingOps = await queue.all();
-      expect(pendingOps, hasLength(1));
-      expect(pendingOps[0].id, equals(op.id));
+        // Cursor must remain 50
+        final cur = await cursorStore.read('product');
+        expect(cur, equals(50));
 
-      await manager.dispose();
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
 
-    test('Requirement 11 — Cursor Safety: Failed apply preserves cursor invariant (CURSOR <= LAST DURABLY APPLIED)', () async {
-      final cursorStore = SyncCursorStore();
-      final queue = SyncQueue();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
+    test(
+      'Requirement 15 — Diagnostic Report Sanitization: Secret credentials omitted',
+      () {
+        final overview = SyncOverview.initial().copyWith(
+          pendingCount: 12,
+          failedCount: 0,
+        );
 
-      await cursorStore.write('product', 50);
+        final report = overview.toDiagnosticReport();
 
-      final failingHandler = Phase8TestEntityHandler(
-        entityType: 'product',
-        cursorStore: cursorStore,
-        failOnApply: true,
-      );
-
-      final change = SyncRemoteChange(
-        entityId: 'p-99',
-        version: 1,
-        updatedAt: DateTime.utc(2026, 8, 24),
-        payload: {'sku': 'SKU-99'},
-      );
-
-      try {
-        await failingHandler.applyRemoteChange(change);
-        fail('Should have thrown failure');
-      } catch (e) {
-        // Expected failure
-      }
-
-      // Cursor must remain 50
-      final cur = await cursorStore.read('product');
-      expect(cur, equals(50));
-
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
-
-    test('Requirement 15 — Diagnostic Report Sanitization: Secret credentials omitted', () {
-      final overview = SyncOverview.initial().copyWith(
-        pendingCount: 12,
-        failedCount: 0,
-      );
-
-      final report = overview.toDiagnosticReport();
-
-      expect(report['pending_count'], equals(12));
-      expect(report.containsKey('api_token'), isFalse);
-      expect(report.containsKey('password'), isFalse);
-    });
+        expect(report['pending_count'], equals(12));
+        expect(report.containsKey('api_token'), isFalse);
+        expect(report.containsKey('password'), isFalse);
+      },
+    );
   });
 }

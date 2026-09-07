@@ -137,7 +137,8 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
             final baseCurrency = ref.read(accountingBaseCurrencyProvider).code;
             composer.reset(baseCurrency);
             if (books.isNotEmpty) composer.setVoucherBook(books.first);
-            if (warehouses.isNotEmpty) composer.setWarehouse(warehouses.first.id);
+            if (warehouses.isNotEmpty)
+              composer.setWarehouse(warehouses.first.id);
           }
         },
       );
@@ -176,8 +177,9 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       final raw = await ProductBarcodeScannerPage.open(context);
       if (raw == null || !mounted) return;
 
-      final resolution =
-          await ref.read(productScanResolverProvider).resolve(raw);
+      final resolution = await ref
+          .read(productScanResolverProvider)
+          .resolve(raw);
       if (!mounted) return;
 
       if (resolution == null) {
@@ -190,7 +192,9 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       }
 
       FocusManager.instance.primaryFocus?.unfocus();
-      ref.read(stockReceiptComposerProvider.notifier).addProduct(resolution.product);
+      ref
+          .read(stockReceiptComposerProvider.notifier)
+          .addProduct(resolution.product);
     } catch (e) {
       if (!mounted) return;
       showAppSnackBar(
@@ -206,7 +210,8 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
     if (_isPostedLocked) {
       showAppSnackBar(
         context,
-        message: 'لا يمكن تعديل المستند وهو في حالة (مرحّل). يرجى إلغاء الترحيل أولاً.',
+        message:
+            'لا يمكن تعديل المستند وهو في حالة (مرحّل). يرجى إلغاء الترحيل أولاً.',
         isSuccess: false,
       );
       return;
@@ -275,7 +280,9 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       child: Scaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(
-          title: _isEdit ? l10n.stockReceiptEditTitle : l10n.stockReceiptNewTitle,
+          title: _isEdit
+              ? l10n.stockReceiptEditTitle
+              : l10n.stockReceiptNewTitle,
           showBackButton: true,
           actions: actions,
         ),
@@ -429,7 +436,8 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
             : 'اختر المستودع',
       ),
     );
-    final warehouseDisplay = (state.warehouse != null && state.warehouse!.isNotEmpty)
+    final warehouseDisplay =
+        (state.warehouse != null && state.warehouse!.isNotEmpty)
         ? selectedWarehouse.name
         : null;
 
@@ -494,43 +502,60 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                     placeholder: l10n.stockIssueVoucherBookLabel,
                     onTap: canSelectVoucherBook
                         ? () async {
-                            final selected = await showModalBottomSheet<InventoryVoucherBookRef>(
-                              context: context,
-                              useSafeArea: true,
-                              builder: (ctx) {
-                                return SafeArea(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(AppSpacing.md),
-                                        child: Text(
-                                          'دفاتر التوريد',
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w800,
+                            final selected =
+                                await showModalBottomSheet<
+                                  InventoryVoucherBookRef
+                                >(
+                                  context: context,
+                                  useSafeArea: true,
+                                  builder: (ctx) {
+                                    return SafeArea(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(
+                                              AppSpacing.md,
+                                            ),
+                                            child: Text(
+                                              'دفاتر التوريد',
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
+                                            ),
                                           ),
-                                        ),
+                                          for (final b in voucherBooks)
+                                            ListTile(
+                                              leading: Icon(
+                                                b.bookId ==
+                                                        state
+                                                            .voucherBook
+                                                            ?.bookId
+                                                    ? Icons.check_circle
+                                                    : Icons.circle_outlined,
+                                                color:
+                                                    b.bookId ==
+                                                        state
+                                                            .voucherBook
+                                                            ?.bookId
+                                                    ? theme.colorScheme.primary
+                                                    : theme
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
+                                              ),
+                                              title: Text(b.name),
+                                              onTap: () =>
+                                                  Navigator.of(ctx).pop(b),
+                                            ),
+                                          const SizedBox(height: AppSpacing.sm),
+                                        ],
                                       ),
-                                      for (final b in voucherBooks)
-                                        ListTile(
-                                          leading: Icon(
-                                            b.bookId == state.voucherBook?.bookId
-                                                ? Icons.check_circle
-                                                : Icons.circle_outlined,
-                                            color: b.bookId == state.voucherBook?.bookId
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme.onSurfaceVariant,
-                                          ),
-                                          title: Text(b.name),
-                                          onTap: () => Navigator.of(ctx).pop(b),
-                                        ),
-                                      const SizedBox(height: AppSpacing.sm),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 );
-                              },
-                            );
-                            if (selected != null) onVoucherBookSelected(selected);
+                            if (selected != null)
+                              onVoucherBookSelected(selected);
                           }
                         : null,
                   ),
@@ -555,9 +580,8 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                                   padding: const EdgeInsets.all(AppSpacing.md),
                                   child: Text(
                                     'المستودعات',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w800),
                                   ),
                                 ),
                                 if (warehouses.isNotEmpty)
@@ -569,7 +593,9 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                                             : Icons.store_outlined,
                                         color: w.id == state.warehouse
                                             ? theme.colorScheme.primary
-                                            : theme.colorScheme.onSurfaceVariant,
+                                            : theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
                                       ),
                                       title: Text(w.name),
                                       subtitle: Text('كود المستودع: ${w.code}'),
@@ -577,12 +603,17 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                                     )
                                 else
                                   Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     child: Text(
                                       'لا توجد مستودعات متاحة',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
                                     ),
                                   ),
                                 const SizedBox(height: AppSpacing.sm),
@@ -605,7 +636,8 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                     value: state.currencyCode,
                     placeholder: l10n.salesCurrency,
                     onTap: () async {
-                      final currencyListItems = currencyItemsAsync.asData?.value ?? [];
+                      final currencyListItems =
+                          currencyItemsAsync.asData?.value ?? [];
                       final selected = await showModalBottomSheet<CurrencyRateListItem>(
                         context: context,
                         useSafeArea: true,
@@ -618,9 +650,8 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                                   padding: const EdgeInsets.all(AppSpacing.md),
                                   child: Text(
                                     l10n.salesCurrency,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w800),
                                   ),
                                 ),
                                 if (currencyListItems.isNotEmpty)
@@ -630,11 +661,17 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                                         item.currency.code == state.currencyCode
                                             ? Icons.check_circle
                                             : Icons.circle_outlined,
-                                        color: item.currency.code == state.currencyCode
+                                        color:
+                                            item.currency.code ==
+                                                state.currencyCode
                                             ? theme.colorScheme.primary
-                                            : theme.colorScheme.onSurfaceVariant,
+                                            : theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
                                       ),
-                                      title: Text('${item.currency.code} - ${item.currency.nameAr}'),
+                                      title: Text(
+                                        '${item.currency.code} - ${item.currency.nameAr}',
+                                      ),
                                       subtitle: item.isBase
                                           ? const Text('العملة الرئيسية')
                                           : Text(
@@ -644,13 +681,18 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                                     )
                                 else
                                   Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     child: Text(
                                       'لا توجد عملات معرفة في الدليل حالياً',
                                       textAlign: TextAlign.center,
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
                                     ),
                                   ),
                                 const SizedBox(height: AppSpacing.sm),
@@ -660,7 +702,10 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                         },
                       );
                       if (selected != null) {
-                        onCurrencyChanged(selected.currency.code, selected.displayRate);
+                        onCurrencyChanged(
+                          selected.currency.code,
+                          selected.displayRate,
+                        );
                       }
                     },
                   ),
@@ -716,7 +761,9 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
       accountId: pickedAccount.uuid as String,
       code: pickedAccount.accountCode as String,
       name: pickedAccount.name as String,
-      systemKey: pickedAccount.isSystemAccount == true ? (pickedAccount.accountCode as String) : null,
+      systemKey: pickedAccount.isSystemAccount == true
+          ? (pickedAccount.accountCode as String)
+          : null,
     );
     widget.onAccountSelected(ref);
     _closeSearch();
@@ -808,15 +855,20 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: scheme.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(AppRadius.xs),
+                                    color: scheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.xs,
+                                    ),
                                   ),
                                   child: Text(
                                     selectedAccount.code,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: scheme.primary,
-                                      fontWeight: FontWeight.w900,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: scheme.primary,
+                                          fontWeight: FontWeight.w900,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -860,8 +912,6 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
   }
 }
 
-
-
 /// Multi-column spreadsheet editor matching SaleProductsTable.
 class StockReceiptProductsTable extends StatefulWidget {
   const StockReceiptProductsTable({
@@ -886,8 +936,7 @@ class StockReceiptProductsTable extends StatefulWidget {
       _StockReceiptProductsTableState();
 }
 
-class _StockReceiptProductsTableState
-    extends State<StockReceiptProductsTable> {
+class _StockReceiptProductsTableState extends State<StockReceiptProductsTable> {
   final List<int> _draftRowIds = [];
   var _nextDraftId = 0;
   final _horizontalScroll = ScrollController();
@@ -971,10 +1020,7 @@ class _StockReceiptProductsTableState
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    this.onScanBarcode,
-  });
+  const _SectionHeader({required this.title, this.onScanBarcode});
 
   final String title;
   final VoidCallback? onScanBarcode;
@@ -1000,9 +1046,7 @@ class _SectionHeader extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: scheme.primary.withValues(alpha: 0.12)),
           ),
           child: Icon(
             Icons.inventory_2_outlined,
@@ -1050,8 +1094,9 @@ class _TableHeader extends StatelessWidget {
         vertical: AppSpacing.sm + 2,
       ),
       decoration: BoxDecoration(
-        color:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.55,
+        ),
         border: Border(
           bottom: BorderSide(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
@@ -1070,19 +1115,35 @@ class _TableHeader extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.main,
-            child: Text('الكمية الرئيسية', style: style, textAlign: TextAlign.center),
+            child: Text(
+              'الكمية الرئيسية',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
           ),
           SizedBox(
             width: _Cols.sub,
-            child: Text('الكمية الفرعية', style: style, textAlign: TextAlign.center),
+            child: Text(
+              'الكمية الفرعية',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
           ),
           SizedBox(
             width: _Cols.cost,
-            child: Text('تكلفة الوحدة', style: style, textAlign: TextAlign.center),
+            child: Text(
+              'تكلفة الوحدة',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
           ),
           SizedBox(
             width: _Cols.total,
-            child: Text('إجمالي التكلفة', style: style, textAlign: TextAlign.end),
+            child: Text(
+              'إجمالي التكلفة',
+              style: style,
+              textAlign: TextAlign.end,
+            ),
           ),
           const SizedBox(width: _Cols.actions),
         ],
@@ -1104,7 +1165,8 @@ class _TableFooter extends StatelessWidget {
     final totalSub = items.fold(0.0, (sum, i) => sum + i.subQuantity);
     final totalCostSum = items.fold(0.0, (sum, i) => sum + i.totalCost);
 
-    String fmtQty(double v) => v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
+    String fmtQty(double v) =>
+        v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
 
     final style = theme.textTheme.labelSmall?.copyWith(
       fontWeight: FontWeight.w800,
@@ -1125,9 +1187,7 @@ class _TableFooter extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
         border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.45),
-          ),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.45)),
         ),
       ),
       child: Row(
@@ -1138,10 +1198,7 @@ class _TableFooter extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.product,
-            child: Text(
-              'المجموع الإجمالي (${items.length})',
-              style: style,
-            ),
+            child: Text('المجموع الإجمالي (${items.length})', style: style),
           ),
           SizedBox(
             width: _Cols.main,
@@ -1161,11 +1218,7 @@ class _TableFooter extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.cost,
-            child: Text(
-              '—',
-              style: style,
-              textAlign: TextAlign.center,
-            ),
+            child: Text('—', style: style, textAlign: TextAlign.center),
           ),
           SizedBox(
             width: _Cols.total,
@@ -1270,7 +1323,8 @@ class _FilledRow extends StatelessWidget {
                   decimalPlaces: 3,
                   trimTrailingZeros: true,
                   variant: AppAmountFieldVariant.compact,
-                  onChanged: (main) => onQuantitiesChanged(main, item.subQuantity),
+                  onChanged: (main) =>
+                      onQuantitiesChanged(main, item.subQuantity),
                 ),
               ),
             ),
@@ -1283,7 +1337,8 @@ class _FilledRow extends StatelessWidget {
                   decimalPlaces: 3,
                   trimTrailingZeros: true,
                   variant: AppAmountFieldVariant.compact,
-                  onChanged: (sub) => onQuantitiesChanged(item.mainQuantity, sub),
+                  onChanged: (sub) =>
+                      onQuantitiesChanged(item.mainQuantity, sub),
                 ),
               ),
             ),
@@ -1377,9 +1432,12 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: productsAsync.when(
           data: (products) {
-            final query = normalizeDigitsToWestern(_controller.text).toLowerCase().trim();
+            final query = normalizeDigitsToWestern(
+              _controller.text,
+            ).toLowerCase().trim();
             final filtered = products.where((p) {
-              return p.name.toLowerCase().contains(query) || p.itemCode.toLowerCase().contains(query);
+              return p.name.toLowerCase().contains(query) ||
+                  p.itemCode.toLowerCase().contains(query);
             }).toList();
 
             return Column(
@@ -1390,7 +1448,10 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     hintText: 'ابحث عن صنف بالاسم أو الرمز...',
-                    prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: scheme.primary,
+                    ),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.close_rounded),
                       onPressed: widget.onCancel,
@@ -1417,7 +1478,9 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                           final p = filtered[i];
                           return ListTile(
                             title: Text(p.name),
-                            subtitle: Text('الرمز: ${p.itemCode} | التكلفة للمنتج: ${p.unitCost.toStringAsFixed(2)} | المتوفر: ${p.onHandQty}'),
+                            subtitle: Text(
+                              'الرمز: ${p.itemCode} | التكلفة للمنتج: ${p.unitCost.toStringAsFixed(2)} | المتوفر: ${p.onHandQty}',
+                            ),
                             onTap: () => widget.onProductSelected(p),
                           );
                         },
@@ -1435,13 +1498,8 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
   }
 }
 
-
-
 class _TableActionsBar extends StatelessWidget {
-  const _TableActionsBar({
-    required this.onAdd,
-    required this.addLabel,
-  });
+  const _TableActionsBar({required this.onAdd, required this.addLabel});
 
   final VoidCallback onAdd;
   final String addLabel;
@@ -1502,5 +1560,3 @@ class _AddRowButton extends StatelessWidget {
     );
   }
 }
-
-

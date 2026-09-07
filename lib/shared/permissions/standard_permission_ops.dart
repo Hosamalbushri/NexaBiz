@@ -15,7 +15,8 @@ abstract final class StandardPermissionOps {
       code: code,
       icon: Icons.visibility_outlined,
       legacyCodes: legacyCodes,
-      labelBuilder: (context) => AppLocalizations.of(context).adminPermActionView,
+      labelBuilder: (context) =>
+          AppLocalizations.of(context).adminPermActionView,
     );
   }
 

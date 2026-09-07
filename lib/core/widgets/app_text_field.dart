@@ -66,11 +66,7 @@ class AppTextField extends StatelessWidget {
       readOnly: readOnly,
       prefix: prefixIcon == null
           ? null
-          : Icon(
-              prefixIcon,
-              size: 20,
-              color: scheme.primary,
-            ),
+          : Icon(prefixIcon, size: 20, color: scheme.primary),
       suffix: suffixIcon,
       child: TextField(
         controller: controller,

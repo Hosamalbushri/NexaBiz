@@ -115,9 +115,7 @@ class ReportQueryFilter {
   }
 
   /// Converts this filter to a legacy [ReportExecutionContext] for engine compatibility.
-  ReportExecutionContext toExecutionContext({
-    String? defaultCurrency,
-  }) {
+  ReportExecutionContext toExecutionContext({String? defaultCurrency}) {
     return ReportExecutionContext(
       companyId: companyId,
       userId: userId,
@@ -125,7 +123,9 @@ class ReportQueryFilter {
       warehouseScope: warehouseUuid,
       accountScope: accountUuid,
       asOfDate: asOfDate,
-      currencyScope: currencyCode.isEmpty ? (defaultCurrency ?? 'ALL') : currencyCode,
+      currencyScope: currencyCode.isEmpty
+          ? (defaultCurrency ?? 'ALL')
+          : currencyCode,
       filters: {
         if (fromDate != null) 'fromDate': fromDate,
         if (toDate != null) 'toDate': toDate,

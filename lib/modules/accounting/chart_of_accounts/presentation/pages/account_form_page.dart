@@ -234,7 +234,9 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
             padding: AppConstants.pageInsets(context),
             children: [
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'البيانات الأساسية' : 'Basic Details',
+                title: l10n.localeName == 'ar'
+                    ? 'البيانات الأساسية'
+                    : 'Basic Details',
                 icon: Icons.account_tree_outlined,
                 topSpacing: 0,
               ),
@@ -304,7 +306,9 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                 ],
               ),
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'التسلسل الهيكلي والنوع' : 'Hierarchy & Type',
+                title: l10n.localeName == 'ar'
+                    ? 'التسلسل الهيكلي والنوع'
+                    : 'Hierarchy & Type',
                 icon: Icons.account_balance_outlined,
               ),
               AppResponsiveForm(
@@ -370,7 +374,9 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                 ],
               ),
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'الوصف والإعدادات' : 'Description & Options',
+                title: l10n.localeName == 'ar'
+                    ? 'الوصف والإعدادات'
+                    : 'Description & Options',
                 icon: Icons.tune_outlined,
               ),
               TextFormField(
@@ -454,7 +460,7 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
           message: l10n.accountingSavedSuccess,
           isSuccess: true,
         );
-        context.go(AccountingRoutes.accountDetails(created.id));
+        context.replace(AccountingRoutes.accountDetails(created.id));
       }
     } on AccountException catch (e) {
       if (!mounted) {

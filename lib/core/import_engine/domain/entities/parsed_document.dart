@@ -2,12 +2,7 @@ import 'import_parse_error.dart';
 import 'parsed_sheet.dart';
 
 /// Supported import document file formats.
-enum ImportFileFormat {
-  csv,
-  xlsx,
-  json,
-  unknown,
-}
+enum ImportFileFormat { csv, xlsx, json, unknown }
 
 /// Generic parsed document representing an ingested file workbook or dataset.
 class ParsedDocument {
@@ -19,11 +14,7 @@ class ParsedDocument {
   });
 
   factory ParsedDocument.empty(String sourceId, ImportFileFormat format) =>
-      ParsedDocument(
-        sourceId: sourceId,
-        format: format,
-        sheets: const [],
-      );
+      ParsedDocument(sourceId: sourceId, format: format, sheets: const []);
 
   final String sourceId;
   final ImportFileFormat format;

@@ -39,8 +39,9 @@ class CustomerRemoteAccountEnsure {
       return;
     }
 
-    final code =
-        (payload['customerCode']?.toString() ?? accountId).trim().toUpperCase();
+    final code = (payload['customerCode']?.toString() ?? accountId)
+        .trim()
+        .toUpperCase();
     final name = (payload['name']?.toString() ?? code).trim();
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
 

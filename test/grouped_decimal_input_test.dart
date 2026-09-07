@@ -35,12 +35,12 @@ void main() {
     });
 
     test('keeps fractional format when decimalPlaces > 0', () {
-      expect(
-        formatGroupedDecimal(1234.5, trimTrailingZeros: true),
-        '1,234.5',
-      );
+      expect(formatGroupedDecimal(1234.5, trimTrailingZeros: true), '1,234.5');
       expect(formatGroupedDecimal(1000000, decimalPlaces: 2), '1,000,000.00');
-      expect(formatGroupedDecimal(1250000.75, decimalPlaces: 2), '1,250,000.75');
+      expect(
+        formatGroupedDecimal(1250000.75, decimalPlaces: 2),
+        '1,250,000.75',
+      );
       expect(formatGroupedDecimal(1250000, decimalPlaces: 3), '1,250,000.000');
     });
 

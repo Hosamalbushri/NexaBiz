@@ -14,8 +14,14 @@ void main() {
 
       expect(ctx.companyId, equals('COMPANY_001'));
       expect(ctx.postingScope, equals(PostingScope.postedOnly));
-      expect(PostingScopeX.fromString('posted'), equals(PostingScope.postedOnly));
-      expect(PostingScopeX.fromString('unposted'), equals(PostingScope.unpostedOnly));
+      expect(
+        PostingScopeX.fromString('posted'),
+        equals(PostingScope.postedOnly),
+      );
+      expect(
+        PostingScopeX.fromString('unposted'),
+        equals(PostingScope.unpostedOnly),
+      );
       expect(PostingScopeX.fromString('all'), equals(PostingScope.all));
     });
 

@@ -11,7 +11,7 @@ import 'company_cloud_state.dart';
 /// StateNotifier holding active [CompanyCloudState] for a specific local company.
 class CompanyCloudStateNotifier extends StateNotifier<CompanyCloudState> {
   CompanyCloudStateNotifier(this._ref, this._localCompanyId)
-      : super(CompanyCloudState.localDefault(_localCompanyId)) {
+    : super(CompanyCloudState.localDefault(_localCompanyId)) {
     _load();
   }
 
@@ -32,7 +32,13 @@ class CompanyCloudStateNotifier extends StateNotifier<CompanyCloudState> {
     await settingsRepo.saveCompanyCloudState(newState);
   }
 
-  Future<void> setStatus(CompanyCloudStatus status, {String? serverCompanyId, String? planId, String? subscriptionId, String? error}) async {
+  Future<void> setStatus(
+    CompanyCloudStatus status, {
+    String? serverCompanyId,
+    String? planId,
+    String? subscriptionId,
+    String? error,
+  }) async {
     final updated = state.copyWith(
       cloudStatus: status,
       serverCompanyId: serverCompanyId ?? state.serverCompanyId,
@@ -40,7 +46,9 @@ class CompanyCloudStateNotifier extends StateNotifier<CompanyCloudState> {
       subscriptionId: subscriptionId ?? state.subscriptionId,
       lastProvisioningError: error,
       clearLastProvisioningError: error == null,
-      cloudLinkedAt: status == CompanyCloudStatus.cloudReady || status == CompanyCloudStatus.linked
+      cloudLinkedAt:
+          status == CompanyCloudStatus.cloudReady ||
+              status == CompanyCloudStatus.linked
           ? (state.cloudLinkedAt ?? DateTime.now().toUtc())
           : state.cloudLinkedAt,
     );
@@ -51,9 +59,9 @@ class CompanyCloudStateNotifier extends StateNotifier<CompanyCloudState> {
 /// Reactive provider exposing [CompanyCloudState] for the currently active company.
 final companyCloudStateProvider =
     StateNotifierProvider<CompanyCloudStateNotifier, CompanyCloudState>((ref) {
-  final companyId = ref.watch(currentCompanyIdProvider);
-  return CompanyCloudStateNotifier(ref, companyId);
-});
+      final companyId = ref.watch(currentCompanyIdProvider);
+      return CompanyCloudStateNotifier(ref, companyId);
+    });
 
 /// Async state for cloud provisioning workflow execution.
 class ProvisioningStepProgress {
@@ -89,10 +97,14 @@ class ProvisioningStepProgress {
 class CompanyProvisioningController
     extends StateNotifier<AsyncValue<ProvisioningStepProgress>> {
   CompanyProvisioningController(this._ref)
-      : super(const AsyncValue.data(ProvisioningStepProgress(
-          status: CompanyCloudStatus.localOnly,
-          stepMessage: 'Ready to upgrade',
-        )));
+    : super(
+        const AsyncValue.data(
+          ProvisioningStepProgress(
+            status: CompanyCloudStatus.localOnly,
+            stepMessage: 'Ready to upgrade',
+          ),
+        ),
+      );
 
   final Ref _ref;
 
@@ -110,10 +122,12 @@ class CompanyProvisioningController
     final token = apiConfig.apiToken;
     final baseUrl = apiConfig.baseUrl.replaceAll(RegExp(r'/+$'), '');
 
-    state = const AsyncValue.data(ProvisioningStepProgress(
-      status: CompanyCloudStatus.provisioning,
-      stepMessage: 'Creating cloud company & admin identity...',
-    ));
+    state = const AsyncValue.data(
+      ProvisioningStepProgress(
+        status: CompanyCloudStatus.provisioning,
+        stepMessage: 'Creating cloud company & admin identity...',
+      ),
+    );
     await cloudNotifier.setStatus(CompanyCloudStatus.provisioning);
 
     try {
@@ -126,7 +140,8 @@ class CompanyProvisioningController
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
           'X-Company-Id': localCompanyId,
-          'Idempotency-Key': 'prov_${localCompanyId}_${DateTime.now().millisecondsSinceEpoch}',
+          'Idempotency-Key':
+              'prov_${localCompanyId}_${DateTime.now().millisecondsSinceEpoch}',
         },
         body: jsonEncode({
           'local_company_id': localCompanyId,
@@ -138,22 +153,27 @@ class CompanyProvisioningController
         throw Exception('Server provisioning failed: ${provisionRes.body}');
       }
 
-      final provisionJson = jsonDecode(provisionRes.body) as Map<String, dynamic>;
+      final provisionJson =
+          jsonDecode(provisionRes.body) as Map<String, dynamic>;
       final data = provisionJson['data'] as Map<String, dynamic>;
       final serverCompanyId = data['server_company_id'] as String;
 
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.cloudAdminLinked,
-        stepMessage: 'Cloud admin linked. Creating subscription...',
-        serverCompanyId: serverCompanyId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.cloudAdminLinked,
+          stepMessage: 'Cloud admin linked. Creating subscription...',
+          serverCompanyId: serverCompanyId,
+        ),
+      );
       await cloudNotifier.setStatus(
         CompanyCloudStatus.cloudAdminLinked,
         serverCompanyId: serverCompanyId,
       );
 
       // 2. Checkout Subscription API
-      final checkoutUri = Uri.parse('$baseUrl/api/v1/companies/$serverCompanyId/subscription/checkout');
+      final checkoutUri = Uri.parse(
+        '$baseUrl/api/v1/companies/$serverCompanyId/subscription/checkout',
+      );
       final checkoutRes = await http.post(
         checkoutUri,
         headers: {
@@ -162,10 +182,7 @@ class CompanyProvisioningController
           'Authorization': 'Bearer $token',
           'X-Company-Id': serverCompanyId,
         },
-        body: jsonEncode({
-          'plan_id': planId,
-          'package_codes': packageCodes,
-        }),
+        body: jsonEncode({'plan_id': planId, 'package_codes': packageCodes}),
       );
 
       if (checkoutRes.statusCode < 200 || checkoutRes.statusCode >= 300) {
@@ -176,13 +193,15 @@ class CompanyProvisioningController
       final checkoutData = checkoutJson['data'] as Map<String, dynamic>;
       final subscriptionId = checkoutData['subscription_id'] as String;
 
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.subscriptionPending,
-        stepMessage: 'Activating server subscription & entitlement...',
-        serverCompanyId: serverCompanyId,
-        subscriptionId: subscriptionId,
-        planId: planId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.subscriptionPending,
+          stepMessage: 'Activating server subscription & entitlement...',
+          serverCompanyId: serverCompanyId,
+          subscriptionId: subscriptionId,
+          planId: planId,
+        ),
+      );
       await cloudNotifier.setStatus(
         CompanyCloudStatus.subscriptionPending,
         serverCompanyId: serverCompanyId,
@@ -191,7 +210,9 @@ class CompanyProvisioningController
       );
 
       // 3. Activate Subscription API
-      final activateUri = Uri.parse('$baseUrl/api/v1/companies/$serverCompanyId/subscription/activate');
+      final activateUri = Uri.parse(
+        '$baseUrl/api/v1/companies/$serverCompanyId/subscription/activate',
+      );
       final activateRes = await http.post(
         activateUri,
         headers: {
@@ -199,7 +220,8 @@ class CompanyProvisioningController
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
           'X-Company-Id': serverCompanyId,
-          'Idempotency-Key': 'sub_act_${subscriptionId}_${DateTime.now().millisecondsSinceEpoch}',
+          'Idempotency-Key':
+              'sub_act_${subscriptionId}_${DateTime.now().millisecondsSinceEpoch}',
         },
         body: jsonEncode({
           'subscription_id': subscriptionId,
@@ -211,13 +233,16 @@ class CompanyProvisioningController
         throw Exception('Subscription activation failed: ${activateRes.body}');
       }
 
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.linked,
-        stepMessage: 'Server entitlement verified. Starting initial migration...',
-        serverCompanyId: serverCompanyId,
-        subscriptionId: subscriptionId,
-        planId: planId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.linked,
+          stepMessage:
+              'Server entitlement verified. Starting initial migration...',
+          serverCompanyId: serverCompanyId,
+          subscriptionId: subscriptionId,
+          planId: planId,
+        ),
+      );
       await cloudNotifier.setStatus(
         CompanyCloudStatus.linked,
         serverCompanyId: serverCompanyId,
@@ -229,13 +254,15 @@ class CompanyProvisioningController
       _ref.invalidate(currentEntitlementProvider);
 
       // 4. Initial Cloud Data Migration
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.initialSyncing,
-        stepMessage: 'Migrating local workspace data to cloud...',
-        serverCompanyId: serverCompanyId,
-        subscriptionId: subscriptionId,
-        planId: planId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.initialSyncing,
+          stepMessage: 'Migrating local workspace data to cloud...',
+          serverCompanyId: serverCompanyId,
+          subscriptionId: subscriptionId,
+          planId: planId,
+        ),
+      );
       await cloudNotifier.setStatus(CompanyCloudStatus.initialSyncing);
 
       final scanner = InitialCloudSyncScanner(_ref);
@@ -243,14 +270,17 @@ class CompanyProvisioningController
 
       scanner.progress.listen((prog) {
         if (mounted) {
-          state = AsyncValue.data(ProvisioningStepProgress(
-            status: CompanyCloudStatus.initialSyncing,
-            stepMessage: 'Uploading data: ${prog.processedCount} / ${prog.totalCount}',
-            serverCompanyId: serverCompanyId,
-            subscriptionId: subscriptionId,
-            planId: planId,
-            migrationProgress: prog,
-          ));
+          state = AsyncValue.data(
+            ProvisioningStepProgress(
+              status: CompanyCloudStatus.initialSyncing,
+              stepMessage:
+                  'Uploading data: ${prog.processedCount} / ${prog.totalCount}',
+              serverCompanyId: serverCompanyId,
+              subscriptionId: subscriptionId,
+              planId: planId,
+              migrationProgress: prog,
+            ),
+          );
         }
       });
 
@@ -272,21 +302,28 @@ class CompanyProvisioningController
       final syncManager = _ref.read(syncManagerProvider);
       await syncManager.start(enabled: true);
 
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.cloudReady,
-        stepMessage: 'Cloud workspace ready!',
-        serverCompanyId: serverCompanyId,
-        subscriptionId: subscriptionId,
-        planId: planId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.cloudReady,
+          stepMessage: 'Cloud workspace ready!',
+          serverCompanyId: serverCompanyId,
+          subscriptionId: subscriptionId,
+          planId: planId,
+        ),
+      );
     } catch (e) {
       final errorMsg = e.toString();
-      await cloudNotifier.setStatus(CompanyCloudStatus.provisioningFailed, error: errorMsg);
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.provisioningFailed,
-        stepMessage: 'Provisioning failed',
-        errorMessage: errorMsg,
-      ));
+      await cloudNotifier.setStatus(
+        CompanyCloudStatus.provisioningFailed,
+        error: errorMsg,
+      );
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.provisioningFailed,
+          stepMessage: 'Provisioning failed',
+          errorMessage: errorMsg,
+        ),
+      );
     }
   }
 
@@ -302,10 +339,12 @@ class CompanyProvisioningController
     final apiConfig = _ref.read(syncApiConfigProvider);
     final baseUrl = apiConfig.baseUrl.replaceAll(RegExp(r'/+$'), '');
 
-    state = const AsyncValue.data(ProvisioningStepProgress(
-      status: CompanyCloudStatus.provisioning,
-      stepMessage: 'Authenticating cloud admin credentials...',
-    ));
+    state = const AsyncValue.data(
+      ProvisioningStepProgress(
+        status: CompanyCloudStatus.provisioning,
+        stepMessage: 'Authenticating cloud admin credentials...',
+      ),
+    );
     await cloudNotifier.setStatus(CompanyCloudStatus.provisioning);
 
     try {
@@ -315,7 +354,8 @@ class CompanyProvisioningController
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Idempotency-Key': 'link_${localCompanyId}_${DateTime.now().millisecondsSinceEpoch}',
+          'Idempotency-Key':
+              'link_${localCompanyId}_${DateTime.now().millisecondsSinceEpoch}',
         },
         body: jsonEncode({
           'local_company_id': localCompanyId,
@@ -336,11 +376,14 @@ class CompanyProvisioningController
       final data = json['data'] as Map<String, dynamic>;
       final serverCompanyId = data['server_company_id'] as String;
 
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.linked,
-        stepMessage: 'Server company linked. Verifying entitlement & starting migration...',
-        serverCompanyId: serverCompanyId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.linked,
+          stepMessage:
+              'Server company linked. Verifying entitlement & starting migration...',
+          serverCompanyId: serverCompanyId,
+        ),
+      );
       await cloudNotifier.setStatus(
         CompanyCloudStatus.linked,
         serverCompanyId: serverCompanyId,
@@ -350,11 +393,13 @@ class CompanyProvisioningController
       _ref.invalidate(currentEntitlementProvider);
 
       // Initial Cloud Data Migration
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.initialSyncing,
-        stepMessage: 'Migrating local workspace data to cloud...',
-        serverCompanyId: serverCompanyId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.initialSyncing,
+          stepMessage: 'Migrating local workspace data to cloud...',
+          serverCompanyId: serverCompanyId,
+        ),
+      );
       await cloudNotifier.setStatus(CompanyCloudStatus.initialSyncing);
 
       final scanner = InitialCloudSyncScanner(_ref);
@@ -362,12 +407,15 @@ class CompanyProvisioningController
 
       scanner.progress.listen((prog) {
         if (mounted) {
-          state = AsyncValue.data(ProvisioningStepProgress(
-            status: CompanyCloudStatus.initialSyncing,
-            stepMessage: 'Uploading data: ${prog.processedCount} / ${prog.totalCount}',
-            serverCompanyId: serverCompanyId,
-            migrationProgress: prog,
-          ));
+          state = AsyncValue.data(
+            ProvisioningStepProgress(
+              status: CompanyCloudStatus.initialSyncing,
+              stepMessage:
+                  'Uploading data: ${prog.processedCount} / ${prog.totalCount}',
+              serverCompanyId: serverCompanyId,
+              migrationProgress: prog,
+            ),
+          );
         }
       });
 
@@ -386,24 +434,34 @@ class CompanyProvisioningController
       final syncManager = _ref.read(syncManagerProvider);
       await syncManager.start(enabled: true);
 
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.cloudReady,
-        stepMessage: 'Cloud workspace successfully linked!',
-        serverCompanyId: serverCompanyId,
-      ));
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.cloudReady,
+          stepMessage: 'Cloud workspace successfully linked!',
+          serverCompanyId: serverCompanyId,
+        ),
+      );
     } catch (e) {
       final errorMsg = e.toString();
-      await cloudNotifier.setStatus(CompanyCloudStatus.provisioningFailed, error: errorMsg);
-      state = AsyncValue.data(ProvisioningStepProgress(
-        status: CompanyCloudStatus.provisioningFailed,
-        stepMessage: 'Linking failed',
-        errorMessage: errorMsg,
-      ));
+      await cloudNotifier.setStatus(
+        CompanyCloudStatus.provisioningFailed,
+        error: errorMsg,
+      );
+      state = AsyncValue.data(
+        ProvisioningStepProgress(
+          status: CompanyCloudStatus.provisioningFailed,
+          stepMessage: 'Linking failed',
+          errorMessage: errorMsg,
+        ),
+      );
     }
   }
 }
 
 final companyProvisioningControllerProvider =
-    StateNotifierProvider<CompanyProvisioningController, AsyncValue<ProvisioningStepProgress>>((ref) {
-  return CompanyProvisioningController(ref);
-});
+    StateNotifierProvider<
+      CompanyProvisioningController,
+      AsyncValue<ProvisioningStepProgress>
+    >((ref) {
+      return CompanyProvisioningController(ref);
+    });

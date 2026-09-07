@@ -108,276 +108,294 @@ void main() {
   });
 
   group('Phase 5 — Client Chaos & Invariant Verification', () {
-    test('PART 5 — Pull Cursor Chaos: Local apply failure preserves cursor invariant (CURSOR <= LAST DURABLY APPLIED)', () async {
-      final cursorStore = SyncCursorStore();
-      final queue = SyncQueue();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
-
-      // Initial cursor set to 100
-      await cursorStore.write('customer', 100);
-
-      final api = HttpRemoteSyncApi(
-        config: const SyncApiConfig(
-          baseUrl: 'https://api.nexabiz.test',
-          apiToken: 'token',
-          companyId: 'cmp-1',
-          userId: 'usr-1',
-          deviceId: 'dev-1',
-        ),
-      );
-
-      final manager = SyncManager(
-        queue: queue,
-        remoteProvider: () => api,
-        connectivity: connectivity,
-        conflictStore: conflictStore,
-      );
-
-      // Handler configured to FAIL during applyRemoteChange
-      final failingHandler = ChaosTestEntityHandler(
-        entityType: 'customer',
-        cursorStore: cursorStore,
-        failOnApply: true,
-        pullChangesProvider: () async => [
-          SyncRemoteChange(
-            entityId: 'c-101',
-            version: 1,
-            updatedAt: DateTime.utc(2026, 8, 24),
-            payload: {'name': 'Cust 101', '_sequence': 102},
-          )
-        ],
-      );
-      manager.registerHandler(failingHandler);
-      await manager.start(enabled: true);
-
-      final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
-
-      // Verify: Sync pass reported failure
-      expect(result.failed, equals(1));
-
-      // CRITICAL INVARIANT: Cursor must NOT advance to 102 because apply failed!
-      final curAfterFail = await cursorStore.read('customer');
-      expect(curAfterFail, equals(100));
-
-      await manager.dispose();
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
-
-    test('PART 6 — Multi-Page Pull Stress: 500+ sequence changes page seamlessly without gap or infinite loop', () async {
-      final cursorStore = SyncCursorStore();
-      final queue = SyncQueue();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
-
-      await cursorStore.write('product', 0);
-
-      final api = HttpRemoteSyncApi(
-        config: const SyncApiConfig(
-          baseUrl: 'https://api.nexabiz.test',
-          apiToken: 'token',
-          companyId: 'cmp-1',
-          userId: 'usr-1',
-          deviceId: 'dev-1',
-        ),
-      );
-
-      final manager = SyncManager(
-        queue: queue,
-        remoteProvider: () => api,
-        connectivity: connectivity,
-        conflictStore: conflictStore,
-      );
-
-      // Handler returning 500 changes
-      final handler = ChaosTestEntityHandler(
-        entityType: 'product',
-        cursorStore: cursorStore,
-        pullChangesProvider: () async {
-          final changes = <SyncRemoteChange>[];
-          for (var i = 1; i <= 500; i++) {
-            changes.add(
-              SyncRemoteChange(
-                entityId: 'p-$i',
-                version: 1,
-                updatedAt: DateTime.utc(2026, 8, 24),
-                payload: {'sku': 'SKU-$i', '_sequence': i},
-              ),
-            );
-          }
-          return changes;
-        },
-      );
-      manager.registerHandler(handler);
-      await manager.start(enabled: true);
-
-      final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
-
-      // Assert: Exactly 500 items pulled and applied
-      expect(result.downloaded, equals(500));
-      expect(handler.appliedChanges.length, equals(500));
-
-      // Assert Cursor advanced cleanly to 500
-      final finalCursor = await cursorStore.read('product');
-      expect(finalCursor, equals(500));
-
-      await manager.dispose();
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
-
-    test('PART 8 — Auth Chaos: 401 token expiration does NOT delete pending local queue operations', () async {
-      final cursorStore = SyncCursorStore();
-      final queue = SyncQueue();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
-
-      // Populate queue with pending operations
-      final op1 = SyncOperation.create(
-        entityType: 'customer',
-        entityId: 'c-auth-1',
-        type: SyncOperationType.create,
-        payload: {'name': 'Pending Cust 1'},
-      );
-      final op2 = SyncOperation.create(
-        entityType: 'customer',
-        entityId: 'c-auth-2',
-        type: SyncOperationType.create,
-        payload: {'name': 'Pending Cust 2'},
-      );
-      await queue.enqueue(op1);
-      await queue.enqueue(op2);
-
-      // Server returns HTTP 401 Unauthorized
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          jsonEncode({'error': {'code': 'unauthorized', 'message': 'Token expired'}}),
-          401,
+    test(
+      'PART 5 — Pull Cursor Chaos: Local apply failure preserves cursor invariant (CURSOR <= LAST DURABLY APPLIED)',
+      () async {
+        final cursorStore = SyncCursorStore();
+        final queue = SyncQueue();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.wifi],
         );
-      });
 
-      final api = HttpRemoteSyncApi(
-        config: const SyncApiConfig(
-          baseUrl: 'https://api.nexabiz.test',
-          apiToken: 'expired-token',
-          companyId: 'cmp-1',
-          userId: 'usr-1',
-          deviceId: 'dev-1',
-        ),
-        client: mockClient,
-      );
+        // Initial cursor set to 100
+        await cursorStore.write('customer', 100);
 
-      final manager = SyncManager(
-        queue: queue,
-        remoteProvider: () => api,
-        connectivity: connectivity,
-        conflictStore: conflictStore,
-      );
-      manager.registerHandler(
-        ChaosTestEntityHandler(
+        final api = HttpRemoteSyncApi(
+          config: const SyncApiConfig(
+            baseUrl: 'https://api.nexabiz.test',
+            apiToken: 'token',
+            companyId: 'cmp-1',
+            userId: 'usr-1',
+            deviceId: 'dev-1',
+          ),
+        );
+
+        final manager = SyncManager(
+          queue: queue,
+          remoteProvider: () => api,
+          connectivity: connectivity,
+          conflictStore: conflictStore,
+          readCompanyId: () => 'cmp-1',
+        );
+
+        // Handler configured to FAIL during applyRemoteChange
+        final failingHandler = ChaosTestEntityHandler(
           entityType: 'customer',
           cursorStore: cursorStore,
-        ),
-      );
-      await manager.start(enabled: true);
-
-      final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
-
-      // Assert Outcome is authRequired
-      expect(result.outcome, equals(SyncPassOutcome.authRequired));
-
-      // CRITICAL INVARIANT: Local pending queue operations must NEVER be deleted on auth failure!
-      final queueOps = await queue.all();
-      expect(queueOps, hasLength(2));
-      expect(queueOps[0].id, equals(op1.id));
-      expect(queueOps[1].id, equals(op2.id));
-
-      await manager.dispose();
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
-
-    test('PART 17 — Background Sync Chaos: Concurrent sync triggers lock into single-flight pass', () async {
-      final cursorStore = SyncCursorStore();
-      final queue = SyncQueue();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
-
-      var networkCalls = 0;
-      final mockClient = MockClient((request) async {
-        networkCalls++;
-        await Future.delayed(const Duration(milliseconds: 50));
-        return http.Response(
-          jsonEncode({
-            'changes': [],
-            'next_cursor': 0,
-            'has_more': false,
-          }),
-          200,
+          failOnApply: true,
+          pullChangesProvider: () async => [
+            SyncRemoteChange(
+              entityId: 'c-101',
+              version: 1,
+              updatedAt: DateTime.utc(2026, 8, 24),
+              payload: {'name': 'Cust 101', '_sequence': 102},
+            ),
+          ],
         );
-      });
+        manager.registerHandler(failingHandler);
+        await manager.start(enabled: true);
 
-      final api = HttpRemoteSyncApi(
-        config: const SyncApiConfig(
-          baseUrl: 'https://api.nexabiz.test',
-          apiToken: 'token',
-          companyId: 'cmp-1',
-          userId: 'usr-1',
-          deviceId: 'dev-1',
-        ),
-        client: mockClient,
-      );
+        final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
 
-      final manager = SyncManager(
-        queue: queue,
-        remoteProvider: () => api,
-        connectivity: connectivity,
-        conflictStore: conflictStore,
-      );
-      manager.registerHandler(
-        ChaosTestEntityHandler(
-          entityType: 'customer',
+        // Verify: Sync pass reported failure
+        expect(result.failed, equals(1));
+
+        // CRITICAL INVARIANT: Cursor must NOT advance to 102 because apply failed!
+        final curAfterFail = await cursorStore.read('customer');
+        expect(curAfterFail, equals(100));
+
+        await manager.dispose();
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
+
+    test(
+      'PART 6 — Multi-Page Pull Stress: 500+ sequence changes page seamlessly without gap or infinite loop',
+      () async {
+        final cursorStore = SyncCursorStore();
+        final queue = SyncQueue();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.wifi],
+        );
+
+        await cursorStore.write('product', 0);
+
+        final api = HttpRemoteSyncApi(
+          config: const SyncApiConfig(
+            baseUrl: 'https://api.nexabiz.test',
+            apiToken: 'token',
+            companyId: 'cmp-1',
+            userId: 'usr-1',
+            deviceId: 'dev-1',
+          ),
+        );
+
+        final manager = SyncManager(
+          queue: queue,
+          remoteProvider: () => api,
+          connectivity: connectivity,
+          conflictStore: conflictStore,
+          readCompanyId: () => 'cmp-1',
+        );
+
+        // Handler returning 500 changes
+        final handler = ChaosTestEntityHandler(
+          entityType: 'product',
           cursorStore: cursorStore,
-        ),
-      );
-      await manager.start(enabled: true);
+          pullChangesProvider: () async {
+            final changes = <SyncRemoteChange>[];
+            for (var i = 1; i <= 500; i++) {
+              changes.add(
+                SyncRemoteChange(
+                  entityId: 'p-$i',
+                  version: 1,
+                  updatedAt: DateTime.utc(2026, 8, 24),
+                  payload: {'sku': 'SKU-$i', '_sequence': i},
+                ),
+              );
+            }
+            return changes;
+          },
+        );
+        manager.registerHandler(handler);
+        await manager.start(enabled: true);
 
-      // Trigger 10 concurrent syncNow calls simultaneously
-      final futures = List.generate(
-        10,
-        (_) => manager.syncNow(trigger: SyncPassTrigger.manual),
-      );
+        final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
 
-      final results = await Future.wait(futures);
+        // Assert: Exactly 500 items pulled and applied
+        expect(result.downloaded, equals(500));
+        expect(handler.appliedChanges.length, equals(500));
 
-      // Assert: All 10 returned idle outcome (0 items uploaded/downloaded)
-      for (final res in results) {
-        expect(res.outcome, equals(SyncPassOutcome.idle));
-      }
+        // Assert Cursor advanced cleanly to 500
+        final finalCursor = await cursorStore.read('product');
+        expect(finalCursor, equals(500));
 
-      // Single-Flight Invariant: Exactly ONE execution pass ran (1 unified pull call)
-      expect(networkCalls, equals(1));
+        await manager.dispose();
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
 
-      await manager.dispose();
-      await connectivity.dispose();
-      await connectivityStream.close();
-    });
+    test(
+      'PART 8 — Auth Chaos: 401 token expiration does NOT delete pending local queue operations',
+      () async {
+        final cursorStore = SyncCursorStore();
+        final queue = SyncQueue();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.wifi],
+        );
+
+        // Populate queue with pending operations
+        final op1 = SyncOperation.create(
+          entityType: 'customer',
+          entityId: 'c-auth-1',
+          type: SyncOperationType.create,
+          payload: {'name': 'Pending Cust 1'},
+        );
+        final op2 = SyncOperation.create(
+          entityType: 'customer',
+          entityId: 'c-auth-2',
+          type: SyncOperationType.create,
+          payload: {'name': 'Pending Cust 2'},
+        );
+        await queue.enqueue(op1);
+        await queue.enqueue(op2);
+
+        // Server returns HTTP 401 Unauthorized
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'error': {'code': 'unauthorized', 'message': 'Token expired'},
+            }),
+            401,
+          );
+        });
+
+        final api = HttpRemoteSyncApi(
+          config: const SyncApiConfig(
+            baseUrl: 'https://api.nexabiz.test',
+            apiToken: 'expired-token',
+            companyId: 'cmp-1',
+            userId: 'usr-1',
+            deviceId: 'dev-1',
+          ),
+          client: mockClient,
+        );
+
+        final manager = SyncManager(
+          queue: queue,
+          remoteProvider: () => api,
+          connectivity: connectivity,
+          conflictStore: conflictStore,
+          readCompanyId: () => 'cmp-1',
+        );
+        manager.registerHandler(
+          ChaosTestEntityHandler(
+            entityType: 'customer',
+            cursorStore: cursorStore,
+          ),
+        );
+        await manager.start(enabled: true);
+
+        final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
+
+        // Assert Outcome is authRequired
+        expect(result.outcome, equals(SyncPassOutcome.authRequired));
+
+        // CRITICAL INVARIANT: Local pending queue operations must NEVER be deleted on auth failure!
+        final queueOps = await queue.all();
+        expect(queueOps, hasLength(2));
+        expect(queueOps[0].id, equals(op1.id));
+        expect(queueOps[1].id, equals(op2.id));
+
+        await manager.dispose();
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
+
+    test(
+      'PART 17 — Background Sync Chaos: Concurrent sync triggers lock into single-flight pass',
+      () async {
+        final cursorStore = SyncCursorStore();
+        final queue = SyncQueue();
+        final conflictStore = SyncConflictStore();
+        final connectivityStream =
+            StreamController<List<ConnectivityResult>>.broadcast();
+        final connectivity = ConnectivityService(
+          connectivityStream: connectivityStream.stream,
+          initialResults: const [ConnectivityResult.wifi],
+        );
+
+        var networkCalls = 0;
+        final mockClient = MockClient((request) async {
+          networkCalls++;
+          await Future.delayed(const Duration(milliseconds: 50));
+          return http.Response(
+            jsonEncode({'changes': [], 'next_cursor': 0, 'has_more': false}),
+            200,
+          );
+        });
+
+        final api = HttpRemoteSyncApi(
+          config: const SyncApiConfig(
+            baseUrl: 'https://api.nexabiz.test',
+            apiToken: 'token',
+            companyId: 'cmp-1',
+            userId: 'usr-1',
+            deviceId: 'dev-1',
+          ),
+          client: mockClient,
+        );
+
+        final manager = SyncManager(
+          queue: queue,
+          remoteProvider: () => api,
+          connectivity: connectivity,
+          conflictStore: conflictStore,
+          readCompanyId: () => 'cmp-1',
+        );
+        manager.registerHandler(
+          ChaosTestEntityHandler(
+            entityType: 'customer',
+            cursorStore: cursorStore,
+          ),
+        );
+        await manager.start(enabled: true);
+
+        // Trigger 10 concurrent syncNow calls simultaneously
+        final futures = List.generate(
+          10,
+          (_) => manager.syncNow(trigger: SyncPassTrigger.manual),
+        );
+
+        final results = await Future.wait(futures);
+
+        // Assert: All 10 returned idle outcome (0 items uploaded/downloaded)
+        for (final res in results) {
+          expect(res.outcome, equals(SyncPassOutcome.idle));
+        }
+
+        // Single-Flight Invariant: Exactly ONE execution pass ran (1 unified pull call)
+        expect(networkCalls, equals(1));
+
+        await manager.dispose();
+        await connectivity.dispose();
+        await connectivityStream.close();
+      },
+    );
   });
 }

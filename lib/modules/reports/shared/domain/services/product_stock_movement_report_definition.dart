@@ -27,8 +27,12 @@ class ProductStockMovementReportDefinition
     final doc = pw.Document(theme: context.theme);
     final dateFmt = DateFormat('dd-MM-yyyy');
 
-    final fromStr = payload.fromDate != null ? dateFmt.format(payload.fromDate!) : payload.labels.periodAll;
-    final toStr = payload.toDate != null ? dateFmt.format(payload.toDate!) : payload.labels.periodAll;
+    final fromStr = payload.fromDate != null
+        ? dateFmt.format(payload.fromDate!)
+        : payload.labels.periodAll;
+    final toStr = payload.toDate != null
+        ? dateFmt.format(payload.toDate!)
+        : payload.labels.periodAll;
 
     final labels = payload.labels;
     final op = payload.openingBalance;
@@ -68,13 +72,27 @@ class ProductStockMovementReportDefinition
                       pw.Container(
                         width: 90,
                         padding: const pw.EdgeInsets.all(4),
-                        decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey400)),
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey400),
+                        ),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
-                            pw.Text(labels.warehouseLabel, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                            pw.Text(
+                              labels.warehouseLabel,
+                              style: pw.TextStyle(
+                                fontSize: 8,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
                             pw.SizedBox(height: 4),
-                            pw.Text(payload.warehouseName, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                            pw.Text(
+                              payload.warehouseName,
+                              style: pw.TextStyle(
+                                fontSize: 9,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -85,29 +103,65 @@ class ProductStockMovementReportDefinition
                         flex: 4,
                         child: pw.Container(
                           padding: const pw.EdgeInsets.all(4),
-                          decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey400)),
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(color: PdfColors.grey400),
+                          ),
                           child: pw.Column(
                             children: [
                               pw.Container(
                                 color: PdfColors.grey200,
-                                padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                                padding: const pw.EdgeInsets.symmetric(
+                                  vertical: 2,
+                                ),
                                 width: double.infinity,
-                                child: pw.Text('بيانات الصنف', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                                child: pw.Text(
+                                  'بيانات الصنف',
+                                  textAlign: pw.TextAlign.center,
+                                  style: pw.TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
+                                ),
                               ),
                               pw.SizedBox(height: 4),
                               pw.Row(
-                                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceAround,
                                 children: [
                                   pw.Column(
                                     children: [
-                                      pw.Text(labels.productCodeLabel, style: pw.TextStyle(fontSize: 7, color: PdfColors.grey800)),
-                                      pw.Text(payload.productCode, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                                      pw.Text(
+                                        labels.productCodeLabel,
+                                        style: pw.TextStyle(
+                                          fontSize: 7,
+                                          color: PdfColors.grey800,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        payload.productCode,
+                                        style: pw.TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: pw.FontWeight.bold,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   pw.Column(
                                     children: [
-                                      pw.Text(labels.productNameLabel, style: pw.TextStyle(fontSize: 7, color: PdfColors.grey800)),
-                                      pw.Text(payload.productName, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                                      pw.Text(
+                                        labels.productNameLabel,
+                                        style: pw.TextStyle(
+                                          fontSize: 7,
+                                          color: PdfColors.grey800,
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        payload.productName,
+                                        style: pw.TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: pw.FontWeight.bold,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -122,23 +176,47 @@ class ProductStockMovementReportDefinition
                       pw.Container(
                         width: 160,
                         padding: const pw.EdgeInsets.all(4),
-                        decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey400)),
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey400),
+                        ),
                         child: pw.Column(
                           children: [
                             pw.Container(
                               color: PdfColors.grey200,
-                              padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                              padding: const pw.EdgeInsets.symmetric(
+                                vertical: 2,
+                              ),
                               width: double.infinity,
-                              child: pw.Text(labels.openingBalanceLabel, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                              child: pw.Text(
+                                labels.openingBalanceLabel,
+                                textAlign: pw.TextAlign.center,
+                                style: pw.TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
                             ),
                             pw.SizedBox(height: 2),
                             pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceEvenly,
                               children: [
-                                _boxHeaderValue(labels.cartonLabel, '${op.cartons}'),
-                                _boxHeaderValue(labels.pieceLabel, op.pieces.toStringAsFixed(0)),
-                                _boxHeaderValue(labels.finalQtyLabel, op.totalQty.toStringAsFixed(0)),
-                                _boxHeaderValue(labels.costLabel, op.totalCost.toStringAsFixed(0)),
+                                _boxHeaderValue(
+                                  labels.cartonLabel,
+                                  '${op.cartons}',
+                                ),
+                                _boxHeaderValue(
+                                  labels.pieceLabel,
+                                  op.pieces.toStringAsFixed(0),
+                                ),
+                                _boxHeaderValue(
+                                  labels.finalQtyLabel,
+                                  op.totalQty.toStringAsFixed(0),
+                                ),
+                                _boxHeaderValue(
+                                  labels.costLabel,
+                                  op.totalCost.toStringAsFixed(0),
+                                ),
                               ],
                             ),
                           ],
@@ -150,13 +228,27 @@ class ProductStockMovementReportDefinition
                       pw.Container(
                         width: 100,
                         padding: const pw.EdgeInsets.all(4),
-                        decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey400)),
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.grey400),
+                        ),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            pw.Text('${labels.mainCapacityLabel}: ${payload.mainUnitCapacity}', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                            pw.Text(
+                              '${labels.mainCapacityLabel}: ${payload.mainUnitCapacity}',
+                              style: pw.TextStyle(
+                                fontSize: 8,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
                             pw.SizedBox(height: 4),
-                            pw.Text('${labels.subCapacityLabel}: ${payload.subUnitCapacity}', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                            pw.Text(
+                              '${labels.subCapacityLabel}: ${payload.subUnitCapacity}',
+                              style: pw.TextStyle(
+                                fontSize: 8,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -175,7 +267,10 @@ class ProductStockMovementReportDefinition
               alignment: pw.Alignment.center,
               child: pw.Text(
                 '${ctx.pageNumber} / ${ctx.pagesCount}',
-                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+                style: const pw.TextStyle(
+                  fontSize: 8,
+                  color: PdfColors.grey700,
+                ),
               ),
             ),
           );
@@ -185,27 +280,60 @@ class ProductStockMovementReportDefinition
             pw.Directionality(
               textDirection: context.textDirection,
               child: pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey700, width: 0.5),
+                border: pw.TableBorder.all(
+                  color: PdfColors.grey700,
+                  width: 0.5,
+                ),
                 children: [
                   // Group Header Row
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey300,
+                    ),
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(3),
-                        child: pw.Text('بيانات المستند', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          'بيانات المستند',
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(3),
-                        child: pw.Text(labels.inwardHeaderLabel, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          labels.inwardHeaderLabel,
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(3),
-                        child: pw.Text(labels.outwardHeaderLabel, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          labels.outwardHeaderLabel,
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(3),
-                        child: pw.Text(labels.endingBalanceHeaderLabel, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                        child: pw.Text(
+                          labels.endingBalanceHeaderLabel,
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -217,18 +345,21 @@ class ProductStockMovementReportDefinition
             pw.Directionality(
               textDirection: context.textDirection,
               child: pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.5),
+                border: pw.TableBorder.all(
+                  color: PdfColors.grey600,
+                  width: 0.5,
+                ),
                 columnWidths: const {
-                  0: pw.FixedColumnWidth(55),  // Date
-                  1: pw.FixedColumnWidth(60),  // Doc Type
-                  2: pw.FixedColumnWidth(65),  // Voucher
-                  3: pw.FixedColumnWidth(40),  // Doc Num
-                  4: pw.FixedColumnWidth(28),  // In Carton
-                  5: pw.FixedColumnWidth(28),  // In Piece
-                  6: pw.FixedColumnWidth(30),  // In Final
-                  7: pw.FixedColumnWidth(45),  // In Cost
-                  8: pw.FixedColumnWidth(28),  // Out Carton
-                  9: pw.FixedColumnWidth(28),  // Out Piece
+                  0: pw.FixedColumnWidth(55), // Date
+                  1: pw.FixedColumnWidth(60), // Doc Type
+                  2: pw.FixedColumnWidth(65), // Voucher
+                  3: pw.FixedColumnWidth(40), // Doc Num
+                  4: pw.FixedColumnWidth(28), // In Carton
+                  5: pw.FixedColumnWidth(28), // In Piece
+                  6: pw.FixedColumnWidth(30), // In Final
+                  7: pw.FixedColumnWidth(45), // In Cost
+                  8: pw.FixedColumnWidth(28), // Out Carton
+                  9: pw.FixedColumnWidth(28), // Out Piece
                   10: pw.FixedColumnWidth(30), // Out Final
                   11: pw.FixedColumnWidth(45), // Out Cost
                   12: pw.FixedColumnWidth(28), // Bal Carton
@@ -239,7 +370,9 @@ class ProductStockMovementReportDefinition
                 children: [
                   // Sub Header Row
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey200,
+                    ),
                     children: [
                       _cellHeader(labels.docDateLabel),
                       _cellHeader(labels.docTypeLabel),
@@ -264,7 +397,11 @@ class ProductStockMovementReportDefinition
                   for (final row in payload.rows)
                     pw.TableRow(
                       children: [
-                        _cellText(dateFmt.format(row.documentDate), color: PdfColors.red800, isBold: true),
+                        _cellText(
+                          dateFmt.format(row.documentDate),
+                          color: PdfColors.red800,
+                          isBold: true,
+                        ),
                         _cellText(row.documentType),
                         _cellText(row.voucherBook),
                         _cellText(row.documentNumber, isBold: true),
@@ -273,19 +410,32 @@ class ProductStockMovementReportDefinition
                         _cellText('${row.inCartons}'),
                         _cellText(row.inPieces.toStringAsFixed(0)),
                         _cellText(row.inTotalQty.toStringAsFixed(0)),
-                        _cellText(row.inCost > 0 ? row.unitCost.toStringAsFixed(0) : '0', isBold: row.inCost > 0),
+                        _cellText(
+                          row.inCost > 0
+                              ? row.unitCost.toStringAsFixed(0)
+                              : '0',
+                          isBold: row.inCost > 0,
+                        ),
 
                         // Outward
                         _cellText('${row.outCartons}'),
                         _cellText(row.outPieces.toStringAsFixed(0)),
                         _cellText(row.outTotalQty.toStringAsFixed(0)),
-                        _cellText(row.outCost > 0 ? row.unitCost.toStringAsFixed(0) : '0', isBold: row.outCost > 0),
+                        _cellText(
+                          row.outCost > 0
+                              ? row.unitCost.toStringAsFixed(0)
+                              : '0',
+                          isBold: row.outCost > 0,
+                        ),
 
                         // Ending Balance
                         _cellText('${row.balanceCartons}'),
                         _cellText(row.balancePieces.toStringAsFixed(0)),
                         _cellText(row.balanceTotalQty.toStringAsFixed(0)),
-                        _cellText(row.unitCost.toStringAsFixed(0), isBold: true),
+                        _cellText(
+                          row.unitCost.toStringAsFixed(0),
+                          isBold: true,
+                        ),
                       ],
                     ),
                 ],
@@ -302,17 +452,26 @@ class ProductStockMovementReportDefinition
                   border: pw.Border.all(color: PdfColors.grey600),
                   color: PdfColors.grey100,
                 ),
-                padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                   children: [
                     pw.Text(
                       '${labels.totalIncomingCostLabel}:  ${payload.totalIncomingCost.toStringAsFixed(0)}',
-                      style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                      style: pw.TextStyle(
+                        fontSize: 9,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
                     ),
                     pw.Text(
                       '${labels.totalOutgoingCostLabel}:  ${payload.totalOutgoingCost.toStringAsFixed(0)}',
-                      style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                      style: pw.TextStyle(
+                        fontSize: 9,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -333,8 +492,14 @@ class ProductStockMovementReportDefinition
   pw.Widget _boxHeaderValue(String title, String val) {
     return pw.Column(
       children: [
-        pw.Text(title, style: pw.TextStyle(fontSize: 7, color: PdfColors.grey800)),
-        pw.Text(val, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+        pw.Text(
+          title,
+          style: pw.TextStyle(fontSize: 7, color: PdfColors.grey800),
+        ),
+        pw.Text(
+          val,
+          style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+        ),
       ],
     );
   }
@@ -350,7 +515,11 @@ class ProductStockMovementReportDefinition
     );
   }
 
-  pw.Widget _cellText(String text, {PdfColor color = PdfColors.black, bool isBold = false}) {
+  pw.Widget _cellText(
+    String text, {
+    PdfColor color = PdfColors.black,
+    bool isBold = false,
+  }) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 1),
       child: pw.Text(

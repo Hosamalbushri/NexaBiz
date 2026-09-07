@@ -3,7 +3,6 @@
 /// Ensures parent accounts (e.g. 1000 Assets) are ordered and processed
 /// before dependent child accounts (e.g. 1100 Current Assets, 1110 Cash).
 class AccountHierarchySorter {
-
   const AccountHierarchySorter._();
 
   /// Sorts raw import rows topologically by parent account code/name references.

@@ -93,7 +93,10 @@ class AppDocumentStickySummary extends StatelessWidget {
                 icon: Icon(saveIcon, size: 20),
                 label: Text(
                   saveLabel,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: scheme.primary,

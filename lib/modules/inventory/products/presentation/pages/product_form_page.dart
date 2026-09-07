@@ -257,7 +257,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
             padding: const EdgeInsets.all(AppConstants.pagePadding),
             children: [
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'بيانات المنتج الأساسية' : 'Basic Product Info',
+                title: l10n.localeName == 'ar'
+                    ? 'بيانات المنتج الأساسية'
+                    : 'Basic Product Info',
                 icon: Icons.inventory_2_outlined,
                 topSpacing: 0,
               ),
@@ -278,7 +280,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                               child: SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             )
                           : Icon(
@@ -314,7 +318,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                     enableInteractiveSelection: true,
                     decoration: InputDecoration(
                       labelText: l10n.packSize,
-                      hintText: widget.isEditing ? null : l10n.packSizeRequiredHint,
+                      hintText: widget.isEditing
+                          ? null
+                          : l10n.packSizeRequiredHint,
                       helperText: widget.isEditing
                           ? l10n.productsFieldLockedHint
                           : null,
@@ -340,7 +346,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                   Consumer(
                     builder: (context, ref, child) {
                       final isAr = l10n.localeName == 'ar';
-                      final categoriesAsync = ref.watch(allCategoriesStreamProvider);
+                      final categoriesAsync = ref.watch(
+                        allCategoriesStreamProvider,
+                      );
                       return categoriesAsync.when(
                         loading: () => const SizedBox.shrink(),
                         error: (_, _) => const SizedBox.shrink(),
@@ -349,16 +357,22 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                             initialValue: _categoryId,
                             isExpanded: true,
                             decoration: InputDecoration(
-                              labelText: isAr ? 'تصنيف المنتج' : 'Product Category',
+                              labelText: isAr
+                                  ? 'تصنيف المنتج'
+                                  : 'Product Category',
                               prefixIcon: const Icon(Icons.category_outlined),
                             ),
                             items: [
                               DropdownMenuItem<String?>(
                                 value: null,
                                 child: Text(
-                                  isAr ? '-- بدون تصنيف --' : '-- Uncategorized --',
+                                  isAr
+                                      ? '-- بدون تصنيف --'
+                                      : '-- Uncategorized --',
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                               ...categories.map((cat) {
@@ -371,7 +385,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                                 );
                               }),
                             ],
-                            onChanged: (val) => setState(() => _categoryId = val),
+                            onChanged: (val) =>
+                                setState(() => _categoryId = val),
                           );
                         },
                       );
@@ -380,7 +395,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                 ],
               ),
               AppFormSection(
-                title: l10n.localeName == 'ar' ? 'التسعير والتكلفة' : 'Pricing & Unit Cost',
+                title: l10n.localeName == 'ar'
+                    ? 'التسعير والتكلفة'
+                    : 'Pricing & Unit Cost',
                 icon: Icons.payments_outlined,
               ),
               AppResponsiveForm(
@@ -415,16 +432,22 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                     decimalPlaces: 2,
                     emptyWhenZero: false,
                     trimTrailingZeros: true,
-                    label: l10n.localeName == 'ar' ? 'تكلفة المنتج (للوحدة)' : 'Unit Cost',
+                    label: l10n.localeName == 'ar'
+                        ? 'تكلفة المنتج (للوحدة)'
+                        : 'Unit Cost',
                     hint: widget.isEditing
                         ? l10n.productsFieldLockedHint
-                        : l10n.localeName == 'ar' ? 'أدخل تكلفة التوريد الافتراضية' : 'Default unit cost',
+                        : l10n.localeName == 'ar'
+                        ? 'أدخل تكلفة التوريد الافتراضية'
+                        : 'Default unit cost',
                     readOnly: widget.isEditing,
                   ),
                 ],
               ),
               AppExpandableFormSection(
-                title: l10n.localeName == 'ar' ? 'سياسة احتساب التكلفة المتقدمة' : 'Advanced Cost Valuation',
+                title: l10n.localeName == 'ar'
+                    ? 'سياسة احتساب التكلفة المتقدمة'
+                    : 'Advanced Cost Valuation',
                 subtitle: l10n.localeName == 'ar'
                     ? 'تجاوز طريقة احتساب التكلفة المورثة من التصنيف والمستودع'
                     : 'Overrides inherited category/warehouse cost method',
@@ -435,48 +458,63 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                   initialValue: _costValuationMethod,
                   isExpanded: true,
                   decoration: InputDecoration(
-                    labelText: l10n.localeName == 'ar' ? 'طريقة احتساب التكلفة' : 'Cost Valuation Method',
+                    labelText: l10n.localeName == 'ar'
+                        ? 'طريقة احتساب التكلفة'
+                        : 'Cost Valuation Method',
                     prefixIcon: const Icon(Icons.calculate_outlined),
                   ),
                   items: [
                     DropdownMenuItem<CostValuationMethod?>(
                       value: null,
                       child: Text(
-                        l10n.localeName == 'ar' ? 'افتراضي (وراثة من التصنيف / المستودع)' : 'Inherit from Category / Warehouse',
+                        l10n.localeName == 'ar'
+                            ? 'افتراضي (وراثة من التصنيف / المستودع)'
+                            : 'Inherit from Category / Warehouse',
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                     DropdownMenuItem<CostValuationMethod?>(
                       value: CostValuationMethod.fifo,
                       child: Text(
-                        l10n.localeName == 'ar' ? 'FIFO - الوارد أولاً يصدر أولاً' : 'FIFO',
+                        l10n.localeName == 'ar'
+                            ? 'FIFO - الوارد أولاً يصدر أولاً'
+                            : 'FIFO',
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     DropdownMenuItem<CostValuationMethod?>(
                       value: CostValuationMethod.lifo,
                       child: Text(
-                        l10n.localeName == 'ar' ? 'LIFO - الوارد أخيراً يصدر أولاً' : 'LIFO',
+                        l10n.localeName == 'ar'
+                            ? 'LIFO - الوارد أخيراً يصدر أولاً'
+                            : 'LIFO',
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     DropdownMenuItem<CostValuationMethod?>(
                       value: CostValuationMethod.weightedAverage,
                       child: Text(
-                        l10n.localeName == 'ar' ? 'Weighted Average - المتوسط المرجح' : 'Weighted Average',
+                        l10n.localeName == 'ar'
+                            ? 'Weighted Average - المتوسط المرجح'
+                            : 'Weighted Average',
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
-                  onChanged: (val) => setState(() => _costValuationMethod = val),
+                  onChanged: (val) =>
+                      setState(() => _costValuationMethod = val),
                 ),
               ),
               if (widget.isEditing) ...[
                 const SizedBox(height: AppSpacing.md),
                 AppExpandableFormSection(
                   title: l10n.productsCodesSection,
-                  subtitle: l10n.localeName == 'ar' ? 'طباعة وتوليد رموز الباركوم وQR' : 'Print & Generate Barcode and QR labels',
+                  subtitle: l10n.localeName == 'ar'
+                      ? 'طباعة وتوليد رموز الباركوم وQR'
+                      : 'Print & Generate Barcode and QR labels',
                   icon: Icons.qr_code_2_outlined,
                   initiallyExpanded: false,
                   child: DefaultTabController(
@@ -492,9 +530,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                             indicatorSize: TabBarIndicatorSize.tab,
                             dividerColor: Colors.transparent,
                             indicator: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer.withValues(
-                                alpha: 0.85,
-                              ),
+                              color: theme.colorScheme.primaryContainer
+                                  .withValues(alpha: 0.85),
                               borderRadius: BorderRadius.circular(AppRadius.sm),
                             ),
                             labelColor: theme.colorScheme.onPrimaryContainer,
@@ -718,12 +755,14 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
         if (!context.mounted) {
           return;
         }
-        await ref.read(notificationServiceProvider).showSuccess(
-          title: l10n.success,
-          message: l10n.productsSavedSuccess,
-          category: NotificationCategory.products,
-          persistToHistory: true,
-        );
+        await ref
+            .read(notificationServiceProvider)
+            .showSuccess(
+              title: l10n.success,
+              message: l10n.productsSavedSuccess,
+              category: NotificationCategory.products,
+              persistToHistory: true,
+            );
         if (!context.mounted) {
           return;
         }

@@ -12,7 +12,6 @@ import 'package:stock_count/modules/customers/directory/domain/entities/customer
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late Directory tempDir;
   late CustomersDatabase db;
   late SyncQueue queue;
@@ -42,50 +41,50 @@ void main() {
     }
   });
 
-  test('applyRemotePayload merges same customerCode onto remote UUID', () async {
-    final local = await repo.insert(
-      const CustomerDraft(
-        customerCode: '12210002',
-        name: 'ناصر محلي',
-        dataSource: CustomerDataSource.local,
-      ),
-    );
-    expect(local.uuid, isNotEmpty);
+  test(
+    'applyRemotePayload merges same customerCode onto remote UUID',
+    () async {
+      final local = await repo.insert(
+        const CustomerDraft(
+          customerCode: '12210002',
+          name: 'ناصر محلي',
+          dataSource: CustomerDataSource.local,
+        ),
+      );
+      expect(local.uuid, isNotEmpty);
 
-    await queue.enqueue(
-      SyncOperation.create(
-        entityType: CustomerRepositoryImpl.entityType,
-        entityId: local.uuid,
-        type: SyncOperationType.create,
-        payload: {'uuid': local.uuid, 'customerCode': '12210002'},
-        baseVersion: 1,
-      ),
-    );
+      await queue.enqueue(
+        SyncOperation.create(
+          entityType: CustomerRepositoryImpl.entityType,
+          entityId: local.uuid,
+          type: SyncOperationType.create,
+          payload: {'uuid': local.uuid, 'customerCode': '12210002'},
+          baseVersion: 1,
+        ),
+      );
 
-    const remoteUuid = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-    await repo.applyRemotePayload({
-      'uuid': remoteUuid,
-      'customerCode': '12210002',
-      'name': 'ناصر من جهاز آخر',
-      'isActive': true,
-      'dataSource': 'local',
-      'version': 2,
-      'updatedAt': DateTime.utc(2026, 8, 14).millisecondsSinceEpoch,
-    });
+      const remoteUuid = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+      await repo.applyRemotePayload({
+        'uuid': remoteUuid,
+        'customerCode': '12210002',
+        'name': 'ناصر من جهاز آخر',
+        'isActive': true,
+        'dataSource': 'local',
+        'version': 2,
+        'updatedAt': DateTime.utc(2026, 8, 14).millisecondsSinceEpoch,
+      });
 
-    final byOld = await repo.getByUuid(local.uuid);
-    expect(byOld, isNull);
+      final byOld = await repo.getByUuid(local.uuid);
+      expect(byOld, isNull);
 
-    final merged = await repo.getByUuid(remoteUuid);
-    expect(merged, isNotNull);
-    expect(merged!.customerCode, '12210002');
-    expect(merged.name, 'ناصر من جهاز آخر');
-    expect(merged.syncStatus, SyncStatus.synced);
+      final merged = await repo.getByUuid(remoteUuid);
+      expect(merged, isNotNull);
+      expect(merged!.customerCode, '12210002');
+      expect(merged.name, 'ناصر من جهاز آخر');
+      expect(merged.syncStatus, SyncStatus.synced);
 
-    final pending = await queue.all();
-    expect(
-      pending.where((op) => op.entityId == local.uuid),
-      isEmpty,
-    );
-  });
+      final pending = await queue.all();
+      expect(pending.where((op) => op.entityId == local.uuid), isEmpty);
+    },
+  );
 }

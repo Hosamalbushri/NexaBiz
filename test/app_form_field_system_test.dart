@@ -8,7 +8,9 @@ import 'package:stock_count/core/widgets/app_text_field.dart';
 
 void main() {
   group('Form Field System Unit Tests', () {
-    testWidgets('AppFieldShell renders label, required star, and child', (WidgetTester tester) async {
+    testWidgets('AppFieldShell renders label, required star, and child', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -25,7 +27,9 @@ void main() {
       expect(find.byType(RichText), findsWidgets);
     });
 
-    testWidgets('AppTextField renders and accepts text input', (WidgetTester tester) async {
+    testWidgets('AppTextField renders and accepts text input', (
+      WidgetTester tester,
+    ) async {
       final controller = TextEditingController();
 
       await tester.pumpWidget(
@@ -45,7 +49,9 @@ void main() {
       expect(controller.text, 'الرياض - الملقا');
     });
 
-    testWidgets('AppSelectField renders selection items', (WidgetTester tester) async {
+    testWidgets('AppSelectField renders selection items', (
+      WidgetTester tester,
+    ) async {
       String? selected = 'SAR';
 
       await tester.pumpWidget(
@@ -93,16 +99,14 @@ void main() {
       expect(find.text('2026-09-01'), findsOneWidget);
     });
 
-    testWidgets('AppFormGrid arranges children responsively', (WidgetTester tester) async {
+    testWidgets('AppFormGrid arranges children responsively', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: AppFormGrid(
-              children: [
-                Text('حقل 1'),
-                Text('حقل 2'),
-                Text('حقل 3'),
-              ],
+              children: [Text('حقل 1'), Text('حقل 2'), Text('حقل 3')],
             ),
           ),
         ),

@@ -74,7 +74,5 @@ abstract class PostingEngine {
   });
 
   /// Atomic reversal of any posted document.
-  Future<void> reversePosting({
-    required InventoryDocumentRef document,
-  });
+  Future<void> reversePosting({required InventoryDocumentRef document});
 }

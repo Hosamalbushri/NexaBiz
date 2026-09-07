@@ -16,11 +16,7 @@ class UnauthorizedException extends AuthorizationException {
   final String? permission;
   final String? userId;
 
-  const UnauthorizedException(
-    super.message, {
-    this.permission,
-    this.userId,
-  });
+  const UnauthorizedException(super.message, {this.permission, this.userId});
 }
 
 /// Thrown when no active authorization context or session exists.
@@ -72,7 +68,9 @@ class LocalAuthorizationGuard {
       );
     }
     if (context.userId.isEmpty) {
-      throw const UnauthorizedException('Operation blocked: unauthenticated user.');
+      throw const UnauthorizedException(
+        'Operation blocked: unauthenticated user.',
+      );
     }
     if (context.userStatus != 'active') {
       throw UnauthorizedException(
@@ -98,7 +96,8 @@ class LocalAuthorizationGuard {
           targetCompanyId.isNotEmpty &&
           targetCompanyId != context.companyId) {
         throw CompanyContextMismatchException(
-          message: 'Operation blocked: target company ($targetCompanyId) does not match active context (${context.companyId}).',
+          message:
+              'Operation blocked: target company ($targetCompanyId) does not match active context (${context.companyId}).',
           expectedCompanyId: context.companyId,
           actualCompanyId: targetCompanyId,
         );
@@ -126,7 +125,9 @@ class LocalAuthorizationGuard {
       );
     }
     if (context.userId.isEmpty) {
-      throw const UnauthorizedException('Operation blocked: unauthenticated user.');
+      throw const UnauthorizedException(
+        'Operation blocked: unauthenticated user.',
+      );
     }
     if (context.userStatus != 'active') {
       throw UnauthorizedException(
@@ -152,14 +153,17 @@ class LocalAuthorizationGuard {
           targetCompanyId.isNotEmpty &&
           targetCompanyId != context.companyId) {
         throw CompanyContextMismatchException(
-          message: 'Operation blocked: target company ($targetCompanyId) does not match active context (${context.companyId}).',
+          message:
+              'Operation blocked: target company ($targetCompanyId) does not match active context (${context.companyId}).',
           expectedCompanyId: context.companyId,
           actualCompanyId: targetCompanyId,
         );
       }
     }
 
-    final hasAny = requiredPermissions.any((p) => context.permissions.contains(p));
+    final hasAny = requiredPermissions.any(
+      (p) => context.permissions.contains(p),
+    );
     if (!hasAny) {
       throw UnauthorizedException(
         'Operation blocked: user lacks any of the required permissions: ${requiredPermissions.join(', ')}.',

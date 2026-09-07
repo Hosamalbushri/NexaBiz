@@ -9,67 +9,74 @@ import 'package:stock_count/core/entitlements/presentation/widgets/capability_ga
 
 void main() {
   group('Phase 12 — Free / Premium UI Flow Tests', () {
-    testWidgets('Free company accessing Premium sync capability triggers capability upgrade card', (tester) async {
-      final container = ProviderContainer(
-        overrides: [
-          currentEntitlementProvider.overrideWith(
-            (ref) => Stream.value(Entitlement.freeLocal('company_free')),
-          ),
-        ],
-      );
+    testWidgets(
+      'Free company accessing Premium sync capability triggers capability upgrade card',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            currentEntitlementProvider.overrideWith(
+              (ref) => Stream.value(Entitlement.freeLocal('company_free')),
+            ),
+          ],
+        );
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: CapabilityGate(
-                capability: EntitlementCapability.sync,
-                child: Text('Unlocked Sync View'),
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: CapabilityGate(
+                  capability: EntitlementCapability.sync,
+                  child: Text('Unlocked Sync View'),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('Unlocked Sync View'), findsNothing);
-      expect(find.text('Premium Feature Required'), findsOneWidget);
-      expect(find.text('Upgrade Company to Premium'), findsOneWidget);
-    });
+        expect(find.text('Unlocked Sync View'), findsNothing);
+        expect(find.text('Premium Feature Required'), findsOneWidget);
+        expect(find.text('Upgrade Company to Premium'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Premium company accessing sync capability renders child view cleanly', (tester) async {
-      final container = ProviderContainer(
-        overrides: [
-          currentEntitlementProvider.overrideWith(
-            (ref) => Stream.value(Entitlement.premiumActive('company_premium')),
-          ),
-        ],
-      );
+    testWidgets(
+      'Premium company accessing sync capability renders child view cleanly',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            currentEntitlementProvider.overrideWith(
+              (ref) =>
+                  Stream.value(Entitlement.premiumActive('company_premium')),
+            ),
+          ],
+        );
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: CapabilityGate(
-                capability: EntitlementCapability.sync,
-                child: Text('Unlocked Sync View'),
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: CapabilityGate(
+                  capability: EntitlementCapability.sync,
+                  child: Text('Unlocked Sync View'),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('Unlocked Sync View'), findsOneWidget);
-      expect(find.text('Upgrade Company to Premium'), findsNothing);
-    });
+        expect(find.text('Unlocked Sync View'), findsOneWidget);
+        expect(find.text('Upgrade Company to Premium'), findsNothing);
+      },
+    );
   });
 }

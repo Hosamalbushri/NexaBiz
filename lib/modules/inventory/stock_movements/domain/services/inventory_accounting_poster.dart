@@ -17,7 +17,5 @@ abstract class InventoryAccountingPoster {
   });
 
   /// Reverses/deletes corresponding accounting journal entries when an inventory document is unposted or deleted.
-  Future<void> reverseAccountingEntry({
-    required InventoryDocumentRef document,
-  });
+  Future<void> reverseAccountingEntry({required InventoryDocumentRef document});
 }

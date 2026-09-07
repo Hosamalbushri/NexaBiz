@@ -42,7 +42,8 @@ class InventoryIssuePortImpl implements InventoryIssuePort {
       issueNumber: issueNumber,
       destination: destination ?? 'Sale Invoice #$invoiceNumber',
       warehouse: warehouse,
-      notes: 'Automatic stock issue for Sale Invoice #$invoiceNumber ($invoiceId)',
+      notes:
+          'Automatic stock issue for Sale Invoice #$invoiceNumber ($invoiceId)',
       issueDate: now,
       lines: movementLines,
       companyId: companyId,
@@ -59,7 +60,8 @@ class InventoryIssuePortImpl implements InventoryIssuePort {
     if (savedIssue != null) {
       for (final line in savedIssue.lines) {
         totalCogs += line.totalCost;
-        lineCosts[line.itemCode] = (lineCosts[line.itemCode] ?? 0.0) + line.totalCost;
+        lineCosts[line.itemCode] =
+            (lineCosts[line.itemCode] ?? 0.0) + line.totalCost;
       }
     }
 

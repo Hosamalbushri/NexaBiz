@@ -2,10 +2,7 @@ import '../entities/category.dart';
 
 /// Hierarchical view model for Inventory Categories Tree UI.
 class CategoryTreeNode {
-  const CategoryTreeNode({
-    required this.category,
-    this.children = const [],
-  });
+  const CategoryTreeNode({required this.category, this.children = const []});
 
   final Category category;
   final List<CategoryTreeNode> children;
@@ -26,10 +23,7 @@ class CategoryTreeNode {
       final kids = byParent[parentId] ?? const <Category>[];
       return [
         for (final cat in kids)
-          CategoryTreeNode(
-            category: cat,
-            children: buildChildren(cat.id),
-          ),
+          CategoryTreeNode(category: cat, children: buildChildren(cat.id)),
       ];
     }
 

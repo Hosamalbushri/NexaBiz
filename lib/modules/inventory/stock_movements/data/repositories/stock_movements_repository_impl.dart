@@ -14,7 +14,6 @@ import '../../domain/repositories/stock_movements_repository.dart';
 
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
-
 class StockMovementsRepositoryImpl implements StockMovementsRepository {
   StockMovementsRepositoryImpl({
     required this._db,
@@ -105,81 +104,95 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     if (receipt.companyId != null &&
         receipt.companyId!.isNotEmpty &&
         receipt.companyId != _currentCompanyId) {
-      throw ArgumentError('Cross-tenant operation rejected: receipt companyId (${receipt.companyId}) does not match current tenant ($_currentCompanyId)');
+      throw ArgumentError(
+        'Cross-tenant operation rejected: receipt companyId (${receipt.companyId}) does not match current tenant ($_currentCompanyId)',
+      );
     }
 
     for (final line in receipt.lines) {
       if (line.unitCost <= 0 || line.totalCost <= 0) {
-        throw ArgumentError('لا يمكن حفظ أمر التوريد بتكلفة صفرية للصنف (${line.itemName})');
+        throw ArgumentError(
+          'لا يمكن حفظ أمر التوريد بتكلفة صفرية للصنف (${line.itemName})',
+        );
       }
     }
     await _db.transaction(() async {
-      final existing = await (_db.select(_db.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl)))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.stockReceipts)..where(
+                (tbl) =>
+                    tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl),
+              ))
+              .getSingleOrNull();
 
-      if (existing != null && (existing.status == 'posted' || existing.postedAt != null)) {
+      if (existing != null &&
+          (existing.status == 'posted' || existing.postedAt != null)) {
         throw const JournalException(JournalException.postedImmutable);
       }
 
       final now = DateTime.now().toUtc();
-      final newVersion = (existing?.version ?? receipt.version) + (existing == null ? 0 : 1);
+      final newVersion =
+          (existing?.version ?? receipt.version) + (existing == null ? 0 : 1);
       final targetCompanyId = receipt.companyId ?? _currentCompanyId;
 
       // Save header row
       if (existing != null) {
-        await (_db.update(_db.stockReceipts)
-              ..where((tbl) => tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl)))
+        await (_db.update(_db.stockReceipts)..where(
+              (tbl) => tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl),
+            ))
             .write(
-          StockReceiptsCompanion(
-            receiptNumber: Value(receipt.receiptNumber),
-            supplier: Value(receipt.supplier),
-            accountId: Value(receipt.accountId),
-            accountName: Value(receipt.accountName),
-            currencyCode: Value(receipt.currencyCode),
-            exchangeRate: Value(receipt.exchangeRate),
-            warehouse: Value(receipt.warehouse),
-            notes: Value(receipt.notes),
-            receiptDate: Value(receipt.receiptDate.millisecondsSinceEpoch),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: Value(newVersion),
-            companyId: Value(targetCompanyId),
-            status: Value(receipt.status.name),
-            postedAt: Value(receipt.postedAt?.millisecondsSinceEpoch),
-          ),
-        );
+              StockReceiptsCompanion(
+                receiptNumber: Value(receipt.receiptNumber),
+                supplier: Value(receipt.supplier),
+                accountId: Value(receipt.accountId),
+                accountName: Value(receipt.accountName),
+                currencyCode: Value(receipt.currencyCode),
+                exchangeRate: Value(receipt.exchangeRate),
+                warehouse: Value(receipt.warehouse),
+                notes: Value(receipt.notes),
+                receiptDate: Value(receipt.receiptDate.millisecondsSinceEpoch),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                syncStatus: const Value('pending'),
+                version: Value(newVersion),
+                companyId: Value(targetCompanyId),
+                status: Value(receipt.status.name),
+                postedAt: Value(receipt.postedAt?.millisecondsSinceEpoch),
+              ),
+            );
       } else {
-        await _db.into(_db.stockReceipts).insert(
-          StockReceiptsCompanion(
-            uuid: Value(receipt.id),
-            receiptNumber: Value(receipt.receiptNumber),
-            supplier: Value(receipt.supplier),
-            accountId: Value(receipt.accountId),
-            accountName: Value(receipt.accountName),
-            currencyCode: Value(receipt.currencyCode),
-            exchangeRate: Value(receipt.exchangeRate),
-            warehouse: Value(receipt.warehouse),
-            notes: Value(receipt.notes),
-            receiptDate: Value(receipt.receiptDate.millisecondsSinceEpoch),
-            createdAt: Value(receipt.createdAt.millisecondsSinceEpoch),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: Value(newVersion),
-            companyId: Value(targetCompanyId),
-            status: Value(receipt.status.name),
-            postedAt: Value(receipt.postedAt?.millisecondsSinceEpoch),
-          ),
-        );
+        await _db
+            .into(_db.stockReceipts)
+            .insert(
+              StockReceiptsCompanion(
+                uuid: Value(receipt.id),
+                receiptNumber: Value(receipt.receiptNumber),
+                supplier: Value(receipt.supplier),
+                accountId: Value(receipt.accountId),
+                accountName: Value(receipt.accountName),
+                currencyCode: Value(receipt.currencyCode),
+                exchangeRate: Value(receipt.exchangeRate),
+                warehouse: Value(receipt.warehouse),
+                notes: Value(receipt.notes),
+                receiptDate: Value(receipt.receiptDate.millisecondsSinceEpoch),
+                createdAt: Value(receipt.createdAt.millisecondsSinceEpoch),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                syncStatus: const Value('pending'),
+                version: Value(newVersion),
+                companyId: Value(targetCompanyId),
+                status: Value(receipt.status.name),
+                postedAt: Value(receipt.postedAt?.millisecondsSinceEpoch),
+              ),
+            );
       }
 
       // Re-insert line items
-      await (_db.delete(_db.stockMovementLines)
-            ..where((tbl) => tbl.movementUuid.equals(receipt.id)))
-          .go();
+      await (_db.delete(
+        _db.stockMovementLines,
+      )..where((tbl) => tbl.movementUuid.equals(receipt.id))).go();
 
       for (final line in receipt.lines) {
-        await _db.into(_db.stockMovementLines).insert(
+        await _db
+            .into(_db.stockMovementLines)
+            .insert(
               StockMovementLinesCompanion(
                 uuid: Value(line.id),
                 movementUuid: Value(receipt.id),
@@ -197,11 +210,17 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             );
       }
 
-      await _enqueueReceipt(receipt.copyWith(version: newVersion, companyId: targetCompanyId), existing == null ? SyncOperationType.create : SyncOperationType.update);
+      await _enqueueReceipt(
+        receipt.copyWith(version: newVersion, companyId: targetCompanyId),
+        existing == null ? SyncOperationType.create : SyncOperationType.update,
+      );
 
       final poster = _accountingPoster;
       if (poster != null) {
-        final totalAmount = receipt.lines.fold(0.0, (sum, l) => sum + l.totalCost);
+        final totalAmount = receipt.lines.fold(
+          0.0,
+          (sum, l) => sum + l.totalCost,
+        );
         final docRef = InventoryDocumentRef(
           documentId: receipt.id,
           documentNumber: receipt.receiptNumber,
@@ -230,14 +249,16 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       if (receipt == null) return;
 
       if (receipt.isPosted) {
-        throw StateError('Cannot delete a posted stock receipt. Unpost it first.');
+        throw StateError(
+          'Cannot delete a posted stock receipt. Unpost it first.',
+        );
       }
 
       final now = DateTime.now().toUtc();
 
-      await (_db.update(_db.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals(id) & _tenantScopedReceipt(tbl)))
-          .write(
+      await (_db.update(
+        _db.stockReceipts,
+      )..where((tbl) => tbl.uuid.equals(id) & _tenantScopedReceipt(tbl))).write(
         StockReceiptsCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -246,7 +267,10 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
         ),
       );
 
-      await _enqueueReceipt(receipt.copyWith(version: receipt.version + 1, deletedAt: now), SyncOperationType.delete);
+      await _enqueueReceipt(
+        receipt.copyWith(version: receipt.version + 1, deletedAt: now),
+        SyncOperationType.delete,
+      );
 
       final poster = _accountingPoster;
       if (poster != null) {
@@ -315,83 +339,96 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     if (issue.companyId != null &&
         issue.companyId!.isNotEmpty &&
         issue.companyId != _currentCompanyId) {
-      throw ArgumentError('Cross-tenant operation rejected: issue companyId (${issue.companyId}) does not match current tenant ($_currentCompanyId)');
+      throw ArgumentError(
+        'Cross-tenant operation rejected: issue companyId (${issue.companyId}) does not match current tenant ($_currentCompanyId)',
+      );
     }
 
     for (final line in issue.lines) {
       if (line.unitCost <= 0 || line.totalCost <= 0) {
-        throw ArgumentError('لا يمكن حفظ أمر الصرف بتكلفة صفرية للصنف (${line.itemName})');
+        throw ArgumentError(
+          'لا يمكن حفظ أمر الصرف بتكلفة صفرية للصنف (${line.itemName})',
+        );
       }
     }
     await _db.transaction(() async {
-      final existing = await (_db.select(_db.stockIssues)
-            ..where((tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl)))
-          .getSingleOrNull();
+      final existing =
+          await (_db.select(_db.stockIssues)..where(
+                (tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl),
+              ))
+              .getSingleOrNull();
 
-      if (existing != null && (existing.status == 'posted' || existing.postedAt != null)) {
+      if (existing != null &&
+          (existing.status == 'posted' || existing.postedAt != null)) {
         throw const JournalException(JournalException.postedImmutable);
       }
 
       final now = DateTime.now().toUtc();
-      final newVersion = (existing?.version ?? issue.version) + (existing == null ? 0 : 1);
+      final newVersion =
+          (existing?.version ?? issue.version) + (existing == null ? 0 : 1);
       final targetCompanyId = issue.companyId ?? _currentCompanyId;
 
       // Save header row
       if (existing != null) {
-        await (_db.update(_db.stockIssues)
-              ..where((tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl)))
+        await (_db.update(_db.stockIssues)..where(
+              (tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl),
+            ))
             .write(
-          StockIssuesCompanion(
-            issueNumber: Value(issue.issueNumber),
-            destination: Value(issue.destination),
-            accountId: Value(issue.accountId),
-            accountName: Value(issue.accountName),
-            currencyCode: Value(issue.currencyCode),
-            exchangeRate: Value(issue.exchangeRate),
-            voucherBookId: Value(issue.voucherBookId),
-            warehouse: Value(issue.warehouse),
-            notes: Value(issue.notes),
-            issueDate: Value(issue.issueDate.millisecondsSinceEpoch),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: Value(newVersion),
-            companyId: Value(targetCompanyId),
-            status: Value(issue.status.name),
-            postedAt: Value(issue.postedAt?.millisecondsSinceEpoch),
-          ),
-        );
+              StockIssuesCompanion(
+                issueNumber: Value(issue.issueNumber),
+                destination: Value(issue.destination),
+                accountId: Value(issue.accountId),
+                accountName: Value(issue.accountName),
+                currencyCode: Value(issue.currencyCode),
+                exchangeRate: Value(issue.exchangeRate),
+                voucherBookId: Value(issue.voucherBookId),
+                warehouse: Value(issue.warehouse),
+                notes: Value(issue.notes),
+                issueDate: Value(issue.issueDate.millisecondsSinceEpoch),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                syncStatus: const Value('pending'),
+                version: Value(newVersion),
+                companyId: Value(targetCompanyId),
+                status: Value(issue.status.name),
+                postedAt: Value(issue.postedAt?.millisecondsSinceEpoch),
+              ),
+            );
       } else {
-        await _db.into(_db.stockIssues).insert(
-          StockIssuesCompanion(
-            uuid: Value(issue.id),
-            issueNumber: Value(issue.issueNumber),
-            destination: Value(issue.destination),
-            accountId: Value(issue.accountId),
-            accountName: Value(issue.accountName),
-            currencyCode: Value(issue.currencyCode),
-            exchangeRate: Value(issue.exchangeRate),
-            voucherBookId: Value(issue.voucherBookId),
-            warehouse: Value(issue.warehouse),
-            notes: Value(issue.notes),
-            issueDate: Value(issue.issueDate.millisecondsSinceEpoch),
-            createdAt: Value(issue.createdAt.millisecondsSinceEpoch),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: Value(newVersion),
-            companyId: Value(targetCompanyId),
-            status: Value(issue.status.name),
-            postedAt: Value(issue.postedAt?.millisecondsSinceEpoch),
-          ),
-        );
+        await _db
+            .into(_db.stockIssues)
+            .insert(
+              StockIssuesCompanion(
+                uuid: Value(issue.id),
+                issueNumber: Value(issue.issueNumber),
+                destination: Value(issue.destination),
+                accountId: Value(issue.accountId),
+                accountName: Value(issue.accountName),
+                currencyCode: Value(issue.currencyCode),
+                exchangeRate: Value(issue.exchangeRate),
+                voucherBookId: Value(issue.voucherBookId),
+                warehouse: Value(issue.warehouse),
+                notes: Value(issue.notes),
+                issueDate: Value(issue.issueDate.millisecondsSinceEpoch),
+                createdAt: Value(issue.createdAt.millisecondsSinceEpoch),
+                updatedAt: Value(now.millisecondsSinceEpoch),
+                syncStatus: const Value('pending'),
+                version: Value(newVersion),
+                companyId: Value(targetCompanyId),
+                status: Value(issue.status.name),
+                postedAt: Value(issue.postedAt?.millisecondsSinceEpoch),
+              ),
+            );
       }
 
       // Re-insert line items
-      await (_db.delete(_db.stockMovementLines)
-            ..where((tbl) => tbl.movementUuid.equals(issue.id)))
-          .go();
+      await (_db.delete(
+        _db.stockMovementLines,
+      )..where((tbl) => tbl.movementUuid.equals(issue.id))).go();
 
       for (final line in issue.lines) {
-        await _db.into(_db.stockMovementLines).insert(
+        await _db
+            .into(_db.stockMovementLines)
+            .insert(
               StockMovementLinesCompanion(
                 uuid: Value(line.id),
                 movementUuid: Value(issue.id),
@@ -409,11 +446,17 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             );
       }
 
-      await _enqueueIssue(issue.copyWith(version: newVersion, companyId: targetCompanyId), existing == null ? SyncOperationType.create : SyncOperationType.update);
+      await _enqueueIssue(
+        issue.copyWith(version: newVersion, companyId: targetCompanyId),
+        existing == null ? SyncOperationType.create : SyncOperationType.update,
+      );
 
       final poster = _accountingPoster;
       if (poster != null) {
-        final totalAmount = issue.lines.fold(0.0, (sum, l) => sum + l.totalCost);
+        final totalAmount = issue.lines.fold(
+          0.0,
+          (sum, l) => sum + l.totalCost,
+        );
         final docRef = InventoryDocumentRef(
           documentId: issue.id,
           documentNumber: issue.issueNumber,
@@ -442,14 +485,16 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       if (issue == null) return;
 
       if (issue.isPosted) {
-        throw StateError('Cannot delete a posted stock issue. Unpost it first.');
+        throw StateError(
+          'Cannot delete a posted stock issue. Unpost it first.',
+        );
       }
 
       final now = DateTime.now().toUtc();
 
-      await (_db.update(_db.stockIssues)
-            ..where((tbl) => tbl.uuid.equals(id) & _tenantScopedIssue(tbl)))
-          .write(
+      await (_db.update(
+        _db.stockIssues,
+      )..where((tbl) => tbl.uuid.equals(id) & _tenantScopedIssue(tbl))).write(
         StockIssuesCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -458,7 +503,10 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
         ),
       );
 
-      await _enqueueIssue(issue.copyWith(version: issue.version + 1, deletedAt: now), SyncOperationType.delete);
+      await _enqueueIssue(
+        issue.copyWith(version: issue.version + 1, deletedAt: now),
+        SyncOperationType.delete,
+      );
 
       final poster = _accountingPoster;
       if (poster != null) {
@@ -481,9 +529,16 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   // HELPERS
   // ---------------------------------------------------------------------------
 
-  Future<List<StockMovementLine>> _getLinesForMovement(String movementUuid, String type) async {
+  Future<List<StockMovementLine>> _getLinesForMovement(
+    String movementUuid,
+    String type,
+  ) async {
     final query = _db.select(_db.stockMovementLines)
-      ..where((tbl) => tbl.movementUuid.equals(movementUuid) & tbl.movementType.equals(type));
+      ..where(
+        (tbl) =>
+            tbl.movementUuid.equals(movementUuid) &
+            tbl.movementType.equals(type),
+      );
     final rows = await query.get();
 
     return rows
@@ -500,13 +555,21 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             unitCost: row.unitCost,
             totalCost: row.totalCost,
             postedCost: row.postedCost,
-            postedAt: row.postedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.postedAt!, isUtc: true),
+            postedAt: row.postedAt == null
+                ? null
+                : DateTime.fromMillisecondsSinceEpoch(
+                    row.postedAt!,
+                    isUtc: true,
+                  ),
           ),
         )
         .toList();
   }
 
-  StockReceipt _mapRowToReceipt(StockReceiptRow row, List<StockMovementLine> lines) {
+  StockReceipt _mapRowToReceipt(
+    StockReceiptRow row,
+    List<StockMovementLine> lines,
+  ) {
     return StockReceipt(
       id: row.uuid,
       receiptNumber: row.receiptNumber,
@@ -517,20 +580,35 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       exchangeRate: row.exchangeRate,
       warehouse: row.warehouse,
       notes: row.notes,
-      receiptDate: DateTime.fromMillisecondsSinceEpoch(row.receiptDate, isUtc: true),
+      receiptDate: DateTime.fromMillisecondsSinceEpoch(
+        row.receiptDate,
+        isUtc: true,
+      ),
       lines: lines,
       status: InventoryDocumentStatus.fromStorage(row.status),
-      postedAt: row.postedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.postedAt!, isUtc: true),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
+      postedAt: row.postedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.postedAt!, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
       syncStatus: SyncStatus.values.firstWhere(
         (s) => s.name == row.syncStatus,
         orElse: () => SyncStatus.synced,
       ),
-      lastSyncedAt: row.lastSyncedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
+      lastSyncedAt: row.lastSyncedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
       version: row.version,
       companyId: row.companyId,
-      deletedAt: row.deletedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+      deletedAt: row.deletedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
     );
   }
 
@@ -546,24 +624,42 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       voucherBookId: row.voucherBookId,
       warehouse: row.warehouse,
       notes: row.notes,
-      issueDate: DateTime.fromMillisecondsSinceEpoch(row.issueDate, isUtc: true),
+      issueDate: DateTime.fromMillisecondsSinceEpoch(
+        row.issueDate,
+        isUtc: true,
+      ),
       lines: lines,
       status: InventoryDocumentStatus.fromStorage(row.status),
-      postedAt: row.postedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.postedAt!, isUtc: true),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
+      postedAt: row.postedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.postedAt!, isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
       syncStatus: SyncStatus.values.firstWhere(
         (s) => s.name == row.syncStatus,
         orElse: () => SyncStatus.synced,
       ),
-      lastSyncedAt: row.lastSyncedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
+      lastSyncedAt: row.lastSyncedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
       version: row.version,
       companyId: row.companyId,
-      deletedAt: row.deletedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+      deletedAt: row.deletedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
     );
   }
 
-  Future<void> _enqueueReceipt(StockReceipt receipt, SyncOperationType type) async {
+  Future<void> _enqueueReceipt(
+    StockReceipt receipt,
+    SyncOperationType type,
+  ) async {
     final queue = _syncQueue;
     if (queue == null) return;
 
@@ -647,12 +743,14 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     required List<StockMovementLine> lines,
   }) async {
     await _db.transaction(() async {
-      await (_db.delete(_db.stockMovementLines)
-            ..where((tbl) => tbl.movementUuid.equals(movementUuid)))
-          .go();
+      await (_db.delete(
+        _db.stockMovementLines,
+      )..where((tbl) => tbl.movementUuid.equals(movementUuid))).go();
 
       for (final line in lines) {
-        await _db.into(_db.stockMovementLines).insert(
+        await _db
+            .into(_db.stockMovementLines)
+            .insert(
               StockMovementLinesCompanion(
                 uuid: Value(line.id),
                 movementUuid: Value(movementUuid),

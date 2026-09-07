@@ -51,11 +51,7 @@ class _PdfDocumentPreviewPageState extends State<PdfDocumentPreviewPage> {
         return;
       }
       final l10n = AppLocalizations.of(context);
-      showAppSnackBar(
-        context,
-        message: _mapError(l10n, e),
-        isSuccess: false,
-      );
+      showAppSnackBar(context, message: _mapError(l10n, e), isSuccess: false);
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -89,10 +85,7 @@ class _PdfDocumentPreviewPageState extends State<PdfDocumentPreviewPage> {
 
     return Scaffold(
       backgroundColor: canvas,
-      appBar: CustomAppBar(
-        title: args.title,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: args.title, showBackButton: true),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

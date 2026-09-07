@@ -6,12 +6,16 @@ final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   return SubscriptionRepositoryImpl();
 });
 
-final availablePlansProvider = FutureProvider<List<CommercialPlan>>((ref) async {
+final availablePlansProvider = FutureProvider<List<CommercialPlan>>((
+  ref,
+) async {
   final repo = ref.watch(subscriptionRepositoryProvider);
   return repo.fetchPlans();
 });
 
-final availablePackagesProvider = FutureProvider<List<AddonPackage>>((ref) async {
+final availablePackagesProvider = FutureProvider<List<AddonPackage>>((
+  ref,
+) async {
   final repo = ref.watch(subscriptionRepositoryProvider);
   return repo.fetchPackages();
 });

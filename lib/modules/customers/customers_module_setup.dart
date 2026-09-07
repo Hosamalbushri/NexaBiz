@@ -27,7 +27,8 @@ final customersPackageSetupDefinition = PackageSetupDefinition(
       titleAr: 'سياسات وقواعد العملاء',
       titleEn: 'Customers Policies & Defaults',
       descriptionAr: 'حد الائتمان الافتراضي والربط التلقائي بالحسابات والضوابط',
-      descriptionEn: 'Default credit limits, auto sub-account creation, and tax ID validation',
+      descriptionEn:
+          'Default credit limits, auto sub-account creation, and tax ID validation',
       fields: [
         SetupField(
           id: 'defaultCreditLimit',
@@ -64,7 +65,8 @@ final customersPackageSetupDefinition = PackageSetupDefinition(
       titleAr: 'ربط حسابات العملاء الرئيسية',
       titleEn: 'Accounts Receivable Parent Account',
       descriptionAr: 'تحديد الحساب الرئيسي للذمم المدينة في دليل الحسابات',
-      descriptionEn: 'Bind Accounts Receivable parent account from Chart of Accounts',
+      descriptionEn:
+          'Bind Accounts Receivable parent account from Chart of Accounts',
       fields: [
         SetupField(
           id: 'ar_account',

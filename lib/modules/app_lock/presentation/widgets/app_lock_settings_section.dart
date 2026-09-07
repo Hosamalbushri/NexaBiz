@@ -140,7 +140,9 @@ class AppLockSettingsSection extends ConsumerWidget {
     );
     if (result == null || !context.mounted) return;
 
-    final error = await ref.read(appLockControllerProvider.notifier).enableWithPin(
+    final error = await ref
+        .read(appLockControllerProvider.notifier)
+        .enableWithPin(
           pin: result.pin,
           confirmPin: result.confirm,
           policy: AppLockPolicy.onResume,
@@ -170,8 +172,9 @@ class AppLockSettingsSection extends ConsumerWidget {
     );
     if (pin == null || !context.mounted) return;
 
-    final error =
-        await ref.read(appLockControllerProvider.notifier).disable(pin: pin);
+    final error = await ref
+        .read(appLockControllerProvider.notifier)
+        .disable(pin: pin);
     if (!context.mounted) return;
     if (error != null) {
       showAppSnackBar(
@@ -410,7 +413,9 @@ class _ChangePinAccordionState extends ConsumerState<_ChangePinAccordion> {
 
     final l10n = AppLocalizations.of(context);
     setState(() => _busy = true);
-    final error = await ref.read(appLockControllerProvider.notifier).changePin(
+    final error = await ref
+        .read(appLockControllerProvider.notifier)
+        .changePin(
           currentPin: _current.text,
           newPin: _next.text,
           confirmPin: _confirm.text,
@@ -605,10 +610,7 @@ class _ChangePinAccordionState extends ConsumerState<_ChangePinAccordion> {
 }
 
 class _ChangePinSectionLabel extends StatelessWidget {
-  const _ChangePinSectionLabel({
-    required this.icon,
-    required this.label,
-  });
+  const _ChangePinSectionLabel({required this.icon, required this.label});
 
   final IconData icon;
   final String label;

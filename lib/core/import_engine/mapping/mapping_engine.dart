@@ -9,9 +9,7 @@ import 'mapping_report.dart';
 /// Main Mapping Engine orchestrator coordinating column matching, manual overrides,
 /// column ignoring, mapping report generation, and reusable MappingProfile presets.
 class MappingEngine {
-  const MappingEngine({
-    this.autoMapper = const AutoMapper(),
-  });
+  const MappingEngine({this.autoMapper = const AutoMapper()});
 
   final AutoMapper autoMapper;
 
@@ -28,10 +26,7 @@ class MappingEngine {
       ignoredColumnNormHeaders: presetProfile?.ignoredColumns,
     );
 
-    return MappingReport(
-      mappings: results,
-      targetFields: targetFields,
-    );
+    return MappingReport(mappings: results, targetFields: targetFields);
   }
 
   /// Manually overrides or updates a specific column mapping decision.
@@ -46,23 +41,27 @@ class MappingEngine {
     for (final mapping in currentReport.mappings) {
       if (mapping.sourceColumnIndex == columnIndex) {
         if (isIgnored) {
-          updatedMappings.add(mapping.copyWith(
-            targetField: null,
-            matchStrategy: MappingMatchStrategy.ignored,
-            confidence: MappingConfidence.high,
-            isIgnored: true,
-          ));
+          updatedMappings.add(
+            mapping.copyWith(
+              targetField: null,
+              matchStrategy: MappingMatchStrategy.ignored,
+              confidence: MappingConfidence.high,
+              isIgnored: true,
+            ),
+          );
         } else {
-          updatedMappings.add(mapping.copyWith(
-            targetField: newTargetField,
-            matchStrategy: newTargetField != null
-                ? MappingMatchStrategy.manual
-                : MappingMatchStrategy.unmapped,
-            confidence: newTargetField != null
-                ? MappingConfidence.high
-                : MappingConfidence.none,
-            isIgnored: false,
-          ));
+          updatedMappings.add(
+            mapping.copyWith(
+              targetField: newTargetField,
+              matchStrategy: newTargetField != null
+                  ? MappingMatchStrategy.manual
+                  : MappingMatchStrategy.unmapped,
+              confidence: newTargetField != null
+                  ? MappingConfidence.high
+                  : MappingConfidence.none,
+              isIgnored: false,
+            ),
+          );
         }
       } else {
         // If the new target field was assigned elsewhere, unassign it to avoid duplicate mapping
@@ -70,11 +69,13 @@ class MappingEngine {
             !isIgnored &&
             mapping.targetField?.key.toLowerCase() ==
                 newTargetField.key.toLowerCase()) {
-          updatedMappings.add(mapping.copyWith(
-            targetField: null,
-            matchStrategy: MappingMatchStrategy.unmapped,
-            confidence: MappingConfidence.none,
-          ));
+          updatedMappings.add(
+            mapping.copyWith(
+              targetField: null,
+              matchStrategy: MappingMatchStrategy.unmapped,
+              confidence: MappingConfidence.none,
+            ),
+          );
         } else {
           updatedMappings.add(mapping);
         }

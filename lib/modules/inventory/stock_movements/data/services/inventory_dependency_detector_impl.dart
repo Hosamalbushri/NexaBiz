@@ -6,10 +6,8 @@ import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_docu
 import '../../domain/services/inventory_dependency_detector.dart';
 
 class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
-  InventoryDependencyDetectorImpl(
-    this._db, [
-    String Function()? readCompanyId,
-  ]) : _readCompanyId = readCompanyId;
+  InventoryDependencyDetectorImpl(this._db, [String Function()? readCompanyId])
+    : _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final String Function()? _readCompanyId;
@@ -56,34 +54,37 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
     final direct = <InventoryDocumentRef>[];
 
     // 1. Direct dependencies via Cost Layers & Consumptions (Inbound -> Outbound)
-    final layers = await (_db.select(_db.inventoryCostLayers)
-          ..where((tbl) =>
-              tbl.movementUuid.equals(doc.documentId) &
-              tbl.companyId.equals(_currentCompanyId) &
-              tbl.deletedAt.isNull()))
-        .get();
+    final layers =
+        await (_db.select(_db.inventoryCostLayers)..where(
+              (tbl) =>
+                  tbl.movementUuid.equals(doc.documentId) &
+                  tbl.companyId.equals(_currentCompanyId) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .get();
 
     for (final layer in layers) {
-      final consumptions = await (_db.select(_db.inventoryCostConsumptions)
-            ..where((tbl) => tbl.layerUuid.equals(layer.uuid)))
-          .get();
+      final consumptions = await (_db.select(
+        _db.inventoryCostConsumptions,
+      )..where((tbl) => tbl.layerUuid.equals(layer.uuid))).get();
 
       for (final cons in consumptions) {
         final lineUuid = cons.issueLineUuid;
 
         // Check if lineUuid belongs to a stock_movement_line
-        final lines = await (_db.select(_db.stockMovementLines)
-              ..where((tbl) => tbl.uuid.equals(lineUuid)))
-            .get();
+        final lines = await (_db.select(
+          _db.stockMovementLines,
+        )..where((tbl) => tbl.uuid.equals(lineUuid))).get();
 
         if (lines.isNotEmpty) {
           final headerUuid = lines.first.movementUuid;
 
           // Check Stock Issue
-          final issues = await (_db.select(_db.stockIssues)
-                ..where((tbl) => tbl.uuid.equals(headerUuid))
-                ..where((tbl) => tbl.deletedAt.isNull()))
-              .get();
+          final issues =
+              await (_db.select(_db.stockIssues)
+                    ..where((tbl) => tbl.uuid.equals(headerUuid))
+                    ..where((tbl) => tbl.deletedAt.isNull()))
+                  .get();
 
           if (issues.isNotEmpty) {
             final issueRow = issues.first;
@@ -94,7 +95,9 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
                   documentId: issueRow.uuid,
                   documentNumber: issueRow.issueNumber,
                   documentType: InventoryDocumentType.stockIssue,
-                  documentDate: DateTime.fromMillisecondsSinceEpoch(issueRow.issueDate),
+                  documentDate: DateTime.fromMillisecondsSinceEpoch(
+                    issueRow.issueDate,
+                  ),
                   warehouseId: issueRow.warehouse,
                   status: status,
                 ),
@@ -103,10 +106,11 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
           }
 
           // Check Stock Return
-          final returns = await (_db.select(_db.stockReturns)
-                ..where((tbl) => tbl.uuid.equals(headerUuid))
-                ..where((tbl) => tbl.deletedAt.isNull()))
-              .get();
+          final returns =
+              await (_db.select(_db.stockReturns)
+                    ..where((tbl) => tbl.uuid.equals(headerUuid))
+                    ..where((tbl) => tbl.deletedAt.isNull()))
+                  .get();
 
           if (returns.isNotEmpty) {
             final retRow = returns.first;
@@ -117,7 +121,9 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
                   documentId: retRow.uuid,
                   documentNumber: retRow.returnNumber,
                   documentType: InventoryDocumentType.stockReturn,
-                  documentDate: DateTime.fromMillisecondsSinceEpoch(retRow.returnDate),
+                  documentDate: DateTime.fromMillisecondsSinceEpoch(
+                    retRow.returnDate,
+                  ),
                   warehouseId: retRow.warehouse,
                   status: status,
                 ),
@@ -126,10 +132,11 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
           }
 
           // Check Stock Transfer
-          final transfers = await (_db.select(_db.stockTransfers)
-                ..where((tbl) => tbl.uuid.equals(headerUuid))
-                ..where((tbl) => tbl.deletedAt.isNull()))
-              .get();
+          final transfers =
+              await (_db.select(_db.stockTransfers)
+                    ..where((tbl) => tbl.uuid.equals(headerUuid))
+                    ..where((tbl) => tbl.deletedAt.isNull()))
+                  .get();
 
           if (transfers.isNotEmpty) {
             final trRow = transfers.first;
@@ -140,7 +147,9 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
                   documentId: trRow.uuid,
                   documentNumber: trRow.transferNumber,
                   documentType: InventoryDocumentType.stockTransfer,
-                  documentDate: DateTime.fromMillisecondsSinceEpoch(trRow.transferDate),
+                  documentDate: DateTime.fromMillisecondsSinceEpoch(
+                    trRow.transferDate,
+                  ),
                   warehouseId: trRow.fromWarehouseId,
                   status: status,
                 ),
@@ -163,10 +172,11 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
     }
 
     // 2. Direct dependencies via originalMovementUuid (e.g. StockReturn referencing an Issue/Receipt)
-    final returnsReferencingDoc = await (_db.select(_db.stockReturns)
-          ..where((tbl) => tbl.originalMovementUuid.equals(doc.documentId))
-          ..where((tbl) => tbl.deletedAt.isNull()))
-        .get();
+    final returnsReferencingDoc =
+        await (_db.select(_db.stockReturns)
+              ..where((tbl) => tbl.originalMovementUuid.equals(doc.documentId))
+              ..where((tbl) => tbl.deletedAt.isNull()))
+            .get();
 
     for (final retRow in returnsReferencingDoc) {
       final status = InventoryDocumentStatus.fromStorage(retRow.status);
@@ -176,7 +186,9 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
             documentId: retRow.uuid,
             documentNumber: retRow.returnNumber,
             documentType: InventoryDocumentType.stockReturn,
-            documentDate: DateTime.fromMillisecondsSinceEpoch(retRow.returnDate),
+            documentDate: DateTime.fromMillisecondsSinceEpoch(
+              retRow.returnDate,
+            ),
             warehouseId: retRow.warehouse,
             status: status,
           ),
@@ -186,30 +198,34 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
 
     // 3. Chronological Downstream Movements Check:
     // Check if any line item in doc has subsequent posted movements after doc.documentDate
-    final docLines = await (_db.select(_db.stockMovementLines)
-          ..where((tbl) => tbl.movementUuid.equals(doc.documentId)))
-        .get();
+    final docLines = await (_db.select(
+      _db.stockMovementLines,
+    )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).get();
 
     final itemCodes = docLines.map((l) => l.itemCode).toSet();
     final docDateEpoch = doc.documentDate.millisecondsSinceEpoch;
 
     for (final itemCode in itemCodes) {
-      final subLines = await (_db.select(_db.stockMovementLines)
-            ..where((tbl) => tbl.itemCode.equals(itemCode)))
-          .get();
+      final subLines = await (_db.select(
+        _db.stockMovementLines,
+      )..where((tbl) => tbl.itemCode.equals(itemCode))).get();
 
       for (final l in subLines) {
         if (l.movementUuid == doc.documentId) continue;
 
         // Check Stock Issue
-        final subIssues = await (_db.select(_db.stockIssues)
-              ..where((tbl) => tbl.uuid.equals(l.movementUuid))
-              ..where((tbl) => tbl.issueDate.isBiggerThan(Constant(docDateEpoch)))
-              ..where((tbl) => tbl.deletedAt.isNull()))
-            .get();
+        final subIssues =
+            await (_db.select(_db.stockIssues)
+                  ..where((tbl) => tbl.uuid.equals(l.movementUuid))
+                  ..where(
+                    (tbl) => tbl.issueDate.isBiggerThan(Constant(docDateEpoch)),
+                  )
+                  ..where((tbl) => tbl.deletedAt.isNull()))
+                .get();
 
         for (final iss in subIssues) {
-          if (InventoryDocumentStatus.fromStorage(iss.status) == InventoryDocumentStatus.posted) {
+          if (InventoryDocumentStatus.fromStorage(iss.status) ==
+              InventoryDocumentStatus.posted) {
             final depRef = InventoryDocumentRef(
               documentId: iss.uuid,
               documentNumber: iss.issueNumber,
@@ -223,19 +239,26 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
         }
 
         // Check Stock Receipts
-        final subReceipts = await (_db.select(_db.stockReceipts)
-              ..where((tbl) => tbl.uuid.equals(l.movementUuid))
-              ..where((tbl) => tbl.receiptDate.isBiggerThan(Constant(docDateEpoch)))
-              ..where((tbl) => tbl.deletedAt.isNull()))
-            .get();
+        final subReceipts =
+            await (_db.select(_db.stockReceipts)
+                  ..where((tbl) => tbl.uuid.equals(l.movementUuid))
+                  ..where(
+                    (tbl) =>
+                        tbl.receiptDate.isBiggerThan(Constant(docDateEpoch)),
+                  )
+                  ..where((tbl) => tbl.deletedAt.isNull()))
+                .get();
 
         for (final rec in subReceipts) {
-          if (InventoryDocumentStatus.fromStorage(rec.status) == InventoryDocumentStatus.posted) {
+          if (InventoryDocumentStatus.fromStorage(rec.status) ==
+              InventoryDocumentStatus.posted) {
             final depRef = InventoryDocumentRef(
               documentId: rec.uuid,
               documentNumber: rec.receiptNumber,
               documentType: InventoryDocumentType.stockReceipt,
-              documentDate: DateTime.fromMillisecondsSinceEpoch(rec.receiptDate),
+              documentDate: DateTime.fromMillisecondsSinceEpoch(
+                rec.receiptDate,
+              ),
               status: InventoryDocumentStatus.posted,
             );
             if (!direct.contains(depRef)) direct.add(depRef);

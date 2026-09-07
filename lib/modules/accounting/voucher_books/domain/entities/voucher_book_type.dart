@@ -13,6 +13,7 @@ enum VoucherBookType {
   purchases,
   purchaseReturns,
   journal,
+
   /// Combined R&P hub: receipts, payments, cash transfers, currency exchange.
   receiptsPayments,
   stockReceipts,

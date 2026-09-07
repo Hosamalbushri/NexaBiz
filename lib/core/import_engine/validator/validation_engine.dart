@@ -33,7 +33,8 @@ class ValidationEngine {
 
       // 2. Evaluate each target field
       for (final field in targetFields) {
-        final normVal = rowMap[field.key] ??
+        final normVal =
+            rowMap[field.key] ??
             NormalizedValue(
               originalValue: null,
               normalizedValue: null,
@@ -41,7 +42,8 @@ class ValidationEngine {
             );
 
         // A. Field Required Check
-        if (field.isRequired && (normVal.isNull || normVal.normalizedValue == null)) {
+        if (field.isRequired &&
+            (normVal.isNull || normVal.normalizedValue == null)) {
           issues.add(
             const RequiredValidationRule().evaluate(
               row: rowNumber,
@@ -67,7 +69,10 @@ class ValidationEngine {
             !normVal.isNull &&
             normVal.normalizedValue != null) {
           final tracker = uniqueValueTracker[field.key]!;
-          final valKey = normVal.normalizedValue.toString().trim().toLowerCase();
+          final valKey = normVal.normalizedValue
+              .toString()
+              .trim()
+              .toLowerCase();
           if (tracker.containsKey(valKey)) {
             final firstRow = tracker[valKey]!;
             issues.add(
@@ -100,7 +105,9 @@ class ValidationEngine {
                 row: rowNumber,
                 field: field.key,
                 code: 'ENTITY_DOES_NOT_EXIST',
-                severity: const ExistsValidationRule(lookupFn: _dummyLookup).severity,
+                severity: const ExistsValidationRule(
+                  lookupFn: _dummyLookup,
+                ).severity,
                 message:
                     'Referenced entity "${normVal.normalizedValue}" was not found',
                 originalValue: normVal.originalValue,
@@ -124,10 +131,7 @@ class ValidationEngine {
       }
     }
 
-    return ValidationReport(
-      issues: issues,
-      totalProcessedRows: rows.length,
-    );
+    return ValidationReport(issues: issues, totalProcessedRows: rows.length);
   }
 
   static Future<bool> _dummyLookup(dynamic val) async => true;

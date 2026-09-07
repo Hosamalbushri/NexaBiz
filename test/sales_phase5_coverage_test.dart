@@ -177,7 +177,6 @@ class _RecordingInventory implements SaleInventoryEffectPort {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   group('SaleComposerController', () {
     late SaleComposerController composer;
 
@@ -305,59 +304,62 @@ void main() {
       expect(posted.syncStatus, SyncStatus.pending);
     });
 
-    test('searchListPaged matches sale number and customer name in SQL', () async {
-      await createSale(
-        _draft(
-          customerId: 'c-alpha',
-          customerName: 'Alpha Trading',
-          paidAmount: 10,
-          items: const [
-            SaleItemDraft(
-              productId: 'p1',
-              productName: 'Nail',
-              productCode: 'N-1',
-              mainQuantity: 1,
-              unitPrice: 10,
-              baseUnitPrice: 10,
-            ),
-          ],
-        ),
-      );
-      await createSale(
-        _draft(
-          customerId: 'c-beta',
-          customerName: 'Beta Motors',
-          paidAmount: 15,
-          items: const [
-            SaleItemDraft(
-              productId: 'p2',
-              productName: 'Bolt',
-              productCode: 'B-1',
-              mainQuantity: 1,
-              unitPrice: 15,
-              baseUnitPrice: 15,
-            ),
-          ],
-        ),
-      );
+    test(
+      'searchListPaged matches sale number and customer name in SQL',
+      () async {
+        await createSale(
+          _draft(
+            customerId: 'c-alpha',
+            customerName: 'Alpha Trading',
+            paidAmount: 10,
+            items: const [
+              SaleItemDraft(
+                productId: 'p1',
+                productName: 'Nail',
+                productCode: 'N-1',
+                mainQuantity: 1,
+                unitPrice: 10,
+                baseUnitPrice: 10,
+              ),
+            ],
+          ),
+        );
+        await createSale(
+          _draft(
+            customerId: 'c-beta',
+            customerName: 'Beta Motors',
+            paidAmount: 15,
+            items: const [
+              SaleItemDraft(
+                productId: 'p2',
+                productName: 'Bolt',
+                productCode: 'B-1',
+                mainQuantity: 1,
+                unitPrice: 15,
+                baseUnitPrice: 15,
+              ),
+            ],
+          ),
+        );
 
-      final byCustomer = await repository.searchListPaged(
-        const SaleListFilter(query: 'alpha'),
-        page: 0,
-        pageSize: 10,
-      );
-      expect(byCustomer.totalCount, 1);
-      expect(byCustomer.items.single.customerName, 'Alpha Trading');
+        final byCustomer = await repository.searchListPaged(
+          const SaleListFilter(query: 'alpha'),
+          page: 0,
+          pageSize: 10,
+        );
+        expect(byCustomer.totalCount, 1);
+        expect(byCustomer.items.single.customerName, 'Alpha Trading');
 
-      final saleNumber = byCustomer.items.single.saleNumber;
-      final byNumber = await repository.searchListPaged(
-        SaleListFilter(query: saleNumber),
-        page: 0,
-        pageSize: 10,
-      );
-      expect(byNumber.totalCount, 1);
-      expect(byNumber.items.single.saleNumber, saleNumber);
-    });
+        final saleNumber = byCustomer.items.single.saleNumber;
+        final byNumber = await repository.searchListPaged(
+          SaleListFilter(query: saleNumber),
+          page: 0,
+          pageSize: 10,
+        );
+        expect(byNumber.totalCount, 1);
+        expect(byNumber.items.single.saleNumber, saleNumber);
+      },
+    );
 
     test('totalsForCustomer aggregates and excludes soft-deleted', () async {
       final s1 = await createSale(

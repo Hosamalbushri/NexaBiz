@@ -19,7 +19,8 @@ class InventorySyncRegistrar implements SyncModuleRegistrar {
     final db = ref.read(inventoryDatabaseProvider);
     final coordinator = ref.read(postingCoordinatorProvider);
     final engine = ref.read(postingEngineProvider);
-    String companyIdReader() => ref.read(authorizationContextProvider).companyId;
+    String companyIdReader() =>
+        ref.read(authorizationContextProvider).companyId;
 
     final handlers = <SyncEntityHandler>[
       ProductSyncHandler(

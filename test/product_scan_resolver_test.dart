@@ -101,15 +101,13 @@ class _FakeProductRepository implements ProductRepository {
   Future<ProductUpsertResult> upsertAll(
     List<ProductDraft> drafts, {
     void Function(int processed, int total)? onProgress,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<Product> adjustOnHandByUuid({
     required String uuid,
     required double delta,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 }
 
 void main() {
@@ -127,126 +125,154 @@ void main() {
   );
 
   group('ProductScanResolver Security Hardening', () {
-    test('1. Valid catalog product QR resolves correctly using catalog data', () async {
-      final resolver = ProductScanResolver(
-        _FakeProductRepository([catalogProduct]),
-      );
-      const builder = ProductQrPayloadBuilder();
-      final qr = builder.build(catalogProduct);
+    test(
+      '1. Valid catalog product QR resolves correctly using catalog data',
+      () async {
+        final resolver = ProductScanResolver(
+          _FakeProductRepository([catalogProduct]),
+        );
+        const builder = ProductQrPayloadBuilder();
+        final qr = builder.build(catalogProduct);
 
-      final resolution = await resolver.resolve(qr);
-      expect(resolution, isNotNull);
-      expect(resolution!.fromProductQr, isTrue);
-      expect(resolution.fromCatalog, isTrue);
-      expect(resolution.product.id, 125);
-      expect(resolution.product.name, 'عباية سوداء');
-      expect(resolution.product.price, 25000);
-      expect(resolution.product.packSize, 1);
-      expect(resolution.product.itemCode, 'AB-001');
-    });
+        final resolution = await resolver.resolve(qr);
+        expect(resolution, isNotNull);
+        expect(resolution!.fromProductQr, isTrue);
+        expect(resolution.fromCatalog, isTrue);
+        expect(resolution.product.id, 125);
+        expect(resolution.product.name, 'عباية سوداء');
+        expect(resolution.product.price, 25000);
+        expect(resolution.product.packSize, 1);
+        expect(resolution.product.itemCode, 'AB-001');
+      },
+    );
 
-    test('2. Forged product name in QR payload is ignored in favor of catalog data', () async {
-      final resolver = ProductScanResolver(
-        _FakeProductRepository([catalogProduct]),
-      );
-      const builder = ProductQrPayloadBuilder();
-      // QR contains forged product name "عباية مجانية"
-      final forgedQr = builder.build(
-        catalogProduct.copyWith(name: 'عباية مجانية (مزورة)'),
-      );
+    test(
+      '2. Forged product name in QR payload is ignored in favor of catalog data',
+      () async {
+        final resolver = ProductScanResolver(
+          _FakeProductRepository([catalogProduct]),
+        );
+        const builder = ProductQrPayloadBuilder();
+        // QR contains forged product name "عباية مجانية"
+        final forgedQr = builder.build(
+          catalogProduct.copyWith(name: 'عباية مجانية (مزورة)'),
+        );
 
-      final resolution = await resolver.resolve(forgedQr);
-      expect(resolution, isNotNull);
-      expect(resolution!.product.name, 'عباية سوداء'); // MUST use catalog name
-    });
+        final resolution = await resolver.resolve(forgedQr);
+        expect(resolution, isNotNull);
+        expect(
+          resolution!.product.name,
+          'عباية سوداء',
+        ); // MUST use catalog name
+      },
+    );
 
-    test('3. Forged price in QR payload is ignored in favor of catalog price', () async {
-      final resolver = ProductScanResolver(
-        _FakeProductRepository([catalogProduct]),
-      );
-      const builder = ProductQrPayloadBuilder();
-      // QR contains forged price 0.01 instead of 25000
-      final forgedQr = builder.build(
-        catalogProduct.copyWith(price: 0.01),
-      );
+    test(
+      '3. Forged price in QR payload is ignored in favor of catalog price',
+      () async {
+        final resolver = ProductScanResolver(
+          _FakeProductRepository([catalogProduct]),
+        );
+        const builder = ProductQrPayloadBuilder();
+        // QR contains forged price 0.01 instead of 25000
+        final forgedQr = builder.build(catalogProduct.copyWith(price: 0.01));
 
-      final resolution = await resolver.resolve(forgedQr);
-      expect(resolution, isNotNull);
-      expect(resolution!.product.price, 25000.0); // MUST use catalog price
-    });
+        final resolution = await resolver.resolve(forgedQr);
+        expect(resolution, isNotNull);
+        expect(resolution!.product.price, 25000.0); // MUST use catalog price
+      },
+    );
 
-    test('4. Forged pack size in QR payload is ignored in favor of catalog pack size', () async {
-      final resolver = ProductScanResolver(
-        _FakeProductRepository([catalogProduct]),
-      );
-      const builder = ProductQrPayloadBuilder();
-      // QR contains forged pack size 100 instead of 1
-      final forgedQr = builder.build(
-        catalogProduct.copyWith(packSize: 100),
-      );
+    test(
+      '4. Forged pack size in QR payload is ignored in favor of catalog pack size',
+      () async {
+        final resolver = ProductScanResolver(
+          _FakeProductRepository([catalogProduct]),
+        );
+        const builder = ProductQrPayloadBuilder();
+        // QR contains forged pack size 100 instead of 1
+        final forgedQr = builder.build(catalogProduct.copyWith(packSize: 100));
 
-      final resolution = await resolver.resolve(forgedQr);
-      expect(resolution, isNotNull);
-      expect(resolution!.product.packSize, 1); // MUST use catalog pack size
-    });
+        final resolution = await resolver.resolve(forgedQr);
+        expect(resolution, isNotNull);
+        expect(resolution!.product.packSize, 1); // MUST use catalog pack size
+      },
+    );
 
-    test('5. Forged item code in QR payload is ignored in favor of catalog item code', () async {
-      final resolver = ProductScanResolver(
-        _FakeProductRepository([catalogProduct]),
-      );
-      // Legacy JSON QR payload with valid catalog ID (125) but forged itemCode ("FORGED-99")
-      const forgedQrWithCatalogId =
-          '{"v":1,"t":"product","id":125,"name":"عباية سوداء","itemCode":"FORGED-99","barcode":"AB-001","price":25000,"packSize":1}';
+    test(
+      '5. Forged item code in QR payload is ignored in favor of catalog item code',
+      () async {
+        final resolver = ProductScanResolver(
+          _FakeProductRepository([catalogProduct]),
+        );
+        // Legacy JSON QR payload with valid catalog ID (125) but forged itemCode ("FORGED-99")
+        const forgedQrWithCatalogId =
+            '{"v":1,"t":"product","id":125,"name":"عباية سوداء","itemCode":"FORGED-99","barcode":"AB-001","price":25000,"packSize":1}';
 
-      final resolution = await resolver.resolve(forgedQrWithCatalogId);
-      expect(resolution, isNotNull);
-      expect(resolution!.product.itemCode, 'AB-001'); // MUST use catalog itemCode ('AB-001'), not FORGED-99
-    });
+        final resolution = await resolver.resolve(forgedQrWithCatalogId);
+        expect(resolution, isNotNull);
+        expect(
+          resolution!.product.itemCode,
+          'AB-001',
+        ); // MUST use catalog itemCode ('AB-001'), not FORGED-99
+      },
+    );
 
-    test('6. Unknown product QR is rejected and returns null (unresolved)', () async {
-      final resolver = ProductScanResolver(_FakeProductRepository(const []));
-      const builder = ProductQrPayloadBuilder();
-      // Product not present in catalog
-      final unknownQr = builder.build(
-        Product(
-          id: 9999,
-          uuid: '00000000-0000-4000-8000-000000009999',
-          itemCode: 'UNKNOWN-999',
-          name: 'منتج غير معروف في الكتالوج',
-          packSize: 1,
-          price: 500,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+    test(
+      '6. Unknown product QR is rejected and returns null (unresolved)',
+      () async {
+        final resolver = ProductScanResolver(_FakeProductRepository(const []));
+        const builder = ProductQrPayloadBuilder();
+        // Product not present in catalog
+        final unknownQr = builder.build(
+          Product(
+            id: 9999,
+            uuid: '00000000-0000-4000-8000-000000009999',
+            itemCode: 'UNKNOWN-999',
+            name: 'منتج غير معروف في الكتالوج',
+            packSize: 1,
+            price: 500,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
 
-      final resolution = await resolver.resolve(unknownQr);
-      // MUST return null, blocking creation of untrusted product from QR
-      expect(resolution, isNull);
-    });
+        final resolution = await resolver.resolve(unknownQr);
+        // MUST return null, blocking creation of untrusted product from QR
+        expect(resolution, isNull);
+      },
+    );
 
-    test('7. Manipulating QR payload cannot create a trusted Product entity', () async {
-      final resolver = ProductScanResolver(_FakeProductRepository(const []));
-      const legacyForgedJson =
-          '{"v":1,"t":"product","id":888,"name":"منتج مزور بالكامل","itemCode":"FORGED-01","price":1.0,"packSize":10}';
+    test(
+      '7. Manipulating QR payload cannot create a trusted Product entity',
+      () async {
+        final resolver = ProductScanResolver(_FakeProductRepository(const []));
+        const legacyForgedJson =
+            '{"v":1,"t":"product","id":888,"name":"منتج مزور بالكامل","itemCode":"FORGED-01","price":1.0,"packSize":10}';
 
-      final resolution = await resolver.resolve(legacyForgedJson);
-      expect(resolution, isNull);
-    });
+        final resolution = await resolver.resolve(legacyForgedJson);
+        expect(resolution, isNull);
+      },
+    );
 
-    test('8. Offline mode still uses trusted local catalog (no fallback to untrusted payload)', () async {
-      final resolver = ProductScanResolver(
-        _FakeProductRepository([catalogProduct]),
-      );
+    test(
+      '8. Offline mode still uses trusted local catalog (no fallback to untrusted payload)',
+      () async {
+        final resolver = ProductScanResolver(
+          _FakeProductRepository([catalogProduct]),
+        );
 
-      // Offline scanning plain barcode resolves from trusted local DB
-      final plainBarcodeRes = await resolver.resolve('AB-001');
-      expect(plainBarcodeRes, isNotNull);
-      expect(plainBarcodeRes!.product.name, 'عباية سوداء');
+        // Offline scanning plain barcode resolves from trusted local DB
+        final plainBarcodeRes = await resolver.resolve('AB-001');
+        expect(plainBarcodeRes, isNotNull);
+        expect(plainBarcodeRes!.product.name, 'عباية سوداء');
 
-      // Offline scanning non-existent product barcode returns null
-      final missingBarcodeRes = await resolver.resolve('NON-EXISTENT-BARCODE');
-      expect(missingBarcodeRes, isNull);
-    });
+        // Offline scanning non-existent product barcode returns null
+        final missingBarcodeRes = await resolver.resolve(
+          'NON-EXISTENT-BARCODE',
+        );
+        expect(missingBarcodeRes, isNull);
+      },
+    );
   });
 }

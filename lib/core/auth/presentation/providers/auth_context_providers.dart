@@ -42,19 +42,21 @@ final authorizationContextProvider = Provider<AuthorizationContext>((ref) {
   }
 
   final companyId = session.currentCompanyId ?? '';
-  
+
   // Watch entitlement for the active company
   final entitlementAsync = ref.watch(currentEntitlementProvider);
-  final entitlement = entitlementAsync.value ?? Entitlement.freeLocal(companyId);
+  final entitlement =
+      entitlementAsync.value ?? Entitlement.freeLocal(companyId);
 
   final mode = authState.isRemoteSession
       ? AuthenticationMode.sync
       : AuthenticationMode.local;
 
   // Resolve offline expiry limits using the grace policy.
-  final lastVerified = authState.offlineAuthorizationSnapshot?.lastServerAuthenticatedAt;
-  final expiresAt = lastVerified != null 
-      ? authState.offlineAuthorizationSnapshot?.expiresAt() 
+  final lastVerified =
+      authState.offlineAuthorizationSnapshot?.lastServerAuthenticatedAt;
+  final expiresAt = lastVerified != null
+      ? authState.offlineAuthorizationSnapshot?.expiresAt()
       : null;
 
   // Clock integrity evaluation
@@ -62,7 +64,8 @@ final authorizationContextProvider = Provider<AuthorizationContext>((ref) {
   final isTimeTrusted = clockState != ClockIntegrityState.tampered;
   var isOfflineGraceActive = true;
 
-  final isPremium = entitlement.tier == EntitlementTier.premium ||
+  final isPremium =
+      entitlement.tier == EntitlementTier.premium ||
       entitlement.tier == EntitlementTier.enterprise;
 
   if (isPremium) {
@@ -77,8 +80,8 @@ final authorizationContextProvider = Provider<AuthorizationContext>((ref) {
     }
   }
 
-  final requiresReverification = clockState == ClockIntegrityState.tampered ||
-      !isOfflineGraceActive;
+  final requiresReverification =
+      clockState == ClockIntegrityState.tampered || !isOfflineGraceActive;
 
   return AuthorizationContext.fromSession(
     session: session,
@@ -86,7 +89,8 @@ final authorizationContextProvider = Provider<AuthorizationContext>((ref) {
     mode: mode,
     offlineSince: authState.isRemoteSession ? lastVerified : null,
     expiresAt: expiresAt,
-    authVersion: authState.offlineAuthorizationSnapshot?.authorizationVersion ?? 1,
+    authVersion:
+        authState.offlineAuthorizationSnapshot?.authorizationVersion ?? 1,
     temporalTrustState: clockState.name,
     isOfflineGraceActive: isOfflineGraceActive,
     requiresReverification: requiresReverification,

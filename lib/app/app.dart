@@ -14,6 +14,7 @@ import '../core/widgets/app_snackbar.dart';
 import '../core/widgets/app_update_gate.dart';
 import '../core/widgets/loading_overlay.dart';
 import '../modules/app_lock/presentation/providers/app_lock_providers.dart';
+import '../modules/app_lock/presentation/widgets/app_lock_gate_barrier.dart';
 import '../core/auth/presentation/providers/auth_state_core.dart';
 import 'localization/app_localizations.dart';
 import 'notifications/presentation/providers/notifications_provider.dart';
@@ -57,14 +58,12 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         ref.read(appLockControllerProvider.notifier).onAppResumed();
         final entitlement = ref.read(entitlementServiceProvider);
         final auth = ref.read(authStateProvider);
-        if (entitlement.hasCapability(EntitlementCapability.sync) && auth.canUseRemoteSync) {
+        if (entitlement.hasCapability(EntitlementCapability.sync) &&
+            auth.canUseRemoteSync) {
           final syncManager = ref.read(syncManagerProvider);
           if (syncManager.isEnabled && !syncManager.overview.isSyncing) {
             unawaited(
-              syncManager.syncNow(
-                trigger: SyncPassTrigger.auto,
-                notify: false,
-              ),
+              syncManager.syncNow(trigger: SyncPassTrigger.auto, notify: false),
             );
           }
         }
@@ -139,7 +138,8 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         unawaited(
           notifications.showWarning(
             title: 'Synchronization Paused',
-            message: 'Temporal authorization check failed. Verify device clock.',
+            message:
+                'Temporal authorization check failed. Verify device clock.',
             category: NotificationCategory.sync,
           ),
         );
@@ -189,10 +189,10 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) {
-        return LoadingOverlayHost(
-          child: NotificationToastHost(
-            child: AppUpdateGate(
-              child: child ?? const SizedBox.shrink(),
+        return AppLockGateBarrier(
+          child: LoadingOverlayHost(
+            child: NotificationToastHost(
+              child: AppUpdateGate(child: child ?? const SizedBox.shrink()),
             ),
           ),
         );

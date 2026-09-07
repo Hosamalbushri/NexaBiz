@@ -30,7 +30,8 @@ class ResolutionResult {
   /// Descriptive error explanation if resolution failed or was ambiguous.
   final String? errorMessage;
 
-  bool get isResolved => status == ResolutionStatus.existing && resolvedId != null;
+  bool get isResolved =>
+      status == ResolutionStatus.existing && resolvedId != null;
   bool get isAmbiguous => status == ResolutionStatus.ambiguous;
   bool get isNotFound => status == ResolutionStatus.notFound;
   bool get isInvalid => status == ResolutionStatus.invalid;

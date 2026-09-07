@@ -51,21 +51,18 @@ class JournalSourceCategoryResolver {
       'sales' ||
       'sale_invoice' ||
       'sales_invoice' ||
-      'sale_return' =>
-        JournalSourceCategory.sales,
+      'sale_return' => JournalSourceCategory.sales,
       'stock_receipt' ||
       'stock_issue' ||
       'stock_transfer' ||
       'inventory' ||
-      'stock' =>
-        JournalSourceCategory.inventory,
+      'stock' => JournalSourceCategory.inventory,
       'receipt' ||
       'payment' ||
       'transfer' ||
       'currency_exchange' ||
       'cash_register' ||
-      'rp' =>
-        JournalSourceCategory.receiptsPayments,
+      'rp' => JournalSourceCategory.receiptsPayments,
       'opening_balance' || 'opening' => JournalSourceCategory.opening,
       'period_closing' || 'closing' => JournalSourceCategory.closing,
       'manual' || 'journal_manual' => JournalSourceCategory.manual,

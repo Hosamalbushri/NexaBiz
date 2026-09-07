@@ -51,10 +51,14 @@ class CashRegister {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  bool get isLinked => accountingAccountId != null && accountingAccountId!.trim().isNotEmpty;
+  bool get isLinked =>
+      accountingAccountId != null && accountingAccountId!.trim().isNotEmpty;
 
   /// Evaluates accounting readiness given the linked account (if any).
-  CashRegisterAccountingStatus evaluateStatus(Account? linkedAccount, {String? targetCompanyId}) {
+  CashRegisterAccountingStatus evaluateStatus(
+    Account? linkedAccount, {
+    String? targetCompanyId,
+  }) {
     if (!isLinked) {
       return CashRegisterAccountingStatus.notLinked;
     }

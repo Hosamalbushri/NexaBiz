@@ -66,7 +66,9 @@ class AppBootstrapState {
       (status == AppBootstrapStatus.ready && isSystemScope);
   bool get isAuthenticatedCompanyScope =>
       status == AppBootstrapStatus.authenticatedCompanyScope ||
-      (status == AppBootstrapStatus.ready && !isSystemScope && activeCompanyId != null);
+      (status == AppBootstrapStatus.ready &&
+          !isSystemScope &&
+          activeCompanyId != null);
   bool get isUnauthenticated => status == AppBootstrapStatus.unauthenticated;
   bool get isReady =>
       status == AppBootstrapStatus.ready ||
@@ -112,12 +114,12 @@ class AppBootstrapState {
 /// - AppBootstrapCoordinator: Manages state machine transitions without persisting runtime status.
 class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
   AppBootstrapCoordinator(this._ref)
-      : super(
-          const AppBootstrapState(
-            status: AppBootstrapStatus.initializing,
-            stageDetails: 'Starting application bootstrap',
-          ),
-        ) {
+    : super(
+        const AppBootstrapState(
+          status: AppBootstrapStatus.initializing,
+          stageDetails: 'Starting application bootstrap',
+        ),
+      ) {
     _listenToAuthChanges();
   }
 
@@ -180,7 +182,11 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
       // 3. Restore Session for Initialized System
       await _restoreSession();
     } catch (e, stack) {
-      AppErrorLog.record(e, stack, source: 'AppBootstrapCoordinator.startBootstrap');
+      AppErrorLog.record(
+        e,
+        stack,
+        source: 'AppBootstrapCoordinator.startBootstrap',
+      );
       if (!mounted) return;
       state = AppBootstrapState(
         status: AppBootstrapStatus.error,
@@ -215,11 +221,15 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
 
     try {
       final syncEnabled = await SettingsRepository().loadSyncEnabled();
-      await _ref.read(authStateProvider.notifier).bootstrap(
-            preferRemote: syncEnabled,
-          );
+      await _ref
+          .read(authStateProvider.notifier)
+          .bootstrap(preferRemote: syncEnabled);
     } catch (e, stack) {
-      AppErrorLog.record(e, stack, source: 'AppBootstrapCoordinator._restoreSession');
+      AppErrorLog.record(
+        e,
+        stack,
+        source: 'AppBootstrapCoordinator._restoreSession',
+      );
     }
 
     // Process queued auth events or read current state
@@ -251,8 +261,8 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
       final status = hasActiveCompany
           ? AppBootstrapStatus.authenticatedCompanyScope
           : (isSystemAdmin
-              ? AppBootstrapStatus.authenticatedSystemScope
-              : AppBootstrapStatus.ready);
+                ? AppBootstrapStatus.authenticatedSystemScope
+                : AppBootstrapStatus.ready);
 
       state = AppBootstrapState(
         status: status,
@@ -261,8 +271,8 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
         stageDetails: hasActiveCompany
             ? 'Company Scope ready ($activeCompanyId)'
             : (isSystemAdmin
-                ? 'System Scope ready (System Admin)'
-                : 'Company selection required'),
+                  ? 'System Scope ready (System Admin)'
+                  : 'Company selection required'),
       );
     }
   }
@@ -276,7 +286,7 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
 /// Provider for watching/reading Phase 2 bootstrap coordinator state.
 final appBootstrapCoordinatorProvider =
     StateNotifierProvider<AppBootstrapCoordinator, AppBootstrapState>((ref) {
-  final coordinator = AppBootstrapCoordinator(ref);
-  coordinator.startBootstrap();
-  return coordinator;
-});
+      final coordinator = AppBootstrapCoordinator(ref);
+      coordinator.startBootstrap();
+      return coordinator;
+    });

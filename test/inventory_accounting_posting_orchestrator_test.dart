@@ -116,144 +116,158 @@ void main() {
   });
 
   group('Unified Posting Engine & Direct Unpost Journal Deletion', () {
-    test('posting receipt creates 1 journal entry and updates inventory status', () async {
-      final receiptId = generateUuidV4();
-      final lineId = generateUuidV4();
-      final now = DateTime.now().millisecondsSinceEpoch;
+    test(
+      'posting receipt creates 1 journal entry and updates inventory status',
+      () async {
+        final receiptId = generateUuidV4();
+        final lineId = generateUuidV4();
+        final now = DateTime.now().millisecondsSinceEpoch;
 
-      final receipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: 'REC-1001',
-        receiptDate: DateTime.utc(2026, 8, 28),
-        supplier: null,
-        lines: [
-          StockMovementLine(
-            id: lineId,
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-A',
-            itemName: 'Item A',
-            quantity: 10,
-            unitCost: 100,
-            totalCost: 1000,
-          ),
-        ],
-      );
-
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: lineId,
-          movementUuid: receiptId,
-          movementType: 'receipt',
-          itemCode: 'ITEM-A',
-          itemName: 'Item A',
-          quantity: const Value(10.0),
-          unitCost: const Value(100.0),
-          totalCost: const Value(1000.0),
-        ),
-      );
-
-      await inventoryDb.into(inventoryDb.stockReceipts).insert(
-        StockReceiptsCompanion.insert(
-          uuid: receiptId,
+        final receipt = StockReceipt(
+          id: receiptId,
           receiptNumber: 'REC-1001',
-          receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
-          status: const Value('draft'),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+          receiptDate: DateTime.utc(2026, 8, 28),
+          supplier: null,
+          lines: [
+            StockMovementLine(
+              id: lineId,
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-A',
+              itemName: 'Item A',
+              quantity: 10,
+              unitCost: 100,
+              totalCost: 1000,
+            ),
+          ],
+        );
 
-      final result = await orchestrator.postReceipt(receipt: receipt);
-      expect(result, isA<OrchestrationSuccess>());
+        await inventoryDb
+            .into(inventoryDb.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: lineId,
+                movementUuid: receiptId,
+                movementType: 'receipt',
+                itemCode: 'ITEM-A',
+                itemName: 'Item A',
+                quantity: const Value(10.0),
+                unitCost: const Value(100.0),
+                totalCost: const Value(1000.0),
+              ),
+            );
 
-      final journalEntry = await journalRepo.findBySource(
-        sourceType: 'stock_receipt',
-        sourceId: receiptId,
-      );
-      expect(journalEntry, isNotNull);
-      expect(journalEntry!.voucherNumber, 'REC-1001');
-      expect(journalEntry.isPosted, isTrue);
+        await inventoryDb
+            .into(inventoryDb.stockReceipts)
+            .insert(
+              StockReceiptsCompanion.insert(
+                uuid: receiptId,
+                receiptNumber: 'REC-1001',
+                receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
+                status: const Value('draft'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
 
-      final allEntries = await journalRepo.listHeaders();
-      expect(allEntries.length, 1);
-    });
+        final result = await orchestrator.postReceipt(receipt: receipt);
+        expect(result, isA<OrchestrationSuccess>());
 
-    test('unposting receipt deletes journal entry directly instead of reversal entry', () async {
-      final receiptId = generateUuidV4();
-      final lineId = generateUuidV4();
-      final now = DateTime.now().millisecondsSinceEpoch;
+        final journalEntry = await journalRepo.findBySource(
+          sourceType: 'stock_receipt',
+          sourceId: receiptId,
+        );
+        expect(journalEntry, isNotNull);
+        expect(journalEntry!.voucherNumber, 'REC-1001');
+        expect(journalEntry.isPosted, isTrue);
 
-      final receipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: 'REC-1002',
-        receiptDate: DateTime.utc(2026, 8, 28),
-        supplier: null,
-        lines: [
-          StockMovementLine(
-            id: lineId,
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-B',
-            itemName: 'Item B',
-            quantity: 5,
-            unitCost: 200,
-            totalCost: 1000,
-          ),
-        ],
-      );
+        final allEntries = await journalRepo.listHeaders();
+        expect(allEntries.length, 1);
+      },
+    );
 
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: lineId,
-          movementUuid: receiptId,
-          movementType: 'receipt',
-          itemCode: 'ITEM-B',
-          itemName: 'Item B',
-          quantity: const Value(5.0),
-          unitCost: const Value(200.0),
-          totalCost: const Value(1000.0),
-        ),
-      );
+    test(
+      'unposting receipt deletes journal entry directly instead of reversal entry',
+      () async {
+        final receiptId = generateUuidV4();
+        final lineId = generateUuidV4();
+        final now = DateTime.now().millisecondsSinceEpoch;
 
-      await inventoryDb.into(inventoryDb.stockReceipts).insert(
-        StockReceiptsCompanion.insert(
-          uuid: receiptId,
+        final receipt = StockReceipt(
+          id: receiptId,
           receiptNumber: 'REC-1002',
-          receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
-          status: const Value('draft'),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+          receiptDate: DateTime.utc(2026, 8, 28),
+          supplier: null,
+          lines: [
+            StockMovementLine(
+              id: lineId,
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-B',
+              itemName: 'Item B',
+              quantity: 5,
+              unitCost: 200,
+              totalCost: 1000,
+            ),
+          ],
+        );
 
-      // 1. Post
-      await orchestrator.postReceipt(receipt: receipt);
+        await inventoryDb
+            .into(inventoryDb.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: lineId,
+                movementUuid: receiptId,
+                movementType: 'receipt',
+                itemCode: 'ITEM-B',
+                itemName: 'Item B',
+                quantity: const Value(5.0),
+                unitCost: const Value(200.0),
+                totalCost: const Value(1000.0),
+              ),
+            );
 
-      final postedEntry = await journalRepo.findBySource(
-        sourceType: 'stock_receipt',
-        sourceId: receiptId,
-      );
-      expect(postedEntry, isNotNull);
+        await inventoryDb
+            .into(inventoryDb.stockReceipts)
+            .insert(
+              StockReceiptsCompanion.insert(
+                uuid: receiptId,
+                receiptNumber: 'REC-1002',
+                receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
+                status: const Value('draft'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
 
-      // 2. Unpost
-      final unpostResult = await orchestrator.unpostReceipt(receipt: receipt);
-      expect(unpostResult, isA<OrchestrationSuccess>());
+        // 1. Post
+        await orchestrator.postReceipt(receipt: receipt);
 
-      // 3. Verify original entry is no longer returned as active source entry
-      final activeEntry = await journalRepo.findBySource(
-        sourceType: 'stock_receipt',
-        sourceId: receiptId,
-      );
-      expect(activeEntry, isNull);
+        final postedEntry = await journalRepo.findBySource(
+          sourceType: 'stock_receipt',
+          sourceId: receiptId,
+        );
+        expect(postedEntry, isNotNull);
 
-      // Verify reversal entry exists in audit trail
-      final reversalEntry = await journalRepo.findBySource(
-        sourceType: JournalPostingService.reverseSourceType,
-        sourceId: postedEntry!.uuid,
-      );
-      expect(reversalEntry, isNotNull);
-    });
+        // 2. Unpost
+        final unpostResult = await orchestrator.unpostReceipt(receipt: receipt);
+        expect(unpostResult, isA<OrchestrationSuccess>());
+
+        // 3. Verify original entry is no longer returned as active source entry
+        final activeEntry = await journalRepo.findBySource(
+          sourceType: 'stock_receipt',
+          sourceId: receiptId,
+        );
+        expect(activeEntry, isNull);
+
+        // Verify reversal entry exists in audit trail
+        final reversalEntry = await journalRepo.findBySource(
+          sourceType: JournalPostingService.reverseSourceType,
+          sourceId: postedEntry!.uuid,
+        );
+        expect(reversalEntry, isNotNull);
+      },
+    );
 
     test('unposting stock issue deletes journal entry directly', () async {
       final receiptId = generateUuidV4();
@@ -282,29 +296,33 @@ void main() {
         ],
       );
 
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: rLineId,
-          movementUuid: receiptId,
-          movementType: 'receipt',
-          itemCode: 'ITEM-C',
-          itemName: 'Item C',
-          quantity: const Value(10.0),
-          unitCost: const Value(50.0),
-          totalCost: const Value(500.0),
-        ),
-      );
+      await inventoryDb
+          .into(inventoryDb.stockMovementLines)
+          .insert(
+            StockMovementLinesCompanion.insert(
+              uuid: rLineId,
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-C',
+              itemName: 'Item C',
+              quantity: const Value(10.0),
+              unitCost: const Value(50.0),
+              totalCost: const Value(500.0),
+            ),
+          );
 
-      await inventoryDb.into(inventoryDb.stockReceipts).insert(
-        StockReceiptsCompanion.insert(
-          uuid: receiptId,
-          receiptNumber: 'REC-2001',
-          receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
-          status: const Value('draft'),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+      await inventoryDb
+          .into(inventoryDb.stockReceipts)
+          .insert(
+            StockReceiptsCompanion.insert(
+              uuid: receiptId,
+              receiptNumber: 'REC-2001',
+              receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
+              status: const Value('draft'),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
 
       await orchestrator.postReceipt(receipt: receipt);
 
@@ -327,29 +345,33 @@ void main() {
         ],
       );
 
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: iLineId,
-          movementUuid: issueId,
-          movementType: 'issue',
-          itemCode: 'ITEM-C',
-          itemName: 'Item C',
-          quantity: const Value(3.0),
-          unitCost: const Value(50.0),
-          totalCost: const Value(150.0),
-        ),
-      );
+      await inventoryDb
+          .into(inventoryDb.stockMovementLines)
+          .insert(
+            StockMovementLinesCompanion.insert(
+              uuid: iLineId,
+              movementUuid: issueId,
+              movementType: 'issue',
+              itemCode: 'ITEM-C',
+              itemName: 'Item C',
+              quantity: const Value(3.0),
+              unitCost: const Value(50.0),
+              totalCost: const Value(150.0),
+            ),
+          );
 
-      await inventoryDb.into(inventoryDb.stockIssues).insert(
-        StockIssuesCompanion.insert(
-          uuid: issueId,
-          issueNumber: 'ISS-1001',
-          issueDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
-          status: const Value('draft'),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+      await inventoryDb
+          .into(inventoryDb.stockIssues)
+          .insert(
+            StockIssuesCompanion.insert(
+              uuid: issueId,
+              issueNumber: 'ISS-1001',
+              issueDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
+              status: const Value('draft'),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
 
       // Post Issue
       final postIssueResult = await orchestrator.postIssue(issue: issue);
@@ -378,294 +400,323 @@ void main() {
       expect(reversalIssueJournal, isNotNull);
     });
 
-    test('draft journal entry with isPosted = false is NOT saved into database', () async {
-      final draft = JournalEntryDraft(
-        entryDate: DateTime.utc(2026, 8, 28),
-        voucherNumber: 'DRAFT-001',
-        voucherType: 'قيد مسودة',
-        currencyCode: 'SAR',
-        description: 'تجربة قيد مسودة',
-        isPosted: false,
-        sourceType: 'test_draft',
-        sourceId: 'draft-123',
-        lines: [
-          JournalLineDraft(
-            accountUuid: systemAccountUuid('inventory'),
-            debit: 100,
-            credit: 0,
-            currencyCode: 'SAR',
-          ),
-          JournalLineDraft(
-            accountUuid: systemAccountUuid('accounts_payable'),
-            debit: 0,
-            credit: 100,
-            currencyCode: 'SAR',
-          ),
-        ],
-      );
+    test(
+      'draft journal entry with isPosted = false is NOT saved into database',
+      () async {
+        final draft = JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 28),
+          voucherNumber: 'DRAFT-001',
+          voucherType: 'قيد مسودة',
+          currencyCode: 'SAR',
+          description: 'تجربة قيد مسودة',
+          isPosted: false,
+          sourceType: 'test_draft',
+          sourceId: 'draft-123',
+          lines: [
+            JournalLineDraft(
+              accountUuid: systemAccountUuid('inventory'),
+              debit: 100,
+              credit: 0,
+              currencyCode: 'SAR',
+            ),
+            JournalLineDraft(
+              accountUuid: systemAccountUuid('accounts_payable'),
+              debit: 0,
+              credit: 100,
+              currencyCode: 'SAR',
+            ),
+          ],
+        );
 
-      final resultEntry = await journalRepo.post(draft);
-      expect(resultEntry.isPosted, isFalse);
+        final resultEntry = await journalRepo.post(draft);
+        expect(resultEntry.isPosted, isFalse);
 
-      final dbEntry = await journalRepo.findBySource(
-        sourceType: 'test_draft',
-        sourceId: 'draft-123',
-      );
-      expect(dbEntry, isNull);
+        final dbEntry = await journalRepo.findBySource(
+          sourceType: 'test_draft',
+          sourceId: 'draft-123',
+        );
+        expect(dbEntry, isNull);
 
-      final headers = await journalRepo.listHeaders();
-      expect(headers.isEmpty, isTrue);
-    });
+        final headers = await journalRepo.listHeaders();
+        expect(headers.isEmpty, isTrue);
+      },
+    );
 
-    test('posting receipt with custom currency propagates currencyCode to journal entry', () async {
-      final receiptId = generateUuidV4();
-      final lineId = generateUuidV4();
-      final now = DateTime.now().millisecondsSinceEpoch;
+    test(
+      'posting receipt with custom currency propagates currencyCode to journal entry',
+      () async {
+        final receiptId = generateUuidV4();
+        final lineId = generateUuidV4();
+        final now = DateTime.now().millisecondsSinceEpoch;
 
-      final receipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: 'REC-USD-1001',
-        receiptDate: DateTime.utc(2026, 8, 28),
-        currencyCode: 'USD',
-        exchangeRate: 3.75,
-        lines: [
-          StockMovementLine(
-            id: lineId,
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-USD',
-            itemName: 'Item USD',
-            quantity: 10,
-            unitCost: 20,
-            totalCost: 200,
-          ),
-        ],
-      );
-
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: lineId,
-          movementUuid: receiptId,
-          movementType: 'receipt',
-          itemCode: 'ITEM-USD',
-          itemName: 'Item USD',
-          quantity: const Value(10.0),
-          unitCost: const Value(20.0),
-          totalCost: const Value(200.0),
-        ),
-      );
-
-      await inventoryDb.into(inventoryDb.stockReceipts).insert(
-        StockReceiptsCompanion.insert(
-          uuid: receiptId,
+        final receipt = StockReceipt(
+          id: receiptId,
           receiptNumber: 'REC-USD-1001',
-          receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
-          currencyCode: const Value('USD'),
-          exchangeRate: const Value(3.75),
-          status: const Value('draft'),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+          receiptDate: DateTime.utc(2026, 8, 28),
+          currencyCode: 'USD',
+          exchangeRate: 3.75,
+          lines: [
+            StockMovementLine(
+              id: lineId,
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-USD',
+              itemName: 'Item USD',
+              quantity: 10,
+              unitCost: 20,
+              totalCost: 200,
+            ),
+          ],
+        );
 
-      final result = await orchestrator.postReceipt(receipt: receipt);
-      if (result is OrchestrationFailure) {
-        fail('Orchestration failed with reason: ${result.reason}');
-      }
-      expect(result, isA<OrchestrationSuccess>());
+        await inventoryDb
+            .into(inventoryDb.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: lineId,
+                movementUuid: receiptId,
+                movementType: 'receipt',
+                itemCode: 'ITEM-USD',
+                itemName: 'Item USD',
+                quantity: const Value(10.0),
+                unitCost: const Value(20.0),
+                totalCost: const Value(200.0),
+              ),
+            );
 
-      final entry = await journalRepo.findBySource(
-        sourceType: 'stock_receipt',
-        sourceId: receiptId,
-      );
+        await inventoryDb
+            .into(inventoryDb.stockReceipts)
+            .insert(
+              StockReceiptsCompanion.insert(
+                uuid: receiptId,
+                receiptNumber: 'REC-USD-1001',
+                receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
+                currencyCode: const Value('USD'),
+                exchangeRate: const Value(3.75),
+                status: const Value('draft'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
 
-      expect(entry, isNotNull);
-      expect(entry!.currencyCode, equals('USD'));
-      expect(entry.lines.length, equals(2));
-      expect(entry.lines.every((l) => l.currencyCode == 'USD'), isTrue);
+        final result = await orchestrator.postReceipt(receipt: receipt);
+        if (result is OrchestrationFailure) {
+          fail('Orchestration failed with reason: ${result.reason}');
+        }
+        expect(result, isA<OrchestrationSuccess>());
 
-      // Verify CostLayer is created in Base Currency (20 USD * 3.75 = 75 SAR/YER)
-      final layers = await inventoryDb.select(inventoryDb.inventoryCostLayers).get();
-      expect(layers.length, equals(1));
-      expect(layers.first.unitCost, equals(75.0)); // 20 * 3.75
-      expect(layers.first.totalCost, equals(750.0)); // 10 * 75
-    });
+        final entry = await journalRepo.findBySource(
+          sourceType: 'stock_receipt',
+          sourceId: receiptId,
+        );
 
-    test('posting sale invoice creates COGS journal entry in Base Currency', () async {
-      final saleId = generateUuidV4();
+        expect(entry, isNotNull);
+        expect(entry!.currencyCode, equals('USD'));
+        expect(entry.lines.length, equals(2));
+        expect(entry.lines.every((l) => l.currencyCode == 'USD'), isTrue);
 
-      final sale = Sale(
-        id: 1,
-        uuid: saleId,
-        saleNumber: 'INV-USD-999',
-        saleDate: DateTime.utc(2026, 8, 28),
-        customerAccountId: null,
-        settlementType: SaleSettlementType.cash,
-        currencyCode: 'USD',
-        baseCurrencyCode: 'YER',
-        exchangeRate: 530.0,
-        subtotal: 100.0,
-        itemDiscountTotal: 0.0,
-        discountType: DiscountType.fixed,
-        discountValue: 0.0,
-        discountAmount: 0.0,
-        taxRate: 0.0,
-        taxAmount: 0.0,
-        total: 100.0,
-        paidAmount: 100.0,
-        remainingAmount: 0.0,
-        paymentStatus: PaymentStatus.paid,
-        paymentMethod: PaymentMethod.cash,
-        saleStatus: SaleStatus.posted,
-        dataSource: SaleDataSource.local,
-        createdAt: DateTime.utc(2026, 8, 28),
-        updatedAt: DateTime.utc(2026, 8, 28),
-        items: [],
-        payments: [],
-      );
+        // Verify CostLayer is created in Base Currency (20 USD * 3.75 = 75 SAR/YER)
+        final layers = await inventoryDb
+            .select(inventoryDb.inventoryCostLayers)
+            .get();
+        expect(layers.length, equals(1));
+        expect(layers.first.unitCost, equals(75.0)); // 20 * 3.75
+        expect(layers.first.totalCost, equals(750.0)); // 10 * 75
+      },
+    );
 
-      final entryBuilder = AccountingEntryBuilder(
-        mappingResolver: AccountMappingResolverImpl(
-          accountRepository: accountRepo,
+    test(
+      'posting sale invoice creates COGS journal entry in Base Currency',
+      () async {
+        final saleId = generateUuidV4();
+
+        final sale = Sale(
+          id: 1,
+          uuid: saleId,
+          saleNumber: 'INV-USD-999',
+          saleDate: DateTime.utc(2026, 8, 28),
+          customerAccountId: null,
+          settlementType: SaleSettlementType.cash,
+          currencyCode: 'USD',
+          baseCurrencyCode: 'YER',
+          exchangeRate: 530.0,
+          subtotal: 100.0,
+          itemDiscountTotal: 0.0,
+          discountType: DiscountType.fixed,
+          discountValue: 0.0,
+          discountAmount: 0.0,
+          taxRate: 0.0,
+          taxAmount: 0.0,
+          total: 100.0,
+          paidAmount: 100.0,
+          remainingAmount: 0.0,
+          paymentStatus: PaymentStatus.paid,
+          paymentMethod: PaymentMethod.cash,
+          saleStatus: SaleStatus.posted,
+          dataSource: SaleDataSource.local,
+          createdAt: DateTime.utc(2026, 8, 28),
+          updatedAt: DateTime.utc(2026, 8, 28),
+          items: [],
+          payments: [],
+        );
+
+        final entryBuilder = AccountingEntryBuilder(
+          mappingResolver: AccountMappingResolverImpl(
+            accountRepository: accountRepo,
+            validationService: AccountValidationServiceImpl(accountRepo),
+          ),
           validationService: AccountValidationServiceImpl(accountRepo),
-        ),
-        validationService: AccountValidationServiceImpl(accountRepo),
-      );
+        );
 
-      final drafts = await entryBuilder.buildDraftsFromSaleInvoice(
-        sale: sale,
-        calculatedCogsCost: 45000.0, // COGS calculated in YER
-        isPosted: true,
-      );
+        final drafts = await entryBuilder.buildDraftsFromSaleInvoice(
+          sale: sale,
+          calculatedCogsCost: 45000.0, // COGS calculated in YER
+          isPosted: true,
+        );
 
-      expect(drafts.length, equals(2)); // Revenue entry + COGS entry
-      final cogsDraft = drafts.firstWhere((d) => d.sourceType == 'sale_cogs');
-      expect(cogsDraft.currencyCode, equals('YER'));
-      expect(cogsDraft.baseCurrencyCode, equals('YER'));
-      expect(cogsDraft.lines.every((l) => l.currencyCode == 'YER'), isTrue);
-      expect(cogsDraft.lines.every((l) => l.exchangeRateToBase == 1.0), isTrue);
-      expect(cogsDraft.lines.first.debit, equals(45000.0));
-    });
+        expect(drafts.length, equals(2)); // Revenue entry + COGS entry
+        final cogsDraft = drafts.firstWhere((d) => d.sourceType == 'sale_cogs');
+        expect(cogsDraft.currencyCode, equals('YER'));
+        expect(cogsDraft.baseCurrencyCode, equals('YER'));
+        expect(cogsDraft.lines.every((l) => l.currencyCode == 'YER'), isTrue);
+        expect(
+          cogsDraft.lines.every((l) => l.exchangeRateToBase == 1.0),
+          isTrue,
+        );
+        expect(cogsDraft.lines.first.debit, equals(45000.0));
+      },
+    );
 
-    test('postIssue calculates layer cost in Base Currency and posts journal in Base Currency', () async {
-      final receiptId = generateUuidV4();
-      final issueId = generateUuidV4();
-      final rLineId = generateUuidV4();
-      final iLineId = generateUuidV4();
-      final now = DateTime.now().millisecondsSinceEpoch;
+    test(
+      'postIssue calculates layer cost in Base Currency and posts journal in Base Currency',
+      () async {
+        final receiptId = generateUuidV4();
+        final issueId = generateUuidV4();
+        final rLineId = generateUuidV4();
+        final iLineId = generateUuidV4();
+        final now = DateTime.now().millisecondsSinceEpoch;
 
-      // 1. Seed USD receipt (10 items @ 10 USD, rate 530 => 5,300 YER unit cost)
-      final receipt = StockReceipt(
-        id: receiptId,
-        receiptNumber: 'REC-FX-10',
-        receiptDate: DateTime.utc(2026, 8, 28),
-        currencyCode: 'USD',
-        exchangeRate: 530.0,
-        lines: [
-          StockMovementLine(
-            id: rLineId,
-            movementUuid: receiptId,
-            movementType: 'receipt',
-            itemCode: 'ITEM-FX-1',
-            itemName: 'Item FX 1',
-            quantity: 10,
-            unitCost: 10,
-            totalCost: 100,
-          ),
-        ],
-      );
-
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: rLineId,
-          movementUuid: receiptId,
-          movementType: 'receipt',
-          itemCode: 'ITEM-FX-1',
-          itemName: 'Item FX 1',
-          quantity: const Value(10.0),
-          unitCost: const Value(10.0),
-          totalCost: const Value(100.0),
-        ),
-      );
-
-      await inventoryDb.into(inventoryDb.stockReceipts).insert(
-        StockReceiptsCompanion.insert(
-          uuid: receiptId,
+        // 1. Seed USD receipt (10 items @ 10 USD, rate 530 => 5,300 YER unit cost)
+        final receipt = StockReceipt(
+          id: receiptId,
           receiptNumber: 'REC-FX-10',
-          receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
-          currencyCode: const Value('USD'),
-          exchangeRate: const Value(530.0),
-          status: const Value('draft'),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+          receiptDate: DateTime.utc(2026, 8, 28),
+          currencyCode: 'USD',
+          exchangeRate: 530.0,
+          lines: [
+            StockMovementLine(
+              id: rLineId,
+              movementUuid: receiptId,
+              movementType: 'receipt',
+              itemCode: 'ITEM-FX-1',
+              itemName: 'Item FX 1',
+              quantity: 10,
+              unitCost: 10,
+              totalCost: 100,
+            ),
+          ],
+        );
 
-      await orchestrator.postReceipt(receipt: receipt);
+        await inventoryDb
+            .into(inventoryDb.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: rLineId,
+                movementUuid: receiptId,
+                movementType: 'receipt',
+                itemCode: 'ITEM-FX-1',
+                itemName: 'Item FX 1',
+                quantity: const Value(10.0),
+                unitCost: const Value(10.0),
+                totalCost: const Value(100.0),
+              ),
+            );
 
-      // 2. Issue 2 items via Stock Issue (issue document in USD, rate 530)
-      final issue = StockIssue(
-        id: issueId,
-        issueNumber: 'ISS-FX-20',
-        issueDate: DateTime.utc(2026, 8, 28),
-        currencyCode: 'USD',
-        exchangeRate: 530.0,
-        lines: [
-          StockMovementLine(
-            id: iLineId,
-            movementUuid: issueId,
-            movementType: 'issue',
-            itemCode: 'ITEM-FX-1',
-            itemName: 'Item FX 1',
-            quantity: 2,
-            unitCost: 10,
-            totalCost: 20,
-          ),
-        ],
-      );
+        await inventoryDb
+            .into(inventoryDb.stockReceipts)
+            .insert(
+              StockReceiptsCompanion.insert(
+                uuid: receiptId,
+                receiptNumber: 'REC-FX-10',
+                receiptDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
+                currencyCode: const Value('USD'),
+                exchangeRate: const Value(530.0),
+                status: const Value('draft'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
 
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: iLineId,
-          movementUuid: issueId,
-          movementType: 'issue',
-          itemCode: 'ITEM-FX-1',
-          itemName: 'Item FX 1',
-          quantity: const Value(2.0),
-          unitCost: const Value(10.0),
-          totalCost: const Value(20.0),
-        ),
-      );
+        await orchestrator.postReceipt(receipt: receipt);
 
-      await inventoryDb.into(inventoryDb.stockIssues).insert(
-        StockIssuesCompanion.insert(
-          uuid: issueId,
+        // 2. Issue 2 items via Stock Issue (issue document in USD, rate 530)
+        final issue = StockIssue(
+          id: issueId,
           issueNumber: 'ISS-FX-20',
-          issueDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
-          currencyCode: const Value('USD'),
-          exchangeRate: const Value(530.0),
-          status: const Value('draft'),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+          issueDate: DateTime.utc(2026, 8, 28),
+          currencyCode: 'USD',
+          exchangeRate: 530.0,
+          lines: [
+            StockMovementLine(
+              id: iLineId,
+              movementUuid: issueId,
+              movementType: 'issue',
+              itemCode: 'ITEM-FX-1',
+              itemName: 'Item FX 1',
+              quantity: 2,
+              unitCost: 10,
+              totalCost: 20,
+            ),
+          ],
+        );
 
-      final issueResult = await orchestrator.postIssue(issue: issue);
-      expect(issueResult, isA<OrchestrationSuccess>());
+        await inventoryDb
+            .into(inventoryDb.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: iLineId,
+                movementUuid: issueId,
+                movementType: 'issue',
+                itemCode: 'ITEM-FX-1',
+                itemName: 'Item FX 1',
+                quantity: const Value(2.0),
+                unitCost: const Value(10.0),
+                totalCost: const Value(20.0),
+              ),
+            );
 
-      // 3. Verify Stock Issue journal entry is created in Base Currency (YER) with amount = 2 * 5,300 = 10,600 YER
-      final issueJournal = await journalRepo.findBySource(
-        sourceType: 'stock_issue',
-        sourceId: issueId,
-      );
+        await inventoryDb
+            .into(inventoryDb.stockIssues)
+            .insert(
+              StockIssuesCompanion.insert(
+                uuid: issueId,
+                issueNumber: 'ISS-FX-20',
+                issueDate: DateTime.utc(2026, 8, 28).millisecondsSinceEpoch,
+                currencyCode: const Value('USD'),
+                exchangeRate: const Value(530.0),
+                status: const Value('draft'),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
 
-      expect(issueJournal, isNotNull);
-      expect(issueJournal!.currencyCode, equals('YER'));
-      expect(issueJournal.lines.length, equals(2));
-      expect(issueJournal.lines.first.debit, equals(10600.0));
-      expect(issueJournal.lines.first.currencyCode, equals('YER'));
-      expect(issueJournal.lines.first.exchangeRateToBase, equals(1.0));
-    });
+        final issueResult = await orchestrator.postIssue(issue: issue);
+        expect(issueResult, isA<OrchestrationSuccess>());
+
+        // 3. Verify Stock Issue journal entry is created in Base Currency (YER) with amount = 2 * 5,300 = 10,600 YER
+        final issueJournal = await journalRepo.findBySource(
+          sourceType: 'stock_issue',
+          sourceId: issueId,
+        );
+
+        expect(issueJournal, isNotNull);
+        expect(issueJournal!.currencyCode, equals('YER'));
+        expect(issueJournal.lines.length, equals(2));
+        expect(issueJournal.lines.first.debit, equals(10600.0));
+        expect(issueJournal.lines.first.currencyCode, equals('YER'));
+        expect(issueJournal.lines.first.exchangeRateToBase, equals(1.0));
+      },
+    );
 
     test('saveReceipt and saveIssue reject zero-cost lines', () async {
       final zeroReceipt = StockReceipt(
@@ -686,7 +737,10 @@ void main() {
       );
 
       final repo = StockMovementsRepositoryImpl(db: inventoryDb);
-      expect(() => repo.saveReceipt(zeroReceipt), throwsA(isA<ArgumentError>()));
+      expect(
+        () => repo.saveReceipt(zeroReceipt),
+        throwsA(isA<ArgumentError>()),
+      );
 
       final zeroIssue = StockIssue(
         id: generateUuidV4(),
@@ -708,206 +762,232 @@ void main() {
       expect(() => repo.saveIssue(zeroIssue), throwsA(isA<ArgumentError>()));
     });
 
-    test('getItemCostValuation calculates cost from layers and falls back to non-zero price/unitCost', () async {
-      final costLayerService = CostLayerServiceImpl(db: inventoryDb);
+    test(
+      'getItemCostValuation calculates cost from layers and falls back to non-zero price/unitCost',
+      () async {
+        final costLayerService = CostLayerServiceImpl(db: inventoryDb);
 
-      // Create a layer of 10 units @ 450 YER
-      await costLayerService.createLayer(CostLayer(
-        id: generateUuidV4(),
-        itemCode: 'VALU-ITEM-1',
-        movementUuid: generateUuidV4(),
-        movementType: 'receipt',
-        receivedDate: DateTime.now(),
-        receivedQty: 10,
-        remainingQty: 10,
-        unitCost: 450,
-        totalCost: 4500,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
-
-      final resolvedLayerCost = await costLayerService.getItemCostValuation(
-        itemCode: 'VALU-ITEM-1',
-      );
-      expect(resolvedLayerCost, equals(450.0));
-
-      // Test fallback for item with no layers but has product unitCost/price
-      final productRepo = ProductRepositoryImpl(inventoryDb);
-      await productRepo.insert(const ProductDraft(
-        itemCode: 'VALU-ITEM-2',
-        name: 'Fallback Item',
-        packSize: 1,
-        price: 300,
-        unitCost: 250,
-      ));
-
-      final fallbackCost = await costLayerService.getItemCostValuation(
-        itemCode: 'VALU-ITEM-2',
-      );
-      expect(fallbackCost, equals(250.0));
-
-      // Test item with price > 0 but unitCost == 0 returns 0.0 (selling price is never used as cost)
-      await productRepo.insert(const ProductDraft(
-        itemCode: 'VALU-ITEM-3',
-        name: 'Price Only Item',
-        packSize: 1,
-        price: 500,
-        unitCost: 0,
-      ));
-
-      final zeroCost = await costLayerService.getItemCostValuation(
-        itemCode: 'VALU-ITEM-3',
-      );
-      expect(zeroCost, equals(0.0));
-    });
-
-    test('PostingCoordinatorImpl blocks posting if document lines have zero cost', () async {
-      final zeroReceiptId = generateUuidV4();
-      final zeroReceipt = StockReceipt(
-        id: zeroReceiptId,
-        receiptNumber: 'REC-ZERO-POST',
-        receiptDate: DateTime.now(),
-        warehouse: 'WH-MAIN',
-        lines: [
-          StockMovementLine(
-            movementUuid: zeroReceiptId,
+        // Create a layer of 10 units @ 450 YER
+        await costLayerService.createLayer(
+          CostLayer(
+            id: generateUuidV4(),
+            itemCode: 'VALU-ITEM-1',
+            movementUuid: generateUuidV4(),
             movementType: 'receipt',
-            itemCode: 'ZERO-ITEM-POST',
-            itemName: 'Zero Post Item',
-            quantity: 10,
+            receivedDate: DateTime.now(),
+            receivedQty: 10,
+            remainingQty: 10,
+            unitCost: 450,
+            totalCost: 4500,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+        final resolvedLayerCost = await costLayerService.getItemCostValuation(
+          itemCode: 'VALU-ITEM-1',
+        );
+        expect(resolvedLayerCost, equals(450.0));
+
+        // Test fallback for item with no layers but has product unitCost/price
+        final productRepo = ProductRepositoryImpl(inventoryDb);
+        await productRepo.insert(
+          const ProductDraft(
+            itemCode: 'VALU-ITEM-2',
+            name: 'Fallback Item',
+            packSize: 1,
+            price: 300,
+            unitCost: 250,
+          ),
+        );
+
+        final fallbackCost = await costLayerService.getItemCostValuation(
+          itemCode: 'VALU-ITEM-2',
+        );
+        expect(fallbackCost, equals(250.0));
+
+        // Test item with price > 0 but unitCost == 0 returns 0.0 (selling price is never used as cost)
+        await productRepo.insert(
+          const ProductDraft(
+            itemCode: 'VALU-ITEM-3',
+            name: 'Price Only Item',
+            packSize: 1,
+            price: 500,
             unitCost: 0,
-            totalCost: 0,
           ),
-        ],
-      );
+        );
 
-      await inventoryDb.into(inventoryDb.stockMovementLines).insert(
-        StockMovementLinesCompanion.insert(
-          uuid: generateUuidV4(),
-          movementUuid: zeroReceiptId,
-          movementType: 'receipt',
-          itemCode: 'ZERO-ITEM-POST',
-          itemName: 'Zero Post Item',
-          quantity: const Value(10.0),
-          unitCost: const Value(0.0),
-          totalCost: const Value(0.0),
-        ),
-      );
+        final zeroCost = await costLayerService.getItemCostValuation(
+          itemCode: 'VALU-ITEM-3',
+        );
+        expect(zeroCost, equals(0.0));
+      },
+    );
 
-      final postingCoordinator = PostingCoordinatorImpl(
-        db: inventoryDb,
-        stockValidationService: StockValidationServiceImpl(inventoryDb),
-        dependencyDetector: InventoryDependencyDetectorImpl(inventoryDb),
-        postingEngine: PostingEngineImpl(inventoryDb, CostLayerServiceImpl(db: inventoryDb)),
-        permissionGuard: const AllowAllPermissionGuard(),
-      );
+    test(
+      'PostingCoordinatorImpl blocks posting if document lines have zero cost',
+      () async {
+        final zeroReceiptId = generateUuidV4();
+        final zeroReceipt = StockReceipt(
+          id: zeroReceiptId,
+          receiptNumber: 'REC-ZERO-POST',
+          receiptDate: DateTime.now(),
+          warehouse: 'WH-MAIN',
+          lines: [
+            StockMovementLine(
+              movementUuid: zeroReceiptId,
+              movementType: 'receipt',
+              itemCode: 'ZERO-ITEM-POST',
+              itemName: 'Zero Post Item',
+              quantity: 10,
+              unitCost: 0,
+              totalCost: 0,
+            ),
+          ],
+        );
 
-      final postResult = await postingCoordinator.post(
-        document: InventoryDocumentRef(
-          documentId: zeroReceiptId,
-          documentNumber: 'REC-ZERO-POST',
-          documentType: InventoryDocumentType.stockReceipt,
-          documentDate: DateTime.now(),
-          warehouseId: 'WH-MAIN',
-        ),
-      );
+        await inventoryDb
+            .into(inventoryDb.stockMovementLines)
+            .insert(
+              StockMovementLinesCompanion.insert(
+                uuid: generateUuidV4(),
+                movementUuid: zeroReceiptId,
+                movementType: 'receipt',
+                itemCode: 'ZERO-ITEM-POST',
+                itemName: 'Zero Post Item',
+                quantity: const Value(10.0),
+                unitCost: const Value(0.0),
+                totalCost: const Value(0.0),
+              ),
+            );
 
-      expect(postResult, isA<PostInvalidStatus>());
-      final invalidStatus = postResult as PostInvalidStatus;
-      expect(invalidStatus.reason, contains('بتكلفة صفرية'));
-    });
-
-    test('PostingCoordinatorImpl blocks unpost when downstream movements exist', () async {
-      final repo = StockMovementsRepositoryImpl(db: inventoryDb);
-      final receiptDate = DateTime.now().subtract(const Duration(days: 2));
-      final issueDate = DateTime.now().subtract(const Duration(days: 1));
-
-      // 1. Create & Post Stock Receipt A
-      final recId = generateUuidV4();
-      final rec = StockReceipt(
-        id: recId,
-        receiptNumber: 'REC-DEP-1',
-        receiptDate: receiptDate,
-        warehouse: 'WH-MAIN',
-        lines: [
-          StockMovementLine(
-            movementUuid: recId,
-            movementType: 'receipt',
-            itemCode: 'DEP-ITEM-1',
-            itemName: 'Dependent Test Item',
-            quantity: 100,
-            unitCost: 50,
-            totalCost: 5000,
+        final postingCoordinator = PostingCoordinatorImpl(
+          db: inventoryDb,
+          stockValidationService: StockValidationServiceImpl(inventoryDb),
+          dependencyDetector: InventoryDependencyDetectorImpl(inventoryDb),
+          postingEngine: PostingEngineImpl(
+            inventoryDb,
+            CostLayerServiceImpl(db: inventoryDb),
           ),
-        ],
-      );
-      await repo.saveReceipt(rec);
+          permissionGuard: const AllowAllPermissionGuard(),
+        );
 
-      final postingCoordinator = PostingCoordinatorImpl(
-        db: inventoryDb,
-        stockValidationService: StockValidationServiceImpl(inventoryDb),
-        dependencyDetector: InventoryDependencyDetectorImpl(inventoryDb),
-        postingEngine: PostingEngineImpl(inventoryDb, CostLayerServiceImpl(db: inventoryDb)),
-        permissionGuard: const AllowAllPermissionGuard(),
-      );
-
-      await postingCoordinator.post(
-        document: InventoryDocumentRef(
-          documentId: recId,
-          documentNumber: 'REC-DEP-1',
-          documentType: InventoryDocumentType.stockReceipt,
-          documentDate: receiptDate,
-          warehouseId: 'WH-MAIN',
-        ),
-      );
-
-      // 2. Create & Post Stock Issue B on the same item after Receipt A
-      final issId = generateUuidV4();
-      final issue = StockIssue(
-        id: issId,
-        issueNumber: 'ISS-DEP-1',
-        issueDate: issueDate,
-        warehouse: 'WH-MAIN',
-        lines: [
-          StockMovementLine(
-            movementUuid: issId,
-            movementType: 'issue',
-            itemCode: 'DEP-ITEM-1',
-            itemName: 'Dependent Test Item',
-            quantity: 20,
-            unitCost: 50,
-            totalCost: 1000,
+        final postResult = await postingCoordinator.post(
+          document: InventoryDocumentRef(
+            documentId: zeroReceiptId,
+            documentNumber: 'REC-ZERO-POST',
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: DateTime.now(),
+            warehouseId: 'WH-MAIN',
           ),
-        ],
-      );
-      await repo.saveIssue(issue);
+        );
 
-      await postingCoordinator.post(
-        document: InventoryDocumentRef(
-          documentId: issId,
-          documentNumber: 'ISS-DEP-1',
-          documentType: InventoryDocumentType.stockIssue,
-          documentDate: issueDate,
-          warehouseId: 'WH-MAIN',
-        ),
-      );
+        expect(postResult, isA<PostInvalidStatus>());
+        final invalidStatus = postResult as PostInvalidStatus;
+        expect(invalidStatus.reason, contains('بتكلفة صفرية'));
+      },
+    );
 
-      // 3. Attempt to unpost Receipt A
-      final unpostResult = await postingCoordinator.unpost(
-        document: InventoryDocumentRef(
-          documentId: recId,
-          documentNumber: 'REC-DEP-1',
-          documentType: InventoryDocumentType.stockReceipt,
-          documentDate: receiptDate,
-          warehouseId: 'WH-MAIN',
-        ),
-      );
+    test(
+      'PostingCoordinatorImpl blocks unpost when downstream movements exist',
+      () async {
+        final repo = StockMovementsRepositoryImpl(db: inventoryDb);
+        final receiptDate = DateTime.now().subtract(const Duration(days: 2));
+        final issueDate = DateTime.now().subtract(const Duration(days: 1));
 
-      // 4. Expect unpost to be BLOCKED by downstream issue B
-      expect(unpostResult, isA<UnpostBlockedByDependencies>());
-      final blockedResult = unpostResult as UnpostBlockedByDependencies;
-      expect(blockedResult.dependentDocuments, isNotEmpty);
-      expect(blockedResult.dependentDocuments.first.documentNumber, equals('ISS-DEP-1'));
-    });
+        // 1. Create & Post Stock Receipt A
+        final recId = generateUuidV4();
+        final rec = StockReceipt(
+          id: recId,
+          receiptNumber: 'REC-DEP-1',
+          receiptDate: receiptDate,
+          warehouse: 'WH-MAIN',
+          lines: [
+            StockMovementLine(
+              movementUuid: recId,
+              movementType: 'receipt',
+              itemCode: 'DEP-ITEM-1',
+              itemName: 'Dependent Test Item',
+              quantity: 100,
+              unitCost: 50,
+              totalCost: 5000,
+            ),
+          ],
+        );
+        await repo.saveReceipt(rec);
+
+        final postingCoordinator = PostingCoordinatorImpl(
+          db: inventoryDb,
+          stockValidationService: StockValidationServiceImpl(inventoryDb),
+          dependencyDetector: InventoryDependencyDetectorImpl(inventoryDb),
+          postingEngine: PostingEngineImpl(
+            inventoryDb,
+            CostLayerServiceImpl(db: inventoryDb),
+          ),
+          permissionGuard: const AllowAllPermissionGuard(),
+        );
+
+        await postingCoordinator.post(
+          document: InventoryDocumentRef(
+            documentId: recId,
+            documentNumber: 'REC-DEP-1',
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receiptDate,
+            warehouseId: 'WH-MAIN',
+          ),
+        );
+
+        // 2. Create & Post Stock Issue B on the same item after Receipt A
+        final issId = generateUuidV4();
+        final issue = StockIssue(
+          id: issId,
+          issueNumber: 'ISS-DEP-1',
+          issueDate: issueDate,
+          warehouse: 'WH-MAIN',
+          lines: [
+            StockMovementLine(
+              movementUuid: issId,
+              movementType: 'issue',
+              itemCode: 'DEP-ITEM-1',
+              itemName: 'Dependent Test Item',
+              quantity: 20,
+              unitCost: 50,
+              totalCost: 1000,
+            ),
+          ],
+        );
+        await repo.saveIssue(issue);
+
+        await postingCoordinator.post(
+          document: InventoryDocumentRef(
+            documentId: issId,
+            documentNumber: 'ISS-DEP-1',
+            documentType: InventoryDocumentType.stockIssue,
+            documentDate: issueDate,
+            warehouseId: 'WH-MAIN',
+          ),
+        );
+
+        // 3. Attempt to unpost Receipt A
+        final unpostResult = await postingCoordinator.unpost(
+          document: InventoryDocumentRef(
+            documentId: recId,
+            documentNumber: 'REC-DEP-1',
+            documentType: InventoryDocumentType.stockReceipt,
+            documentDate: receiptDate,
+            warehouseId: 'WH-MAIN',
+          ),
+        );
+
+        // 4. Expect unpost to be BLOCKED by downstream issue B
+        expect(unpostResult, isA<UnpostBlockedByDependencies>());
+        final blockedResult = unpostResult as UnpostBlockedByDependencies;
+        expect(blockedResult.dependentDocuments, isNotEmpty);
+        expect(
+          blockedResult.dependentDocuments.first.documentNumber,
+          equals('ISS-DEP-1'),
+        );
+      },
+    );
   });
 }

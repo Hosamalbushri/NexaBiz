@@ -18,7 +18,8 @@ class InventoryMovementEvent {
   final String uuid;
   final String itemCode;
   final double quantityChange;
-  final String movementType; // 'sale', 'purchase', 'adjustment', 'transfer', 'stock_count'
+  final String
+  movementType; // 'sale', 'purchase', 'adjustment', 'transfer', 'stock_count'
   final String? referenceId;
   final DateTime createdAt;
   final int version;
@@ -42,9 +43,13 @@ class InventoryMovementEvent {
       quantityChange: (map['quantityChange'] as num?)?.toDouble() ?? 0.0,
       movementType: map['movementType'] as String? ?? 'adjustment',
       referenceId: map['referenceId'] as String?,
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '')?.toUtc() ??
+      createdAt:
+          DateTime.tryParse(map['createdAt']?.toString() ?? '')?.toUtc() ??
           (map['createdAt'] is num
-              ? DateTime.fromMillisecondsSinceEpoch((map['createdAt'] as num).toInt(), isUtc: true)
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  (map['createdAt'] as num).toInt(),
+                  isUtc: true,
+                )
               : DateTime.now().toUtc()),
       version: (map['version'] as num?)?.toInt() ?? 1,
     );
@@ -53,10 +58,7 @@ class InventoryMovementEvent {
 
 /// Ledger managing append-only inventory movement events and derived stock snapshots.
 class InventoryMovementLedger {
-  InventoryMovementLedger({
-    this._inventoryRepo,
-    this._syncQueue,
-  });
+  InventoryMovementLedger({this._inventoryRepo, this._syncQueue});
 
   final InventoryRepositoryImpl? _inventoryRepo;
   final SyncQueue? _syncQueue;

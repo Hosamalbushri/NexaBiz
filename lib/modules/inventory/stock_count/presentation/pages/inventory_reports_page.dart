@@ -222,9 +222,7 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
                       onExpandedChanged: (value) {
                         if (!value) {
                           _searchController.clear();
-                          ref
-                                  .read(reportsSearchQueryProvider.notifier)
-                                  .state =
+                          ref.read(reportsSearchQueryProvider.notifier).state =
                               '';
                           ref.read(reportPageIndexProvider.notifier).state = 0;
                         }
@@ -427,16 +425,14 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
                 ListTile(
                   leading: const Icon(Icons.table_chart_outlined),
                   title: Text(localization.exportExcel),
-                  onTap: () => Navigator.of(
-                    sheetContext,
-                  ).pop(ReportExportFormat.excel),
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(ReportExportFormat.excel),
                 ),
                 ListTile(
                   leading: const Icon(Icons.picture_as_pdf_outlined),
                   title: Text(localization.exportPdf),
-                  onTap: () => Navigator.of(
-                    sheetContext,
-                  ).pop(ReportExportFormat.pdf),
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(ReportExportFormat.pdf),
                 ),
               ],
             );
@@ -467,12 +463,14 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
   Future<void> _previewPdfReport() async {
     final localization = AppLocalizations.of(context);
     final labels = _exportLabels(localization);
-    final result = await ref.read(loadingControllerProvider).run(
-      message: localization.loadingExportingReport,
-      action: () => ref
-          .read(reportExportProvider.notifier)
-          .preparePdfPreview(labels: labels),
-    );
+    final result = await ref
+        .read(loadingControllerProvider)
+        .run(
+          message: localization.loadingExportingReport,
+          action: () => ref
+              .read(reportExportProvider.notifier)
+              .preparePdfPreview(labels: labels),
+        );
 
     if (!mounted) {
       return;

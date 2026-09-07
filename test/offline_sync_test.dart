@@ -63,9 +63,13 @@ void main() {
       queue: queue,
       connectivity: connectivity,
       clock: () => DateTime.utc(2026, 8, 12, 12),
+      readCompanyId: () => 'cmp-1',
     );
     manager!.registerHandler(
-      InventoryItemSyncHandler(repository: inventoryRepo, remoteProvider: () => remote),
+      InventoryItemSyncHandler(
+        repository: inventoryRepo,
+        remoteProvider: () => remote,
+      ),
     );
     await manager!.start(enabled: true);
 
@@ -105,9 +109,13 @@ void main() {
       queue: queue,
       connectivity: connectivity,
       clock: () => DateTime.utc(2026, 8, 12, 12),
+      readCompanyId: () => 'cmp-1',
     );
     manager!.registerHandler(
-      InventoryItemSyncHandler(repository: inventoryRepo, remoteProvider: () => remote),
+      InventoryItemSyncHandler(
+        repository: inventoryRepo,
+        remoteProvider: () => remote,
+      ),
     );
     await connectivity.start();
     connectivity.debugSetStatus(ConnectivityStatus.online);
@@ -130,7 +138,10 @@ void main() {
 
     remote = InMemoryRemoteSyncApi();
     manager!.registerHandler(
-      InventoryItemSyncHandler(repository: inventoryRepo, remoteProvider: () => remote),
+      InventoryItemSyncHandler(
+        repository: inventoryRepo,
+        remoteProvider: () => remote,
+      ),
     );
     await manager!.retryFailed();
     expect(
@@ -144,9 +155,13 @@ void main() {
       queue: queue,
       connectivity: connectivity,
       clock: () => DateTime.utc(2026, 8, 12, 12),
+      readCompanyId: () => 'cmp-1',
     );
     manager!.registerHandler(
-      InventoryItemSyncHandler(repository: inventoryRepo, remoteProvider: () => remote),
+      InventoryItemSyncHandler(
+        repository: inventoryRepo,
+        remoteProvider: () => remote,
+      ),
     );
     connectivity.debugSetStatus(ConnectivityStatus.online);
     await manager!.setEnabled(true);

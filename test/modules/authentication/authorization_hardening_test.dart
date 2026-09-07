@@ -58,75 +58,77 @@ void main() {
       );
     });
 
-    test('Requirement 2: Normal user with restricted permissions cannot perform administrative actions', () {
-      final normalUserContext = AuthorizationContext(
-        userId: 'usr_cashier_01',
-        companyId: 'comp_01',
-        permissions: {
-          'sales.view',
-          'sales.create',
-          'products.view',
-        },
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'Requirement 2: Normal user with restricted permissions cannot perform administrative actions',
+      () {
+        final normalUserContext = AuthorizationContext(
+          userId: 'usr_cashier_01',
+          companyId: 'comp_01',
+          permissions: {'sales.view', 'sales.create', 'products.view'},
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      // Normal user can view sales
-      expect(
-        policy.hasLocalAccess(
-          context: normalUserContext,
-          permission: 'sales.view',
-        ),
-        isTrue,
-      );
-
-      // Normal user CANNOT post sales, reverse journals, or manage users
-      expect(
-        policy.hasLocalAccess(
-          context: normalUserContext,
-          permission: 'sales.post',
-        ),
-        isFalse,
-      );
-      expect(
-        policy.hasLocalAccess(
-          context: normalUserContext,
-          permission: 'accounting.journals.reverse',
-        ),
-        isFalse,
-      );
-      expect(
-        policy.hasLocalAccess(
-          context: normalUserContext,
-          permission: 'users.manage',
-        ),
-        isFalse,
-      );
-    });
-
-    test('Requirement 3: Unauthorized user throws UnauthorizedException on mandatory check', () {
-      final restrictedContext = AuthorizationContext(
-        userId: 'usr_clerk_01',
-        companyId: 'comp_01',
-        permissions: {'sales.view'},
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
-
-      expect(
-        () => guard.requirePermission(
-          context: restrictedContext,
-          requiredPermission: 'accounting.journals.post',
-        ),
-        throwsA(
-          isA<UnauthorizedException>().having(
-            (e) => e.permission,
-            'permission',
-            'accounting.journals.post',
+        // Normal user can view sales
+        expect(
+          policy.hasLocalAccess(
+            context: normalUserContext,
+            permission: 'sales.view',
           ),
-        ),
-      );
-    });
+          isTrue,
+        );
+
+        // Normal user CANNOT post sales, reverse journals, or manage users
+        expect(
+          policy.hasLocalAccess(
+            context: normalUserContext,
+            permission: 'sales.post',
+          ),
+          isFalse,
+        );
+        expect(
+          policy.hasLocalAccess(
+            context: normalUserContext,
+            permission: 'accounting.journals.reverse',
+          ),
+          isFalse,
+        );
+        expect(
+          policy.hasLocalAccess(
+            context: normalUserContext,
+            permission: 'users.manage',
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'Requirement 3: Unauthorized user throws UnauthorizedException on mandatory check',
+      () {
+        final restrictedContext = AuthorizationContext(
+          userId: 'usr_clerk_01',
+          companyId: 'comp_01',
+          permissions: {'sales.view'},
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
+
+        expect(
+          () => guard.requirePermission(
+            context: restrictedContext,
+            requiredPermission: 'accounting.journals.post',
+          ),
+          throwsA(
+            isA<UnauthorizedException>().having(
+              (e) => e.permission,
+              'permission',
+              'accounting.journals.post',
+            ),
+          ),
+        );
+      },
+    );
 
     test('Requirement 4: Missing authorization session fails closed', () {
       expect(
@@ -156,136 +158,154 @@ void main() {
       );
     });
 
-    test('Requirement 6: Invalid company context mismatch throws CompanyContextMismatchException', () {
-      final companyAContext = AuthorizationContext(
-        userId: 'usr_clerk_01',
-        companyId: 'comp_A',
-        permissions: {'sales.view'},
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'Requirement 6: Invalid company context mismatch throws CompanyContextMismatchException',
+      () {
+        final companyAContext = AuthorizationContext(
+          userId: 'usr_clerk_01',
+          companyId: 'comp_A',
+          permissions: {'sales.view'},
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      expect(
-        () => guard.requirePermission(
-          context: companyAContext,
-          requiredPermission: 'sales.view',
-          targetCompanyId: 'comp_B',
-        ),
-        throwsA(
-          isA<CompanyContextMismatchException>().having(
-            (e) => e.expectedCompanyId,
-            'expectedCompanyId',
-            'comp_A',
+        expect(
+          () => guard.requirePermission(
+            context: companyAContext,
+            requiredPermission: 'sales.view',
+            targetCompanyId: 'comp_B',
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<CompanyContextMismatchException>().having(
+              (e) => e.expectedCompanyId,
+              'expectedCompanyId',
+              'comp_A',
+            ),
+          ),
+        );
+      },
+    );
 
-    test('Requirement 7: Unauthorized accounting posting is denied at domain boundary', () {
-      final unprivilegedContext = AuthorizationContext(
-        userId: 'usr_clerk_01',
-        companyId: 'comp_01',
-        permissions: {'accounting.journals.view'},
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'Requirement 7: Unauthorized accounting posting is denied at domain boundary',
+      () {
+        final unprivilegedContext = AuthorizationContext(
+          userId: 'usr_clerk_01',
+          companyId: 'comp_01',
+          permissions: {'accounting.journals.view'},
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      expect(
-        () => guard.requirePermission(
-          context: unprivilegedContext,
-          requiredPermission: 'accounting.journals.post',
-        ),
-        throwsA(isA<UnauthorizedException>()),
-      );
-    });
+        expect(
+          () => guard.requirePermission(
+            context: unprivilegedContext,
+            requiredPermission: 'accounting.journals.post',
+          ),
+          throwsA(isA<UnauthorizedException>()),
+        );
+      },
+    );
 
-    test('Requirement 8: Unauthorized accounting reversal is denied at domain boundary', () {
-      final unprivilegedContext = AuthorizationContext(
-        userId: 'usr_clerk_01',
-        companyId: 'comp_01',
-        permissions: {'accounting.journals.view', 'accounting.journals.post'},
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'Requirement 8: Unauthorized accounting reversal is denied at domain boundary',
+      () {
+        final unprivilegedContext = AuthorizationContext(
+          userId: 'usr_clerk_01',
+          companyId: 'comp_01',
+          permissions: {'accounting.journals.view', 'accounting.journals.post'},
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      expect(
-        () => guard.requirePermission(
-          context: unprivilegedContext,
-          requiredPermission: 'accounting.journals.reverse',
-        ),
-        throwsA(isA<UnauthorizedException>()),
-      );
-    });
+        expect(
+          () => guard.requirePermission(
+            context: unprivilegedContext,
+            requiredPermission: 'accounting.journals.reverse',
+          ),
+          throwsA(isA<UnauthorizedException>()),
+        );
+      },
+    );
 
-    test('Requirement 9: Unauthorized user management is denied at domain boundary', () {
-      final unprivilegedContext = AuthorizationContext(
-        userId: 'usr_clerk_01',
-        companyId: 'comp_01',
-        permissions: {'sales.view'},
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'Requirement 9: Unauthorized user management is denied at domain boundary',
+      () {
+        final unprivilegedContext = AuthorizationContext(
+          userId: 'usr_clerk_01',
+          companyId: 'comp_01',
+          permissions: {'sales.view'},
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      expect(
-        () => guard.requirePermission(
-          context: unprivilegedContext,
-          requiredPermission: 'users.manage',
-        ),
-        throwsA(isA<UnauthorizedException>()),
-      );
-    });
+        expect(
+          () => guard.requirePermission(
+            context: unprivilegedContext,
+            requiredPermission: 'users.manage',
+          ),
+          throwsA(isA<UnauthorizedException>()),
+        );
+      },
+    );
 
-    test('Requirement 10: Unauthorized configuration change is denied at domain boundary', () {
-      final unprivilegedContext = AuthorizationContext(
-        userId: 'usr_clerk_01',
-        companyId: 'comp_01',
-        permissions: {'sales.view'},
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'Requirement 10: Unauthorized configuration change is denied at domain boundary',
+      () {
+        final unprivilegedContext = AuthorizationContext(
+          userId: 'usr_clerk_01',
+          companyId: 'comp_01',
+          permissions: {'sales.view'},
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      expect(
-        () => guard.requirePermission(
-          context: unprivilegedContext,
-          requiredPermission: 'settings.update',
-        ),
-        throwsA(isA<UnauthorizedException>()),
-      );
+        expect(
+          () => guard.requirePermission(
+            context: unprivilegedContext,
+            requiredPermission: 'settings.update',
+          ),
+          throwsA(isA<UnauthorizedException>()),
+        );
 
-      expect(
-        () => guard.requirePermission(
-          context: unprivilegedContext,
-          requiredPermission: 'accounting.config.manage',
-        ),
-        throwsA(isA<UnauthorizedException>()),
-      );
-    });
+        expect(
+          () => guard.requirePermission(
+            context: unprivilegedContext,
+            requiredPermission: 'accounting.config.manage',
+          ),
+          throwsA(isA<UnauthorizedException>()),
+        );
+      },
+    );
 
-    test('Requirement 11: Bypassing UI PermissionGate still fails closed at domain boundary', () {
-      final unprivilegedContext = AuthorizationContext(
-        userId: 'usr_hacker_01',
-        companyId: 'comp_01',
-        permissions: <String>{}, // No permissions granted
-        entitlement: mockEntitlement,
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'Requirement 11: Bypassing UI PermissionGate still fails closed at domain boundary',
+      () {
+        final unprivilegedContext = AuthorizationContext(
+          userId: 'usr_hacker_01',
+          companyId: 'comp_01',
+          permissions: <String>{}, // No permissions granted
+          entitlement: mockEntitlement,
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      // Even if user navigates directly to a hidden screen or calls domain code directly:
-      expect(
-        () => guard.requirePermission(
-          context: unprivilegedContext,
-          requiredPermission: 'accounting.journals.post',
-        ),
-        throwsA(isA<UnauthorizedException>()),
-      );
+        // Even if user navigates directly to a hidden screen or calls domain code directly:
+        expect(
+          () => guard.requirePermission(
+            context: unprivilegedContext,
+            requiredPermission: 'accounting.journals.post',
+          ),
+          throwsA(isA<UnauthorizedException>()),
+        );
 
-      expect(
-        () => guard.requirePermission(
-          context: unprivilegedContext,
-          requiredPermission: 'companies.update',
-        ),
-        throwsA(isA<UnauthorizedException>()),
-      );
-    });
+        expect(
+          () => guard.requirePermission(
+            context: unprivilegedContext,
+            requiredPermission: 'companies.update',
+          ),
+          throwsA(isA<UnauthorizedException>()),
+        );
+      },
+    );
   });
 }

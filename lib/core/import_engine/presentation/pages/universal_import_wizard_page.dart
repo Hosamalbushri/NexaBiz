@@ -43,7 +43,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Universal Import Wizard (Step ${state.activeStep + 1} of 11)'),
+        title: Text(
+          'Universal Import Wizard (Step ${state.activeStep + 1} of 11)',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -59,15 +61,23 @@ class UniversalImportWizardPage extends ConsumerWidget {
           if (state.errorMessage != null) ...[
             Container(
               margin: const EdgeInsets.all(12.0),
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
+              ),
               decoration: BoxDecoration(
                 color: colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: colorScheme.error.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error_outline_rounded, color: colorScheme.onErrorContainer),
+                  Icon(
+                    Icons.error_outline_rounded,
+                    color: colorScheme.onErrorContainer,
+                  ),
                   const SizedBox(width: 12.0),
                   Expanded(
                     child: Text(
@@ -87,7 +97,13 @@ class UniversalImportWizardPage extends ConsumerWidget {
             ),
           ],
           Expanded(
-            child: _buildStepContent(context, ref, state, notifier, availableProfiles),
+            child: _buildStepContent(
+              context,
+              ref,
+              state,
+              notifier,
+              availableProfiles,
+            ),
           ),
           // Bottom control action bar
           _buildBottomNavigationBar(context, ref, state, notifier),
@@ -105,7 +121,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+          bottom: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
         ),
       ),
       child: Column(
@@ -118,7 +136,10 @@ class UniversalImportWizardPage extends ConsumerWidget {
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 10.0,
+            ),
             child: Row(
               children: List.generate(11, (idx) {
                 final isCompleted = idx < currentStep;
@@ -126,24 +147,29 @@ class UniversalImportWizardPage extends ConsumerWidget {
                 final stepColor = isCurrent
                     ? colorScheme.primary
                     : isCompleted
-                        ? colorScheme.primary.withValues(alpha: 0.8)
-                        : colorScheme.outlineVariant;
+                    ? colorScheme.primary.withValues(alpha: 0.8)
+                    : colorScheme.outlineVariant;
 
                 return Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10.0,
+                        vertical: 6.0,
+                      ),
                       decoration: BoxDecoration(
                         color: isCurrent
                             ? colorScheme.primaryContainer
                             : isCompleted
-                                ? colorScheme.surfaceContainerHighest
-                                : colorScheme.surface,
+                            ? colorScheme.surfaceContainerHighest
+                            : colorScheme.surface,
                         borderRadius: BorderRadius.circular(20.0),
                         border: Border.all(
                           color: isCurrent
                               ? colorScheme.primary
-                              : colorScheme.outlineVariant.withValues(alpha: 0.6),
+                              : colorScheme.outlineVariant.withValues(
+                                  alpha: 0.6,
+                                ),
                         ),
                       ),
                       child: Row(
@@ -157,13 +183,19 @@ class UniversalImportWizardPage extends ConsumerWidget {
                             ),
                             child: Center(
                               child: isCompleted
-                                  ? Icon(Icons.check_rounded, size: 12, color: colorScheme.onPrimary)
+                                  ? Icon(
+                                      Icons.check_rounded,
+                                      size: 12,
+                                      color: colorScheme.onPrimary,
+                                    )
                                   : Text(
                                       '${idx + 1}',
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: isCurrent ? colorScheme.onPrimary : colorScheme.onSurface,
+                                        color: isCurrent
+                                            ? colorScheme.onPrimary
+                                            : colorScheme.onSurface,
                                       ),
                                     ),
                             ),
@@ -172,8 +204,12 @@ class UniversalImportWizardPage extends ConsumerWidget {
                           Text(
                             _getStepShortTitle(idx),
                             style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                              color: isCurrent ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isCurrent
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -218,18 +254,29 @@ class UniversalImportWizardPage extends ConsumerWidget {
             offset: const Offset(0, -4),
           ),
         ],
-        border: Border(top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+        border: Border(
+          top: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
       ),
       child: Row(
         children: [
           OutlinedButton.icon(
             key: const Key('wizard_back_button'),
-            onPressed: state.activeStep > 0 ? () => notifier.previousStep() : null,
+            onPressed: state.activeStep > 0
+                ? () => notifier.previousStep()
+                : null,
             icon: const Icon(Icons.arrow_back_rounded, size: 18),
             label: const Text('Back'),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18.0,
+                vertical: 12.0,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
             ),
           ),
           Expanded(
@@ -243,11 +290,15 @@ class UniversalImportWizardPage extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     maxLines: 1,
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     'Step ${state.activeStep + 1} of 11',
-                    style: theme.textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -262,13 +313,26 @@ class UniversalImportWizardPage extends ConsumerWidget {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                : Icon(state.activeStep == 9 ? Icons.rocket_launch_rounded : Icons.arrow_forward_rounded, size: 18),
+                : Icon(
+                    state.activeStep == 9
+                        ? Icons.rocket_launch_rounded
+                        : Icons.arrow_forward_rounded,
+                    size: 18,
+                  ),
             label: Text(state.activeStep == 9 ? 'Start Import' : 'Next'),
             style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 12.0),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22.0,
+                vertical: 12.0,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
             ),
           ),
         ],
@@ -369,7 +433,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
     }
   }
 
-  Widget _buildStep1Source(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep1Source(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -378,11 +446,16 @@ class UniversalImportWizardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Step 1: Select Import Source', style: theme.textTheme.headlineSmall),
+          Text(
+            'Step 1: Select Import Source',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 8.0),
           Text(
             'Supported formats: CSV, Excel (XLSX/XLS), or JSON file',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16.0),
 
@@ -393,20 +466,31 @@ class UniversalImportWizardPage extends ConsumerWidget {
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(16.0),
-              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.4), width: 1.5),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
             ),
             child: Column(
               children: [
-                Icon(Icons.cloud_upload_outlined, size: 48, color: colorScheme.primary),
+                Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 48,
+                  color: colorScheme.primary,
+                ),
                 const SizedBox(height: 12.0),
                 Text(
                   'Upload Import File',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4.0),
                 Text(
                   'Select a CSV, Excel (.xlsx/.xls), or JSON file from your device',
-                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16.0),
@@ -416,8 +500,13 @@ class UniversalImportWizardPage extends ConsumerWidget {
                   icon: const Icon(Icons.folder_open_rounded, size: 20),
                   label: const Text('Browse Files / اختيار ملف'),
                   style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 14.0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
                   ),
                 ),
               ],
@@ -431,14 +520,22 @@ class UniversalImportWizardPage extends ConsumerWidget {
             decoration: InputDecoration(
               labelText: 'Source Format',
               prefixIcon: const Icon(Icons.dataset_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
             ),
             items: const [
-              DropdownMenuItem(value: 'csv', child: Text('CSV (Comma Separated)')),
+              DropdownMenuItem(
+                value: 'csv',
+                child: Text('CSV (Comma Separated)'),
+              ),
               DropdownMenuItem(value: 'json', child: Text('JSON Format')),
               DropdownMenuItem(value: 'xlsx', child: Text('Excel (XLSX)')),
             ],
-            onChanged: (val) => notifier.setRawSourceText(state.rawSourceText, sourceType: val ?? 'csv'),
+            onChanged: (val) => notifier.setRawSourceText(
+              state.rawSourceText,
+              sourceType: val ?? 'csv',
+            ),
           ),
           const SizedBox(height: 16.0),
 
@@ -447,7 +544,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(16.0),
-              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,12 +556,18 @@ class UniversalImportWizardPage extends ConsumerWidget {
                   children: [
                     Text(
                       'Paste Raw Data Content / Edit',
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     TextButton.icon(
                       onPressed: () {
-                        final sample = 'code,name,price,description\nP001,Sample Product A,150.00,Default Item A\nP002,Sample Product B,280.00,Default Item B';
-                        notifier.setRawSourceText(sample, sourceType: state.sourceType);
+                        final sample =
+                            'code,name,price,description\nP001,Sample Product A,150.00,Default Item A\nP002,Sample Product B,280.00,Default Item B';
+                        notifier.setRawSourceText(
+                          sample,
+                          sourceType: state.sourceType,
+                        );
                       },
                       icon: const Icon(Icons.auto_awesome, size: 16),
                       label: const Text('Insert Sample CSV'),
@@ -477,16 +582,26 @@ class UniversalImportWizardPage extends ConsumerWidget {
                     maxLines: null,
                     expands: true,
                     controller: TextEditingController(text: state.rawSourceText)
-                      ..selection = TextSelection.collapsed(offset: state.rawSourceText.length),
-                    style: theme.textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                      ..selection = TextSelection.collapsed(
+                        offset: state.rawSourceText.length,
+                      ),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontFamily: 'monospace',
+                    ),
                     decoration: InputDecoration(
-                      hintText: 'code,name,price\nP001,Product 1,100.00\nP002,Product 2,250.00',
+                      hintText:
+                          'code,name,price\nP001,Product 1,100.00\nP002,Product 2,250.00',
                       alignLabelWithHint: true,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
                       filled: true,
                       fillColor: colorScheme.surface,
                     ),
-                    onChanged: (text) => notifier.setRawSourceText(text, sourceType: state.sourceType),
+                    onChanged: (text) => notifier.setRawSourceText(
+                      text,
+                      sourceType: state.sourceType,
+                    ),
                   ),
                 ),
               ],
@@ -497,7 +612,10 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _pickSourceFile(BuildContext context, ImportWizardNotifier notifier) async {
+  Future<void> _pickSourceFile(
+    BuildContext context,
+    ImportWizardNotifier notifier,
+  ) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -538,9 +656,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File selection failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('File selection failed: $e')));
       }
     }
   }
@@ -559,11 +677,16 @@ class UniversalImportWizardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Step 2: Select Target Import Profile', style: theme.textTheme.headlineSmall),
+          Text(
+            'Step 2: Select Target Import Profile',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 8.0),
           Text(
             'Choose the entity blueprint for mapping & normalization rules',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16.0),
           DropdownButtonFormField<String>(
@@ -572,7 +695,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
             decoration: InputDecoration(
               labelText: 'Target Profile',
               prefixIcon: const Icon(Icons.layers_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
             ),
             items: profiles.map((p) {
               return DropdownMenuItem(
@@ -590,7 +715,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
             Card(
               child: ListTile(
                 title: Text(state.selectedProfile!.label),
-                subtitle: Text('Entity: ${state.selectedProfile!.entityType} | Fields: ${state.selectedProfile!.fields.length} | Relations: ${state.selectedProfile!.relations.length}'),
+                subtitle: Text(
+                  'Entity: ${state.selectedProfile!.entityType} | Fields: ${state.selectedProfile!.fields.length} | Relations: ${state.selectedProfile!.relations.length}',
+                ),
               ),
             ),
           ],
@@ -599,7 +726,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep3Structure(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep3Structure(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final schema = state.detectedSchema;
     final headers = schema?.columns.map((c) => c.rawHeader).toList() ?? [];
     final theme = Theme.of(context);
@@ -610,16 +741,23 @@ class UniversalImportWizardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Step 3: Detected Structure', style: theme.textTheme.headlineSmall),
+          Text(
+            'Step 3: Detected Structure',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 8.0),
           Text(
             'Headers (${headers.length}): ${headers.join(', ')}',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 4.0),
           Text(
             'Total Rows Detected: ${state.parsedDocument?.sheets.first.rows.length ?? 0}',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16.0),
           if (schema == null)
@@ -635,14 +773,27 @@ class UniversalImportWizardPage extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
                     ),
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: colorScheme.primaryContainer,
-                        child: Text('${idx + 1}', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          '${idx + 1}',
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      title: Text(col.rawHeader, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        col.rawHeader,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       subtitle: Text('Inferred Type: ${col.inferredType.name}'),
                     ),
                   );
@@ -655,8 +806,13 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep4Mapping(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
-    final headers = state.detectedSchema?.columns.map((c) => c.rawHeader).toList() ?? [];
+  Widget _buildStep4Mapping(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
+    final headers =
+        state.detectedSchema?.columns.map((c) => c.rawHeader).toList() ?? [];
     final profileFields = state.selectedProfile?.fields ?? [];
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -670,7 +826,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
           const SizedBox(height: 8.0),
           Text(
             'Map source file headers to target profile field attributes',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16.0),
           Expanded(
@@ -678,12 +836,16 @@ class UniversalImportWizardPage extends ConsumerWidget {
               itemCount: headers.length,
               itemBuilder: (context, idx) {
                 final header = headers[idx];
-                final currentTarget = state.columnMappings[header] ?? '__IGNORE__';
+                final currentTarget =
+                    state.columnMappings[header] ?? '__IGNORE__';
                 final isIgnored = state.ignoredColumns.contains(header);
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 10.0),
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14.0,
+                    vertical: 8.0,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(12.0),
@@ -698,13 +860,19 @@ class UniversalImportWizardPage extends ConsumerWidget {
                       Expanded(
                         child: Row(
                           children: [
-                            Icon(Icons.table_chart_outlined, size: 20, color: colorScheme.primary),
+                            Icon(
+                              Icons.table_chart_outlined,
+                              size: 20,
+                              color: colorScheme.primary,
+                            ),
                             const SizedBox(width: 8.0),
                             Expanded(
                               child: Text(
                                 'Column: $header',
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -712,7 +880,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Icon(Icons.arrow_forward_rounded, color: colorScheme.onSurfaceVariant, size: 18),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          color: colorScheme.onSurfaceVariant,
+                          size: 18,
+                        ),
                       ),
                       SizedBox(
                         width: 220,
@@ -722,11 +894,22 @@ class UniversalImportWizardPage extends ConsumerWidget {
                             key: Key('mapping_dropdown_$header'),
                             value: isIgnored ? '__IGNORE__' : currentTarget,
                             items: [
-                              const DropdownMenuItem(value: '__IGNORE__', child: Text('-- Ignore Column --', overflow: TextOverflow.ellipsis)),
-                              ...profileFields.map((f) => DropdownMenuItem(
-                                    value: f.key,
-                                    child: Text('${f.label} (${f.key})${f.isRequired ? ' *' : ''}', overflow: TextOverflow.ellipsis),
-                                  )),
+                              const DropdownMenuItem(
+                                value: '__IGNORE__',
+                                child: Text(
+                                  '-- Ignore Column --',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              ...profileFields.map(
+                                (f) => DropdownMenuItem(
+                                  value: f.key,
+                                  child: Text(
+                                    '${f.label} (${f.key})${f.isRequired ? ' *' : ''}',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
                             ],
                             onChanged: (val) {
                               if (val != null) {
@@ -747,7 +930,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep5Configuration(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep5Configuration(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -756,11 +943,16 @@ class UniversalImportWizardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Step 5: Execution Configuration', style: theme.textTheme.headlineSmall),
+          Text(
+            'Step 5: Execution Configuration',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 8.0),
           Text(
             'Configure duplicate handling, transactional persistence, and memory chunks',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 20.0),
           DropdownButtonFormField<DuplicateResolutionStrategy>(
@@ -769,14 +961,26 @@ class UniversalImportWizardPage extends ConsumerWidget {
             decoration: InputDecoration(
               labelText: 'Duplicate Policy',
               prefixIcon: const Icon(Icons.copy_rounded),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
             ),
             items: const [
-              DropdownMenuItem(value: DuplicateResolutionStrategy.skip, child: Text('Skip Duplicates')),
-              DropdownMenuItem(value: DuplicateResolutionStrategy.overwrite, child: Text('Overwrite / Update Duplicates')),
-              DropdownMenuItem(value: DuplicateResolutionStrategy.error, child: Text('Raise Error on Duplicate')),
+              DropdownMenuItem(
+                value: DuplicateResolutionStrategy.skip,
+                child: Text('Skip Duplicates'),
+              ),
+              DropdownMenuItem(
+                value: DuplicateResolutionStrategy.overwrite,
+                child: Text('Overwrite / Update Duplicates'),
+              ),
+              DropdownMenuItem(
+                value: DuplicateResolutionStrategy.error,
+                child: Text('Raise Error on Duplicate'),
+              ),
             ],
-            onChanged: (val) => notifier.updateConfiguration(duplicateResolution: val),
+            onChanged: (val) =>
+                notifier.updateConfiguration(duplicateResolution: val),
           ),
           const SizedBox(height: 16.0),
           DropdownButtonFormField<ImportPersistenceMode>(
@@ -785,15 +989,30 @@ class UniversalImportWizardPage extends ConsumerWidget {
             decoration: InputDecoration(
               labelText: 'Persistence Scoping Mode',
               prefixIcon: const Icon(Icons.security_rounded),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
             ),
             items: const [
-              DropdownMenuItem(value: ImportPersistenceMode.allOrNothing, child: Text('ALL OR NOTHING (Roll back whole job on failure)')),
-              DropdownMenuItem(value: ImportPersistenceMode.perChunk, child: Text('PER CHUNK (Commit per chunk)')),
-              DropdownMenuItem(value: ImportPersistenceMode.perRow, child: Text('PER ROW (Commit per row)')),
-              DropdownMenuItem(value: ImportPersistenceMode.bestEffort, child: Text('BEST EFFORT (Log errors & commit valid)')),
+              DropdownMenuItem(
+                value: ImportPersistenceMode.allOrNothing,
+                child: Text('ALL OR NOTHING (Roll back whole job on failure)'),
+              ),
+              DropdownMenuItem(
+                value: ImportPersistenceMode.perChunk,
+                child: Text('PER CHUNK (Commit per chunk)'),
+              ),
+              DropdownMenuItem(
+                value: ImportPersistenceMode.perRow,
+                child: Text('PER ROW (Commit per row)'),
+              ),
+              DropdownMenuItem(
+                value: ImportPersistenceMode.bestEffort,
+                child: Text('BEST EFFORT (Log errors & commit valid)'),
+              ),
             ],
-            onChanged: (val) => notifier.updateConfiguration(persistenceMode: val),
+            onChanged: (val) =>
+                notifier.updateConfiguration(persistenceMode: val),
           ),
           const SizedBox(height: 16.0),
           TextFormField(
@@ -802,7 +1021,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
             decoration: InputDecoration(
               labelText: 'Chunk Size (Bounded Memory)',
               prefixIcon: const Icon(Icons.memory_rounded),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
             ),
             keyboardType: TextInputType.number,
             onChanged: (val) {
@@ -817,9 +1038,17 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep6Assignments(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep6Assignments(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     if (state.selectedProfile == null) {
-      return const Center(child: Text('No target profile selected. Please select a profile in Step 2.'));
+      return const Center(
+        child: Text(
+          'No target profile selected. Please select a profile in Step 2.',
+        ),
+      );
     }
 
     return StepDynamicAssignments(
@@ -829,7 +1058,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep7Validation(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep7Validation(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final report = state.validationReport;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -839,15 +1072,26 @@ class UniversalImportWizardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Step 7: Validation Summary', style: theme.textTheme.headlineSmall),
+          Text(
+            'Step 7: Validation Summary',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 8.0),
           Text(
             'Dry-run validation issues and rule enforcement report',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16.0),
           if (report == null)
-            const Expanded(child: Center(child: Text('Click Next or Run Validation to execute dry-run checks.')))
+            const Expanded(
+              child: Center(
+                child: Text(
+                  'Click Next or Run Validation to execute dry-run checks.',
+                ),
+              ),
+            )
           else ...[
             Text('Validation Issues Found: ${report.issues.length}'),
             const SizedBox(height: 12.0),
@@ -874,7 +1118,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep8Preview(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep8Preview(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final summary = state.previewSummary;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -884,29 +1132,61 @@ class UniversalImportWizardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Step 8: Import Preview Engine', style: theme.textTheme.headlineSmall),
+          Text(
+            'Step 8: Import Preview Engine',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 8.0),
           Text(
             'Dry-run evaluation of row-level actions prior to committing',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16.0),
           if (summary == null)
-            const Expanded(child: Center(child: Text('Generating preview summary...')))
+            const Expanded(
+              child: Center(child: Text('Generating preview summary...')),
+            )
           else ...[
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildSummaryBadge(context, 'Total', '${summary.totalRows}', Colors.blue),
+                  _buildSummaryBadge(
+                    context,
+                    'Total',
+                    '${summary.totalRows}',
+                    Colors.blue,
+                  ),
                   const SizedBox(width: 8),
-                  _buildSummaryBadge(context, 'Creates', '${summary.creates}', Colors.green),
+                  _buildSummaryBadge(
+                    context,
+                    'Creates',
+                    '${summary.creates}',
+                    Colors.green,
+                  ),
                   const SizedBox(width: 8),
-                  _buildSummaryBadge(context, 'Updates', '${summary.updates}', Colors.orange),
+                  _buildSummaryBadge(
+                    context,
+                    'Updates',
+                    '${summary.updates}',
+                    Colors.orange,
+                  ),
                   const SizedBox(width: 8),
-                  _buildSummaryBadge(context, 'Skips', '${summary.skips}', Colors.grey),
+                  _buildSummaryBadge(
+                    context,
+                    'Skips',
+                    '${summary.skips}',
+                    Colors.grey,
+                  ),
                   const SizedBox(width: 8),
-                  _buildSummaryBadge(context, 'Errors', '${summary.errors}', Colors.red),
+                  _buildSummaryBadge(
+                    context,
+                    'Errors',
+                    '${summary.errors}',
+                    Colors.red,
+                  ),
                 ],
               ),
             ),
@@ -921,13 +1201,18 @@ class UniversalImportWizardPage extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
                     ),
                     child: ListTile(
-                      leading: CircleAvatar(
-                        child: Text('${row.rowIndex + 1}'),
+                      leading: CircleAvatar(child: Text('${row.rowIndex + 1}')),
+                      title: Text(
+                        'Action: ${row.action.name.toUpperCase()}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      title: Text('Action: ${row.action.name.toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(row.explanation),
                     ),
                   );
@@ -940,20 +1225,39 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryBadge(BuildContext context, String label, String value, Color color) {
+  Widget _buildSummaryBadge(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12.0)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12.0),
+      ),
       child: Column(
         children: [
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
           Text(label, style: const TextStyle(fontSize: 12)),
         ],
       ),
     );
   }
 
-  Widget _buildStep9Confirm(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep9Confirm(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -972,29 +1276,44 @@ class UniversalImportWizardPage extends ConsumerWidget {
                 offset: const Offset(0, 5),
               ),
             ],
-            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle_outline, size: 80, color: colorScheme.primary),
+              Icon(
+                Icons.check_circle_outline,
+                size: 80,
+                color: colorScheme.primary,
+              ),
               const SizedBox(height: 16.0),
-              Text('Ready to Start Import Job', style: theme.textTheme.headlineSmall),
+              Text(
+                'Ready to Start Import Job',
+                style: theme.textTheme.headlineSmall,
+              ),
               const SizedBox(height: 8.0),
               Text(
                 'Profile: ${state.selectedProfile?.label ?? "Generic"} | Target Company: $companyId',
-                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6.0),
               Text(
                 'Total Rows: ${state.parsedDocument?.sheets.first.rows.length ?? 0}',
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20.0),
               Text(
                 'Click "Start Import" to submit the job to background execution.',
-                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -1004,7 +1323,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep10StartDetach(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep10StartDetach(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -1014,9 +1337,16 @@ class UniversalImportWizardPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.rocket_launch_outlined, size: 80, color: Colors.green.shade600),
+            Icon(
+              Icons.rocket_launch_outlined,
+              size: 80,
+              color: Colors.green.shade600,
+            ),
             const SizedBox(height: 16.0),
-            Text('Import Started Successfully!', style: theme.textTheme.headlineSmall),
+            Text(
+              'Import Started Successfully!',
+              style: theme.textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8.0),
             Chip(
               label: Text('Job ID: ${state.activeJob?.jobId ?? "JOB-QUEUED"}'),
@@ -1029,7 +1359,9 @@ class UniversalImportWizardPage extends ConsumerWidget {
             ),
             Text(
               'You may safely navigate away or close this wizard.',
-              style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -1037,7 +1369,11 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep11ReportHub(BuildContext context, ImportWizardState state, ImportWizardNotifier notifier) {
+  Widget _buildStep11ReportHub(
+    BuildContext context,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -1047,12 +1383,18 @@ class UniversalImportWizardPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assessment_outlined, size: 80, color: colorScheme.primary),
+            Icon(
+              Icons.assessment_outlined,
+              size: 80,
+              color: colorScheme.primary,
+            ),
             const SizedBox(height: 16.0),
             Text('Import Job Status Hub', style: theme.textTheme.headlineSmall),
             const SizedBox(height: 8.0),
             Chip(
-              label: Text('Job Status: ${state.activeJob?.status.name.toUpperCase() ?? "QUEUED"}'),
+              label: Text(
+                'Job Status: ${state.activeJob?.status.name.toUpperCase() ?? "QUEUED"}',
+              ),
               backgroundColor: Colors.green.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 24.0),
@@ -1061,8 +1403,13 @@ class UniversalImportWizardPage extends ConsumerWidget {
               icon: const Icon(Icons.add_rounded),
               label: const Text('Start Another Import'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 12.0,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
               ),
             ),
           ],
@@ -1071,18 +1418,27 @@ class UniversalImportWizardPage extends ConsumerWidget {
     );
   }
 
-  void _handleNext(BuildContext context, WidgetRef ref, ImportWizardState state, ImportWizardNotifier notifier) async {
+  void _handleNext(
+    BuildContext context,
+    WidgetRef ref,
+    ImportWizardState state,
+    ImportWizardNotifier notifier,
+  ) async {
     switch (state.activeStep) {
       case 0:
         if (state.rawSourceText.trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter raw data content.')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter raw data content.')),
+          );
           return;
         }
         notifier.nextStep();
         break;
       case 1:
         if (state.selectedProfileId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a target profile.')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please select a target profile.')),
+          );
           return;
         }
         notifier.nextStep();
@@ -1104,11 +1460,16 @@ class UniversalImportWizardPage extends ConsumerWidget {
       case 7:
       case 8:
         if (state.activeStep == 8) {
-          final job = await notifier.startImport(companyId: companyId, userId: userId);
+          final job = await notifier.startImport(
+            companyId: companyId,
+            userId: userId,
+          );
           if (job != null) {
             onImportStarted?.call();
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Import started (${job.jobId})')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Import started (${job.jobId})')),
+              );
             }
           }
         }

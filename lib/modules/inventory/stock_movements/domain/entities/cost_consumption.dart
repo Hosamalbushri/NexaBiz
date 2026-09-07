@@ -12,9 +12,9 @@ class CostConsumption {
     double? totalCost,
     DateTime? createdAt,
     this.companyId,
-  })  : id = id ?? generateUuidV4(),
-        totalCost = totalCost ?? (consumedQty * unitCost),
-        createdAt = createdAt ?? DateTime.now().toUtc();
+  }) : id = id ?? generateUuidV4(),
+       totalCost = totalCost ?? (consumedQty * unitCost),
+       createdAt = createdAt ?? DateTime.now().toUtc();
 
   final String id;
   final String layerUuid;

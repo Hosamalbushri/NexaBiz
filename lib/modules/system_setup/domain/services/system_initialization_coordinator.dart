@@ -4,9 +4,15 @@ import '../ports/system_setup_seed_port.dart';
 import '../repositories/system_setup_state_repository.dart';
 
 enum SystemInitializationState {
-  uninitialized,
+  notInitialized,
   initializing,
+  partiallyInitialized,
   initialized,
+  failed,
+  recoveryRequired,
+
+  // Legacy aliases
+  uninitialized,
   initializationFailed,
 }
 
@@ -23,23 +29,37 @@ class SystemInitializationCoordinator {
     required this._stateRepository,
     required this._seedPort,
     LocalAuthStore? authStore,
-  })  : _authStore = authStore ?? LocalAuthStore();
+  }) : _authStore = authStore ?? LocalAuthStore();
 
   final SystemSetupStateRepository _stateRepository;
   final SystemSetupSeedPort _seedPort;
   final LocalAuthStore _authStore;
-  SystemInitializationState _initState = SystemInitializationState.uninitialized;
+  SystemInitializationState _initState =
+      SystemInitializationState.notInitialized;
 
   SystemInitializationState get currentState => _initState;
 
   Future<SystemInitializationState> getInitializationState() async {
-    final hasAdmin = await _authStore.hasConfiguredAdmin();
     final progress = await loadProgress();
-    if (hasAdmin || progress.isReady) {
+    if (progress.isReady) {
       _initState = SystemInitializationState.initialized;
       return SystemInitializationState.initialized;
     }
-    return _initState;
+    if (progress.steps.values.any((s) => s.status == SetupStepStatus.failed)) {
+      _initState = SystemInitializationState.failed;
+      return SystemInitializationState.failed;
+    }
+    if (progress.requiredDone > 0 && !progress.isReady) {
+      _initState = SystemInitializationState.partiallyInitialized;
+      return SystemInitializationState.partiallyInitialized;
+    }
+    final hasAdmin = await _authStore.hasConfiguredAdmin();
+    if (hasAdmin) {
+      _initState = SystemInitializationState.initialized;
+      return SystemInitializationState.initialized;
+    }
+    _initState = SystemInitializationState.notInitialized;
+    return SystemInitializationState.notInitialized;
   }
 
   /// Authoritative Phase 4 First-Run System Initialization.
@@ -167,7 +187,7 @@ class SystemInitializationCoordinator {
 
   /// Runs the local seed step via [SystemSetupSeedPort].
   Future<SetupProgress> runSeedLocal() {
-    return runSeedDataStep(seedDefaults: false);
+    return runSeedDataStep(seedDefaults: true);
   }
 
   /// Runs Chart of Accounts bootstrap by pulling from the remote company.
@@ -215,8 +235,8 @@ class SystemInitializationCoordinator {
     bool clearError = false,
   }) {
     final steps = Map<SetupStepId, SetupStepState>.from(progress.steps);
-    final previous = steps[id] ??
-        SetupStepState(id: id, status: SetupStepStatus.pending);
+    final previous =
+        steps[id] ?? SetupStepState(id: id, status: SetupStepStatus.pending);
     steps[id] = previous.copyWith(
       status: status,
       updatedAt: DateTime.now().toUtc(),

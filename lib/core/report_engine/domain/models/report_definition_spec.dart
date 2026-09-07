@@ -79,10 +79,7 @@ class ReportGroupHeaderSpec {
 /// Sorting rule for report queries.
 @immutable
 class ReportSortSpec {
-  const ReportSortSpec({
-    required this.fieldId,
-    this.ascending = true,
-  });
+  const ReportSortSpec({required this.fieldId, this.ascending = true});
 
   final String fieldId;
   final bool ascending;
@@ -99,7 +96,8 @@ class ReportDrillDownSpec {
 
   final String documentTypeField;
   final String documentUuidField;
-  final Widget Function(BuildContext context, String docType, String docUuid) targetScreenResolver;
+  final Widget Function(BuildContext context, String docType, String docUuid)
+  targetScreenResolver;
 }
 
 /// Complete declarative specification of an ERP report.

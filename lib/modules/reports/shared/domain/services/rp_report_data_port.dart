@@ -119,14 +119,13 @@ class NoOpRpReportDataPort implements RpReportDataPort {
   Future<RpReportData> loadFromFilter({
     required ReportQueryFilter filter,
     required RpReportKind kind,
-  }) =>
-      load(
-        RpReportQuery(
-          kind: kind,
-          from: filter.fromDate ?? DateTime(2000),
-          to: filter.toDate ?? DateTime(2100),
-          customerId: filter.customerUuid,
-          rowLimit: filter.pageSize,
-        ),
-      );
+  }) => load(
+    RpReportQuery(
+      kind: kind,
+      from: filter.fromDate ?? DateTime(2000),
+      to: filter.toDate ?? DateTime(2100),
+      customerId: filter.customerUuid,
+      rowLimit: filter.pageSize,
+    ),
+  );
 }

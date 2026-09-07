@@ -9,8 +9,7 @@ import 'package:stock_count/modules/receipts_payments/domain/entities/transactio
 import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/domain/models/transaction_list_filter.dart';
 
-void _setupSqlite() {
-}
+void _setupSqlite() {}
 
 /// Performance harness for Receipts & Payments list/dashboard queries.
 ///
@@ -26,8 +25,9 @@ void main() {
       final isReceipt = i.isEven;
       await repo.insert(
         FinancialTransactionDraft(
-          transactionType:
-              isReceipt ? TransactionType.receipt : TransactionType.payment,
+          transactionType: isReceipt
+              ? TransactionType.receipt
+              : TransactionType.payment,
           source: isReceipt
               ? TransactionSource.manualReceipt
               : TransactionSource.manualPayment,
@@ -100,9 +100,13 @@ void main() {
     }
   }, timeout: const Timeout(Duration(minutes: 5)));
 
-  test('benchmark 100_000 (optional heavy)', () async {
-    await measureSize(100000);
-  }, timeout: const Timeout(Duration(minutes: 15)));
+  test(
+    'benchmark 100_000 (optional heavy)',
+    () async {
+      await measureSize(100000);
+    },
+    timeout: const Timeout(Duration(minutes: 15)),
+  );
 
   test('1_000_000 NOT MEASURED in default CI', () {
     expect(true, isTrue);

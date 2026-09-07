@@ -101,9 +101,7 @@ class Account {
       companyId: companyId ?? this.companyId,
       accountCode: accountCode ?? this.accountCode,
       name: name ?? this.name,
-      description: clearDescription
-          ? null
-          : (description ?? this.description),
+      description: clearDescription ? null : (description ?? this.description),
       accountType: accountType ?? this.accountType,
       normalBalance: normalBalance ?? this.normalBalance,
       level: level ?? this.level,

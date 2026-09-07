@@ -20,10 +20,10 @@ class SyncAuditResult {
   final String? message;
 
   static SyncAuditResult synced(String documentId) => SyncAuditResult(
-        isSynced: true,
-        documentId: documentId,
-        message: 'المستند والقيد المحاسبي متطابقان تماماً',
-      );
+    isSynced: true,
+    documentId: documentId,
+    message: 'المستند والقيد المحاسبي متطابقان تماماً',
+  );
 }
 
 class DocumentEntrySync {
@@ -59,7 +59,10 @@ class DocumentEntrySync {
       );
     }
 
-    final journalTotalDebit = entry.lines.fold<double>(0.0, (sum, line) => sum + line.debit);
+    final journalTotalDebit = entry.lines.fold<double>(
+      0.0,
+      (sum, line) => sum + line.debit,
+    );
     final diff = (expectedAmount - journalTotalDebit).abs();
 
     if (diff > 0.001) {

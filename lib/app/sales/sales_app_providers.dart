@@ -21,7 +21,9 @@ import 'inventory_sale_product_catalog_adapter.dart';
 import 'perpetual_sale_inventory_effect_adapter.dart';
 
 /// App-level customer lookup port for Sales.
-final appSaleCustomerLookupPortProvider = Provider<SaleCustomerLookupPort>((ref) {
+final appSaleCustomerLookupPortProvider = Provider<SaleCustomerLookupPort>((
+  ref,
+) {
   return CustomersSaleLookupAdapter(
     repository: ref.watch(customerRepositoryProvider),
     accountLinkPort: ref.watch(customerAccountLinkPortProvider),
@@ -30,7 +32,9 @@ final appSaleCustomerLookupPortProvider = Provider<SaleCustomerLookupPort>((ref)
 });
 
 /// App-level product catalog port for Sales.
-final appSaleProductCatalogPortProvider = Provider<SaleProductCatalogPort>((ref) {
+final appSaleProductCatalogPortProvider = Provider<SaleProductCatalogPort>((
+  ref,
+) {
   return InventorySaleProductCatalogAdapter(
     repository: ref.watch(productRepositoryProvider),
     scanResolver: ref.watch(productScanResolverProvider),
@@ -38,7 +42,9 @@ final appSaleProductCatalogPortProvider = Provider<SaleProductCatalogPort>((ref)
 });
 
 /// App-level inventory effect port for Sales.
-final appSaleInventoryEffectPortProvider = Provider<SaleInventoryEffectPort>((ref) {
+final appSaleInventoryEffectPortProvider = Provider<SaleInventoryEffectPort>((
+  ref,
+) {
   return PerpetualSaleInventoryEffectAdapter(
     orchestrator: ref.watch(documentPostingOrchestratorProvider),
     stockMovementsRepository: ref.watch(stockMovementsRepositoryProvider),
@@ -55,7 +61,9 @@ final appSaleLedgerPostingPortProvider = Provider<SaleLedgerPostingPort>((ref) {
 });
 
 /// App-level treasury account port for Sales.
-final appSaleTreasuryAccountPortProvider = Provider<SaleTreasuryAccountPort>((ref) {
+final appSaleTreasuryAccountPortProvider = Provider<SaleTreasuryAccountPort>((
+  ref,
+) {
   return AccountingSaleTreasuryAdapter(
     ref.watch(accountRepositoryProvider),
     cashRegisterRepository: ref.watch(cashRegisterRepositoryProvider),

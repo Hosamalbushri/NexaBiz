@@ -17,4 +17,3 @@ enum AccountBindingMode {
 
   String get storageValue => name;
 }
-

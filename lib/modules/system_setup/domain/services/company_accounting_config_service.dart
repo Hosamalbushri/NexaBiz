@@ -132,7 +132,10 @@ class CompanyAccountingConfigService {
     return config;
   }
 
-  void _assertRoleTypeCompatibility(AccountRole role, SetupAccountData account) {
+  void _assertRoleTypeCompatibility(
+    AccountRole role,
+    SetupAccountData account,
+  ) {
     switch (role) {
       case AccountRole.inventory:
       case AccountRole.receivable:

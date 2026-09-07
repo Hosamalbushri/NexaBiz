@@ -43,18 +43,14 @@ class FxRevaluationPlan {
   final double totalLoss;
   final List<JournalLineDraft> lines;
 
-  double get netDifference =>
-      JournalMoney.round(totalGain - totalLoss);
+  double get netDifference => JournalMoney.round(totalGain - totalLoss);
 
   bool get hasDifferences => lines.isNotEmpty;
 }
 
 /// Builds period-end FX revaluation lines in company base currency.
 class FxRevaluationService {
-  const FxRevaluationService({
-    required this._journals,
-    required this._rates,
-  });
+  const FxRevaluationService({required this._journals, required this._rates});
 
   final JournalRepository _journals;
   final CurrencyRateRepository _rates;

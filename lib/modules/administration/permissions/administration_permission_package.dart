@@ -17,8 +17,7 @@ PermissionPackageDef administrationPermissionPackage() {
       PermissionServiceDef(
         id: 'users',
         icon: Icons.people_outline,
-        titleBuilder: (context) =>
-            AppLocalizations.of(context).adminUsersTitle,
+        titleBuilder: (context) => AppLocalizations.of(context).adminUsersTitle,
         subtitleBuilder: (context) =>
             AppLocalizations.of(context).adminUsersSubtitle,
         operations: [
@@ -50,9 +49,7 @@ PermissionPackageDef administrationPermissionPackage() {
             AppLocalizations.of(context).adminPermissionsCatalogTitle,
         subtitleBuilder: (context) =>
             AppLocalizations.of(context).adminPermissionsCatalogSubtitle,
-        operations: [
-          StandardPermissionOps.manage('permissions.manage'),
-        ],
+        operations: [StandardPermissionOps.manage('permissions.manage')],
       ),
     ],
   );

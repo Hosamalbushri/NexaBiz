@@ -4,7 +4,9 @@ import 'package:stock_count/core/widgets/app_rate_field.dart';
 
 void main() {
   group('AppRateField Widget Tests', () {
-    testWidgets('renders input label and accepts user text changes', (WidgetTester tester) async {
+    testWidgets('renders input label and accepts user text changes', (
+      WidgetTester tester,
+    ) async {
       String? entered;
 
       await tester.pumpWidget(

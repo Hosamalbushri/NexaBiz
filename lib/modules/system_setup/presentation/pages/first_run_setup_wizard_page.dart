@@ -4,8 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/bootstrap/app_bootstrap_coordinator.dart';
+import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/di/app_providers.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_responsive.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/services/first_run_setup_coordinator.dart';
 import '../providers/system_setup_providers.dart';
 
@@ -32,12 +38,25 @@ class _FirstRunSetupWizardPageState
   var _obscureConfirmPassword = true;
 
   // Form State
-  String _selectedLanguage = 'ar';
+  String? _selectedLanguage;
+  bool _initializedLanguage = false;
 
   final _adminNameController = TextEditingController();
   final _adminEmailController = TextEditingController();
   final _adminPasswordController = TextEditingController();
   final _adminPasswordConfirmController = TextEditingController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initializedLanguage) {
+      final activeLocale =
+          ref.read(localeProvider)?.languageCode ??
+          Localizations.localeOf(context).languageCode;
+      _selectedLanguage = activeLocale == 'en' ? 'en' : 'ar';
+      _initializedLanguage = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -49,6 +68,13 @@ class _FirstRunSetupWizardPageState
   }
 
   bool get _isArabic => _selectedLanguage == 'ar';
+
+  void _onLanguageSelected(String langCode) {
+    setState(() {
+      _selectedLanguage = langCode;
+    });
+    ref.read(localeProvider.notifier).state = Locale(langCode);
+  }
 
   void _nextStep() {
     setState(() => _errorMessage = null);
@@ -74,13 +100,15 @@ class _FirstRunSetupWizardPageState
 
   Future<void> _commitSetup() async {
     if (_isCommitting) return;
+    final l10n = AppLocalizations.of(context);
+
     setState(() {
       _isCommitting = true;
       _errorMessage = null;
     });
 
     final payload = FirstRunSetupPayload(
-      language: _selectedLanguage,
+      language: _selectedLanguage ?? 'ar',
       adminName: _adminNameController.text.trim(),
       adminEmail: _adminEmailController.text.trim(),
       adminPassword: _adminPasswordController.text.trim(),
@@ -97,32 +125,16 @@ class _FirstRunSetupWizardPageState
       ref.read(firstRunCompletedProvider.notifier).markCompleted();
       ref.read(systemSetupReadyProvider.notifier).markReady();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  _isArabic
-                      ? 'تم تهيئة مدير النظام بنجاح'
-                      : 'System administrator set up successfully',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: const Color(0xFF10B981),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(AppSpacing.md),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        message: l10n.setupAdminSuccess,
+        isSuccess: true,
       );
 
-      context.go('/login');
+      if (mounted) {
+        context.go(AppRoutes.login);
+      }
     } catch (e) {
       if (!mounted) return;
       if (e is FirstRunAlreadyCompletedException) {
@@ -131,33 +143,31 @@ class _FirstRunSetupWizardPageState
             .onFirstRunCompleted();
         ref.read(firstRunCompletedProvider.notifier).markCompleted();
         ref.read(systemSetupReadyProvider.notifier).markReady();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isArabic
-                  ? 'التهيئة الأولى مكتملة بالفعل'
-                  : 'Setup already completed.',
-            ),
-            backgroundColor: Colors.blue.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
+        if (!mounted) return;
+        showAppSnackBar(
+          context,
+          message: l10n.setupAlreadyCompleted,
+          isSuccess: true,
         );
-        context.go('/login');
+        if (mounted) {
+          context.go(AppRoutes.login);
+        }
         return;
       }
       setState(() {
         _isCommitting = false;
         _errorMessage = e.toString();
       });
+      showAppSnackBar(context, message: e.toString(), isSuccess: false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final textDirection = _isArabic ? TextDirection.rtl : TextDirection.ltr;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final textDirection = _isArabic ? TextDirection.rtl : TextDirection.ltr;
 
     return Directionality(
       textDirection: textDirection,
@@ -166,8 +176,9 @@ class _FirstRunSetupWizardPageState
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
           systemNavigationBarColor: colorScheme.surface,
-          systemNavigationBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
+          systemNavigationBarIconBrightness: isDark
+              ? Brightness.light
+              : Brightness.dark,
         ),
         child: Scaffold(
           body: Container(
@@ -177,7 +188,7 @@ class _FirstRunSetupWizardPageState
                 center: const Alignment(0, -0.6),
                 radius: 1.2,
                 colors: [
-                  colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.06),
+                  colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.05),
                   colorScheme.surface,
                 ],
               ),
@@ -185,56 +196,39 @@ class _FirstRunSetupWizardPageState
             child: SafeArea(
               child: Column(
                 children: [
-                  _buildHeaderNavBar(theme, colorScheme, isDark),
+                  _buildHeaderNavBar(theme, colorScheme),
                   _buildProgressHeader(theme, colorScheme),
                   if (_errorMessage != null)
                     _buildErrorMessageBanner(colorScheme),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.md,
-                      ),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       physics: const BouncingScrollPhysics(),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 580),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            switchInCurve: Curves.easeOutCubic,
-                            switchOutCurve: Curves.easeInCubic,
-                            transitionBuilder: (child, animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0.03, 0),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Card(
-                              key: ValueKey<int>(_currentStep),
-                              elevation: isDark ? 6 : 3,
-                              shadowColor: colorScheme.shadow.withValues(
-                                alpha: isDark ? 0.4 : 0.08,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                side: BorderSide(
-                                  color: colorScheme.outlineVariant.withValues(
-                                    alpha: 0.5,
-                                  ),
+                      child: AppContentConstraint(
+                        maxWidth: 560,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: Card(
+                            key: ValueKey<int>(_currentStep),
+                            elevation: isDark ? 4 : 2,
+                            shadowColor: colorScheme.shadow.withValues(
+                              alpha: isDark ? 0.3 : 0.06,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.4,
                                 ),
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(AppSpacing.lg),
-                                child: _buildCurrentStepContent(
-                                  theme,
-                                  colorScheme,
-                                ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              child: _buildCurrentStepContent(
+                                theme,
+                                colorScheme,
                               ),
                             ),
                           ),
@@ -252,182 +246,173 @@ class _FirstRunSetupWizardPageState
     );
   }
 
-  Widget _buildHeaderNavBar(
-    ThemeData theme,
-    ColorScheme colorScheme,
-    bool isDark,
-  ) {
+  Widget _buildHeaderNavBar(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm + 4,
+        vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: 0.85),
+        color: colorScheme.surface.withValues(alpha: 0.9),
         border: Border(
           bottom: BorderSide(
             color: colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
         ),
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.primary.withValues(alpha: 0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.admin_panel_settings_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
+      child: AppContentConstraint(
+        maxWidth: 560,
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                'NexaBiz ERP',
-                style: theme.textTheme.titleMedium?.copyWith(
+              child: const Icon(
+                Icons.admin_panel_settings_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              'NexaBiz ERP',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
+              child: Text(
+                l10n.setupAdminTitle,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                ),
-                child: Text(
-                  _isArabic ? 'تهيئة مدير النظام' : 'System Admin Setup',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildProgressHeader(ThemeData theme, ColorScheme colorScheme) {
-    final steps = _isArabic
-        ? ['اللغة', 'مدير النظام', 'تأكيد']
-        : ['Language', 'System Admin', 'Confirm'];
+    final l10n = AppLocalizations.of(context);
+    final steps = [
+      l10n.setupStepLanguage,
+      l10n.setupStepAdmin,
+      l10n.setupStepConfirm,
+    ];
 
     return Container(
-      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.15),
       padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.sm + 2,
-        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+        horizontal: AppSpacing.md,
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
-          child: Row(
-            children: List.generate(steps.length, (index) {
-              final isCurrent = index == _currentStep;
-              final isDone = index < _currentStep;
-              final isLast = index == steps.length - 1;
+      child: AppContentConstraint(
+        maxWidth: 560,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(steps.length, (index) {
+            final isCurrent = index == _currentStep;
+            final isDone = index < _currentStep;
+            final isLast = index == steps.length - 1;
+            final isNextDone = index < _currentStep;
 
-              return Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isDone
-                                  ? const Color(0xFF10B981)
-                                  : isCurrent
-                                      ? colorScheme.primary
-                                      : colorScheme.surfaceContainerHighest,
-                              border: Border.all(
-                                color: isCurrent
-                                    ? colorScheme.primary
-                                    : isDone
-                                        ? const Color(0xFF10B981)
-                                        : colorScheme.outlineVariant,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Center(
-                              child: isDone
-                                  ? const Icon(
-                                      Icons.check_rounded,
-                                      size: 16,
-                                      color: Colors.white,
-                                    )
-                                  : Text(
-                                      '${index + 1}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: isCurrent
-                                            ? colorScheme.onPrimary
-                                            : colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            steps[index],
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontWeight:
-                                  isCurrent ? FontWeight.bold : FontWeight.w500,
-                              color: isCurrent
-                                  ? colorScheme.primary
-                                  : isDone
-                                      ? colorScheme.onSurface
-                                      : colorScheme.onSurfaceVariant,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isLast)
+            return Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      // Left line segment (touching left edge of circle)
                       Expanded(
-                        child: Container(
-                          height: 2,
-                          margin: const EdgeInsets.only(bottom: 14),
-                          decoration: BoxDecoration(
-                            color: isDone
-                                ? const Color(0xFF10B981)
-                                : colorScheme.outlineVariant.withValues(
-                                    alpha: 0.4,
+                        child: index == 0
+                            ? const SizedBox.shrink()
+                            : Container(
+                                height: 3,
+                                color: isDone
+                                    ? const Color(0xFF10B981)
+                                    : colorScheme.outlineVariant.withValues(
+                                        alpha: 0.4,
+                                      ),
+                              ),
+                      ),
+                      // Circle Badge
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDone
+                              ? const Color(0xFF10B981)
+                              : isCurrent
+                              ? colorScheme.primary
+                              : colorScheme.surfaceContainerHighest,
+                        ),
+                        child: Center(
+                          child: isDone
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: isCurrent
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.onSurfaceVariant,
                                   ),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                                ),
                         ),
                       ),
-                  ],
-                ),
-              );
-            }),
-          ),
+                      // Right line segment (touching right edge of circle)
+                      Expanded(
+                        child: isLast
+                            ? const SizedBox.shrink()
+                            : Container(
+                                height: 3,
+                                color: isNextDone
+                                    ? const Color(0xFF10B981)
+                                    : colorScheme.outlineVariant.withValues(
+                                        alpha: 0.4,
+                                      ),
+                              ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    steps[index],
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
+                      color: isCurrent
+                          ? colorScheme.primary
+                          : isDone
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ),
       ),
     );
@@ -441,25 +426,27 @@ class _FirstRunSetupWizardPageState
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.xs + 2,
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
-          child: Row(
-            children: [
-              Icon(Icons.error_outline_rounded, color: colorScheme.error, size: 20),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(
-                    color: colorScheme.onErrorContainer,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+      child: AppContentConstraint(
+        maxWidth: 560,
+        child: Row(
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              color: colorScheme.error,
+              size: 20,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: colorScheme.onErrorContainer,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -480,32 +467,31 @@ class _FirstRunSetupWizardPageState
 
   // STEP 0: Language Selection
   Widget _buildStepLanguage(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isArabic ? 'اللغة' : 'Language',
-          style: theme.textTheme.titleLarge?.copyWith(
+          l10n.setupStepLanguage,
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
         _buildLanguageCard(
           theme: theme,
           colorScheme: colorScheme,
-          title: 'العربية',
-          subtitle: 'Arabic (RTL)',
+          title: l10n.setupLanguageArabic,
+          subtitle: l10n.setupLanguageArabicSubtitle,
           value: 'ar',
-          flagText: '🇸🇦',
         ),
         const SizedBox(height: AppSpacing.sm),
         _buildLanguageCard(
           theme: theme,
           colorScheme: colorScheme,
-          title: 'English',
-          subtitle: 'English (LTR)',
+          title: l10n.setupLanguageEnglish,
+          subtitle: l10n.setupLanguageEnglishSubtitle,
           value: 'en',
-          flagText: '🇺🇸',
         ),
       ],
     );
@@ -517,14 +503,13 @@ class _FirstRunSetupWizardPageState
     required String title,
     required String subtitle,
     required String value,
-    required String flagText,
   }) {
     final isSelected = _selectedLanguage == value;
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => setState(() => _selectedLanguage = value),
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _onLanguageSelected(value),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(
@@ -533,19 +518,37 @@ class _FirstRunSetupWizardPageState
           ),
           decoration: BoxDecoration(
             color: isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
+                ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isSelected
                   ? colorScheme.primary
-                  : colorScheme.outlineVariant.withValues(alpha: 0.5),
-              width: isSelected ? 2 : 1,
+                  : colorScheme.outlineVariant.withValues(alpha: 0.4),
+              width: isSelected ? 1.5 : 1,
             ),
           ),
           child: Row(
             children: [
-              Text(flagText, style: const TextStyle(fontSize: 22)),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? colorScheme.primary.withValues(alpha: 0.15)
+                      : colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.4,
+                        ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.language_rounded,
+                  size: 20,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -553,8 +556,11 @@ class _FirstRunSetupWizardPageState
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? colorScheme.primary
+                            : colorScheme.onSurface,
                       ),
                     ),
                     Text(
@@ -569,8 +575,9 @@ class _FirstRunSetupWizardPageState
               Radio<String>(
                 value: value,
                 groupValue: _selectedLanguage,
+                activeColor: colorScheme.primary,
                 onChanged: (val) {
-                  if (val != null) setState(() => _selectedLanguage = val);
+                  if (val != null) _onLanguageSelected(val);
                 },
               ),
             ],
@@ -582,6 +589,7 @@ class _FirstRunSetupWizardPageState
 
   // STEP 1: Admin Credentials
   Widget _buildStepAdminAccount(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context);
     return Form(
       key: _adminFormKey,
       autovalidateMode: _autoValidateAdmin
@@ -591,81 +599,41 @@ class _FirstRunSetupWizardPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _isArabic ? 'حساب مدير النظام' : 'System Administrator Account',
-            style: theme.textTheme.titleLarge?.copyWith(
+            l10n.setupAdminAccountTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            _isArabic
-                ? 'قم بإنشاء حساب مدير النظام الرئيسي للتحكم الشامل في التطبيق'
-                : 'Create the primary system administrator account for overall system control',
-            style: theme.textTheme.bodyMedium?.copyWith(
+            l10n.setupAdminAccountSubtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-
-          // System Scope Information Card
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: colorScheme.secondary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: colorScheme.secondary,
-                  size: 20,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    _isArabic
-                        ? 'تُنشئ هذه الخطوة حساب مدير النظام الرئيسي. يمكنك إنشاء الشركات وإدارة حسابات المستخدمين بعد تسجيل الدخول.'
-                        : 'This step sets up the primary System Administrator. You can create companies and manage user accounts after signing in.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSecondaryContainer,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
 
           // Admin Name
           TextFormField(
             controller: _adminNameController,
             autofocus: true,
             textInputAction: TextInputAction.next,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             decoration: InputDecoration(
-              labelText: _isArabic ? 'اسم مدير النظام *' : 'Admin Name *',
-              hintText: _isArabic ? 'مثال: عبد الله أحمد' : 'e.g. System Admin',
-              prefixIcon: Icon(
-                Icons.person_outline_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
+              labelText: l10n.setupAdminNameLabel,
+              hintText: l10n.setupAdminNameHint,
+              prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
-              filled: true,
-              fillColor: colorScheme.surfaceContainerLowest,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return _isArabic
-                    ? 'يرجى إدخال اسم مدير النظام'
-                    : 'Admin name is required';
+                return l10n.setupAdminNameRequired;
               }
               return null;
             },
@@ -673,41 +641,36 @@ class _FirstRunSetupWizardPageState
               if (_autoValidateAdmin) _adminFormKey.currentState?.validate();
             },
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
 
           // Admin Email
           TextFormField(
             controller: _adminEmailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             decoration: InputDecoration(
-              labelText: _isArabic ? 'البريد الإلكتروني *' : 'Email *',
+              labelText: l10n.setupEmailLabel,
               hintText: 'admin@nexabiz.com',
-              prefixIcon: Icon(
-                Icons.email_outlined,
-                color: colorScheme.primary,
-                size: 20,
-              ),
+              prefixIcon: const Icon(Icons.email_outlined, size: 20),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
-              filled: true,
-              fillColor: colorScheme.surfaceContainerLowest,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
             ),
             validator: (value) {
               final trimmed = value?.trim() ?? '';
               if (trimmed.isEmpty) {
-                return _isArabic
-                    ? 'يرجى إدخال البريد الإلكتروني'
-                    : 'Email is required';
+                return l10n.setupEmailRequired;
               }
-              final emailRegex =
-                  RegExp(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$');
+              final emailRegex = RegExp(
+                r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+              );
               if (!emailRegex.hasMatch(trimmed)) {
-                return _isArabic
-                    ? 'البريد الإلكتروني غير صحيح'
-                    : 'Invalid email address';
+                return l10n.setupEmailInvalid;
               }
               return null;
             },
@@ -715,47 +678,43 @@ class _FirstRunSetupWizardPageState
               if (_autoValidateAdmin) _adminFormKey.currentState?.validate();
             },
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
 
           // Admin Password
           TextFormField(
             controller: _adminPasswordController,
             obscureText: _obscurePassword,
             textInputAction: TextInputAction.next,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             decoration: InputDecoration(
-              labelText: _isArabic
-                  ? 'كلمة المرور * (8 أحرف فأكثر)'
-                  : 'Password * (8+ chars)',
-              prefixIcon: Icon(
-                Icons.lock_outline_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
+              labelText: l10n.setupPasswordLabel,
+              prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  size: 20,
+                  size: 18,
                 ),
                 onPressed: () {
                   setState(() => _obscurePassword = !_obscurePassword);
                 },
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
-              filled: true,
-              fillColor: colorScheme.surfaceContainerLowest,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
             ),
             validator: (value) {
               final trimmed = value?.trim() ?? '';
               if (trimmed.isEmpty) {
-                return _isArabic ? 'أدخل كلمة المرور' : 'Password is required';
+                return l10n.setupPasswordRequired;
               }
               if (trimmed.length < 8) {
-                return _isArabic ? '8 أحرف على الأقل' : 'Min 8 characters';
+                return l10n.setupPasswordMinLength;
               }
               return null;
             },
@@ -763,27 +722,23 @@ class _FirstRunSetupWizardPageState
               if (_autoValidateAdmin) _adminFormKey.currentState?.validate();
             },
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
 
           // Admin Password Confirm
           TextFormField(
             controller: _adminPasswordConfirmController,
             obscureText: _obscureConfirmPassword,
             textInputAction: TextInputAction.done,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             decoration: InputDecoration(
-              labelText: _isArabic ? 'تأكيد كلمة المرور *' : 'Confirm Password *',
-              prefixIcon: Icon(
-                Icons.lock_reset_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
+              labelText: l10n.setupConfirmPasswordLabel,
+              prefixIcon: const Icon(Icons.lock_reset_rounded, size: 20),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  size: 20,
+                  size: 18,
                 ),
                 onPressed: () {
                   setState(
@@ -792,20 +747,20 @@ class _FirstRunSetupWizardPageState
                 },
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
-              filled: true,
-              fillColor: colorScheme.surfaceContainerLowest,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
             ),
             validator: (value) {
               final trimmed = value?.trim() ?? '';
               if (trimmed.isEmpty) {
-                return _isArabic ? 'أدخل تأكيد كلمة المرور' : 'Confirm password';
+                return l10n.setupConfirmPasswordRequired;
               }
               if (trimmed != _adminPasswordController.text.trim()) {
-                return _isArabic
-                    ? 'كلمتا المرور غير متطابقتين'
-                    : 'Passwords do not match';
+                return l10n.setupPasswordsMismatch;
               }
               return null;
             },
@@ -820,124 +775,126 @@ class _FirstRunSetupWizardPageState
 
   // STEP 2: Review & Final Confirmation
   Widget _buildStepReviewAndCommit(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          Icons.verified_user_rounded,
-          size: 48,
-          color: colorScheme.primary,
-        ),
-        const SizedBox(height: AppSpacing.sm),
         Text(
-          _isArabic ? 'تأكيد تهيئة النظام' : 'Confirm System Setup',
-          style: theme.textTheme.titleLarge?.copyWith(
+          l10n.setupConfirmTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
-          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
 
         // Manifest Card
         Container(
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(18),
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
           child: Column(
             children: [
-              _buildManifestTile(
-                theme: theme,
-                colorScheme: colorScheme,
-                icon: Icons.language_rounded,
-                label: _isArabic ? 'اللغة' : 'Language',
-                value: _selectedLanguage == 'ar' ? 'العربية' : 'English',
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(15),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.admin_panel_settings_rounded,
+                        color: colorScheme.onPrimary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _adminNameController.text.trim().isEmpty
+                                ? l10n.setupTargetRoleValue
+                                : _adminNameController.text.trim(),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                          Text(
+                            l10n.setupTargetRoleValue,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const Divider(height: 1),
               _buildManifestTile(
                 theme: theme,
                 colorScheme: colorScheme,
-                icon: Icons.person_rounded,
-                label: _isArabic ? 'اسم مدير النظام' : 'Admin Name',
+                icon: Icons.language_rounded,
+                label: l10n.setupStepLanguage,
+                value: _selectedLanguage == 'ar'
+                    ? l10n.setupLanguageArabic
+                    : l10n.setupLanguageEnglish,
+              ),
+              const Divider(height: 1),
+              _buildManifestTile(
+                theme: theme,
+                colorScheme: colorScheme,
+                icon: Icons.person_outline_rounded,
+                label: l10n.setupAdminNameLabel.replaceAll(' *', ''),
                 value: _adminNameController.text.trim(),
               ),
               const Divider(height: 1),
               _buildManifestTile(
                 theme: theme,
                 colorScheme: colorScheme,
-                icon: Icons.email_rounded,
-                label: _isArabic ? 'البريد الإلكتروني' : 'Email',
+                icon: Icons.email_outlined,
+                label: l10n.setupEmailLabel.replaceAll(' *', ''),
                 value: _adminEmailController.text.trim(),
-              ),
-              const Divider(height: 1),
-              _buildManifestTile(
-                theme: theme,
-                colorScheme: colorScheme,
-                icon: Icons.security_rounded,
-                label: _isArabic ? 'الدور المستهدف' : 'Target Role',
-                value: _isArabic ? 'مدير النظام الرئيسي' : 'System Administrator',
+                isStacked: true,
+                isLtr: true,
               ),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-
-        // Confirmation Note Card
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.check_circle_outline_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  _isArabic
-                      ? 'سيتم اعتماد تهيئة النظام وإنشاء مدير النظام. لا يتم إنشاء أي شركة أو انتماء في هذه الخطوة.'
-                      : 'System setup will be initialized with the admin account. No company or membership is created during this step.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
+        Text(
+          l10n.setupConfirmNote,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            fontStyle: FontStyle.italic,
           ),
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.lg),
 
-        if (_isCommitting)
-          const CircularProgressIndicator()
-        else
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: FilledButton.icon(
-              onPressed: _commitSetup,
-              icon: const Icon(Icons.check_circle_rounded, size: 20),
-              label: Text(
-                _isArabic ? 'اعتماد تهيئة النظام' : 'Initialize System',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-          ),
+        AppButton(
+          label: l10n.setupInitializeButton,
+          icon: Icons.check_circle_rounded,
+          isLoading: _isCommitting,
+          expand: true,
+          onPressed: _isCommitting ? null : _commitSetup,
+        ),
       ],
     );
   }
@@ -948,16 +905,68 @@ class _FirstRunSetupWizardPageState
     required IconData icon,
     required String label,
     required String value,
+    bool isStacked = false,
+    bool isLtr = false,
   }) {
+    if (isStacked) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md - 2,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: colorScheme.primary, size: 18),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 26, right: 26),
+              child: Align(
+                alignment: isLtr ? Alignment.centerLeft : Alignment.centerRight,
+                child: Directionality(
+                  textDirection: isLtr
+                      ? TextDirection.ltr
+                      : Directionality.of(context),
+                  child: Text(
+                    value,
+                    softWrap: true,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm + 2,
+        vertical: AppSpacing.md - 2,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: colorScheme.primary, size: 18),
-          const SizedBox(width: AppSpacing.sm),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, color: colorScheme.primary, size: 18),
+          ),
+          const SizedBox(width: AppSpacing.md),
           Text(
             label,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -969,9 +978,9 @@ class _FirstRunSetupWizardPageState
             child: Text(
               value,
               textAlign: TextAlign.end,
-              overflow: TextOverflow.ellipsis,
+              softWrap: true,
               style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -981,10 +990,15 @@ class _FirstRunSetupWizardPageState
   }
 
   Widget _buildBottomFloatingBar(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context);
+
+    const nextIcon = Icons.arrow_forward_rounded;
+    const backIcon = Icons.arrow_back_rounded;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm + 2,
+        vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -994,56 +1008,30 @@ class _FirstRunSetupWizardPageState
           ),
         ),
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 580),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (_currentStep > 0 && _currentStep < 2)
-                OutlinedButton.icon(
-                  onPressed: _prevStep,
-                  icon: Icon(
-                    _isArabic
-                        ? Icons.arrow_forward_rounded
-                        : Icons.arrow_back_rounded,
-                    size: 16,
-                  ),
-                  label: Text(_isArabic ? 'السابق' : 'Back'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs + 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                )
-              else
-                const SizedBox.shrink(),
-              if (_currentStep < 2)
-                FilledButton.icon(
-                  onPressed: _nextStep,
-                  icon: Icon(
-                    _isArabic
-                        ? Icons.arrow_back_rounded
-                        : Icons.arrow_forward_rounded,
-                    size: 16,
-                  ),
-                  label: Text(_isArabic ? 'التالي' : 'Next'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.xs + 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+      child: AppContentConstraint(
+        maxWidth: 560,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (_currentStep > 0 && _currentStep < 2)
+              AppButton(
+                label: l10n.setupBackButton,
+                icon: backIcon,
+                variant: AppButtonVariant.outlined,
+                onPressed: _isCommitting ? null : _prevStep,
+              )
+            else
+              const SizedBox.shrink(),
+            if (_currentStep < 2)
+              AppButton(
+                label: l10n.setupNextButton,
+                icon: nextIcon,
+                trailingIcon: true,
+                isLoading: _isCommitting,
+                variant: AppButtonVariant.filled,
+                onPressed: _isCommitting ? null : _nextStep,
+              ),
+          ],
         ),
       ),
     );

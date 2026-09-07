@@ -101,10 +101,7 @@ void main() {
     rpDb = ReceiptsPaymentsDatabase.memory();
     salesDb = SalesDatabase.memory();
 
-    accountRepo = AccountRepositoryImpl(
-      accDb,
-      readCompanyId: () => companyId,
-    );
+    accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => companyId);
     await accountRepo.seedDefaultChart();
     await accountRepo.ensureDefaultChartSeeded();
 
@@ -121,7 +118,8 @@ void main() {
 
     periodValidator = AccountingPeriodValidator(
       repository: fiscalYearRepo,
-      legacyPolicyReader: () => const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
+      legacyPolicyReader: () =>
+          const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
     );
 
     journalRepo = JournalRepositoryImpl(
@@ -152,10 +150,7 @@ void main() {
       readCompanyId: () => companyId,
     );
 
-    saleRepo = SaleRepositoryImpl(
-      salesDb,
-      readCompanyId: () => companyId,
-    );
+    saleRepo = SaleRepositoryImpl(salesDb, readCompanyId: () => companyId);
   });
 
   tearDown(() async {
@@ -170,58 +165,81 @@ void main() {
   });
 
   group('ROOT FIX 20 — Posted Date Immutability Test Suite', () {
-    test('1. Modifying posted JournalEntry date MUST be rejected (posted_immutable)', () async {
-      await createFY2025();
+    test(
+      '1. Modifying posted JournalEntry date MUST be rejected (posted_immutable)',
+      () async {
+        await createFY2025();
 
-      final draftJan = JournalEntryDraft(
-        entryDate: DateTime.utc(2025, 1, 15),
-        voucherNumber: 'V-20-1',
-        voucherType: 'general',
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        description: 'Original Jan entry',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: acc1, debit: 1000, credit: 0, currencyCode: 'YER'),
-          JournalLineDraft(accountUuid: acc2, debit: 0, credit: 1000, currencyCode: 'YER'),
-        ],
-      );
+        final draftJan = JournalEntryDraft(
+          entryDate: DateTime.utc(2025, 1, 15),
+          voucherNumber: 'V-20-1',
+          voucherType: 'general',
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'Original Jan entry',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1,
+              debit: 1000,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2,
+              debit: 0,
+              credit: 1000,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      final postedEntry = await journalService.post(draftJan);
-      expect(postedEntry.isPosted, true);
+        final postedEntry = await journalService.post(draftJan);
+        expect(postedEntry.isPosted, true);
 
-      // Attempt to modify the entry date to February
-      final modifiedDraft = JournalEntryDraft(
-        uuid: postedEntry.uuid,
-        entryDate: DateTime.utc(2025, 2, 15),
-        voucherNumber: 'V-20-1',
-        voucherType: 'general',
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        description: 'Attempt date change to Feb',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: acc1, debit: 1000, credit: 0, currencyCode: 'YER'),
-          JournalLineDraft(accountUuid: acc2, debit: 0, credit: 1000, currencyCode: 'YER'),
-        ],
-      );
+        // Attempt to modify the entry date to February
+        final modifiedDraft = JournalEntryDraft(
+          uuid: postedEntry.uuid,
+          entryDate: DateTime.utc(2025, 2, 15),
+          voucherNumber: 'V-20-1',
+          voucherType: 'general',
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'Attempt date change to Feb',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1,
+              debit: 1000,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2,
+              debit: 0,
+              credit: 1000,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      expect(
-        () async => await journalRepo.post(modifiedDraft),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.postedImmutable,
+        expect(
+          () async => await journalRepo.post(modifiedDraft),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
           ),
-        ),
-      );
+        );
 
-      // Verify original posted entry remains unchanged in January
-      final reloaded = await journalRepo.getByUuid(postedEntry.uuid);
-      expect(reloaded, isNotNull);
-      expect(reloaded!.entryDate, DateTime.utc(2025, 1, 15));
-    });
+        // Verify original posted entry remains unchanged in January
+        final reloaded = await journalRepo.getByUuid(postedEntry.uuid);
+        expect(reloaded, isNotNull);
+        expect(reloaded!.entryDate, DateTime.utc(2025, 1, 15));
+      },
+    );
 
     test('2. Modifying date on posted StockReceipt MUST be rejected', () async {
       await createFY2025();
@@ -316,118 +334,127 @@ void main() {
       expect(reloaded!.issueDate, DateTime.utc(2025, 1, 20));
     });
 
-    test('4. Modifying posted StockTransfer or deleting posted transfer MUST be rejected', () async {
-      await createFY2025();
+    test(
+      '4. Modifying posted StockTransfer or deleting posted transfer MUST be rejected',
+      () async {
+        await createFY2025();
 
-      final transfer = StockTransfer(
-        id: '55555555-5555-4555-8555-555555555555',
-        transferNumber: 'TRF-20-1',
-        fromWarehouseId: 'WH-A',
-        toWarehouseId: 'WH-B',
-        transferDate: DateTime.utc(2025, 1, 25),
-        status: InventoryDocumentStatus.posted,
-        postedAt: DateTime.utc(2025, 1, 25),
-        lines: const [
-          StockTransferLine(
-            id: '66666666-6666-4666-8666-666666666666',
-            transferUuid: '55555555-5555-4555-8555-555555555555',
-            itemCode: 'ITEM-1',
-            itemName: 'Item 1',
-            quantity: 2,
-            unitCost: 100,
-            totalCost: 200,
+        final transfer = StockTransfer(
+          id: '55555555-5555-4555-8555-555555555555',
+          transferNumber: 'TRF-20-1',
+          fromWarehouseId: 'WH-A',
+          toWarehouseId: 'WH-B',
+          transferDate: DateTime.utc(2025, 1, 25),
+          status: InventoryDocumentStatus.posted,
+          postedAt: DateTime.utc(2025, 1, 25),
+          lines: const [
+            StockTransferLine(
+              id: '66666666-6666-4666-8666-666666666666',
+              transferUuid: '55555555-5555-4555-8555-555555555555',
+              itemCode: 'ITEM-1',
+              itemName: 'Item 1',
+              quantity: 2,
+              unitCost: 100,
+              totalCost: 200,
+            ),
+          ],
+        );
+
+        await stockTransferRepo.saveTransfer(transfer);
+
+        // Attempt edit
+        final modifiedTransfer = transfer.copyWith(
+          transferDate: DateTime.utc(2025, 5, 25),
+        );
+
+        expect(
+          () async => await stockTransferRepo.saveTransfer(modifiedTransfer),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
           ),
-        ],
-      );
+        );
 
-      await stockTransferRepo.saveTransfer(transfer);
-
-      // Attempt edit
-      final modifiedTransfer = transfer.copyWith(
-        transferDate: DateTime.utc(2025, 5, 25),
-      );
-
-      expect(
-        () async => await stockTransferRepo.saveTransfer(modifiedTransfer),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.postedImmutable,
+        // Attempt delete
+        expect(
+          () async => await stockTransferRepo.deleteTransfer(transfer.id),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
           ),
-        ),
-      );
+        );
+      },
+    );
 
-      // Attempt delete
-      expect(
-        () async => await stockTransferRepo.deleteTransfer(transfer.id),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.postedImmutable,
+    test(
+      '5. Modifying date on posted FinancialTransaction MUST be rejected',
+      () async {
+        await createFY2025();
+
+        final draftRP = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.utc(2025, 1, 12),
+          amount: 2500,
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          exchangeRate: 1.0,
+          counterAmount: 2500,
+          counterCurrencyCode: 'YER',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1,
+          counterAccountId: acc2,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.unposted,
+          lines: const [],
+        );
+
+        final inserted = await rpRepo.insert(
+          draftRP,
+          transactionNumber: 'RP-20-1',
+        );
+        await rpRepo.markPosted(inserted.id);
+
+        final updateDraft = FinancialTransactionDraft(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: DateTime.utc(2025, 6, 12), // Attempt change to June
+          amount: 2500,
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          exchangeRate: 1.0,
+          counterAmount: 2500,
+          counterCurrencyCode: 'YER',
+          counterExchangeRate: 1.0,
+          cashAccountId: acc1,
+          counterAccountId: acc2,
+          paymentMethod: RpPaymentMethod.cash,
+          documentStatus: TransactionStatus.posted,
+          lines: const [],
+        );
+
+        expect(
+          () async => await rpRepo.update(inserted.id, updateDraft),
+          throwsA(
+            isA<JournalException>().having(
+              (e) => e.code,
+              'code',
+              JournalException.postedImmutable,
+            ),
           ),
-        ),
-      );
-    });
+        );
 
-    test('5. Modifying date on posted FinancialTransaction MUST be rejected', () async {
-      await createFY2025();
-
-      final draftRP = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.utc(2025, 1, 12),
-        amount: 2500,
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        exchangeRate: 1.0,
-        counterAmount: 2500,
-        counterCurrencyCode: 'YER',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1,
-        counterAccountId: acc2,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.unposted,
-        lines: const [],
-      );
-
-      final inserted = await rpRepo.insert(draftRP, transactionNumber: 'RP-20-1');
-      await rpRepo.markPosted(inserted.id);
-
-      final updateDraft = FinancialTransactionDraft(
-        transactionType: TransactionType.receipt,
-        source: TransactionSource.manualReceipt,
-        transactionDate: DateTime.utc(2025, 6, 12), // Attempt change to June
-        amount: 2500,
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        exchangeRate: 1.0,
-        counterAmount: 2500,
-        counterCurrencyCode: 'YER',
-        counterExchangeRate: 1.0,
-        cashAccountId: acc1,
-        counterAccountId: acc2,
-        paymentMethod: RpPaymentMethod.cash,
-        documentStatus: TransactionStatus.posted,
-        lines: const [],
-      );
-
-      expect(
-        () async => await rpRepo.update(inserted.id, updateDraft),
-        throwsA(
-          isA<JournalException>().having(
-            (e) => e.code,
-            'code',
-            JournalException.postedImmutable,
-          ),
-        ),
-      );
-
-      final reloaded = await rpRepo.getById(inserted.id);
-      expect(reloaded, isNotNull);
-      expect(reloaded!.transactionDate, DateTime.utc(2025, 1, 12));
-    });
+        final reloaded = await rpRepo.getById(inserted.id);
+        expect(reloaded, isNotNull);
+        expect(reloaded!.transactionDate, DateTime.utc(2025, 1, 12));
+      },
+    );
 
     test('6. Modifying date on posted Sale MUST be rejected', () async {
       await createFY2025();
@@ -500,43 +527,56 @@ void main() {
       expect(reloaded!.saleDate, DateTime.utc(2025, 1, 18));
     });
 
-    test('7. Reversal creates a NEW event while keeping original posted record intact', () async {
-      await createFY2025();
+    test(
+      '7. Reversal creates a NEW event while keeping original posted record intact',
+      () async {
+        await createFY2025();
 
-      final draftJan = JournalEntryDraft(
-        entryDate: DateTime.utc(2025, 1, 10),
-        voucherNumber: 'V-REV-ORIG',
-        voucherType: 'general',
-        currencyCode: 'YER',
-        baseCurrencyCode: 'YER',
-        description: 'Original entry to reverse',
-        isPosted: true,
-        lines: [
-          JournalLineDraft(accountUuid: acc1, debit: 3000, credit: 0, currencyCode: 'YER'),
-          JournalLineDraft(accountUuid: acc2, debit: 0, credit: 3000, currencyCode: 'YER'),
-        ],
-      );
+        final draftJan = JournalEntryDraft(
+          entryDate: DateTime.utc(2025, 1, 10),
+          voucherNumber: 'V-REV-ORIG',
+          voucherType: 'general',
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'Original entry to reverse',
+          isPosted: true,
+          lines: [
+            JournalLineDraft(
+              accountUuid: acc1,
+              debit: 3000,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: acc2,
+              debit: 0,
+              credit: 3000,
+              currencyCode: 'YER',
+            ),
+          ],
+        );
 
-      final original = await journalService.post(draftJan);
+        final original = await journalService.post(draftJan);
 
-      // Perform reversal in February
-      final reversalDate = DateTime.utc(2025, 2, 10);
-      final reversed = await journalService.reverseByUuid(
-        original.uuid,
-        reverseDate: reversalDate,
-      );
+        // Perform reversal in February
+        final reversalDate = DateTime.utc(2025, 2, 10);
+        final reversed = await journalService.reverseByUuid(
+          original.uuid,
+          reverseDate: reversalDate,
+        );
 
-      // Verify original remains in January with unchanged date & amounts
-      final reloadedOriginal = await journalRepo.getByUuid(original.uuid);
-      expect(reloadedOriginal, isNotNull);
-      expect(reloadedOriginal!.entryDate, DateTime.utc(2025, 1, 10));
-      expect(reloadedOriginal.lines.first.debit, 3000);
+        // Verify original remains in January with unchanged date & amounts
+        final reloadedOriginal = await journalRepo.getByUuid(original.uuid);
+        expect(reloadedOriginal, isNotNull);
+        expect(reloadedOriginal!.entryDate, DateTime.utc(2025, 1, 10));
+        expect(reloadedOriginal.lines.first.debit, 3000);
 
-      // Verify reversal is a distinct NEW entry in February with inverted amounts
-      expect(reversed.uuid, isNot(original.uuid));
-      expect(reversed.entryDate, DateTime.utc(2025, 2, 10));
-      expect(reversed.lines.first.debit, 0);
-      expect(reversed.lines.first.credit, 3000);
-    });
+        // Verify reversal is a distinct NEW entry in February with inverted amounts
+        expect(reversed.uuid, isNot(original.uuid));
+        expect(reversed.entryDate, DateTime.utc(2025, 2, 10));
+        expect(reversed.lines.first.debit, 0);
+        expect(reversed.lines.first.credit, 3000);
+      },
+    );
   });
 }

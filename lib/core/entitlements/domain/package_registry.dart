@@ -32,10 +32,14 @@ class PackageRegistry {
       code: 'cloud_sync',
       name: 'Cloud Data Synchronization',
       category: 'core',
-      description: 'Real-time multi-device cloud synchronization and offline queue processing.',
+      description:
+          'Real-time multi-device cloud synchronization and offline queue processing.',
       price: 29.0,
       currency: 'USD',
-      capabilities: [EntitlementCapability.sync, EntitlementCapability.cloudBackup],
+      capabilities: [
+        EntitlementCapability.sync,
+        EntitlementCapability.cloudBackup,
+      ],
       dependencies: [],
       requiredPlan: 'starter',
     ),
@@ -43,7 +47,8 @@ class PackageRegistry {
       code: 'multi_device',
       name: 'Multi-Device Access',
       category: 'add_on',
-      description: 'Connect multiple active terminal devices to your company catalog.',
+      description:
+          'Connect multiple active terminal devices to your company catalog.',
       price: 15.0,
       currency: 'USD',
       capabilities: [EntitlementCapability.multiDevice],
@@ -54,7 +59,8 @@ class PackageRegistry {
       code: 'multi_branch',
       name: 'Multi-Branch Management',
       category: 'add_on',
-      description: 'Manage multiple physical branches and consolidated reports.',
+      description:
+          'Manage multiple physical branches and consolidated reports.',
       price: 49.0,
       currency: 'USD',
       capabilities: [EntitlementCapability.multiBranch],

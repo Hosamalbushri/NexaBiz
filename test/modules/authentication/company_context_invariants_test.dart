@@ -19,43 +19,52 @@ void main() {
       authenticationMode: AuthenticationMode.local,
     );
 
-    test('CompanyContextResolver throws MissingCompanyContextException when context is null', () {
-      expect(
-        () => resolver.resolveActiveCompanyId(context: null),
-        throwsA(isA<MissingCompanyContextException>()),
-      );
-    });
+    test(
+      'CompanyContextResolver throws MissingCompanyContextException when context is null',
+      () {
+        expect(
+          () => resolver.resolveActiveCompanyId(context: null),
+          throwsA(isA<MissingCompanyContextException>()),
+        );
+      },
+    );
 
-    test('CompanyContextResolver throws MissingCompanyContextException when context companyId is empty', () {
-      final emptyCompContext = AuthorizationContext(
-        userId: 'user-1',
-        companyId: '',
-        permissions: const {},
-        roleId: 'role-owner',
-        entitlement: Entitlement.freeLocal(''),
-        authenticationMode: AuthenticationMode.local,
-      );
+    test(
+      'CompanyContextResolver throws MissingCompanyContextException when context companyId is empty',
+      () {
+        final emptyCompContext = AuthorizationContext(
+          userId: 'user-1',
+          companyId: '',
+          permissions: const {},
+          roleId: 'role-owner',
+          entitlement: Entitlement.freeLocal(''),
+          authenticationMode: AuthenticationMode.local,
+        );
 
-      expect(
-        () => resolver.resolveActiveCompanyId(context: emptyCompContext),
-        throwsA(isA<MissingCompanyContextException>()),
-      );
-    });
+        expect(
+          () => resolver.resolveActiveCompanyId(context: emptyCompContext),
+          throwsA(isA<MissingCompanyContextException>()),
+        );
+      },
+    );
 
     test('CompanyContextResolver returns companyId when valid', () {
       final cid = resolver.resolveActiveCompanyId(context: validContext);
       expect(cid, equals('comp-100'));
     });
 
-    test('CompanyContextResolver throws CompanyContextMismatchException when requested companyId differs', () {
-      expect(
-        () => resolver.resolveActiveCompanyId(
-          context: validContext,
-          requestedCompanyId: 'comp-200',
-        ),
-        throwsA(isA<CompanyContextMismatchException>()),
-      );
-    });
+    test(
+      'CompanyContextResolver throws CompanyContextMismatchException when requested companyId differs',
+      () {
+        expect(
+          () => resolver.resolveActiveCompanyId(
+            context: validContext,
+            requestedCompanyId: 'comp-200',
+          ),
+          throwsA(isA<CompanyContextMismatchException>()),
+        );
+      },
+    );
 
     test('TenantContext validates hasActiveCompany state', () {
       expect(TenantContext.empty.hasActiveCompany, isFalse);
@@ -63,12 +72,19 @@ void main() {
       expect(activeTenant.hasActiveCompany, isTrue);
     });
 
-    test('MissingCompanyContextException string representation contains message', () {
-      const exception = MissingCompanyContextException('No company context available.');
-      expect(
-        exception.toString(),
-        contains('MissingCompanyContextException: No company context available.'),
-      );
-    });
+    test(
+      'MissingCompanyContextException string representation contains message',
+      () {
+        const exception = MissingCompanyContextException(
+          'No company context available.',
+        );
+        expect(
+          exception.toString(),
+          contains(
+            'MissingCompanyContextException: No company context available.',
+          ),
+        );
+      },
+    );
   });
 }

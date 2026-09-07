@@ -32,7 +32,8 @@ class AppDetailPagePattern extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasTabs = tabs != null && tabViews != null && tabs!.length == tabViews!.length;
+    final hasTabs =
+        tabs != null && tabViews != null && tabs!.length == tabViews!.length;
 
     Widget mainContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,20 +76,13 @@ class AppDetailPagePattern extends StatelessWidget {
                 tabAlignment: TabAlignment.start,
               ),
               const SizedBox(height: AppSpacing.md),
-              Expanded(
-                child: TabBarView(
-                  children: tabViews!,
-                ),
-              ),
+              Expanded(child: TabBarView(children: tabViews!)),
             ],
           ),
         ),
       );
     }
 
-    return AppPageShell(
-      scrollable: true,
-      child: mainContent,
-    );
+    return AppPageShell(scrollable: true, child: mainContent);
   }
 }

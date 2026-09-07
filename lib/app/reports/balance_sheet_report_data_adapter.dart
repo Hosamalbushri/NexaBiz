@@ -60,7 +60,8 @@ class BalanceSheetReportDataAdapter implements BalanceSheetReportDataPort {
       final netCredit = row.credit - row.debit;
 
       // Assets (Class 1 / AccountType.asset) -> Net debit
-      if (acc.accountType == AccountType.asset || acc.accountCode.startsWith('1')) {
+      if (acc.accountType == AccountType.asset ||
+          acc.accountCode.startsWith('1')) {
         if (netDebit != 0) {
           totalAssets += netDebit;
           assetItems.add(
@@ -73,7 +74,8 @@ class BalanceSheetReportDataAdapter implements BalanceSheetReportDataPort {
         }
       }
       // Liabilities (Class 2 / AccountType.liability) -> Net credit
-      else if (acc.accountType == AccountType.liability || acc.accountCode.startsWith('2')) {
+      else if (acc.accountType == AccountType.liability ||
+          acc.accountCode.startsWith('2')) {
         if (netCredit != 0) {
           totalLiabilities += netCredit;
           liabilityItems.add(
@@ -86,7 +88,8 @@ class BalanceSheetReportDataAdapter implements BalanceSheetReportDataPort {
         }
       }
       // Equity (Class 3 / AccountType.equity) -> Net credit
-      else if (acc.accountType == AccountType.equity || acc.accountCode.startsWith('3')) {
+      else if (acc.accountType == AccountType.equity ||
+          acc.accountCode.startsWith('3')) {
         if (netCredit != 0) {
           totalEquity += netCredit;
           equityItems.add(
@@ -99,16 +102,20 @@ class BalanceSheetReportDataAdapter implements BalanceSheetReportDataPort {
         }
       }
       // P&L Accounts (Revenue/Expense) aggregate into retained earnings
-      else if (acc.accountType == AccountType.revenue || acc.accountCode.startsWith('4')) {
+      else if (acc.accountType == AccountType.revenue ||
+          acc.accountCode.startsWith('4')) {
         totalRevenue += netCredit;
-      } else if (acc.accountType == AccountType.expense || acc.accountCode.startsWith('5') || acc.accountCode.startsWith('6')) {
+      } else if (acc.accountType == AccountType.expense ||
+          acc.accountCode.startsWith('5') ||
+          acc.accountCode.startsWith('6')) {
         totalExpense += netDebit;
       }
     }
 
     final retainedEarnings = totalRevenue - totalExpense;
     final totalEquityWithRetained = totalEquity + retainedEarnings;
-    final totalLiabilitiesAndEquity = totalLiabilities + totalEquityWithRetained;
+    final totalLiabilitiesAndEquity =
+        totalLiabilities + totalEquityWithRetained;
 
     // Check Assets == Liabilities + Equity (within floating point precision tolerance)
     final isBalanced = (totalAssets - totalLiabilitiesAndEquity).abs() < 0.01;

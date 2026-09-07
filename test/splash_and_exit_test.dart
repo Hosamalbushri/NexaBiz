@@ -205,8 +205,6 @@ AuthState _testAuthenticatedState() {
   );
 }
 
-
-
 void main() {
   Widget wrapDialog({
     required Widget child,
@@ -236,8 +234,7 @@ void main() {
         ),
         GoRoute(
           path: AppRoutes.login,
-          builder: (context, state) =>
-              const Scaffold(body: Text('LoginShell')),
+          builder: (context, state) => const Scaffold(body: Text('LoginShell')),
         ),
         GoRoute(
           path: AppRoutes.dashboard,
@@ -309,39 +306,51 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    testWidgets('navigates to dashboard when initialization succeeds and user is authenticated', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrapSplash(
-          overrides: [
-            ...setupOverrides(_readyProgress(), isFirstLaunch: false, onboardingCompleted: true),
-            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
-          ],
-        ),
-      );
+    testWidgets(
+      'navigates to dashboard when initialization succeeds and user is authenticated',
+      (tester) async {
+        await tester.pumpWidget(
+          wrapSplash(
+            overrides: [
+              ...setupOverrides(
+                _readyProgress(),
+                isFirstLaunch: false,
+                onboardingCompleted: true,
+              ),
+              authStateProvider.overrideWith(
+                (ref) => _FakeAuthController(_testAuthenticatedState()),
+              ),
+            ],
+          ),
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('DashboardShell'), findsOneWidget);
-      expect(find.byType(SplashPage), findsNothing);
-    });
+        expect(find.text('DashboardShell'), findsOneWidget);
+        expect(find.byType(SplashPage), findsNothing);
+      },
+    );
 
-    testWidgets('navigates to first-run setup when onboarding is not completed', (tester) async {
-      await tester.pumpWidget(
-        wrapSplash(
-          overrides: [
-            ...setupOverrides(_freshProgress(), onboardingCompleted: false),
-            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
-          ],
-        ),
-      );
+    testWidgets(
+      'navigates to first-run setup when onboarding is not completed',
+      (tester) async {
+        await tester.pumpWidget(
+          wrapSplash(
+            overrides: [
+              ...setupOverrides(_freshProgress(), onboardingCompleted: false),
+              authStateProvider.overrideWith(
+                (ref) => _FakeAuthController(_testAuthenticatedState()),
+              ),
+            ],
+          ),
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('FirstRunSetupShell'), findsOneWidget);
-      expect(find.text('DashboardShell'), findsNothing);
-    });
+        expect(find.text('FirstRunSetupShell'), findsOneWidget);
+        expect(find.text('DashboardShell'), findsNothing);
+      },
+    );
 
     testWidgets('shows error state with retry on failure', (tester) async {
       late _TestAppInitializationCoordinator coordinator;
@@ -349,12 +358,21 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress(), isFirstLaunch: false, onboardingCompleted: true),
+            ...setupOverrides(
+              _readyProgress(),
+              isFirstLaunch: false,
+              onboardingCompleted: true,
+            ),
             appInitializationControllerProvider.overrideWith((ref) {
-              coordinator = _TestAppInitializationCoordinator(ref, shouldFail: true);
+              coordinator = _TestAppInitializationCoordinator(
+                ref,
+                shouldFail: true,
+              );
               return coordinator;
             }),
-            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
+            authStateProvider.overrideWith(
+              (ref) => _FakeAuthController(_testAuthenticatedState()),
+            ),
           ],
         ),
       );

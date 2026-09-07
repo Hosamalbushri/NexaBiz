@@ -29,17 +29,20 @@ void main() {
       expect(state, equals(DatasetSyncState.initialSyncRequired));
     });
 
-    test('TEST 3: Server has data + local has data + no new changes -> synchronized', () {
-      final state = resolver.resolve(
-        isAuthenticated: true,
-        isServerReachable: true,
-        localDataRecordCount: 50,
-        localCursorSequence: 150,
-        serverHasData: true,
-        serverSequence: 150,
-      );
-      expect(state, equals(DatasetSyncState.synchronized));
-    });
+    test(
+      'TEST 3: Server has data + local has data + no new changes -> synchronized',
+      () {
+        final state = resolver.resolve(
+          isAuthenticated: true,
+          isServerReachable: true,
+          localDataRecordCount: 50,
+          localCursorSequence: 150,
+          serverHasData: true,
+          serverSequence: 150,
+        );
+        expect(state, equals(DatasetSyncState.synchronized));
+      },
+    );
 
     test('TEST 4: Server has new changes + local has data -> syncRequired', () {
       final state = resolver.resolve(
@@ -65,17 +68,20 @@ void main() {
       expect(state, equals(DatasetSyncState.offlineReady));
     });
 
-    test('TEST 6: Server unavailable + local empty -> offlineUninitialized', () {
-      final state = resolver.resolve(
-        isAuthenticated: true,
-        isServerReachable: false,
-        localDataRecordCount: 0,
-        localCursorSequence: 0,
-        serverHasData: false,
-        serverSequence: 0,
-      );
-      expect(state, equals(DatasetSyncState.offlineUninitialized));
-    });
+    test(
+      'TEST 6: Server unavailable + local empty -> offlineUninitialized',
+      () {
+        final state = resolver.resolve(
+          isAuthenticated: true,
+          isServerReachable: false,
+          localDataRecordCount: 0,
+          localCursorSequence: 0,
+          serverHasData: false,
+          serverSequence: 0,
+        );
+        expect(state, equals(DatasetSyncState.offlineUninitialized));
+      },
+    );
 
     test('TEST 7: Local database empty + cursor > 0 -> recoveryRequired', () {
       final state = resolver.resolve(
@@ -148,30 +154,36 @@ void main() {
       expect(state1, equals(DatasetSyncState.synchronized));
     });
 
-    test('TEST 12: Recovery required evaluated even when server unavailable if local DB empty and cursor > 0', () {
-      final state = resolver.resolve(
-        isAuthenticated: true,
-        isServerReachable: false,
-        localDataRecordCount: 0,
-        localCursorSequence: 100,
-        serverHasData: false,
-        serverSequence: 0,
-      );
-      // Offline with data = offlineReady, offline without data = offlineUninitialized
-      expect(state, equals(DatasetSyncState.offlineUninitialized));
-    });
+    test(
+      'TEST 12: Recovery required evaluated even when server unavailable if local DB empty and cursor > 0',
+      () {
+        final state = resolver.resolve(
+          isAuthenticated: true,
+          isServerReachable: false,
+          localDataRecordCount: 0,
+          localCursorSequence: 100,
+          serverHasData: false,
+          serverSequence: 0,
+        );
+        // Offline with data = offlineReady, offline without data = offlineUninitialized
+        expect(state, equals(DatasetSyncState.offlineUninitialized));
+      },
+    );
 
-    test('TEST 13: Local DB record count > 0 with server Sequence == local Cursor -> synchronized', () {
-      final state = resolver.resolve(
-        isAuthenticated: true,
-        isServerReachable: true,
-        localDataRecordCount: 1,
-        localCursorSequence: 10,
-        serverHasData: true,
-        serverSequence: 10,
-      );
-      expect(state, equals(DatasetSyncState.synchronized));
-    });
+    test(
+      'TEST 13: Local DB record count > 0 with server Sequence == local Cursor -> synchronized',
+      () {
+        final state = resolver.resolve(
+          isAuthenticated: true,
+          isServerReachable: true,
+          localDataRecordCount: 1,
+          localCursorSequence: 10,
+          serverHasData: true,
+          serverSequence: 10,
+        );
+        expect(state, equals(DatasetSyncState.synchronized));
+      },
+    );
 
     test('TEST 14: Server dataset sequence > local cursor -> syncRequired', () {
       final state = resolver.resolve(

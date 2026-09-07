@@ -34,8 +34,10 @@ class InventoryItemAdapter extends TypeAdapter<InventoryItem> {
       mainQuantity: _asDouble(fields[6]),
       subQuantity: _asDouble(fields[7]),
       id: _asNullableString(fields[8]) ?? 'legacy:$itemCode',
-      createdAt: createdAt ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
-      updatedAt: updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      createdAt:
+          createdAt ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      updatedAt:
+          updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       syncStatus: SyncStatusX.fromStorage(fields[11] as String?),
       lastSyncedAt: _asDateTime(fields[12]),
       version: _asNullableInt(fields[13]) ?? 1,

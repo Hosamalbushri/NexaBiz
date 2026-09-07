@@ -91,8 +91,7 @@ class StockIssueComposerState {
   double get totalQuantity =>
       lines.fold(0.0, (sum, line) => sum + line.totalQuantity);
 
-  double get totalCost =>
-      lines.fold(0.0, (sum, line) => sum + line.totalCost);
+  double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
 
   StockIssueComposerState copyWith({
     DateTime? issueDate,
@@ -117,8 +116,7 @@ class StockIssueComposerState {
   }) {
     return StockIssueComposerState(
       issueDate: issueDate ?? this.issueDate,
-      voucherBook:
-          clearVoucherBook ? null : (voucherBook ?? this.voucherBook),
+      voucherBook: clearVoucherBook ? null : (voucherBook ?? this.voucherBook),
       previewIssueNumber: clearPreviewIssueNumber
           ? null
           : (previewIssueNumber ?? this.previewIssueNumber),
@@ -140,7 +138,7 @@ class StockIssueComposerState {
 class StockIssueComposerNotifier
     extends StateNotifier<StockIssueComposerState> {
   StockIssueComposerNotifier()
-      : super(StockIssueComposerState(issueDate: DateTime.now()));
+    : super(StockIssueComposerState(issueDate: DateTime.now()));
 
   void reset([String? defaultCurrencyCode]) {
     state = StockIssueComposerState(
@@ -183,7 +181,11 @@ class StockIssueComposerNotifier
                 subQuantity: l.subQuantity,
                 packSize: l.packSize,
                 unitCost: l.unitCost,
-                baseUnitCost: l.unitCost * (issueToEdit.exchangeRate > 0 ? issueToEdit.exchangeRate : 1.0),
+                baseUnitCost:
+                    l.unitCost *
+                    (issueToEdit.exchangeRate > 0
+                        ? issueToEdit.exchangeRate
+                        : 1.0),
               ),
             )
             .toList(),
@@ -210,10 +212,7 @@ class StockIssueComposerNotifier
   }
 
   void setAccount(InventoryAccountRef? account) {
-    state = state.copyWith(
-      account: account,
-      clearAccount: account == null,
-    );
+    state = state.copyWith(account: account, clearAccount: account == null);
   }
 
   void setCurrency(String code, [double rate = 1.0]) {
@@ -243,7 +242,10 @@ class StockIssueComposerNotifier
     );
   }
 
-  Future<void> addProduct(Product product, {CostLayerService? costLayerService}) async {
+  Future<void> addProduct(
+    Product product, {
+    CostLayerService? costLayerService,
+  }) async {
     double baseCost = product.unitCost;
     if (baseCost <= 0 && costLayerService != null) {
       baseCost = await costLayerService.getItemCostValuation(
@@ -254,15 +256,17 @@ class StockIssueComposerNotifier
     final rate = state.exchangeRate <= 0 ? 1.0 : state.exchangeRate;
     final docUnitCost = baseCost / rate;
 
-    addLine(StockIssueLineDraft(
-      itemCode: product.itemCode,
-      itemName: product.name,
-      packSize: product.packSize > 0 ? product.packSize.toDouble() : 1.0,
-      unitCost: docUnitCost,
-      baseUnitCost: baseCost,
-      mainQuantity: 1.0,
-      subQuantity: 0.0,
-    ));
+    addLine(
+      StockIssueLineDraft(
+        itemCode: product.itemCode,
+        itemName: product.name,
+        packSize: product.packSize > 0 ? product.packSize.toDouble() : 1.0,
+        unitCost: docUnitCost,
+        baseUnitCost: baseCost,
+        mainQuantity: 1.0,
+        subQuantity: 0.0,
+      ),
+    );
   }
 
   void addLine(StockIssueLineDraft line) {
@@ -283,10 +287,7 @@ class StockIssueComposerNotifier
     state = state.copyWith(lines: updated);
   }
 
-  void updateUnitCost({
-    required int index,
-    required double unitCost,
-  }) {
+  void updateUnitCost({required int index, required double unitCost}) {
     if (index < 0 || index >= state.lines.length) return;
     final updated = List<StockIssueLineDraft>.from(state.lines);
     final rate = state.exchangeRate <= 0 ? 1.0 : state.exchangeRate;
@@ -308,7 +309,8 @@ class StockIssueComposerNotifier
 
   void removeLine(int index) {
     if (index < 0 || index >= state.lines.length) return;
-    final updated = List<StockIssueLineDraft>.from(state.lines)..removeAt(index);
+    final updated = List<StockIssueLineDraft>.from(state.lines)
+      ..removeAt(index);
     state = state.copyWith(lines: updated);
   }
 
@@ -322,21 +324,26 @@ class StockIssueComposerNotifier
     }
 
     if (state.account == null || state.account!.accountId.trim().isEmpty) {
-      state = state.copyWith(error: 'يرجى اختيار الحساب المحاسبي للمستند أولاً');
+      state = state.copyWith(
+        error: 'يرجى اختيار الحساب المحاسبي للمستند أولاً',
+      );
       return false;
     }
 
     for (final line in state.lines) {
       if (line.unitCost <= 0 || line.totalCost <= 0) {
         state = state.copyWith(
-          error: 'لا يمكن حفظ أمر الصرف بتكلفة صفرية للصنف (${line.itemName}). يرجى التأكد من توفر تكلفة للصنف.',
+          error:
+              'لا يمكن حفظ أمر الصرف بتكلفة صفرية للصنف (${line.itemName}). يرجى التأكد من توفر تكلفة للصنف.',
         );
         return false;
       }
     }
 
     if (state.totalCost <= 0) {
-      state = state.copyWith(error: 'لا يمكن حفظ أمر الصرف بتكلفة إجمالية صفرية.');
+      state = state.copyWith(
+        error: 'لا يمكن حفظ أمر الصرف بتكلفة إجمالية صفرية.',
+      );
       return false;
     }
 
@@ -349,7 +356,9 @@ class StockIssueComposerNotifier
 
       if (number.isEmpty) {
         if (state.voucherBook != null) {
-          number = await voucherPort.allocateIssueNumber(state.voucherBook!.bookId);
+          number = await voucherPort.allocateIssueNumber(
+            state.voucherBook!.bookId,
+          );
         } else {
           number = 'ISS-${DateTime.now().millisecondsSinceEpoch % 10000}';
         }
@@ -395,7 +404,10 @@ class StockIssueComposerNotifier
   }
 }
 
-final stockIssueComposerProvider = StateNotifierProvider.autoDispose<
-    StockIssueComposerNotifier, StockIssueComposerState>((ref) {
-  return StockIssueComposerNotifier();
-});
+final stockIssueComposerProvider =
+    StateNotifierProvider.autoDispose<
+      StockIssueComposerNotifier,
+      StockIssueComposerState
+    >((ref) {
+      return StockIssueComposerNotifier();
+    });

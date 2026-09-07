@@ -20,15 +20,15 @@ final allCategoriesStreamProvider = StreamProvider<List<Category>>((ref) {
 
 final categoriesForWarehouseStreamProvider =
     StreamProvider.family<List<Category>, String>((ref, warehouseId) {
-  final repo = ref.watch(categoryRepositoryProvider);
-  return repo.watchCategoriesForWarehouse(warehouseId);
-});
+      final repo = ref.watch(categoryRepositoryProvider);
+      return repo.watchCategoriesForWarehouse(warehouseId);
+    });
 
 final categoryControllerProvider =
     StateNotifierProvider<CategoryController, AsyncValue<void>>((ref) {
-  final repo = ref.watch(categoryRepositoryProvider);
-  return CategoryController(repo);
-});
+      final repo = ref.watch(categoryRepositoryProvider);
+      return CategoryController(repo);
+    });
 
 class CategoryController extends StateNotifier<AsyncValue<void>> {
   CategoryController(this._repo) : super(const AsyncData(null));

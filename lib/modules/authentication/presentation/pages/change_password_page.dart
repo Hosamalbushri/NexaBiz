@@ -84,10 +84,12 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     });
 
     try {
-      await ref.read(authStateProvider.notifier).changePassword(
-        currentPassword: _current.text,
-        newPassword: _next.text,
-      );
+      await ref
+          .read(authStateProvider.notifier)
+          .changePassword(
+            currentPassword: _current.text,
+            newPassword: _next.text,
+          );
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,11 +219,13 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                                 padding: const EdgeInsets.all(AppSpacing.md),
                                 decoration: BoxDecoration(
                                   color: scheme.primary.withValues(alpha: 0.08),
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.md),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.md,
+                                  ),
                                   border: Border.all(
-                                    color:
-                                        scheme.primary.withValues(alpha: 0.2),
+                                    color: scheme.primary.withValues(
+                                      alpha: 0.2,
+                                    ),
                                   ),
                                 ),
                                 child: Row(
@@ -235,12 +239,12 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                                     Expanded(
                                       child: Text(
                                         l10n.authChangePasswordLocalAccountNotice,
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: scheme.onSurface,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.35,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: scheme.onSurface,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.35,
+                                            ),
                                       ),
                                     ),
                                   ],

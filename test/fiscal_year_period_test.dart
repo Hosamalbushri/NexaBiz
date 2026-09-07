@@ -112,7 +112,12 @@ void main() {
       db = AccountingDatabase.memory();
       fyRepo = FiscalYearRepositoryImpl(db);
       accounts = AccountRepositoryImpl(db, syncQueue: queue);
-      journals = JournalRepositoryImpl(db, accounts: accounts, periodValidator: legacyPeriodValidator(), syncQueue: queue);
+      journals = JournalRepositoryImpl(
+        db,
+        accounts: accounts,
+        periodValidator: legacyPeriodValidator(),
+        syncQueue: queue,
+      );
       await accounts.ensureDefaultChartSeeded();
     });
 
@@ -125,10 +130,7 @@ void main() {
     });
 
     test('create FY defaults periods to closed and blocks posting', () async {
-      final create = CreateFiscalYear(
-        repository: fyRepo,
-        accounts: accounts,
-      );
+      final create = CreateFiscalYear(repository: fyRepo, accounts: accounts);
       final fy = await create(
         FiscalYearDraft(
           code: '2026',

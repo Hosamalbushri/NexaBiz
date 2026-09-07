@@ -100,9 +100,7 @@ class _BlockingLayer extends StatelessWidget {
         children: [
           ModalBarrier(dismissible: false, color: barrierColor),
           SafeArea(
-            child: Center(
-              child: _LoadingCard(message: message),
-            ),
+            child: Center(child: _LoadingCard(message: message)),
           ),
         ],
       ),
@@ -137,9 +135,10 @@ class _LoadingCardState extends State<_LoadingCard>
       vsync: this,
       duration: const Duration(milliseconds: 240),
     );
-    _scale = Tween<double>(begin: 0.95, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _scale = Tween<double>(
+      begin: 0.95,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
   }
 

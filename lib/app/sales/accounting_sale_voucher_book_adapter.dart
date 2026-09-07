@@ -47,12 +47,7 @@ class AccountingSaleVoucherBookAdapter implements SaleVoucherBookPort {
     if (book.bookType.section != VoucherBookType.sales) {
       return null;
     }
-    return _toRef(
-      book.uuid,
-      book.name,
-      book.currentNumber,
-      book.canAllocate,
-    );
+    return _toRef(book.uuid, book.name, book.currentNumber, book.canAllocate);
   }
 
   Future<SaleVoucherBookRef> _toRef(

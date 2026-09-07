@@ -6,10 +6,7 @@ import 'package:stock_count/core/setup/presentation/widgets/central_setup_center
 ///
 /// Refactored in Phase 7 to wrap the central dynamic [CentralSetupCenterWidget].
 class PackageInitializationSettingsHub extends ConsumerWidget {
-  const PackageInitializationSettingsHub({
-    super.key,
-    this.packageId,
-  });
+  const PackageInitializationSettingsHub({super.key, this.packageId});
 
   final String? packageId;
 
@@ -18,4 +15,3 @@ class PackageInitializationSettingsHub extends ConsumerWidget {
     return CentralSetupCenterWidget(filterPackageId: packageId);
   }
 }
-

@@ -8,7 +8,8 @@ enum NormalBalance {
   static NormalBalance fromStorage(String value) {
     return NormalBalance.values.firstWhere(
       (b) => b.name == value,
-      orElse: () => throw ArgumentError.value(value, 'value', 'Unknown balance'),
+      orElse: () =>
+          throw ArgumentError.value(value, 'value', 'Unknown balance'),
     );
   }
 }

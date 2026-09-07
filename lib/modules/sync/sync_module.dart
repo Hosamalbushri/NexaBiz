@@ -11,7 +11,6 @@ import '../../core/modules/module_settings_definition.dart';
 import 'sync.dart';
 import 'sync_module_settings.dart';
 
-
 /// Sync module — encapsulates offline-first synchronization infrastructure.
 class SyncModule extends AppModule {
   const SyncModule();
@@ -50,7 +49,10 @@ class SyncModule extends AppModule {
   bool get showInLauncher => false;
 
   @override
-  List<String> get requiredAnyPermissions => const ['sync.view', 'sync.execute'];
+  List<String> get requiredAnyPermissions => const [
+    'sync.view',
+    'sync.execute',
+  ];
 
   @override
   bool get hasSettings => true;
@@ -61,18 +63,17 @@ class SyncModule extends AppModule {
 
   @override
   List<Widget> buildSettingsSections(BuildContext context) => [
-        const SyncSettingsTileSection(),
-      ];
+    const SyncSettingsTileSection(),
+  ];
 
   @override
   List<RouteBase> get routes => [
-        GoRoute(
-          path: AppRoutes.settingsDataSync,
-          name: 'settingsDataSync',
-          builder: (context, state) => const DataSyncSettingsPage(),
-        ),
-      ];
-
+    GoRoute(
+      path: AppRoutes.settingsDataSync,
+      name: 'settingsDataSync',
+      builder: (context, state) => const DataSyncSettingsPage(),
+    ),
+  ];
 
   @override
   String label(BuildContext context) => 'المزامنة';
@@ -82,20 +83,24 @@ class SyncModule extends AppModule {
 
   @override
   List<Override> get providerOverrides => [
-        localDatasetRecordCountersProvider.overrideWith((ref) => [
-              AccountingRecordCounter(ref),
-              InventoryRecordCounter(ref),
-              CustomerRecordCounter(ref),
-              SaleRecordCounter(ref),
-              RpRecordCounter(ref),
-            ]),
-        initialCloudEntityScannersProvider.overrideWith((ref) => [
-              AccountInitialCloudScanner(),
-              CustomerInitialCloudScanner(),
-              ProductInitialCloudScanner(),
-              SaleInitialCloudScanner(),
-              FinancialTransactionInitialCloudScanner(),
-              JournalEntryInitialCloudScanner(),
-            ]),
-      ];
+    localDatasetRecordCountersProvider.overrideWith(
+      (ref) => [
+        AccountingRecordCounter(ref),
+        InventoryRecordCounter(ref),
+        CustomerRecordCounter(ref),
+        SaleRecordCounter(ref),
+        RpRecordCounter(ref),
+      ],
+    ),
+    initialCloudEntityScannersProvider.overrideWith(
+      (ref) => [
+        AccountInitialCloudScanner(),
+        CustomerInitialCloudScanner(),
+        ProductInitialCloudScanner(),
+        SaleInitialCloudScanner(),
+        FinancialTransactionInitialCloudScanner(),
+        JournalEntryInitialCloudScanner(),
+      ],
+    ),
+  ];
 }

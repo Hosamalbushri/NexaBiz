@@ -24,19 +24,19 @@ class AccountingRpVoucherBookAdapter implements RpVoucherBookPort {
   int get _base => deviceSaleNumberBase(deviceId);
 
   VoucherBookType _bookTypeFor(TransactionType type) => switch (type) {
-        TransactionType.receipt => VoucherBookType.receipts,
-        TransactionType.payment => VoucherBookType.payments,
-        TransactionType.transfer => VoucherBookType.transfers,
-        TransactionType.currencyExchange => VoucherBookType.exchanges,
-      };
+    TransactionType.receipt => VoucherBookType.receipts,
+    TransactionType.payment => VoucherBookType.payments,
+    TransactionType.transfer => VoucherBookType.transfers,
+    TransactionType.currencyExchange => VoucherBookType.exchanges,
+  };
 
   TransactionType? _typeForBook(VoucherBookType bookType) => switch (bookType) {
-        VoucherBookType.receipts => TransactionType.receipt,
-        VoucherBookType.payments => TransactionType.payment,
-        VoucherBookType.transfers => TransactionType.transfer,
-        VoucherBookType.exchanges => TransactionType.currencyExchange,
-        _ => null,
-      };
+    VoucherBookType.receipts => TransactionType.receipt,
+    VoucherBookType.payments => TransactionType.payment,
+    VoucherBookType.transfers => TransactionType.transfer,
+    VoucherBookType.exchanges => TransactionType.currencyExchange,
+    _ => null,
+  };
 
   @override
   Future<List<RpVoucherBookRef>> listActiveBooks(TransactionType type) async {
@@ -46,13 +46,7 @@ class AccountingRpVoucherBookAdapter implements RpVoucherBookPort {
     for (final b in books) {
       if (b.isGroup || !b.isActive) continue;
       refs.add(
-        await _toRef(
-          b.uuid,
-          b.name,
-          b.currentNumber,
-          b.canAllocate,
-          type,
-        ),
+        await _toRef(b.uuid, b.name, b.currentNumber, b.canAllocate, type),
       );
     }
     return refs;

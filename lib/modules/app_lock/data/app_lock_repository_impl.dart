@@ -70,10 +70,7 @@ class AppLockRepositoryImpl implements AppLockRepository {
     final box = await _open();
     final hash = box.get(_hashKey) as String?;
     final salt = box.get(_saltKey) as String?;
-    return hash != null &&
-        hash.isNotEmpty &&
-        salt != null &&
-        salt.isNotEmpty;
+    return hash != null && hash.isNotEmpty && salt != null && salt.isNotEmpty;
   }
 
   @override

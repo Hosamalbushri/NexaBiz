@@ -15,7 +15,9 @@ import 'package:stock_count/modules/inventory/warehouses/domain/repositories/war
 import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
 
 class MissingCompanyContextException implements Exception {
-  const MissingCompanyContextException([this.message = 'مطلوب سياق شركة صالح لتنفيذ العملية المحاسبية.']);
+  const MissingCompanyContextException([
+    this.message = 'مطلوب سياق شركة صالح لتنفيذ العملية المحاسبية.',
+  ]);
   final String message;
 
   @override
@@ -31,7 +33,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     this._initializationGuard,
     this.bindingRepo,
     this.validationService,
-  })  : _accountingDb = accountingDb;
+  }) : _accountingDb = accountingDb;
 
   final AccountingDatabase? _accountingDb;
   final JournalPostingService? _journalPostingService;
@@ -83,15 +85,16 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
         }
       }
 
-      final byUuidOrCode = await (db.select(db.accounts)..where(
-            (tbl) =>
-                (tbl.uuid.equals(target) | tbl.accountCode.equals(target)) &
-                tbl.companyId.equals(companyId) &
-                tbl.deletedAt.isNull() &
-                tbl.isGroup.equals(false) &
-                tbl.isActive.equals(true),
-          ))
-          .getSingleOrNull();
+      final byUuidOrCode =
+          await (db.select(db.accounts)..where(
+                (tbl) =>
+                    (tbl.uuid.equals(target) | tbl.accountCode.equals(target)) &
+                    tbl.companyId.equals(companyId) &
+                    tbl.deletedAt.isNull() &
+                    tbl.isGroup.equals(false) &
+                    tbl.isActive.equals(true),
+              ))
+              .getSingleOrNull();
       if (byUuidOrCode != null) return byUuidOrCode.uuid;
 
       throw MissingAccountException(
@@ -104,13 +107,19 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     }
 
     // Precedence Level 2: Warehouse-specific binding
-    if (warehouseId != null && warehouseId.trim().isNotEmpty && bindingRepo != null) {
-      final binding = await bindingRepo!.getBindingForWarehouse(warehouseId.trim());
+    if (warehouseId != null &&
+        warehouseId.trim().isNotEmpty &&
+        bindingRepo != null) {
+      final binding = await bindingRepo!.getBindingForWarehouse(
+        warehouseId.trim(),
+      );
       if (binding != null) {
         final candidateId = switch (role) {
           AccountRole.inventory => binding.inventoryAssetAccountId,
           AccountRole.cogs => binding.cogsAccountId,
-          AccountRole.payable => binding.inventoryAdjustmentAccountId ?? binding.inventoryAssetAccountId,
+          AccountRole.payable =>
+            binding.inventoryAdjustmentAccountId ??
+                binding.inventoryAssetAccountId,
           AccountRole.receivable => binding.inventoryAssetAccountId,
           AccountRole.revenue => binding.cogsAccountId,
           _ => null,
@@ -136,16 +145,17 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
             }
           }
 
-          final acc = await (db.select(db.accounts)..where(
-                (tbl) =>
-                    (tbl.uuid.equals(targetCandidate) |
-                        tbl.accountCode.equals(targetCandidate)) &
-                    tbl.companyId.equals(companyId) &
-                    tbl.deletedAt.isNull() &
-                    tbl.isGroup.equals(false) &
-                    tbl.isActive.equals(true),
-              ))
-              .getSingleOrNull();
+          final acc =
+              await (db.select(db.accounts)..where(
+                    (tbl) =>
+                        (tbl.uuid.equals(targetCandidate) |
+                            tbl.accountCode.equals(targetCandidate)) &
+                        tbl.companyId.equals(companyId) &
+                        tbl.deletedAt.isNull() &
+                        tbl.isGroup.equals(false) &
+                        tbl.isActive.equals(true),
+                  ))
+                  .getSingleOrNull();
           if (acc != null) return acc.uuid;
         }
       }
@@ -174,17 +184,50 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
         }
       }
 
-      final acc = await (db.select(db.accounts)..where(
-            (tbl) =>
-                (tbl.uuid.equals(configuredKey) |
-                    tbl.accountCode.equals(configuredKey)) &
-                tbl.companyId.equals(companyId) &
-                tbl.deletedAt.isNull() &
-                tbl.isGroup.equals(false) &
-                tbl.isActive.equals(true),
-          ))
-          .getSingleOrNull();
+      final acc =
+          await (db.select(db.accounts)..where(
+                (tbl) =>
+                    (tbl.uuid.equals(configuredKey) |
+                        tbl.accountCode.equals(configuredKey)) &
+                    tbl.companyId.equals(companyId) &
+                    tbl.deletedAt.isNull() &
+                    tbl.isGroup.equals(false) &
+                    tbl.isActive.equals(true),
+              ))
+              .getSingleOrNull();
       if (acc != null) return acc.uuid;
+    }
+
+    // Precedence Level 4: System Key Fallback (e.g. system:payable, system:inventory)
+    final systemKeys = switch (role) {
+      AccountRole.inventory => ['system:inventory'],
+      AccountRole.payable => ['system:payable', 'system:accounts_payable'],
+      AccountRole.cogs => ['system:cost_of_goods', 'system:cogs'],
+      AccountRole.revenue => ['system:revenue', 'system:sales_revenue'],
+      AccountRole.receivable => [
+        'system:receivable',
+        'system:accounts_receivable',
+      ],
+      AccountRole.cash => ['system:cash', 'system:cash_box'],
+      AccountRole.adjustment => [
+        'system:inventory_adjustment',
+        'system:adjustment',
+      ],
+      _ => <String>[],
+    };
+
+    for (final sysKey in systemKeys) {
+      final sysAcc =
+          await (db.select(db.accounts)..where(
+                (tbl) =>
+                    tbl.description.equals(sysKey) &
+                    tbl.companyId.equals(companyId) &
+                    tbl.deletedAt.isNull() &
+                    tbl.isGroup.equals(false) &
+                    tbl.isActive.equals(true),
+              ))
+              .getSingleOrNull();
+      if (sysAcc != null) return sysAcc.uuid;
     }
 
     final roleNameAr = switch (role) {
@@ -422,14 +465,15 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     final now = DateTime.now().toUtc();
 
     await db.transaction(() async {
-      final existingEntry = await (db.select(db.journalEntries)..where(
-            (tbl) =>
-                tbl.sourceType.equals(sourceType) &
-                tbl.sourceId.equals(sourceId) &
-                tbl.companyId.equals(_currentCompanyId) &
-                tbl.deletedAt.isNull(),
-          ))
-          .getSingleOrNull();
+      final existingEntry =
+          await (db.select(db.journalEntries)..where(
+                (tbl) =>
+                    tbl.sourceType.equals(sourceType) &
+                    tbl.sourceId.equals(sourceId) &
+                    tbl.companyId.equals(_currentCompanyId) &
+                    tbl.deletedAt.isNull(),
+              ))
+              .getSingleOrNull();
 
       final String entryUuid;
 
@@ -464,7 +508,9 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
         )..where((tbl) => tbl.entryUuid.equals(entryUuid))).go();
       } else {
         entryUuid = generateUuidV4();
-        await db.into(db.journalEntries).insert(
+        await db
+            .into(db.journalEntries)
+            .insert(
               JournalEntriesCompanion(
                 uuid: Value(entryUuid),
                 voucherNumber: Value(document.documentNumber),
@@ -485,7 +531,9 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       }
 
       // 1. Inventory Account Line (in Inventory Base Currency, e.g. YER)
-      await db.into(db.journalLines).insert(
+      await db
+          .into(db.journalLines)
+          .insert(
             JournalLinesCompanion(
               uuid: Value(generateUuidV4()),
               entryUuid: Value(entryUuid),
@@ -501,7 +549,9 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
           );
 
       // 2. Offset Account Line (in Document Currency, e.g. SAR/USD)
-      await db.into(db.journalLines).insert(
+      await db
+          .into(db.journalLines)
+          .insert(
             JournalLinesCompanion(
               uuid: Value(generateUuidV4()),
               entryUuid: Value(entryUuid),
@@ -525,14 +575,15 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
   }) async {
     final now = DateTime.now().toUtc();
 
-    final existing = await (db.select(db.journalEntries)..where(
-          (tbl) =>
-              tbl.sourceType.equals(document.documentType.storageValue) &
-              tbl.sourceId.equals(document.documentId) &
-              tbl.companyId.equals(_currentCompanyId) &
-              tbl.deletedAt.isNull(),
-        ))
-        .getSingleOrNull();
+    final existing =
+        await (db.select(db.journalEntries)..where(
+              (tbl) =>
+                  tbl.sourceType.equals(document.documentType.storageValue) &
+                  tbl.sourceId.equals(document.documentId) &
+                  tbl.companyId.equals(_currentCompanyId) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
 
     if (existing != null && existing.isPosted && !isPosted) {
       throw const JournalException(JournalException.postedImmutable);
@@ -570,14 +621,15 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
 
     final now = DateTime.now().toUtc();
 
-    final existing = await (db.select(db.journalEntries)..where(
-          (tbl) =>
-              tbl.sourceType.equals(sourceType) &
-              tbl.sourceId.equals(sourceId) &
-              tbl.companyId.equals(_currentCompanyId) &
-              tbl.deletedAt.isNull(),
-        ))
-        .getSingleOrNull();
+    final existing =
+        await (db.select(db.journalEntries)..where(
+              (tbl) =>
+                  tbl.sourceType.equals(sourceType) &
+                  tbl.sourceId.equals(sourceId) &
+                  tbl.companyId.equals(_currentCompanyId) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
 
     if (existing != null && existing.isPosted) {
       final existingLines = await (db.select(
@@ -585,7 +637,9 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       )..where((tbl) => tbl.entryUuid.equals(existing.uuid))).get();
 
       final reverseUuid = generateUuidV4();
-      await db.into(db.journalEntries).insert(
+      await db
+          .into(db.journalEntries)
+          .insert(
             JournalEntriesCompanion(
               uuid: Value(reverseUuid),
               voucherNumber: Value('${existing.voucherNumber}-R'),
@@ -605,7 +659,9 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
           );
 
       for (final line in existingLines) {
-        await db.into(db.journalLines).insert(
+        await db
+            .into(db.journalLines)
+            .insert(
               JournalLinesCompanion(
                 uuid: Value(generateUuidV4()),
                 entryUuid: Value(reverseUuid),

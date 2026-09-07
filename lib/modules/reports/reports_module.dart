@@ -10,6 +10,7 @@ import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'financial_reports/presentation/pages/account_statement_report_page.dart';
+import 'financial_reports/presentation/pages/account_statement_report_table_page.dart';
 import 'financial_reports/presentation/pages/balance_sheet_report_page.dart';
 import 'financial_reports/presentation/pages/cash_flow_report_page.dart';
 import 'financial_reports/presentation/pages/general_ledger_report_page.dart';
@@ -26,7 +27,6 @@ import 'shared/domain/services/rp_report_data_port.dart';
 import 'shared/presentation/pages/report_pdf_preview_page.dart';
 import 'shared/presentation/pages/reports_home_page.dart';
 import 'shared/presentation/pages/reports_routes.dart';
-
 
 /// Platform reports module — generic PDF catalog, preview, print/share.
 ///
@@ -64,24 +64,23 @@ class ReportsModule extends AppModule {
   @override
   bool get isEnabled => true;
 
-
   @override
   List<String> get requiredAnyPermissions => const [
-        'reports.view',
-        'reports.sales_period.view',
-        'reports.account_statement.view',
-        'reports.trial_balance.view',
-        'reports.journal_book.view',
-        'receipts_payments.reports.view',
-      ];
+    'reports.view',
+    'reports.sales_period.view',
+    'reports.account_statement.view',
+    'reports.trial_balance.view',
+    'reports.journal_book.view',
+    'receipts_payments.reports.view',
+  ];
 
   @override
   List<RouteAccessRule> get routeAccessRules => [
-        RouteAccessRule(
-          pathPrefix: ReportsRoutes.root,
-          anyOf: requiredAnyPermissions,
-        ),
-      ];
+    RouteAccessRule(
+      pathPrefix: ReportsRoutes.root,
+      anyOf: requiredAnyPermissions,
+    ),
+  ];
 
   @override
   PermissionPackageDef? get permissionPackage => reportsPermissionPackage();
@@ -166,7 +165,8 @@ class ReportsModule extends AppModule {
               icon: Icons.trending_up_outlined,
               path: ReportsRoutes.incomeStatement,
               titleBuilder: (l10n) => 'قائمة الدخل (الأرباح والخسائر)',
-              subtitleBuilder: (l10n) => 'الإيرادات والتكاليف والمصروفات وصافي الربح',
+              subtitleBuilder: (l10n) =>
+                  'الإيرادات والتكاليف والمصروفات وصافي الربح',
             ),
             ReportItemDefinition(
               id: 'reports_balance_sheet',
@@ -290,8 +290,12 @@ class ReportsModule extends AppModule {
               moduleId: 'inventory',
               icon: Icons.compare_arrows_outlined,
               path: ReportsRoutes.productStockMovement,
-              titleBuilder: (l10n) => l10n.localeName == 'ar' ? 'تقرير حركة صنف' : 'Product Stock Movement Report',
-              subtitleBuilder: (l10n) => l10n.localeName == 'ar' ? 'كشف تفصيلي بحركات التوريد والصرف والتحويل ورصيد التكلفة' : 'Detailed product inward, outward, and balance cost movements',
+              titleBuilder: (l10n) => l10n.localeName == 'ar'
+                  ? 'تقرير حركة صنف'
+                  : 'Product Stock Movement Report',
+              subtitleBuilder: (l10n) => l10n.localeName == 'ar'
+                  ? 'كشف تفصيلي بحركات التوريد والصرف والتحويل ورصيد التكلفة'
+                  : 'Detailed product inward, outward, and balance cost movements',
             ),
             ReportItemDefinition(
               id: 'reports_stock_balance',
@@ -360,6 +364,20 @@ class ReportsModule extends AppModule {
           path: 'account-statement',
           name: 'reportsAccountStatement',
           builder: (context, state) => const AccountStatementReportPage(),
+          routes: [
+            GoRoute(
+              path: 'table',
+              name: 'reportsAccountStatementTable',
+              builder: (context, state) {
+                final args = state.extra as AccountStatementReportTableArgs;
+                return AccountStatementReportTablePage(
+                  payload: args.payload,
+                  onExportPdf: args.onExportPdf,
+                  onPrint: args.onPrint,
+                );
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: 'trial-balance',
@@ -451,8 +469,7 @@ class ReportsModule extends AppModule {
         GoRoute(
           path: 'product-stock-movement',
           name: 'reportsProductStockMovement',
-          builder: (context, state) =>
-              const ProductStockMovementReportPage(),
+          builder: (context, state) => const ProductStockMovementReportPage(),
         ),
         GoRoute(
           path: 'preview',
@@ -466,4 +483,3 @@ class ReportsModule extends AppModule {
   @override
   List<Override> get providerOverrides => buildReportsAppProviderOverrides();
 }
-

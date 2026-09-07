@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:stock_count/core/navigation/app_route_param_parser.dart';
+
 import '../../app/localization/app_localizations.dart';
 import '../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../app/receipts_payments/customers_rp_lookup_adapter.dart';
@@ -71,37 +73,36 @@ class CustomersModule extends AppModule {
   @override
   bool get isEnabled => true;
 
-
   @override
   List<String> get requiredAnyPermissions => CustomersPermissions.view;
 
   @override
   List<RouteAccessRule> get routeAccessRules => [
-        RouteAccessRule(
-          pathEquals: CustomersRoutes.create,
-          anyOf: CustomersPermissions.create,
-        ),
-        RouteAccessRule(
-          pathEquals: CustomersRoutes.importPath,
-          anyOf: CustomersPermissions.importOp,
-        ),
-        RouteAccessRule(
-          pathEquals: CustomersRoutes.accounts,
-          anyOf: CustomersPermissions.accountsView,
-        ),
-        RouteAccessRule(
-          pathPrefix: CustomersRoutes.settings,
-          anyOf: CustomersPermissions.settingsView,
-        ),
-        RouteAccessRule(
-          pathRegex: RegExp(r'^/customers/\d+/edit$'),
-          anyOf: CustomersPermissions.update,
-        ),
-        RouteAccessRule(
-          pathPrefix: CustomersRoutes.root,
-          anyOf: CustomersPermissions.view,
-        ),
-      ];
+    RouteAccessRule(
+      pathEquals: CustomersRoutes.create,
+      anyOf: CustomersPermissions.create,
+    ),
+    RouteAccessRule(
+      pathEquals: CustomersRoutes.importPath,
+      anyOf: CustomersPermissions.importOp,
+    ),
+    RouteAccessRule(
+      pathEquals: CustomersRoutes.accounts,
+      anyOf: CustomersPermissions.accountsView,
+    ),
+    RouteAccessRule(
+      pathPrefix: CustomersRoutes.settings,
+      anyOf: CustomersPermissions.settingsView,
+    ),
+    RouteAccessRule(
+      pathRegex: RegExp(r'^/customers/\d+/edit$'),
+      anyOf: CustomersPermissions.update,
+    ),
+    RouteAccessRule(
+      pathPrefix: CustomersRoutes.root,
+      anyOf: CustomersPermissions.view,
+    ),
+  ];
 
   @override
   PermissionPackageDef? get permissionPackage => customersPermissionPackage();
@@ -182,7 +183,7 @@ class CustomersModule extends AppModule {
           path: ':id',
           name: 'customersDetails',
           builder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '');
+            final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
             if (id == null) {
               return const CustomerDetailsPage(customerId: -1);
             }
@@ -193,7 +194,7 @@ class CustomersModule extends AppModule {
               path: 'edit',
               name: 'customersEdit',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
                 if (id == null) {
                   return const CustomerFormPage(customerId: -1);
                 }
@@ -208,19 +209,19 @@ class CustomersModule extends AppModule {
 
   @override
   List<Override> get providerOverrides => [
-        saleCustomerLookupPortProvider.overrideWith((ref) {
-          return CustomersSaleLookupAdapter(
-            repository: ref.watch(customerRepositoryProvider),
-            accountLinkPort: ref.watch(customerAccountLinkPortProvider),
-            settings: ref.watch(settingsRepositoryProvider),
-          );
-        }),
-        rpCustomerLookupPortProvider.overrideWith((ref) {
-          return CustomersRpLookupAdapter(
-            repository: ref.watch(customerRepositoryProvider),
-            accountLinkPort: ref.watch(customerAccountLinkPortProvider),
-            settings: ref.watch(settingsRepositoryProvider),
-          );
-        }),
-      ];
+    saleCustomerLookupPortProvider.overrideWith((ref) {
+      return CustomersSaleLookupAdapter(
+        repository: ref.watch(customerRepositoryProvider),
+        accountLinkPort: ref.watch(customerAccountLinkPortProvider),
+        settings: ref.watch(settingsRepositoryProvider),
+      );
+    }),
+    rpCustomerLookupPortProvider.overrideWith((ref) {
+      return CustomersRpLookupAdapter(
+        repository: ref.watch(customerRepositoryProvider),
+        accountLinkPort: ref.watch(customerAccountLinkPortProvider),
+        settings: ref.watch(settingsRepositoryProvider),
+      );
+    }),
+  ];
 }

@@ -16,28 +16,27 @@ enum SyncErrorCode {
 
   /// Whether operations experiencing this error should be retried automatically.
   bool get isRetryable => switch (this) {
-        networkUnavailable ||
-        serverUnreachable ||
-        rateLimited ||
-        serverError =>
-          true,
-        _ => false,
-      };
+    networkUnavailable ||
+    serverUnreachable ||
+    rateLimited ||
+    serverError => true,
+    _ => false,
+  };
 
   /// User-friendly description for UI error display.
   String get userMessage => switch (this) {
-        networkUnavailable => 'Internet connection is unavailable.',
-        serverUnreachable => 'Server is unreachable or timing out.',
-        authenticationFailed => 'Session expired. Please log in again.',
-        authorizationFailed => 'You do not have permission to sync this item.',
-        validationFailed => 'Data validation failed on the server.',
-        conflictDetected => 'Data conflict detected between client and server.',
-        rateLimited => 'Too many requests. Retrying shortly.',
-        missingDependency => 'Dependent record is missing.',
-        serverError => 'Server encountered an internal error.',
-        databaseError => 'Local database error occurred.',
-        unknown => 'An unknown synchronization error occurred.',
-      };
+    networkUnavailable => 'Internet connection is unavailable.',
+    serverUnreachable => 'Server is unreachable or timing out.',
+    authenticationFailed => 'Session expired. Please log in again.',
+    authorizationFailed => 'You do not have permission to sync this item.',
+    validationFailed => 'Data validation failed on the server.',
+    conflictDetected => 'Data conflict detected between client and server.',
+    rateLimited => 'Too many requests. Retrying shortly.',
+    missingDependency => 'Dependent record is missing.',
+    serverError => 'Server encountered an internal error.',
+    databaseError => 'Local database error occurred.',
+    unknown => 'An unknown synchronization error occurred.',
+  };
 
   static SyncErrorCode fromFailure(AppFailure failure) {
     if (failure is NetworkFailure) {

@@ -174,10 +174,7 @@ class _PageSizeSelector extends StatelessWidget {
             ),
             items: [
               for (final size in options)
-                DropdownMenuItem<int>(
-                  value: size,
-                  child: Text('$size'),
-                ),
+                DropdownMenuItem<int>(value: size, child: Text('$size')),
             ],
             onChanged: (value) {
               if (value == null || value == pageSize) {

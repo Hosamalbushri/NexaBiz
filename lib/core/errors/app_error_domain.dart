@@ -110,18 +110,30 @@ AppError classifyAppError(
 
   final msg = error.toString().toLowerCase();
 
-  if (msg.contains('hive') || msg.contains('disk') || msg.contains('database') || msg.contains('sqlite') || msg.contains('drift')) {
-    final isCorrupted = msg.contains('corrupt') || msg.contains('lock') || msg.contains('incompatible');
+  if (msg.contains('hive') ||
+      msg.contains('disk') ||
+      msg.contains('database') ||
+      msg.contains('sqlite') ||
+      msg.contains('drift')) {
+    final isCorrupted =
+        msg.contains('corrupt') ||
+        msg.contains('lock') ||
+        msg.contains('incompatible');
     return AppError(
       category: category ?? AppErrorCategory.database,
       message: 'Local database or storage error: $error',
-      severity: severity ?? (isCorrupted ? FailureSeverity.fatal : FailureSeverity.recoverable),
+      severity:
+          severity ??
+          (isCorrupted ? FailureSeverity.fatal : FailureSeverity.recoverable),
       originalError: error,
       stackTrace: stackTrace,
     );
   }
 
-  if (msg.contains('socket') || msg.contains('connect') || msg.contains('timeout') || msg.contains('dns')) {
+  if (msg.contains('socket') ||
+      msg.contains('connect') ||
+      msg.contains('timeout') ||
+      msg.contains('dns')) {
     return AppError(
       category: category ?? AppErrorCategory.network,
       message: 'Network connectivity error: $error',
@@ -131,7 +143,10 @@ AppError classifyAppError(
     );
   }
 
-  if (msg.contains('cert') || msg.contains('handshake') || msg.contains('tls') || msg.contains('ssl')) {
+  if (msg.contains('cert') ||
+      msg.contains('handshake') ||
+      msg.contains('tls') ||
+      msg.contains('ssl')) {
     return AppError(
       category: category ?? AppErrorCategory.tlsCertificate,
       message: 'Security/TLS error: $error',

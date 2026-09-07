@@ -115,48 +115,74 @@ void main() {
       expect(audit.errorCount, equals(5));
     });
 
-    test('2. Full JSON serialization roundtrip guarantees exact rehydration', () {
-      final originalReport = createSampleReport(
-        jobId: 'JOB-9002',
-        companyId: 'COMP-ALPHA',
-        userId: 'USER-102',
-      );
+    test(
+      '2. Full JSON serialization roundtrip guarantees exact rehydration',
+      () {
+        final originalReport = createSampleReport(
+          jobId: 'JOB-9002',
+          companyId: 'COMP-ALPHA',
+          userId: 'USER-102',
+        );
 
-      final json = originalReport.toJson();
-      final restoredReport = ImportReport.fromJson(json);
+        final json = originalReport.toJson();
+        final restoredReport = ImportReport.fromJson(json);
 
-      expect(restoredReport.jobId, equals(originalReport.jobId));
-      expect(restoredReport.companyId, equals(originalReport.companyId));
-      expect(restoredReport.auditRecord.auditId, equals(originalReport.auditRecord.auditId));
-      expect(restoredReport.rowResults.length, equals(originalReport.rowResults.length));
-      expect(restoredReport.errorReports.length, equals(originalReport.errorReports.length));
+        expect(restoredReport.jobId, equals(originalReport.jobId));
+        expect(restoredReport.companyId, equals(originalReport.companyId));
+        expect(
+          restoredReport.auditRecord.auditId,
+          equals(originalReport.auditRecord.auditId),
+        );
+        expect(
+          restoredReport.rowResults.length,
+          equals(originalReport.rowResults.length),
+        );
+        expect(
+          restoredReport.errorReports.length,
+          equals(originalReport.errorReports.length),
+        );
 
-      expect(restoredReport.rowResults[0].outcome, equals(ImportRowOutcome.created));
-      expect(restoredReport.rowResults[0].entityId, equals('PROD-001'));
-      expect(restoredReport.errorReports[0].errorCode, equals('REQUIRED_FIELD_MISSING'));
-    });
+        expect(
+          restoredReport.rowResults[0].outcome,
+          equals(ImportRowOutcome.created),
+        );
+        expect(restoredReport.rowResults[0].entityId, equals('PROD-001'));
+        expect(
+          restoredReport.errorReports[0].errorCode,
+          equals('REQUIRED_FIELD_MISSING'),
+        );
+      },
+    );
 
-    test('3. Report reproducibility after application restart simulation', () async {
-      final report1 = createSampleReport(
-        jobId: 'JOB-RESTART-01',
-        companyId: 'COMP-BETA',
-        userId: 'USER-201',
-      );
+    test(
+      '3. Report reproducibility after application restart simulation',
+      () async {
+        final report1 = createSampleReport(
+          jobId: 'JOB-RESTART-01',
+          companyId: 'COMP-BETA',
+          userId: 'USER-201',
+        );
 
-      await reportRepository.saveReport(report1);
+        await reportRepository.saveReport(report1);
 
-      // Simulate application restart by exporting raw storage and initializing a fresh repository
-      final exportedStorage = reportRepository.exportStorage();
-      final freshRepositoryAfterRestart = InMemoryImportReportRepository(exportedStorage);
+        // Simulate application restart by exporting raw storage and initializing a fresh repository
+        final exportedStorage = reportRepository.exportStorage();
+        final freshRepositoryAfterRestart = InMemoryImportReportRepository(
+          exportedStorage,
+        );
 
-      final retrievedAudit = await freshRepositoryAfterRestart.getAuditRecord('JOB-RESTART-01', companyId: 'COMP-BETA');
+        final retrievedAudit = await freshRepositoryAfterRestart.getAuditRecord(
+          'JOB-RESTART-01',
+          companyId: 'COMP-BETA',
+        );
 
-      expect(retrievedAudit, isNotNull);
-      expect(retrievedAudit!.jobId, equals('JOB-RESTART-01'));
-      expect(retrievedAudit.companyId, equals('COMP-BETA'));
-      expect(retrievedAudit.totalRows, equals(100));
-      expect(retrievedAudit.createdRows, equals(80));
-    });
+        expect(retrievedAudit, isNotNull);
+        expect(retrievedAudit!.jobId, equals('JOB-RESTART-01'));
+        expect(retrievedAudit.companyId, equals('COMP-BETA'));
+        expect(retrievedAudit.totalRows, equals(100));
+        expect(retrievedAudit.createdRows, equals(80));
+      },
+    );
 
     test('4. Multi-company tenant isolation for audit records', () async {
       final reportAlpha = createSampleReport(
@@ -174,8 +200,12 @@ void main() {
       await reportRepository.saveReport(reportAlpha);
       await reportRepository.saveReport(reportBeta);
 
-      final companyAAudits = await reportRepository.listAuditRecordsForCompany('COMPANY-A');
-      final companyBAudits = await reportRepository.listAuditRecordsForCompany('COMPANY-B');
+      final companyAAudits = await reportRepository.listAuditRecordsForCompany(
+        'COMPANY-A',
+      );
+      final companyBAudits = await reportRepository.listAuditRecordsForCompany(
+        'COMPANY-B',
+      );
 
       expect(companyAAudits.length, equals(1));
       expect(companyAAudits.first.jobId, equals('JOB-A1'));

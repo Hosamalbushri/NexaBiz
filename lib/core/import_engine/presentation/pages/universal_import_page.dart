@@ -34,25 +34,25 @@ enum ParentAccountStrategy {
 ///
 /// Dynamically reveals sections 01 to 06 on one continuous page based on user choices.
 class UniversalImportPage extends ConsumerStatefulWidget {
-  const UniversalImportPage({
-    super.key,
-    this.initialProfileId,
-  });
+  const UniversalImportPage({super.key, this.initialProfileId});
 
   final String? initialProfileId;
 
   @override
-  ConsumerState<UniversalImportPage> createState() => _UniversalImportPageState();
+  ConsumerState<UniversalImportPage> createState() =>
+      _UniversalImportPageState();
 }
 
 class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
   // Selected Profile & Strategy state
   ImportProfile? _selectedProfile;
-  ParentAccountStrategy _parentStrategy = ParentAccountStrategy.fromFileWithFallback;
+  ParentAccountStrategy _parentStrategy =
+      ParentAccountStrategy.fromFileWithFallback;
   Account? _selectedParentAccount;
 
   // Search & File state
-  final TextEditingController _profileSearchController = TextEditingController();
+  final TextEditingController _profileSearchController =
+      TextEditingController();
   bool _isPickingFile = false;
 
   @override
@@ -60,7 +60,9 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
     super.initState();
     final profiles = ImportProfileRegistry.allProfiles;
     if (widget.initialProfileId != null) {
-      _selectedProfile = ImportProfileRegistry.getProfile(widget.initialProfileId!);
+      _selectedProfile = ImportProfileRegistry.getProfile(
+        widget.initialProfileId!,
+      );
     }
     _selectedProfile ??= profiles.firstWhere(
       (p) => p.profileId == 'PROF-ACCOUNTING-COA',
@@ -69,7 +71,9 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_selectedProfile != null) {
-        ref.read(importWizardNotifierProvider.notifier).selectProfile(_selectedProfile!);
+        ref
+            .read(importWizardNotifierProvider.notifier)
+            .selectProfile(_selectedProfile!);
       }
     });
   }
@@ -117,7 +121,9 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('تم تحميل الملف بنجاح: ${file.name} (${(file.size / 1024).toStringAsFixed(1)} KB)'),
+            content: Text(
+              'تم تحميل الملف بنجاح: ${file.name} (${(file.size / 1024).toStringAsFixed(1)} KB)',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -141,7 +147,8 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
     final theme = Theme.of(context);
     final wizardState = ref.watch(importWizardNotifierProvider);
     final activeJobState = wizardState.activeJob;
-    final isJobActive = activeJobState != null &&
+    final isJobActive =
+        activeJobState != null &&
         (activeJobState.status == ImportJobStatus.queued ||
             activeJobState.status == ImportJobStatus.preparing ||
             activeJobState.status == ImportJobStatus.processing);
@@ -162,14 +169,20 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             onPressed: () {
               ref.read(importWizardNotifierProvider.notifier).reset();
               if (_selectedProfile != null) {
-                ref.read(importWizardNotifierProvider.notifier).selectProfile(_selectedProfile!);
+                ref
+                    .read(importWizardNotifierProvider.notifier)
+                    .selectProfile(_selectedProfile!);
               }
             },
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppBreakpoints.isMobile(MediaQuery.of(context).size.width) ? AppSpacing.md : AppSpacing.lg),
+        padding: EdgeInsets.all(
+          AppBreakpoints.isMobile(MediaQuery.of(context).size.width)
+              ? AppSpacing.md
+              : AppSpacing.lg,
+        ),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1100),
@@ -191,7 +204,8 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                   theme,
                   number: '01',
                   title: 'اختر نوع البيانات المستوردة | Choose Import Type',
-                  subtitle: 'اختر كيان النظام المراد استيراد بياناته إلى الشركة الحالية',
+                  subtitle:
+                      'اختر كيان النظام المراد استيراد بياناته إلى الشركة الحالية',
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _buildProfileSelectionGrid(theme),
@@ -203,7 +217,8 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                     theme,
                     number: '02',
                     title: 'إعدادات الاستيراد التكيفية | Import Configuration',
-                    subtitle: 'تكوين الخيارات والسياسات الخاصة بـ ${_selectedProfile!.label}',
+                    subtitle:
+                        'تكوين الخيارات والسياسات الخاصة بـ ${_selectedProfile!.label}',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildDynamicConfigurationCard(theme, wizardState),
@@ -241,8 +256,10 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                   _buildSectionHeader(
                     theme,
                     number: '05',
-                    title: 'المعاينة والتحقق الخالي من التغيير | Preview & Dry-Run (0 Mutations)',
-                    subtitle: 'مراجعة نتيجة المعاينة ومؤشرات الصحة قبل الاعتماد المالي',
+                    title:
+                        'المعاينة والتحقق الخالي من التغيير | Preview & Dry-Run (0 Mutations)',
+                    subtitle:
+                        'مراجعة نتيجة المعاينة ومؤشرات الصحة قبل الاعتماد المالي',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildPreviewAndValidationCard(theme, wizardState),
@@ -255,7 +272,8 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                     theme,
                     number: '06',
                     title: 'بدء الاستيراد في الخلفية | Start Background Import',
-                    subtitle: 'مراجعة ملخص العمل وتفويض المعالج الخلفي بالتنفيذ المستقل',
+                    subtitle:
+                        'مراجعة ملخص العمل وتفويض المعالج الخلفي بالتنفيذ المستقل',
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildStartImportCard(theme, wizardState),
@@ -376,7 +394,9 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
           onTap: () => _onSelectProfile(profile),
           borderRadius: BorderRadius.circular(AppRadius.md),
           child: Container(
-            width: AppBreakpoints.isMobile(MediaQuery.of(context).size.width) ? double.infinity : 240,
+            width: AppBreakpoints.isMobile(MediaQuery.of(context).size.width)
+                ? double.infinity
+                : 240,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: isSelected
@@ -394,7 +414,9 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -404,8 +426,12 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                       Text(
                         profile.label,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w600,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -421,7 +447,11 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                   ),
                 ),
                 if (isSelected)
-                  Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary, size: 20),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
               ],
             ),
           ),
@@ -430,7 +460,10 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
     );
   }
 
-  Widget _buildDynamicConfigurationCard(ThemeData theme, ImportWizardState wizardState) {
+  Widget _buildDynamicConfigurationCard(
+    ThemeData theme,
+    ImportWizardState wizardState,
+  ) {
     final isCOA = _selectedProfile?.profileId == 'PROF-ACCOUNTING-COA';
 
     return AppCard(
@@ -439,11 +472,17 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.tune_rounded, color: theme.colorScheme.primary, size: 20),
+              Icon(
+                Icons.tune_rounded,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 'خيارات الاستيراد لـ ${_selectedProfile?.label}',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -453,26 +492,40 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             // Chart of Accounts Parent Strategy Selector
             Text(
               'استراتيجية ربط الحساب الأب (Parent Account Strategy):',
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             RadioListTile<ParentAccountStrategy>(
-              title: const Text('أقحام كافة الحسابات تحت حساب أب محدد (Under Selected Parent)'),
-              subtitle: const Text('سيتم تعيين الحساب المختار أدناه كـ أب مباشر لكافة الحسابات المستوردة.'),
+              title: const Text(
+                'أقحام كافة الحسابات تحت حساب أب محدد (Under Selected Parent)',
+              ),
+              subtitle: const Text(
+                'سيتم تعيين الحساب المختار أدناه كـ أب مباشر لكافة الحسابات المستوردة.',
+              ),
               value: ParentAccountStrategy.underSelectedParent,
               groupValue: _parentStrategy,
               onChanged: (val) => setState(() => _parentStrategy = val!),
             ),
             RadioListTile<ParentAccountStrategy>(
-              title: const Text('قراءة الحساب الأب من الملف المرفوع (From File)'),
-              subtitle: const Text('سيتم البحث عن كود الحساب الأب من العمود المحدد بالملف.'),
+              title: const Text(
+                'قراءة الحساب الأب من الملف المرفوع (From File)',
+              ),
+              subtitle: const Text(
+                'سيتم البحث عن كود الحساب الأب من العمود المحدد بالملف.',
+              ),
               value: ParentAccountStrategy.fromFile,
               groupValue: _parentStrategy,
               onChanged: (val) => setState(() => _parentStrategy = val!),
             ),
             RadioListTile<ParentAccountStrategy>(
-              title: const Text('قراءة الأب من الملف + استخدام حساب احتياطي (File + Fallback Parent)'),
-              subtitle: const Text('إذا تعذر العثور على الحساب الأب في الملف، يتم التراجع واستخدام الحساب الاحتياطي.'),
+              title: const Text(
+                'قراءة الأب من الملف + استخدام حساب احتياطي (File + Fallback Parent)',
+              ),
+              subtitle: const Text(
+                'إذا تعذر العثور على الحساب الأب في الملف، يتم التراجع واستخدام الحساب الاحتياطي.',
+              ),
               value: ParentAccountStrategy.fromFileWithFallback,
               groupValue: _parentStrategy,
               onChanged: (val) => setState(() => _parentStrategy = val!),
@@ -483,9 +536,15 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.3,
+                  ),
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.4,
+                    ),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,16 +552,22 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                     Row(
                       children: [
                         Text(
-                          _parentStrategy == ParentAccountStrategy.underSelectedParent
+                          _parentStrategy ==
+                                  ParentAccountStrategy.underSelectedParent
                               ? 'الحساب الأب المستهدف *:'
                               : 'الحساب الأب الاحتياطي (Fallback Parent) *:',
-                          style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         if (_selectedParentAccount != null)
                           Chip(
-                            label: Text('${_selectedParentAccount!.accountCode} - ${_selectedParentAccount!.name}'),
-                            onDeleted: () => setState(() => _selectedParentAccount = null),
+                            label: Text(
+                              '${_selectedParentAccount!.accountCode} - ${_selectedParentAccount!.name}',
+                            ),
+                            onDeleted: () =>
+                                setState(() => _selectedParentAccount = null),
                           ),
                       ],
                     ),
@@ -516,11 +581,20 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                         );
                         if (account != null) {
                           setState(() => _selectedParentAccount = account);
-                          ref.read(importWizardNotifierProvider.notifier).updateAssignment('parentAccount', account.accountCode);
+                          ref
+                              .read(importWizardNotifierProvider.notifier)
+                              .updateAssignment(
+                                'parentAccount',
+                                account.accountCode,
+                              );
                         }
                       },
                       icon: const Icon(Icons.account_tree_outlined, size: 18),
-                      label: Text(_selectedParentAccount == null ? 'البحث واختيار حساب من الدليل' : 'تغيير الحساب الأب'),
+                      label: Text(
+                        _selectedParentAccount == null
+                            ? 'البحث واختيار حساب من الدليل'
+                            : 'تغيير الحساب الأب',
+                      ),
                     ),
                   ],
                 ),
@@ -530,12 +604,15 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
           ],
 
           // Generic Dynamic Assignments
-          if (_selectedProfile?.relations != null && _selectedProfile!.relations.isNotEmpty)
+          if (_selectedProfile?.relations != null &&
+              _selectedProfile!.relations.isNotEmpty)
             StepDynamicAssignments(
               profile: _selectedProfile!,
               assignments: wizardState.dynamicAssignments,
               onAssignmentChanged: (key, val) {
-                ref.read(importWizardNotifierProvider.notifier).updateAssignment(key, val);
+                ref
+                    .read(importWizardNotifierProvider.notifier)
+                    .updateAssignment(key, val);
               },
             ),
         ],
@@ -543,7 +620,10 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
     );
   }
 
-  Widget _buildFileSelectionCard(ThemeData theme, ImportWizardState wizardState) {
+  Widget _buildFileSelectionCard(
+    ThemeData theme,
+    ImportWizardState wizardState,
+  ) {
     final doc = wizardState.parsedDocument;
 
     return AppCard(
@@ -555,9 +635,16 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             children: [
               Text(
                 'ملف البيانات الخارجي | Data Source File',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              if (_isPickingFile) const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+              if (_isPickingFile)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -566,7 +653,10 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             borderRadius: BorderRadius.circular(AppRadius.md),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl, horizontal: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(
+                vertical: AppSpacing.xl,
+                horizontal: AppSpacing.md,
+              ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(AppRadius.md),
@@ -577,11 +667,25 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
               ),
               child: Column(
                 children: [
-                  Icon(Icons.cloud_upload_outlined, size: 42, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.cloud_upload_outlined,
+                    size: 42,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text('انقر هنا لاختيار ملف البيانات (Excel / CSV / JSON)', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'انقر هنا لاختيار ملف البيانات (Excel / CSV / JSON)',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('يدعم صيغ .xlsx, .xls, .csv, .json حتى 100,000 صف', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'يدعم صيغ .xlsx, .xls, .csv, .json حتى 100,000 صف',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   AppButton(
                     key: const Key('pick_file_button'),
@@ -599,20 +703,36 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.2,
+                ),
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.success.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_outline_rounded, color: AppColors.success),
+                  const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: AppColors.success,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('تم تحليل هيكل الملف بنجاح (File Analyzed Successfully)', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.success)),
-                        Text('عدد الصفوف الكلي: ${doc.activeSheet?.totalRows ?? 0} | عدد الأعمدة المكتشفة: ${doc.activeSheet?.headers.length ?? 0}', style: theme.textTheme.bodySmall),
+                        Text(
+                          'تم تحليل هيكل الملف بنجاح (File Analyzed Successfully)',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.success,
+                          ),
+                        ),
+                        Text(
+                          'عدد الصفوف الكلي: ${doc.activeSheet?.totalRows ?? 0} | عدد الأعمدة المكتشفة: ${doc.activeSheet?.headers.length ?? 0}',
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
@@ -625,7 +745,10 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
     );
   }
 
-  Widget _buildColumnMappingCard(ThemeData theme, ImportWizardState wizardState) {
+  Widget _buildColumnMappingCard(
+    ThemeData theme,
+    ImportWizardState wizardState,
+  ) {
     final doc = wizardState.parsedDocument;
     final sourceCols = doc?.activeSheet?.headers ?? [];
     final fields = _selectedProfile?.fields ?? [];
@@ -639,11 +762,15 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             children: [
               Text(
                 'جدول مطابقة الأعمدة (Column Mapping Matrix)',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               TextButton.icon(
                 onPressed: () {
-                  ref.read(importWizardNotifierProvider.notifier).autoMapColumns();
+                  ref
+                      .read(importWizardNotifierProvider.notifier)
+                      .autoMapColumns();
                 },
                 icon: const Icon(Icons.auto_fix_high_rounded, size: 16),
                 label: const Text('إعادة المطابقة التلقائية'),
@@ -661,8 +788,11 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                 DataColumn(label: Text('حالة المطابقة')),
               ],
               rows: fields.map((field) {
-                final currentMappedSource = wizardState.columnMappings[field.key];
-                final isMatched = currentMappedSource != null && currentMappedSource.isNotEmpty;
+                final currentMappedSource =
+                    wizardState.columnMappings[field.key];
+                final isMatched =
+                    currentMappedSource != null &&
+                    currentMappedSource.isNotEmpty;
 
                 return DataRow(
                   cells: [
@@ -672,36 +802,59 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
                         children: [
                           Text(
                             field.label,
-                            style: TextStyle(fontWeight: field.isRequired ? FontWeight.bold : FontWeight.normal),
+                            style: TextStyle(
+                              fontWeight: field.isRequired
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
                           ),
                           if (field.isRequired)
-                            const Text(' *', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            const Text(
+                              ' *',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                         ],
                       ),
                     ),
                     DataCell(Text(field.dataType.name)),
                     DataCell(
                       DropdownButton<String>(
-                        value: sourceCols.contains(currentMappedSource) ? currentMappedSource : null,
+                        value: sourceCols.contains(currentMappedSource)
+                            ? currentMappedSource
+                            : null,
                         hint: const Text('-- غير مرتبط (Ignored) --'),
                         items: [
-                          const DropdownMenuItem<String>(value: null, child: Text('-- تجاهل العمود --')),
-                          ...sourceCols.map((col) => DropdownMenuItem(value: col, child: Text(col))),
+                          const DropdownMenuItem<String>(
+                            value: null,
+                            child: Text('-- تجاهل العمود --'),
+                          ),
+                          ...sourceCols.map(
+                            (col) =>
+                                DropdownMenuItem(value: col, child: Text(col)),
+                          ),
                         ],
                         onChanged: (val) {
-                          ref.read(importWizardNotifierProvider.notifier).updateMapping(field.key, val ?? '');
+                          ref
+                              .read(importWizardNotifierProvider.notifier)
+                              .updateMapping(field.key, val ?? '');
                         },
                       ),
                     ),
                     DataCell(
                       AppStatusBadge(
-                        label: isMatched ? 'مربوط (Matched)' : (field.isRequired ? 'مطلوب!' : 'اختياري'),
+                        label: isMatched
+                            ? 'مربوط (Matched)'
+                            : (field.isRequired ? 'مطلوب!' : 'اختياري'),
                         tone: isMatched
                             ? AppStatusTone.success
-                            : (field.isRequired ? AppStatusTone.error : AppStatusTone.neutral),
+                            : (field.isRequired
+                                  ? AppStatusTone.error
+                                  : AppStatusTone.neutral),
                       ),
                     ),
-
                   ],
                 );
               }).toList(),
@@ -712,7 +865,10 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
     );
   }
 
-  Widget _buildPreviewAndValidationCard(ThemeData theme, ImportWizardState wizardState) {
+  Widget _buildPreviewAndValidationCard(
+    ThemeData theme,
+    ImportWizardState wizardState,
+  ) {
     final summary = wizardState.previewSummary;
     if (summary == null) return const SizedBox.shrink();
 
@@ -722,44 +878,88 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
         children: [
           Text(
             'مؤشرات نتيجة المعاينة (Preview Metrics)',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              _buildMetricChip(theme, 'إجمالي الصفوف', summary.totalRows.toString(), Colors.blue),
-              _buildMetricChip(theme, 'صفوف صالحة', summary.validRows.toString(), AppColors.success),
-              _buildMetricChip(theme, 'تحذيرات', summary.warnings.toString(), Colors.orange),
-              _buildMetricChip(theme, 'أخطاء', summary.errors.toString(), Theme.of(context).colorScheme.error),
-              _buildMetricChip(theme, 'إنشاء جديد', summary.creates.toString(), Colors.teal),
-              _buildMetricChip(theme, 'تحديث', summary.updates.toString(), Colors.indigo),
+              _buildMetricChip(
+                theme,
+                'إجمالي الصفوف',
+                summary.totalRows.toString(),
+                Colors.blue,
+              ),
+              _buildMetricChip(
+                theme,
+                'صفوف صالحة',
+                summary.validRows.toString(),
+                AppColors.success,
+              ),
+              _buildMetricChip(
+                theme,
+                'تحذيرات',
+                summary.warnings.toString(),
+                Colors.orange,
+              ),
+              _buildMetricChip(
+                theme,
+                'أخطاء',
+                summary.errors.toString(),
+                Theme.of(context).colorScheme.error,
+              ),
+              _buildMetricChip(
+                theme,
+                'إنشاء جديد',
+                summary.creates.toString(),
+                Colors.teal,
+              ),
+              _buildMetricChip(
+                theme,
+                'تحديث',
+                summary.updates.toString(),
+                Colors.indigo,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'عينات الصفوف والمعاينة الحية:',
-            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 200),
             child: ListView.separated(
-              itemCount: (wizardState.previewSummary?.rows ?? []).take(5).length,
+              itemCount: (wizardState.previewSummary?.rows ?? [])
+                  .take(5)
+                  .length,
               separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, idx) {
                 final row = wizardState.previewSummary!.rows[idx];
                 return ListTile(
                   dense: true,
-                  leading: Text('#${row.rowIndex}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  leading: Text(
+                    '#${row.rowIndex}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   title: Text('Action: ${row.action.name.toUpperCase()}'),
                   subtitle: row.issues.isNotEmpty
-                      ? Text('Issues: ${row.issues.map((i) => i.message).join(', ')}', style: TextStyle(color: theme.colorScheme.error))
+                      ? Text(
+                          'Issues: ${row.issues.map((i) => i.message).join(', ')}',
+                          style: TextStyle(color: theme.colorScheme.error),
+                        )
                       : const Text('جاهز للاستيراد السليم'),
                   trailing: AppStatusBadge(
                     label: row.action.name,
-                    tone: row.issues.isEmpty ? AppStatusTone.success : AppStatusTone.error,
+                    tone: row.issues.isEmpty
+                        ? AppStatusTone.success
+                        : AppStatusTone.error,
                   ),
                 );
               },
@@ -770,9 +970,17 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
     );
   }
 
-  Widget _buildMetricChip(ThemeData theme, String label, String value, Color color) {
+  Widget _buildMetricChip(
+    ThemeData theme,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -781,8 +989,22 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$label: ', style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 14)),
+          Text(
+            '$label: ',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );
@@ -799,12 +1021,16 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
               children: [
                 Text(
                   'جاهز لبدء العملية في الخلفية',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'سيتم تحويل المهمة إلى مشغل الخلفية (Background Worker) فورياً للحفاظ على استجابة النظام.',
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -815,10 +1041,9 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             label: 'بدء الاستيراد | Start Import',
             icon: Icons.play_arrow_rounded,
             onPressed: () async {
-              await ref.read(importWizardNotifierProvider.notifier).startImport(
-                    companyId: 'SYSTEM',
-                    userId: 'USER',
-                  );
+              await ref
+                  .read(importWizardNotifierProvider.notifier)
+                  .startImport(companyId: 'SYSTEM', userId: 'USER');
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -849,11 +1074,17 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
             children: [
               Row(
                 children: [
-                  const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5)),
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     'مهمة استيراد نشطة: ${activeJobState.jobId}',
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -865,18 +1096,26 @@ class _UniversalImportPageState extends ConsumerState<UniversalImportPage> {
           ),
 
           const SizedBox(height: AppSpacing.sm),
-          LinearProgressIndicator(value: progress, minHeight: 8, borderRadius: BorderRadius.circular(4)),
+          LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(4),
+          ),
           const SizedBox(height: AppSpacing.xs),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'التقدم: ${(progress * 100).toStringAsFixed(1)}% (${activeJobState.processedRows} / ${activeJobState.totalRows} صفوف)',
-                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 'ناجح: ${activeJobState.successfulRows} | أخطاء: ${activeJobState.failedRows}',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

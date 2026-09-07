@@ -34,11 +34,7 @@ class AccountingSaleCurrencyAdapter implements SaleCurrencyPort {
       }
       seen.add(code);
       out.add(
-        SaleCurrencyRef(
-          code: code,
-          rateToBase: rate.rateToBase,
-          isBase: false,
-        ),
+        SaleCurrencyRef(code: code, rateToBase: rate.rateToBase, isBase: false),
       );
     }
     return out;

@@ -8,10 +8,7 @@ void main() {
       home: Directionality(
         textDirection: direction,
         child: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: child,
-          ),
+          body: Padding(padding: const EdgeInsets.all(16), child: child),
         ),
       ),
     );
@@ -71,37 +68,19 @@ void main() {
 
   testWidgets('disabled and readOnly states', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        AppAmountField(
-          value: 10,
-          onChanged: (_) {},
-          enabled: false,
-        ),
-      ),
+      wrap(AppAmountField(value: 10, onChanged: (_) {}, enabled: false)),
     );
     expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
 
     await tester.pumpWidget(
-      wrap(
-        AppAmountField(
-          value: 10,
-          onChanged: (_) {},
-          readOnly: true,
-        ),
-      ),
+      wrap(AppAmountField(value: 10, onChanged: (_) {}, readOnly: true)),
     );
     expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isTrue);
   });
 
   testWidgets('shows error text', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        AppAmountField(
-          value: 0,
-          onChanged: (_) {},
-          errorText: 'Required',
-        ),
-      ),
+      wrap(AppAmountField(value: 0, onChanged: (_) {}, errorText: 'Required')),
     );
     expect(find.text('Required'), findsOneWidget);
   });
@@ -127,11 +106,7 @@ void main() {
   testWidgets('FinancialNumberField alias works', (tester) async {
     await tester.pumpWidget(
       wrap(
-        FinancialNumberField(
-          value: 1000,
-          onChanged: (_) {},
-          decimalPlaces: 0,
-        ),
+        FinancialNumberField(value: 1000, onChanged: (_) {}, decimalPlaces: 0),
       ),
     );
     expect(find.text('1,000'), findsOneWidget);

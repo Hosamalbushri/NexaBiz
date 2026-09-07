@@ -52,6 +52,7 @@ enum SetupStepId {
     SetupStepId.primaryCurrency,
     SetupStepId.companyProfile,
     SetupStepId.localAccount,
+    SetupStepId.seedData,
   ];
 
   static const allIds = requiredIds;
@@ -60,7 +61,9 @@ enum SetupStepId {
 
   static SetupStepId? tryParse(String raw) {
     for (final id in SetupStepId.values) {
-      if (id.storageKey == raw || id.name == raw || (raw == 'seedLocal' && id == seedData)) {
+      if (id.storageKey == raw ||
+          id.name == raw ||
+          (raw == 'seedLocal' && id == seedData)) {
         return id;
       }
     }
@@ -158,8 +161,7 @@ class SetupProgress {
   }
 
   SetupStepState stateFor(SetupStepId id) {
-    return steps[id] ??
-        SetupStepState(id: id, status: SetupStepStatus.pending);
+    return steps[id] ?? SetupStepState(id: id, status: SetupStepStatus.pending);
   }
 }
 

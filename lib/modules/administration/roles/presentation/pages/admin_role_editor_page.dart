@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
@@ -76,8 +77,9 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
     try {
       final existing = widget.existing;
       if (existing != null) {
-        final full =
-            await ref.read(adminApiRepositoryProvider).getRole(existing.id);
+        final full = await ref
+            .read(adminApiRepositoryProvider)
+            .getRole(existing.id);
         _name.text = full.name;
         _description.text = full.description ?? '';
         _readOnlySystem = full.systemRole;
@@ -126,24 +128,24 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
       _error = null;
     });
     try {
-      final repo = ref.read(adminApiRepositoryProvider);
+      final useCase = ref.read(manageAdminRolesUseCaseProvider);
       // Persist primary codes; server aliases cover legacy checks.
       final codes = _selected.toList()..sort();
       if (widget.existing == null) {
-        await repo.createRole(
+        await useCase.createRole(
           name: _name.text,
           description: _description.text,
           permissionCodes: codes,
         );
       } else {
-        await repo.updateRole(
+        await useCase.updateRole(
           roleId: widget.existing!.id,
           name: _name.text,
           description: _description.text,
           permissionCodes: codes,
         );
       }
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) context.pop(true);
     } on AppFailure catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
@@ -201,11 +203,13 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isCreate = widget.existing == null;
-    final canEdit = !_readOnlySystem ||
+    final canEdit =
+        !_readOnlySystem ||
         ref.watch(authStateProvider).session?.user.isSuperAdmin == true;
     final allPackages = ref.watch(moduleRegistryProvider).permissionPackages;
-    final packages =
-        allPackages.where((p) => _matchesFilter(context, p)).toList();
+    final packages = allPackages
+        .where((p) => _matchesFilter(context, p))
+        .toList();
     final totalOps = allPackages
         .expand((p) => p.services)
         .expand((s) => s.operations)
@@ -224,10 +228,9 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
               children: [
                 Expanded(
                   child: ListView(
-                    padding: AppConstants.pageInsets(context).copyWith(
-                      top: AppSpacing.sm,
-                      bottom: AppSpacing.sm,
-                    ),
+                    padding: AppConstants.pageInsets(
+                      context,
+                    ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.sm),
                     children: [
                       if (_readOnlySystem) ...[
                         _Banner(
@@ -312,14 +315,14 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                 onPressed: _saving
                                     ? null
                                     : () => setState(() {
-                                          for (final p in allPackages) {
-                                            for (final s in p.services) {
-                                              for (final o in s.operations) {
-                                                _selected.add(o.code);
-                                              }
+                                        for (final p in allPackages) {
+                                          for (final s in p.services) {
+                                            for (final o in s.operations) {
+                                              _selected.add(o.code);
                                             }
                                           }
-                                        }),
+                                        }
+                                      }),
                                 child: Text(l10n.adminSelectAllPermissions),
                               ),
                               TextButton(
@@ -348,13 +351,12 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                         final pkgSelected = pkgOps
                             .where((o) => _selected.contains(o.code))
                             .length;
-                        final pkgAll = pkgSelected == pkgOps.length &&
-                            pkgOps.isNotEmpty;
+                        final pkgAll =
+                            pkgSelected == pkgOps.length && pkgOps.isNotEmpty;
                         final pkgNone = pkgSelected == 0;
 
                         return Padding(
-                          padding:
-                              const EdgeInsets.only(bottom: AppSpacing.sm),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                           child: Material(
                             color: scheme.surface,
                             borderRadius: BorderRadius.circular(AppRadius.md),
@@ -370,8 +372,9 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                     }
                                   }),
                                   child: Padding(
-                                    padding:
-                                        const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     child: Row(
                                       children: [
                                         CircleAvatar(
@@ -390,19 +393,20 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                               Text(
                                                 pkg.title(context),
                                                 style: theme
-                                                    .textTheme.titleSmall
+                                                    .textTheme
+                                                    .titleSmall
                                                     ?.copyWith(
-                                                  fontWeight: FontWeight.w800,
-                                                ),
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
                                               ),
                                               Text(
                                                 pkg.subtitle(context),
-                                                style: theme
-                                                    .textTheme.bodySmall
+                                                style: theme.textTheme.bodySmall
                                                     ?.copyWith(
-                                                  color: scheme
-                                                      .onSurfaceVariant,
-                                                ),
+                                                      color: scheme
+                                                          .onSurfaceVariant,
+                                                    ),
                                               ),
                                               Text(
                                                 l10n.adminPermPackageSummary(
@@ -411,11 +415,13 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                                   pkgOps.length,
                                                 ),
                                                 style: theme
-                                                    .textTheme.labelMedium
+                                                    .textTheme
+                                                    .labelMedium
                                                     ?.copyWith(
-                                                  color: scheme.primary,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
+                                                      color: scheme.primary,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -429,9 +435,9 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                             onChanged: _saving
                                                 ? null
                                                 : (v) => _togglePackage(
-                                                      pkg,
-                                                      v ?? false,
-                                                    ),
+                                                    pkg,
+                                                    v ?? false,
+                                                  ),
                                           ),
                                         Icon(
                                           pkgExpanded
@@ -445,13 +451,15 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                 if (pkgExpanded)
                                   ...pkg.services.map((svc) {
                                     final svcKey = '${pkg.id}.${svc.id}';
-                                    final svcExpanded =
-                                        _expandedServices.contains(svcKey);
+                                    final svcExpanded = _expandedServices
+                                        .contains(svcKey);
                                     final svcSelected = svc.operations
-                                        .where((o) => _selected.contains(o.code))
+                                        .where(
+                                          (o) => _selected.contains(o.code),
+                                        )
                                         .length;
-                                    final svcAll = svcSelected ==
-                                            svc.operations.length &&
+                                    final svcAll =
+                                        svcSelected == svc.operations.length &&
                                         svc.operations.isNotEmpty;
                                     final svcNone = svcSelected == 0;
 
@@ -495,9 +503,10 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                                             .textTheme
                                                             .bodyLarge
                                                             ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                            ),
                                                       ),
                                                       Text(
                                                         svc.subtitle(context),
@@ -505,26 +514,25 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                                             .textTheme
                                                             .bodySmall
                                                             ?.copyWith(
-                                                          color: scheme
-                                                              .onSurfaceVariant,
-                                                        ),
+                                                              color: scheme
+                                                                  .onSurfaceVariant,
+                                                            ),
                                                       ),
                                                       Text(
-                                                        l10n
-                                                            .adminGroupPermissionSummary(
+                                                        l10n.adminGroupPermissionSummary(
                                                           svcSelected,
-                                                          svc.operations
-                                                              .length,
+                                                          svc.operations.length,
                                                         ),
                                                         style: theme
                                                             .textTheme
                                                             .labelSmall
                                                             ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          color:
-                                                              scheme.primary,
-                                                        ),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color: scheme
+                                                                  .primary,
+                                                            ),
                                                       ),
                                                     ],
                                                   ),
@@ -535,15 +543,14 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                                     value: svcAll
                                                         ? true
                                                         : (svcNone
-                                                            ? false
-                                                            : null),
+                                                              ? false
+                                                              : null),
                                                     onChanged: _saving
                                                         ? null
-                                                        : (v) =>
-                                                            _toggleService(
-                                                              svc,
-                                                              v ?? false,
-                                                            ),
+                                                        : (v) => _toggleService(
+                                                            svc,
+                                                            v ?? false,
+                                                          ),
                                                   ),
                                                 Icon(
                                                   svcExpanded
@@ -558,23 +565,25 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                           ...svc.operations.map((op) {
                                             return CheckboxListTile(
                                               contentPadding:
-                                                  const EdgeInsetsDirectional
-                                                      .only(
-                                                start: AppSpacing.xxl,
-                                                end: AppSpacing.md,
+                                                  const EdgeInsetsDirectional.only(
+                                                    start: AppSpacing.xxl,
+                                                    end: AppSpacing.md,
+                                                  ),
+                                              value: _selected.contains(
+                                                op.code,
                                               ),
-                                              value:
-                                                  _selected.contains(op.code),
                                               onChanged: !canEdit || _saving
                                                   ? null
                                                   : (v) {
                                                       setState(() {
                                                         if (v == true) {
-                                                          _selected
-                                                              .add(op.code);
+                                                          _selected.add(
+                                                            op.code,
+                                                          );
                                                         } else {
-                                                          _selected
-                                                              .remove(op.code);
+                                                          _selected.remove(
+                                                            op.code,
+                                                          );
                                                         }
                                                       });
                                                     },
@@ -584,20 +593,23 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                               title: Text(
                                                 op.label(context),
                                                 style: theme
-                                                    .textTheme.bodyMedium
+                                                    .textTheme
+                                                    .bodyMedium
                                                     ?.copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
                                               ),
                                               subtitle: Text(
                                                 op.code,
                                                 style: theme
-                                                    .textTheme.labelSmall
+                                                    .textTheme
+                                                    .labelSmall
                                                     ?.copyWith(
-                                                  color: scheme
-                                                      .onSurfaceVariant,
-                                                  fontFamily: 'monospace',
-                                                ),
+                                                      color: scheme
+                                                          .onSurfaceVariant,
+                                                      fontFamily: 'monospace',
+                                                    ),
                                               ),
                                             );
                                           }),
