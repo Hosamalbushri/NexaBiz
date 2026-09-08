@@ -113,6 +113,7 @@ void main() {
 
     test('2. Sale Serialization Round-trip', () {
       final sale = Sale(
+        companyId: 'company_1',
         id: 201,
         uuid: '00000000-0000-4000-8000-000000000201',
         saleNumber: 'INV-2026-888',

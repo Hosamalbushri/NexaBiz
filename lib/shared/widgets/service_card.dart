@@ -85,6 +85,7 @@ class ServiceCard extends StatelessWidget {
         : colorScheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.55);
 
     final card = Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       selected: selected,

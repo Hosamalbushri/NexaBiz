@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
@@ -15,7 +16,31 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/stoc
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
+
+class MockAccountingPoster implements InventoryAccountingPoster {
+  @override
+  Future<void> postAccountingEntry({
+    required InventoryDocumentRef document,
+    required double totalAmount,
+    double? valuationAmount,
+    String? accountId,
+    bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
+  }) async {}
+
+  @override
+  Future<void> setAccountingEntryPostingStatus({
+    required InventoryDocumentRef document,
+    required bool isPosted,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
+  }) async {}
+}
 
 void main() {
   late InventoryDatabase db;
@@ -64,6 +89,8 @@ void main() {
       dependencyDetector: dependencyDetector,
       postingEngine: postingEngine,
       readCompanyId: () => testCompanyId,
+      accountingPoster: MockAccountingPoster(),
+      permissionGuard: CallbackPermissionGuard((codes) => true),
     );
   });
 
@@ -149,6 +176,7 @@ void main() {
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: receipt.receiptDate,
         status: InventoryDocumentStatus.draft,
+        warehouseId: 'WH-MAIN',
       );
       await postingCoordinator.post(document: receiptDocRef);
 
@@ -222,6 +250,7 @@ void main() {
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
           status: InventoryDocumentStatus.draft,
+          warehouseId: 'WH-MAIN',
         ),
       );
 
@@ -254,6 +283,7 @@ void main() {
           documentType: InventoryDocumentType.stockIssue,
           documentDate: issue.issueDate,
           status: InventoryDocumentStatus.draft,
+          warehouseId: 'WH-MAIN',
         ),
       );
 
@@ -306,6 +336,7 @@ void main() {
           documentType: InventoryDocumentType.stockIssue,
           documentDate: issue.issueDate,
           status: InventoryDocumentStatus.draft,
+          warehouseId: 'WH-MAIN',
         ),
       );
 

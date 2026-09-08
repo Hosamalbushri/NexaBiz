@@ -190,6 +190,9 @@ class AccountLedgerMovement {
     required this.lineUuid,
     required this.lineId,
     required this.sortOrder,
+    this.baseDebit,
+    this.baseCredit,
+    this.exchangeRateToBase,
   });
 
   final DateTime entryDate;
@@ -207,4 +210,9 @@ class AccountLedgerMovement {
   /// Stable keyset fields for paginated ledger reads.
   final int lineId;
   final int sortOrder;
+
+  /// Base currency equivalent amounts
+  final double? baseDebit;
+  final double? baseCredit;
+  final double? exchangeRateToBase;
 }

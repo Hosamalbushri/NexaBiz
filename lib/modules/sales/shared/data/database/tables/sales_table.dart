@@ -34,10 +34,9 @@ class Sales extends Table {
   /// Cash/treasury CoA Account.uuid for cash settlement.
   TextColumn get cashAccountId => text().nullable()();
 
-  TextColumn get currencyCode => text().withDefault(const Constant('SAR'))();
+  TextColumn get currencyCode => text()();
 
-  TextColumn get baseCurrencyCode =>
-      text().withDefault(const Constant('SAR'))();
+  TextColumn get baseCurrencyCode => text()();
 
   /// rateToBase snapshot at save time.
   RealColumn get exchangeRate => real().withDefault(const Constant(1.0))();

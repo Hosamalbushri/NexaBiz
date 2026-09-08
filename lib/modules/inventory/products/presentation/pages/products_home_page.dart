@@ -148,6 +148,7 @@ class _ProductsFeatureCard extends StatelessWidget {
     final brightness = theme.brightness;
 
     return Semantics(
+      container: true,
       button: true,
       label: title,
       child: Material(

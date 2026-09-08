@@ -156,7 +156,6 @@ class AtomicBootstrapInstaller {
           existingProfile.copyWith(
             name: profileName.isNotEmpty ? profileName : existingProfile.name,
             legalName: legalName,
-            defaultCurrencyCode: currencyCode,
             taxNumber: taxNumber,
             commercialRegister: commercialRegister,
             phone: phone,

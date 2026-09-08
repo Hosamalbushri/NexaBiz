@@ -11,12 +11,12 @@ class ReceivablesPayablesReportDataAdapter
   ReceivablesPayablesReportDataAdapter({
     required this.journals,
     required this.accounts,
-    required this.loadCompanyProfile,
+    required this.loadFunctionalCurrencyCode,
   });
 
   final JournalRepository journals;
   final AccountRepository accounts;
-  final Future<CompanyProfile> Function() loadCompanyProfile;
+  final Future<String> Function() loadFunctionalCurrencyCode;
 
   @override
   Future<ReceivablesPayablesReportPayload> loadFromFilter({
@@ -24,9 +24,9 @@ class ReceivablesPayablesReportDataAdapter
     required ReceivablesPayablesType type,
     required ReceivablesPayablesReportLabels labels,
   }) async {
-    final profile = await loadCompanyProfile();
+    final functionalCode = await loadFunctionalCurrencyCode();
     final baseCurrency = filter.currencyCode == 'ALL'
-        ? profile.defaultCurrencyCode
+        ? functionalCode
         : filter.currencyCode;
 
     final isPostedFilter = filter.postingScope == PostingScope.postedOnly

@@ -716,8 +716,8 @@ class SaleRepositoryImpl implements SaleRepository {
               customerName: Value(draft.customerName),
               customerAccountId: Value(draft.customerAccountId),
               cashAccountId: Value(draft.cashAccountId),
-              currencyCode: Value(draft.currencyCode),
-              baseCurrencyCode: Value(draft.baseCurrencyCode),
+              currencyCode: draft.currencyCode,
+              baseCurrencyCode: draft.baseCurrencyCode,
               exchangeRate: Value(draft.exchangeRate),
               subtotal: summary.subtotal,
               itemDiscountTotal: summary.itemDiscountTotal,
@@ -1034,12 +1034,8 @@ class SaleRepositoryImpl implements SaleRepository {
                   payload['customerAccountId'] as String?,
                 ),
                 cashAccountId: Value(payload['cashAccountId'] as String?),
-                currencyCode: Value(
-                  (payload['currencyCode'] as String?) ?? 'SAR',
-                ),
-                baseCurrencyCode: Value(
-                  (payload['baseCurrencyCode'] as String?) ?? 'SAR',
-                ),
+                currencyCode: (payload['currencyCode'] as String?) ?? '',
+                baseCurrencyCode: (payload['baseCurrencyCode'] as String?) ?? '',
                 exchangeRate: Value(
                   (payload['exchangeRate'] as num?)?.toDouble() ?? 1,
                 ),

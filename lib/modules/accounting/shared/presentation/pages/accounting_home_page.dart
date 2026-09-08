@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
@@ -21,7 +22,17 @@ class AccountingHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: l10n.moduleAccounting, showBackButton: true),
+      appBar: CustomAppBar(
+        title: l10n.moduleAccounting,
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settingsTitle,
+            onPressed: () => context.push('/accounting/settings'),
+          ),
+        ],
+      ),
       body: AppContentConstraint(
         child: ListView(
           padding: AppConstants.pageInsets(context),
@@ -146,12 +157,32 @@ class AccountingHomePage extends ConsumerWidget {
                   duration: 240.ms,
                   curve: Curves.easeOutCubic,
                 ),
+            const SizedBox(height: AppSpacing.md),
+            _ServiceCard(
+                  icon: Icons.tune_outlined,
+                  title: l10n.localeName == 'ar'
+                      ? 'إعدادات المحاسبة'
+                      : 'Accounting Settings',
+                  subtitle: l10n.localeName == 'ar'
+                      ? 'ربط الحسابات المحاسبية وإعدادات موديول المحاسبة'
+                      : 'Account bindings and accounting master settings',
+                  onTap: () => context.push('/accounting/settings'),
+                )
+                .animate(delay: 240.ms)
+                .fadeIn(duration: 220.ms)
+                .moveY(
+                  begin: 8,
+                  end: 0,
+                  duration: 240.ms,
+                  curve: Curves.easeOutCubic,
+                ),
           ],
         ),
       ),
     );
   }
 }
+
 
 class _ServiceCard extends StatelessWidget {
   const _ServiceCard({

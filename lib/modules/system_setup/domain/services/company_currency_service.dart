@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:stock_count/core/errors/currency_exception.dart';
 import '../entities/company_inventory_config.dart';
 import '../repositories/company_initialization_repository.dart';
 
@@ -23,13 +24,15 @@ class CompanyCurrencyService {
   final Future<bool> Function(String companyId)? _transactionChecker;
 
   /// Returns the configured inventory base currency for the company.
-  /// Defaults to 'YER' if not yet configured.
+  /// Throws [CurrencyRequiredException] if not yet configured.
   Future<String> getInventoryBaseCurrency([String? companyId]) async {
     final config = await _initRepository.getInventoryConfig();
     if (config != null && config.inventoryBaseCurrencyId.isNotEmpty) {
       return config.inventoryBaseCurrencyId.toUpperCase();
     }
-    return 'YER';
+    throw const CurrencyRequiredException(
+      'Inventory base currency is not configured for tenant company.',
+    );
   }
 
   /// Sets or updates the inventory base currency for the active company.

@@ -29,7 +29,9 @@ import 'directory/presentation/pages/customers_list_page.dart';
 import 'directory/presentation/providers/customer_providers.dart';
 import 'permissions/customers_permission_package.dart';
 import 'shared/presentation/pages/customers_routes.dart';
+import 'shared/presentation/pages/customers_master_settings_page.dart';
 import 'shared/presentation/pages/customers_settings_page.dart';
+
 import 'shared/presentation/widgets/customers_settings_panel.dart';
 
 /// Customers business module — master data for business partners.
@@ -164,8 +166,9 @@ class CustomersModule extends AppModule {
         GoRoute(
           path: 'settings',
           name: 'customersSettings',
-          builder: (context, state) => const CustomersSettingsPage(),
+          builder: (context, state) => const CustomersMasterSettingsPage(),
           routes: [
+
             GoRoute(
               path: 'parent-account',
               name: 'customersParentAccountSettings',

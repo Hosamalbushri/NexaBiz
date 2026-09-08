@@ -8,6 +8,9 @@ class WarehouseAccountingBindings extends Table {
   TextColumn get cogsAccountId => text().nullable()();
   TextColumn get inventoryAdjustmentAccountId => text().nullable()();
   TextColumn get stockTransferClearingAccountId => text().nullable()();
+  TextColumn get salesRevenueAccountId => text().nullable()();
+  TextColumn get salesReturnAccountId => text().nullable()();
+  TextColumn get salesDiscountAccountId => text().nullable()();
 
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();

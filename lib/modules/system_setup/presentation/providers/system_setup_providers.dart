@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/settings_repository.dart';
+import '../../../inventory/products/presentation/providers/product_providers.dart';
 import '../../data/repositories/system_setup_state_repository_impl.dart';
 import '../../domain/entities/system_setup_state.dart';
 import '../../domain/ports/system_setup_seed_port.dart';
@@ -39,6 +40,7 @@ final companyInitializationRepositoryProvider =
       return CompanyInitializationRepositoryImpl(
         box: null,
         readCompanyId: () => ref.read(currentCompanyIdProvider),
+        invDb: ref.watch(inventoryDatabaseProvider),
       );
     });
 

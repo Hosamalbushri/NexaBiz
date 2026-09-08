@@ -7,6 +7,7 @@ import 'package:stock_count/modules/accounting/shared/domain/services/document_l
 import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/providers/account_mapping_providers.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 
 final documentLockCheckerProvider = Provider<DocumentLockChecker>((ref) {
   return const DocumentLockChecker();
@@ -16,10 +17,12 @@ final accountingEntryBuilderProvider = Provider<AccountingEntryBuilder>((ref) {
   final mappingResolver = ref.watch(accountMappingResolverProvider);
   final validationService = ref.watch(accountValidationServiceProvider);
   final initRepo = ref.watch(companyInitializationRepositoryProvider);
+  final functionalCurrencyService = ref.watch(functionalCurrencyServiceProvider);
   return AccountingEntryBuilder(
     mappingResolver: mappingResolver,
     validationService: validationService,
     initRepository: initRepo,
+    functionalCurrencyService: functionalCurrencyService,
   );
 });
 

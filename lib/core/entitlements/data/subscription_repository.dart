@@ -33,7 +33,7 @@ class CommercialPlan {
       code: json['code'] as String? ?? '',
       description: json['description'] as String? ?? '',
       price: (json['price'] as num? ?? 0.0).toDouble(),
-      currency: json['currency'] as String? ?? 'USD',
+      currency: json['currency'] as String? ?? '',
       billingInterval: json['billing_interval'] as String? ?? 'monthly',
       isFree: json['is_free'] as bool? ?? false,
       sortOrder: json['sort_order'] as int? ?? 0,
@@ -70,7 +70,7 @@ class AddonPackage {
       category: json['category'] as String? ?? 'core',
       description: json['description'] as String? ?? '',
       price: (json['price'] as num? ?? 0.0).toDouble(),
-      currency: json['currency'] as String? ?? 'USD',
+      currency: json['currency'] as String? ?? '',
       isAddon: json['is_addon'] as bool? ?? false,
     );
   }

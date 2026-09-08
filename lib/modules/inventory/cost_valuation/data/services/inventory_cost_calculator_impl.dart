@@ -25,6 +25,8 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
     String? sourceDocumentId,
     String? sourceLineUuid,
     bool allowZeroCost = false,
+    String? documentCurrencyId,
+    double? exchangeRate,
   }) async {
     if (quantity <= 0) {
       throw ArgumentError(
@@ -32,7 +34,11 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
       );
     }
 
-    if (unitCost <= 0.0 && !allowZeroCost) {
+    final effectiveExchangeRate =
+        (exchangeRate != null && exchangeRate > 0) ? exchangeRate : 1.0;
+    final effectiveValuationUnitCost = unitCost * effectiveExchangeRate;
+
+    if (effectiveValuationUnitCost <= 0.0 && !allowZeroCost) {
       throw StateError(
         'Zero-cost inbound receipt rejected by business policy for item ($itemCode). Set allowZeroCost=true to explicitly override.',
       );
@@ -44,7 +50,8 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
       companyId: companyId,
     );
 
-    final roundedUnitCost = MonetaryPrecisionUtils.roundUnitCost(unitCost);
+    final roundedUnitCost =
+        MonetaryPrecisionUtils.roundUnitCost(effectiveValuationUnitCost);
     final totalCost = MonetaryPrecisionUtils.calculateTotalCost(
       unitCost: roundedUnitCost,
       quantity: quantity,

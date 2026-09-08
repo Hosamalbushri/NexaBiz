@@ -1,4 +1,3 @@
-import 'package:meta/meta.dart';
 
 /// Standard module identifiers for NexaBiz ERP.
 enum ModuleId {

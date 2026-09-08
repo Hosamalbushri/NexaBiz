@@ -15,7 +15,7 @@ class CostLayer {
     double? remainingQty,
     required this.unitCost,
     double? totalCost,
-    this.inventoryCurrencyId = 'YER',
+    String? inventoryCurrencyId,
     double? unitCostInventoryCurrency,
     double? totalCostInventoryCurrency,
     String? documentCurrencyId,
@@ -33,16 +33,19 @@ class CostLayer {
     this.deletedAt,
   }) : id = id ?? generateUuidV4(),
        remainingQty = remainingQty ?? receivedQty,
+       totalCost = totalCost ?? (receivedQty * unitCost),
+       inventoryCurrencyId = (inventoryCurrencyId != null && inventoryCurrencyId.isNotEmpty)
+           ? inventoryCurrencyId
+           : (documentCurrencyId ?? ''),
        unitCostInventoryCurrency = unitCostInventoryCurrency ?? unitCost,
        totalCostInventoryCurrency =
            totalCostInventoryCurrency ?? totalCost ?? (receivedQty * unitCost),
-       documentCurrencyId = documentCurrencyId ?? inventoryCurrencyId,
+       documentCurrencyId = documentCurrencyId ?? inventoryCurrencyId ?? '',
        unitCostDocumentCurrency = unitCostDocumentCurrency ?? unitCost,
        totalCostDocumentCurrency =
            totalCostDocumentCurrency ?? totalCost ?? (receivedQty * unitCost),
        exchangeRate = exchangeRate ?? 1.0,
        exchangeRateDate = exchangeRateDate ?? receivedDate,
-       totalCost = totalCost ?? (receivedQty * unitCost),
        createdAt = createdAt ?? DateTime.now().toUtc(),
        updatedAt = updatedAt ?? DateTime.now().toUtc();
 

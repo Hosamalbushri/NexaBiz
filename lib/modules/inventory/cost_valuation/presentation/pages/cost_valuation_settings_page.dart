@@ -8,6 +8,8 @@ import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 
+import '../widgets/inventory_valuation_currency_card.dart';
+
 import '../providers/cost_valuation_providers.dart';
 
 class CostValuationSettingsPage extends ConsumerWidget {
@@ -31,6 +33,8 @@ class CostValuationSettingsPage extends ConsumerWidget {
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
+          const InventoryValuationCurrencyCard(),
+          const SizedBox(height: AppSpacing.lg),
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: Text(

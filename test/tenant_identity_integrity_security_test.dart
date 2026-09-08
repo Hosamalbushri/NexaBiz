@@ -24,12 +24,17 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 
-class AlwaysPermissivePeriodValidator implements AccountingPeriodValidator {
+import 'package:stock_count/core/domain/ports/period_validator_port.dart';
+
+class AlwaysPermissivePeriodValidator implements PeriodValidatorPort {
   const AlwaysPermissivePeriodValidator();
   @override
-  Future<void> assertEntryAllowed(DateTime date) async {}
+  Future<void> assertEntryAllowed(DateTime entryDate) async {}
   @override
-  Future<bool> isEntryAllowed(DateTime date) async => true;
+  Future<void> assertMutationAllowed({
+    required DateTime entryDate,
+    DateTime? originalDate,
+  }) async {}
 }
 
 void main() {

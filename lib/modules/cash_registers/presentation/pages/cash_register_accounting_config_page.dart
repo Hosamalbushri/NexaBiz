@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
@@ -19,7 +20,7 @@ import '../../domain/entities/cash_register.dart';
 import '../../domain/services/default_cash_register_resolver.dart';
 import '../providers/cash_register_providers.dart';
 
-/// Cash Register Accounting Configuration Screen inside Module Initialization Settings.
+/// Cash Register & Accounting Bindings Configuration Page matching the standardized Module Settings design pattern.
 class CashRegisterAccountingConfigPage extends ConsumerStatefulWidget {
   const CashRegisterAccountingConfigPage({super.key});
 
@@ -108,7 +109,7 @@ class _CashRegisterAccountingConfigPageState
             ? 'CR-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}'
             : code,
         isActive: true,
-        accountingAccountId: null, // Initially ACCOUNTING_NOT_LINKED
+        accountingAccountId: null,
         createdAt: DateTime.now().toUtc(),
         updatedAt: DateTime.now().toUtc(),
       );
@@ -152,7 +153,6 @@ class _CashRegisterAccountingConfigPageState
 
     if (selectedAccount == null) return;
 
-    // Validate account eligibility
     if (selectedAccount.accountType != AccountType.asset) {
       if (mounted) {
         showAppSnackBar(
@@ -185,9 +185,14 @@ class _CashRegisterAccountingConfigPageState
       }
     } catch (e) {
       if (mounted) {
+        final String errorMessage =
+            e.toString().contains('REGISTER_HAS_MOVEMENTS') ||
+                e.toString().contains('movements')
+            ? 'لا يمكن تغيير الحساب المحاسبي للصندوق لوجود حركات مالية مسجلة عليه.'
+            : l10n.cashRegisterLinkFailed(e.toString());
         showAppSnackBar(
           context,
-          message: l10n.cashRegisterLinkFailed(e.toString()),
+          message: errorMessage,
           isSuccess: false,
         );
       }
@@ -340,6 +345,7 @@ class _CashRegisterAccountingConfigPageState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final isAr = l10n.localeName == 'ar';
     final asyncRegisters = ref.watch(cashRegistersProvider);
     final asyncSummary = ref.watch(cashModuleReadinessSummaryProvider);
     final asyncAccounts = ref.watch(accountsProvider);
@@ -359,49 +365,60 @@ class _CashRegisterAccountingConfigPageState
         return ListView(
           padding: AppConstants.pageInsets(context),
           children: [
-            // Readiness Overview Card
+            // Hero Header
+            _buildHeroHeader(theme, isAr),
+            const SizedBox(height: AppSpacing.md),
+
+            // Section 1: Readiness Summary
+            SettingsGroupLabel(
+              isAr ? 'حالة الجاهزية والملخص' : 'Readiness & Bindings Summary',
+            ),
             asyncSummary.when(
               loading: () => const AppLoading(style: AppLoadingStyle.linear),
               error: (_, _) => const SizedBox(),
-              data: (summary) => _buildSummaryHeader(theme, l10n, summary),
+              data: (summary) => _buildSummaryGroup(theme, l10n, summary, isAr),
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Default Cash Register for New Documents Card
-            _buildDefaultRegisterSection(
+            // Section 2: Default Cash Register
+            SettingsGroupLabel(
+              isAr
+                  ? 'الصندوق الافتراضي لعمليات القبض والصرف'
+                  : 'Default Cash Register for Documents',
+            ),
+            _buildDefaultRegisterGroup(
               theme,
               l10n,
               asyncDefaultResult,
               companyId,
+              isAr,
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Header Action
+            // Section 3: Cash Registers & Accounts Binding List
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    l10n.cashRegisterCompanyRegisters,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: SettingsGroupLabel(
+                    isAr ? 'قائمة الصناديق والخزائن' : 'Cash Registers List',
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                AppButton(
-                  label: l10n.cashRegisterAddAction,
-                  icon: Icons.add,
-                  variant: AppButtonVariant.outlined,
-                  onPressed: _busy
-                      ? null
-                      : () => _addRegisterDialog(companyId, l10n),
+                const SizedBox(width: AppSpacing.xs),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: AppButton(
+                    label: isAr ? 'إضافة صندوق' : 'Add Register',
+                    icon: Icons.add,
+                    variant: AppButtonVariant.outlined,
+                    onPressed: _busy
+                        ? null
+                        : () => _addRegisterDialog(companyId, l10n),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
 
-            // Registers List
             asyncRegisters.when(
               loading: () => const AppLoading(style: AppLoadingStyle.circular),
               error: (err, _) =>
@@ -421,7 +438,7 @@ class _CashRegisterAccountingConfigPageState
 
                 final accountsList = asyncAccounts.valueOrNull ?? [];
 
-                return Column(
+                return SettingsGroup(
                   children: registers.map((reg) {
                     Account? linkedAcc;
                     if (reg.isLinked) {
@@ -439,7 +456,7 @@ class _CashRegisterAccountingConfigPageState
                       targetCompanyId: companyId,
                     );
 
-                    return _buildRegisterCard(
+                    return _buildRegisterTile(
                       context,
                       theme,
                       l10n,
@@ -447,106 +464,154 @@ class _CashRegisterAccountingConfigPageState
                       linkedAcc,
                       status,
                       companyId,
+                      isAr,
                     );
                   }).toList(),
                 );
               },
             ),
+            const SizedBox(height: AppSpacing.xl),
           ],
         );
       },
     );
   }
 
-  Widget _buildSummaryHeader(
-    ThemeData theme,
-    AppLocalizations l10n,
-    CashModuleReadinessSummary summary,
-  ) {
-    Color badgeColor = summary.isReady
-        ? Colors.green
-        : (summary.linkedRegisters > 0 ? Colors.amber.shade700 : Colors.red);
-
+  Widget _buildHeroHeader(ThemeData theme, bool isAr) {
     return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xs),
-                decoration: BoxDecoration(
-                  color: badgeColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Icon(
-                  summary.isReady
-                      ? Icons.check_circle
-                      : Icons.warning_amber_rounded,
-                  color: badgeColor,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.cashRegisterReadinessTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'ar'
-                          ? summary.statusLabelAr
-                          : summary.statusLabelEn,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: badgeColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Icon(
+              Icons.account_balance_wallet_rounded,
+              color: theme.colorScheme.onPrimary,
+              size: 32,
+            ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          const Divider(height: 1),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _summaryStat(
-                theme,
-                label: l10n.cashRegisterTotalRegisters,
-                value: '${summary.totalRegisters}',
-              ),
-              _summaryStat(
-                theme,
-                label: l10n.cashRegisterLinkedAndReady,
-                value: '${summary.linkedRegisters}',
-                color: Colors.green,
-              ),
-              _summaryStat(
-                theme,
-                label: l10n.cashRegisterNotLinked,
-                value: '${summary.unlinkedRegisters}',
-                color: Colors.orange,
-              ),
-              if (summary.invalidRegisters > 0)
-                _summaryStat(
-                  theme,
-                  label: l10n.cashRegisterInvalidLink,
-                  value: '${summary.invalidRegisters}',
-                  color: Colors.red,
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isAr
+                      ? 'مركز تهيئة الصناديق والربط المحاسبي'
+                      : 'Cash Registers & Accounting Bindings Center',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  isAr
+                      ? 'إدارة الصناديق المالية، تعيين الصندوق الافتراضي، وربط كل صندوق بحسابه في دليل الحسابات'
+                      : 'Manage cash registers, set document default register, and bind registers to Chart of Accounts',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryGroup(
+    ThemeData theme,
+    AppLocalizations l10n,
+    CashModuleReadinessSummary summary,
+    bool isAr,
+  ) {
+    final badgeColor = summary.isReady
+        ? Colors.green
+        : (summary.linkedRegisters > 0 ? Colors.amber.shade700 : Colors.red);
+
+    return SettingsGroup(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SettingsIconBadge(
+                    icon: summary.isReady
+                        ? Icons.check_circle_rounded
+                        : Icons.warning_amber_rounded,
+                    color: badgeColor,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.cashRegisterReadinessTitle,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isAr ? summary.statusLabelAr : summary.statusLabelEn,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: badgeColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _summaryStat(
+                    theme,
+                    label: l10n.cashRegisterTotalRegisters,
+                    value: '${summary.totalRegisters}',
+                  ),
+                  _summaryStat(
+                    theme,
+                    label: l10n.cashRegisterLinkedAndReady,
+                    value: '${summary.linkedRegisters}',
+                    color: Colors.green,
+                  ),
+                  _summaryStat(
+                    theme,
+                    label: l10n.cashRegisterNotLinked,
+                    value: '${summary.unlinkedRegisters}',
+                    color: Colors.orange.shade800,
+                  ),
+                  if (summary.invalidRegisters > 0)
+                    _summaryStat(
+                      theme,
+                      label: l10n.cashRegisterInvalidLink,
+                      value: '${summary.invalidRegisters}',
+                      color: Colors.red,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -565,8 +630,10 @@ class _CashRegisterAccountingConfigPageState
             color: color,
           ),
         ),
+        const SizedBox(height: 2),
         Text(
           label,
+          textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             fontSize: 11,
@@ -576,7 +643,108 @@ class _CashRegisterAccountingConfigPageState
     );
   }
 
-  Widget _buildRegisterCard(
+  Widget _buildDefaultRegisterGroup(
+    ThemeData theme,
+    AppLocalizations l10n,
+    AsyncValue<DefaultCashRegisterResult> asyncDefaultResult,
+    String companyId,
+    bool isAr,
+  ) {
+    return asyncDefaultResult.when(
+      loading: () => const AppLoading(style: AppLoadingStyle.linear),
+      error: (err, _) => AppErrorState(message: err.toString()),
+      data: (result) {
+        final reg = result.register;
+        final linkedAcc = result.linkedAccount;
+
+        final String subtitleText;
+        if (result.isValid && reg != null && linkedAcc != null) {
+          subtitleText =
+              '${reg.name} (${reg.code}) — ${linkedAcc.accountCode} ${linkedAcc.name}';
+        } else if (reg != null) {
+          subtitleText = isAr
+              ? '${reg.name} (غير جاهز للمحاسبة ⚠️)'
+              : '${reg.name} (Not accounting ready ⚠️)';
+        } else {
+          subtitleText = isAr
+              ? 'لم يتم تحديد صندوق افتراضي بعد'
+              : 'No default cash register configured';
+        }
+
+        return SettingsGroup(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      SettingsIconBadge(
+                        icon: Icons.star_rounded,
+                        color: Colors.amber.shade800,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.cashRegisterDefaultTitle,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitleText,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (reg != null) ...[
+                        TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => _clearDefaultRegister(companyId, l10n),
+                          child: Text(
+                            isAr ? 'مسح' : 'Clear',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                      ],
+                      AppButton(
+                        label: reg != null
+                            ? (isAr ? 'تغيير الصندوق' : 'Change Default')
+                            : (isAr ? 'تحديد صندوق افتراضي' : 'Set Default'),
+                        variant: AppButtonVariant.outlined,
+                        onPressed: _busy
+                            ? null
+                            : () =>
+                                _openDefaultRegisterPicker(companyId, l10n),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRegisterTile(
     BuildContext context,
     ThemeData theme,
     AppLocalizations l10n,
@@ -584,6 +752,7 @@ class _CashRegisterAccountingConfigPageState
     Account? linkedAcc,
     CashRegisterAccountingStatus status,
     String companyId,
+    bool isAr,
   ) {
     Color statusColor;
     String statusText;
@@ -593,39 +762,32 @@ class _CashRegisterAccountingConfigPageState
       case CashRegisterAccountingStatus.ready:
         statusColor = Colors.green;
         statusText = l10n.cashRegisterStatusReady;
-        statusIcon = Icons.check_circle_outline;
+        statusIcon = Icons.check_circle_rounded;
         break;
       case CashRegisterAccountingStatus.invalid:
         statusColor = Colors.red;
         statusText = l10n.cashRegisterStatusInvalid;
-        statusIcon = Icons.error_outline;
+        statusIcon = Icons.error_outline_rounded;
         break;
       case CashRegisterAccountingStatus.notLinked:
-        statusColor = Colors.orange;
+        statusColor = Colors.orange.shade800;
         statusText = l10n.cashRegisterStatusNotLinked;
-        statusIcon = Icons.link_off;
+        statusIcon = Icons.link_off_rounded;
         break;
     }
 
-    return AppCard(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Header Row: Name & Code + Status Badge
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xs + 2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(
-                    alpha: 0.5,
-                  ),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Icon(
-                  Icons.point_of_sale,
-                  color: theme.colorScheme.primary,
-                ),
+              SettingsIconBadge(
+                icon: Icons.point_of_sale_rounded,
+                color: theme.colorScheme.primary,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -634,10 +796,11 @@ class _CashRegisterAccountingConfigPageState
                   children: [
                     Text(
                       reg.name,
-                      style: theme.textTheme.titleSmall?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       '${l10n.cashRegisterCodeLabel}: ${reg.code}',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -647,11 +810,13 @@ class _CashRegisterAccountingConfigPageState
                   ],
                 ),
               ),
+              const SizedBox(width: AppSpacing.xs),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                   border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
@@ -673,49 +838,56 @@ class _CashRegisterAccountingConfigPageState
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
+
+          // 2. Middle Block: Linked Chart of Accounts Detail
           Container(
-            padding: const EdgeInsets.all(AppSpacing.xs + 2),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm + 2,
+              vertical: AppSpacing.sm,
+            ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
-              ),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant
+                    .withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.account_balance,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  Icons.account_balance_rounded,
+                  size: 20,
+                  color: theme.colorScheme.primary,
                 ),
-                const SizedBox(width: AppSpacing.xs),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: linkedAcc != null
                       ? Text(
-                          '${linkedAcc.accountCode} — ${linkedAcc.name}',
+                          '${isAr ? "الحساب المحاسبي" : "Account"}: ${linkedAcc.accountCode} — ${linkedAcc.name}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         )
                       : Text(
-                          l10n.cashRegisterNoAccountLinked,
+                          isAr
+                              ? 'غير مرتبط بحساب محاسبي'
+                              : 'No account linked',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.orange.shade800,
-                            fontStyle: FontStyle.italic,
+                            color: Colors.orange.shade900,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                 ),
               ],
             ),
           ),
-          if (status == CashRegisterAccountingStatus.invalid) ...[
-            const SizedBox(height: 4),
-            Text(
-              l10n.cashRegisterInvalidReason,
-              style: theme.textTheme.bodySmall?.copyWith(color: Colors.red),
-            ),
-          ],
           const SizedBox(height: AppSpacing.sm),
+
+          // 3. Bottom Row: Action Buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -724,24 +896,24 @@ class _CashRegisterAccountingConfigPageState
                   onPressed: _busy
                       ? null
                       : () => _unlinkAccount(reg, companyId, l10n),
-                  icon: const Icon(Icons.link_off, size: 18, color: Colors.red),
+                  icon: const Icon(Icons.link_off, size: 16, color: Colors.red),
                   label: Text(
-                    l10n.cashRegisterUnlinkConfirmAction,
-                    style: const TextStyle(color: Colors.red),
+                    isAr ? 'إلغاء الربط' : 'Unlink',
+                    style: const TextStyle(color: Colors.red, fontSize: 13),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 AppButton(
-                  label: l10n.cashRegisterChangeAccountAction,
-                  variant: AppButtonVariant.outlined,
+                  label: isAr ? 'تغيير الحساب' : 'Change Account',
                   icon: Icons.edit_outlined,
+                  variant: AppButtonVariant.outlined,
                   onPressed: _busy
                       ? null
                       : () => _openAccountLinkPicker(reg, companyId, l10n),
                 ),
               ] else ...[
                 AppButton(
-                  label: l10n.cashRegisterLinkAccountAction,
+                  label: isAr ? 'ربط بحساب محاسبي' : 'Link Account',
                   icon: Icons.link,
                   onPressed: _busy
                       ? null
@@ -854,252 +1026,6 @@ class _AccountPickerSheet extends StatelessWidget {
   }
 }
 
-extension _DefaultConfigExtension on _CashRegisterAccountingConfigPageState {
-  Widget _buildDefaultRegisterSection(
-    ThemeData theme,
-    AppLocalizations l10n,
-    AsyncValue<DefaultCashRegisterResult> asyncDefaultResult,
-    String companyId,
-  ) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.star_outline,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Text(
-                  l10n.cashRegisterDefaultTitle,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.cashRegisterDefaultSubtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          const Divider(height: 1),
-          const SizedBox(height: AppSpacing.sm),
-          asyncDefaultResult.when(
-            loading: () => const AppLoading(style: AppLoadingStyle.linear),
-            error: (err, _) => AppErrorState(message: err.toString()),
-            data: (result) {
-              if (result.isValid) {
-                final reg = result.register!;
-                final acc = result.linkedAccount!;
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = constraints.maxWidth < 500;
-                    final infoWidget = Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: [
-                            Text(
-                              reg.name,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                l10n.cashRegisterDefaultReady,
-                                style: const TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${l10n.cashRegisterLinkAccountAction}: ${acc.accountCode} — ${acc.name}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    );
-
-                    final actionsWidget = Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      alignment: WrapAlignment.start,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () => _clearDefaultRegister(companyId, l10n),
-                          child: Text(
-                            l10n.cashRegisterClearDefaultAction,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                        AppButton(
-                          label: l10n.cashRegisterChangeAccountAction,
-                          variant: AppButtonVariant.outlined,
-                          onPressed: _busy
-                              ? null
-                              : () =>
-                                    _openDefaultRegisterPicker(companyId, l10n),
-                        ),
-                      ],
-                    );
-
-                    if (isCompact) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          infoWidget,
-                          const SizedBox(height: AppSpacing.sm),
-                          actionsWidget,
-                        ],
-                      );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(child: infoWidget),
-                        const SizedBox(width: AppSpacing.md),
-                        actionsWidget,
-                      ],
-                    );
-                  },
-                );
-              }
-
-              if (result.errorCode ==
-                  DefaultCashRegisterErrorCode.notConfigured) {
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = constraints.maxWidth < 500;
-                    final infoWidget = Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.cashRegisterDefaultNotConfigured,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.orange.shade800,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          l10n.cashRegisterDefaultNotConfiguredHint,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    );
-
-                    final buttonWidget = AppButton(
-                      label: l10n.cashRegisterSetDefaultAction,
-                      icon: Icons.check_circle_outline,
-                      onPressed: _busy
-                          ? null
-                          : () => _openDefaultRegisterPicker(companyId, l10n),
-                    );
-
-                    if (isCompact) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          infoWidget,
-                          const SizedBox(height: AppSpacing.sm),
-                          buttonWidget,
-                        ],
-                      );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(child: infoWidget),
-                        const SizedBox(width: AppSpacing.md),
-                        buttonWidget,
-                      ],
-                    );
-                  },
-                );
-              }
-
-              // Invalid Default State (DEFAULT_CASH_REGISTER_INVALID)
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          l10n.cashRegisterDefaultInvalid,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    result.message ?? "Invalid configuration",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.red.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: AppButton(
-                      label: l10n.cashRegisterRepairConfigAction,
-                      variant: AppButtonVariant.outlined,
-                      onPressed: _busy
-                          ? null
-                          : () => _openDefaultRegisterPicker(companyId, l10n),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DefaultRegisterPickerSheet extends StatelessWidget {
   const _DefaultRegisterPickerSheet({
     required this.readyRegisters,
@@ -1114,7 +1040,7 @@ class _DefaultRegisterPickerSheet extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SizedBox(
-      height: MediaQuery.sizeOf(context).height * 0.55,
+      height: MediaQuery.sizeOf(context).height * 0.5,
       child: Column(
         children: [
           Padding(
@@ -1140,35 +1066,22 @@ class _DefaultRegisterPickerSheet extends StatelessWidget {
           ),
           const Divider(height: 1),
           Expanded(
-            child: readyRegisters.isEmpty
-                ? AppEmptyState(
-                    title: l10n.cashRegisterNoReadyRegisters,
-                    icon: Icons.point_of_sale_outlined,
-                  )
-                : ListView.separated(
-                    itemCount: readyRegisters.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (ctx, index) {
-                      final reg = readyRegisters[index];
-                      return ListTile(
-                        leading: const Icon(
-                          Icons.point_of_sale,
-                          color: Colors.green,
-                        ),
-                        title: Text(reg.name),
-                        subtitle: Text(
-                          '${l10n.cashRegisterCodeLabel}: ${reg.code}',
-                        ),
-                        trailing: const Icon(
-                          Icons.check_circle_outline,
-                          color: Colors.green,
-                        ),
-                        onTap: () {
-                          Navigator.of(ctx).pop(reg);
-                        },
-                      );
-                    },
+            child: ListView.separated(
+              itemCount: readyRegisters.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (ctx, index) {
+                final reg = readyRegisters[index];
+                return ListTile(
+                  leading: Icon(
+                    Icons.point_of_sale,
+                    color: theme.colorScheme.primary,
                   ),
+                  title: Text(reg.name),
+                  subtitle: Text('${l10n.cashRegisterCodeLabel}: ${reg.code}'),
+                  onTap: () => Navigator.of(ctx).pop(reg),
+                );
+              },
+            ),
           ),
         ],
       ),

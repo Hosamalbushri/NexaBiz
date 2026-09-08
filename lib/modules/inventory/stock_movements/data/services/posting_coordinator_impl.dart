@@ -384,15 +384,22 @@ class PostingCoordinatorImpl implements PostingCoordinator {
           }
 
           // 5.5. Execute Accounting Posting inside the atomic database transaction
-          final totalAmount = value > 0
-              ? value
-              : dbLines.fold(0.0, (sum, l) => sum + l.totalCost);
+          final totalDocAmount =
+              dbLines.fold(0.0, (sum, l) => sum + l.totalCost);
+          final valuationAmount = value > 0 ? value : null;
+          final isOutboundOrIssue =
+              document.documentType == InventoryDocumentType.stockIssue ||
+                  document.documentType == InventoryDocumentType.stockAdjustment;
           final docAccountId = await _resolveDocumentAccountId(document);
           await _accountingPoster.postAccountingEntry(
             document: document,
-            totalAmount: totalAmount,
+            totalAmount: totalDocAmount > 0
+                ? totalDocAmount
+                : (value > 0 ? value : 0.0),
+            valuationAmount: valuationAmount,
             accountId: docAccountId,
             isPosted: true,
+            useBaseCurrencyForPosting: isOutboundOrIssue,
           );
           accountingPosted = true;
 

@@ -20,18 +20,16 @@ class FinancialTransactions extends Table {
 
   RealColumn get amount => real()();
 
-  TextColumn get currencyCode => text().withDefault(const Constant('SAR'))();
+  TextColumn get currencyCode => text()();
 
-  TextColumn get baseCurrencyCode =>
-      text().withDefault(const Constant('SAR'))();
+  TextColumn get baseCurrencyCode => text()();
 
   RealColumn get exchangeRate => real().withDefault(const Constant(1.0))();
 
   /// Counter/party amount (may differ from cash [amount] when currencies differ).
   RealColumn get counterAmount => real().withDefault(const Constant(0.0))();
 
-  TextColumn get counterCurrencyCode =>
-      text().withDefault(const Constant('SAR'))();
+  TextColumn get counterCurrencyCode => text()();
 
   RealColumn get counterExchangeRate =>
       real().withDefault(const Constant(1.0))();

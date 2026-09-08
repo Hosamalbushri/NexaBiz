@@ -12,6 +12,7 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settleme
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_ledger_posting_port.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_accounting_config.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_accounting_binding_repository.dart';
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
 
 /// App adapter: sale save/post → local journal.
@@ -20,13 +21,16 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     required JournalPostingService posting,
     required AccountRepository accounts,
     CompanyInitializationRepository? initRepository,
+    WarehouseAccountingBindingRepository? bindingRepo,
   }) : _posting = posting,
        _accounts = accounts,
-       _initRepository = initRepository;
+       _initRepository = initRepository,
+       _bindingRepo = bindingRepo;
 
   final JournalPostingService _posting;
   final AccountRepository _accounts;
   final CompanyInitializationRepository? _initRepository;
+  final WarehouseAccountingBindingRepository? _bindingRepo;
 
   static const sourceType = 'sale';
   static const voucherTypeCreditSale = 'بيع آجل';
@@ -54,6 +58,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
       final arAccount = await _resolveRoleAccount(
         companyConfig: companyConfig,
         role: AccountRole.receivable,
+        warehouseId: sale.warehouseId,
       );
       if (arAccount != null) {
         debitAccountId = arAccount.uuid;
@@ -63,6 +68,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
       final cashAccount = await _resolveRoleAccount(
         companyConfig: companyConfig,
         role: AccountRole.cash,
+        warehouseId: sale.warehouseId,
       );
       if (cashAccount != null) {
         debitAccountId = cashAccount.uuid;
@@ -75,6 +81,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     final revenue = await _resolveRoleAccount(
       companyConfig: companyConfig,
       role: AccountRole.revenue,
+      warehouseId: sale.warehouseId,
     );
     if (revenue == null) {
       throw const JournalException(JournalException.revenueAccountMissing);
@@ -86,10 +93,12 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
           await _resolveRoleAccount(
             companyConfig: companyConfig,
             role: AccountRole.discount,
+            warehouseId: sale.warehouseId,
           ) ??
           await _resolveRoleAccount(
             companyConfig: companyConfig,
             role: AccountRole.cogs,
+            warehouseId: sale.warehouseId,
           );
       if (discountAccount == null) {
         throw const JournalException(JournalException.discountAccountMissing);
@@ -101,6 +110,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
       taxAccount = await _resolveRoleAccount(
         companyConfig: companyConfig,
         role: AccountRole.payable,
+        warehouseId: sale.warehouseId,
       );
       if (taxAccount == null) {
         throw const JournalException(JournalException.taxAccountMissing);
@@ -201,7 +211,36 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
   Future<Account?> _resolveRoleAccount({
     required CompanyAccountingConfig? companyConfig,
     required AccountRole role,
+    String? warehouseId,
   }) async {
+    if (warehouseId != null &&
+        warehouseId.trim().isNotEmpty &&
+        _bindingRepo != null) {
+      final binding = await _bindingRepo!.getBindingForWarehouse(
+        warehouseId.trim(),
+      );
+      if (binding != null) {
+        final candidateId = switch (role) {
+          AccountRole.revenue => binding.salesRevenueAccountId,
+          AccountRole.discount => binding.salesDiscountAccountId,
+          AccountRole.inventory => binding.inventoryAssetAccountId,
+          AccountRole.cogs => binding.cogsAccountId,
+          AccountRole.adjustment => binding.inventoryAdjustmentAccountId,
+          _ => null,
+        };
+
+        if (candidateId != null && candidateId.trim().isNotEmpty) {
+          final target = candidateId.trim();
+          final acc =
+              await _accounts.getByUuid(target) ??
+              await _accounts.getByAccountCode(target);
+          if (acc != null && acc.isPostingAccount && !acc.isDeleted) {
+            return acc;
+          }
+        }
+      }
+    }
+
     final configuredKey =
         companyConfig?.bindingTargets[role]?.activeUuid ??
         companyConfig?.accountMappings[role]?.trim();

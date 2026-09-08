@@ -8,11 +8,11 @@ import '../settings/company/company_profile.dart';
 class TrialBalanceReportDataAdapter implements TrialBalanceReportDataPort {
   const TrialBalanceReportDataAdapter({
     required this.journals,
-    required this.loadCompanyProfile,
+    required this.loadFunctionalCurrencyCode,
   });
 
   final JournalRepository journals;
-  final Future<CompanyProfile> Function() loadCompanyProfile;
+  final Future<String> Function() loadFunctionalCurrencyCode;
 
   static const double _balanceTolerance = 0.02;
 
@@ -24,7 +24,7 @@ class TrialBalanceReportDataAdapter implements TrialBalanceReportDataPort {
     required bool postedOnly,
     required TrialBalanceReportLabels labels,
   }) async {
-    final profile = await loadCompanyProfile();
+    final baseCurrencyCode = await loadFunctionalCurrencyCode();
     final rows = await journals.listTrialBalance(
       companyId: companyId,
       fromDate: fromDate,
@@ -70,7 +70,7 @@ class TrialBalanceReportDataAdapter implements TrialBalanceReportDataPort {
       totalsDebit: totalsDebit,
       totalsCredit: totalsCredit,
       isBalanced: isBalanced,
-      baseCurrencyCode: profile.defaultCurrencyCode,
+      baseCurrencyCode: baseCurrencyCode,
       fromDate: fromDate,
       toDate: toDate,
       emptyMessage: labels.emptyMessage,

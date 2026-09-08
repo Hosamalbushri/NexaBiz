@@ -87,17 +87,10 @@ class CompanyProfileController
       return trimmed;
     }
 
-    final locked = await _repository.loadSystemBaseCurrencyLocked();
-    final existing = await _repository.loadCompanyProfile(_companyId);
-    final currencyCode = locked
-        ? existing.defaultCurrencyCode
-        : profile.defaultCurrency.code;
-
     final normalized = CompanyProfile(
       name: profile.name.trim(),
       legalName: opt(profile.legalName),
       logoPath: opt(profile.logoPath),
-      defaultCurrencyCode: currencyCode,
       taxNumber: opt(profile.taxNumber),
       commercialRegister: opt(profile.commercialRegister),
       phone: opt(profile.phone),

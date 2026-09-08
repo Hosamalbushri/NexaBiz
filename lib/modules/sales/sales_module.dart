@@ -16,7 +16,9 @@ import '../accounting/shared/presentation/providers/document_posting_providers.d
 import '../inventory/stock_movements/presentation/providers/stock_movements_providers.dart';
 import 'invoices/presentation/pages/sale_details_page.dart';
 import 'invoices/presentation/pages/sale_form_page.dart';
+import 'presentation/pages/sales_master_settings_page.dart';
 import 'invoices/presentation/pages/sales_home_page.dart';
+
 import 'invoices/presentation/pages/sales_list_page.dart';
 import 'invoices/presentation/providers/sale_providers.dart';
 import '../../core/modules/module_setup_definition.dart';
@@ -133,10 +135,16 @@ class SalesModule extends AppModule {
       builder: (context, state) => const SalesHomePage(),
       routes: [
         GoRoute(
+          path: 'settings',
+          name: 'salesMasterSettings',
+          builder: (context, state) => const SalesMasterSettingsPage(),
+        ),
+        GoRoute(
           path: 'list',
           name: 'salesList',
           builder: (context, state) => const SalesListPage(),
         ),
+
         GoRoute(
           path: 'create',
           name: 'salesCreate',

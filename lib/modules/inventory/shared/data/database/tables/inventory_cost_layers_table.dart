@@ -40,8 +40,7 @@ class InventoryCostLayers extends Table {
   RealColumn get totalCost => real().withDefault(const Constant(0))();
 
   /// Explicit inventory valuation currency code (e.g. 'YER').
-  TextColumn get inventoryCurrencyId =>
-      text().withDefault(const Constant('YER'))();
+  TextColumn get inventoryCurrencyId => text()();
 
   /// Unit cost explicitly in inventory valuation currency.
   RealColumn get unitCostInventoryCurrency =>
@@ -52,8 +51,7 @@ class InventoryCostLayers extends Table {
       real().withDefault(const Constant(0))();
 
   /// Original document currency code (e.g. 'SAR', 'USD').
-  TextColumn get documentCurrencyId =>
-      text().withDefault(const Constant('YER'))();
+  TextColumn get documentCurrencyId => text()();
 
   /// Unit cost in original document currency.
   RealColumn get unitCostDocumentCurrency =>

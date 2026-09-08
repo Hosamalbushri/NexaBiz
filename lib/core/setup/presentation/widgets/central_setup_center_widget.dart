@@ -401,6 +401,29 @@ class _CentralSetupCenterWidgetState
 
     final isWideScreen = MediaQuery.of(context).size.width >= 768;
 
+    if (widget.filterPackageId != null) {
+      return PackageSetupView(
+        definition: currentPackage,
+        fieldValues: currentPackageFields,
+        isArabic: isArabic,
+        availableAccounts: availableAccounts,
+        accountRoles: _knownAccountRoles,
+        status: _calculatePackageStatus(
+          currentPackage,
+          currentPackageFields,
+        ),
+        onFieldValueChanged: (key, val) {
+          setState(() {
+            currentPackageFields[key] = val;
+          });
+        },
+        onSavePackage: () => _savePackage(currentPackage),
+        isSaving: _saving,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+      );
+    }
+
     return Column(
       children: [
         // Show package tabs header if displaying all packages
@@ -459,7 +482,7 @@ class _CentralSetupCenterWidgetState
         ],
 
         Expanded(
-          child: (widget.filterPackageId != null || !isWideScreen)
+          child: !isWideScreen
               ? PackageSetupView(
                   definition: currentPackage,
                   fieldValues: currentPackageFields,

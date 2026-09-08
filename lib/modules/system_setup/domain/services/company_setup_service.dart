@@ -87,7 +87,6 @@ class CompanySetupService {
       city: profile.city,
       country: profile.country,
       website: profile.website,
-      defaultCurrencyCode: profile.defaultCurrencyCode,
     );
 
     // Save company profile to persistent settings

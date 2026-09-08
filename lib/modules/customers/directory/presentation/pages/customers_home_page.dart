@@ -23,7 +23,17 @@ class CustomersHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: l10n.moduleCustomers, showBackButton: true),
+      appBar: CustomAppBar(
+        title: l10n.moduleCustomers,
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settingsTitle,
+            onPressed: () => CustomersRoutes.pushSettings(context),
+          ),
+        ],
+      ),
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [

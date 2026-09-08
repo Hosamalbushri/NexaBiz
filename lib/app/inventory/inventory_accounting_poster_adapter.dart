@@ -3,6 +3,7 @@ import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/errors/missing_account_exception.dart';
 import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
+import 'package:stock_count/core/errors/currency_exception.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
@@ -13,6 +14,7 @@ import 'package:stock_count/modules/accounting/journals/domain/entities/journal_
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_accounting_binding_repository.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
+import 'package:stock_count/modules/currency/domain/services/functional_currency_service.dart';
 
 class MissingCompanyContextException implements Exception {
   const MissingCompanyContextException([
@@ -33,6 +35,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     this._initializationGuard,
     this.bindingRepo,
     this.validationService,
+    this._functionalCurrencyService,
   }) : _accountingDb = accountingDb;
 
   final AccountingDatabase? _accountingDb;
@@ -42,6 +45,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
   final InitializationGuard? _initializationGuard;
   final WarehouseAccountingBindingRepository? bindingRepo;
   final WarehouseAccountingValidationService? validationService;
+  final FunctionalCurrencyService? _functionalCurrencyService;
 
   String get _currentCompanyId {
     final id = _readCompanyId?.call();
@@ -106,22 +110,18 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       );
     }
 
-    // Precedence Level 2: Warehouse-specific binding
-    if (warehouseId != null &&
-        warehouseId.trim().isNotEmpty &&
-        bindingRepo != null) {
+    // Strict Warehouse-Centric Accounting Binding
+    if (bindingRepo != null) {
       final binding = await bindingRepo!.getBindingForWarehouse(
-        warehouseId.trim(),
+        warehouseId ?? '',
       );
       if (binding != null) {
         final candidateId = switch (role) {
           AccountRole.inventory => binding.inventoryAssetAccountId,
           AccountRole.cogs => binding.cogsAccountId,
-          AccountRole.payable =>
-            binding.inventoryAdjustmentAccountId ??
-                binding.inventoryAssetAccountId,
-          AccountRole.receivable => binding.inventoryAssetAccountId,
-          AccountRole.revenue => binding.cogsAccountId,
+          AccountRole.adjustment => binding.inventoryAdjustmentAccountId,
+          AccountRole.revenue => binding.salesRevenueAccountId,
+          AccountRole.discount => binding.salesDiscountAccountId,
           _ => null,
         };
 
@@ -150,7 +150,6 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
                     (tbl) =>
                         (tbl.uuid.equals(targetCandidate) |
                             tbl.accountCode.equals(targetCandidate)) &
-                        tbl.companyId.equals(companyId) &
                         tbl.deletedAt.isNull() &
                         tbl.isGroup.equals(false) &
                         tbl.isActive.equals(true),
@@ -161,75 +160,6 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       }
     }
 
-    // Precedence Level 3: Company Fallback
-    final companyConfig = await _initRepository?.getAccountingConfig();
-    final configuredKey = companyConfig?.accountMappings[role]?.trim();
-
-    if (configuredKey != null && configuredKey.isNotEmpty) {
-      if (validationService != null) {
-        final valRes = await validationService!.validateAccount(
-          accountIdOrCode: configuredKey,
-          role: role,
-          companyId: companyId,
-        );
-        if (valRes is WarehouseAccountingValidationSuccess) {
-          return valRes.accountUuid;
-        } else if (valRes is WarehouseAccountingValidationFailure) {
-          throw MissingAccountException(
-            accountRole: role.name,
-            expectedCode: configuredKey,
-            systemKey: configuredKey,
-            message: valRes.reason,
-          );
-        }
-      }
-
-      final acc =
-          await (db.select(db.accounts)..where(
-                (tbl) =>
-                    (tbl.uuid.equals(configuredKey) |
-                        tbl.accountCode.equals(configuredKey)) &
-                    tbl.companyId.equals(companyId) &
-                    tbl.deletedAt.isNull() &
-                    tbl.isGroup.equals(false) &
-                    tbl.isActive.equals(true),
-              ))
-              .getSingleOrNull();
-      if (acc != null) return acc.uuid;
-    }
-
-    // Precedence Level 4: System Key Fallback (e.g. system:payable, system:inventory)
-    final systemKeys = switch (role) {
-      AccountRole.inventory => ['system:inventory'],
-      AccountRole.payable => ['system:payable', 'system:accounts_payable'],
-      AccountRole.cogs => ['system:cost_of_goods', 'system:cogs'],
-      AccountRole.revenue => ['system:revenue', 'system:sales_revenue'],
-      AccountRole.receivable => [
-        'system:receivable',
-        'system:accounts_receivable',
-      ],
-      AccountRole.cash => ['system:cash', 'system:cash_box'],
-      AccountRole.adjustment => [
-        'system:inventory_adjustment',
-        'system:adjustment',
-      ],
-      _ => <String>[],
-    };
-
-    for (final sysKey in systemKeys) {
-      final sysAcc =
-          await (db.select(db.accounts)..where(
-                (tbl) =>
-                    tbl.description.equals(sysKey) &
-                    tbl.companyId.equals(companyId) &
-                    tbl.deletedAt.isNull() &
-                    tbl.isGroup.equals(false) &
-                    tbl.isActive.equals(true),
-              ))
-              .getSingleOrNull();
-      if (sysAcc != null) return sysAcc.uuid;
-    }
-
     final roleNameAr = switch (role) {
       AccountRole.inventory => 'أصل المخزون',
       AccountRole.payable => 'الموردين / الحسابات الدائنة',
@@ -238,15 +168,16 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       AccountRole.receivable => 'العملاء / الحسابات المدينة',
       AccountRole.cash => 'الصندوق / النقدية',
       AccountRole.adjustment => 'تسويات وانحرافات المخزون',
+      AccountRole.discount => 'الخصم المسموح به',
       _ => role.name,
     };
 
     throw MissingAccountException(
       accountRole: role.name,
-      expectedCode: configuredKey ?? role.name,
+      expectedCode: role.name,
       systemKey: role.name,
       message:
-          'خطأ محاسبي: لم يتم إعداد حساب ($roleNameAr) للمستودع المحدد أو لتهيئة الشركة ($companyId). يرجى ربط الحسابات المحاسبية أولاً.',
+          'خطأ محاسبي: لم يتم ربط حساب ($roleNameAr) للمستودع المحدد. يرجى تهيئة الربط المحاسبي الخاص بهذا المستودع من صفحة إعدادات المستودعات.',
     );
   }
 
@@ -256,15 +187,30 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
         inventoryConfig.inventoryBaseCurrencyId.trim().isNotEmpty) {
       return inventoryConfig.inventoryBaseCurrencyId.trim().toUpperCase();
     }
-    return 'YER';
+    final funcService = _functionalCurrencyService;
+    if (funcService != null) {
+      try {
+        final func = await funcService.getFunctionalCurrency(
+          _readCompanyId?.call(),
+        );
+        if (func.code.trim().isNotEmpty) {
+          return func.code.trim().toUpperCase();
+        }
+      } catch (_) {}
+    }
+    throw const CurrencyRequiredException(
+      'Company base currency or functional currency is required for inventory accounting posting.',
+    );
   }
 
   @override
   Future<void> postAccountingEntry({
     required InventoryDocumentRef document,
     required double totalAmount,
+    double? valuationAmount,
     String? accountId,
     bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
   }) async {
     await _initializationGuard?.assertInitialized();
     if (totalAmount <= 0) return;
@@ -372,7 +318,9 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       voucherTypeStr: voucherTypeStr,
     );
 
-    final offsetRole = isReceipt ? AccountRole.payable : AccountRole.cogs;
+    final offsetRole = isReceipt
+        ? AccountRole.payable
+        : (isAdjustment ? AccountRole.adjustment : AccountRole.cogs);
     final resolvedOffset = await _resolveCompanyAccount(
       role: offsetRole,
       explicitAccountId: accountId,
@@ -380,21 +328,34 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       voucherTypeStr: voucherTypeStr,
     );
 
-    final String docCurrency = document.currencyCode.trim().isNotEmpty
+    final String rawDocCurrency = document.currencyCode.trim().isNotEmpty
         ? document.currencyCode.trim().toUpperCase()
         : baseCurrency;
-    final double docRate = ExchangeRateValidator.validate(
-      currencyCode: docCurrency,
-      baseCurrencyCode: baseCurrency,
-      exchangeRate: document.exchangeRate,
-    );
-    final double calculatedBaseDebit = totalAmount * docRate;
+
+    final bool isBasePosting = useBaseCurrencyForPosting || !isReceipt;
+
+    final String docCurrency = isBasePosting ? baseCurrency : rawDocCurrency;
+    final double docRate = isBasePosting
+        ? 1.0
+        : ExchangeRateValidator.validate(
+            currencyCode: docCurrency,
+            baseCurrencyCode: baseCurrency,
+            exchangeRate: document.exchangeRate,
+          );
+
+    final double offsetAmount = isBasePosting
+        ? (valuationAmount ?? totalAmount)
+        : totalAmount;
+
+    final double calculatedBaseValuation = isBasePosting
+        ? offsetAmount
+        : (valuationAmount ?? (totalAmount * docRate));
 
     if (_journalPostingService != null) {
       final inventoryLine = JournalLineDraft(
         accountUuid: resolvedInventory,
-        debit: isReceipt ? calculatedBaseDebit : 0.0,
-        credit: isReceipt ? 0.0 : calculatedBaseDebit,
+        debit: isReceipt ? calculatedBaseValuation : 0.0,
+        credit: isReceipt ? 0.0 : calculatedBaseValuation,
         currencyCode: baseCurrency,
         exchangeRateToBase: 1.0,
         lineDescription: 'مخزون - ${document.documentNumber}',
@@ -403,8 +364,8 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
 
       final offsetLine = JournalLineDraft(
         accountUuid: resolvedOffset,
-        debit: isReceipt ? 0.0 : totalAmount,
-        credit: isReceipt ? totalAmount : 0.0,
+        debit: isReceipt ? 0.0 : offsetAmount,
+        credit: isReceipt ? offsetAmount : 0.0,
         currencyCode: docCurrency,
         exchangeRateToBase: docRate,
         lineDescription: 'مخزون - ${document.documentNumber}',
@@ -438,11 +399,11 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       resolvedInventory: resolvedInventory,
       resolvedOffset: resolvedOffset,
       isReceipt: isReceipt,
-      totalAmount: totalAmount,
+      totalAmount: offsetAmount,
       docCurrency: docCurrency,
       docRate: docRate,
       baseCurrency: baseCurrency,
-      calculatedBaseDebit: calculatedBaseDebit,
+      calculatedBaseDebit: calculatedBaseValuation,
       isPosted: isPosted,
     );
   }

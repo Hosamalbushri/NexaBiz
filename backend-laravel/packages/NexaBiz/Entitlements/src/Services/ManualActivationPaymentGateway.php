@@ -27,7 +27,7 @@ class ManualActivationPaymentGateway implements PaymentGateway
             planId: $plan->id,
             packages: $packages,
             amount: $totalAmount,
-            currency: $plan->currency ?? 'USD',
+            currency: $plan->currency ?? '',
             status: 'completed',
             checkoutUrl: null,
         );

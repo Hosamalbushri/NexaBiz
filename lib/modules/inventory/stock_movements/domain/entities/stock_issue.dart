@@ -13,7 +13,7 @@ class StockIssue {
     this.destination,
     this.accountId,
     this.accountName,
-    this.currencyCode = 'SAR',
+    this.currencyCode = '',
     this.exchangeRate = 1.0,
     this.voucherBookId,
     this.warehouse,

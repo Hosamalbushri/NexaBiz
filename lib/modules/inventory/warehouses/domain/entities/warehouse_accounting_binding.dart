@@ -6,6 +6,9 @@ class WarehouseAccountingBinding {
     this.cogsAccountId,
     this.inventoryAdjustmentAccountId,
     this.stockTransferClearingAccountId,
+    this.salesRevenueAccountId,
+    this.salesReturnAccountId,
+    this.salesDiscountAccountId,
     required this.companyId,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -19,6 +22,9 @@ class WarehouseAccountingBinding {
   final String? cogsAccountId;
   final String? inventoryAdjustmentAccountId;
   final String? stockTransferClearingAccountId;
+  final String? salesRevenueAccountId;
+  final String? salesReturnAccountId;
+  final String? salesDiscountAccountId;
   final String companyId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -35,6 +41,12 @@ class WarehouseAccountingBinding {
     bool clearInventoryAdjustmentAccountId = false,
     String? stockTransferClearingAccountId,
     bool clearStockTransferClearingAccountId = false,
+    String? salesRevenueAccountId,
+    bool clearSalesRevenueAccountId = false,
+    String? salesReturnAccountId,
+    bool clearSalesReturnAccountId = false,
+    String? salesDiscountAccountId,
+    bool clearSalesDiscountAccountId = false,
     String? companyId,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -56,6 +68,15 @@ class WarehouseAccountingBinding {
           ? null
           : (stockTransferClearingAccountId ??
                 this.stockTransferClearingAccountId),
+      salesRevenueAccountId: clearSalesRevenueAccountId
+          ? null
+          : (salesRevenueAccountId ?? this.salesRevenueAccountId),
+      salesReturnAccountId: clearSalesReturnAccountId
+          ? null
+          : (salesReturnAccountId ?? this.salesReturnAccountId),
+      salesDiscountAccountId: clearSalesDiscountAccountId
+          ? null
+          : (salesDiscountAccountId ?? this.salesDiscountAccountId),
       companyId: companyId ?? this.companyId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

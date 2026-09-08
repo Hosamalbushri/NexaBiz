@@ -136,6 +136,13 @@ class AuthSessionSnapshot {
   }
 
   bool hasPermission(String code) {
+    if (user.isSuperAdmin ||
+        roles.contains('Owner') ||
+        roles.contains(LocalAuthDefaults.adminRole) ||
+        roles.contains('Admin')) {
+      return true;
+    }
+    if (permissions.contains(code)) return true;
     if (isSystemLevelPermission(code)) {
       return user.isSystemAdmin || permissions.contains(code);
     }

@@ -11,21 +11,21 @@ class BalanceSheetReportDataAdapter implements BalanceSheetReportDataPort {
   BalanceSheetReportDataAdapter({
     required this.journals,
     required this.accounts,
-    required this.loadCompanyProfile,
+    required this.loadFunctionalCurrencyCode,
   });
 
   final JournalRepository journals;
   final AccountRepository accounts;
-  final Future<CompanyProfile> Function() loadCompanyProfile;
+  final Future<String> Function() loadFunctionalCurrencyCode;
 
   @override
   Future<BalanceSheetReportPayload> loadFromFilter({
     required ReportQueryFilter filter,
     required BalanceSheetReportLabels labels,
   }) async {
-    final profile = await loadCompanyProfile();
+    final functionalCode = await loadFunctionalCurrencyCode();
     final baseCurrency = filter.currencyCode == 'ALL'
-        ? profile.defaultCurrencyCode
+        ? functionalCode
         : filter.currencyCode;
 
     final isPostedFilter = filter.postingScope == PostingScope.postedOnly

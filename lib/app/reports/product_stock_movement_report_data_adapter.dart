@@ -12,12 +12,12 @@ class ProductStockMovementReportDataAdapter
   ProductStockMovementReportDataAdapter({
     required this.db,
     this.salesDb,
-    required this.loadCompanyProfile,
+    required this.loadFunctionalCurrencyCode,
   });
 
   final InventoryDatabase db;
   final SalesDatabase? salesDb;
-  final Future<CompanyProfile> Function() loadCompanyProfile;
+  final Future<String> Function() loadFunctionalCurrencyCode;
 
   @override
   Future<ProductStockMovementReportPayload> loadFromFilter({
@@ -41,7 +41,7 @@ class ProductStockMovementReportDataAdapter
     DateTime? toDate,
     required ProductStockMovementReportLabels labels,
   }) async {
-    await loadCompanyProfile();
+    await loadFunctionalCurrencyCode();
 
     // 1. Fetch Product details
     String productCode = productId;

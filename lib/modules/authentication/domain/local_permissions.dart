@@ -130,6 +130,12 @@ class LocalPermissions {
   static const transfersCancel = 'transfers.cancel';
   static const transfersApprove = 'transfers.approve';
 
+  static const exchangesView = 'exchanges.view';
+  static const exchangesCreate = 'exchanges.create';
+  static const exchangesUpdate = 'exchanges.update';
+  static const exchangesPost = 'exchanges.post';
+  static const exchangesCancel = 'exchanges.cancel';
+
   // Reports
   static const reportsView = 'reports.view';
   static const reportsSalesPeriodView = 'reports.sales_period.view';
@@ -236,6 +242,11 @@ const List<String> kAllLocalPermissions = [
   LocalPermissions.transfersPost,
   LocalPermissions.transfersCancel,
   LocalPermissions.transfersApprove,
+  LocalPermissions.exchangesView,
+  LocalPermissions.exchangesCreate,
+  LocalPermissions.exchangesUpdate,
+  LocalPermissions.exchangesPost,
+  LocalPermissions.exchangesCancel,
   LocalPermissions.reportsView,
   LocalPermissions.reportsSalesPeriodView,
   LocalPermissions.reportsSalesPeriodExport,

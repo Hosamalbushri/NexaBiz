@@ -27,6 +27,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/st
 
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 
 final stockMovementsRepositoryProvider = Provider<StockMovementsRepository>((
   ref,
@@ -102,10 +103,12 @@ final inventoryDependencyDetectorProvider =
 final costLayerServiceProvider = Provider<CostLayerService>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
   final initRepo = ref.watch(companyInitializationRepositoryProvider);
+  final functionalCurrencyService = ref.watch(functionalCurrencyServiceProvider);
   return CostLayerServiceImpl(
     db: db,
     readCompanyId: () => ref.read(currentCompanyIdProvider),
     initRepository: initRepo,
+    functionalCurrencyService: functionalCurrencyService,
   );
 });
 

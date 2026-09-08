@@ -15,6 +15,7 @@ import 'package:stock_count/modules/inventory/shared/presentation/pages/inventor
 import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
+import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/inventory_valuation_currency_providers.dart';
 import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
 
@@ -391,6 +392,7 @@ class _StockReceiptDetailsPageState
                   _DocumentHero(
                     documentNumber: receipt.receiptNumber,
                     currencyCode: receipt.currencyCode,
+                    valuationCurrencyCode: ref.watch(inventoryValuationCurrencyStateProvider).valueOrNull?.currencyCode ?? '',
                     exchangeRate: receipt.exchangeRate,
                     totalCost: totalCostSum,
                     status: receipt.status,
@@ -569,6 +571,7 @@ class _DocumentHero extends StatelessWidget {
   const _DocumentHero({
     required this.documentNumber,
     required this.currencyCode,
+    required this.valuationCurrencyCode,
     required this.exchangeRate,
     required this.totalCost,
     required this.status,
@@ -577,6 +580,7 @@ class _DocumentHero extends StatelessWidget {
 
   final String documentNumber;
   final String currencyCode;
+  final String valuationCurrencyCode;
   final double exchangeRate;
   final double totalCost;
   final InventoryDocumentStatus status;
@@ -587,6 +591,14 @@ class _DocumentHero extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final appCurrency = AppCurrencies.byCode(currencyCode);
+    final valCurrencyCode = valuationCurrencyCode.isNotEmpty
+        ? valuationCurrencyCode
+        : currencyCode;
+    final valCurrency = AppCurrencies.byCode(valCurrencyCode);
+
+    final isForeign = currencyCode.toUpperCase() != valCurrencyCode.toUpperCase();
+    final effectiveFx = exchangeRate > 0 ? exchangeRate : 1.0;
+    final valuationTotalCost = isForeign ? totalCost * effectiveFx : totalCost;
 
     return Container(
       decoration: BoxDecoration(
@@ -620,35 +632,56 @@ class _DocumentHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      border: Border.all(
-                        color: scheme.outlineVariant.withValues(alpha: 0.4),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.surface.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        border: Border.all(
+                          color: scheme.outlineVariant.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        'عملة المستند: ${appCurrency.code} (${appCurrency.symbol})',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: scheme.primary,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      '${appCurrency.code} (${appCurrency.nameAr})',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.primary,
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.secondaryContainer.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Text(
+                        'عملة التقييم: ${valCurrency.code} (${valCurrency.symbol})',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: scheme.onSecondaryContainer,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'إجمالي تكلفة المستند',
+              isForeign
+                  ? 'إجمالي التكلفة بلغة المستند (Transaction)'
+                  : 'إجمالي تكلفة المستند (Valuation)',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w700,
@@ -665,13 +698,28 @@ class _DocumentHero extends StatelessWidget {
                 height: 1.05,
               ),
             ),
-            if (exchangeRate != 1.0) ...[
-              const SizedBox(height: 4),
-              Text(
-                'سعر الصرف: ${exchangeRate.toStringAsFixed(4)}',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+            if (isForeign) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.monetization_on_outlined, size: 18, color: scheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'قيمة تقييم المخزون: ${valuationTotalCost.toStringAsFixed(2)} ${valCurrency.symbol} (${valCurrency.code}) | سعر الصرف: ${effectiveFx.toStringAsFixed(4)}',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

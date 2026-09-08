@@ -101,8 +101,7 @@ class $FinancialTransactionsTable extends FinancialTransactions
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('SAR'),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _baseCurrencyCodeMeta = const VerificationMeta(
     'baseCurrencyCode',
@@ -113,8 +112,7 @@ class $FinancialTransactionsTable extends FinancialTransactions
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('SAR'),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _exchangeRateMeta = const VerificationMeta(
     'exchangeRate',
@@ -149,8 +147,7 @@ class $FinancialTransactionsTable extends FinancialTransactions
         aliasedName,
         false,
         type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('SAR'),
+        requiredDuringInsert: true,
       );
   static const VerificationMeta _counterExchangeRateMeta =
       const VerificationMeta('counterExchangeRate');
@@ -589,6 +586,8 @@ class $FinancialTransactionsTable extends FinancialTransactions
           _currencyCodeMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
     }
     if (data.containsKey('base_currency_code')) {
       context.handle(
@@ -598,6 +597,8 @@ class $FinancialTransactionsTable extends FinancialTransactions
           _baseCurrencyCodeMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_baseCurrencyCodeMeta);
     }
     if (data.containsKey('exchange_rate')) {
       context.handle(
@@ -625,6 +626,8 @@ class $FinancialTransactionsTable extends FinancialTransactions
           _counterCurrencyCodeMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_counterCurrencyCodeMeta);
     }
     if (data.containsKey('counter_exchange_rate')) {
       context.handle(
@@ -1834,11 +1837,11 @@ class FinancialTransactionsCompanion
     required String source,
     required int transactionDate,
     required double amount,
-    this.currencyCode = const Value.absent(),
-    this.baseCurrencyCode = const Value.absent(),
+    required String currencyCode,
+    required String baseCurrencyCode,
     this.exchangeRate = const Value.absent(),
     this.counterAmount = const Value.absent(),
-    this.counterCurrencyCode = const Value.absent(),
+    required String counterCurrencyCode,
     this.counterExchangeRate = const Value.absent(),
     this.linesJson = const Value.absent(),
     this.voucherBookId = const Value.absent(),
@@ -1873,6 +1876,9 @@ class FinancialTransactionsCompanion
        source = Value(source),
        transactionDate = Value(transactionDate),
        amount = Value(amount),
+       currencyCode = Value(currencyCode),
+       baseCurrencyCode = Value(baseCurrencyCode),
+       counterCurrencyCode = Value(counterCurrencyCode),
        cashAccountId = Value(cashAccountId),
        counterAccountId = Value(counterAccountId),
        createdAt = Value(createdAt),
@@ -2256,11 +2262,11 @@ typedef $$FinancialTransactionsTableCreateCompanionBuilder =
       required String source,
       required int transactionDate,
       required double amount,
-      Value<String> currencyCode,
-      Value<String> baseCurrencyCode,
+      required String currencyCode,
+      required String baseCurrencyCode,
       Value<double> exchangeRate,
       Value<double> counterAmount,
-      Value<String> counterCurrencyCode,
+      required String counterCurrencyCode,
       Value<double> counterExchangeRate,
       Value<String?> linesJson,
       Value<String?> voucherBookId,
@@ -3077,11 +3083,11 @@ class $$FinancialTransactionsTableTableManager
                 required String source,
                 required int transactionDate,
                 required double amount,
-                Value<String> currencyCode = const Value.absent(),
-                Value<String> baseCurrencyCode = const Value.absent(),
+                required String currencyCode,
+                required String baseCurrencyCode,
                 Value<double> exchangeRate = const Value.absent(),
                 Value<double> counterAmount = const Value.absent(),
-                Value<String> counterCurrencyCode = const Value.absent(),
+                required String counterCurrencyCode,
                 Value<double> counterExchangeRate = const Value.absent(),
                 Value<String?> linesJson = const Value.absent(),
                 Value<String?> voucherBookId = const Value.absent(),

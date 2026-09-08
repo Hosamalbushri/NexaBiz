@@ -64,7 +64,7 @@ class JournalBalanceValidator {
     }
 
     final skipForeignBalance =
-        allowUnbalancedMultiCurrency && currencies.length > 1;
+        allowUnbalancedMultiCurrency || currencies.length > 1;
     if (!skipForeignBalance && totalDebitCents != totalCreditCents) {
       throw JournalException(
         JournalException.unbalanced,

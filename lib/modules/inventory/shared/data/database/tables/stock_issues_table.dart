@@ -16,7 +16,7 @@ class StockIssues extends Table {
 
   TextColumn get accountName => text().nullable()();
 
-  TextColumn get currencyCode => text().withDefault(const Constant('SAR'))();
+  TextColumn get currencyCode => text()();
 
   RealColumn get exchangeRate => real().withDefault(const Constant(1))();
 

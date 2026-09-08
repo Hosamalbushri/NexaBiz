@@ -8,7 +8,9 @@ import '../../domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 import '../../domain/repositories/journal_repository.dart';
+import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+
 import '../../domain/services/journal_balance_validator.dart';
 import '../../domain/services/journal_base_amount_resolver.dart';
 import '../../domain/services/journal_money.dart';
@@ -31,7 +33,7 @@ class JournalRepositoryImpl implements JournalRepository {
 
   final AccountingDatabase _db;
   final AccountRepository _accounts;
-  final AccountingPeriodValidator _periodValidator;
+  final PeriodValidatorPort _periodValidator;
   final CurrencyRateRepository? _rates;
   final SyncQueue? _syncQueue;
   final String Function()? _readCompanyId;
@@ -584,6 +586,9 @@ class JournalRepositoryImpl implements JournalRepository {
           lineUuid: row.readTable(_db.journalLines).uuid,
           lineId: row.readTable(_db.journalLines).id,
           sortOrder: row.readTable(_db.journalLines).sortOrder,
+          baseDebit: row.readTable(_db.journalLines).baseDebit,
+          baseCredit: row.readTable(_db.journalLines).baseCredit,
+          exchangeRateToBase: row.readTable(_db.journalLines).exchangeRateToBase,
         ),
     ];
   }

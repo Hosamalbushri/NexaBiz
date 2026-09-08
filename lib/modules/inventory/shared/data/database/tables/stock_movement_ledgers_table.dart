@@ -50,12 +50,10 @@ class StockMovementLedgers extends Table {
   RealColumn get totalCost => real().withDefault(const Constant(0))();
 
   /// Inventory valuation currency code (e.g. 'YER').
-  TextColumn get inventoryCurrencyId =>
-      text().withDefault(const Constant('YER'))();
+  TextColumn get inventoryCurrencyId => text()();
 
   /// Original document currency code (e.g. 'SAR', 'USD').
-  TextColumn get documentCurrencyId =>
-      text().withDefault(const Constant('YER'))();
+  TextColumn get documentCurrencyId => text()();
 
   /// Unit cost in original document currency.
   RealColumn get unitCostDocumentCurrency =>

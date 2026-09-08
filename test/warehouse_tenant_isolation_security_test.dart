@@ -36,12 +36,12 @@ void main() {
         final repoA = createRepo();
 
         final defaultWh = await repoA.ensureDefaultWarehouse();
-        expect(defaultWh.isDefault, isTrue);
-        expect(defaultWh.companyId, equals('company_alpha'));
-        expect(defaultWh.code, equals('WH-MAIN'));
+        expect(defaultWh?.isDefault, isTrue);
+        expect(defaultWh?.companyId, equals('company_alpha'));
+        expect(defaultWh?.code, equals('WH-MAIN'));
 
         final retrieved = await repoA.getDefaultWarehouse();
-        expect(retrieved?.id, equals(defaultWh.id));
+        expect(retrieved?.id, equals(defaultWh?.id));
         expect(retrieved?.companyId, equals('company_alpha'));
       },
     );
@@ -58,7 +58,7 @@ void main() {
         final repoB = createRepo();
 
         // Company B trying to update Company A's warehouse
-        final hackedWhA = whA.copyWith(
+        final hackedWhA = whA!.copyWith(
           name: 'Hacked Name',
           companyId: 'company_beta',
         );
@@ -109,15 +109,15 @@ void main() {
         final repoB = createRepo();
         final whB1 = await repoB.ensureDefaultWarehouse();
 
-        expect(whA1.isDefault, isTrue);
-        expect(whB1.isDefault, isTrue);
+        expect(whA1?.isDefault, isTrue);
+        expect(whB1?.isDefault, isTrue);
 
         // Switch back to Company A and set WhA2 as default
         currentTenant = 'company_alpha';
         await repoA.saveWarehouse(whA2.copyWith(isDefault: true));
 
         // Verify Company A's WhA1 is no longer default, WhA2 IS default
-        final updatedWhA1 = await repoA.getWarehouseById(whA1.id);
+        final updatedWhA1 = await repoA.getWarehouseById(whA1!.id);
         final updatedWhA2 = await repoA.getWarehouseById(whA2.id);
 
         expect(updatedWhA1?.isDefault, isFalse);
@@ -125,7 +125,7 @@ void main() {
 
         // CRITICAL SECURITY CHECK: Verify Company B's whB1 IS STILL DEFAULT!
         currentTenant = 'company_beta';
-        final updatedWhB1 = await repoB.getWarehouseById(whB1.id);
+        final updatedWhB1 = await repoB.getWarehouseById(whB1!.id);
         expect(updatedWhB1?.isDefault, isTrue);
       },
     );
@@ -173,7 +173,7 @@ void main() {
         final defaultWh = await repoA.ensureDefaultWarehouse();
 
         expect(
-          () => repoA.deleteWarehouse(defaultWh.id),
+          () => repoA.deleteWarehouse(defaultWh!.id),
           throwsA(
             isA<JournalException>().having(
               (e) => e.code,

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_snackbar.dart';
+import '../../core/widgets/app_currency_selector.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
@@ -17,8 +18,7 @@ import '../../modules/authentication/data/local_auth_store.dart';
 import 'company/app_currency.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
-import '../../modules/system_setup/presentation/widgets/package_initialization_settings_hub.dart';
-import '../../modules/cash_registers/presentation/pages/cash_register_accounting_config_page.dart';
+import '../../modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
 
 /// Setup / company configuration settings page.
 class SetupSettingsPage extends ConsumerStatefulWidget {
@@ -48,9 +48,7 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   CompanyProfile? _hydratedProfile;
   var _saving = false;
   var _logoBusy = false;
-  var _currencyLocked = false;
   var _obscureAdminPassword = true;
-  String _currencyCode = AppCurrencies.sar.code;
   int _fiscalMonth = 1;
   String? _logoPath;
 
@@ -91,7 +89,6 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     _websiteController.text = profile.website ?? '';
     _invoiceHeaderRightController.text = profile.invoiceHeaderRight ?? '';
     _invoiceHeaderLeftController.text = profile.invoiceHeaderLeft ?? '';
-    _currencyCode = profile.defaultCurrencyCode;
     _fiscalMonth = profile.fiscalYearStartMonth;
     _logoPath = profile.logoPath;
   }
@@ -157,14 +154,6 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         name: _nameController.text.trim(),
         legalName: _legalNameController.text.trim(),
         logoPath: _logoPath,
-        defaultCurrencyCode: _currencyCode,
-        taxNumber: _taxController.text.trim(),
-        commercialRegister: _crController.text.trim(),
-        phone: _phoneController.text.trim(),
-        email: _emailController.text.trim(),
-        address: _addressController.text.trim(),
-        city: _cityController.text.trim(),
-        country: _countryController.text.trim(),
         website: _websiteController.text.trim(),
         fiscalYearStartMonth: _fiscalMonth,
         invoiceHeaderRight: _invoiceHeaderRightController.text.trim(),
@@ -223,220 +212,16 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
       ),
       data: (profile) {
         _hydrate(profile);
-        final currencyLocked =
-            ref.watch(systemBaseCurrencyLockedProvider).valueOrNull ?? false;
-        if (_currencyLocked != currencyLocked) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() => _currencyLocked = currencyLocked);
-            }
-          });
-        }
 
-        // Sub-page title helper
-        String getSubPageTitle() {
-          switch (_activeSubSection) {
-            case 'company':
-              return isArabic ? 'بيانات وإعدادات الشركة' : 'Company Profile';
-            case 'accounting':
-              return isArabic ? 'تهيئة المحاسبة والمالية' : 'Accounting Setup';
-            case 'inventory':
-              return isArabic ? 'تهيئة وإعدادات المخزون' : 'Inventory Setup';
-            case 'sales':
-              return isArabic ? 'تهيئة وإعدادات المبيعات' : 'Sales Setup';
-            case 'purchases':
-              return isArabic ? 'تهيئة وإعدادات المشتريات' : 'Purchases Setup';
-            case 'receipts_payments':
-              return isArabic
-                  ? 'تهيئة المقبوضات والمصروفات والخزينة'
-                  : 'Receipts & Payments Setup';
-            case 'cash_registers':
-              return isArabic
-                  ? 'تهيئة الحسابات النقدية وصناديق النقدية'
-                  : 'Cash Register Accounting Configuration';
-            default:
-              return l10n.setupSettingsTitle;
-          }
-        }
-
-        return PopScope(
-          canPop: _activeSubSection == null,
-          onPopInvokedWithResult: (didPop, _) {
-            if (didPop) {
-              return;
-            }
-            setState(() => _activeSubSection = null);
-          },
-          child: Scaffold(
-            backgroundColor: theme.colorScheme.surfaceContainerLowest,
-            appBar: CustomAppBar(
-              title: getSubPageTitle(),
-              showBackButton: true,
-              onBack: _activeSubSection != null
-                  ? () => setState(() => _activeSubSection = null)
-                  : null,
-            ),
-            body: _activeSubSection == null
-                ? _buildMenuHub(context, theme, isArabic)
-                : _activeSubSection == 'company'
-                ? _buildCompanyForm(context, theme, l10n)
-                : _activeSubSection == 'cash_registers'
-                ? const CashRegisterAccountingConfigPage()
-                : PackageInitializationSettingsHub(
-                    packageId: _activeSubSection,
-                  ),
+        return Scaffold(
+          backgroundColor: theme.colorScheme.surfaceContainerLowest,
+          appBar: CustomAppBar(
+            title: isArabic ? 'بيانات وإعدادات الشركة' : 'Company Profile & Identity',
+            showBackButton: true,
           ),
+          body: _buildCompanyForm(context, theme, l10n),
         );
       },
-    );
-  }
-
-  Widget _buildMenuHub(BuildContext context, ThemeData theme, bool isArabic) {
-    final menuItems = [
-      _SetupMenuItem(
-        id: 'company',
-        icon: Icons.apartment_outlined,
-        iconColor: theme.colorScheme.primary,
-        title: isArabic
-            ? 'بيانات وإعدادات الشركة'
-            : 'Company Profile & Identity',
-        subtitle: isArabic
-            ? 'الاسم التجاري، الشعار، الرقم الضريبي، العملة الأساسية، بداية السنة المالية، وسجل مسؤول النظام'
-            : 'Company legal name, logo, tax ID, base currency, fiscal start month, and local admin account',
-      ),
-      _SetupMenuItem(
-        id: 'cash_registers',
-        icon: Icons.point_of_sale_outlined,
-        iconColor: Colors.deepOrange,
-        title: isArabic
-            ? 'تهيئة وإعدادات صناديق النقدية'
-            : 'Cash Register Accounting Configuration',
-        subtitle: isArabic
-            ? 'ربط صناديق النقدية بالحسابات المحاسبية في دليل الحسابات وتحديد حالة الجاهزية'
-            : 'Explicitly link cash registers to Chart of Accounts accounts & manage readiness status',
-      ),
-      _SetupMenuItem(
-        id: 'accounting',
-        icon: Icons.account_balance_outlined,
-        iconColor: Colors.teal,
-        title: isArabic
-            ? 'تهيئة المحاسبة والمالية'
-            : 'Accounting & Finance Setup',
-        subtitle: isArabic
-            ? 'ربط الحسابات الافتراضية الرئيسية للصندوق، العملاء، الموردين وشجرة الحسابات'
-            : 'Default system account roles, cash accounts, customer/supplier default bindings',
-      ),
-      _SetupMenuItem(
-        id: 'inventory',
-        icon: Icons.inventory_2_outlined,
-        iconColor: Colors.amber.shade800,
-        title: isArabic ? 'تهيئة وإعدادات المخزون' : 'Inventory Package Setup',
-        subtitle: isArabic
-            ? 'حساب أصول المخزون، تكلفة البضاعة المباعة، طريقة التقييم (FIFO/المتوسط)، والسماح بالسالب'
-            : 'Inventory asset account, COGS, costing method (FIFO/Weighted Avg), and negative stock rules',
-      ),
-      _SetupMenuItem(
-        id: 'sales',
-        icon: Icons.point_of_sale_outlined,
-        iconColor: Colors.blue,
-        title: isArabic ? 'تهيئة وإعدادات المبيعات' : 'Sales Package Setup',
-        subtitle: isArabic
-            ? 'حساب إيرادات المبيعات، مردودات المبيعات، الخصم المسموح به، وأوراق القبض'
-            : 'Sales revenue account, sales returns, allowed discounts, and accounts receivable',
-      ),
-      _SetupMenuItem(
-        id: 'purchases',
-        icon: Icons.shopping_bag_outlined,
-        iconColor: Colors.purple,
-        title: isArabic
-            ? 'تهيئة وإعدادات المشتريات'
-            : 'Purchases Package Setup',
-        subtitle: isArabic
-            ? 'حساب الموردين وأوراق الدفع والخصم المكتسب'
-            : 'Accounts payable, supplier accounts, and earned purchase discounts',
-      ),
-      _SetupMenuItem(
-        id: 'receipts_payments',
-        icon: Icons.account_balance_wallet_outlined,
-        iconColor: Colors.green,
-        title: isArabic
-            ? 'تهيئة المقبوضات والمصروفات والخزينة'
-            : 'Receipts, Payments & Treasury Setup',
-        subtitle: isArabic
-            ? 'حسابات النقدية بالصندوق، البنوك، والمصروفات الإدارية العمومية'
-            : 'Cash in hand, bank accounts, and general administrative expense accounts',
-      ),
-    ];
-
-    return ListView(
-      padding: AppConstants.pageInsets(context),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isArabic
-                    ? 'قائمة تهيئة وإعدادات النظام'
-                    : 'System Setup Navigation Hub',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                isArabic
-                    ? 'اختر القسم المطلوب لعرض وتعديل إعداداته وربطه المحاسبي'
-                    : 'Select a package section to view and update its operational & accounting settings.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        for (final item in menuItems) ...[
-          AppCard(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(AppSpacing.xs),
-              leading: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: item.iconColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Icon(item.icon, color: item.iconColor, size: 28),
-              ),
-              title: Text(
-                item.title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  item.subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.3,
-                  ),
-                ),
-              ),
-              trailing: Icon(
-                isArabic ? Icons.chevron_left : Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              onTap: () {
-                setState(() => _activeSubSection = item.id);
-              },
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -637,37 +422,24 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  l10n.setupCurrencySectionSubtitle,
+                  isArabic
+                      ? 'تم توحيد إدارة العملات في سجل العملات (Currency Master). لتحديد العملة الرئيسية أو عملة تقييم المخزون، انتقل إلى شاشة إدارة العملات.'
+                      : 'Currency management is unified under Currency Master. To configure functional or valuation currency roles, manage them directly in Currency Master.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                DropdownButtonFormField<String>(
-                  initialValue: _currencyCode,
-                  decoration: InputDecoration(
-                    labelText: l10n.setupDefaultCurrency,
-                    helperText: _currencyLocked
-                        ? l10n.systemSetupCurrencyLocked
-                        : null,
+                AppButton(
+                  label: isArabic ? 'انتقال إلى سجل العملات' : 'Go to Currency Master',
+                  icon: Icons.currency_exchange_outlined,
+                  variant: AppButtonVariant.outlined,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CurrenciesManagePage(),
+                    ),
                   ),
-                  items: [
-                    for (final currency in AppCurrencies.all)
-                      DropdownMenuItem(
-                        value: currency.code,
-                        child: Text(
-                          '${currency.code} — ${currency.localizedName(isArabic)} (${currency.symbol})',
-                        ),
-                      ),
-                  ],
-                  onChanged: _currencyLocked
-                      ? null
-                      : (value) {
-                          if (value == null) {
-                            return;
-                          }
-                          setState(() => _currencyCode = value);
-                        },
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DropdownButtonFormField<int>(

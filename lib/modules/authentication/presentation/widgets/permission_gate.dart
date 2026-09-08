@@ -20,10 +20,10 @@ class PermissionGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final perms = ref.watch(currentPermissionsProvider);
+    final authState = ref.watch(authStateProvider);
     final allowed = permission != null
-        ? perms.contains(permission)
-        : (anyOf?.any(perms.contains) ?? false);
+        ? authState.hasPermission(permission!)
+        : (anyOf != null ? authState.hasAnyPermission(anyOf!) : true);
     return allowed ? child : fallback;
   }
 }

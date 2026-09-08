@@ -21,9 +21,35 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/po
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock_transfer_repository_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
+import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/sync/engine/domain/services/sync_queue.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:hive/hive.dart';
+
+class MockAccountingPoster implements InventoryAccountingPoster {
+  @override
+  Future<void> postAccountingEntry({
+    required InventoryDocumentRef document,
+    required double totalAmount,
+    double? valuationAmount,
+    String? accountId,
+    bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
+  }) async {}
+
+  @override
+  Future<void> setAccountingEntryPostingStatus({
+    required InventoryDocumentRef document,
+    required bool isPosted,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
+  }) async {}
+}
 
 class MockSyncBox<T> implements Box<T> {
   MockSyncBox(List<T> initial) {
@@ -99,6 +125,8 @@ void main() {
       postingEngine: postingEngine,
       syncQueue: syncQueue,
       readCompanyId: () => activeCompanyId,
+      accountingPoster: MockAccountingPoster(),
+      permissionGuard: CallbackPermissionGuard((codes) => true),
     );
     movementsRepo = StockMovementsRepositoryImpl(
       db: db,
@@ -141,6 +169,32 @@ void main() {
             companyId: const Value('company_B'),
             createdAt: Value(now),
             updatedAt: Value(now),
+          ),
+        );
+    await db
+        .into(db.warehouses)
+        .insert(
+          WarehousesCompanion.insert(
+            uuid: 'WH-001',
+            code: 'WH-001',
+            name: 'Main Warehouse',
+            companyId: const Value('company_A'),
+            isActive: const Value(true),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await db
+        .into(db.warehouses)
+        .insert(
+          WarehousesCompanion.insert(
+            uuid: 'WH-002',
+            code: 'WH-002',
+            name: 'Secondary Warehouse',
+            companyId: const Value('company_A'),
+            isActive: const Value(true),
+            createdAt: now,
+            updatedAt: now,
           ),
         );
   });

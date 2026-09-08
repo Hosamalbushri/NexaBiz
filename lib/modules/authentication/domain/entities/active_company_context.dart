@@ -65,7 +65,15 @@ class ActiveCompanyContext {
     );
   }
 
-  bool hasPermission(String code) => companyPermissions.contains(code);
+  bool hasPermission(String code) {
+    if (companyRole == 'Owner' ||
+        companyRole == 'Super Admin' ||
+        companyRole == 'Admin' ||
+        companyRole == 'System Admin') {
+      return true;
+    }
+    return companyPermissions.contains(code);
+  }
 
   Map<String, dynamic> toJson() => {
     'companyId': companyId,

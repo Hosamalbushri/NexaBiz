@@ -12,7 +12,8 @@ class AccountingRoutes {
   static const String accountsCreate = '/accounting/accounts/create';
   static const String accountsImport = '/accounting/accounts/import';
   static const String openingSetup = '/accounting/opening-setup';
-  static const String currencyRates = '/accounting/currency-rates';
+  static const String currencyRates = '/settings/currencies/rates';
+
   static const String voucherBooks = '/accounting/voucher-books';
   static const String voucherBooksCreate = '/accounting/voucher-books/new';
   static const String reports = '/accounting/reports';

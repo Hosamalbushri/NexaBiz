@@ -161,8 +161,7 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('SAR'),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _baseCurrencyCodeMeta = const VerificationMeta(
     'baseCurrencyCode',
@@ -173,8 +172,7 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('SAR'),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _exchangeRateMeta = const VerificationMeta(
     'exchangeRate',
@@ -678,6 +676,8 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
           _currencyCodeMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
     }
     if (data.containsKey('base_currency_code')) {
       context.handle(
@@ -687,6 +687,8 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
           _baseCurrencyCodeMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_baseCurrencyCodeMeta);
     }
     if (data.containsKey('exchange_rate')) {
       context.handle(
@@ -1972,8 +1974,8 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     this.customerName = const Value.absent(),
     this.customerAccountId = const Value.absent(),
     this.cashAccountId = const Value.absent(),
-    this.currencyCode = const Value.absent(),
-    this.baseCurrencyCode = const Value.absent(),
+    required String currencyCode,
+    required String baseCurrencyCode,
     this.exchangeRate = const Value.absent(),
     required double subtotal,
     required double itemDiscountTotal,
@@ -2006,6 +2008,8 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        saleNumber = Value(saleNumber),
+       currencyCode = Value(currencyCode),
+       baseCurrencyCode = Value(baseCurrencyCode),
        subtotal = Value(subtotal),
        itemDiscountTotal = Value(itemDiscountTotal),
        total = Value(total),
@@ -4101,8 +4105,8 @@ typedef $$SalesTableCreateCompanionBuilder =
       Value<String?> customerName,
       Value<String?> customerAccountId,
       Value<String?> cashAccountId,
-      Value<String> currencyCode,
-      Value<String> baseCurrencyCode,
+      required String currencyCode,
+      required String baseCurrencyCode,
       Value<double> exchangeRate,
       required double subtotal,
       required double itemDiscountTotal,
@@ -4978,8 +4982,8 @@ class $$SalesTableTableManager
                 Value<String?> customerName = const Value.absent(),
                 Value<String?> customerAccountId = const Value.absent(),
                 Value<String?> cashAccountId = const Value.absent(),
-                Value<String> currencyCode = const Value.absent(),
-                Value<String> baseCurrencyCode = const Value.absent(),
+                required String currencyCode,
+                required String baseCurrencyCode,
                 Value<double> exchangeRate = const Value.absent(),
                 required double subtotal,
                 required double itemDiscountTotal,

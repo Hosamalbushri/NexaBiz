@@ -952,7 +952,14 @@ class PostingEngineImpl implements PostingEngine {
     required double totalCost,
     required String costingMethodUsed,
     required String companyId,
+    String? inventoryCurrencyId,
+    String? documentCurrencyId,
+    double? unitCostDocumentCurrency,
+    double? totalCostDocumentCurrency,
+    double? exchangeRate,
   }) async {
+    final invCurr = inventoryCurrencyId ?? 'YER';
+    final docCurr = documentCurrencyId ?? invCurr;
     await _db
         .into(_db.stockMovementLedgers)
         .insert(
@@ -970,6 +977,11 @@ class PostingEngineImpl implements PostingEngine {
             sourceLineUuid: Value(sourceLineUuid),
             unitCost: Value(unitCost),
             totalCost: Value(totalCost),
+            inventoryCurrencyId: Value(invCurr),
+            documentCurrencyId: Value(docCurr),
+            unitCostDocumentCurrency: Value(unitCostDocumentCurrency ?? unitCost),
+            totalCostDocumentCurrency: Value(totalCostDocumentCurrency ?? totalCost),
+            exchangeRate: Value(exchangeRate ?? 1.0),
             costingMethodUsed: Value(costingMethodUsed),
             createdAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
           ),

@@ -1,6 +1,7 @@
 import '../../core/import_engine/import_engine_module.dart';
 import '../../modules/accounting/accounting_module.dart';
 import '../../modules/administration/administration_module.dart';
+import '../../modules/currency/currency_module.dart';
 import '../../modules/customers/customers_module.dart';
 import '../../modules/inventory/inventory_module.dart';
 import '../../modules/receipts_payments/receipts_payments_module.dart';
@@ -16,6 +17,7 @@ import '../../modules/system_setup/system_setup_module.dart';
 void initializeModuleCatalog() {
   AccountingModule.register();
   AdministrationModule.register();
+  CurrencyModule.register();
   CustomersModule.register();
   ImportEngineModule.register();
   InventoryModule.register();

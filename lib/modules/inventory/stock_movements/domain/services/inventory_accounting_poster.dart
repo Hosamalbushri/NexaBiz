@@ -6,8 +6,10 @@ abstract class InventoryAccountingPoster {
   Future<void> postAccountingEntry({
     required InventoryDocumentRef document,
     required double totalAmount,
+    double? valuationAmount,
     String? accountId,
     bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
   });
 
   /// Updates journal entry posting status when document status changes (e.g. unposting).

@@ -47,19 +47,21 @@ class MockAccountingPoster implements InventoryAccountingPoster {
   Future<void> postAccountingEntry({
     required InventoryDocumentRef document,
     required double totalAmount,
+    double? valuationAmount,
     String? accountId,
     bool isPosted = true,
-  }) async {}
-
-  @override
-  Future<void> reverseAccountingEntry({
-    required InventoryDocumentRef document,
+    bool useBaseCurrencyForPosting = false,
   }) async {}
 
   @override
   Future<void> setAccountingEntryPostingStatus({
     required InventoryDocumentRef document,
     required bool isPosted,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
   }) async {}
 }
 

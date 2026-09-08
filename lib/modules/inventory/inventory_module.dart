@@ -20,7 +20,8 @@ import '../../core/setup/setup.dart';
 import 'inventory_module_quick_actions.dart';
 import 'inventory_module_settings.dart';
 import 'inventory_module_setup.dart';
-import '../../core/import_engine/presentation/pages/universal_import_wizard_page.dart';
+import '../../core/import_engine/presentation/pages/universal_import_page.dart';
+
 import '../../core/tenancy/tenant_context.dart';
 import '../authentication/presentation/providers/auth_providers.dart';
 import 'permissions/inventory_permission_package.dart';
@@ -31,7 +32,11 @@ import 'products/presentation/pages/product_barcode_scanner_page.dart';
 import 'products/presentation/pages/product_form_page.dart';
 import 'products/presentation/pages/products_barcode_page.dart';
 import 'products/presentation/pages/products_home_page.dart';
+import 'master_data/presentation/pages/inventory_master_data_page.dart';
+import 'shared/presentation/pages/inventory_master_settings_page.dart';
 import 'products/presentation/pages/products_list_page.dart';
+
+
 import 'products/presentation/pages/products_settings_page.dart';
 import 'products/presentation/providers/product_providers.dart';
 import 'shared/presentation/pages/inventory_home_page.dart';
@@ -49,10 +54,8 @@ import 'stock_movements/presentation/pages/stock_issue_form_page.dart';
 import 'stock_movements/presentation/pages/stock_receipt_details_page.dart';
 import 'stock_movements/presentation/pages/stock_receipt_form_page.dart';
 
-import 'categories/presentation/pages/categories_settings_page.dart';
-import 'cost_valuation/presentation/pages/cost_valuation_settings_page.dart';
 import 'warehouses/presentation/pages/stock_transfer_form_page.dart';
-import 'warehouses/presentation/pages/warehouses_settings_page.dart';
+
 
 /// Inventory business module — self-contained routes and features.
 ///
@@ -299,13 +302,9 @@ class InventoryModule extends AppModule {
               name: 'inventoryStockCountReportPreview',
               builder: (context, state) => const PdfDocumentPreviewPage(),
             ),
-            GoRoute(
-              path: 'settings',
-              name: 'inventoryStockCountSettings',
-              builder: (context, state) => const StockCountSettingsPage(),
-            ),
           ],
         ),
+
         GoRoute(
           path: 'stock-movements',
           name: 'inventoryStockMovements',
@@ -396,18 +395,9 @@ class InventoryModule extends AppModule {
             GoRoute(
               path: 'import',
               name: 'inventoryProductsImport',
-              builder: (context, state) => Consumer(
-                builder: (context, ref, child) {
-                  final companyId = ref.watch(currentCompanyIdProvider);
-                  final auth = ref.watch(authStateProvider);
-                  final userId = auth.session?.user.id ?? 'SYSTEM_USER';
-                  return UniversalImportWizardPage(
-                    companyId: companyId,
-                    userId: userId,
-                    registeredProfiles: [ProductImportProfile.createProfile()],
-                  );
-                },
-              ),
+              builder: (context, state) =>
+                  const UniversalImportPage(initialProfileId: 'PROF-INVENTORY-PRODUCTS'),
+
             ),
             GoRoute(
               path: 'barcode',
@@ -417,12 +407,8 @@ class InventoryModule extends AppModule {
               ),
             ),
             GoRoute(
-              path: 'settings',
-              name: 'inventoryProductsSettings',
-              builder: (context, state) => const ProductsSettingsPage(),
-            ),
-            GoRoute(
               path: ':id/edit',
+
               name: 'inventoryProductsEdit',
               builder: (context, state) {
                 final id = AppRouteParamParser.tryParseInt(
@@ -437,20 +423,42 @@ class InventoryModule extends AppModule {
           ],
         ),
         GoRoute(
+          path: 'settings',
+          name: 'inventoryMasterSettings',
+          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
+        ),
+        GoRoute(
+          path: 'master-data',
+          name: 'inventoryMasterData',
+          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
+        ),
+        GoRoute(
           path: 'warehouses/settings',
           name: 'inventoryWarehousesSettings',
-          builder: (context, state) => const WarehousesSettingsPage(),
+          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
         GoRoute(
           path: 'categories/settings',
           name: 'inventoryCategoriesSettings',
-          builder: (context, state) => const CategoriesSettingsPage(),
+          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
         GoRoute(
           path: 'cost-valuation/settings',
           name: 'inventoryCostValuationSettings',
-          builder: (context, state) => const CostValuationSettingsPage(),
+          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
+        GoRoute(
+          path: 'products/settings',
+          name: 'inventoryProductsSettings',
+          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 1),
+        ),
+        GoRoute(
+          path: 'stock-count/settings',
+          name: 'inventoryStockCountSettings',
+          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 2),
+        ),
+
+
         GoRoute(
           path: 'stock-transfers',
           name: 'inventoryStockTransfers',

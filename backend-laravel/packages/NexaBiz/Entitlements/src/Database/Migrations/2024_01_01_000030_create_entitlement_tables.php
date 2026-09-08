@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('code', 100)->unique('uq_plans_code');
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2)->default(0.00);
-            $table->string('currency', 10)->default('USD');
+            $table->string('currency', 10);
             $table->string('billing_interval', 50)->default('monthly');
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('category', 100)->default('core');
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2)->default(0.00);
-            $table->string('currency', 10)->default('USD');
+            $table->string('currency', 10);
             $table->string('billing_interval', 50)->default('monthly');
             $table->boolean('is_addon')->default(false);
             $table->boolean('is_active')->default(true);

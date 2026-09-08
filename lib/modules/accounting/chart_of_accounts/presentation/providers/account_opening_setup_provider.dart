@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/settings/company/company_profile_providers.dart';
+import 'package:stock_count/modules/accounting/shared/presentation/providers/currency_providers.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../data/datasources/account_excel_import_datasource.dart';
 import '../../data/datasources/opening_balance_excel_datasource.dart';
@@ -275,14 +275,10 @@ class AccountOpeningSetupNotifier
         }
       }
 
-      final defaultCurrency =
-          _ref
-              .read(companyProfileProvider)
-              .valueOrNull
-              ?.defaultCurrencyCode
-              .trim()
-              .toUpperCase() ??
-          'SAR';
+      final defaultCurrencyObj = await _ref
+          .read(functionalCurrencyServiceProvider)
+          .getFunctionalCurrency();
+      final defaultCurrency = defaultCurrencyObj.code.trim().toUpperCase();
 
       final seeded = <OpeningBalanceLine>[
         ...state.balanceLines,
@@ -657,14 +653,10 @@ class AccountOpeningSetupNotifier
     final allowed = {
       for (final code in allowedCurrencyCodes) code.trim().toUpperCase(),
     };
-    final fallback =
-        _ref
-            .read(companyProfileProvider)
-            .valueOrNull
-            ?.defaultCurrencyCode
-            .trim()
-            .toUpperCase() ??
-        'SAR';
+    final defaultCurrencyObj = await _ref
+        .read(functionalCurrencyServiceProvider)
+        .getFunctionalCurrency();
+    final fallback = defaultCurrencyObj.code.trim().toUpperCase();
     allowed.add(fallback);
 
     for (final line in withAmounts) {

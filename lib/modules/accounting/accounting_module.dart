@@ -37,7 +37,8 @@ import 'accounting_module_quick_actions.dart';
 import 'accounting_module_settings.dart';
 import 'accounting_module_setup.dart';
 import 'chart_of_accounts/data/repositories/account_repository_impl.dart';
-import '../../core/import_engine/presentation/pages/universal_import_wizard_page.dart';
+import '../../core/import_engine/presentation/pages/universal_import_page.dart';
+
 import '../authentication/presentation/providers/auth_providers.dart';
 import 'chart_of_accounts/import/account_import_profile.dart';
 import 'chart_of_accounts/presentation/pages/account_details_page.dart';
@@ -53,11 +54,14 @@ import 'journals/presentation/pages/journal_entry_details_page.dart';
 import 'journals/presentation/pages/journal_entry_form_page.dart';
 import 'journals/presentation/providers/journal_providers.dart';
 import 'permissions/accounting_permission_package.dart';
+import 'presentation/pages/accounting_master_settings_page.dart';
 import 'shared/presentation/pages/accounting_home_page.dart';
+
 import 'shared/presentation/pages/accounting_reports_page.dart';
 import 'shared/presentation/pages/accounting_routes.dart';
 import 'shared/presentation/pages/currency_rates_page.dart';
 import 'shared/presentation/providers/accounting_mode_providers.dart';
+import 'shared/presentation/providers/currency_providers.dart';
 import 'shared/presentation/providers/currency_rate_providers.dart';
 import 'shared/presentation/widgets/accounting_settings_panel.dart';
 import 'voucher_books/domain/entities/voucher_book_type.dart';
@@ -199,10 +203,16 @@ class AccountingModule extends AppModule {
       builder: (context, state) => const AccountingHomePage(),
       routes: [
         GoRoute(
+          path: 'settings',
+          name: 'accountingMasterSettings',
+          builder: (context, state) => const AccountingMasterSettingsPage(),
+        ),
+        GoRoute(
           path: 'opening-setup',
           name: 'accountingOpeningSetup',
           builder: (context, state) => const AccountsOpeningSetupPage(),
         ),
+
         GoRoute(
           path: 'currency-rates',
           name: 'accountingCurrencyRates',
@@ -355,18 +365,9 @@ class AccountingModule extends AppModule {
             GoRoute(
               path: 'import',
               name: 'accountingAccountsImport',
-              builder: (context, state) => Consumer(
-                builder: (context, ref, child) {
-                  final companyId = ref.watch(currentCompanyIdProvider);
-                  final auth = ref.watch(authStateProvider);
-                  final userId = auth.session?.user.id ?? 'SYSTEM_USER';
-                  return UniversalImportWizardPage(
-                    companyId: companyId,
-                    userId: userId,
-                    registeredProfiles: [AccountImportProfile.createProfile()],
-                  );
-                },
-              ),
+              builder: (context, state) =>
+                  const UniversalImportPage(initialProfileId: 'PROF-ACCOUNTING-COA'),
+
             ),
             GoRoute(
               path: ':id',
@@ -453,10 +454,10 @@ class AccountingModule extends AppModule {
     saleCurrencyPortProvider.overrideWith((ref) {
       return AccountingSaleCurrencyAdapter(
         baseCurrencyReader: () async {
-          final profile = await ref
-              .read(settingsRepositoryProvider)
-              .loadCompanyProfile();
-          return profile.defaultCurrencyCode;
+          final currency = await ref
+              .read(functionalCurrencyServiceProvider)
+              .getFunctionalCurrency();
+          return currency.code;
         },
         rates: ref.watch(currencyRateRepositoryProvider),
       );
@@ -491,10 +492,10 @@ class AccountingModule extends AppModule {
     rpCurrencyPortProvider.overrideWith((ref) {
       return AccountingRpCurrencyAdapter(
         baseCurrencyReader: () async {
-          final profile = await ref
-              .read(settingsRepositoryProvider)
-              .loadCompanyProfile();
-          return profile.defaultCurrencyCode;
+          final currency = await ref
+              .read(functionalCurrencyServiceProvider)
+              .getFunctionalCurrency();
+          return currency.code;
         },
         rates: ref.watch(currencyRateRepositoryProvider),
       );

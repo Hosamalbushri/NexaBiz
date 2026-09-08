@@ -30,7 +30,7 @@ class AccountStatementReportDataAdapter
     required this.accounts,
     required this.currencyRates,
     required this.journals,
-    required this.loadCompanyProfile,
+    required this.loadFunctionalCurrencyCode,
     this.loadSalesForAccount,
     this.ledger,
   });
@@ -38,7 +38,7 @@ class AccountStatementReportDataAdapter
   final AccountRepository accounts;
   final CurrencyRateRepository currencyRates;
   final JournalRepository journals;
-  final Future<CompanyProfile> Function() loadCompanyProfile;
+  final Future<String> Function() loadFunctionalCurrencyCode;
   final Future<List<Sale>> Function(String accountUuid)? loadSalesForAccount;
   final SaleLedgerPostingPort? ledger;
 
@@ -185,8 +185,8 @@ class AccountStatementReportDataAdapter
   Future<List<AccountStatementCurrencyRef>> listCurrencies({
     required bool isArabic,
   }) async {
-    final profile = await loadCompanyProfile();
-    final base = profile.defaultCurrency;
+    final baseCode = await loadFunctionalCurrencyCode();
+    final base = AppCurrencies.byCode(baseCode);
     final rates = await currencyRates.getAll();
     final codes = <String>{base.code, for (final r in rates) r.currencyCode};
     final sorted = codes.toList()..sort();
@@ -248,8 +248,7 @@ class AccountStatementReportDataAdapter
     }
 
     final ref = _toRef(account);
-    final profile = await loadCompanyProfile();
-    final baseCurrency = profile.defaultCurrencyCode.trim().toUpperCase();
+    final baseCurrency = (await loadFunctionalCurrencyCode()).trim().toUpperCase();
     final postedFilter = switch (postingFilter) {
       AccountStatementPostingFilter.all => null,
       AccountStatementPostingFilter.posted => true,
@@ -322,6 +321,10 @@ class AccountStatementReportDataAdapter
             displayCurrencyCode: AppCurrencies.byCode(m.currencyCode).symbol,
             isPosted: m.isPosted,
             entryUuid: m.entryUuid,
+            baseDebit: m.baseDebit,
+            baseCredit: m.baseCredit,
+            exchangeRateToBase: m.exchangeRateToBase,
+            baseCurrencyCode: baseCurrency,
           ),
         );
       }
@@ -352,8 +355,11 @@ class AccountStatementReportDataAdapter
       aggregateOpening += opening;
     }
 
+    final hasSingleCurrencyBalance = balances.length == 1;
     final firstOpening = balances.isEmpty ? 0.0 : balances.first.openingBalance;
     final firstClosing = balances.isEmpty ? 0.0 : balances.first.closingBalance;
+    final firstDebit = balances.isEmpty ? 0.0 : balances.first.totalDebit;
+    final firstCredit = balances.isEmpty ? 0.0 : balances.first.totalCredit;
 
     return AccountStatementReportPayload(
       companyName: labels.companyName,
@@ -368,14 +374,18 @@ class AccountStatementReportDataAdapter
       statementTypeLabel: typeTitle,
       postingFilterLabel: labels.postingFilterLabelOf(postingFilter),
       currencyLabel: singleCurrency ?? labels.currencyAll,
-      openingBalance: singleCurrency != null ? firstOpening : aggregateOpening,
-      totalDebit: aggregateDebit,
-      totalCredit: aggregateCredit,
-      closingBalance: singleCurrency != null
+      openingBalance: (singleCurrency != null || hasSingleCurrencyBalance)
+          ? firstOpening
+          : 0.0,
+      totalDebit: (singleCurrency != null || hasSingleCurrencyBalance)
+          ? firstDebit
+          : 0.0,
+      totalCredit: (singleCurrency != null || hasSingleCurrencyBalance)
+          ? firstCredit
+          : 0.0,
+      closingBalance: (singleCurrency != null || hasSingleCurrencyBalance)
           ? firstClosing
-          : (balances.isEmpty
-                ? 0.0
-                : balances.fold<double>(0, (s, b) => s + b.closingBalance)),
+          : 0.0,
       lines: statementType == AccountStatementType.summary
           ? const []
           : allLines,

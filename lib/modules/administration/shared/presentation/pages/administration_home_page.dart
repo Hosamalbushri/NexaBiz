@@ -32,6 +32,13 @@ class AdministrationHomePage extends ConsumerWidget {
         title: l10n.moduleAdministration,
         centerTitle: false,
         showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settingsTitle,
+            onPressed: () => context.push('/administration/settings'),
+          ),
+        ],
       ),
       body: auth.needsSessionRenewal
           ? AppEmptyState(
@@ -55,6 +62,17 @@ class AdministrationHomePage extends ConsumerWidget {
                 SettingsGroupLabel(l10n.adminAccessControlSection),
                 SettingsGroup(
                   children: [
+                    SettingsTile(
+                      icon: Icons.tune_outlined,
+                      title: l10n.localeName == 'ar'
+                          ? 'إعدادات الإدارة العامة'
+                          : 'Administration Master Settings',
+                      subtitle: l10n.localeName == 'ar'
+                          ? 'صفحة الإعدادات الشاملة للإدارة'
+                          : 'Master administration settings hub',
+                      showChevron: true,
+                      onTap: () => context.push('/administration/settings'),
+                    ),
                     PermissionGate(
                       anyOf: const [
                         'users.view',

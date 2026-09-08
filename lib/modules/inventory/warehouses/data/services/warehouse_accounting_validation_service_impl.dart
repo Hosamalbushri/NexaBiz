@@ -5,9 +5,7 @@ import 'package:stock_count/modules/inventory/warehouses/domain/services/warehou
 
 class WarehouseAccountingValidationServiceImpl
     implements WarehouseAccountingValidationService {
-  WarehouseAccountingValidationServiceImpl({
-    required AccountingDatabase accountingDb,
-  }) : _accountingDb = accountingDb;
+  WarehouseAccountingValidationServiceImpl(this._accountingDb);
 
   final AccountingDatabase _accountingDb;
 

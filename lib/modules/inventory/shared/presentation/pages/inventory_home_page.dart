@@ -29,7 +29,17 @@ class InventoryHomePage extends ConsumerWidget {
     final controller = ref.read(inventoryServicesProvider.notifier);
 
     return Scaffold(
-      appBar: CustomAppBar(title: l10n.moduleInventory, showBackButton: true),
+      appBar: CustomAppBar(
+        title: l10n.moduleInventory,
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settingsTitle,
+            onPressed: () => context.push('/inventory/settings'),
+          ),
+        ],
+      ),
       body: servicesAsync.when(
         loading: () => const AppLoading(),
         error: (error, _) => Center(
@@ -283,6 +293,7 @@ class _InventoryServiceCard extends StatelessWidget {
     final brightness = theme.brightness;
 
     return Semantics(
+      container: true,
       button: true,
       label: title,
       child: Material(

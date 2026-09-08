@@ -55,8 +55,23 @@ List<InventoryServiceDefinition> inventoryServiceCatalog() {
       titleBuilder: _categoriesTitle,
       subtitleBuilder: _categoriesSubtitle,
     ),
+    InventoryServiceDefinition(
+      id: 'master_data',
+      icon: Icons.tune_rounded,
+      path: '/inventory/master-data',
+      titleBuilder: _masterDataTitle,
+      subtitleBuilder: _masterDataSubtitle,
+    ),
   ];
 }
+
+String _masterDataTitle(AppLocalizations l10n) =>
+    l10n.localeName == 'ar' ? 'بيانات المخزون' : 'Master Data';
+
+String _masterDataSubtitle(AppLocalizations l10n) => l10n.localeName == 'ar'
+    ? 'إدارة المستودعات، الشجرة، وسياست التقييم'
+    : 'Manage warehouses, tree, and costing rules';
+
 
 String _stockMovementsTitle(AppLocalizations l10n) => 'الحركة';
 String _stockMovementsSubtitle(AppLocalizations l10n) =>

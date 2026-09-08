@@ -297,13 +297,6 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
                         ),
                       _buildDetailTile(
                         context,
-                        icon: Icons.attach_money_rounded,
-                        title: 'العملة الافتراضية',
-                        subtitle:
-                            '${profile.defaultCurrency.nameAr} (${profile.defaultCurrencyCode})',
-                      ),
-                      _buildDetailTile(
-                        context,
                         icon: Icons.receipt_long_rounded,
                         title: 'الرقم الضريبي',
                         subtitle: profile.taxNumber ?? 'غير محدد',

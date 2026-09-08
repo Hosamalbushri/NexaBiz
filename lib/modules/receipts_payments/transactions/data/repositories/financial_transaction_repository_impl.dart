@@ -328,11 +328,11 @@ class FinancialTransactionRepositoryImpl
             source: draft.source.storageValue,
             transactionDate: BusinessDate.utcDayMs(draft.transactionDate),
             amount: draft.amount,
-            currencyCode: Value(draft.currencyCode),
-            baseCurrencyCode: Value(draft.baseCurrencyCode),
+            currencyCode: draft.currencyCode,
+            baseCurrencyCode: draft.baseCurrencyCode,
             exchangeRate: Value(draft.exchangeRate),
             counterAmount: Value(draft.counterAmount),
-            counterCurrencyCode: Value(draft.counterCurrencyCode),
+            counterCurrencyCode: draft.counterCurrencyCode,
             counterExchangeRate: Value(draft.counterExchangeRate),
             voucherBookId: Value(draft.voucherBookId),
             cashAccountId: draft.cashAccountId,
@@ -810,9 +810,9 @@ class FinancialTransactionRepositoryImpl
       source: Value((payload['source'] as String?) ?? 'manualReceipt'),
       transactionDate: Value((payload['transactionDate'] as int?) ?? now),
       amount: Value((payload['amount'] as num?)?.toDouble() ?? 0),
-      currencyCode: Value((payload['currencyCode'] as String?) ?? 'SAR'),
+      currencyCode: Value((payload['currencyCode'] as String?) ?? ''),
       baseCurrencyCode: Value(
-        (payload['baseCurrencyCode'] as String?) ?? 'SAR',
+        (payload['baseCurrencyCode'] as String?) ?? '',
       ),
       exchangeRate: Value((payload['exchangeRate'] as num?)?.toDouble() ?? 1),
       counterAmount: Value(
@@ -823,7 +823,7 @@ class FinancialTransactionRepositoryImpl
       counterCurrencyCode: Value(
         (payload['counterCurrencyCode'] as String?) ??
             (payload['currencyCode'] as String?) ??
-            'SAR',
+            '',
       ),
       counterExchangeRate: Value(
         (payload['counterExchangeRate'] as num?)?.toDouble() ??
@@ -955,7 +955,7 @@ List<FinancialTransactionLine> _linesFromPayload(Map<String, dynamic> payload) {
     currencyCode:
         (payload['counterCurrencyCode'] as String?) ??
         (payload['currencyCode'] as String?) ??
-        'SAR',
+        '',
     exchangeRate:
         (payload['counterExchangeRate'] as num?)?.toDouble() ??
         (payload['exchangeRate'] as num?)?.toDouble() ??

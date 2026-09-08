@@ -32,6 +32,10 @@ import '../presentation/pages/modules_reports_page.dart';
 import '../presentation/pages/not_found_page.dart';
 import '../presentation/pages/platform_reports_page.dart';
 import '../presentation/pages/service_launcher_page.dart';
+import '../../modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
+import '../../modules/currency/presentation/pages/currency_rates_page.dart';
+
+import '../settings/company/functional_currency_config_page.dart';
 import '../settings/platform_settings_page.dart';
 import '../settings/security_settings_page.dart';
 import '../settings/setup_settings_page.dart';
@@ -252,15 +256,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                           return ModuleUnitReportsPage(moduleId: moduleId);
                         },
                       ),
-                      GoRoute(
-                        path: ':moduleId',
-                        name: 'moduleReports',
-                        builder: (context, state) {
-                          final moduleId =
-                              state.pathParameters['moduleId'] ?? '';
-                          return ModuleUnitReportsPage(moduleId: moduleId);
-                        },
-                      ),
                     ],
                   ),
                 ],
@@ -278,6 +273,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         name: 'settingsSetup',
                         builder: (context, state) => const SetupSettingsPage(),
                       ),
+                      GoRoute(
+                        path: 'functional-currency',
+                        name: 'settingsFunctionalCurrency',
+                        builder: (context, state) =>
+                            const FunctionalCurrencyConfigPage(),
+                      ),
+                      GoRoute(
+                        path: 'currencies',
+                        name: 'settingsCurrencies',
+                        builder: (context, state) =>
+                            const CurrenciesManagePage(),
+                        routes: [
+                          GoRoute(
+                            path: 'rates',
+                            name: 'settingsCurrencyRates',
+                            builder: (context, state) =>
+                                const CurrencyRatesPage(),
+                          ),
+                        ],
+                      ),
+
                       GoRoute(
                         path: 'security',
                         name: 'settingsSecurity',

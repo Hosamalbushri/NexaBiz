@@ -747,7 +747,15 @@ final authStateProvider = StateNotifierProvider<AuthController, AuthState>((
 });
 
 final currentPermissionsProvider = Provider<Set<String>>((ref) {
-  return ref.watch(authStateProvider).session?.permissions ?? {};
+  final session = ref.watch(authStateProvider).session;
+  if (session == null) return {};
+  if (session.user.isSuperAdmin ||
+      session.roles.contains('Owner') ||
+      session.roles.contains(LocalAuthDefaults.adminRole) ||
+      session.roles.contains('Admin')) {
+    return {...session.permissions, ...kAllLocalPermissions};
+  }
+  return session.permissions;
 });
 
 /// Exposes the current authoritative [ActiveCompanyContext] for Riverpod consumers.

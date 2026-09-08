@@ -14,6 +14,8 @@ abstract class InventoryCostCalculator {
     String? sourceDocumentId,
     String? sourceLineUuid,
     bool allowZeroCost = false,
+    String? documentCurrencyId,
+    double? exchangeRate,
   });
 
   /// Calculates cost for outbound issues by consuming cost layers (FIFO/LIFO/WAVG).

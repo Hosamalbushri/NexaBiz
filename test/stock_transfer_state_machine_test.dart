@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
@@ -9,6 +10,7 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/inve
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_engine_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/stock_validation_service_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
 
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock_transfer_repository_impl.dart';
@@ -18,6 +20,29 @@ import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehou
 import 'package:stock_count/modules/inventory/warehouses/domain/repositories/stock_transfer_repository.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_repository.dart';
 import 'package:drift/drift.dart' as drift;
+
+class MockAccountingPoster implements InventoryAccountingPoster {
+  @override
+  Future<void> postAccountingEntry({
+    required InventoryDocumentRef document,
+    required double totalAmount,
+    double? valuationAmount,
+    String? accountId,
+    bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
+  }) async {}
+
+  @override
+  Future<void> setAccountingEntryPostingStatus({
+    required InventoryDocumentRef document,
+    required bool isPosted,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
+  }) async {}
+}
 
 void main() {
   late InventoryDatabase invDb;
@@ -70,6 +95,8 @@ void main() {
       stockValidationService: stockValidationService,
       dependencyDetector: dependencyDetector,
       readCompanyId: () => activeTenant,
+      accountingPoster: MockAccountingPoster(),
+      permissionGuard: CallbackPermissionGuard((codes) => true),
     );
 
     transferRepo = StockTransferRepositoryImpl(
@@ -139,6 +166,7 @@ void main() {
             createdAt: drift.Value(receiptDate.millisecondsSinceEpoch),
             updatedAt: drift.Value(receiptDate.millisecondsSinceEpoch),
             status: const drift.Value('draft'),
+            currencyCode: const drift.Value('YER'),
             companyId: const drift.Value(tenantA),
           ),
         );
@@ -217,6 +245,7 @@ void main() {
           documentNumber: 'TR-NUM-01',
           documentType: InventoryDocumentType.stockTransfer,
           documentDate: transfer.transferDate,
+          warehouseId: whSourceAId,
         );
 
         final postRes = await coordinator.post(document: ref);
@@ -268,6 +297,7 @@ void main() {
           documentNumber: 'TR-NUM-CANCEL',
           documentType: InventoryDocumentType.stockTransfer,
           documentDate: transfer.transferDate,
+          warehouseId: whSourceAId,
         );
 
         final res = await coordinator.post(document: ref);
@@ -342,6 +372,7 @@ void main() {
           documentNumber: 'TR-NUM-CONSERVE',
           documentType: InventoryDocumentType.stockTransfer,
           documentDate: transfer.transferDate,
+          warehouseId: whSourceAId,
         );
 
         await coordinator.post(document: ref);
@@ -428,6 +459,7 @@ void main() {
           documentNumber: 'TR-NUM-SHORT',
           documentType: InventoryDocumentType.stockTransfer,
           documentDate: transfer.transferDate,
+          warehouseId: whSourceAId,
         );
 
         final res = await coordinator.post(document: ref);

@@ -27,8 +27,10 @@ class MockAccountingPoster implements InventoryAccountingPoster {
   Future<void> postAccountingEntry({
     required InventoryDocumentRef document,
     required double totalAmount,
+    double? valuationAmount,
     String? accountId,
     bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
   }) async {
     lastPostedDocumentId = document.documentId;
     lastPostedTotalAmount = totalAmount;

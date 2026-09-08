@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_ledger_adapter.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction_line.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_status.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
-import 'package:stock_count/modules/receipts_payments/domain/models/financial_transaction_exception.dart';
-import 'package:stock_count/modules/receipts_payments/domain/services/financial_transaction_validator.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction_line.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/models/financial_transaction_exception.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/services/financial_transaction_validator.dart';
 import 'helpers/fake_account_repository.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
@@ -119,6 +119,7 @@ class _RecordingJournals implements JournalRepository {
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
+    String? companyId,
   }) async => const [];
 
   @override
@@ -126,6 +127,7 @@ class _RecordingJournals implements JournalRepository {
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
+    String? companyId,
   }) async => const [];
 }
 

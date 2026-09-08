@@ -14,6 +14,7 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_treasury_a
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 import 'package:stock_count/modules/cash_registers/presentation/providers/cash_register_providers.dart';
 
+import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
 import 'accounting_sale_ledger_adapter.dart';
 import 'accounting_sale_treasury_adapter.dart';
 import 'customers_sale_lookup_adapter.dart';
@@ -57,6 +58,7 @@ final appSaleLedgerPostingPortProvider = Provider<SaleLedgerPostingPort>((ref) {
     posting: ref.watch(journalPostingServiceProvider),
     accounts: ref.watch(accountRepositoryProvider),
     initRepository: ref.watch(companyInitializationRepositoryProvider),
+    bindingRepo: ref.watch(warehouseAccountingBindingRepositoryProvider),
   );
 });
 

@@ -8,11 +8,11 @@ import '../settings/company/company_profile.dart';
 class JournalBookReportDataAdapter implements JournalBookReportDataPort {
   const JournalBookReportDataAdapter({
     required this.journals,
-    required this.loadCompanyProfile,
+    required this.loadFunctionalCurrencyCode,
   });
 
   final JournalRepository journals;
-  final Future<CompanyProfile> Function() loadCompanyProfile;
+  final Future<String> Function() loadFunctionalCurrencyCode;
 
   @override
   Future<JournalBookReportPayload> load({
@@ -21,7 +21,7 @@ class JournalBookReportDataAdapter implements JournalBookReportDataPort {
     required bool postedOnly,
     required JournalBookReportLabels labels,
   }) async {
-    final profile = await loadCompanyProfile();
+    final baseCurrencyCode = await loadFunctionalCurrencyCode();
     final rows = await journals.listJournalBookLines(
       fromDate: fromDate,
       toDate: toDate,
@@ -68,7 +68,7 @@ class JournalBookReportDataAdapter implements JournalBookReportDataPort {
       rows: reportRows,
       totalsDebit: totalsDebit,
       totalsCredit: totalsCredit,
-      baseCurrencyCode: profile.defaultCurrencyCode,
+      baseCurrencyCode: baseCurrencyCode,
       fromDate: fromDate,
       toDate: toDate,
       emptyMessage: labels.emptyMessage,

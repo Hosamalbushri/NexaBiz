@@ -330,6 +330,36 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       );
     }
 
+    if (register.isLinked &&
+        register.accountingAccountId != null &&
+        register.accountingAccountId != accountId) {
+      final boundAccountId = register.accountingAccountId!;
+      final currentAccount =
+          await accountRepository.getByUuid(boundAccountId) ??
+          await accountRepository.getByAccountCode(boundAccountId);
+      final targetUuids = <String>{
+        boundAccountId,
+        if (currentAccount != null) currentAccount.uuid,
+        if (currentAccount != null) currentAccount.accountCode,
+      };
+
+      for (final uuid in targetUuids) {
+        final hasMovements =
+            await (_db.select(_db.journalLines)
+                  ..where((tbl) => tbl.accountUuid.equals(uuid))
+                  ..limit(1))
+                .get()
+                .then((rows) => rows.isNotEmpty);
+
+        if (hasMovements) {
+          throw const CashRegisterException(
+            'Cannot change accounting account: cash register has recorded transaction movements.',
+            code: 'REGISTER_HAS_MOVEMENTS',
+          );
+        }
+      }
+    }
+
     final account =
         await accountRepository.getByUuid(accountId) ??
         await accountRepository.getByAccountCode(accountId);

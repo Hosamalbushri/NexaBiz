@@ -88,6 +88,10 @@ class AccountStatementLine {
     this.displayCurrencyCode,
     this.isPosted = true,
     this.entryUuid,
+    this.baseDebit,
+    this.baseCredit,
+    this.exchangeRateToBase,
+    this.baseCurrencyCode,
   });
 
   final DateTime entryDate;
@@ -112,6 +116,18 @@ class AccountStatementLine {
 
   /// Unique journal entry UUID for deep navigation.
   final String? entryUuid;
+
+  /// Functional currency base equivalent debit.
+  final double? baseDebit;
+
+  /// Functional currency base equivalent credit.
+  final double? baseCredit;
+
+  /// Exchange rate used to convert transaction currency to base currency.
+  final double? exchangeRateToBase;
+
+  /// Base/functional currency code (e.g. YER).
+  final String? baseCurrencyCode;
 }
 
 /// Per-currency totals for Soft2 "الرصيد النهائي على مستوى العملة".

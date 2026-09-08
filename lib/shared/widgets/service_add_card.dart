@@ -46,6 +46,7 @@ class ServiceAddCard extends StatelessWidget {
         : colorScheme.surface.withValues(alpha: isDark ? 0.4 : 0.5);
 
     return Semantics(
+      container: true,
       button: true,
       label: label,
       child: SizedBox.expand(

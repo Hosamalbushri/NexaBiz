@@ -31,6 +31,7 @@ void main() {
                 receiptDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
+                currencyCode: 'YER',
                 companyId: const Value('Company-A'),
               ),
             );
@@ -45,6 +46,7 @@ void main() {
                 receiptDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
+                currencyCode: 'YER',
                 companyId: const Value('Company-B'),
               ),
             );
@@ -66,6 +68,7 @@ void main() {
                 receiptDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
+                currencyCode: 'YER',
                 companyId: const Value('Company-A'),
               ),
             );
@@ -81,6 +84,7 @@ void main() {
                   receiptDate: DateTime.now().millisecondsSinceEpoch,
                   createdAt: DateTime.now().millisecondsSinceEpoch,
                   updatedAt: DateTime.now().millisecondsSinceEpoch,
+                  currencyCode: 'YER',
                   companyId: const Value('Company-A'),
                 ),
               ),
@@ -101,6 +105,7 @@ void main() {
                 issueDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
+                currencyCode: 'YER',
                 companyId: const Value('Company-A'),
               ),
             );
@@ -114,6 +119,7 @@ void main() {
                 issueDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
+                currencyCode: 'YER',
                 companyId: const Value('Company-B'),
               ),
             );
@@ -132,6 +138,7 @@ void main() {
                   issueDate: DateTime.now().millisecondsSinceEpoch,
                   createdAt: DateTime.now().millisecondsSinceEpoch,
                   updatedAt: DateTime.now().millisecondsSinceEpoch,
+                  currencyCode: 'YER',
                   companyId: const Value('Company-A'),
                 ),
               ),
@@ -154,6 +161,7 @@ void main() {
                 transferDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
+                currencyCode: 'YER',
                 companyId: const Value('Company-A'),
               ),
             );
@@ -169,6 +177,7 @@ void main() {
                 transferDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
+                currencyCode: 'YER',
                 companyId: const Value('Company-B'),
               ),
             );
@@ -189,6 +198,7 @@ void main() {
                   transferDate: DateTime.now().millisecondsSinceEpoch,
                   createdAt: DateTime.now().millisecondsSinceEpoch,
                   updatedAt: DateTime.now().millisecondsSinceEpoch,
+                  currencyCode: 'YER',
                   companyId: const Value('Company-A'),
                 ),
               ),

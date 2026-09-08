@@ -32,14 +32,68 @@ class WarehouseAccountingBindingRepositoryImpl
     String warehouseId,
   ) async {
     final companyId = _currentCompanyId;
-    final row =
-        await (db.select(db.warehouseAccountingBindings)..where(
+    var targetId = warehouseId.trim();
+
+    if (targetId.isEmpty) {
+      final defaultWh = await (db.select(db.warehouses)..where(
+        (tbl) =>
+            tbl.companyId.equals(companyId) &
+            tbl.isDefault.equals(true) &
+            tbl.deletedAt.isNull(),
+      )).getSingleOrNull();
+      if (defaultWh != null) {
+        targetId = defaultWh.uuid;
+      } else {
+        final anyWh = await (db.select(db.warehouses)..where(
+          (tbl) => tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
+        )).getSingleOrNull();
+        if (anyWh != null) {
+          targetId = anyWh.uuid;
+        }
+      }
+    } else {
+      final whByCode = await (db.select(db.warehouses)..where(
+        (tbl) =>
+            (tbl.code.equals(targetId) | tbl.uuid.equals(targetId)) &
+            tbl.companyId.equals(companyId) &
+            tbl.deletedAt.isNull(),
+      )).getSingleOrNull();
+      if (whByCode != null) {
+        targetId = whByCode.uuid;
+      }
+    }
+
+    var row = targetId.isNotEmpty
+        ? await (db.select(db.warehouseAccountingBindings)..where(
               (tbl) =>
-                  tbl.warehouseId.equals(warehouseId) &
+                  tbl.warehouseId.equals(targetId) &
+                  tbl.companyId.equals(companyId) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull()
+        : null;
+
+    if (row == null) {
+      final defaultWh = await (db.select(db.warehouses)..where(
+        (tbl) =>
+            tbl.companyId.equals(companyId) &
+            tbl.isDefault.equals(true) &
+            tbl.deletedAt.isNull(),
+      )).getSingleOrNull();
+      if (defaultWh != null && defaultWh.uuid != targetId) {
+        row = await (db.select(db.warehouseAccountingBindings)..where(
+              (tbl) =>
+                  tbl.warehouseId.equals(defaultWh.uuid) &
                   tbl.companyId.equals(companyId) &
                   tbl.deletedAt.isNull(),
             ))
             .getSingleOrNull();
+      }
+    }
+
+    row ??= await (db.select(db.warehouseAccountingBindings)..where(
+      (tbl) => tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
+    )).getSingleOrNull();
 
     if (row == null) return null;
 
@@ -50,6 +104,9 @@ class WarehouseAccountingBindingRepositoryImpl
       cogsAccountId: row.cogsAccountId,
       inventoryAdjustmentAccountId: row.inventoryAdjustmentAccountId,
       stockTransferClearingAccountId: row.stockTransferClearingAccountId,
+      salesRevenueAccountId: row.salesRevenueAccountId,
+      salesReturnAccountId: row.salesReturnAccountId,
+      salesDiscountAccountId: row.salesDiscountAccountId,
       companyId: row.companyId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt),
@@ -86,6 +143,9 @@ class WarehouseAccountingBindingRepositoryImpl
           stockTransferClearingAccountId: Value(
             binding.stockTransferClearingAccountId,
           ),
+          salesRevenueAccountId: Value(binding.salesRevenueAccountId),
+          salesReturnAccountId: Value(binding.salesReturnAccountId),
+          salesDiscountAccountId: Value(binding.salesDiscountAccountId),
           updatedAt: Value(now),
         ),
       );
@@ -104,6 +164,9 @@ class WarehouseAccountingBindingRepositoryImpl
               stockTransferClearingAccountId: Value(
                 binding.stockTransferClearingAccountId,
               ),
+              salesRevenueAccountId: Value(binding.salesRevenueAccountId),
+              salesReturnAccountId: Value(binding.salesReturnAccountId),
+              salesDiscountAccountId: Value(binding.salesDiscountAccountId),
               createdAt: now,
               updatedAt: now,
               companyId: companyId,

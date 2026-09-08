@@ -1119,8 +1119,7 @@ class $StockReceiptsTable extends StockReceipts
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('YER'),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _exchangeRateMeta = const VerificationMeta(
     'exchangeRate',
@@ -1351,6 +1350,8 @@ class $StockReceiptsTable extends StockReceipts
           _currencyCodeMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
     }
     if (data.containsKey('exchange_rate')) {
       context.handle(
@@ -1948,7 +1949,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     this.supplier = const Value.absent(),
     this.accountId = const Value.absent(),
     this.accountName = const Value.absent(),
-    this.currencyCode = const Value.absent(),
+    required String currencyCode,
     this.exchangeRate = const Value.absent(),
     this.warehouse = const Value.absent(),
     this.notes = const Value.absent(),
@@ -1964,6 +1965,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        receiptNumber = Value(receiptNumber),
+       currencyCode = Value(currencyCode),
        receiptDate = Value(receiptDate),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
@@ -2243,8 +2245,7 @@ class $StockIssuesTable extends StockIssues
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('SAR'),
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _exchangeRateMeta = const VerificationMeta(
     'exchangeRate',
@@ -2490,6 +2491,8 @@ class $StockIssuesTable extends StockIssues
           _currencyCodeMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
     }
     if (data.containsKey('exchange_rate')) {
       context.handle(
@@ -3119,7 +3122,7 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
     this.destination = const Value.absent(),
     this.accountId = const Value.absent(),
     this.accountName = const Value.absent(),
-    this.currencyCode = const Value.absent(),
+    required String currencyCode,
     this.exchangeRate = const Value.absent(),
     this.voucherBookId = const Value.absent(),
     this.warehouse = const Value.absent(),
@@ -3136,6 +3139,7 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        issueNumber = Value(issueNumber),
+       currencyCode = Value(currencyCode),
        issueDate = Value(issueDate),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
@@ -4277,8 +4281,7 @@ class $InventoryCostLayersTable extends InventoryCostLayers
         aliasedName,
         false,
         type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('YER'),
+        requiredDuringInsert: true,
       );
   static const VerificationMeta _unitCostInventoryCurrencyMeta =
       const VerificationMeta('unitCostInventoryCurrency');
@@ -4313,8 +4316,7 @@ class $InventoryCostLayersTable extends InventoryCostLayers
         aliasedName,
         false,
         type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('YER'),
+        requiredDuringInsert: true,
       );
   static const VerificationMeta _unitCostDocumentCurrencyMeta =
       const VerificationMeta('unitCostDocumentCurrency');
@@ -4593,6 +4595,8 @@ class $InventoryCostLayersTable extends InventoryCostLayers
           _inventoryCurrencyIdMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_inventoryCurrencyIdMeta);
     }
     if (data.containsKey('unit_cost_inventory_currency')) {
       context.handle(
@@ -4620,6 +4624,8 @@ class $InventoryCostLayersTable extends InventoryCostLayers
           _documentCurrencyIdMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_documentCurrencyIdMeta);
     }
     if (data.containsKey('unit_cost_document_currency')) {
       context.handle(
@@ -5424,10 +5430,10 @@ class InventoryCostLayersCompanion
     this.remainingQty = const Value.absent(),
     this.unitCost = const Value.absent(),
     this.totalCost = const Value.absent(),
-    this.inventoryCurrencyId = const Value.absent(),
+    required String inventoryCurrencyId,
     this.unitCostInventoryCurrency = const Value.absent(),
     this.totalCostInventoryCurrency = const Value.absent(),
-    this.documentCurrencyId = const Value.absent(),
+    required String documentCurrencyId,
     this.unitCostDocumentCurrency = const Value.absent(),
     this.totalCostDocumentCurrency = const Value.absent(),
     this.exchangeRate = const Value.absent(),
@@ -5445,6 +5451,8 @@ class InventoryCostLayersCompanion
        movementUuid = Value(movementUuid),
        movementType = Value(movementType),
        receivedDate = Value(receivedDate),
+       inventoryCurrencyId = Value(inventoryCurrencyId),
+       documentCurrencyId = Value(documentCurrencyId),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<InventoryCostLayerRow> custom({
@@ -11380,6 +11388,39 @@ class $WarehouseAccountingBindingsTable extends WarehouseAccountingBindings
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _salesRevenueAccountIdMeta =
+      const VerificationMeta('salesRevenueAccountId');
+  @override
+  late final GeneratedColumn<String> salesRevenueAccountId =
+      GeneratedColumn<String>(
+        'sales_revenue_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _salesReturnAccountIdMeta =
+      const VerificationMeta('salesReturnAccountId');
+  @override
+  late final GeneratedColumn<String> salesReturnAccountId =
+      GeneratedColumn<String>(
+        'sales_return_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _salesDiscountAccountIdMeta =
+      const VerificationMeta('salesDiscountAccountId');
+  @override
+  late final GeneratedColumn<String> salesDiscountAccountId =
+      GeneratedColumn<String>(
+        'sales_discount_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -11456,6 +11497,9 @@ class $WarehouseAccountingBindingsTable extends WarehouseAccountingBindings
     cogsAccountId,
     inventoryAdjustmentAccountId,
     stockTransferClearingAccountId,
+    salesRevenueAccountId,
+    salesReturnAccountId,
+    salesDiscountAccountId,
     createdAt,
     updatedAt,
     syncStatus,
@@ -11527,6 +11571,33 @@ class $WarehouseAccountingBindingsTable extends WarehouseAccountingBindings
         stockTransferClearingAccountId.isAcceptableOrUnknown(
           data['stock_transfer_clearing_account_id']!,
           _stockTransferClearingAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sales_revenue_account_id')) {
+      context.handle(
+        _salesRevenueAccountIdMeta,
+        salesRevenueAccountId.isAcceptableOrUnknown(
+          data['sales_revenue_account_id']!,
+          _salesRevenueAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sales_return_account_id')) {
+      context.handle(
+        _salesReturnAccountIdMeta,
+        salesReturnAccountId.isAcceptableOrUnknown(
+          data['sales_return_account_id']!,
+          _salesReturnAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sales_discount_account_id')) {
+      context.handle(
+        _salesDiscountAccountIdMeta,
+        salesDiscountAccountId.isAcceptableOrUnknown(
+          data['sales_discount_account_id']!,
+          _salesDiscountAccountIdMeta,
         ),
       );
     }
@@ -11612,6 +11683,18 @@ class $WarehouseAccountingBindingsTable extends WarehouseAccountingBindings
         DriftSqlType.string,
         data['${effectivePrefix}stock_transfer_clearing_account_id'],
       ),
+      salesRevenueAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sales_revenue_account_id'],
+      ),
+      salesReturnAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sales_return_account_id'],
+      ),
+      salesDiscountAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sales_discount_account_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -11653,6 +11736,9 @@ class WarehouseAccountingBindingRow extends DataClass
   final String? cogsAccountId;
   final String? inventoryAdjustmentAccountId;
   final String? stockTransferClearingAccountId;
+  final String? salesRevenueAccountId;
+  final String? salesReturnAccountId;
+  final String? salesDiscountAccountId;
   final int createdAt;
   final int updatedAt;
   final String syncStatus;
@@ -11666,6 +11752,9 @@ class WarehouseAccountingBindingRow extends DataClass
     this.cogsAccountId,
     this.inventoryAdjustmentAccountId,
     this.stockTransferClearingAccountId,
+    this.salesRevenueAccountId,
+    this.salesReturnAccountId,
+    this.salesDiscountAccountId,
     required this.createdAt,
     required this.updatedAt,
     required this.syncStatus,
@@ -11694,6 +11783,17 @@ class WarehouseAccountingBindingRow extends DataClass
     if (!nullToAbsent || stockTransferClearingAccountId != null) {
       map['stock_transfer_clearing_account_id'] = Variable<String>(
         stockTransferClearingAccountId,
+      );
+    }
+    if (!nullToAbsent || salesRevenueAccountId != null) {
+      map['sales_revenue_account_id'] = Variable<String>(salesRevenueAccountId);
+    }
+    if (!nullToAbsent || salesReturnAccountId != null) {
+      map['sales_return_account_id'] = Variable<String>(salesReturnAccountId);
+    }
+    if (!nullToAbsent || salesDiscountAccountId != null) {
+      map['sales_discount_account_id'] = Variable<String>(
+        salesDiscountAccountId,
       );
     }
     map['created_at'] = Variable<int>(createdAt);
@@ -11725,6 +11825,15 @@ class WarehouseAccountingBindingRow extends DataClass
           stockTransferClearingAccountId == null && nullToAbsent
           ? const Value.absent()
           : Value(stockTransferClearingAccountId),
+      salesRevenueAccountId: salesRevenueAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salesRevenueAccountId),
+      salesReturnAccountId: salesReturnAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salesReturnAccountId),
+      salesDiscountAccountId: salesDiscountAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salesDiscountAccountId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       syncStatus: Value(syncStatus),
@@ -11754,6 +11863,15 @@ class WarehouseAccountingBindingRow extends DataClass
       stockTransferClearingAccountId: serializer.fromJson<String?>(
         json['stockTransferClearingAccountId'],
       ),
+      salesRevenueAccountId: serializer.fromJson<String?>(
+        json['salesRevenueAccountId'],
+      ),
+      salesReturnAccountId: serializer.fromJson<String?>(
+        json['salesReturnAccountId'],
+      ),
+      salesDiscountAccountId: serializer.fromJson<String?>(
+        json['salesDiscountAccountId'],
+      ),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
@@ -11778,6 +11896,13 @@ class WarehouseAccountingBindingRow extends DataClass
       'stockTransferClearingAccountId': serializer.toJson<String?>(
         stockTransferClearingAccountId,
       ),
+      'salesRevenueAccountId': serializer.toJson<String?>(
+        salesRevenueAccountId,
+      ),
+      'salesReturnAccountId': serializer.toJson<String?>(salesReturnAccountId),
+      'salesDiscountAccountId': serializer.toJson<String?>(
+        salesDiscountAccountId,
+      ),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
@@ -11794,6 +11919,9 @@ class WarehouseAccountingBindingRow extends DataClass
     Value<String?> cogsAccountId = const Value.absent(),
     Value<String?> inventoryAdjustmentAccountId = const Value.absent(),
     Value<String?> stockTransferClearingAccountId = const Value.absent(),
+    Value<String?> salesRevenueAccountId = const Value.absent(),
+    Value<String?> salesReturnAccountId = const Value.absent(),
+    Value<String?> salesDiscountAccountId = const Value.absent(),
     int? createdAt,
     int? updatedAt,
     String? syncStatus,
@@ -11815,6 +11943,15 @@ class WarehouseAccountingBindingRow extends DataClass
     stockTransferClearingAccountId: stockTransferClearingAccountId.present
         ? stockTransferClearingAccountId.value
         : this.stockTransferClearingAccountId,
+    salesRevenueAccountId: salesRevenueAccountId.present
+        ? salesRevenueAccountId.value
+        : this.salesRevenueAccountId,
+    salesReturnAccountId: salesReturnAccountId.present
+        ? salesReturnAccountId.value
+        : this.salesReturnAccountId,
+    salesDiscountAccountId: salesDiscountAccountId.present
+        ? salesDiscountAccountId.value
+        : this.salesDiscountAccountId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     syncStatus: syncStatus ?? this.syncStatus,
@@ -11843,6 +11980,15 @@ class WarehouseAccountingBindingRow extends DataClass
           data.stockTransferClearingAccountId.present
           ? data.stockTransferClearingAccountId.value
           : this.stockTransferClearingAccountId,
+      salesRevenueAccountId: data.salesRevenueAccountId.present
+          ? data.salesRevenueAccountId.value
+          : this.salesRevenueAccountId,
+      salesReturnAccountId: data.salesReturnAccountId.present
+          ? data.salesReturnAccountId.value
+          : this.salesReturnAccountId,
+      salesDiscountAccountId: data.salesDiscountAccountId.present
+          ? data.salesDiscountAccountId.value
+          : this.salesDiscountAccountId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       syncStatus: data.syncStatus.present
@@ -11867,6 +12013,9 @@ class WarehouseAccountingBindingRow extends DataClass
           ..write(
             'stockTransferClearingAccountId: $stockTransferClearingAccountId, ',
           )
+          ..write('salesRevenueAccountId: $salesRevenueAccountId, ')
+          ..write('salesReturnAccountId: $salesReturnAccountId, ')
+          ..write('salesDiscountAccountId: $salesDiscountAccountId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -11885,6 +12034,9 @@ class WarehouseAccountingBindingRow extends DataClass
     cogsAccountId,
     inventoryAdjustmentAccountId,
     stockTransferClearingAccountId,
+    salesRevenueAccountId,
+    salesReturnAccountId,
+    salesDiscountAccountId,
     createdAt,
     updatedAt,
     syncStatus,
@@ -11904,6 +12056,9 @@ class WarehouseAccountingBindingRow extends DataClass
               this.inventoryAdjustmentAccountId &&
           other.stockTransferClearingAccountId ==
               this.stockTransferClearingAccountId &&
+          other.salesRevenueAccountId == this.salesRevenueAccountId &&
+          other.salesReturnAccountId == this.salesReturnAccountId &&
+          other.salesDiscountAccountId == this.salesDiscountAccountId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.syncStatus == this.syncStatus &&
@@ -11920,6 +12075,9 @@ class WarehouseAccountingBindingsCompanion
   final Value<String?> cogsAccountId;
   final Value<String?> inventoryAdjustmentAccountId;
   final Value<String?> stockTransferClearingAccountId;
+  final Value<String?> salesRevenueAccountId;
+  final Value<String?> salesReturnAccountId;
+  final Value<String?> salesDiscountAccountId;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<String> syncStatus;
@@ -11934,6 +12092,9 @@ class WarehouseAccountingBindingsCompanion
     this.cogsAccountId = const Value.absent(),
     this.inventoryAdjustmentAccountId = const Value.absent(),
     this.stockTransferClearingAccountId = const Value.absent(),
+    this.salesRevenueAccountId = const Value.absent(),
+    this.salesReturnAccountId = const Value.absent(),
+    this.salesDiscountAccountId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
@@ -11949,6 +12110,9 @@ class WarehouseAccountingBindingsCompanion
     this.cogsAccountId = const Value.absent(),
     this.inventoryAdjustmentAccountId = const Value.absent(),
     this.stockTransferClearingAccountId = const Value.absent(),
+    this.salesRevenueAccountId = const Value.absent(),
+    this.salesReturnAccountId = const Value.absent(),
+    this.salesDiscountAccountId = const Value.absent(),
     required int createdAt,
     required int updatedAt,
     this.syncStatus = const Value.absent(),
@@ -11968,6 +12132,9 @@ class WarehouseAccountingBindingsCompanion
     Expression<String>? cogsAccountId,
     Expression<String>? inventoryAdjustmentAccountId,
     Expression<String>? stockTransferClearingAccountId,
+    Expression<String>? salesRevenueAccountId,
+    Expression<String>? salesReturnAccountId,
+    Expression<String>? salesDiscountAccountId,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<String>? syncStatus,
@@ -11986,6 +12153,12 @@ class WarehouseAccountingBindingsCompanion
         'inventory_adjustment_account_id': inventoryAdjustmentAccountId,
       if (stockTransferClearingAccountId != null)
         'stock_transfer_clearing_account_id': stockTransferClearingAccountId,
+      if (salesRevenueAccountId != null)
+        'sales_revenue_account_id': salesRevenueAccountId,
+      if (salesReturnAccountId != null)
+        'sales_return_account_id': salesReturnAccountId,
+      if (salesDiscountAccountId != null)
+        'sales_discount_account_id': salesDiscountAccountId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (syncStatus != null) 'sync_status': syncStatus,
@@ -12003,6 +12176,9 @@ class WarehouseAccountingBindingsCompanion
     Value<String?>? cogsAccountId,
     Value<String?>? inventoryAdjustmentAccountId,
     Value<String?>? stockTransferClearingAccountId,
+    Value<String?>? salesRevenueAccountId,
+    Value<String?>? salesReturnAccountId,
+    Value<String?>? salesDiscountAccountId,
     Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<String>? syncStatus,
@@ -12021,6 +12197,11 @@ class WarehouseAccountingBindingsCompanion
           inventoryAdjustmentAccountId ?? this.inventoryAdjustmentAccountId,
       stockTransferClearingAccountId:
           stockTransferClearingAccountId ?? this.stockTransferClearingAccountId,
+      salesRevenueAccountId:
+          salesRevenueAccountId ?? this.salesRevenueAccountId,
+      salesReturnAccountId: salesReturnAccountId ?? this.salesReturnAccountId,
+      salesDiscountAccountId:
+          salesDiscountAccountId ?? this.salesDiscountAccountId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -12056,6 +12237,21 @@ class WarehouseAccountingBindingsCompanion
     if (stockTransferClearingAccountId.present) {
       map['stock_transfer_clearing_account_id'] = Variable<String>(
         stockTransferClearingAccountId.value,
+      );
+    }
+    if (salesRevenueAccountId.present) {
+      map['sales_revenue_account_id'] = Variable<String>(
+        salesRevenueAccountId.value,
+      );
+    }
+    if (salesReturnAccountId.present) {
+      map['sales_return_account_id'] = Variable<String>(
+        salesReturnAccountId.value,
+      );
+    }
+    if (salesDiscountAccountId.present) {
+      map['sales_discount_account_id'] = Variable<String>(
+        salesDiscountAccountId.value,
       );
     }
     if (createdAt.present) {
@@ -12095,6 +12291,9 @@ class WarehouseAccountingBindingsCompanion
           ..write(
             'stockTransferClearingAccountId: $stockTransferClearingAccountId, ',
           )
+          ..write('salesRevenueAccountId: $salesRevenueAccountId, ')
+          ..write('salesReturnAccountId: $salesReturnAccountId, ')
+          ..write('salesDiscountAccountId: $salesDiscountAccountId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -12308,8 +12507,7 @@ class $StockMovementLedgersTable extends StockMovementLedgers
         aliasedName,
         false,
         type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('YER'),
+        requiredDuringInsert: true,
       );
   static const VerificationMeta _documentCurrencyIdMeta =
       const VerificationMeta('documentCurrencyId');
@@ -12320,8 +12518,7 @@ class $StockMovementLedgersTable extends StockMovementLedgers
         aliasedName,
         false,
         type: DriftSqlType.string,
-        requiredDuringInsert: false,
-        defaultValue: const Constant('YER'),
+        requiredDuringInsert: true,
       );
   static const VerificationMeta _unitCostDocumentCurrencyMeta =
       const VerificationMeta('unitCostDocumentCurrency');
@@ -12599,6 +12796,8 @@ class $StockMovementLedgersTable extends StockMovementLedgers
           _inventoryCurrencyIdMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_inventoryCurrencyIdMeta);
     }
     if (data.containsKey('document_currency_id')) {
       context.handle(
@@ -12608,6 +12807,8 @@ class $StockMovementLedgersTable extends StockMovementLedgers
           _documentCurrencyIdMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_documentCurrencyIdMeta);
     }
     if (data.containsKey('unit_cost_document_currency')) {
       context.handle(
@@ -13329,8 +13530,8 @@ class StockMovementLedgersCompanion
     required String sourceLineUuid,
     this.unitCost = const Value.absent(),
     this.totalCost = const Value.absent(),
-    this.inventoryCurrencyId = const Value.absent(),
-    this.documentCurrencyId = const Value.absent(),
+    required String inventoryCurrencyId,
+    required String documentCurrencyId,
     this.unitCostDocumentCurrency = const Value.absent(),
     this.totalCostDocumentCurrency = const Value.absent(),
     this.exchangeRate = const Value.absent(),
@@ -13350,6 +13551,8 @@ class StockMovementLedgersCompanion
        sourceDocumentId = Value(sourceDocumentId),
        sourceDocumentType = Value(sourceDocumentType),
        sourceLineUuid = Value(sourceLineUuid),
+       inventoryCurrencyId = Value(inventoryCurrencyId),
+       documentCurrencyId = Value(documentCurrencyId),
        costingMethodUsed = Value(costingMethodUsed),
        createdAt = Value(createdAt);
   static Insertable<StockMovementLedgerRow> custom({
@@ -14094,7 +14297,7 @@ typedef $$StockReceiptsTableCreateCompanionBuilder =
       Value<String?> supplier,
       Value<String?> accountId,
       Value<String?> accountName,
-      Value<String> currencyCode,
+      required String currencyCode,
       Value<double> exchangeRate,
       Value<String?> warehouse,
       Value<String?> notes,
@@ -14524,7 +14727,7 @@ class $$StockReceiptsTableTableManager
                 Value<String?> supplier = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<String?> accountName = const Value.absent(),
-                Value<String> currencyCode = const Value.absent(),
+                required String currencyCode,
                 Value<double> exchangeRate = const Value.absent(),
                 Value<String?> warehouse = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -14597,7 +14800,7 @@ typedef $$StockIssuesTableCreateCompanionBuilder =
       Value<String?> destination,
       Value<String?> accountId,
       Value<String?> accountName,
-      Value<String> currencyCode,
+      required String currencyCode,
       Value<double> exchangeRate,
       Value<int?> voucherBookId,
       Value<String?> warehouse,
@@ -15046,7 +15249,7 @@ class $$StockIssuesTableTableManager
                 Value<String?> destination = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<String?> accountName = const Value.absent(),
-                Value<String> currencyCode = const Value.absent(),
+                required String currencyCode,
                 Value<double> exchangeRate = const Value.absent(),
                 Value<int?> voucherBookId = const Value.absent(),
                 Value<String?> warehouse = const Value.absent(),
@@ -15491,10 +15694,10 @@ typedef $$InventoryCostLayersTableCreateCompanionBuilder =
       Value<double> remainingQty,
       Value<double> unitCost,
       Value<double> totalCost,
-      Value<String> inventoryCurrencyId,
+      required String inventoryCurrencyId,
       Value<double> unitCostInventoryCurrency,
       Value<double> totalCostInventoryCurrency,
-      Value<String> documentCurrencyId,
+      required String documentCurrencyId,
       Value<double> unitCostDocumentCurrency,
       Value<double> totalCostDocumentCurrency,
       Value<double> exchangeRate,
@@ -16064,10 +16267,10 @@ class $$InventoryCostLayersTableTableManager
                 Value<double> remainingQty = const Value.absent(),
                 Value<double> unitCost = const Value.absent(),
                 Value<double> totalCost = const Value.absent(),
-                Value<String> inventoryCurrencyId = const Value.absent(),
+                required String inventoryCurrencyId,
                 Value<double> unitCostInventoryCurrency = const Value.absent(),
                 Value<double> totalCostInventoryCurrency = const Value.absent(),
-                Value<String> documentCurrencyId = const Value.absent(),
+                required String documentCurrencyId,
                 Value<double> unitCostDocumentCurrency = const Value.absent(),
                 Value<double> totalCostDocumentCurrency = const Value.absent(),
                 Value<double> exchangeRate = const Value.absent(),
@@ -18771,6 +18974,9 @@ typedef $$WarehouseAccountingBindingsTableCreateCompanionBuilder =
       Value<String?> cogsAccountId,
       Value<String?> inventoryAdjustmentAccountId,
       Value<String?> stockTransferClearingAccountId,
+      Value<String?> salesRevenueAccountId,
+      Value<String?> salesReturnAccountId,
+      Value<String?> salesDiscountAccountId,
       required int createdAt,
       required int updatedAt,
       Value<String> syncStatus,
@@ -18787,6 +18993,9 @@ typedef $$WarehouseAccountingBindingsTableUpdateCompanionBuilder =
       Value<String?> cogsAccountId,
       Value<String?> inventoryAdjustmentAccountId,
       Value<String?> stockTransferClearingAccountId,
+      Value<String?> salesRevenueAccountId,
+      Value<String?> salesReturnAccountId,
+      Value<String?> salesDiscountAccountId,
       Value<int> createdAt,
       Value<int> updatedAt,
       Value<String> syncStatus,
@@ -18835,6 +19044,21 @@ class $$WarehouseAccountingBindingsTableFilterComposer
         column: $table.stockTransferClearingAccountId,
         builder: (column) => ColumnFilters(column),
       );
+
+  ColumnFilters<String> get salesRevenueAccountId => $composableBuilder(
+    column: $table.salesRevenueAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salesReturnAccountId => $composableBuilder(
+    column: $table.salesReturnAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salesDiscountAccountId => $composableBuilder(
+    column: $table.salesDiscountAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
@@ -18908,6 +19132,21 @@ class $$WarehouseAccountingBindingsTableOrderingComposer
         builder: (column) => ColumnOrderings(column),
       );
 
+  ColumnOrderings<String> get salesRevenueAccountId => $composableBuilder(
+    column: $table.salesRevenueAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salesReturnAccountId => $composableBuilder(
+    column: $table.salesReturnAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salesDiscountAccountId => $composableBuilder(
+    column: $table.salesDiscountAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -18977,6 +19216,21 @@ class $$WarehouseAccountingBindingsTableAnnotationComposer
         column: $table.stockTransferClearingAccountId,
         builder: (column) => column,
       );
+
+  GeneratedColumn<String> get salesRevenueAccountId => $composableBuilder(
+    column: $table.salesRevenueAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get salesReturnAccountId => $composableBuilder(
+    column: $table.salesReturnAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get salesDiscountAccountId => $composableBuilder(
+    column: $table.salesDiscountAccountId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -19053,6 +19307,9 @@ class $$WarehouseAccountingBindingsTableTableManager
                     const Value.absent(),
                 Value<String?> stockTransferClearingAccountId =
                     const Value.absent(),
+                Value<String?> salesRevenueAccountId = const Value.absent(),
+                Value<String?> salesReturnAccountId = const Value.absent(),
+                Value<String?> salesDiscountAccountId = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
@@ -19067,6 +19324,9 @@ class $$WarehouseAccountingBindingsTableTableManager
                 cogsAccountId: cogsAccountId,
                 inventoryAdjustmentAccountId: inventoryAdjustmentAccountId,
                 stockTransferClearingAccountId: stockTransferClearingAccountId,
+                salesRevenueAccountId: salesRevenueAccountId,
+                salesReturnAccountId: salesReturnAccountId,
+                salesDiscountAccountId: salesDiscountAccountId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,
@@ -19085,6 +19345,9 @@ class $$WarehouseAccountingBindingsTableTableManager
                     const Value.absent(),
                 Value<String?> stockTransferClearingAccountId =
                     const Value.absent(),
+                Value<String?> salesRevenueAccountId = const Value.absent(),
+                Value<String?> salesReturnAccountId = const Value.absent(),
+                Value<String?> salesDiscountAccountId = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
                 Value<String> syncStatus = const Value.absent(),
@@ -19099,6 +19362,9 @@ class $$WarehouseAccountingBindingsTableTableManager
                 cogsAccountId: cogsAccountId,
                 inventoryAdjustmentAccountId: inventoryAdjustmentAccountId,
                 stockTransferClearingAccountId: stockTransferClearingAccountId,
+                salesRevenueAccountId: salesRevenueAccountId,
+                salesReturnAccountId: salesReturnAccountId,
+                salesDiscountAccountId: salesDiscountAccountId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,
@@ -19152,8 +19418,8 @@ typedef $$StockMovementLedgersTableCreateCompanionBuilder =
       required String sourceLineUuid,
       Value<double> unitCost,
       Value<double> totalCost,
-      Value<String> inventoryCurrencyId,
-      Value<String> documentCurrencyId,
+      required String inventoryCurrencyId,
+      required String documentCurrencyId,
       Value<double> unitCostDocumentCurrency,
       Value<double> totalCostDocumentCurrency,
       Value<double> exchangeRate,
@@ -19687,8 +19953,8 @@ class $$StockMovementLedgersTableTableManager
                 required String sourceLineUuid,
                 Value<double> unitCost = const Value.absent(),
                 Value<double> totalCost = const Value.absent(),
-                Value<String> inventoryCurrencyId = const Value.absent(),
-                Value<String> documentCurrencyId = const Value.absent(),
+                required String inventoryCurrencyId,
+                required String documentCurrencyId,
                 Value<double> unitCostDocumentCurrency = const Value.absent(),
                 Value<double> totalCostDocumentCurrency = const Value.absent(),
                 Value<double> exchangeRate = const Value.absent(),

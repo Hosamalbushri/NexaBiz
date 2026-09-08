@@ -46,7 +46,7 @@ class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -56,9 +56,20 @@ class InventoryDatabase extends _$InventoryDatabase {
       await _createIdempotencyIndexes();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 19) {
+        await customStatement(
+          'ALTER TABLE warehouse_accounting_bindings ADD COLUMN sales_revenue_account_id TEXT NULL',
+        );
+        await customStatement(
+          'ALTER TABLE warehouse_accounting_bindings ADD COLUMN sales_return_account_id TEXT NULL',
+        );
+        await customStatement(
+          'ALTER TABLE warehouse_accounting_bindings ADD COLUMN sales_discount_account_id TEXT NULL',
+        );
+      }
       if (from < 18) {
         await customStatement(
-          "ALTER TABLE inventory_cost_layers ADD COLUMN inventory_currency_id TEXT NOT NULL DEFAULT 'YER'",
+          "ALTER TABLE inventory_cost_layers ADD COLUMN inventory_currency_id TEXT NOT NULL DEFAULT ''",
         );
         await customStatement(
           'ALTER TABLE inventory_cost_layers ADD COLUMN unit_cost_inventory_currency REAL NOT NULL DEFAULT 0',
@@ -67,7 +78,7 @@ class InventoryDatabase extends _$InventoryDatabase {
           'ALTER TABLE inventory_cost_layers ADD COLUMN total_cost_inventory_currency REAL NOT NULL DEFAULT 0',
         );
         await customStatement(
-          "ALTER TABLE inventory_cost_layers ADD COLUMN document_currency_id TEXT NOT NULL DEFAULT 'YER'",
+          "ALTER TABLE inventory_cost_layers ADD COLUMN document_currency_id TEXT NOT NULL DEFAULT ''",
         );
         await customStatement(
           'ALTER TABLE inventory_cost_layers ADD COLUMN unit_cost_document_currency REAL NOT NULL DEFAULT 0',
@@ -82,10 +93,10 @@ class InventoryDatabase extends _$InventoryDatabase {
           'ALTER TABLE inventory_cost_layers ADD COLUMN exchange_rate_date INTEGER NULL',
         );
         await customStatement(
-          "ALTER TABLE stock_movement_ledgers ADD COLUMN inventory_currency_id TEXT NOT NULL DEFAULT 'YER'",
+          "ALTER TABLE stock_movement_ledgers ADD COLUMN inventory_currency_id TEXT NOT NULL DEFAULT ''",
         );
         await customStatement(
-          "ALTER TABLE stock_movement_ledgers ADD COLUMN document_currency_id TEXT NOT NULL DEFAULT 'YER'",
+          "ALTER TABLE stock_movement_ledgers ADD COLUMN document_currency_id TEXT NOT NULL DEFAULT ''",
         );
         await customStatement(
           'ALTER TABLE stock_movement_ledgers ADD COLUMN unit_cost_document_currency REAL NOT NULL DEFAULT 0',
@@ -223,7 +234,7 @@ class InventoryDatabase extends _$InventoryDatabase {
           'ALTER TABLE stock_issues ADD COLUMN account_name TEXT NULL',
         );
         await customStatement(
-          "ALTER TABLE stock_issues ADD COLUMN currency_code TEXT NOT NULL DEFAULT 'SAR'",
+          "ALTER TABLE stock_issues ADD COLUMN currency_code TEXT NOT NULL DEFAULT ''",
         );
         await customStatement(
           'ALTER TABLE stock_issues ADD COLUMN exchange_rate REAL NOT NULL DEFAULT 1',

@@ -6,7 +6,6 @@ class CompanyProfile {
     this.name = '',
     this.legalName,
     this.logoPath,
-    this.defaultCurrencyCode = 'SAR',
     this.taxNumber,
     this.commercialRegister,
     this.phone,
@@ -26,9 +25,6 @@ class CompanyProfile {
   /// Absolute local path to the company logo image (nullable).
   final String? logoPath;
 
-  /// ISO-like currency code (e.g. `SAR`).
-  final String defaultCurrencyCode;
-
   final String? taxNumber;
   final String? commercialRegister;
   final String? phone;
@@ -47,8 +43,6 @@ class CompanyProfile {
   /// Free-form text shown in the sales invoice PDF header (visual left).
   final String? invoiceHeaderLeft;
 
-  AppCurrency get defaultCurrency => AppCurrencies.byCode(defaultCurrencyCode);
-
   bool get hasLogo => logoPath != null && logoPath!.trim().isNotEmpty;
 
   CompanyProfile copyWith({
@@ -57,7 +51,6 @@ class CompanyProfile {
     bool clearLegalName = false,
     String? logoPath,
     bool clearLogoPath = false,
-    String? defaultCurrencyCode,
     String? taxNumber,
     bool clearTaxNumber = false,
     String? commercialRegister,
@@ -84,7 +77,6 @@ class CompanyProfile {
       name: name ?? this.name,
       legalName: clearLegalName ? null : (legalName ?? this.legalName),
       logoPath: clearLogoPath ? null : (logoPath ?? this.logoPath),
-      defaultCurrencyCode: defaultCurrencyCode ?? this.defaultCurrencyCode,
       taxNumber: clearTaxNumber ? null : (taxNumber ?? this.taxNumber),
       commercialRegister: clearCommercialRegister
           ? null
@@ -110,7 +102,6 @@ class CompanyProfile {
       'name': name,
       'legalName': legalName,
       'logoPath': logoPath,
-      'defaultCurrencyCode': defaultCurrencyCode,
       'taxNumber': taxNumber,
       'commercialRegister': commercialRegister,
       'phone': phone,
@@ -137,9 +128,6 @@ class CompanyProfile {
       name: (map['name'] as String?)?.trim() ?? '',
       legalName: _optionalString(map['legalName']),
       logoPath: _optionalString(map['logoPath']),
-      defaultCurrencyCode: AppCurrencies.byCode(
-        map['defaultCurrencyCode'] as String?,
-      ).code,
       taxNumber: _optionalString(map['taxNumber']),
       commercialRegister: _optionalString(map['commercialRegister']),
       phone: _optionalString(map['phone']),

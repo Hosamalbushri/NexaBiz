@@ -176,15 +176,7 @@ class AppDocumentLineTableShell<T> extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            scrollableShell,
-            if (items.isNotEmpty && footerSummaryBuilder != null)
-              footerSummaryBuilder!(context),
-          ],
-        ),
+        child: scrollableShell,
       ),
     );
   }

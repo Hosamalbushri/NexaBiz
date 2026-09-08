@@ -19,6 +19,8 @@ class PackageSetupView extends StatelessWidget {
     this.accountBindingModes = const {},
     this.onSavePackage,
     this.isSaving = false,
+    this.shrinkWrap = false,
+    this.physics,
   });
 
   final PackageSetupDefinition definition;
@@ -31,6 +33,8 @@ class PackageSetupView extends StatelessWidget {
   final Map<String, AccountBindingMode> accountBindingModes;
   final VoidCallback? onSavePackage;
   final bool isSaving;
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +42,8 @@ class PackageSetupView extends StatelessWidget {
     final packageName = definition.displayName(isArabic ? 'ar' : 'en');
 
     return ListView(
+      shrinkWrap: shrinkWrap,
+      physics: physics,
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
         Row(

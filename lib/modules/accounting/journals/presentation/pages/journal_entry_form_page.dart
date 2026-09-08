@@ -6,6 +6,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
+import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
@@ -95,11 +96,12 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final defaultCurrency = ref.watch(
-      companyProfileProvider.select((p) => p.valueOrNull?.defaultCurrencyCode),
-    );
+    final currencyInfo = ref.watch(functionalCurrencyStateInfoProvider);
+    final defaultCurrency = currencyInfo.valueOrNull?.currencyCode;
     if (!_hydrated && !widget.isEditing) {
-      _currencyCode = defaultCurrency ?? _currencyCode;
+      if (defaultCurrency != null && defaultCurrency.isNotEmpty) {
+        _currencyCode = defaultCurrency;
+      }
       _hydrated = true;
     }
 

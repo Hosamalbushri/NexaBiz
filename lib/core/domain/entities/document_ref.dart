@@ -89,7 +89,7 @@ class DocumentRef {
     this.warehouseId,
     this.destinationWarehouseId,
     this.status = DocumentStatus.draft,
-    this.currencyCode = 'SAR',
+    this.currencyCode = '',
     this.exchangeRate = 1.0,
   });
 

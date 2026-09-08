@@ -15,7 +15,9 @@ import 'permissions/administration_permission_package.dart';
 import 'roles/presentation/pages/admin_role_editor_page.dart';
 import 'roles/presentation/pages/admin_roles_page.dart';
 import 'shared/data/admin_api_repository.dart';
+import 'presentation/pages/administration_master_settings_page.dart';
 import 'shared/presentation/pages/administration_home_page.dart';
+
 import 'users/presentation/pages/admin_users_page.dart';
 
 /// Administration module — users / roles inside the same Flutter app.
@@ -157,7 +159,13 @@ class AdministrationModule extends AppModule {
       builder: (context, state) => const AdministrationHomePage(),
       routes: [
         GoRoute(
+          path: 'settings',
+          name: 'administrationMasterSettings',
+          builder: (context, state) => const AdministrationMasterSettingsPage(),
+        ),
+        GoRoute(
           path: 'users',
+
           name: 'administrationModuleUsers',
           builder: (context, state) => const AdminUsersPage(),
         ),

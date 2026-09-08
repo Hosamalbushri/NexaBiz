@@ -14,7 +14,9 @@ import '../../core/setup/setup.dart';
 import 'exchanges/presentation/pages/currency_exchange_form_page.dart';
 import 'permissions/receipts_payments_permission_package.dart';
 import 'posting/presentation/pages/rp_posting_service_page.dart';
+import 'presentation/pages/receipts_payments_master_settings_page.dart';
 import 'receipts_payments_module_quick_actions.dart';
+
 import 'receipts_payments_module_settings.dart';
 import 'receipts_payments_module_setup.dart';
 import 'shared/presentation/pages/receipts_payments_home_page.dart';
@@ -157,8 +159,14 @@ class ReceiptsPaymentsModule extends AppModule {
       builder: (context, state) => const ReceiptsPaymentsHomePage(),
       routes: [
         GoRoute(
+          path: 'settings',
+          name: 'receiptsPaymentsMasterSettings',
+          builder: (context, state) => const ReceiptsPaymentsMasterSettingsPage(),
+        ),
+        GoRoute(
           path: 'receipts',
           name: 'receiptsService',
+
           builder: (context, state) =>
               const RpServiceMenuPage(type: TransactionType.receipt),
           routes: [

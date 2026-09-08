@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/app/reports/trial_balance_report_data_adapter.dart';
-import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
@@ -100,8 +99,7 @@ void main() {
 
     final adapter = TrialBalanceReportDataAdapter(
       journals: journals,
-      loadCompanyProfile: () async =>
-          const CompanyProfile(defaultCurrencyCode: 'YER'),
+      loadFunctionalCurrencyCode: () async => 'YER',
     );
     const labels = TrialBalanceReportLabels(
       companyName: 'Demo',

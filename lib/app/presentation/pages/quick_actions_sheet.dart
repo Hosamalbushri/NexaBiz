@@ -322,6 +322,7 @@ class _QuickActionCustomizeTile extends StatelessWidget {
     final borderColor = colorScheme.outline.withValues(alpha: 0.55);
 
     return Semantics(
+      container: true,
       button: true,
       label: label,
       child: Material(

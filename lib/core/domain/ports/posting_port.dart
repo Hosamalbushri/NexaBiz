@@ -72,7 +72,7 @@ class StockDocumentPostingData {
     required this.status,
     required this.totalAmount,
     this.offsetAccountId,
-    this.currencyCode = 'SAR',
+    this.currencyCode = '',
     this.exchangeRate = 1.0,
   });
 
@@ -111,8 +111,8 @@ class SaleInvoicePostingData {
     required this.discountAmount,
     required this.settlementType,
     this.taxAmount = 0.0,
-    this.currencyCode = 'SAR',
-    this.baseCurrencyCode = 'SAR',
+    this.currencyCode = '',
+    this.baseCurrencyCode = '',
     this.exchangeRate = 1.0,
     this.customerAccountId,
     this.cashAccountId,

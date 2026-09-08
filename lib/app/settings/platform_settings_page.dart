@@ -27,9 +27,8 @@ import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/presentation/widgets/company_selection_sheet.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
-import 'module_unit_settings_page.dart';
-import 'modules_settings_page.dart';
 import 'settings_repository.dart';
+
 import 'widgets/settings_chrome.dart';
 
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) {
@@ -225,6 +224,17 @@ class _PlatformSettingsBody extends ConsumerWidget {
                       onTap: () => CompanySelectionSheet.show(context),
                     ),
                     SettingsTile(
+                      icon: Icons.currency_exchange_outlined,
+                      title: Localizations.localeOf(context).languageCode == 'ar'
+                          ? 'إدارة سجل العملات والرسوم'
+                          : 'Currency Master & Roles Management',
+                      subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                          ? 'تحديد العملة الرئيسية، عملة تقييم المخزون، وسجل أسعار الصرف'
+                          : 'Manage functional currency, inventory valuation currency, and master currencies',
+                      showChevron: true,
+                      onTap: () => context.push(AppRoutes.settingsCurrencies),
+                    ),
+                    SettingsTile(
                       icon: Icons.star_outline,
                       title: l10n.subscriptionAndPackagesTitle,
                       subtitle: l10n.subscriptionAndPackagesSubtitle,
@@ -242,27 +252,100 @@ class _PlatformSettingsBody extends ConsumerWidget {
                     ),
                   ],
                 ),
-                if (categories.isNotEmpty) ...[
-                  SettingsGroup(
-                    children: [
-                      SettingsTile(
-                        icon: Icons.grid_view_rounded,
-                        title: l10n.moduleUnitsSettingsTitle,
-                        subtitle: l10n.moduleUnitsSettingsSubtitle,
-                        showChevron: true,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ModulesSettingsPage(categories: categories),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
+                const SizedBox(height: AppSpacing.sm),
+                SettingsExpandableSection(
+                  icon: Icons.apps_outlined,
+                  title: Localizations.localeOf(context).languageCode == 'ar'
+                      ? 'إعدادات الموديولات'
+                      : 'Module Settings Hub',
+                  subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                      ? 'تهيئة وإعدادات كربط الحسابات والإعدادات الخاصة بكل موديول'
+                      : 'Configure account bindings and module master settings',
+                  initiallyExpanded: true,
+                  children: [
+                    SettingsGroup(
+                      children: [
+                        SettingsTile(
+                          icon: Icons.inventory_2_outlined,
+                          title: l10n.moduleInventory,
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'إعدادات وتهيئة موديول المخزون والمستودعات'
+                              : 'Inventory master settings & account bindings',
+                          showChevron: true,
+                          onTap: () => context.push('/inventory/settings'),
+                        ),
+                        SettingsTile(
+                          icon: Icons.account_balance_outlined,
+                          title: l10n.moduleAccounting,
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'إعدادات وتهيئة موديول المحاسبة والدفاتر'
+                              : 'Accounting master settings & account bindings',
+                          showChevron: true,
+                          onTap: () => context.push('/accounting/settings'),
+                        ),
+                        SettingsTile(
+                          icon: Icons.point_of_sale_outlined,
+                          title: l10n.moduleSales,
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'إعدادات وتهيئة موديول المبيعات'
+                              : 'Sales master settings & account bindings',
+                          showChevron: true,
+                          onTap: () => context.push('/sales/settings'),
+                        ),
+                        SettingsTile(
+                          icon: Icons.shopping_bag_outlined,
+                          title: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'المشتريات والموردين'
+                              : 'Purchases & Suppliers',
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'إعدادات وتهيئة موديول المشتريات'
+                              : 'Purchases master settings & account bindings',
+                          showChevron: true,
+                          onTap: () => context.push('/purchases/settings'),
+                        ),
+                        SettingsTile(
+                          icon: Icons.account_balance_wallet_outlined,
+                          title: l10n.moduleReceiptsPayments,
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'إعدادات وتهيئة موديول المقبوضات والمدفوعات'
+                              : 'Receipts & Payments settings & account bindings',
+                          showChevron: true,
+                          onTap: () => context.push('/receipts-payments/settings'),
+                        ),
+                        SettingsTile(
+                          icon: Icons.people_outline,
+                          title: l10n.moduleCustomers,
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'إعدادات وتهيئة موديول العملاء والدليل'
+                              : 'Customers settings & account bindings',
+                          showChevron: true,
+                          onTap: () => context.push('/customers/settings'),
+                        ),
+                        SettingsTile(
+                          icon: Icons.admin_panel_settings_outlined,
+                          title: l10n.moduleAdministration,
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'إدارة المستخدمين، الأدوار، الفروع، والأجهزة'
+                              : 'Administer users, roles, branches, & devices',
+                          showChevron: true,
+                          onTap: () => context.push('/administration/settings'),
+                        ),
+                        SettingsTile(
+                          icon: Icons.sync_outlined,
+                          title: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'مزامنة البيانات'
+                              : 'Data Sync',
+                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'مراقبة المزامنة وفض التعارضات السحابية'
+                              : 'Monitor cloud sync status & conflict strategy',
+                          showChevron: true,
+                          onTap: () => context.push(AppRoutes.settingsDataSync),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
                 SettingsExpandableSection(
                   icon: Icons.info_outline_rounded,
                   title: l10n.about,
@@ -371,98 +454,7 @@ class _PlatformSettingsBody extends ConsumerWidget {
   }
 }
 
-class _ModuleCard extends StatelessWidget {
-  const _ModuleCard({required this.category});
 
-  final ModuleSettingsCategoryDefinition category;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final title = category.titleBuilder(l10n);
-    final subtitle =
-        category.subtitleBuilder?.call(l10n) ??
-        (l10n.localeName == 'ar'
-            ? '${category.items.length} وحدات إعدادات'
-            : '${category.items.length} setting units');
-
-    return Material(
-      color: colorScheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ModuleUnitSettingsPage(category: category),
-            ),
-          );
-        },
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-            ),
-            boxShadow: AppShadows.card(theme.brightness),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.7),
-                  ),
-                  child: Icon(
-                    category.icon,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _AboutInfoRow extends StatelessWidget {
   const _AboutInfoRow({

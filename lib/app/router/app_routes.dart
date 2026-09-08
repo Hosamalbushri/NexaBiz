@@ -35,6 +35,8 @@ class AppRoutes {
   static const String reports = '/reports';
   static const String settings = '/settings';
   static const String settingsSetup = '/settings/setup';
+  static const String settingsFunctionalCurrency = '/settings/functional-currency';
+  static const String settingsCurrencies = '/settings/currencies';
   static const String settingsSecurity = '/settings/security';
   static const String settingsDataSync = '/settings/data-sync';
   static const String settingsDataSyncLogin = '/settings/data-sync/login';

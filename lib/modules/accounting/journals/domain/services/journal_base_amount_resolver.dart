@@ -1,37 +1,76 @@
-import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
-import '../entities/journal_entry.dart';
+import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/core/utils/decimal_money.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/exchange_rate_engine.dart';
+import '../entities/journal_entry.dart';
 import 'journal_money.dart';
 
-/// Fills [JournalLineDraft] base amounts / rates when callers omit them.
+/// Fills [JournalLineDraft] base amounts / rates when callers omit them,
+/// utilizing [ExchangeRateEngine] for deterministic fixed-precision multi-currency conversion.
 class JournalBaseAmountResolver {
-  const JournalBaseAmountResolver(this._rates);
+  const JournalBaseAmountResolver([
+    this._rates,
+    this._exchangeRateEngine,
+  ]);
 
-  final CurrencyRateRepository _rates;
+  /// Convenience constructor wrapping legacy repository.
+  factory JournalBaseAmountResolver.fromRepository(CurrencyRateRepository rates) {
+    return JournalBaseAmountResolver(rates);
+  }
+
+  /// Convenience constructor wrapping ExchangeRateEngine.
+  factory JournalBaseAmountResolver.fromEngine(ExchangeRateEngine engine) {
+    return JournalBaseAmountResolver(null, engine);
+  }
+
+  final CurrencyRateRepository? _rates;
+  final ExchangeRateEngine? _exchangeRateEngine;
 
   Future<List<JournalLineDraft>> resolve({
     required DateTime entryDate,
     required String baseCurrencyCode,
     required List<JournalLineDraft> lines,
+    String? companyId,
   }) async {
     final base = baseCurrencyCode.trim().toUpperCase();
     final resolved = <JournalLineDraft>[];
+
     for (final line in lines) {
       final code = line.currencyCode.trim().toUpperCase();
+      final debit = JournalMoney.clampNonNegative(line.debit);
+      final credit = JournalMoney.clampNonNegative(line.credit);
+
       final rate = await _resolveRate(
         currencyCode: code,
         baseCurrencyCode: base,
         entryDate: entryDate,
         explicit: line.exchangeRateToBase,
+        companyId: companyId,
       );
-      final debit = JournalMoney.clampNonNegative(line.debit);
-      final credit = JournalMoney.clampNonNegative(line.credit);
-      final baseDebit = line.baseDebit != null
-          ? JournalMoney.clampNonNegative(line.baseDebit!)
-          : JournalMoney.round(debit * rate);
-      final baseCredit = line.baseCredit != null
-          ? JournalMoney.clampNonNegative(line.baseCredit!)
-          : JournalMoney.round(credit * rate);
+
+      double baseDebit;
+      double baseCredit;
+
+      if (line.baseDebit != null) {
+        baseDebit = JournalMoney.clampNonNegative(line.baseDebit!);
+      } else if (code == base || debit == 0) {
+        baseDebit = debit;
+      } else {
+        final decimalRate = DecimalRate.fromDouble(rate);
+        final decimalDebit = DecimalMoney.fromDouble(debit);
+        baseDebit = decimalRate.convert(decimalDebit, targetPrecision: 2).toDouble();
+      }
+
+      if (line.baseCredit != null) {
+        baseCredit = JournalMoney.clampNonNegative(line.baseCredit!);
+      } else if (code == base || credit == 0) {
+        baseCredit = credit;
+      } else {
+        final decimalRate = DecimalRate.fromDouble(rate);
+        final decimalCredit = DecimalMoney.fromDouble(credit);
+        baseCredit = decimalRate.convert(decimalCredit, targetPrecision: 2).toDouble();
+      }
+
       resolved.add(
         JournalLineDraft(
           accountUuid: line.accountUuid,
@@ -133,6 +172,7 @@ class JournalBaseAmountResolver {
     required String baseCurrencyCode,
     required DateTime entryDate,
     required double? explicit,
+    String? companyId,
   }) async {
     if (currencyCode == baseCurrencyCode || currencyCode.isEmpty) {
       return 1.0;
@@ -143,19 +183,49 @@ class JournalBaseAmountResolver {
         !explicit.isInfinite) {
       return explicit;
     }
-    final dated = await _rates.getRateOn(currencyCode, entryDate);
-    if (dated != null && dated > 0 && !dated.isNaN && !dated.isInfinite) {
-      return dated;
+
+    if (_exchangeRateEngine != null) {
+      try {
+        final resolvedRate = await _exchangeRateEngine.getRate(
+          fromCurrency: currencyCode,
+          toCurrency: baseCurrencyCode,
+          effectiveDate: entryDate,
+          companyId: companyId,
+        );
+        return resolvedRate.rateValue;
+      } on ExchangeRateNotFoundException {
+        rethrow;
+      } on ExchangeRateExpiredException {
+        rethrow;
+      } catch (e) {
+        throw ExchangeRateNotFoundException(
+          fromCurrency: currencyCode,
+          toCurrency: baseCurrencyCode,
+          effectiveDate: entryDate,
+        );
+      }
     }
-    final current = await _rates.getByCode(currencyCode);
-    if (current != null &&
-        current.rateToBase > 0 &&
-        !current.rateToBase.isNaN &&
-        !current.rateToBase.isInfinite) {
-      return current.rateToBase;
+
+    if (_rates != null) {
+      final dated = await _rates.getRateOn(currencyCode, entryDate);
+      if (dated != null && dated > 0 && !dated.isNaN && !dated.isInfinite) {
+        return dated;
+      }
+      final current = await _rates.getByCode(currencyCode);
+      if (current != null &&
+          current.rateToBase > 0 &&
+          !current.rateToBase.isNaN &&
+          !current.rateToBase.isInfinite) {
+        return current.rateToBase;
+      }
     }
-    throw InvalidExchangeRateException(
-      'لم يتم العثور على سعر صرف صالح للعملة $currencyCode مقابل العملة الأساسية $baseCurrencyCode.',
+
+    throw ExchangeRateNotFoundException(
+      fromCurrency: currencyCode,
+      toCurrency: baseCurrencyCode,
+      effectiveDate: entryDate,
+      customMessage:
+          'لم يتم العثور على سعر صرف صالح للعملة $currencyCode مقابل العملة الأساسية $baseCurrencyCode.',
     );
   }
 }

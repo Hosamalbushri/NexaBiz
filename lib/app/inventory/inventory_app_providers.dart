@@ -11,6 +11,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/in
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_voucher_book_port.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 
@@ -36,11 +37,13 @@ final appInventoryAccountingPosterProvider =
       final db = ref.watch(accountingDatabaseProvider);
       final postingService = ref.watch(journalPostingServiceProvider);
       final initRepo = ref.watch(companyInitializationRepositoryProvider);
+      final functionalCurrencyService = ref.watch(functionalCurrencyServiceProvider);
       return InventoryAccountingPosterAdapter(
         db,
         journalPostingService: postingService,
         readCompanyId: () => ref.read(currentCompanyIdProvider),
         initRepository: initRepo,
+        functionalCurrencyService: functionalCurrencyService,
       );
     });
 

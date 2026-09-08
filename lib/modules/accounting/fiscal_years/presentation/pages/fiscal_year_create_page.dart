@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
+import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/permissions/permission_error_messages.dart';
 import 'package:stock_count/core/utils/business_date.dart';
@@ -120,8 +121,10 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
       );
       return;
     }
-    final profile = ref.read(companyProfileProvider).valueOrNull;
-    final base = profile?.defaultCurrencyCode ?? 'SAR';
+    final currencyInfo = ref.read(functionalCurrencyStateInfoProvider).valueOrNull;
+    final base = (currencyInfo?.currencyCode != null && currencyInfo!.currencyCode.isNotEmpty)
+        ? currencyInfo.currencyCode
+        : 'SAR';
     final actor = ref.read(authStateProvider).session?.user.name ?? 'local';
 
     setState(() => _saving = true);

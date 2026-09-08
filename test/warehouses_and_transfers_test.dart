@@ -20,7 +20,7 @@ void main() {
 
   setUp(() async {
     db = InventoryDatabase.memory();
-    warehouseRepo = WarehouseRepositoryImpl(db: db);
+    warehouseRepo = WarehouseRepositoryImpl(db, null, () => 'COMP-TEST');
     stockMovementsRepo = StockMovementsRepositoryImpl(db: db);
     transferRepo = StockTransferRepositoryImpl(db: db);
 

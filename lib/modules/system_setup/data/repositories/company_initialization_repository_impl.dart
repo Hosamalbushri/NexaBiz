@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../core/database/hive_boxes.dart';
 import '../../../authentication/data/local_auth_store.dart';
+import '../../../inventory/shared/data/database/inventory_database.dart';
 import '../../domain/entities/company_accounting_config.dart';
 import '../../domain/entities/company_initialization_state.dart';
 import '../../domain/entities/company_inventory_config.dart';
@@ -13,10 +14,36 @@ import '../../domain/services/initialization_validator.dart';
 /// Enforces mandatory company isolation via `readCompanyId`.
 class CompanyInitializationRepositoryImpl
     implements CompanyInitializationRepository {
-  CompanyInitializationRepositoryImpl({this._box, this._readCompanyId});
+  CompanyInitializationRepositoryImpl({
+    this._box,
+    this._readCompanyId,
+    InventoryDatabase? invDb,
+    Future<bool> Function()? hasInventoryActivity,
+  })  : _invDb = invDb,
+        _hasInventoryActivityCustom = hasInventoryActivity;
 
   Box<dynamic>? _box;
   final String Function()? _readCompanyId;
+  final InventoryDatabase? _invDb;
+  final Future<bool> Function()? _hasInventoryActivityCustom;
+
+  Future<bool> _hasInventoryActivity() async {
+    if (_hasInventoryActivityCustom != null) {
+      return await _hasInventoryActivityCustom!();
+    }
+    final db = _invDb;
+    if (db == null) return false;
+    try {
+      final costLayers = await db.select(db.inventoryCostLayers).get();
+      final stockReceipts = await db.select(db.stockReceipts).get();
+      final stockIssues = await db.select(db.stockIssues).get();
+      final hasPostedReceipts = stockReceipts.any((r) => r.status == 'posted');
+      final hasPostedIssues = stockIssues.any((i) => i.status == 'posted');
+      return costLayers.isNotEmpty || hasPostedReceipts || hasPostedIssues;
+    } catch (_) {
+      return false;
+    }
+  }
 
   String get _currentCompanyId {
     final id = _readCompanyId?.call().trim();
@@ -118,14 +145,17 @@ class CompanyInitializationRepositoryImpl
     final companyId = _currentCompanyId;
     final existing = await getInventoryConfig();
 
-    // Invariant constraint check: ONE inventory base currency per tenant.
+    // Invariant constraint check: ONE inventory base currency per tenant once posted inventory activity exists.
     if (existing != null &&
         existing.inventoryBaseCurrencyId.isNotEmpty &&
         existing.inventoryBaseCurrencyId !=
             config.inventoryBaseCurrencyId.toUpperCase()) {
-      throw StateError(
-        'Inventory base currency cannot be modified once set for company ($companyId). Existing: ${existing.inventoryBaseCurrencyId}, Attempted: ${config.inventoryBaseCurrencyId}',
-      );
+      final hasTx = await _hasInventoryActivity();
+      if (hasTx) {
+        throw StateError(
+          'Inventory base currency cannot be modified once posted inventory transactions exist for company ($companyId). Existing: ${existing.inventoryBaseCurrencyId}, Attempted: ${config.inventoryBaseCurrencyId}',
+        );
+      }
     }
 
     final scopedConfig = config.copyWith(

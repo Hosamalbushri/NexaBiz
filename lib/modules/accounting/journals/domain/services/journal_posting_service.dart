@@ -2,7 +2,7 @@ import '../entities/journal_entry.dart';
 import '../models/journal_exception.dart';
 import '../repositories/journal_repository.dart';
 import 'package:stock_count/core/audit/domain/services/audit_trail_service.dart';
-import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/accounting/permissions/accounting_permissions.dart';
 
@@ -23,7 +23,7 @@ class JournalPostingService {
   static const reverseSourceType = 'journal_reverse';
 
   final JournalRepository _journals;
-  final AccountingPeriodValidator _periodValidator;
+  final PeriodValidatorPort _periodValidator;
   final PermissionGuard _permissionGuard;
   final AuditTrailService? _auditService;
 

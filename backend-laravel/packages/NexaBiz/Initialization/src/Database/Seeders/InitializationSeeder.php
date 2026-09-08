@@ -126,17 +126,17 @@ class InitializationSeeder extends Seeder
             'uuid' => '30000000-0000-4000-8000-000000005555',
             'type' => 'currency_rate',
             'payload' => [
-                'currencyCode' => 'YER',
+                'currencyCode' => '',
                 'rateToBase' => 1.0,
-                'notes' => 'العملة الرئيسية - الريال اليمني (YER)',
+                'notes' => 'العملة الرئيسية',
             ],
         ],
         [
             'uuid' => '40000000-0000-4000-8000-000000009999',
             'type' => 'company_profile',
             'payload' => [
-                'name' => 'شركة النماء (الريال اليمني)',
-                'defaultCurrencyCode' => 'YER',
+                'name' => 'شركة النماء',
+                'defaultCurrencyCode' => '',
                 'fiscalYearStartMonth' => 1,
             ],
         ],
@@ -149,6 +149,7 @@ class InitializationSeeder extends Seeder
             return;
         }
 
+        $seedCurrency = (string) config('nexabiz.seed_company_currency');
         $now = CarbonImmutable::now('UTC');
         $year = (int) $now->format('Y');
         $startMs = (int) $now->copy()->startOfYear()->format('Uv');
@@ -163,8 +164,12 @@ class InitializationSeeder extends Seeder
                     'startDate' => $startMs,
                     'endDate' => $endMs,
                     'status' => 'open',
-                    'baseCurrencyCode' => 'YER',
+                    'baseCurrencyCode' => $seedCurrency,
                 ];
+            } elseif ($entity['type'] === 'currency_rate' && $seedCurrency !== '') {
+                $payload['currencyCode'] = $seedCurrency;
+            } elseif ($entity['type'] === 'company_profile' && $seedCurrency !== '') {
+                $payload['defaultCurrencyCode'] = $seedCurrency;
             }
 
             SyncEntity::query()->updateOrCreate([

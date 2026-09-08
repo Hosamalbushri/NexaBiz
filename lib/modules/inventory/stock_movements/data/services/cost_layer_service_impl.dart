@@ -10,17 +10,20 @@ import '../../domain/enums/cost_valuation_method.dart';
 import '../../domain/services/cost_layer_service.dart';
 
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
+import 'package:stock_count/modules/currency/domain/services/functional_currency_service.dart';
 
 class CostLayerServiceImpl implements CostLayerService {
   CostLayerServiceImpl({
     required this._db,
     this._readCompanyId,
     this._initRepository,
+    this._functionalCurrencyService,
   });
 
   final InventoryDatabase _db;
   final String Function()? _readCompanyId;
   final CompanyInitializationRepository? _initRepository;
+  final FunctionalCurrencyService? _functionalCurrencyService;
 
   String get _currentCompanyId {
     final cid = _readCompanyId?.call().trim();
@@ -48,11 +51,23 @@ class CostLayerServiceImpl implements CostLayerService {
     }
 
     var invCurrency = layer.inventoryCurrencyId;
-    if (_initRepository != null &&
-        (invCurrency.isEmpty || invCurrency == 'YER')) {
+    if (invCurrency.isEmpty && _initRepository != null) {
       final invConfig = await _initRepository.getInventoryConfig();
       if (invConfig != null && invConfig.inventoryBaseCurrencyId.isNotEmpty) {
         invCurrency = invConfig.inventoryBaseCurrencyId.toUpperCase();
+      }
+    }
+    if (invCurrency.isEmpty) {
+      final funcService = _functionalCurrencyService;
+      if (funcService != null) {
+        try {
+          final func = await funcService.getFunctionalCurrency(
+            effectiveCompanyId,
+          );
+          if (func.code.isNotEmpty) {
+            invCurrency = func.code.toUpperCase();
+          }
+        } catch (_) {}
       }
     }
 
@@ -665,7 +680,7 @@ class CostLayerServiceImpl implements CostLayerService {
     final rows = await query.get();
 
     return rows
-        .map(
+        .map<CostLayer>(
           (row) => CostLayer(
             id: row.uuid,
             itemCode: row.itemCode,

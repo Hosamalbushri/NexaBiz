@@ -1,6 +1,8 @@
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_currency_port.dart';
 
+import 'package:stock_count/core/errors/currency_exception.dart';
+
 /// App adapter: Sales currencies → company base + Accounting rates.
 class AccountingSaleCurrencyAdapter implements SaleCurrencyPort {
   AccountingSaleCurrencyAdapter({
@@ -13,7 +15,12 @@ class AccountingSaleCurrencyAdapter implements SaleCurrencyPort {
 
   Future<String> _normalizedBase() async {
     final code = (await _baseCurrencyReader()).trim().toUpperCase();
-    return code.isEmpty ? 'SAR' : code;
+    if (code.isEmpty) {
+      throw const CurrencyRequiredException(
+        'Base currency is required for sales currency adapter.',
+      );
+    }
+    return code;
   }
 
   @override

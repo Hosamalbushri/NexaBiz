@@ -1,8 +1,8 @@
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 
 /// Minimal account repo for adapter unit tests (system FX accounts).
 class FakeAccountRepository implements AccountRepository {
@@ -115,6 +115,9 @@ class FakeAccountRepository implements AccountRepository {
 
   @override
   Future<void> ensureDefaultChartSeeded() async {}
+
+  @override
+  Future<void> seedDefaultChart() async {}
 
   @override
   Future<List<Account>> getByType(

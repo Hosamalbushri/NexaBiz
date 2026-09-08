@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/core/report_engine/report_engine.dart';
 import 'package:stock_count/modules/reports/shared/presentation/providers/reports_providers.dart';
@@ -12,7 +13,8 @@ class SalesPeriodReportPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final companyAsync = ref.watch(companyProfileProvider);
-    final currencyCode = companyAsync.valueOrNull?.defaultCurrencyCode ?? 'SAR';
+    final currencyInfoAsync = ref.watch(functionalCurrencyStateInfoProvider);
+    final currencyCode = currencyInfoAsync.valueOrNull?.currencyCode ?? '';
     final companyName = companyAsync.valueOrNull?.name ?? 'NexaBiz ERP';
 
     final provider =

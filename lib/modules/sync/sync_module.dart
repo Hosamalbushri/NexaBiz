@@ -8,8 +8,10 @@ import '../../app/sync/app_sync_adapters.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
+import 'presentation/pages/sync_master_settings_page.dart';
 import 'sync.dart';
 import 'sync_module_settings.dart';
+
 
 /// Sync module — encapsulates offline-first synchronization infrastructure.
 class SyncModule extends AppModule {
@@ -71,9 +73,10 @@ class SyncModule extends AppModule {
     GoRoute(
       path: AppRoutes.settingsDataSync,
       name: 'settingsDataSync',
-      builder: (context, state) => const DataSyncSettingsPage(),
+      builder: (context, state) => const SyncMasterSettingsPage(),
     ),
   ];
+
 
   @override
   String label(BuildContext context) => 'المزامنة';

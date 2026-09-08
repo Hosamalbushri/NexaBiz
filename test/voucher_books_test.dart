@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/voucher_book_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/voucher_book.dart';
-import 'package:stock_count/modules/accounting/domain/entities/voucher_book_type.dart';
-import 'package:stock_count/modules/accounting/domain/models/voucher_book_exception.dart';
-import 'package:stock_count/modules/accounting/domain/services/default_voucher_books.dart';
+import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/modules/accounting/voucher_books/data/repositories/voucher_book_repository_impl.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/models/voucher_book_exception.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/services/default_voucher_books.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

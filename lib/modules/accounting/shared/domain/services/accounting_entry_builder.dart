@@ -6,17 +6,20 @@ import 'account_mapping_resolver.dart';
 import 'account_validation_service.dart';
 
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
+import 'package:stock_count/modules/currency/domain/services/functional_currency_service.dart';
 
 class AccountingEntryBuilder {
   AccountingEntryBuilder({
     required this._mappingResolver,
     required this._validationService,
     this._initRepository,
+    this._functionalCurrencyService,
   });
 
   final AccountMappingResolver _mappingResolver;
   final AccountValidationService _validationService;
   final CompanyInitializationRepository? _initRepository;
+  final FunctionalCurrencyService? _functionalCurrencyService;
 
   Future<JournalEntryDraft> buildDraftFromInventoryDocument({
     required InventoryDocumentRef document,
@@ -67,29 +70,39 @@ class AccountingEntryBuilder {
     await _validationService.assertCanPost(inventoryRef.accountUuid);
     await _validationService.assertCanPost(offsetRef.accountUuid);
 
-    final debitUuid = isReceipt
-        ? inventoryRef.accountUuid
-        : offsetRef.accountUuid;
-    final creditUuid = isReceipt
-        ? offsetRef.accountUuid
-        : inventoryRef.accountUuid;
-
     final companyInventoryConfig = await _initRepository?.getInventoryConfig();
-    final baseCurrency =
-        (companyInventoryConfig?.inventoryBaseCurrencyId.trim().isNotEmpty ==
-            true)
-        ? companyInventoryConfig!.inventoryBaseCurrencyId.trim().toUpperCase()
+    String? resolvedBase =
+        companyInventoryConfig?.inventoryBaseCurrencyId.trim().toUpperCase();
+    if (resolvedBase == null || resolvedBase.isEmpty) {
+      final funcService = _functionalCurrencyService;
+      if (funcService != null) {
+        try {
+          final func = await funcService.getFunctionalCurrency();
+          resolvedBase = func.code.trim().toUpperCase();
+        } catch (_) {}
+      }
+    }
+    final baseCurrency = (resolvedBase != null && resolvedBase.isNotEmpty)
+        ? resolvedBase
         : 'YER';
 
-    final String docCurrency = document.currencyCode.trim().isNotEmpty
+    final String rawDocCurrency = document.currencyCode.trim().isNotEmpty
         ? document.currencyCode.trim().toUpperCase()
         : baseCurrency;
-    final double docRate = ExchangeRateValidator.validate(
-      currencyCode: docCurrency,
-      baseCurrencyCode: baseCurrency,
-      exchangeRate: document.exchangeRate,
-    );
-    final double baseAmount = totalAmount * docRate;
+
+    final bool isBasePosting = useBaseCurrencyForCogs || !isReceipt;
+    final String docCurrency = isBasePosting ? baseCurrency : rawDocCurrency;
+    final double docRate = isBasePosting
+        ? 1.0
+        : ExchangeRateValidator.validate(
+            currencyCode: docCurrency,
+            baseCurrencyCode: baseCurrency,
+            exchangeRate: document.exchangeRate,
+          );
+
+    final double offsetAmount = totalAmount;
+    final double baseAmount =
+        isBasePosting ? totalAmount : (totalAmount * docRate);
 
     // 1. Inventory Account Line (always in Inventory Base Currency)
     final inventoryLine = JournalLineDraft(
@@ -105,8 +118,8 @@ class AccountingEntryBuilder {
     // 2. Offset Account Line (Vendor/Payable/COGS/Cash - in Document Currency)
     final offsetLine = JournalLineDraft(
       accountUuid: offsetRef.accountUuid,
-      debit: isReceipt ? 0.0 : totalAmount,
-      credit: isReceipt ? totalAmount : 0.0,
+      debit: isReceipt ? 0.0 : offsetAmount,
+      credit: isReceipt ? offsetAmount : 0.0,
       currencyCode: docCurrency,
       exchangeRateToBase: docRate,
       lineDescription: 'مخزون - ${document.documentNumber}',

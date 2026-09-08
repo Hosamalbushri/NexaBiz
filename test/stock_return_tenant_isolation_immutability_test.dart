@@ -7,6 +7,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositori
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'helpers/journal_posting_test_helper.dart';
 
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
@@ -19,9 +20,32 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/stoc
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_return.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
 
-import 'helpers/journal_posting_test_helper.dart';
+class MockAccountingPoster implements InventoryAccountingPoster {
+  @override
+  Future<void> postAccountingEntry({
+    required InventoryDocumentRef document,
+    required double totalAmount,
+    double? valuationAmount,
+    String? accountId,
+    bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
+  }) async {}
+
+  @override
+  Future<void> setAccountingEntryPostingStatus({
+    required InventoryDocumentRef document,
+    required bool isPosted,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
+  }) async {}
+}
 
 void main() {
   late AccountingDatabase db;
@@ -86,12 +110,15 @@ void main() {
       () => activeCompanyId,
     );
 
+
     postingCoordinator = PostingCoordinatorImpl(
       db: invDb,
       stockValidationService: validationService,
       dependencyDetector: dependencyDetector,
       postingEngine: postingEngine,
       readCompanyId: () => activeCompanyId,
+      accountingPoster: MockAccountingPoster(),
+      permissionGuard: CallbackPermissionGuard((codes) => true),
     );
 
     activeCompanyId = companyA;

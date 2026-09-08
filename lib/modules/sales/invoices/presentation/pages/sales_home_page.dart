@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
@@ -22,7 +23,17 @@ class SalesHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: l10n.moduleSales, showBackButton: true),
+      appBar: CustomAppBar(
+        title: l10n.moduleSales,
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settingsTitle,
+            onPressed: () => context.push('/sales/settings'),
+          ),
+        ],
+      ),
       body: AppContentConstraint(
         child: ListView(
           padding: AppConstants.pageInsets(context),
@@ -71,9 +82,27 @@ class SalesHomePage extends ConsumerWidget {
                         duration: 280.ms,
                       ),
             ),
+            const SizedBox(height: AppSpacing.md),
+            AppModuleHubCard(
+                  icon: Icons.tune_outlined,
+                  title: l10n.localeName == 'ar' ? 'إعدادات المبيعات' : 'Sales Settings',
+                  subtitle: l10n.localeName == 'ar'
+                      ? 'ربط الحسابات وإعدادات موديول المبيعات'
+                      : 'Account bindings and sales master settings',
+                  onTap: () => context.push('/sales/settings'),
+                )
+                .animate()
+                .fadeIn(delay: 120.ms, duration: 280.ms)
+                .slideY(
+                  begin: 0.04,
+                  end: 0,
+                  delay: 120.ms,
+                  duration: 280.ms,
+                ),
           ],
         ),
       ),
     );
   }
 }
+

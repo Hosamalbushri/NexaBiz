@@ -75,7 +75,7 @@ void main() {
         await warehouseRepo.saveWarehouse(wh);
 
         final service = CompanyWarehouseConfigService(
-          warehouseRepository: warehouseRepo,
+          warehouseLookupPort: warehouseRepo,
           initRepository: initRepo,
         );
 
@@ -129,7 +129,7 @@ void main() {
         );
 
         final serviceA = CompanyWarehouseConfigService(
-          warehouseRepository: warehouseRepoA,
+          warehouseLookupPort: warehouseRepoA,
           initRepository: initRepoA,
         );
 
@@ -161,7 +161,7 @@ void main() {
         );
 
         final service = CompanyWarehouseConfigService(
-          warehouseRepository: warehouseRepo,
+          warehouseLookupPort: warehouseRepo,
           initRepository: initRepo,
         );
 
@@ -210,7 +210,7 @@ void main() {
         await warehouseRepo.saveWarehouse(inactiveWh);
 
         final service = CompanyWarehouseConfigService(
-          warehouseRepository: warehouseRepo,
+          warehouseLookupPort: warehouseRepo,
           initRepository: initRepo,
         );
 
@@ -318,7 +318,7 @@ void main() {
           ),
         );
         final serviceA = CompanyWarehouseConfigService(
-          warehouseRepository: WarehouseRepositoryImpl(
+          warehouseLookupPort: WarehouseRepositoryImpl(
             db,
             null,
             () => 'company-A',
@@ -345,7 +345,7 @@ void main() {
           ),
         );
         final serviceB = CompanyWarehouseConfigService(
-          warehouseRepository: WarehouseRepositoryImpl(
+          warehouseLookupPort: WarehouseRepositoryImpl(
             db,
             null,
             () => 'company-B',

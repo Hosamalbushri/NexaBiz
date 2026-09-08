@@ -112,7 +112,8 @@ class DeviceInitializationRecord {
 
 /// Persists and loads platform settings from Hive.
 class SettingsRepository {
-  SettingsRepository({this._box});
+  // ignore: prefer_initializing_formals
+  SettingsRepository({Box<dynamic>? box}) : _box = box;
 
   Box<dynamic>? _box;
 
