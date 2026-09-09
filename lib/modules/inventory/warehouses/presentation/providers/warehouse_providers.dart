@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 
 import '../../data/repositories/warehouse_repository_impl.dart';
 import '../../domain/entities/product_warehouse_stock.dart';

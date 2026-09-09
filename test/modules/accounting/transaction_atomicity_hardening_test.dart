@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';

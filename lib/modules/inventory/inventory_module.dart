@@ -36,7 +36,6 @@ import 'master_data/presentation/pages/inventory_master_data_page.dart';
 import 'shared/presentation/pages/inventory_master_settings_page.dart';
 import 'products/presentation/pages/products_list_page.dart';
 
-
 import 'products/presentation/pages/products_settings_page.dart';
 import 'products/presentation/providers/product_providers.dart';
 import 'shared/presentation/pages/inventory_home_page.dart';
@@ -55,7 +54,6 @@ import 'stock_movements/presentation/pages/stock_receipt_details_page.dart';
 import 'stock_movements/presentation/pages/stock_receipt_form_page.dart';
 
 import 'warehouses/presentation/pages/stock_transfer_form_page.dart';
-
 
 /// Inventory business module — self-contained routes and features.
 ///
@@ -326,7 +324,8 @@ class InventoryModule extends AppModule {
                   path: ':id',
                   name: 'inventoryStockReceiptsDetails',
                   builder: (context, state) => StockReceiptDetailsPage(
-                    receiptId: AppRouteParamParser.tryParseString(
+                    receiptId:
+                        AppRouteParamParser.tryParseString(
                           state.pathParameters['id'],
                         ) ??
                         '',
@@ -358,7 +357,8 @@ class InventoryModule extends AppModule {
                   path: ':id',
                   name: 'inventoryStockIssuesDetails',
                   builder: (context, state) => StockIssueDetailsPage(
-                    issueId: AppRouteParamParser.tryParseString(
+                    issueId:
+                        AppRouteParamParser.tryParseString(
                           state.pathParameters['id'],
                         ) ??
                         '',
@@ -395,9 +395,9 @@ class InventoryModule extends AppModule {
             GoRoute(
               path: 'import',
               name: 'inventoryProductsImport',
-              builder: (context, state) =>
-                  const UniversalImportPage(initialProfileId: 'PROF-INVENTORY-PRODUCTS'),
-
+              builder: (context, state) => const UniversalImportPage(
+                initialProfileId: 'PROF-INVENTORY-PRODUCTS',
+              ),
             ),
             GoRoute(
               path: 'barcode',
@@ -425,39 +425,45 @@ class InventoryModule extends AppModule {
         GoRoute(
           path: 'settings',
           name: 'inventoryMasterSettings',
-          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
+          builder: (context, state) =>
+              const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
         GoRoute(
           path: 'master-data',
           name: 'inventoryMasterData',
-          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
+          builder: (context, state) =>
+              const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
         GoRoute(
           path: 'warehouses/settings',
           name: 'inventoryWarehousesSettings',
-          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
+          builder: (context, state) =>
+              const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
         GoRoute(
           path: 'categories/settings',
           name: 'inventoryCategoriesSettings',
-          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
+          builder: (context, state) =>
+              const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
         GoRoute(
           path: 'cost-valuation/settings',
           name: 'inventoryCostValuationSettings',
-          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 0),
+          builder: (context, state) =>
+              const InventoryMasterSettingsPage(initialTabIndex: 0),
         ),
         GoRoute(
           path: 'products/settings',
           name: 'inventoryProductsSettings',
-          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 1),
+          builder: (context, state) =>
+              const InventoryMasterSettingsPage(initialTabIndex: 1),
         ),
         GoRoute(
           path: 'stock-count/settings',
           name: 'inventoryStockCountSettings',
-          builder: (context, state) => const InventoryMasterSettingsPage(initialTabIndex: 2),
+          builder: (context, state) =>
+              const InventoryMasterSettingsPage(initialTabIndex: 2),
         ),
-
 
         GoRoute(
           path: 'stock-transfers',

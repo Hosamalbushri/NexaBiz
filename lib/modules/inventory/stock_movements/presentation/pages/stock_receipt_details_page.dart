@@ -392,7 +392,12 @@ class _StockReceiptDetailsPageState
                   _DocumentHero(
                     documentNumber: receipt.receiptNumber,
                     currencyCode: receipt.currencyCode,
-                    valuationCurrencyCode: ref.watch(inventoryValuationCurrencyStateProvider).valueOrNull?.currencyCode ?? '',
+                    valuationCurrencyCode:
+                        ref
+                            .watch(inventoryValuationCurrencyStateProvider)
+                            .valueOrNull
+                            ?.currencyCode ??
+                        '',
                     exchangeRate: receipt.exchangeRate,
                     totalCost: totalCostSum,
                     status: receipt.status,
@@ -596,7 +601,8 @@ class _DocumentHero extends StatelessWidget {
         : currencyCode;
     final valCurrency = AppCurrencies.byCode(valCurrencyCode);
 
-    final isForeign = currencyCode.toUpperCase() != valCurrencyCode.toUpperCase();
+    final isForeign =
+        currencyCode.toUpperCase() != valCurrencyCode.toUpperCase();
     final effectiveFx = exchangeRate > 0 ? exchangeRate : 1.0;
     final valuationTotalCost = isForeign ? totalCost * effectiveFx : totalCost;
 
@@ -708,7 +714,11 @@ class _DocumentHero extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.monetization_on_outlined, size: 18, color: scheme.primary),
+                    Icon(
+                      Icons.monetization_on_outlined,
+                      size: 18,
+                      color: scheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

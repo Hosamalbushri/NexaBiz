@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/utils/business_date.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/discount_type.dart';
@@ -1035,7 +1035,8 @@ class SaleRepositoryImpl implements SaleRepository {
                 ),
                 cashAccountId: Value(payload['cashAccountId'] as String?),
                 currencyCode: (payload['currencyCode'] as String?) ?? '',
-                baseCurrencyCode: (payload['baseCurrencyCode'] as String?) ?? '',
+                baseCurrencyCode:
+                    (payload['baseCurrencyCode'] as String?) ?? '',
                 exchangeRate: Value(
                   (payload['exchangeRate'] as num?)?.toDouble() ?? 1,
                 ),

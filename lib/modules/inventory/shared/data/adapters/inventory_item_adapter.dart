@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_count/domain/entities/inventory_item.dart';
 
 /// Hive type adapter for [InventoryItem] (typeId: 0).

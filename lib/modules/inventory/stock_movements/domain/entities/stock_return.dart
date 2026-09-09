@@ -1,6 +1,6 @@
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'stock_movement_line.dart';
 
 enum StockReturnType {

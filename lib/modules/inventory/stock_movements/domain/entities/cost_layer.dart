@@ -1,5 +1,5 @@
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 
 /// Represents a single batch/layer of inventory purchased or received at a specific unit cost,
 /// preserving historical multi-currency valuation (document currency vs inventory valuation currency).
@@ -34,7 +34,8 @@ class CostLayer {
   }) : id = id ?? generateUuidV4(),
        remainingQty = remainingQty ?? receivedQty,
        totalCost = totalCost ?? (receivedQty * unitCost),
-       inventoryCurrencyId = (inventoryCurrencyId != null && inventoryCurrencyId.isNotEmpty)
+       inventoryCurrencyId =
+           (inventoryCurrencyId != null && inventoryCurrencyId.isNotEmpty)
            ? inventoryCurrencyId
            : (documentCurrencyId ?? ''),
        unitCostInventoryCurrency = unitCostInventoryCurrency ?? unitCost,

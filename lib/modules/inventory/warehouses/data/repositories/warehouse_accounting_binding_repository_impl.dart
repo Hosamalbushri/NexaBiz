@@ -35,29 +35,36 @@ class WarehouseAccountingBindingRepositoryImpl
     var targetId = warehouseId.trim();
 
     if (targetId.isEmpty) {
-      final defaultWh = await (db.select(db.warehouses)..where(
-        (tbl) =>
-            tbl.companyId.equals(companyId) &
-            tbl.isDefault.equals(true) &
-            tbl.deletedAt.isNull(),
-      )).getSingleOrNull();
+      final defaultWh =
+          await (db.select(db.warehouses)..where(
+                (tbl) =>
+                    tbl.companyId.equals(companyId) &
+                    tbl.isDefault.equals(true) &
+                    tbl.deletedAt.isNull(),
+              ))
+              .getSingleOrNull();
       if (defaultWh != null) {
         targetId = defaultWh.uuid;
       } else {
-        final anyWh = await (db.select(db.warehouses)..where(
-          (tbl) => tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
-        )).getSingleOrNull();
+        final anyWh =
+            await (db.select(db.warehouses)..where(
+                  (tbl) =>
+                      tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
+                ))
+                .getSingleOrNull();
         if (anyWh != null) {
           targetId = anyWh.uuid;
         }
       }
     } else {
-      final whByCode = await (db.select(db.warehouses)..where(
-        (tbl) =>
-            (tbl.code.equals(targetId) | tbl.uuid.equals(targetId)) &
-            tbl.companyId.equals(companyId) &
-            tbl.deletedAt.isNull(),
-      )).getSingleOrNull();
+      final whByCode =
+          await (db.select(db.warehouses)..where(
+                (tbl) =>
+                    (tbl.code.equals(targetId) | tbl.uuid.equals(targetId)) &
+                    tbl.companyId.equals(companyId) &
+                    tbl.deletedAt.isNull(),
+              ))
+              .getSingleOrNull();
       if (whByCode != null) {
         targetId = whByCode.uuid;
       }
@@ -65,35 +72,40 @@ class WarehouseAccountingBindingRepositoryImpl
 
     var row = targetId.isNotEmpty
         ? await (db.select(db.warehouseAccountingBindings)..where(
-              (tbl) =>
-                  tbl.warehouseId.equals(targetId) &
-                  tbl.companyId.equals(companyId) &
-                  tbl.deletedAt.isNull(),
-            ))
-            .getSingleOrNull()
+                (tbl) =>
+                    tbl.warehouseId.equals(targetId) &
+                    tbl.companyId.equals(companyId) &
+                    tbl.deletedAt.isNull(),
+              ))
+              .getSingleOrNull()
         : null;
 
     if (row == null) {
-      final defaultWh = await (db.select(db.warehouses)..where(
-        (tbl) =>
-            tbl.companyId.equals(companyId) &
-            tbl.isDefault.equals(true) &
-            tbl.deletedAt.isNull(),
-      )).getSingleOrNull();
+      final defaultWh =
+          await (db.select(db.warehouses)..where(
+                (tbl) =>
+                    tbl.companyId.equals(companyId) &
+                    tbl.isDefault.equals(true) &
+                    tbl.deletedAt.isNull(),
+              ))
+              .getSingleOrNull();
       if (defaultWh != null && defaultWh.uuid != targetId) {
-        row = await (db.select(db.warehouseAccountingBindings)..where(
-              (tbl) =>
-                  tbl.warehouseId.equals(defaultWh.uuid) &
-                  tbl.companyId.equals(companyId) &
-                  tbl.deletedAt.isNull(),
-            ))
-            .getSingleOrNull();
+        row =
+            await (db.select(db.warehouseAccountingBindings)..where(
+                  (tbl) =>
+                      tbl.warehouseId.equals(defaultWh.uuid) &
+                      tbl.companyId.equals(companyId) &
+                      tbl.deletedAt.isNull(),
+                ))
+                .getSingleOrNull();
       }
     }
 
-    row ??= await (db.select(db.warehouseAccountingBindings)..where(
-      (tbl) => tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
-    )).getSingleOrNull();
+    row ??=
+        await (db.select(db.warehouseAccountingBindings)..where(
+              (tbl) => tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
 
     if (row == null) return null;
 

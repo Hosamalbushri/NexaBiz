@@ -9,7 +9,7 @@ import 'package:stock_count/app/reports/receivables_payables_report_data_adapter
 import 'package:stock_count/app/reports/trial_balance_report_data_adapter.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/core/utils/decimal_money.dart';
 import 'package:stock_count/core/utils/id_generator.dart';

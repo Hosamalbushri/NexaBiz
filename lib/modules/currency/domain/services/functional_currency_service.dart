@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import '../entities/currency.dart';
@@ -114,9 +114,7 @@ class FunctionalCurrencyService {
       return count.isNotEmpty;
     } else {
       final query = database.select(database.journalEntries)
-        ..where(
-          (t) => t.isPosted.equals(true) & t.deletedAt.isNull(),
-        );
+        ..where((t) => t.isPosted.equals(true) & t.deletedAt.isNull());
       final count = await query.get();
       return count.isNotEmpty;
     }

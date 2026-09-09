@@ -72,7 +72,6 @@ String _masterDataSubtitle(AppLocalizations l10n) => l10n.localeName == 'ar'
     ? 'إدارة المستودعات، الشجرة، وسياست التقييم'
     : 'Manage warehouses, tree, and costing rules';
 
-
 String _stockMovementsTitle(AppLocalizations l10n) => 'الحركة';
 String _stockMovementsSubtitle(AppLocalizations l10n) =>
     'أوامر الصرف وأوامر التوريد للمخزون';

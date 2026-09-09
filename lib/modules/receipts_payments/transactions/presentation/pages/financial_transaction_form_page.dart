@@ -31,6 +31,8 @@ import 'package:stock_count/core/widgets/app_kpi_tile.dart';
 import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
 import '../widgets/rp_error_messages.dart';
+import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 
 class FinancialTransactionFormPage extends ConsumerStatefulWidget {
   const FinancialTransactionFormPage({
@@ -337,6 +339,8 @@ class _FinancialTransactionFormPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
     final state = ref.watch(transactionComposerProvider);
     final type = state.transactionType;
     final title = _isEdit
@@ -351,11 +355,28 @@ class _FinancialTransactionFormPageState
       );
     }
 
-    if (_loadError != null) {
+    if (_loadError != null || baseCurrency == null) {
+      final isMissingCurrency = baseCurrency == null ||
+          (_loadError?.contains('العملة') ?? false) ||
+          (_loadError?.contains('currency') ?? false) ||
+          (_loadError?.contains('Currency') ?? false);
+
       return AppResponsiveScaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(title: title, showBackButton: true),
-        body: AppErrorState(message: _loadError!, onRetry: _loadPage),
+        body: AppErrorState(
+          message: isMissingCurrency
+              ? (isArabic
+                  ? 'لم يتم إعداد العملة الرئيسية للنظام بعد. يرجى إضافة وتعيين العملة الرئيسية من دليل العملات لتشغيل المقبوضات والمدفوعات.'
+                  : 'System base currency is not configured. Please set up the base currency from the currency catalog to enable receipts and payments.')
+              : (_loadError ?? l10n.somethingWentWrong),
+          retryLabel: isMissingCurrency
+              ? (isArabic ? 'إعداد العملة الرئيسية' : 'Set Up Base Currency')
+              : (isArabic ? 'إعادة المحاولة' : 'Retry'),
+          onRetry: isMissingCurrency
+              ? () => showMissingCurrencyDialog(context)
+              : _loadPage,
+        ),
       );
     }
 

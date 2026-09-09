@@ -1,0 +1,51 @@
+import 'package:stock_count/core/auth/ports/session_context_port.dart';
+
+import '../domain/entities/auth_user.dart';
+import '../presentation/providers/auth_providers.dart';
+import 'local_auth_store.dart';
+
+/// Adapter implementation of [SessionContextPort] for the authentication module.
+///
+/// Converts module-level authentication state and [LocalAuthStore] data into
+/// the abstract core [SessionContextPort] interface.
+class SessionContextAdapter implements SessionContextPort {
+  /// Creates a [SessionContextAdapter] with the provided [authState] and optional [localAuthStore].
+  const SessionContextAdapter({required this.authState, this.localAuthStore});
+
+  /// The current authentication state snapshot.
+  final AuthState authState;
+
+  /// Optional local auth store reference.
+  final LocalAuthStore? localAuthStore;
+
+  @override
+  bool get isAuthenticated =>
+      authState.isAuthenticated && authState.session != null;
+
+  @override
+  String? get currentCompanyId => authState.session?.currentCompanyId;
+
+  @override
+  String? get activeCompanyId => authState.session?.activeCompanyId;
+
+  @override
+  List<CompanyInfo> get companies {
+    final List<AuthCompany> sessionCompanies =
+        authState.session?.companies ?? const <AuthCompany>[];
+    return sessionCompanies
+        .map(
+          (AuthCompany company) =>
+              CompanyInfo(id: company.id, name: company.name),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  String? get userId => authState.session?.user.id;
+
+  @override
+  String? get deviceId => authState.session?.deviceId;
+
+  @override
+  bool get isStandalone => authState.session?.user.isSuperAdmin ?? false;
+}

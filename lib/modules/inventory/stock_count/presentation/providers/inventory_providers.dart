@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import '../../data/datasources/excel_export_datasource.dart';
 import '../../data/datasources/excel_import_datasource.dart';
 import '../../data/datasources/pdf_export_datasource.dart';

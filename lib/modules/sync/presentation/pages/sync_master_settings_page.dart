@@ -28,7 +28,9 @@ class SyncMasterSettingsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isAr ? 'إعدادات وتهيئة محرك التزامن' : 'Sync Engine Master Settings',
+        title: isAr
+            ? 'إعدادات وتهيئة محرك التزامن'
+            : 'Sync Engine Master Settings',
         showBackButton: true,
       ),
       body: ListView(
@@ -40,7 +42,9 @@ class SyncMasterSettingsPage extends ConsumerWidget {
 
           // Section 1: Active Sync Engine Controls & Monitor
           SettingsGroupLabel(
-            isAr ? 'حالة التزامن والاتصال بالخادم' : 'Live Sync Status & Engine Control',
+            isAr
+                ? 'حالة التزامن والاتصال بالخادم'
+                : 'Live Sync Status & Engine Control',
           ),
           const SettingsGroup(
             children: [
@@ -51,20 +55,26 @@ class SyncMasterSettingsPage extends ConsumerWidget {
 
           // Section 2: Sync Conflicts & Outbox Management List Menu
           SettingsGroupLabel(
-            isAr ? 'إدارة التعارضات وصندوق الصادر' : 'Conflict Management & Inspection',
+            isAr
+                ? 'إدارة التعارضات وصندوق الصادر'
+                : 'Conflict Management & Inspection',
           ),
           SettingsGroup(
             children: [
               SettingsTile(
                 icon: Icons.sync_problem_rounded,
                 iconColor: Colors.deepOrange,
-                title: isAr ? 'إدارة وسجل فك التعارضات' : 'Sync Conflicts Management',
+                title: isAr
+                    ? 'إدارة وسجل فك التعارضات'
+                    : 'Sync Conflicts Management',
                 subtitle: isAr
                     ? 'عرض وتصفية السجلات المتعادلة وإصلاح تعارض البيانات يدوياً'
                     : 'Review and resolve conflicting data records between local & cloud',
                 showChevron: true,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AdminSyncConflictPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const AdminSyncConflictPage(),
+                  ),
                 ),
               ),
             ],
@@ -98,7 +108,9 @@ class SyncMasterSettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'مركز تهيئة وإعدادات المزامنة' : 'Sync Engine Settings Center',
+                  isAr
+                      ? 'مركز تهيئة وإعدادات المزامنة'
+                      : 'Sync Engine Settings Center',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

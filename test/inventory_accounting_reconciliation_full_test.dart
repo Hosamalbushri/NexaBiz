@@ -30,6 +30,14 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock_transfer_repository_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
 
+import 'package:stock_count/core/domain/entities/document_ref.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/accounting/journals/data/services/journal_builder_impl.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/inventory/shared/data/adapters/inventory_subledger_query_adapter.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
+
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
@@ -82,20 +90,6 @@ void main() {
       () => tenantId,
     );
 
-    accountingPoster = InventoryAccountingPosterImpl(
-      accDb,
-      readCompanyId: () => tenantId,
-    );
-
-    coordinator = PostingCoordinatorImpl(
-      db: invDb,
-      stockValidationService: validationService,
-      dependencyDetector: depDetector,
-      postingEngine: postingEngine,
-      accountingPoster: accountingPoster,
-      readCompanyId: () => tenantId,
-    );
-
     validator = legacyPeriodValidator();
 
     final accountRepo = AccountRepositoryImpl(
@@ -113,6 +107,33 @@ void main() {
     journalPostingService = JournalPostingService(
       journals: journalRepo,
       periodValidator: validator,
+    );
+
+    final bindingRepo = WarehouseAccountingBindingRepositoryImpl(
+      invDb,
+      () => tenantId,
+    );
+
+    final journalBuilder = JournalBuilderImpl(
+      accountRepository: accountRepo,
+      currencyRateRepository: CurrencyRateRepositoryImpl(accDb),
+      bindingRepo: bindingRepo,
+      readCompanyId: () => tenantId,
+    );
+
+    accountingPoster = InventoryAccountingPosterImpl(
+      journalPostingService: journalPostingService,
+      journalBuilder: journalBuilder,
+    );
+
+    coordinator = PostingCoordinatorImpl(
+      db: invDb,
+      stockValidationService: validationService,
+      dependencyDetector: depDetector,
+      postingEngine: postingEngine,
+      accountingPoster: accountingPoster,
+      permissionGuard: const AllowAllPermissionGuard(),
+      readCompanyId: () => tenantId,
     );
 
     final accValService = AccountValidationServiceImpl(accountRepo);
@@ -133,7 +154,9 @@ void main() {
     );
 
     reconEngine = InventoryAccountingReconciliationEngine(
-      inventoryDb: invDb,
+      inventorySubledgerQuery: InventorySubledgerQueryAdapter(
+        inventoryDb: invDb,
+      ),
       accountingDb: accDb,
       readCompanyId: () => tenantId,
     );
@@ -210,6 +233,35 @@ void main() {
             updatedAt: now,
           ),
         );
+
+    // Seed Warehouses
+    for (final wh in [warehouseA, warehouseB]) {
+      await invDb.into(invDb.warehouses).insert(
+        WarehousesCompanion.insert(
+          uuid: wh,
+          name: 'Warehouse $wh',
+          code: wh,
+          companyId: Value(tenantId),
+          isDefault: Value(wh == warehouseA),
+          isActive: const Value(true),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      await invDb.into(invDb.warehouseAccountingBindings).insert(
+        WarehouseAccountingBindingsCompanion.insert(
+          uuid: generateUuidV4(),
+          warehouseId: wh,
+          companyId: tenantId,
+          inventoryAssetAccountId: Value('11111111-1111-1111-1111-111111111111'),
+          cogsAccountId: Value('22222222-2222-2222-2222-222222222222'),
+          inventoryAdjustmentAccountId: Value('22222222-2222-2222-2222-222222222222'),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+    }
   });
 
   tearDown(() async {
@@ -231,6 +283,7 @@ void main() {
           supplier: '33333333-3333-3333-3333-333333333333',
           accountId: '33333333-3333-3333-3333-333333333333',
           receiptDate: DateTime.now().toUtc(),
+          warehouse: warehouseA,
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
@@ -248,7 +301,9 @@ void main() {
         );
 
         await stockRepo.saveReceipt(receipt);
-        final result = await orchestrator.postReceipt(receipt: receipt);
+        final result = await orchestrator.postStockReceiptData(
+          data: receipt.toPostingData(),
+        );
         expect(result, isA<OrchestrationSuccess>());
 
         // Verify Reconciliation Subledger == GL Inventory Balance ($1,500.0)
@@ -272,6 +327,7 @@ void main() {
           supplier: '33333333-3333-3333-3333-333333333333',
           accountId: '33333333-3333-3333-3333-333333333333',
           receiptDate: DateTime.now().toUtc(),
+          warehouse: warehouseA,
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
@@ -288,7 +344,7 @@ void main() {
           companyId: tenantId,
         );
         await stockRepo.saveReceipt(receipt);
-        await orchestrator.postReceipt(receipt: receipt);
+        await orchestrator.postStockReceiptData(data: receipt.toPostingData());
 
         // Step B: Post Issue of 40 units ($400 Cost of Goods Sold)
         final issue = StockIssue(
@@ -297,6 +353,7 @@ void main() {
           destination: '22222222-2222-2222-2222-222222222222',
           accountId: '22222222-2222-2222-2222-222222222222',
           issueDate: DateTime.now().toUtc(),
+          warehouse: warehouseA,
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
@@ -313,7 +370,7 @@ void main() {
           companyId: tenantId,
         );
         await stockRepo.saveIssue(issue);
-        await orchestrator.postIssue(issue: issue);
+        await orchestrator.postStockIssueData(data: issue.toPostingData());
 
         // Subledger remaining: 60 units @ $10 = $600
         // GL balance remaining: Debit $1,000 (Receipt) - Credit $400 (Issue) = $600
@@ -354,7 +411,7 @@ void main() {
           ],
         );
         await stockRepo.saveReceipt(receipt);
-        await orchestrator.postReceipt(receipt: receipt);
+        await orchestrator.postStockReceiptData(data: receipt.toPostingData());
 
         // Step B: Transfer 20 units from WH-A to WH-B
         final transferId = generateUuidV4();
@@ -427,7 +484,7 @@ void main() {
           ],
         );
         await stockRepo.saveReceipt(receipt);
-        await orchestrator.postReceipt(receipt: receipt);
+        await orchestrator.postStockReceiptData(data: receipt.toPostingData());
 
         // Step B: Post Issue of 20 units @ $30 = $600
         final issueId = generateUuidV4();
@@ -455,12 +512,18 @@ void main() {
           ],
         );
         await stockRepo.saveIssue(issue);
-        await orchestrator.postIssue(issue: issue);
+        await orchestrator.postStockIssueData(data: issue.toPostingData());
 
         // Step C: Unpost Issue (Reversal) via Orchestrator
         final fetchedIssue = await stockRepo.getIssueById(issueId);
-        final unpostResult = await orchestrator.unpostIssue(
-          issue: fetchedIssue!,
+        final unpostResult = await orchestrator.unpostStockDocumentRef(
+          docRef: DocumentRef(
+            documentId: fetchedIssue!.id,
+            documentNumber: fetchedIssue.issueNumber,
+            documentType: DocumentType.stockIssue,
+            documentDate: fetchedIssue.issueDate,
+            warehouseId: fetchedIssue.warehouse,
+          ),
         );
         expect(unpostResult, isA<OrchestrationSuccess>());
 
@@ -485,6 +548,7 @@ void main() {
           supplier: '33333333-3333-3333-3333-333333333333',
           accountId: '33333333-3333-3333-3333-333333333333',
           receiptDate: DateTime.now().toUtc(),
+          warehouse: warehouseA,
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
@@ -501,7 +565,7 @@ void main() {
           companyId: tenantId,
         );
         await stockRepo.saveReceipt(receipt);
-        await orchestrator.postReceipt(receipt: receipt);
+        await orchestrator.postStockReceiptData(data: receipt.toPostingData());
 
         // Tamper with GL line by altering debit amount to cause $100 inconsistency
         final jes = await accDb.select(accDb.journalEntries).get();

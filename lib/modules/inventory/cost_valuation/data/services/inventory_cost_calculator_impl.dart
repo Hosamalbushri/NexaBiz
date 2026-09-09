@@ -34,8 +34,9 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
       );
     }
 
-    final effectiveExchangeRate =
-        (exchangeRate != null && exchangeRate > 0) ? exchangeRate : 1.0;
+    final effectiveExchangeRate = (exchangeRate != null && exchangeRate > 0)
+        ? exchangeRate
+        : 1.0;
     final effectiveValuationUnitCost = unitCost * effectiveExchangeRate;
 
     if (effectiveValuationUnitCost <= 0.0 && !allowZeroCost) {
@@ -50,8 +51,9 @@ class InventoryCostCalculatorImpl implements InventoryCostCalculator {
       companyId: companyId,
     );
 
-    final roundedUnitCost =
-        MonetaryPrecisionUtils.roundUnitCost(effectiveValuationUnitCost);
+    final roundedUnitCost = MonetaryPrecisionUtils.roundUnitCost(
+      effectiveValuationUnitCost,
+    );
     final totalCost = MonetaryPrecisionUtils.calculateTotalCost(
       unitCost: roundedUnitCost,
       quantity: quantity,

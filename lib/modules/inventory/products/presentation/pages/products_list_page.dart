@@ -16,7 +16,7 @@ import 'package:stock_count/core/widgets/app_pagination_bar.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_view_mode_toggle.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/models/product_exception.dart';
 import 'package:stock_count/modules/inventory/permissions/inventory_permission_package.dart';

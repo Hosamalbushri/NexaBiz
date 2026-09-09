@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/core/utils/decimal_money.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';

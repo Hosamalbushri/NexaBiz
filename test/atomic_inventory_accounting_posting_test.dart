@@ -24,6 +24,10 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/accounting/journals/data/services/journal_builder_impl.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 import 'helpers/journal_posting_test_helper.dart';
@@ -101,10 +105,21 @@ void main() {
       periodValidator: periodValidator,
     );
 
-    accountingPoster = InventoryAccountingPosterImpl(
-      accDb,
-      journalPostingService: journalPostingService,
+    final bindingRepo = WarehouseAccountingBindingRepositoryImpl(
+      invDb,
+      () => testCompanyId,
+    );
+
+    final journalBuilder = JournalBuilderImpl(
+      accountRepository: accountRepo,
+      currencyRateRepository: CurrencyRateRepositoryImpl(accDb),
+      bindingRepo: bindingRepo,
       readCompanyId: () => testCompanyId,
+    );
+
+    accountingPoster = InventoryAccountingPosterImpl(
+      journalPostingService: journalPostingService,
+      journalBuilder: journalBuilder,
     );
 
     syncQueue = SyncQueue(
@@ -144,6 +159,7 @@ void main() {
       dependencyDetector: dependencyDetector,
       postingEngine: postingEngine,
       accountingPoster: accountingPoster,
+      permissionGuard: const AllowAllPermissionGuard(),
       readCompanyId: () => testCompanyId,
       syncQueue: syncQueue,
     );
@@ -180,6 +196,34 @@ void main() {
       ),
     );
     cogsAccountUuid = cogsAcc.uuid;
+
+    // Seed default warehouse and binding
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await invDb.into(invDb.warehouses).insert(
+      WarehousesCompanion.insert(
+        uuid: 'WH-01',
+        name: 'Default Warehouse',
+        code: 'WH-01',
+        companyId: Value(testCompanyId),
+        isDefault: Value(true),
+        isActive: const Value(true),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await invDb.into(invDb.warehouseAccountingBindings).insert(
+      WarehouseAccountingBindingsCompanion.insert(
+        uuid: generateUuidV4(),
+        warehouseId: 'WH-01',
+        companyId: testCompanyId,
+        inventoryAssetAccountId: Value(invAccountUuid),
+        cogsAccountId: Value(cogsAccountUuid),
+        inventoryAdjustmentAccountId: Value(cogsAccountUuid),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
   });
 
   tearDown(() async {
@@ -230,14 +274,13 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
+          warehouseId: 'WH-01',
           status: InventoryDocumentStatus.draft,
         );
 
         // Attempt posting — expecting failure due to invalid specified account
-        await expectLater(
-          postingCoordinator.post(document: docRef),
-          throwsA(isA<StateError>()),
-        );
+        final result = await postingCoordinator.post(document: docRef);
+        expect(result, isA<PostInvalidStatus>());
 
         // VERIFY ATOMIC ROLLBACK:
         // A. Document status in database MUST remain 'draft'
@@ -301,6 +344,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
+          warehouseId: 'WH-01',
           status: InventoryDocumentStatus.draft,
         );
 
@@ -435,6 +479,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
+          warehouseId: 'WH-01',
           status: InventoryDocumentStatus.draft,
         );
 
@@ -449,6 +494,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
+          warehouseId: 'WH-01',
           status: InventoryDocumentStatus.posted,
         );
 

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../data/admin_api_repository.dart';
 import '../../../domain/repositories/admin_repository.dart';
 import '../../../domain/usecases/manage_admin_branches_usecase.dart';

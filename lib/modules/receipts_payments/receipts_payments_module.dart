@@ -161,7 +161,8 @@ class ReceiptsPaymentsModule extends AppModule {
         GoRoute(
           path: 'settings',
           name: 'receiptsPaymentsMasterSettings',
-          builder: (context, state) => const ReceiptsPaymentsMasterSettingsPage(),
+          builder: (context, state) =>
+              const ReceiptsPaymentsMasterSettingsPage(),
         ),
         GoRoute(
           path: 'receipts',
@@ -230,7 +231,9 @@ class ReceiptsPaymentsModule extends AppModule {
               path: ':id/edit',
               name: 'transfersEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 return CashBoxTransferFormPage(transactionId: id ?? -1);
               },
             ),
@@ -258,7 +261,9 @@ class ReceiptsPaymentsModule extends AppModule {
               path: ':id/edit',
               name: 'exchangesEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 return CurrencyExchangeFormPage(transactionId: id ?? -1);
               },
             ),
@@ -273,7 +278,9 @@ class ReceiptsPaymentsModule extends AppModule {
           path: ':id',
           name: 'receiptsPaymentsDetails',
           builder: (context, state) {
-            final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+            final id = AppRouteParamParser.tryParseInt(
+              state.pathParameters['id'],
+            );
             return FinancialTransactionDetailsPage(transactionId: id ?? -1);
           },
           routes: [
@@ -281,7 +288,9 @@ class ReceiptsPaymentsModule extends AppModule {
               path: 'edit',
               name: 'receiptsPaymentsEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 return FinancialTransactionFormPage(transactionId: id ?? -1);
               },
             ),

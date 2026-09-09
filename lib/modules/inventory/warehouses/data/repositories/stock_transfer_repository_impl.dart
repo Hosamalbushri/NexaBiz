@@ -1,17 +1,17 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 
 import '../../domain/entities/stock_transfer.dart';
 import '../../domain/repositories/stock_transfer_repository.dart';
 
-import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+import 'package:stock_count/core/setup/setup_core.dart';
 
 class StockTransferRepositoryImpl implements StockTransferRepository {
   StockTransferRepositoryImpl({

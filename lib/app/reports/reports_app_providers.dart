@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/core/report_engine/report_engine.dart';
+import 'package:stock_count/modules/reports/providers/sales_period_report_provider.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/providers/currency_providers.dart';
 import '../../modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
@@ -11,7 +12,6 @@ import '../../modules/receipts_payments/transactions/presentation/providers/rp_p
 import '../../modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
 import '../../modules/reports/shared/presentation/providers/reports_providers.dart';
 import '../../modules/sales/invoices/presentation/providers/sale_providers.dart';
-import '../presentation/providers/dashboard_services_provider.dart';
 import 'account_statement_report_data_adapter.dart';
 import 'balance_sheet_report_data_adapter.dart';
 import 'cash_flow_report_data_adapter.dart';
@@ -62,7 +62,9 @@ List<Override> buildReportsAppProviderOverrides() {
         currencyRates: ref.watch(currencyRateRepositoryProvider),
         journals: ref.watch(journalRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
         loadSalesForAccount: (accountUuid) =>
@@ -74,7 +76,9 @@ List<Override> buildReportsAppProviderOverrides() {
       return TrialBalanceReportDataAdapter(
         journals: ref.watch(journalRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );
@@ -83,7 +87,9 @@ List<Override> buildReportsAppProviderOverrides() {
       return JournalBookReportDataAdapter(
         journals: ref.watch(journalRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );
@@ -98,7 +104,9 @@ List<Override> buildReportsAppProviderOverrides() {
         db: ref.watch(inventoryDatabaseProvider),
         salesDb: ref.watch(salesDatabaseProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );
@@ -107,7 +115,9 @@ List<Override> buildReportsAppProviderOverrides() {
       return GeneralLedgerReportDataAdapter(
         journals: ref.watch(journalRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );
@@ -117,7 +127,9 @@ List<Override> buildReportsAppProviderOverrides() {
         journals: ref.watch(journalRepositoryProvider),
         accounts: ref.watch(accountRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );
@@ -127,7 +139,9 @@ List<Override> buildReportsAppProviderOverrides() {
         journals: ref.watch(journalRepositoryProvider),
         accounts: ref.watch(accountRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );
@@ -137,7 +151,9 @@ List<Override> buildReportsAppProviderOverrides() {
         journals: ref.watch(journalRepositoryProvider),
         accounts: ref.watch(accountRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );
@@ -147,7 +163,9 @@ List<Override> buildReportsAppProviderOverrides() {
         journals: ref.watch(journalRepositoryProvider),
         accounts: ref.watch(accountRepositoryProvider),
         loadFunctionalCurrencyCode: () async {
-          final c = await ref.read(currencyRepositoryProvider).getDefaultCurrency();
+          final c = await ref
+              .read(currencyRepositoryProvider)
+              .getDefaultCurrency();
           return c?.code ?? '';
         },
       );

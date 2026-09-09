@@ -218,13 +218,9 @@ class LocalAuthStore {
         .map((m) => m.companyId)
         .toSet();
     final companies = allCompanies
-        .where(
-          (c) => authorizedCompanyIds.contains(c.id),
-        )
+        .where((c) => authorizedCompanyIds.contains(c.id))
         .map((c) {
-          final m = userMemberships.firstWhere(
-            (mem) => mem.companyId == c.id,
-          );
+          final m = userMemberships.firstWhere((mem) => mem.companyId == c.id);
           return AuthCompany(
             id: c.id,
             name: c.name,
@@ -419,13 +415,9 @@ class LocalAuthStore {
         .map((m) => m.companyId)
         .toSet();
     final companies = allCompanies
-        .where(
-          (c) => authorizedCompanyIds.contains(c.id),
-        )
+        .where((c) => authorizedCompanyIds.contains(c.id))
         .map((c) {
-          final m = userMemberships.firstWhere(
-            (mem) => mem.companyId == c.id,
-          );
+          final m = userMemberships.firstWhere((mem) => mem.companyId == c.id);
           return AuthCompany(
             id: c.id,
             name: c.name,
@@ -617,9 +609,7 @@ class LocalAuthStore {
         final memberships = _readMemberships(box);
         final hasActiveMembership = memberships.any(
           (m) =>
-              m.userId == snapshot.user.id &&
-              m.companyId == cid &&
-              m.isActive,
+              m.userId == snapshot.user.id && m.companyId == cid && m.isActive,
         );
 
         if (!companyExists || !hasActiveMembership) {
@@ -1581,20 +1571,12 @@ class LocalAuthStore {
         .map((m) => m.companyId)
         .toSet();
 
-    return allCompanies
-        .where((c) => authorizedCompanyIds.contains(c.id))
-        .map((c) {
-          final m = userMemberships.firstWhere(
-            (mem) => mem.companyId == c.id,
-          );
-          return AuthCompany(
-            id: c.id,
-            name: c.name,
-            code: c.code,
-            role: m.role,
-          );
-        })
-        .toList();
+    return allCompanies.where((c) => authorizedCompanyIds.contains(c.id)).map((
+      c,
+    ) {
+      final m = userMemberships.firstWhere((mem) => mem.companyId == c.id);
+      return AuthCompany(id: c.id, name: c.name, code: c.code, role: m.role);
+    }).toList();
   }
 
   static String hashPassword(String password, String salt) {

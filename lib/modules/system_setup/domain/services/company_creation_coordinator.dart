@@ -1,6 +1,5 @@
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
-import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
+import 'package:stock_count/core/auth/auth_core.dart';
+
 
 class CompanyCreationCoordinator {
   CompanyCreationCoordinator({required this._authStore});

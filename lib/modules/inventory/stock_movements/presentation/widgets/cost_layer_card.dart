@@ -5,11 +5,7 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 
 class CostLayerCard extends StatelessWidget {
-  const CostLayerCard({
-    super.key,
-    required this.layer,
-    this.compact = false,
-  });
+  const CostLayerCard({super.key, required this.layer, this.compact = false});
 
   final CostLayer layer;
   final bool compact;
@@ -20,9 +16,7 @@ class CostLayerCard extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     final valCurrency = AppCurrencies.byCode(
-      layer.inventoryCurrencyId.isNotEmpty
-          ? layer.inventoryCurrencyId
-          : 'YER',
+      layer.inventoryCurrencyId.isNotEmpty ? layer.inventoryCurrencyId : 'YER',
     );
 
     final hasDifferentSourceCurrency =

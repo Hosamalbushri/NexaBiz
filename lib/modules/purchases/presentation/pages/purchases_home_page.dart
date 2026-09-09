@@ -29,9 +29,14 @@ class PurchasesHomePage extends ConsumerWidget {
             Card(
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.people_alt_outlined, color: Colors.indigo),
+                leading: const Icon(
+                  Icons.people_alt_outlined,
+                  color: Colors.indigo,
+                ),
                 title: const Text('دليل الموردين (Suppliers)'),
-                subtitle: const Text('إدارة بيانات الموردين وأرصدتهم والحسابات المربوطة'),
+                subtitle: const Text(
+                  'إدارة بيانات الموردين وأرصدتهم والحسابات المربوطة',
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
                   // Navigate to suppliers catalog
@@ -42,9 +47,14 @@ class PurchasesHomePage extends ConsumerWidget {
             Card(
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.receipt_long_outlined, color: Colors.teal),
+                leading: const Icon(
+                  Icons.receipt_long_outlined,
+                  color: Colors.teal,
+                ),
                 title: const Text('فواتير المشتريات (Purchase Invoices)'),
-                subtitle: const Text('إنشاء واستعراض فواتير المشتريات وترحيل قيود المخزون'),
+                subtitle: const Text(
+                  'إنشاء واستعراض فواتير المشتريات وترحيل قيود المخزون',
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
                   // Navigate to purchase invoices list
@@ -55,9 +65,14 @@ class PurchasesHomePage extends ConsumerWidget {
             Card(
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.inventory_2_outlined, color: Colors.orange),
+                leading: const Icon(
+                  Icons.inventory_2_outlined,
+                  color: Colors.orange,
+                ),
                 title: const Text('إشعارات الاستلام والمخزون (Goods Receipts)'),
-                subtitle: const Text('متابعة الشحنات المستلمة ومطابقة أوامر الشراء'),
+                subtitle: const Text(
+                  'متابعة الشحنات المستلمة ومطابقة أوامر الشراء',
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
                   // Navigate to receiving notes
@@ -68,9 +83,14 @@ class PurchasesHomePage extends ConsumerWidget {
             Card(
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.tune_outlined, color: Colors.blueGrey),
+                leading: const Icon(
+                  Icons.tune_outlined,
+                  color: Colors.blueGrey,
+                ),
                 title: const Text('إعدادات المشتريات (Purchases Settings)'),
-                subtitle: const Text('ربط الحسابات المحاسبية وإعدادات موديول المشتريات'),
+                subtitle: const Text(
+                  'ربط الحسابات المحاسبية وإعدادات موديول المشتريات',
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => context.push('/purchases/settings'),
               ),
@@ -88,4 +108,3 @@ class PurchasesHomePage extends ConsumerWidget {
     );
   }
 }
-

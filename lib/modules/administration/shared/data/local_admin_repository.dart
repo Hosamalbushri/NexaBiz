@@ -91,10 +91,9 @@ class LocalAdminRepository implements AdminRepository {
       'isSuperAdmin': false,
       'mustChangePassword': false,
       'companyIds': companyId != null ? [companyId] : <String>[],
-      'rolesByCompany':
-          companyId != null && roleId != null
-              ? {companyId: roleId}
-              : <String, String>{},
+      'rolesByCompany': companyId != null && roleId != null
+          ? {companyId: roleId}
+          : <String, String>{},
       'permissionsByCompany': <String, List<String>>{},
     };
 
@@ -162,7 +161,10 @@ class LocalAdminRepository implements AdminRepository {
     if (password != null && password.trim().isNotEmpty) {
       final salt = generateUuidV4();
       targetUserMap['passwordSalt'] = salt;
-      targetUserMap['passwordHash'] = LocalAuthStore.hashPassword(password, salt);
+      targetUserMap['passwordHash'] = LocalAuthStore.hashPassword(
+        password,
+        salt,
+      );
     }
 
     final updatedList = List<dynamic>.from(rawUsers);
@@ -307,8 +309,8 @@ class LocalAdminRepository implements AdminRepository {
   // ROLES & PERMISSIONS
   // ==========================================
 
-  static final List<String> kAllLocalPermissionsList =
-      kAllLocalPermissions.toList();
+  static final List<String> kAllLocalPermissionsList = kAllLocalPermissions
+      .toList();
 
   static final List<AdminRoleSummary> _defaultSystemRoles = [
     AdminRoleSummary(
@@ -370,7 +372,8 @@ class LocalAdminRepository implements AdminRepository {
     const AdminRoleSummary(
       id: 'InventoryManager',
       name: 'InventoryManager',
-      description: 'مسؤول مخزن - متابعة المستودعات وتنسيق المنتجات وحركات الصنف',
+      description:
+          'مسؤول مخزن - متابعة المستودعات وتنسيق المنتجات وحركات الصنف',
       systemRole: true,
       permissions: [
         'inventory.view',
@@ -429,7 +432,9 @@ class LocalAdminRepository implements AdminRepository {
   }) async {
     final box = await _box();
     final rawCustom = box.get(_rolesKey);
-    final customList = rawCustom is List ? List<dynamic>.from(rawCustom) : <dynamic>[];
+    final customList = rawCustom is List
+        ? List<dynamic>.from(rawCustom)
+        : <dynamic>[];
 
     final roleId = generateUuidV4();
     final newRoleMap = {

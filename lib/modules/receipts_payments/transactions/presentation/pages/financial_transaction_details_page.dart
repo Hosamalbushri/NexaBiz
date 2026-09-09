@@ -9,7 +9,7 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../../domain/entities/financial_transaction.dart';
 import '../../domain/entities/transaction_status.dart';

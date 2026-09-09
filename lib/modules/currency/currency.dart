@@ -25,5 +25,4 @@ export 'presentation/providers/functional_currency_providers.dart';
 export 'presentation/pages/currencies_manage_page.dart';
 export 'presentation/pages/functional_currency_config_page.dart';
 export 'presentation/pages/currency_rates_page.dart';
-export 'presentation/widgets/app_currency_selector.dart';
-
+export 'package:stock_count/core/widgets/app_currency_selector.dart';

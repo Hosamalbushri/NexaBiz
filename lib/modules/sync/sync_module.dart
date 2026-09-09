@@ -12,7 +12,6 @@ import 'presentation/pages/sync_master_settings_page.dart';
 import 'sync.dart';
 import 'sync_module_settings.dart';
 
-
 /// Sync module — encapsulates offline-first synchronization infrastructure.
 class SyncModule extends AppModule {
   const SyncModule();
@@ -45,10 +44,10 @@ class SyncModule extends AppModule {
   int get sortOrder => 90;
 
   @override
-  bool get isEnabled => false;
+  bool get isEnabled => true;
 
   @override
-  bool get showInLauncher => false;
+  bool get showInLauncher => true;
 
   @override
   List<String> get requiredAnyPermissions => const [
@@ -76,7 +75,6 @@ class SyncModule extends AppModule {
       builder: (context, state) => const SyncMasterSettingsPage(),
     ),
   ];
-
 
   @override
   String label(BuildContext context) => 'المزامنة';

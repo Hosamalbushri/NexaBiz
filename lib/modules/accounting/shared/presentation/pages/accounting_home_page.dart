@@ -183,7 +183,6 @@ class AccountingHomePage extends ConsumerWidget {
   }
 }
 
-
 class _ServiceCard extends StatelessWidget {
   const _ServiceCard({
     required this.icon,

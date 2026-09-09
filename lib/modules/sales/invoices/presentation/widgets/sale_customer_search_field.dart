@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,8 +9,8 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_customer_l
 import '../providers/sale_providers.dart';
 import '../../domain/services/sale_autocomplete_defaults.dart';
 
-/// Inline customer search with live results, built using [AppCustomerSearchField].
-class SaleCustomerSearchField extends ConsumerStatefulWidget {
+/// Sales-specific customer search field wrapper built on canonical [AppCustomerSearchField].
+class SaleCustomerSearchField extends ConsumerWidget {
   const SaleCustomerSearchField({
     super.key,
     required this.onCustomerSelected,
@@ -36,45 +34,7 @@ class SaleCustomerSearchField extends ConsumerStatefulWidget {
   final bool autofocus;
 
   @override
-  ConsumerState<SaleCustomerSearchField> createState() =>
-      _SaleCustomerSearchFieldState();
-}
-
-class _SaleCustomerSearchFieldState
-    extends ConsumerState<SaleCustomerSearchField> {
-  late final TextEditingController _controller;
-  final _focusNode = FocusNode(skipTraversal: true);
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialQuery);
-  }
-
-  @override
-  void didUpdateWidget(covariant SaleCustomerSearchField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialQuery != oldWidget.initialQuery &&
-        widget.initialQuery != _controller.text) {
-      _controller.text = widget.initialQuery;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  Future<List<SaleCustomerRef>> _search(String query) async {
-    return ref
-        .read(saleCustomerLookupPortProvider)
-        .search(query, limit: SaleAutocompleteDefaults.resultLimit);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -83,23 +43,22 @@ class _SaleCustomerSearchFieldState
       isDense: true,
       filled: true,
       fillColor: scheme.surface,
-      hintText: widget.hintText ?? l10n.salesSearchCustomerHint,
+      hintText: hintText ?? l10n.salesSearchCustomerHint,
       hintStyle: theme.textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w600,
         color: scheme.onSurface.withValues(alpha: 0.45),
       ),
       prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
       suffixIcon: IconButton(
-        tooltip: widget.onCancel != null
+        tooltip: onCancel != null
             ? MaterialLocalizations.of(context).cancelButtonLabel
             : MaterialLocalizations.of(context).deleteButtonTooltip,
         onPressed: () {
-          if (widget.onCancel != null) {
-            widget.onCancel!();
+          if (onCancel != null) {
+            onCancel!();
             return;
           }
-          _controller.clear();
-          widget.onQueryChanged?.call('');
+          onQueryChanged?.call('');
         },
         icon: Icon(Icons.close_rounded, color: scheme.onSurfaceVariant),
       ),
@@ -124,28 +83,30 @@ class _SaleCustomerSearchFieldState
     );
 
     return AppCustomerSearchField<SaleCustomerRef>(
-      controller: _controller,
-      focusNode: _focusNode,
-      autofocus: widget.autofocus,
+      initialQuery: initialQuery,
+      autofocus: autofocus,
       minQueryLength: SaleAutocompleteDefaults.customerMinLength,
       debounceDuration: const Duration(
         milliseconds: SaleAutocompleteDefaults.debounceMs,
       ),
       decoration: customDecoration,
-      fetchOptions: _search,
+      fetchOptions: (query) => ref
+          .read(saleCustomerLookupPortProvider)
+          .search(query, limit: SaleAutocompleteDefaults.resultLimit),
       itemLabelBuilder: (c) => c.name,
-      onQueryChanged: widget.onQueryChanged,
+      onQueryChanged: onQueryChanged,
+      onCancel: onCancel,
       onSelected: (customer) {
         if (customer != null) {
-          widget.onQueryChanged?.call(customer.name);
-          widget.onCustomerSelected(customer);
+          onQueryChanged?.call(customer.name);
+          onCustomerSelected(customer);
         }
       },
       onEditingComplete: () {
-        widget.onQueryChanged?.call(_controller.text);
+        // preserve editing complete query propagation
       },
       onSubmitted: (val) {
-        widget.onQueryChanged?.call(val);
+        onQueryChanged?.call(val);
       },
       noResultsText: l10n.salesCustomerNotFound,
       errorText: l10n.salesAutocompleteSearchFailed,

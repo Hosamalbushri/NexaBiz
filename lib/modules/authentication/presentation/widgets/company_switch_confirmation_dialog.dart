@@ -5,6 +5,7 @@ import '../../../../app/bootstrap/app_bootstrap.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/app_confirmation_dialog.dart';
 import '../../domain/entities/auth_user.dart';
 import '../providers/auth_providers.dart';
 
@@ -16,42 +17,16 @@ Future<bool> showCompanySwitchConfirmationFlow(
   AuthCompany targetCompany,
 ) async {
   final l10n = AppLocalizations.of(context);
-  final theme = Theme.of(context);
-  final colorScheme = theme.colorScheme;
 
-  // Step 1: Confirmation Dialog
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogCtx) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      title: Row(
-        children: [
-          Icon(Icons.swap_horiz_rounded, color: colorScheme.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Text(l10n.authSelectCompanyTitle),
-        ],
-      ),
-      content: Text(
-        'هل أنت تأكد من الانتقال إلى شركة "${targetCompany.name}"؟',
-        style: theme.textTheme.bodyMedium,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogCtx).pop(false),
-          child: const Text('إلغاء'),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-          ),
-          onPressed: () => Navigator.of(dialogCtx).pop(true),
-          child: const Text('تأكيد الانتقال'),
-        ),
-      ],
-    ),
+  // Step 1: Confirmation Dialog using canonical AppConfirmationDialog
+  final confirmed = await AppConfirmationDialog.show(
+    context,
+    title: l10n.authSelectCompanyTitle,
+    message: 'هل أنت تأكد من الانتقال إلى شركة "${targetCompany.name}"؟',
+    confirmLabel: 'تأكيد الانتقال',
+    cancelLabel: 'إلغاء',
+    tone: AppDialogTone.info,
+    onConfirm: () {},
   );
 
   if (confirmed != true) return false;

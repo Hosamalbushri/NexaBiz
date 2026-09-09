@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 
 class AccountCurrencyMigrationReport {
@@ -26,14 +26,17 @@ class AccountCurrencyMigration {
   Future<AccountCurrencyMigrationReport> auditHistoricalJournalLines({
     String? companyId,
   }) async {
-    final sqlAll = '''
+    final sqlAll =
+        '''
       SELECT jl.id, jl.currency_code
       FROM journal_lines jl
       INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
       ${companyId != null && companyId.trim().isNotEmpty ? "WHERE je.company_id = '$companyId'" : ""}
     ''';
 
-    final rows = await _db.customSelect(sqlAll, readsFrom: {_db.journalLines, _db.journalEntries}).get();
+    final rows = await _db
+        .customSelect(sqlAll, readsFrom: {_db.journalLines, _db.journalEntries})
+        .get();
 
     int total = rows.length;
     int missing = 0;
@@ -67,7 +70,8 @@ class AccountCurrencyMigration {
       );
     }
 
-    final sqlSelect = '''
+    final sqlSelect =
+        '''
       SELECT jl.id
       FROM journal_lines jl
       INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
@@ -75,7 +79,12 @@ class AccountCurrencyMigration {
       ${companyId != null && companyId.trim().isNotEmpty ? "AND je.company_id = '$companyId'" : ""}
     ''';
 
-    final unassignedRows = await _db.customSelect(sqlSelect, readsFrom: {_db.journalLines, _db.journalEntries}).get();
+    final unassignedRows = await _db
+        .customSelect(
+          sqlSelect,
+          readsFrom: {_db.journalLines, _db.journalEntries},
+        )
+        .get();
     if (unassignedRows.isEmpty) {
       return 0;
     }
@@ -92,7 +101,16 @@ class AccountCurrencyMigration {
     return idsToUpdate.length;
   }
 
-  Future<void> customUpdate(String sql, {List<Object?> variables = const []}) async {
-    await _db.customUpdate(sql, variables: variables.map((v) => Variable.withString(v.toString())).toList(), updates: {_db.journalLines});
+  Future<void> customUpdate(
+    String sql, {
+    List<Object?> variables = const [],
+  }) async {
+    await _db.customUpdate(
+      sql,
+      variables: variables
+          .map((v) => Variable.withString(v.toString()))
+          .toList(),
+      updates: {_db.journalLines},
+    );
   }
 }

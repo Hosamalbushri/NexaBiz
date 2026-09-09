@@ -340,7 +340,9 @@ class AccountingModule extends AppModule {
               path: ':id/edit',
               name: 'accountingVoucherBooksEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 if (id == null) {
                   return const VoucherBookFormPage(bookId: -1);
                 }
@@ -365,15 +367,17 @@ class AccountingModule extends AppModule {
             GoRoute(
               path: 'import',
               name: 'accountingAccountsImport',
-              builder: (context, state) =>
-                  const UniversalImportPage(initialProfileId: 'PROF-ACCOUNTING-COA'),
-
+              builder: (context, state) => const UniversalImportPage(
+                initialProfileId: 'PROF-ACCOUNTING-COA',
+              ),
             ),
             GoRoute(
               path: ':id',
               name: 'accountingAccountDetails',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 if (id == null) {
                   return const AccountDetailsPage(accountId: -1);
                 }
@@ -384,7 +388,9 @@ class AccountingModule extends AppModule {
                   path: 'edit',
                   name: 'accountingAccountEdit',
                   builder: (context, state) {
-                    final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                    final id = AppRouteParamParser.tryParseInt(
+                      state.pathParameters['id'],
+                    );
                     if (id == null) {
                       return const AccountFormPage(accountId: -1);
                     }

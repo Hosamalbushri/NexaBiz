@@ -5,7 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/app/settings/company/functional_currency_service.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';

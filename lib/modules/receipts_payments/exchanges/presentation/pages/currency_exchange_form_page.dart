@@ -30,6 +30,8 @@ import 'package:stock_count/modules/receipts_payments/transactions/presentation/
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/widgets/rp_account_search_field.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/widgets/rp_error_messages.dart';
 import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
+import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 
 /// Currency exchange within one cash box (from currency → to currency).
 class CurrencyExchangeFormPage extends ConsumerStatefulWidget {
@@ -478,6 +480,9 @@ class _CurrencyExchangeFormPageState
               l10n.rpVoucherBookEmpty);
     final dateLabel = DateFormat('d/M/yyyy').format(_date);
 
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
+
     if (_loading) {
       return Scaffold(
         backgroundColor: scheme.surfaceContainerLowest,
@@ -485,18 +490,34 @@ class _CurrencyExchangeFormPageState
         body: AppLoading(message: l10n.rpLoading),
       );
     }
-    if (_loadError != null) {
+    if (_loadError != null || baseCurrency == null) {
+      final isMissingCurrency = baseCurrency == null ||
+          (_loadError?.contains('العملة') ?? false) ||
+          (_loadError?.contains('currency') ?? false) ||
+          (_loadError?.contains('Currency') ?? false);
+
       return Scaffold(
         backgroundColor: scheme.surfaceContainerLowest,
         appBar: CustomAppBar(title: title, showBackButton: true),
         body: AppErrorState(
-          message: _loadError!,
+          message: isMissingCurrency
+              ? (isArabic
+                  ? 'لم يتم إعداد العملة الرئيسية للنظام بعد. يرجى إضافة وتعيين العملة الرئيسية من دليل العملات لتشغيل مصارفة العملات.'
+                  : 'System base currency is not configured. Please set up the base currency from the currency catalog to enable currency exchanges.')
+              : (_loadError ?? l10n.somethingWentWrong),
+          retryLabel: isMissingCurrency
+              ? (isArabic ? 'إعداد العملة الرئيسية' : 'Set Up Base Currency')
+              : (isArabic ? 'إعادة المحاولة' : 'Retry'),
           onRetry: () {
-            setState(() {
-              _loading = true;
-              _loadError = null;
-            });
-            _loadPage();
+            if (isMissingCurrency) {
+              showMissingCurrencyDialog(context);
+            } else {
+              setState(() {
+                _loading = true;
+                _loadError = null;
+              });
+              _loadPage();
+            }
           },
         ),
       );

@@ -1,7 +1,4 @@
-export 'data/definitions/sales_period_report_spec.dart';
-export 'data/definitions/stock_movement_report_spec.dart';
 export 'data/providers/report_data_provider.dart';
-export 'data/providers/sales_period_report_provider.dart';
 export 'data/providers/stock_movement_report_provider.dart';
 export 'domain/models/report_column_spec.dart';
 export 'domain/models/report_dataset.dart';

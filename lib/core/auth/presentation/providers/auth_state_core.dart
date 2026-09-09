@@ -5,4 +5,6 @@
 library;
 
 export '../../../../modules/authentication/presentation/providers/auth_providers.dart'
-    show authStateProvider, AuthState, AuthStatus, currentPermissionsProvider;
+    show authStateProvider, AuthState, AuthStatus, currentPermissionsProvider, permissionGuardProvider, localAuthStoreProvider;
+
+

@@ -7,6 +7,8 @@ import 'package:stock_count/modules/authentication/domain/entities/active_compan
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
 import 'package:stock_count/modules/authentication/domain/entities/system_role.dart';
+import 'package:stock_count/core/tenancy/tenant_providers.dart';
+import 'package:stock_count/modules/authentication/data/session_context_adapter.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
@@ -129,6 +131,11 @@ void main() {
           syncManagerProvider.overrideWithValue(
             SyncManager(queue: SyncQueue(), connectivity: connectivity),
           ),
+          sessionContextPortProvider.overrideWithValue(
+            SessionContextAdapter(
+              authState: const AuthState(status: AuthStatus.unauthenticated),
+            ),
+          ),
           authStateProvider.overrideWith(
             (ref) => FakeAuthController(
               const AuthState(status: AuthStatus.unauthenticated),
@@ -173,6 +180,9 @@ void main() {
           overrides: [
             syncManagerProvider.overrideWithValue(
               SyncManager(queue: SyncQueue(), connectivity: connectivity),
+            ),
+            sessionContextPortProvider.overrideWithValue(
+              SessionContextAdapter(authState: systemAuthState),
             ),
             authStateProvider.overrideWith(
               (ref) => FakeAuthController(systemAuthState),
@@ -236,6 +246,9 @@ void main() {
             syncManagerProvider.overrideWithValue(
               SyncManager(queue: SyncQueue(), connectivity: connectivity),
             ),
+            sessionContextPortProvider.overrideWithValue(
+              SessionContextAdapter(authState: companyAuthState),
+            ),
             authStateProvider.overrideWith(
               (ref) => FakeAuthController(companyAuthState),
             ),
@@ -294,6 +307,9 @@ void main() {
           syncManagerProvider.overrideWithValue(
             SyncManager(queue: SyncQueue(), connectivity: connectivity),
           ),
+          sessionContextPortProvider.overrideWithValue(
+            SessionContextAdapter(authState: companyAuthState),
+          ),
           authStateProvider.overrideWith(
             (ref) => FakeAuthController(companyAuthState),
           ),
@@ -308,6 +324,11 @@ void main() {
       final logoutContainer = ProviderContainer(
         overrides: [
           syncManagerProvider.overrideWithValue(manager),
+          sessionContextPortProvider.overrideWithValue(
+            SessionContextAdapter(
+              authState: const AuthState(status: AuthStatus.unauthenticated),
+            ),
+          ),
           authStateProvider.overrideWith(
             (ref) => FakeAuthController(
               const AuthState(status: AuthStatus.unauthenticated),

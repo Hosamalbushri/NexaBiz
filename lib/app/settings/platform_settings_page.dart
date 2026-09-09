@@ -225,21 +225,27 @@ class _PlatformSettingsBody extends ConsumerWidget {
                     ),
                     SettingsTile(
                       icon: Icons.currency_exchange_outlined,
-                      title: Localizations.localeOf(context).languageCode == 'ar'
+                      title:
+                          Localizations.localeOf(context).languageCode == 'ar'
                           ? 'إدارة سجل العملات والرسوم'
                           : 'Currency Master & Roles Management',
-                      subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                      subtitle:
+                          Localizations.localeOf(context).languageCode == 'ar'
                           ? 'تحديد العملة الرئيسية، عملة تقييم المخزون، وسجل أسعار الصرف'
                           : 'Manage functional currency, inventory valuation currency, and master currencies',
                       showChevron: true,
                       onTap: () => context.push(AppRoutes.settingsCurrencies),
                     ),
                     SettingsTile(
-                      icon: Icons.star_outline,
-                      title: l10n.subscriptionAndPackagesTitle,
-                      subtitle: l10n.subscriptionAndPackagesSubtitle,
+                      icon: Icons.sync_outlined,
+                      title: Localizations.localeOf(context).languageCode == 'ar'
+                          ? 'مزامنة البيانات'
+                          : 'Data Sync',
+                      subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                          ? 'مراقبة المزامنة وفض التعارضات السحابية'
+                          : 'Monitor cloud sync status & conflict strategy',
                       showChevron: true,
-                      onTap: () => context.push(AppRoutes.settingsSubscription),
+                      onTap: () => context.push(AppRoutes.settingsDataSync),
                     ),
                     SettingsTile(
                       icon: Icons.shield_outlined,
@@ -252,99 +258,7 @@ class _PlatformSettingsBody extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                SettingsExpandableSection(
-                  icon: Icons.apps_outlined,
-                  title: Localizations.localeOf(context).languageCode == 'ar'
-                      ? 'إعدادات الموديولات'
-                      : 'Module Settings Hub',
-                  subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                      ? 'تهيئة وإعدادات كربط الحسابات والإعدادات الخاصة بكل موديول'
-                      : 'Configure account bindings and module master settings',
-                  initiallyExpanded: true,
-                  children: [
-                    SettingsGroup(
-                      children: [
-                        SettingsTile(
-                          icon: Icons.inventory_2_outlined,
-                          title: l10n.moduleInventory,
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'إعدادات وتهيئة موديول المخزون والمستودعات'
-                              : 'Inventory master settings & account bindings',
-                          showChevron: true,
-                          onTap: () => context.push('/inventory/settings'),
-                        ),
-                        SettingsTile(
-                          icon: Icons.account_balance_outlined,
-                          title: l10n.moduleAccounting,
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'إعدادات وتهيئة موديول المحاسبة والدفاتر'
-                              : 'Accounting master settings & account bindings',
-                          showChevron: true,
-                          onTap: () => context.push('/accounting/settings'),
-                        ),
-                        SettingsTile(
-                          icon: Icons.point_of_sale_outlined,
-                          title: l10n.moduleSales,
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'إعدادات وتهيئة موديول المبيعات'
-                              : 'Sales master settings & account bindings',
-                          showChevron: true,
-                          onTap: () => context.push('/sales/settings'),
-                        ),
-                        SettingsTile(
-                          icon: Icons.shopping_bag_outlined,
-                          title: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'المشتريات والموردين'
-                              : 'Purchases & Suppliers',
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'إعدادات وتهيئة موديول المشتريات'
-                              : 'Purchases master settings & account bindings',
-                          showChevron: true,
-                          onTap: () => context.push('/purchases/settings'),
-                        ),
-                        SettingsTile(
-                          icon: Icons.account_balance_wallet_outlined,
-                          title: l10n.moduleReceiptsPayments,
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'إعدادات وتهيئة موديول المقبوضات والمدفوعات'
-                              : 'Receipts & Payments settings & account bindings',
-                          showChevron: true,
-                          onTap: () => context.push('/receipts-payments/settings'),
-                        ),
-                        SettingsTile(
-                          icon: Icons.people_outline,
-                          title: l10n.moduleCustomers,
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'إعدادات وتهيئة موديول العملاء والدليل'
-                              : 'Customers settings & account bindings',
-                          showChevron: true,
-                          onTap: () => context.push('/customers/settings'),
-                        ),
-                        SettingsTile(
-                          icon: Icons.admin_panel_settings_outlined,
-                          title: l10n.moduleAdministration,
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'إدارة المستخدمين، الأدوار، الفروع، والأجهزة'
-                              : 'Administer users, roles, branches, & devices',
-                          showChevron: true,
-                          onTap: () => context.push('/administration/settings'),
-                        ),
-                        SettingsTile(
-                          icon: Icons.sync_outlined,
-                          title: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'مزامنة البيانات'
-                              : 'Data Sync',
-                          subtitle: Localizations.localeOf(context).languageCode == 'ar'
-                              ? 'مراقبة المزامنة وفض التعارضات السحابية'
-                              : 'Monitor cloud sync status & conflict strategy',
-                          showChevron: true,
-                          onTap: () => context.push(AppRoutes.settingsDataSync),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+
 
                 SettingsExpandableSection(
                   icon: Icons.info_outline_rounded,
@@ -453,8 +367,6 @@ class _PlatformSettingsBody extends ConsumerWidget {
     showAppSnackBar(context, message: l10n.success, isSuccess: true);
   }
 }
-
-
 
 class _AboutInfoRow extends StatelessWidget {
   const _AboutInfoRow({

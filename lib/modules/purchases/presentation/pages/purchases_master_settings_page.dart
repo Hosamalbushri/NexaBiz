@@ -8,7 +8,7 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_card.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/system_setup/presentation/widgets/package_initialization_settings_hub.dart';
+import 'package:stock_count/core/setup/setup_core.dart';
 
 /// Single authoritative Master Settings Hub for the Purchases Module (`/purchases/settings`).
 ///
@@ -40,7 +40,9 @@ class PurchasesMasterSettingsPage extends ConsumerWidget {
 
           // Section 1: Package Setup & Account Bindings List Menu
           SettingsGroupLabel(
-            isAr ? 'التهيئة والربط المحاسبي للمشتريات' : 'Purchases Account Bindings',
+            isAr
+                ? 'التهيئة والربط المحاسبي للمشتريات'
+                : 'Purchases Account Bindings',
           ),
           const SettingsGroup(
             children: [
@@ -76,7 +78,9 @@ class PurchasesMasterSettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'مركز تهيئة وإعدادات المشتريات' : 'Purchases Settings Center',
+                  isAr
+                      ? 'مركز تهيئة وإعدادات المشتريات'
+                      : 'Purchases Settings Center',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

@@ -31,7 +31,9 @@ class AdministrationMasterSettingsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isAr ? 'إعدادات وتهيئة الإدارة والنظام' : 'Administration Master Settings',
+        title: isAr
+            ? 'إعدادات وتهيئة الإدارة والنظام'
+            : 'Administration Master Settings',
         showBackButton: true,
       ),
       body: ListView(
@@ -50,7 +52,9 @@ class AdministrationMasterSettingsPage extends ConsumerWidget {
               SettingsTile(
                 icon: Icons.people_alt_rounded,
                 iconColor: colorScheme.primary,
-                title: isAr ? 'إدارة المستخدمين والحسابات' : 'User Accounts Management',
+                title: isAr
+                    ? 'إدارة المستخدمين والحسابات'
+                    : 'User Accounts Management',
                 subtitle: isAr
                     ? 'إضافة وحظر وتعديل بيانات وحسابات مستخدمي النظام'
                     : 'Manage system user accounts, credentials, and access',
@@ -62,7 +66,9 @@ class AdministrationMasterSettingsPage extends ConsumerWidget {
               SettingsTile(
                 icon: Icons.security_rounded,
                 iconColor: Colors.teal,
-                title: isAr ? 'إدارة أدوار النظام والصلاحيات' : 'Roles & Permissions Matrix',
+                title: isAr
+                    ? 'إدارة أدوار النظام والصلاحيات'
+                    : 'Roles & Permissions Matrix',
                 subtitle: isAr
                     ? 'تعريف الأدوار (مدير، محاسب، بائع) وتحديد مصفوفة الصلاحيات'
                     : 'Define custom user roles and assign permission capabilities',
@@ -96,7 +102,9 @@ class AdministrationMasterSettingsPage extends ConsumerWidget {
               SettingsTile(
                 icon: Icons.business_rounded,
                 iconColor: Colors.purple,
-                title: isAr ? 'إدارة الشركات والمستأجرين' : 'Companies & Tenants',
+                title: isAr
+                    ? 'إدارة الشركات والمستأجرين'
+                    : 'Companies & Tenants',
                 subtitle: isAr
                     ? 'إدارة بيانات الشركات المسجلة بالنظام ومؤسسات العميل'
                     : 'Manage corporate entities and system tenants',
@@ -108,7 +116,9 @@ class AdministrationMasterSettingsPage extends ConsumerWidget {
               SettingsTile(
                 icon: Icons.devices_rounded,
                 iconColor: Colors.amber.shade800,
-                title: isAr ? 'إدارة الأجهزة والطرفيات' : 'Registered Devices & Terminals',
+                title: isAr
+                    ? 'إدارة الأجهزة والطرفيات'
+                    : 'Registered Devices & Terminals',
                 subtitle: isAr
                     ? 'التحكم بالأجهزة المرخصة ونقاط البيع المعتمدة'
                     : 'Manage authorized POS terminals and mobile devices',
@@ -148,7 +158,9 @@ class AdministrationMasterSettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'مركز تهيئة وإعدادات الإدارة' : 'Administration Settings Center',
+                  isAr
+                      ? 'مركز تهيئة وإعدادات الإدارة'
+                      : 'Administration Settings Center',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

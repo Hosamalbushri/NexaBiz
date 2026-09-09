@@ -8,7 +8,8 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
-import 'package:stock_count/modules/reports/shared/presentation/pages/reports_routes.dart';
+import 'package:stock_count/core/routes/reports_routes_core.dart';
+
 
 /// Accounting reports hub — Chart of Accounts statements and financial reports.
 class AccountingReportsPage extends StatelessWidget {
@@ -45,42 +46,56 @@ class AccountingReportsPage extends StatelessWidget {
       _ReportEntry(
         icon: Icons.book_outlined,
         title: isAr ? 'الأستاذ العام' : 'General Ledger',
-        subtitle: isAr ? 'دفتر الأستاذ العام وتفاصيل الحسابات' : 'General ledger accounts and transaction details',
+        subtitle: isAr
+            ? 'دفتر الأستاذ العام وتفاصيل الحسابات'
+            : 'General ledger accounts and transaction details',
         path: ReportsRoutes.generalLedger,
         available: true,
       ),
       _ReportEntry(
         icon: Icons.trending_up_outlined,
-        title: isAr ? 'قائمة الدخل (الأرباح والخسائر)' : 'Income Statement (P&L)',
-        subtitle: isAr ? 'الإيرادات والتكاليف والمصروفات وصافي الربح' : 'Revenues, costs, expenses, and net profit',
+        title: isAr
+            ? 'قائمة الدخل (الأرباح والخسائر)'
+            : 'Income Statement (P&L)',
+        subtitle: isAr
+            ? 'الإيرادات والتكاليف والمصروفات وصافي الربح'
+            : 'Revenues, costs, expenses, and net profit',
         path: ReportsRoutes.incomeStatement,
         available: true,
       ),
       _ReportEntry(
         icon: Icons.account_balance_outlined,
         title: isAr ? 'الميزانية العمومية' : 'Balance Sheet',
-        subtitle: isAr ? 'الأصول والالتزامات وحقوق الملكية' : 'Assets, liabilities, and equity balance',
+        subtitle: isAr
+            ? 'الأصول والالتزامات وحقوق الملكية'
+            : 'Assets, liabilities, and equity balance',
         path: ReportsRoutes.balanceSheet,
         available: true,
       ),
       _ReportEntry(
         icon: Icons.call_received_outlined,
         title: isAr ? 'ذمم العملاء' : 'Accounts Receivable',
-        subtitle: isAr ? 'كشف مديونيات العملاء والمقبوضات' : 'Customer receivables and receipts',
+        subtitle: isAr
+            ? 'كشف مديونيات العملاء والمقبوضات'
+            : 'Customer receivables and receipts',
         path: ReportsRoutes.receivables,
         available: true,
       ),
       _ReportEntry(
         icon: Icons.call_made_outlined,
         title: isAr ? 'ذمم الموردين' : 'Accounts Payable',
-        subtitle: isAr ? 'كشف المستحقات للموردين والمدفوعات' : 'Supplier payables and payments',
+        subtitle: isAr
+            ? 'كشف المستحقات للموردين والمدفوعات'
+            : 'Supplier payables and payments',
         path: ReportsRoutes.payables,
         available: true,
       ),
       _ReportEntry(
         icon: Icons.water_drop_outlined,
         title: isAr ? 'التدفقات النقدية' : 'Cash Flow',
-        subtitle: isAr ? 'حركة الصناديق والبنوك' : 'Cash box and bank movements',
+        subtitle: isAr
+            ? 'حركة الصناديق والبنوك'
+            : 'Cash box and bank movements',
         path: ReportsRoutes.cashFlow,
         available: true,
       ),

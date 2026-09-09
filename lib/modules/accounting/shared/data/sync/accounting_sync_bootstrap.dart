@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import '../../presentation/providers/currency_rate_providers.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';

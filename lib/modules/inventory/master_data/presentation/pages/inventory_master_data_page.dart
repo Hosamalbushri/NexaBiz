@@ -16,7 +16,6 @@ class InventoryMasterDataPage extends ConsumerStatefulWidget {
 
   final int initialTabIndex;
 
-
   @override
   ConsumerState<InventoryMasterDataPage> createState() =>
       _InventoryMasterDataPageState();
@@ -53,7 +52,9 @@ class _InventoryMasterDataPageState
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isAr ? 'إعدادات وبيانات المخزون الرئيسية' : 'Inventory Master Data & Settings',
+        title: isAr
+            ? 'إعدادات وبيانات المخزون الرئيسية'
+            : 'Inventory Master Data & Settings',
         showBackButton: true,
         bottom: TabBar(
           controller: _tabController,

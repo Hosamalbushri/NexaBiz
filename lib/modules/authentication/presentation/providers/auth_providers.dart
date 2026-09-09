@@ -8,16 +8,18 @@ import '../../../../core/network/http_client_providers.dart';
 import '../../../../core/network/sync_api_config.dart';
 import '../../../../core/network/token_refresh_outcome.dart';
 import '../../../../core/permissions/permission_guard.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import '../../../../core/tenancy/session_company.dart';
 import '../../../../core/tenancy/tenant_lifecycle.dart';
 export '../../../../core/tenancy/tenant_lifecycle.dart';
 import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../data/auth_repository_impl.dart';
+import '../../../../core/tenancy/tenant_providers.dart';
 import '../../data/local_auth_repository.dart';
 import '../../data/local_auth_store.dart';
 import '../../data/offline_authorization_store.dart';
 import '../../data/secure_token_storage.dart';
+import '../../data/session_context_adapter.dart';
 import '../../data/sync_login_credential_store.dart';
 import '../../domain/entities/active_company_context.dart';
 import '../../domain/entities/auth_session.dart';
@@ -83,9 +85,19 @@ final sessionCompanyIdOverride = sessionCompanyIdProvider.overrideWith((ref) {
   return ref.watch(authStateProvider).session?.currentCompanyId;
 });
 
+final sessionContextPortOverride = sessionContextPortProvider.overrideWith((
+  ref,
+) {
+  return SessionContextAdapter(
+    authState: ref.watch(authStateProvider),
+    localAuthStore: ref.watch(localAuthStoreProvider),
+  );
+});
+
 List<Override> authenticationOverrides() => [
   authSyncHttpOverride,
   sessionCompanyIdOverride,
+  sessionContextPortOverride,
 ];
 
 final localAuthStoreProvider = Provider<LocalAuthStore>((ref) {

@@ -1,25 +1,56 @@
-import 'package:drift/drift.dart';
+import 'package:stock_count/core/auth/ports/session_context_port.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+
 import '../entities/audit_trail_entry.dart';
+import '../ports/audit_repository_port.dart';
 
 /// Centralized, append-only service for recording and retrieving audit trail events.
 ///
-/// Audit logs recorded through this service are strictly immutable: no delete or
-/// update interfaces exist.
+/// Audit logs recorded through this service are strictly immutable.
+/// Decoupled from database implementation drivers via [AuditRepositoryPort].
 class AuditTrailService {
-  AuditTrailService({required this._db, this._syncQueue, this._readCompanyId});
+  /// Creates an [AuditTrailService] with the provided repository, session context, and optional sync queue.
+  AuditTrailService({
+    required this.repository,
+    required this.sessionContext,
+    this.syncQueue,
+  });
 
-  final InventoryDatabase _db;
-  final SyncQueue? _syncQueue;
-  final String Function()? _readCompanyId;
+  final AuditRepositoryPort repository;
+  final SessionContextPort sessionContext;
+  final SyncQueue? syncQueue;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  /// Record an audit entry using domain [AuditEntry].
+  Future<void> recordAudit(AuditEntry entry) async {
+    await repository.record(entry);
 
-  /// Append-only audit record creation.
+    final effectiveCompanyId =
+        entry.companyId ?? sessionContext.currentCompanyId;
+    if (syncQueue != null && effectiveCompanyId != null) {
+      await syncQueue!.enqueue(
+        SyncOperation.create(
+          entityType: 'audit_event',
+          entityId: entry.id,
+          type: SyncOperationType.create,
+          companyId: effectiveCompanyId,
+          payload: {
+            'uuid': entry.id,
+            'documentId': entry.entityId,
+            'documentType': entry.entityType,
+            'eventType': entry.action,
+            'userId': entry.userId,
+            'notes': entry.metadata?['notes'],
+            'timestamp': entry.timestamp.millisecondsSinceEpoch,
+            'metadata': entry.metadata,
+            'companyId': effectiveCompanyId,
+          },
+        ),
+      );
+    }
+  }
+
+  /// Append-only audit record creation (legacy helper returning [AuditTrailEntry]).
   Future<AuditTrailEntry> recordEvent({
     required String documentId,
     required String documentType,
@@ -29,95 +60,56 @@ class AuditTrailService {
     Map<String, dynamic>? metadata,
     String? companyId,
   }) async {
-    final effectiveCompanyId = companyId ?? _currentCompanyId;
+    final effectiveCompanyId = companyId ?? sessionContext.currentCompanyId;
+    final effectiveUserId = userId ?? sessionContext.userId ?? 'system';
     final eventUuid = generateUuidV4();
     final now = DateTime.now().toUtc();
-    final timestampMs = now.millisecondsSinceEpoch;
 
-    final entry = AuditTrailEntry(
+    final Map<String, dynamic> meta = <String, dynamic>{
+      ...?notes != null ? {'notes': notes} : null,
+      ...?metadata,
+    };
+
+    final entry = AuditEntry(
+      id: eventUuid,
+      companyId: effectiveCompanyId,
+      userId: effectiveUserId,
+      action: eventType,
+      entityType: documentType,
+      entityId: documentId,
+      metadata: meta.isNotEmpty ? meta : null,
+      timestamp: now,
+    );
+
+    await recordAudit(entry);
+
+    return AuditTrailEntry(
       uuid: eventUuid,
       documentId: documentId,
       documentType: documentType,
       eventType: eventType,
-      userId: userId,
+      userId: effectiveUserId,
       notes: notes,
       timestamp: now,
       metadata: metadata,
       companyId: effectiveCompanyId,
     );
-
-    await _db
-        .into(_db.inventoryAuditTrail)
-        .insert(
-          InventoryAuditTrailCompanion(
-            uuid: Value(eventUuid),
-            documentId: Value(documentId),
-            documentType: Value(documentType),
-            eventType: Value(eventType),
-            userId: Value(userId),
-            notes: Value(notes),
-            timestamp: Value(timestampMs),
-            metadata: Value(entry.metadataJson),
-            companyId: Value(effectiveCompanyId),
-          ),
-        );
-
-    if (_syncQueue != null) {
-      await _syncQueue.enqueue(
-        SyncOperation.create(
-          entityType: 'audit_event',
-          entityId: eventUuid,
-          type: SyncOperationType.create,
-          companyId: effectiveCompanyId,
-          payload: {
-            'uuid': eventUuid,
-            'documentId': documentId,
-            'documentType': documentType,
-            'eventType': eventType,
-            'userId': userId,
-            'notes': notes,
-            'timestamp': timestampMs,
-            'metadata': metadata,
-            'companyId': effectiveCompanyId,
-          },
-        ),
-      );
-    }
-
-    return entry;
   }
 
   /// Retrieve all audit events for a specific document, ordered chronologically.
   Future<List<AuditTrailEntry>> getAuditTrail({
     required String documentId,
     String? companyId,
+    String? documentType,
   }) async {
-    final query = _db.select(_db.inventoryAuditTrail)
-      ..where((tbl) => tbl.documentId.equals(documentId));
-
-    final targetCompany = companyId ?? _currentCompanyId;
-    query.where(
-      (tbl) => tbl.companyId.equals(targetCompany) | tbl.companyId.isNull(),
+    final effectiveCompanyId = companyId ?? sessionContext.currentCompanyId;
+    final entries = await repository.getForEntity(
+      documentType ?? '',
+      documentId,
+      companyId: effectiveCompanyId,
     );
-    query.orderBy([(tbl) => OrderingTerm.asc(tbl.timestamp)]);
 
-    final rows = await query.get();
-    return rows
-        .map(
-          (r) => AuditTrailEntry.fromStorage(
-            id: r.id,
-            uuid: r.uuid,
-            documentId: r.documentId,
-            documentType: r.documentType,
-            eventType: r.eventType,
-            userId: r.userId,
-            notes: r.notes,
-            timestampMs: r.timestamp,
-            metadataRaw: r.metadata,
-            companyId: r.companyId,
-          ),
-        )
-        .toList();
+    return entries.map(_toAuditTrailEntry).toList();
   }
 
   /// Query audit events by event type and company ID.
@@ -126,32 +118,32 @@ class AuditTrailService {
     String? eventType,
     int limit = 100,
   }) async {
-    final query = _db.select(_db.inventoryAuditTrail)
-      ..where((tbl) => tbl.companyId.equals(companyId));
+    final entries = await repository.getForCompany(companyId, limit: limit);
 
-    if (eventType != null) {
-      query.where((tbl) => tbl.eventType.equals(eventType));
-    }
+    final filtered = eventType != null
+        ? entries.where((e) => e.action == eventType)
+        : entries;
 
-    query.orderBy([(tbl) => OrderingTerm.desc(tbl.timestamp)]);
-    query.limit(limit);
+    return filtered.map(_toAuditTrailEntry).toList();
+  }
 
-    final rows = await query.get();
-    return rows
-        .map(
-          (r) => AuditTrailEntry.fromStorage(
-            id: r.id,
-            uuid: r.uuid,
-            documentId: r.documentId,
-            documentType: r.documentType,
-            eventType: r.eventType,
-            userId: r.userId,
-            notes: r.notes,
-            timestampMs: r.timestamp,
-            metadataRaw: r.metadata,
-            companyId: r.companyId,
-          ),
-        )
-        .toList();
+  /// Query system-level audit events where companyId IS NULL.
+  Future<List<AuditTrailEntry>> getSystemAudits({int limit = 100}) async {
+    final entries = await repository.getSystemAudits(limit: limit);
+    return entries.map(_toAuditTrailEntry).toList();
+  }
+
+  AuditTrailEntry _toAuditTrailEntry(AuditEntry entry) {
+    return AuditTrailEntry(
+      uuid: entry.id,
+      documentId: entry.entityId,
+      documentType: entry.entityType,
+      eventType: entry.action,
+      userId: entry.userId,
+      notes: entry.metadata?['notes'] as String?,
+      timestamp: entry.timestamp,
+      metadata: entry.metadata,
+      companyId: entry.companyId,
+    );
   }
 }

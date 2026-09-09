@@ -1,6 +1,6 @@
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 import 'package:stock_count/core/utils/business_date.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import '../repositories/fiscal_year_repository.dart';
 import 'fiscal_period_policy.dart';
 

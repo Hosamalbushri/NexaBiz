@@ -1,4 +1,4 @@
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 
 /// Represents the debit, credit, and net balance for a specific account in ONE currency.
 class AccountCurrencyBalance {
@@ -54,8 +54,8 @@ class AccountMultiCurrencyBalance {
     Map<String, AccountCurrencyBalance>? balances,
     this.companyId,
   }) : balances = Map.unmodifiable(
-          balances?.map((k, v) => MapEntry(k.trim().toUpperCase(), v)) ?? {},
-        );
+         balances?.map((k, v) => MapEntry(k.trim().toUpperCase(), v)) ?? {},
+       );
 
   final String accountUuid;
   final Map<String, AccountCurrencyBalance> balances;

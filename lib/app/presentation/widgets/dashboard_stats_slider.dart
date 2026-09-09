@@ -98,7 +98,9 @@ class _DashboardStatsSliderState extends State<DashboardStatsSlider> {
     required bool isDark,
   }) {
     final primary = scheme.primary;
-    final side = isDark ? const Color(0xFF1C1C1E) : const Color(0xFF2C3440);
+    final side = isDark
+        ? scheme.surfaceContainerHighest
+        : scheme.onSurfaceVariant;
     final teal = AppColors.secondaryTeal;
     final onPrimary = scheme.onPrimary;
     final onSide = Colors.white;

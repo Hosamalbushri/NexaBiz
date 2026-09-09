@@ -8,7 +8,7 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/inve
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/core/errors/missing_account_exception.dart';
+import 'package:stock_count/shared/contracts/errors/account_exception.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {

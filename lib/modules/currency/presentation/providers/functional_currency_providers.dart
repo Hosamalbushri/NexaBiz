@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../domain/entities/currency.dart';
 import 'currency_providers.dart';
 
@@ -47,62 +47,63 @@ class FunctionalCurrencyStateInfo {
 
 final functionalCurrencyStateInfoProvider =
     FutureProvider.autoDispose<FunctionalCurrencyStateInfo>((ref) async {
-  final companyId = ref.watch(sessionCompanyIdProvider) ?? '';
-  final currencyRepo = ref.watch(currencyRepositoryProvider);
-  final service = ref.watch(functionalCurrencyServiceProvider);
+      final companyId = ref.watch(sessionCompanyIdProvider) ?? '';
+      final currencyRepo = ref.watch(currencyRepositoryProvider);
+      final service = ref.watch(functionalCurrencyServiceProvider);
 
-  // Check RBAC permissions / user role
-  final authState = ref.watch(authStateProvider);
-  final isSuperAdmin = authState.session?.user.isSuperAdmin ?? false;
-  final hasPerm = authState.hasPermission('platform.company.manage') ||
-      authState.hasPermission('accounting.fiscal_years.configure_fx') ||
-      authState.hasPermission('currency.functional.configure');
-  final canModify = isSuperAdmin || hasPerm;
+      // Check RBAC permissions / user role
+      final authState = ref.watch(authStateProvider);
+      final isSuperAdmin = authState.session?.user.isSuperAdmin ?? false;
+      final hasPerm =
+          authState.hasPermission('platform.company.manage') ||
+          authState.hasPermission('accounting.fiscal_years.configure_fx') ||
+          authState.hasPermission('currency.functional.configure');
+      final canModify = isSuperAdmin || hasPerm;
 
-  final hasPosted = await service.hasPostedAccountingActivity(companyId);
-  final currency = await currencyRepo.getDefaultCurrency();
+      final hasPosted = await service.hasPostedAccountingActivity(companyId);
+      final currency = await currencyRepo.getDefaultCurrency();
 
-  // State 2: Not Configured (no default currency in Currency Master)
-  if (currency == null) {
-    return FunctionalCurrencyStateInfo(
-      configState: FunctionalCurrencyConfigState.notConfigured,
-      currencyCode: '',
-      hasPostedActivity: hasPosted,
-      canModify: canModify,
-    );
-  }
+      // State 2: Not Configured (no default currency in Currency Master)
+      if (currency == null) {
+        return FunctionalCurrencyStateInfo(
+          configState: FunctionalCurrencyConfigState.notConfigured,
+          currencyCode: '',
+          hasPostedActivity: hasPosted,
+          canModify: canModify,
+        );
+      }
 
-  final code = currency.code;
+      final code = currency.code;
 
-  // State 4: Currency Inactive (currency is deactivated)
-  if (!currency.isActive) {
-    return FunctionalCurrencyStateInfo(
-      configState: FunctionalCurrencyConfigState.currencyInactive,
-      currency: currency,
-      currencyCode: code,
-      hasPostedActivity: hasPosted,
-      errorMessage: 'العملة المعرفة "$code" غير نشطة حالياً.',
-      canModify: canModify,
-    );
-  }
+      // State 4: Currency Inactive (currency is deactivated)
+      if (!currency.isActive) {
+        return FunctionalCurrencyStateInfo(
+          configState: FunctionalCurrencyConfigState.currencyInactive,
+          currency: currency,
+          currencyCode: code,
+          hasPostedActivity: hasPosted,
+          errorMessage: 'العملة المعرفة "$code" غير نشطة حالياً.',
+          canModify: canModify,
+        );
+      }
 
-  // State 5: Change Restricted (has posted accounting activity)
-  if (hasPosted) {
-    return FunctionalCurrencyStateInfo(
-      configState: FunctionalCurrencyConfigState.changeRestricted,
-      currency: currency,
-      currencyCode: code,
-      hasPostedActivity: true,
-      canModify: false, // Modification restricted due to posted activity
-    );
-  }
+      // State 5: Change Restricted (has posted accounting activity)
+      if (hasPosted) {
+        return FunctionalCurrencyStateInfo(
+          configState: FunctionalCurrencyConfigState.changeRestricted,
+          currency: currency,
+          currencyCode: code,
+          hasPostedActivity: true,
+          canModify: false, // Modification restricted due to posted activity
+        );
+      }
 
-  // State 1: Configured (valid & active, no restriction)
-  return FunctionalCurrencyStateInfo(
-    configState: FunctionalCurrencyConfigState.configured,
-    currency: currency,
-    currencyCode: code,
-    hasPostedActivity: false,
-    canModify: canModify,
-  );
-});
+      // State 1: Configured (valid & active, no restriction)
+      return FunctionalCurrencyStateInfo(
+        configState: FunctionalCurrencyConfigState.configured,
+        currency: currency,
+        currencyCode: code,
+        hasPostedActivity: false,
+        canModify: canModify,
+      );
+    });

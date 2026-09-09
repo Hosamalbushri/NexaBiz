@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/providers/currency_providers.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
@@ -77,7 +77,9 @@ final inventoryValuationCurrencyStateProvider =
         final costLayers = await db.select(db.inventoryCostLayers).get();
         final stockReceipts = await db.select(db.stockReceipts).get();
         final stockIssues = await db.select(db.stockIssues).get();
-        final hasPostedReceipts = stockReceipts.any((r) => r.status == 'posted');
+        final hasPostedReceipts = stockReceipts.any(
+          (r) => r.status == 'posted',
+        );
         final hasPostedIssues = stockIssues.any((i) => i.status == 'posted');
 
         if (costLayers.isNotEmpty || hasPostedReceipts || hasPostedIssues) {

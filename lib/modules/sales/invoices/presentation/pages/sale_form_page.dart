@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_document_meta_chip.dart';
 import 'package:stock_count/core/widgets/app_document_option_card.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/sale_item.dart';
 import '../../domain/entities/sale_settlement_type.dart';
@@ -33,9 +29,12 @@ import '../widgets/sale_summary_widgets.dart';
 import '../widgets/sale_products_table.dart';
 import '../widgets/sale_settlement_type_selector.dart';
 import '../widgets/voucher_book_selector.dart';
+import 'package:stock_count/core/warehouse/warehouse_core.dart';
 import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
-import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
-import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
+
+
+import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 
 /// POS-style create / edit sales invoice.
 class SaleFormPage extends ConsumerStatefulWidget {
@@ -375,17 +374,33 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
   Widget build(BuildContext context) {
     ref.watch(saleComposerProvider);
     final l10n = AppLocalizations.of(context);
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
     final composer = ref.read(saleComposerProvider.notifier);
 
     if (_loading) {
       return _shell(body: const SizedBox.expand());
     }
 
-    if (_loadError != null || !_loaded) {
+    if (_loadError != null || !_loaded || baseCurrency == null) {
+      final isMissingCurrency = baseCurrency == null ||
+          (_loadError?.contains('العملة') ?? false) ||
+          (_loadError?.contains('currency') ?? false) ||
+          (_loadError?.contains('Currency') ?? false);
+
       return _shell(
         body: AppErrorState(
-          message: _loadError ?? l10n.somethingWentWrong,
-          onRetry: _loadPage,
+          message: isMissingCurrency
+              ? (isArabic
+                  ? 'لم يتم إعداد العملة الرئيسية للنظام بعد. يرجى إضافة وتعيين العملة الرئيسية من دليل العملات لتشغيل المبيعات.'
+                  : 'System base currency is not configured. Please set up the base currency from the currency catalog to enable sales.')
+              : (_loadError ?? l10n.somethingWentWrong),
+          retryLabel: isMissingCurrency
+              ? (isArabic ? 'إعداد العملة الرئيسية' : 'Set Up Base Currency')
+              : (isArabic ? 'إعادة المحاولة' : 'Retry'),
+          onRetry: isMissingCurrency
+              ? () => showMissingCurrencyDialog(context)
+              : _loadPage,
         ),
       );
     }
@@ -580,21 +595,22 @@ class _SaleStickySummarySection extends ConsumerWidget {
 class _InvoiceMetaRow extends StatelessWidget {
   const _InvoiceMetaRow({
     required this.invoiceNumber,
-    required this.dateLabel,
-    required this.onPickDate,
+    required this.saleDate,
+    required this.onDateChanged,
     this.invoiceReference,
   });
 
   final String invoiceNumber;
   final String? invoiceReference;
-  final String dateLabel;
-  final VoidCallback onPickDate;
+  final DateTime saleDate;
+  final ValueChanged<DateTime> onDateChanged;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: AppDocumentMetaChip(
@@ -609,11 +625,12 @@ class _InvoiceMetaRow extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: AppDocumentMetaChip(
+          child: AppDateField(
             label: l10n.salesDate,
-            value: dateLabel,
-            icon: Icons.calendar_month_rounded,
-            onTap: onPickDate,
+            value: saleDate,
+            onChanged: onDateChanged,
+            dateFormat: 'd/M/yyyy',
+            density: AppFieldDensity.compact,
           ),
         ),
       ],
@@ -873,7 +890,6 @@ class _InvoiceHeaderCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final saleDate = ref.watch(saleComposerProvider.select((s) => s.saleDate));
-    final dateLabel = DateFormat('d/M/yyyy').format(saleDate);
     final numberRaw = ref.watch(
       saleComposerProvider.select(
         (s) => s.previewSaleNumber ?? s.voucherBook?.previewNumber ?? '—',
@@ -929,8 +945,10 @@ class _InvoiceHeaderCard extends ConsumerWidget {
               invoiceReference: numberView.hasSeparateReference
                   ? numberView.referenceLabel
                   : null,
-              dateLabel: dateLabel,
-              onPickDate: onPickDate,
+              saleDate: saleDate,
+              onDateChanged: (picked) {
+                ref.read(saleComposerProvider.notifier).setSaleDate(picked);
+              },
             ),
             const SizedBox(height: AppSpacing.md),
             SaleSettlementTypeSelector(

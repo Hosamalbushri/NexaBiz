@@ -26,7 +26,29 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_dependency_detector.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/auth/ports/session_context_port.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/inventory/data/repositories/inventory_audit_repository.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
+
+class _TestSessionContext implements SessionContextPort {
+  _TestSessionContext(this.currentCompanyId);
+
+  @override
+  final String? currentCompanyId;
+  @override
+  final String? activeCompanyId = null;
+  @override
+  final List<CompanyInfo> companies = const [];
+  @override
+  final bool isAuthenticated = true;
+  @override
+  final String? userId = 'user-101';
+  @override
+  final String? deviceId = 'dev-1';
+  @override
+  final bool isStandalone = false;
+}
 
 class _FakePostingEngine implements PostingEngine {
   @override
@@ -60,6 +82,12 @@ class _FakePostingEngine implements PostingEngine {
 
 class _FakeStockValidationService implements StockValidationService {
   @override
+  Future<void> validateWarehouseAccess({
+    required String? warehouseId,
+    String? companyId,
+  }) async {}
+
+  @override
   Future<double> getPostedBalance({
     required String itemCode,
     String? warehouseId,
@@ -70,6 +98,31 @@ class _FakeStockValidationService implements StockValidationService {
     required List<OutboundLineRequest> lines,
     String? warehouseId,
   }) async => [];
+}
+
+class _FakeAccountingPoster implements InventoryAccountingPoster {
+  const _FakeAccountingPoster();
+
+  @override
+  Future<void> postAccountingEntry({
+    required InventoryDocumentRef document,
+    required double totalAmount,
+    double? valuationAmount,
+    String? accountId,
+    bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
+  }) async {}
+
+  @override
+  Future<void> setAccountingEntryPostingStatus({
+    required InventoryDocumentRef document,
+    required bool isPosted,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
+  }) async {}
 }
 
 class _FakeDependencyDetector implements InventoryDependencyDetector {
@@ -163,10 +216,11 @@ void main() {
           const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
     );
 
+    final auditRepo = InventoryAuditRepository(invDb);
     auditService = AuditTrailService(
-      db: invDb,
+      repository: auditRepo,
+      sessionContext: _TestSessionContext(companyId),
       syncQueue: syncQueue,
-      readCompanyId: () => companyId,
     );
 
     journalRepo = JournalRepositoryImpl(
@@ -191,6 +245,7 @@ void main() {
       permissionGuard: const AllowAllPermissionGuard(),
       readCompanyId: () => companyId,
       syncQueue: syncQueue,
+      accountingPoster: const _FakeAccountingPoster(),
     );
   });
 
@@ -376,6 +431,7 @@ void main() {
               updatedAt: DateTime.now().millisecondsSinceEpoch,
               status: const Value('draft'),
               companyId: const Value(companyId),
+              currencyCode: 'YER',
             ),
           );
 
@@ -399,6 +455,7 @@ void main() {
         documentNumber: 'REC-100',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.utc(2025, 1, 10),
+        warehouseId: 'WH-MAIN',
       );
 
       final result = await postingCoordinator.post(
@@ -493,7 +550,10 @@ void main() {
         expect(auditOp.entityId, event.uuid);
         expect(auditOp.payload['documentId'], 'DOC-SYNC-1');
         expect(auditOp.payload['eventType'], 'post');
-        expect(auditOp.payload['metadata'], equals({'postedValue': 1200.0}));
+        expect(
+          auditOp.payload['metadata'],
+          equals({'notes': 'Test sync survival', 'postedValue': 1200.0}),
+        );
       },
     );
 

@@ -26,11 +26,11 @@ class InventoryValuationCurrencyCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
-        child: const Center(
-          child: CircularProgressIndicator.adaptive(),
-        ),
+        child: const Center(child: CircularProgressIndicator.adaptive()),
       ),
       error: (err, _) => Container(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -144,10 +144,7 @@ class InventoryValuationCurrencyCard extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.lock_rounded,
-                          color: Colors.blue.shade900,
-                        ),
+                        Icon(Icons.lock_rounded, color: Colors.blue.shade900),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
@@ -181,7 +178,9 @@ class InventoryValuationCurrencyCard extends ConsumerWidget {
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: scheme.primary.withValues(alpha: 0.15),
+                          backgroundColor: scheme.primary.withValues(
+                            alpha: 0.15,
+                          ),
                           child: Text(
                             info.currency!.symbol,
                             style: TextStyle(

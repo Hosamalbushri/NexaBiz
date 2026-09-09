@@ -74,7 +74,9 @@ class ServiceCard extends StatelessWidget {
     }
 
     final tileColor = walletStyle
-        ? (isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F4F7))
+        ? (isDark
+              ? colorScheme.surfaceContainerHigh
+              : colorScheme.surfaceContainerHighest)
         : colorScheme.surface;
     final tileBorder = selected
         ? colorScheme.primary

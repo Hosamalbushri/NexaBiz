@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/bootstrap/app_bootstrap_coordinator.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
@@ -343,7 +344,7 @@ class _FirstRunSetupWizardPageState
                             : Container(
                                 height: 3,
                                 color: isDone
-                                    ? const Color(0xFF10B981)
+                                    ? AppColors.success
                                     : colorScheme.outlineVariant.withValues(
                                         alpha: 0.4,
                                       ),
@@ -357,7 +358,7 @@ class _FirstRunSetupWizardPageState
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isDone
-                              ? const Color(0xFF10B981)
+                              ? AppColors.success
                               : isCurrent
                               ? colorScheme.primary
                               : colorScheme.surfaceContainerHighest,
@@ -931,7 +932,7 @@ class _FirstRunSetupWizardPageState
             ),
             const SizedBox(height: 4),
             Padding(
-              padding: const EdgeInsets.only(left: 26, right: 26),
+              padding: const EdgeInsetsDirectional.only(start: 26, end: 26),
               child: Align(
                 alignment: isLtr ? Alignment.centerLeft : Alignment.centerRight,
                 child: Directionality(

@@ -18,7 +18,12 @@ import 'currencies_manage_page.dart';
 /// 2. Directs currency modifications to Currency Master (`CurrenciesManagePage`) via `[Manage Currencies]`.
 /// 3. NEVER displays or infers YER as a default when unconfigured.
 class FunctionalCurrencyConfigPage extends ConsumerStatefulWidget {
-  const FunctionalCurrencyConfigPage({super.key});
+  const FunctionalCurrencyConfigPage({
+    super.key,
+    this.showAppBar = true,
+  });
+
+  final bool showAppBar;
 
   @override
   ConsumerState<FunctionalCurrencyConfigPage> createState() =>
@@ -32,61 +37,64 @@ class _FunctionalCurrencyConfigPageState
     final stateInfoAsync = ref.watch(functionalCurrencyStateInfoProvider);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
+    final body = stateInfoAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: AppCard(
+            color: Theme.of(context).colorScheme.errorContainer,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  isArabic
+                      ? 'حدث خطأ أثناء تحميل تكوين العملة الوظيفية'
+                      : 'Error loading functional currency configuration',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(err.toString(), textAlign: TextAlign.center),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: isArabic ? 'إعادة المحاولة' : 'Retry',
+                  onPressed: () =>
+                      ref.refresh(functionalCurrencyStateInfoProvider),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      data: (info) => _buildContent(context, info),
+    );
+
+    if (!widget.showAppBar) {
+      return body;
+    }
+
     return Scaffold(
       appBar: CustomAppBar(
         title: isArabic
             ? 'تكوين العملة الوظيفية (الدفترية)'
             : 'Functional Currency Configuration',
       ),
-      body: stateInfoAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: AppCard(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    isArabic
-                        ? 'حدث خطأ أثناء تحميل تكوين العملة الوظيفية'
-                        : 'Error loading functional currency configuration',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(err.toString(), textAlign: TextAlign.center),
-                  const SizedBox(height: AppSpacing.md),
-                  AppButton(
-                    label: isArabic ? 'إعادة المحاولة' : 'Retry',
-                    onPressed: () => ref.refresh(functionalCurrencyStateInfoProvider),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        data: (info) => _buildContent(context, info),
-      ),
+      body: body,
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    FunctionalCurrencyStateInfo info,
-  ) {
+  Widget _buildContent(BuildContext context, FunctionalCurrencyStateInfo info) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    final contentColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
           _buildStatusHeaderCard(context, info),
           const SizedBox(height: AppSpacing.md),
-          if (info.configState == FunctionalCurrencyConfigState.currencyInactive)
+          if (info.configState ==
+              FunctionalCurrencyConfigState.currencyInactive)
             _buildAlertBanner(
               context: context,
               icon: Icons.warning_amber_rounded,
@@ -99,7 +107,8 @@ class _FunctionalCurrencyConfigPageState
                   ? 'تم إلغاء تنشيط العملة المحددة كعملة وظيفية في سجل العملات. يُرجى مراجعة سجل العملات الرئيسي.'
                   : 'The currency configured as functional is inactive in Currency Master.',
             )
-          else if (info.configState == FunctionalCurrencyConfigState.notConfigured)
+          else if (info.configState ==
+              FunctionalCurrencyConfigState.notConfigured)
             _buildAlertBanner(
               context: context,
               icon: Icons.info_outline_rounded,
@@ -112,7 +121,8 @@ class _FunctionalCurrencyConfigPageState
                   ? 'لم يتم اختيار عملة وظيفية للشركة بعد. يمكنك تعيين العملة الوظيفية من صفحة إدارة العملات.'
                   : 'No functional currency set yet. You can assign it from Currency Master.',
             )
-          else if (info.configState == FunctionalCurrencyConfigState.invalidConfig)
+          else if (info.configState ==
+              FunctionalCurrencyConfigState.invalidConfig)
             _buildAlertBanner(
               context: context,
               icon: Icons.error_outline_rounded,
@@ -142,7 +152,15 @@ class _FunctionalCurrencyConfigPageState
             },
           ),
         ],
-      ),
+      );
+
+    if (!widget.showAppBar) {
+      return contentColumn;
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: contentColumn,
     );
   }
 
@@ -162,7 +180,9 @@ class _FunctionalCurrencyConfigPageState
         tone = AppStatusTone.success;
         break;
       case FunctionalCurrencyConfigState.changeRestricted:
-        statusTitle = isArabic ? 'مضبوط ومقيد (توجد معاملات)' : 'Configured & Locked (Has Transactions)';
+        statusTitle = isArabic
+            ? 'مضبوط ومقيد (توجد معاملات)'
+            : 'Configured & Locked (Has Transactions)';
         tone = AppStatusTone.info;
         break;
       case FunctionalCurrencyConfigState.currencyInactive:
@@ -201,7 +221,9 @@ class _FunctionalCurrencyConfigPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isArabic ? 'حالة العملة الوظيفية' : 'Functional Currency Status',
+                    isArabic
+                        ? 'حالة العملة الوظيفية'
+                        : 'Functional Currency Status',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -218,11 +240,7 @@ class _FunctionalCurrencyConfigPageState
                 ],
               ),
             ),
-            AppStatusBadge(
-              label: statusTitle,
-              tone: tone,
-              animate: false,
-            ),
+            AppStatusBadge(label: statusTitle, tone: tone, animate: false),
           ],
         ),
       ),
@@ -255,15 +273,15 @@ class _FunctionalCurrencyConfigPageState
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: color),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   message,
-                  style: TextStyle(fontSize: 13, color: color.withValues(alpha: 0.9)),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: color.withValues(alpha: 0.9),
+                  ),
                 ),
               ],
             ),
@@ -309,13 +327,18 @@ class _FunctionalCurrencyConfigPageState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isArabic ? 'تفاصيل العملة الوظيفية الحالية' : 'Current Functional Currency Details',
+                  isArabic
+                      ? 'تفاصيل العملة الوظيفية الحالية'
+                      : 'Current Functional Currency Details',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -344,7 +367,9 @@ class _FunctionalCurrencyConfigPageState
             _buildDetailRow(
               context,
               label: isArabic ? 'رمز العملة' : 'Symbol',
-              value: currency.symbol.isNotEmpty ? currency.symbol : currency.code,
+              value: currency.symbol.isNotEmpty
+                  ? currency.symbol
+                  : currency.code,
             ),
             _buildDetailRow(
               context,

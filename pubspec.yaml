@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  nexabiz_ui:
+    path: packages/nexabiz_ui
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2

@@ -20,6 +20,7 @@ import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/app/providers/currency_rate_providers.dart';
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
@@ -134,7 +135,7 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
             composer.loadFromReceipt(receipt);
             _notesController.text = receipt.notes ?? '';
           } else {
-            final baseCurrency = ref.read(accountingBaseCurrencyProvider).code;
+            final baseCurrency = ref.read(accountingBaseCurrencyProvider)?.code ?? '';
             composer.reset(baseCurrency);
             if (books.isNotEmpty) composer.setVoucherBook(books.first);
             if (warehouses.isNotEmpty)
@@ -350,9 +351,15 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       onSave: _save,
     );
 
+    final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
+
     final body = ListView(
       padding: AppConstants.pageInsets(context),
       children: [
+        if (baseCurrency == null) ...[
+          const AppMissingCurrencyBanner(),
+          const SizedBox(height: AppSpacing.md),
+        ],
         if (_isPostedLocked) ...[
           AppDocumentLockedBanner(
             message: l10n.localeName == 'ar'

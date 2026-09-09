@@ -168,7 +168,6 @@ class CustomersModule extends AppModule {
           name: 'customersSettings',
           builder: (context, state) => const CustomersMasterSettingsPage(),
           routes: [
-
             GoRoute(
               path: 'parent-account',
               name: 'customersParentAccountSettings',
@@ -186,7 +185,9 @@ class CustomersModule extends AppModule {
           path: ':id',
           name: 'customersDetails',
           builder: (context, state) {
-            final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+            final id = AppRouteParamParser.tryParseInt(
+              state.pathParameters['id'],
+            );
             if (id == null) {
               return const CustomerDetailsPage(customerId: -1);
             }
@@ -197,7 +198,9 @@ class CustomersModule extends AppModule {
               path: 'edit',
               name: 'customersEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 if (id == null) {
                   return const CustomerFormPage(customerId: -1);
                 }

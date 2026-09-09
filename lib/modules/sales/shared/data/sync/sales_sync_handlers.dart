@@ -1,5 +1,5 @@
 import 'package:stock_count/core/network/remote_sync_api.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
 
 /// Sales adapter for the shared SyncManager.

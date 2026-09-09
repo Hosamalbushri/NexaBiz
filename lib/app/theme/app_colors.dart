@@ -1,3 +1,1 @@
-library app_colors;
-
-export '../../core/theme/tokens/app_colors.dart';
+export 'package:nexabiz_ui/nexabiz_ui.dart';

@@ -25,8 +25,8 @@ class DashboardRecentOperations extends ConsumerWidget {
     final dateFmt = DateFormat('dd/MM/yyyy');
 
     final tileColor = isDark
-        ? const Color(0xFF1C1C1E)
-        : const Color(0xFFF2F4F7);
+        ? colorScheme.surfaceContainerHigh
+        : colorScheme.surfaceContainerHighest;
     final tileBorder = isDark
         ? Colors.white.withValues(alpha: 0.06)
         : colorScheme.outlineVariant.withValues(alpha: 0.4);

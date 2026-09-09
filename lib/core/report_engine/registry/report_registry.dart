@@ -1,5 +1,3 @@
-import '../data/definitions/sales_period_report_spec.dart';
-import '../data/definitions/stock_movement_report_spec.dart';
 import '../data/providers/report_data_provider.dart';
 import '../domain/models/report_definition_spec.dart';
 
@@ -7,12 +5,14 @@ import '../domain/models/report_definition_spec.dart';
 class ReportRegistry {
   ReportRegistry._();
 
-  static final Map<String, ReportDefinitionSpec> _definitions = {
-    stockMovementReportSpec.id: stockMovementReportSpec,
-    salesPeriodReportSpec.id: salesPeriodReportSpec,
-  };
+  static final Map<String, ReportDefinitionSpec> _definitions = {};
 
   static final Map<String, ReportDataProvider> _providers = {};
+
+  /// Registers a declarative [ReportDefinitionSpec].
+  static void registerDefinition(ReportDefinitionSpec spec) {
+    _definitions[spec.id] = spec;
+  }
 
   /// Registers a custom or dynamic [ReportDataProvider].
   static void registerProvider(ReportDataProvider provider) {

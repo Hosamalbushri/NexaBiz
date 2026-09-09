@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/core/report_engine/report_engine.dart';
+import 'package:stock_count/modules/reports/data/definitions/sales_period_report_spec.dart';
+import 'package:stock_count/modules/reports/providers/sales_period_report_provider.dart';
 import 'package:stock_count/modules/reports/shared/presentation/providers/reports_providers.dart';
 
 /// App navigation entry point for Sales Period Analysis Report (تقرير مبيعات الفترة والعملاء).

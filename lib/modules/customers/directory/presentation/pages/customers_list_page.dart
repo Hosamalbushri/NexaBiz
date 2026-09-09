@@ -10,8 +10,8 @@ import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dar
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
-import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
+import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/customer_data_source.dart';
 import '../../domain/models/customer_exception.dart';

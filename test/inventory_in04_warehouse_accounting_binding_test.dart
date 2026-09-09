@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/inventory/inventory_accounting_poster_adapter.dart';
-import 'package:stock_count/core/errors/missing_account_exception.dart';
+import 'package:stock_count/shared/contracts/errors/account_exception.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';

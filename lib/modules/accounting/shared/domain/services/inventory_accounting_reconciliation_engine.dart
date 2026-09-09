@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/domain/services/inventory_subledger_port.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
 
 enum ReconciliationIssueType {
   missingJournalEntry,
@@ -80,7 +80,7 @@ class InventoryAccountingReconciliationEngine {
   final String Function()? _readCompanyId;
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
 
   /// Calculate total inventory subledger valuation based on open, non-deleted cost layers
   Future<double> calculateSubledgerValuation({String? companyId}) async {

@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -13,7 +13,7 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
   final String Function()? _readCompanyId;
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
 
   @override
   Future<List<InventoryDocumentRef>> findDependentDocuments({

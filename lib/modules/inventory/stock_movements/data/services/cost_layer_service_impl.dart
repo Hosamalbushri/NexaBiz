@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 import '../../../shared/data/database/inventory_database.dart';

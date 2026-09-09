@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
@@ -148,7 +149,9 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                               color: colorScheme.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(AppRadius.lg),
                               border: Border.all(
-                                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                             child: Row(
@@ -157,8 +160,9 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
                                     color: colorScheme.primary,
-                                    borderRadius:
-                                        BorderRadius.circular(AppRadius.md),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.md,
+                                    ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: colorScheme.primary.withValues(
@@ -186,16 +190,16 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                       Text(
                                         isEditing
                                             ? (isAr
-                                                ? 'تعديل بيانات المستودع والربط'
-                                                : 'Edit Warehouse Configuration')
+                                                  ? 'تعديل بيانات المستودع والربط'
+                                                  : 'Edit Warehouse Configuration')
                                             : (isAr
-                                                ? 'تهيئة مستودع جديد'
-                                                : 'Setup New Warehouse'),
+                                                  ? 'تهيئة مستودع جديد'
+                                                  : 'Setup New Warehouse'),
                                         style: theme.textTheme.titleLarge
                                             ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: colorScheme.onSurface,
-                                        ),
+                                              fontWeight: FontWeight.bold,
+                                              color: colorScheme.onSurface,
+                                            ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
@@ -204,9 +208,10 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                             : 'Configure core details, costing methodology, and chart of accounts mapping',
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                          height: 1.35,
-                                        ),
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                              height: 1.35,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -228,51 +233,28 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                             icon: Icons.store_rounded,
                             child: Column(
                               children: [
-                                TextField(
+                                AppTextField(
                                   controller: _codeCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: isAr
-                                        ? 'كود المستودع *'
-                                        : 'Warehouse Code *',
-                                    hintText: 'WH-01',
-                                    prefixIcon: const Icon(
-                                      Icons.qr_code_rounded,
-                                      size: 20,
-                                    ),
-                                  ),
+                                  label: isAr ? 'كود المستودع' : 'Warehouse Code',
+                                  required: true,
+                                  hint: 'WH-01',
+                                  prefixIcon: Icons.qr_code_rounded,
                                 ),
                                 const SizedBox(height: AppSpacing.md),
-                                TextField(
+                                AppTextField(
                                   controller: _nameCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: isAr
-                                        ? 'اسم المستودع *'
-                                        : 'Warehouse Name *',
-                                    hintText: isAr
-                                        ? 'المستودع الرئيسي'
-                                        : 'Main Warehouse',
-                                    prefixIcon: const Icon(
-                                      Icons.storefront_rounded,
-                                      size: 20,
-                                    ),
-                                  ),
+                                  label: isAr ? 'اسم المستودع' : 'Warehouse Name',
+                                  required: true,
+                                  hint: isAr ? 'المستودع الرئيسي' : 'Main Warehouse',
+                                  prefixIcon: Icons.storefront_rounded,
                                 ),
                                 const SizedBox(height: AppSpacing.md),
-                                TextField(
+                                AppTextField(
                                   controller: _managerCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: isAr
-                                        ? 'أمين / مدير المستودع'
-                                        : 'Warehouse Manager',
-                                    hintText: isAr
-                                        ? 'اسم المسؤول عن المستودع'
-                                        : 'Manager Name',
-                                    prefixIcon: const Icon(
-                                      Icons.person_outline_rounded,
-                                      size: 20,
-                                    ),
-                                   ),
-                                 ),
+                                  label: isAr ? 'أمين / مدير المستودع' : 'Warehouse Manager',
+                                  hint: isAr ? 'اسم المسؤول عن المستودع' : 'Manager Name',
+                                  prefixIcon: Icons.person_outline_rounded,
+                                ),
                               ],
                             ),
                           ),
@@ -290,31 +272,17 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                             icon: Icons.location_on_outlined,
                             child: Column(
                               children: [
-                                TextField(
+                                AppTextField(
                                   controller: _phoneCtrl,
                                   keyboardType: TextInputType.phone,
-                                  decoration: InputDecoration(
-                                    labelText: isAr
-                                        ? 'رقم الهاتف'
-                                        : 'Phone Number',
-                                    prefixIcon: const Icon(
-                                      Icons.phone_outlined,
-                                      size: 20,
-                                    ),
-                                  ),
+                                  label: isAr ? 'رقم الهاتف' : 'Phone Number',
+                                  prefixIcon: Icons.phone_outlined,
                                 ),
                                 const SizedBox(height: AppSpacing.md),
-                                TextField(
+                                AppTextField(
                                   controller: _addressCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: isAr
-                                        ? 'العنوان / الموقع'
-                                        : 'Physical Address',
-                                    prefixIcon: const Icon(
-                                      Icons.map_outlined,
-                                      size: 20,
-                                    ),
-                                  ),
+                                  label: isAr ? 'العنوان / الموقع' : 'Physical Address',
+                                  prefixIcon: Icons.map_outlined,
                                 ),
                               ],
                             ),
@@ -331,56 +299,42 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                 ? 'طريقة تتبع واحتساب تكلفة البضاعة في المستودع'
                                 : 'Costing method used for valuation layers',
                             icon: Icons.calculate_outlined,
-                            child: DropdownButtonFormField<CostValuationMethod?>(
-                              isExpanded: true,
-                              initialValue: _costValuationMethod,
-                              decoration: InputDecoration(
-                                labelText: isAr
-                                    ? 'طريقة احتساب التكلفة'
-                                    : 'Valuation Methodology',
-                                prefixIcon: const Icon(
-                                  Icons.account_tree_outlined,
-                                  size: 20,
-                                ),
-                                helperText: isAr
-                                    ? 'تحدد كيفية احتساب تكلفة البضاعة المباعة والمنصرفة'
-                                    : 'Determines COGS and stock movement issue costs',
-                              ),
+                            child: AppSelectField<CostValuationMethod?>(
+                              value: _costValuationMethod,
+                              label: isAr
+                                  ? 'طريقة احتساب التكلفة'
+                                  : 'Valuation Methodology',
+                              hint: isAr
+                                  ? 'افتراضي النظام (المتوسط المرجح)'
+                                  : 'System Default (Weighted Average)',
+                              helperText: isAr
+                                  ? 'تحدد كيفية احتساب تكلفة البضاعة المباعة والمنصرفة'
+                                  : 'Determines COGS and stock movement issue costs',
+                              prefixIcon: Icons.account_tree_outlined,
                               items: [
-                                DropdownMenuItem<CostValuationMethod?>(
+                                AppSelectItem<CostValuationMethod?>(
                                   value: null,
-                                  child: Text(
-                                    isAr
-                                        ? 'افتراضي النظام (المتوسط المرجح - Weighted Average)'
-                                        : 'System Default (Weighted Average)',
-                                    style: TextStyle(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
+                                  label: isAr
+                                      ? 'افتراضي النظام (المتوسط المرجح - Weighted Average)'
+                                      : 'System Default (Weighted Average)',
                                 ),
-                                DropdownMenuItem<CostValuationMethod?>(
+                                AppSelectItem<CostValuationMethod?>(
                                   value: CostValuationMethod.fifo,
-                                  child: Text(
-                                    isAr
-                                        ? 'FIFO - الوارد أولاً يصدر أولاً (First-In, First-Out)'
-                                        : 'FIFO (First-In, First-Out)',
-                                  ),
+                                  label: isAr
+                                      ? 'FIFO - الوارد أولاً يصدر أولاً (First-In, First-Out)'
+                                      : 'FIFO (First-In, First-Out)',
                                 ),
-                                DropdownMenuItem<CostValuationMethod?>(
+                                AppSelectItem<CostValuationMethod?>(
                                   value: CostValuationMethod.lifo,
-                                  child: Text(
-                                    isAr
-                                        ? 'LIFO - الوارد أخيراً يصدر أولاً (Last-In, First-Out)'
-                                        : 'LIFO (Last-In, First-Out)',
-                                  ),
+                                  label: isAr
+                                      ? 'LIFO - الوارد أخيراً يصدر أولاً (Last-In, First-Out)'
+                                      : 'LIFO (Last-In, First-Out)',
                                 ),
-                                DropdownMenuItem<CostValuationMethod?>(
+                                AppSelectItem<CostValuationMethod?>(
                                   value: CostValuationMethod.weightedAverage,
-                                  child: Text(
-                                    isAr
-                                        ? 'Weighted Average - المتوسط المرجح'
-                                        : 'Weighted Average',
-                                  ),
+                                  label: isAr
+                                      ? 'Weighted Average - المتوسط المرجح'
+                                      : 'Weighted Average',
                                 ),
                               ],
                               onChanged: (val) =>
@@ -424,8 +378,8 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                     );
                                     if (acc != null) {
                                       setState(
-                                        () => _inventoryAssetAccountId =
-                                            acc.uuid,
+                                        () =>
+                                            _inventoryAssetAccountId = acc.uuid,
                                       );
                                     }
                                   },
@@ -579,7 +533,8 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                     );
                                     if (acc != null) {
                                       setState(
-                                        () => _salesDiscountAccountId = acc.uuid,
+                                        () =>
+                                            _salesDiscountAccountId = acc.uuid,
                                       );
                                     }
                                   },
@@ -615,11 +570,8 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                 ),
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: SwitchListTile(
-                                value: _isDefault,
-                                onChanged: (val) =>
-                                    setState(() => _isDefault = val),
-                                secondary: Icon(
+                              child: ListTile(
+                                leading: Icon(
                                   Icons.star_rounded,
                                   color: _isDefault
                                       ? colorScheme.primary
@@ -640,6 +592,11 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
+                                ),
+                                trailing: AppSwitch(
+                                  value: _isDefault,
+                                  onChanged: (val) =>
+                                      setState(() => _isDefault = val),
                                 ),
                               ),
                             ),
@@ -675,61 +632,23 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                         constraints: const BoxConstraints(maxWidth: 840),
                         child: Row(
                           children: [
-                            OutlinedButton.icon(
+                            AppButton(
+                              label: isAr ? 'إلغاء' : 'Cancel',
                               onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                              label: Text(isAr ? 'إلغاء' : 'Cancel'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.md,
-                                  ),
-                                ),
-                              ),
+                              variant: AppButtonVariant.outlined,
+                              icon: Icons.arrow_back_rounded,
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
-                              child: FilledButton.icon(
+                              child: AppButton(
+                                label: isAr
+                                    ? 'حفظ البيانات والربط'
+                                    : 'Save Warehouse & Bindings',
                                 onPressed: _isSaving ? null : _onSave,
-                                icon: _isSaving
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.check_circle_rounded,
-                                        size: 18,
-                                      ),
-                                label: Text(
-                                  isAr
-                                      ? 'حفظ البيانات والربط'
-                                      : 'Save Warehouse & Bindings',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadius.md,
-                                    ),
-                                  ),
-                                ),
+                                variant: AppButtonVariant.filled,
+                                icon: Icons.check_circle_rounded,
+                                isLoading: _isSaving,
+                                expand: true,
                               ),
                             ),
                           ],
@@ -807,7 +726,6 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
     setState(() => _isSaving = true);
 
     try {
-
       final success = await ref
           .read(warehouseControllerProvider.notifier)
           .saveWarehouse(newWh, binding: binding);
@@ -1048,14 +966,13 @@ class _AccountBindingTile extends StatelessWidget {
                   isLinked
                       ? resolvedName
                       : (isAr
-                          ? 'غير معين (سيتم استخدام حساب الشركة الافتراضي)'
-                          : 'Not assigned (Company default account will be used)'),
+                            ? 'غير معين (سيتم استخدام حساب الشركة الافتراضي)'
+                            : 'Not assigned (Company default account will be used)'),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: isLinked
                         ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
-                    fontWeight:
-                        isLinked ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isLinked ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ),
@@ -1065,34 +982,20 @@ class _AccountBindingTile extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Column(
           children: [
-            OutlinedButton.icon(
+            AppButton(
               onPressed: onSelect,
-              icon: const Icon(Icons.search_rounded, size: 16),
-              label: Text(
-                isLinked
-                    ? (isAr ? 'تغيير' : 'Change')
-                    : (isAr ? 'اختيار' : 'Select'),
-              ),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-              ),
+              icon: Icons.search_rounded,
+              label: isLinked
+                  ? (isAr ? 'تغيير' : 'Change')
+                  : (isAr ? 'اختيار' : 'Select'),
+              variant: AppButtonVariant.outlined,
             ),
             if (isLinked) ...[
               const SizedBox(height: 4),
-              TextButton(
+              AppButton(
                 onPressed: onClear,
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  foregroundColor: colorScheme.error,
-                ),
-                child: Text(
-                  isAr ? 'إلغاء الربط' : 'Clear',
-                  style: const TextStyle(fontSize: 12),
-                ),
+                label: isAr ? 'إلغاء الربط' : 'Clear',
+                variant: AppButtonVariant.text,
               ),
             ],
           ],

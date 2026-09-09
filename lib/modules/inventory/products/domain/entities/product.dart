@@ -1,5 +1,5 @@
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 
 /// Master product in the inventory catalog (Drift-backed).
 class Product {

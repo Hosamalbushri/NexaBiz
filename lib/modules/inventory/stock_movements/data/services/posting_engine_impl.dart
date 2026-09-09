@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -9,7 +9,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/co
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/domain/services/cost_method_inheritance_resolver.dart';
-import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+import 'package:stock_count/core/setup/setup_core.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/stock_validation_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 import '../../domain/services/posting_engine.dart';
@@ -38,7 +38,7 @@ class PostingEngineImpl implements PostingEngine {
       StockValidationServiceImpl(_db, _readCompanyId);
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
 
   @override
   Future<double> applyInboundPosting({
@@ -979,8 +979,12 @@ class PostingEngineImpl implements PostingEngine {
             totalCost: Value(totalCost),
             inventoryCurrencyId: Value(invCurr),
             documentCurrencyId: Value(docCurr),
-            unitCostDocumentCurrency: Value(unitCostDocumentCurrency ?? unitCost),
-            totalCostDocumentCurrency: Value(totalCostDocumentCurrency ?? totalCost),
+            unitCostDocumentCurrency: Value(
+              unitCostDocumentCurrency ?? unitCost,
+            ),
+            totalCostDocumentCurrency: Value(
+              totalCostDocumentCurrency ?? totalCost,
+            ),
             exchangeRate: Value(exchangeRate ?? 1.0),
             costingMethodUsed: Value(costingMethodUsed),
             createdAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),

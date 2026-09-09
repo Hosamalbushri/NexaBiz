@@ -1,10 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:stock_count/app/reports/product_stock_movement_report_data_adapter.dart';
-import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/core/report_engine/data/providers/stock_movement_report_provider.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
 
@@ -32,6 +31,7 @@ void main() {
               StockReceiptsCompanion.insert(
                 uuid: '11111111-1111-1111-1111-111111111111',
                 receiptNumber: 'REC-001',
+                currencyCode: 'YER',
                 receiptDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
@@ -61,6 +61,7 @@ void main() {
               StockReceiptsCompanion.insert(
                 uuid: '33333333-3333-3333-3333-333333333333',
                 receiptNumber: 'REC-002',
+                currencyCode: 'YER',
                 receiptDate: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 updatedAt: DateTime.now().millisecondsSinceEpoch,
@@ -106,45 +107,10 @@ void main() {
     );
 
     test(
-      'ProductStockMovementReportDataAdapter isolates stock movements by tenant',
+      'ProductStockMovementReportDataAdapter isolates stock movements (Receipts, Issues, Transfers, Returns) strictly by companyId',
       () async {
-        // 1. Insert header for Company A
-        await db
-            .into(db.stockReceipts)
-            .insert(
-              StockReceiptsCompanion.insert(
-                uuid: '55555555-5555-5555-5555-555555555555',
-                receiptNumber: 'REC-100',
-                receiptDate: DateTime.now().millisecondsSinceEpoch,
-                createdAt: DateTime.now().millisecondsSinceEpoch,
-                updatedAt: DateTime.now().millisecondsSinceEpoch,
-                companyId: const Value('company-a'),
-              ),
-            );
-
-        // 2. Insert line for Company A
-        await db
-            .into(db.stockMovementLines)
-            .insert(
-              StockMovementLinesCompanion.insert(
-                uuid: '66666666-6666-6666-6666-666666666666',
-                movementUuid: '55555555-5555-5555-5555-555555555555',
-                movementType: 'receipt',
-                itemCode: 'PROD-A',
-                itemName: 'Product A',
-                quantity: const Value(50),
-                postedAt: Value(DateTime.now().millisecondsSinceEpoch),
-              ),
-            );
-
-        final adapterCompanyA = ProductStockMovementReportDataAdapter(
-          db: db,
-          loadCompanyProfile: () async =>
-              const CompanyProfile(name: 'Company A'),
-        );
-
-        final labels = const ProductStockMovementReportLabels(
-          companyName: 'Company A',
+        const labels = ProductStockMovementReportLabels(
+          companyName: 'Test Company',
           reportTitle: 'Stock Movement',
           warehouseLabel: 'Warehouse',
           productCodeLabel: 'Product Code',
@@ -171,14 +137,202 @@ void main() {
           emptyMessage: 'No Data',
         );
 
-        final payload = await adapterCompanyA.load(
-          productId: 'PROD-A',
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+        // --- COMPANY A DATASET ---
+        // 1. Company A Receipt
+        await db.into(db.stockReceipts).insert(
+              StockReceiptsCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000001',
+                receiptNumber: 'REC-A-100',
+                currencyCode: 'YER',
+                receiptDate: nowMs,
+                createdAt: nowMs,
+                updatedAt: nowMs,
+                companyId: const Value('company-a'),
+              ),
+            );
+        await db.into(db.stockMovementLines).insert(
+              StockMovementLinesCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000002',
+                movementUuid: '10000000-0000-0000-0000-000000000001',
+                movementType: 'receipt',
+                itemCode: 'PROD-SHARED',
+                itemName: 'Shared Product',
+                quantity: const Value(100),
+                unitCost: const Value(10.0),
+              ),
+            );
+
+        // 2. Company A Issue
+        await db.into(db.stockIssues).insert(
+              StockIssuesCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000003',
+                issueNumber: 'ISS-A-100',
+                currencyCode: 'YER',
+                issueDate: nowMs + 1000,
+                createdAt: nowMs,
+                updatedAt: nowMs,
+                companyId: const Value('company-a'),
+              ),
+            );
+        await db.into(db.stockMovementLines).insert(
+              StockMovementLinesCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000004',
+                movementUuid: '10000000-0000-0000-0000-000000000003',
+                movementType: 'issue',
+                itemCode: 'PROD-SHARED',
+                itemName: 'Shared Product',
+                quantity: const Value(30),
+                unitCost: const Value(10.0),
+              ),
+            );
+
+        // 3. Company A Transfer
+        await db.into(db.stockTransfers).insert(
+              StockTransfersCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000005',
+                transferNumber: 'TR-A-100',
+                fromWarehouseId: 'WH-1',
+                toWarehouseId: 'WH-2',
+                transferDate: nowMs + 2000,
+                createdAt: nowMs,
+                updatedAt: nowMs,
+                companyId: const Value('company-a'),
+              ),
+            );
+        await db.into(db.stockMovementLines).insert(
+              StockMovementLinesCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000006',
+                movementUuid: '10000000-0000-0000-0000-000000000005',
+                movementType: 'transfer',
+                itemCode: 'PROD-SHARED',
+                itemName: 'Shared Product',
+                quantity: const Value(15),
+                unitCost: const Value(10.0),
+              ),
+            );
+
+        // 4. Company A Return
+        await db.into(db.stockReturns).insert(
+              StockReturnsCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000007',
+                returnNumber: 'RET-A-100',
+                returnType: 'sales_return',
+                returnDate: nowMs + 3000,
+                createdAt: nowMs,
+                updatedAt: nowMs,
+                companyId: const Value('company-a'),
+              ),
+            );
+        await db.into(db.stockMovementLines).insert(
+              StockMovementLinesCompanion.insert(
+                uuid: '10000000-0000-0000-0000-000000000008',
+                movementUuid: '10000000-0000-0000-0000-000000000007',
+                movementType: 'return',
+                itemCode: 'PROD-SHARED',
+                itemName: 'Shared Product',
+                quantity: const Value(5),
+                unitCost: const Value(10.0),
+              ),
+            );
+
+        // --- COMPANY B DATASET (Identical product ID 'PROD-SHARED') ---
+        // 1. Company B Receipt
+        await db.into(db.stockReceipts).insert(
+              StockReceiptsCompanion.insert(
+                uuid: '20000000-0000-0000-0000-000000000001',
+                receiptNumber: 'REC-B-999',
+                currencyCode: 'YER',
+                receiptDate: nowMs,
+                createdAt: nowMs,
+                updatedAt: nowMs,
+                companyId: const Value('company-b'),
+              ),
+            );
+        await db.into(db.stockMovementLines).insert(
+              StockMovementLinesCompanion.insert(
+                uuid: '20000000-0000-0000-0000-000000000002',
+                movementUuid: '20000000-0000-0000-0000-000000000001',
+                movementType: 'receipt',
+                itemCode: 'PROD-SHARED',
+                itemName: 'Shared Product',
+                quantity: const Value(500),
+                unitCost: const Value(20.0),
+              ),
+            );
+
+        // 2. Company B Issue
+        await db.into(db.stockIssues).insert(
+              StockIssuesCompanion.insert(
+                uuid: '20000000-0000-0000-0000-000000000003',
+                issueNumber: 'ISS-B-999',
+                currencyCode: 'YER',
+                issueDate: nowMs + 1000,
+                createdAt: nowMs,
+                updatedAt: nowMs,
+                companyId: const Value('company-b'),
+              ),
+            );
+        await db.into(db.stockMovementLines).insert(
+              StockMovementLinesCompanion.insert(
+                uuid: '20000000-0000-0000-0000-000000000004',
+                movementUuid: '20000000-0000-0000-0000-000000000003',
+                movementType: 'issue',
+                itemCode: 'PROD-SHARED',
+                itemName: 'Shared Product',
+                quantity: const Value(200),
+                unitCost: const Value(20.0),
+              ),
+            );
+
+        // Instantiate adapter
+        final adapter = ProductStockMovementReportDataAdapter(
+          db: db,
+          loadFunctionalCurrencyCode: () async => 'YER',
+        );
+
+        // --- QUERY AS COMPANY A ---
+        final filterA = const ReportQueryFilter(
+          companyId: 'company-a',
+          productUuid: 'PROD-SHARED',
+        );
+        final payloadA = await adapter.loadFromFilter(
+          filter: filterA,
           labels: labels,
         );
 
-        expect(payload.rows, hasLength(1));
-        expect(payload.rows.first.documentNumber, equals('REC-100'));
-        expect(payload.rows.first.inTotalQty, equals(50.0));
+        final docNumsA = payloadA.rows.map((r) => r.documentNumber).toSet();
+        // Positive assertions: Company A documents MUST appear
+        expect(docNumsA, contains('REC-A-100'));
+        expect(docNumsA, contains('ISS-A-100'));
+        expect(docNumsA, contains('TR-A-100'));
+        expect(docNumsA, contains('RET-A-100'));
+
+        // Negative assertions: Company B documents MUST NOT appear
+        expect(docNumsA, isNot(contains('REC-B-999')));
+        expect(docNumsA, isNot(contains('ISS-B-999')));
+
+        // --- QUERY AS COMPANY B ---
+        final filterB = const ReportQueryFilter(
+          companyId: 'company-b',
+          productUuid: 'PROD-SHARED',
+        );
+        final payloadB = await adapter.loadFromFilter(
+          filter: filterB,
+          labels: labels,
+        );
+
+        final docNumsB = payloadB.rows.map((r) => r.documentNumber).toSet();
+        // Positive assertions: Company B documents MUST appear
+        expect(docNumsB, contains('REC-B-999'));
+        expect(docNumsB, contains('ISS-B-999'));
+
+        // Negative assertions: Company A documents MUST NOT appear
+        expect(docNumsB, isNot(contains('REC-A-100')));
+        expect(docNumsB, isNot(contains('ISS-A-100')));
+        expect(docNumsB, isNot(contains('TR-A-100')));
+        expect(docNumsB, isNot(contains('RET-A-100')));
       },
     );
   });

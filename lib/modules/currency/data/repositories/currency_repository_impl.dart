@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import '../../domain/entities/currency.dart';
@@ -239,9 +239,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
   }
 
   @override
-  Future<void> ensureDefaultCurrenciesSeeded({
-    String defaultCode = '',
-  }) async {
+  Future<void> ensureDefaultCurrenciesSeeded({String defaultCode = ''}) async {
     final existing = await getAll(includeInactive: true);
     if (existing.isNotEmpty) return;
 

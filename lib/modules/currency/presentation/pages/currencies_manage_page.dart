@@ -1,34 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
+import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
+import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
-import 'package:stock_count/core/widgets/app_text_field.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
+
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/inventory_valuation_currency_providers.dart';
-import 'package:stock_count/modules/system_setup/domain/entities/company_inventory_config.dart';
-import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+
+import '../../domain/entities/app_currency.dart';
 import '../../domain/entities/currency.dart';
 import '../providers/currency_providers.dart';
 import '../providers/functional_currency_providers.dart';
+import '../widgets/app_searchable_currency_picker.dart';
 
 enum _CurrencyFilter { all, activeOnly, inactiveOnly }
 
-/// Master Data UI page for Currencies (List, Search, Create, Edit, Toggle Active, View Details).
+/// Standardized Master Data UI page for Currencies built with [ModuleListScaffold].
 class CurrenciesManagePage extends ConsumerStatefulWidget {
   const CurrenciesManagePage({super.key});
 
   @override
-  ConsumerState<CurrenciesManagePage> createState() => _CurrenciesManagePageState();
+  ConsumerState<CurrenciesManagePage> createState() =>
+      _CurrenciesManagePageState();
 }
 
 class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
@@ -41,262 +36,444 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final currenciesAsync = ref.watch(allCurrenciesProvider);
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: isArabic ? 'إدارة العملات' : 'Currencies Master Data',
-        showBackButton: true,
-      ),
+    final funcCode =
+        ref
+            .watch(functionalCurrencyStateInfoProvider)
+            .valueOrNull
+            ?.currencyCode
+            .toUpperCase() ??
+        '';
+    final valCode =
+        ref
+            .watch(inventoryValuationCurrencyStateProvider)
+            .valueOrNull
+            ?.currencyCode
+            .toUpperCase() ??
+        '';
+
+    final currenciesList = currenciesAsync.valueOrNull ?? const [];
+
+    // Filter currencies by query and status filter chip
+    final filteredCurrencies = currenciesList.where((c) {
+      if (_filter == _CurrencyFilter.activeOnly && !c.isActive) {
+        return false;
+      }
+      if (_filter == _CurrencyFilter.inactiveOnly && c.isActive) {
+        return false;
+      }
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final matchCode = c.code.toLowerCase().contains(q);
+        final matchAr = c.nameAr.toLowerCase().contains(q);
+        final matchEn = c.nameEn.toLowerCase().contains(q);
+        final matchSymbol = c.symbol.toLowerCase().contains(q);
+        return matchCode || matchAr || matchEn || matchSymbol;
+      }
+      return true;
+    }).toList();
+
+    return ModuleListScaffold<Currency>(
+      title: isArabic ? 'قائمة العملات' : 'Currencies List',
+      searchQuery: _searchQuery,
+      searchHint: isArabic ? 'بحث برمز العملة أو الاسم...' : 'Search code or name...',
+      onSearchChanged: (val) {
+        setState(() => _searchQuery = val.trim());
+      },
+      isLoading: currenciesAsync.isLoading && !currenciesAsync.hasValue,
+      error: currenciesAsync.error,
+      onRetry: () {
+        ref.invalidate(allCurrenciesProvider);
+      },
+      onRefresh: () async {
+        ref.invalidate(allCurrenciesProvider);
+        ref.invalidate(functionalCurrencyStateInfoProvider);
+      },
+      emptyTitle: isArabic ? 'لا توجد عملات' : 'No Currencies Found',
+      emptyMessage: isArabic
+          ? 'لم يتم العثور على عملات تطابق معايير البحث'
+          : 'No currencies match your filter criteria',
+      emptyIcon: Icons.monetization_on_outlined,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateCurrencyDialog(context),
         icon: const Icon(Icons.add_rounded),
         label: Text(isArabic ? 'إضافة عملة' : 'Add Currency'),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppConstants.pagePadding),
+      actions: [
+        PopupMenuButton<_CurrencyFilter>(
+          icon: const Icon(Icons.filter_list_rounded),
+          tooltip: isArabic ? 'تصفية' : 'Filter',
+          initialValue: _filter,
+          onSelected: (filter) => setState(() => _filter = filter),
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: _CurrencyFilter.all,
+              child: Row(
+                children: [
+                  if (_filter == _CurrencyFilter.all)
+                    const Icon(Icons.check_rounded, size: 18)
+                  else
+                    const SizedBox(width: 18),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(isArabic ? 'عرض الكل' : 'All Currencies'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: _CurrencyFilter.activeOnly,
+              child: Row(
+                children: [
+                  if (_filter == _CurrencyFilter.activeOnly)
+                    const Icon(Icons.check_rounded, size: 18)
+                  else
+                    const SizedBox(width: 18),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(isArabic ? 'العملات النشطة فقط' : 'Active Only'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: _CurrencyFilter.inactiveOnly,
+              child: Row(
+                children: [
+                  if (_filter == _CurrencyFilter.inactiveOnly)
+                    const Icon(Icons.check_rounded, size: 18)
+                  else
+                    const SizedBox(width: 18),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(isArabic ? 'العملات غير النشطة' : 'Inactive Only'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+      items: filteredCurrencies,
+      itemBuilder: (context, currency) {
+        return _buildCurrencyItemCard(
+          context,
+          currency,
+          funcCode,
+          valCode,
+          isArabic,
+          theme,
+        );
+      },
+    );
+  }
+
+  Widget _buildCurrencyItemCard(
+    BuildContext context,
+    Currency currency,
+    String funcCode,
+    String valCode,
+    bool isArabic,
+    ThemeData theme,
+  ) {
+    final isFunc =
+        funcCode.isNotEmpty && currency.code.toUpperCase() == funcCode;
+    final isVal =
+        valCode.isNotEmpty && currency.code.toUpperCase() == valCode;
+
+    return Material(
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: () => _showCurrencyDetails(context, currency, isArabic),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: isFunc
+                  ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppTextField(
-                  hint: isArabic ? 'بحث برمز العملة أو الاسم...' : 'Search code or name...',
-                  prefixIcon: Icons.search_rounded,
-                  onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                ),
-                const SizedBox(height: AppSpacing.sm),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    FilterChip(
-                      selected: _filter == _CurrencyFilter.all,
-                      label: Text(isArabic ? 'الكل' : 'All'),
-                      onSelected: (_) => setState(() => _filter = _CurrencyFilter.all),
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: currency.isActive
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surfaceContainerHigh,
+                      child: Text(
+                        currency.symbol.isNotEmpty
+                            ? currency.symbol
+                            : currency.code,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: currency.isActive
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: AppSpacing.xs),
-                    FilterChip(
-                      selected: _filter == _CurrencyFilter.activeOnly,
-                      label: Text(isArabic ? 'نشط فقط' : 'Active Only'),
-                      onSelected: (_) => setState(() => _filter = _CurrencyFilter.activeOnly),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.secondaryContainer,
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.xs),
+                                ),
+                                child: Text(
+                                  currency.code,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        theme.colorScheme.onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Expanded(
+                                child: Text(
+                                  currency.localizedName(isArabic),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            currency.nameEn,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: AppSpacing.xs),
-                    FilterChip(
-                      selected: _filter == _CurrencyFilter.inactiveOnly,
-                      label: Text(isArabic ? 'غير نشط' : 'Inactive Only'),
-                      onSelected: (_) => setState(() => _filter = _CurrencyFilter.inactiveOnly),
+                    PopupMenuButton<String>(
+                      onSelected: (val) {
+                        if (val == 'details') {
+                          _showCurrencyDetails(context, currency, isArabic);
+                        } else if (val == 'edit') {
+                          _showEditCurrencyDialog(context, currency);
+                        } else if (val == 'set_base') {
+                          _showSetAsFunctionalCurrencyDialog(context, currency);
+                        } else if (val == 'toggle') {
+                          _toggleActive(currency);
+                        } else if (val == 'delete') {
+                          _confirmDelete(context, currency);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'details',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline_rounded, size: 20),
+                              const SizedBox(width: AppSpacing.xs),
+                              Text(isArabic ? 'التفاصيل' : 'Details'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit_outlined, size: 20),
+                              const SizedBox(width: AppSpacing.xs),
+                              Text(isArabic ? 'تعديل' : 'Edit'),
+                            ],
+                          ),
+                        ),
+                        if (!isFunc)
+                          PopupMenuItem(
+                            value: 'set_base',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.account_balance_outlined, size: 20),
+                                const SizedBox(width: AppSpacing.xs),
+                                Text(isArabic ? 'تعيين كعملة رئيسية' : 'Set as Base'),
+                              ],
+                            ),
+                          ),
+                        PopupMenuItem(
+                          value: 'toggle',
+                          child: Row(
+                            children: [
+                              Icon(
+                                currency.isActive
+                                    ? Icons.block_rounded
+                                    : Icons.check_circle_outline_rounded,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Text(
+                                currency.isActive
+                                    ? (isArabic ? 'تعطيل' : 'Deactivate')
+                                    : (isArabic ? 'تفعيل' : 'Activate'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                size: 20,
+                                color: theme.colorScheme.error,
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Text(
+                                isArabic ? 'حذف' : 'Delete',
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                  ],
+                ),
+
+                const SizedBox(height: AppSpacing.xs),
+
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    AppStatusBadge(
+                      label: currency.isActive
+                          ? (isArabic ? 'نشط' : 'Active')
+                          : (isArabic ? 'غير نشط' : 'Inactive'),
+                      tone: currency.isActive
+                          ? AppStatusTone.success
+                          : AppStatusTone.neutral,
+                      animate: false,
+                    ),
+                    if (isFunc)
+                      AppStatusBadge(
+                        label: isArabic
+                            ? 'العملة الرئيسية للشركة'
+                            : 'Main Functional Base',
+                        tone: AppStatusTone.info,
+                        animate: false,
+                      ),
+                    if (isVal)
+                      AppStatusBadge(
+                        label: isArabic
+                            ? 'تقييم المخزون'
+                            : 'Inventory Valuation',
+                        tone: AppStatusTone.warning,
+                        animate: false,
+                      ),
                   ],
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: currenciesAsync.when(
-              loading: () => const AppLoading(),
-              error: (e, _) => AppErrorState(message: e.toString()),
-              data: (currencies) {
-                final funcCode = ref.watch(functionalCurrencyStateInfoProvider).valueOrNull?.currencyCode.toUpperCase() ?? '';
-                final valCode = ref.watch(inventoryValuationCurrencyStateProvider).valueOrNull?.currencyCode.toUpperCase() ?? '';
+        ),
+      ),
+    );
+  }
 
-                final filtered = currencies.where((c) {
-                  if (_filter == _CurrencyFilter.activeOnly && !c.isActive) return false;
-                  if (_filter == _CurrencyFilter.inactiveOnly && c.isActive) return false;
-                  if (_searchQuery.isNotEmpty) {
-                    final q = _searchQuery.toLowerCase();
-                    final matchCode = c.code.toLowerCase().contains(q);
-                    final matchAr = c.nameAr.toLowerCase().contains(q);
-                    final matchEn = c.nameEn.toLowerCase().contains(q);
-                    final matchSymbol = c.symbol.toLowerCase().contains(q);
-                    return matchCode || matchAr || matchEn || matchSymbol;
-                  }
-                  return true;
-                }).toList();
-
-                if (filtered.isEmpty) {
-                  return AppEmptyState(
-                    title: isArabic ? 'لا توجد عملات' : 'No Currencies Found',
-                    subtitle: isArabic
-                        ? 'لم يتم العثور على عملات تطابق معايير البحث'
-                        : 'No currencies match your filter criteria',
-                    icon: Icons.monetization_on_outlined,
-                  );
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppConstants.pagePadding,
-                    0,
-                    AppConstants.pagePadding,
-                    80,
+  void _showCurrencyDetails(
+    BuildContext context,
+    Currency currency,
+    bool isArabic,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.lg,
+            top: AppSpacing.lg,
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    child: Text(
+                      currency.symbol.isNotEmpty ? currency.symbol : currency.code,
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final currency = filtered[index];
-                    final isFunc = funcCode.isNotEmpty && currency.code.toUpperCase() == funcCode;
-                    final isVal = valCode.isNotEmpty && currency.code.toUpperCase() == valCode;
-
-                    return AppCard(
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.xs,
-                        ),
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: currency.isActive
-                                ? theme.colorScheme.primaryContainer
-                                : theme.colorScheme.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                          ),
-                          child: Text(
-                            currency.symbol.isNotEmpty ? currency.symbol : currency.code,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: currency.isActive
-                                  ? theme.colorScheme.onPrimaryContainer
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        title: Row(
-                          children: [
-                            Text(
-                              currency.code,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Expanded(
-                              child: Text(
-                                '— ${currency.localizedName(isArabic)}',
-                                style: theme.textTheme.bodyMedium,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isArabic
-                                  ? 'الخانات العشرية: ${currency.decimalDigits}'
-                                  : 'Decimals: ${currency.decimalDigits}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            if (isFunc || isVal) ...[
-                              const SizedBox(height: 4),
-                              Wrap(
-                                spacing: 4,
-                                children: [
-                                  if (isFunc)
-                                    AppStatusBadge(
-                                      label: isArabic ? 'العملة الرئيسية' : 'Main Currency',
-                                      tone: AppStatusTone.info,
-                                      animate: false,
-                                    ),
-                                  if (isVal)
-                                    AppStatusBadge(
-                                      label: isArabic ? 'تقييم المخزون' : 'Inventory Valuation',
-                                      tone: AppStatusTone.info,
-                                      animate: false,
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AppStatusBadge(
-                              label: currency.isActive
-                                  ? (isArabic ? 'نشط' : 'Active')
-                                  : (isArabic ? 'غير نشط' : 'Inactive'),
-                              tone: currency.isActive ? AppStatusTone.success : AppStatusTone.neutral,
-                              animate: false,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            PopupMenuButton<String>(
-                              onSelected: (val) {
-                                if (val == 'details') {
-                                  _showCurrencyDetails(context, currency, isArabic);
-                                } else if (val == 'edit') {
-                                  _showEditCurrencyDialog(context, currency);
-                                } else if (val == 'toggle') {
-                                  _toggleActive(currency);
-                                } else if (val == 'delete') {
-                                  _confirmDelete(context, currency);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'details',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.info_outline_rounded, size: 20),
-                                      const SizedBox(width: AppSpacing.xs),
-                                      Text(isArabic ? 'التفاصيل' : 'Details'),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.edit_outlined, size: 20),
-                                      const SizedBox(width: AppSpacing.xs),
-                                      Text(isArabic ? 'تعديل' : 'Edit'),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'toggle',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        currency.isActive ? Icons.block_rounded : Icons.check_circle_outline_rounded,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: AppSpacing.xs),
-                                      Text(
-                                        currency.isActive
-                                            ? (isArabic ? 'تعطيل' : 'Deactivate')
-                                            : (isArabic ? 'تفعيل' : 'Activate'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete_outline_rounded, size: 20, color: theme.colorScheme.error),
-                                      const SizedBox(width: AppSpacing.xs),
-                                      Text(
-                                        isArabic ? 'حذف' : 'Delete',
-                                        style: TextStyle(color: theme.colorScheme.error),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                  const SizedBox(width: AppSpacing.md),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        currency.localizedName(isArabic),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                      Text(
+                        currency.code,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const Divider(height: AppSpacing.lg),
+              _detailRow(isArabic ? 'الاسم بالإنجليزي' : 'English Name', currency.nameEn),
+              _detailRow(isArabic ? 'الاسم بالعربي' : 'Arabic Name', currency.nameAr),
+              _detailRow(isArabic ? 'الرمز' : 'Symbol', currency.symbol),
+              _detailRow(isArabic ? 'الخانات العشرية' : 'Decimals', '${currency.decimalDigits}'),
+              _detailRow(
+                isArabic ? 'الحالة' : 'Status',
+                currency.isActive
+                    ? (isArabic ? 'نشط' : 'Active')
+                    : (isArabic ? 'غير نشط' : 'Inactive'),
+              ),
+            ],
           ),
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -304,538 +481,326 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
 
   Future<void> _showCreateCurrencyDialog(BuildContext context) async {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final currencies = ref.read(allCurrenciesProvider).valueOrNull ?? [];
-    final existingCodes = currencies.map((c) => c.code.toUpperCase()).toList();
+    AppCurrency? selectedAppCurrency;
+    int decimalDigits = 2;
 
-    final result = await showDialog<_CurrencyFormResult>(
+    await showDialog<void>(
       context: context,
-      builder: (_) => _CurrencyFormDialog(
-        existingCodes: existingCodes,
-        isCurrentlyFunctionalCurrency: false,
-        isCurrentlyInventoryValuationCurrency: false,
-      ),
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(isArabic ? 'إضافة عملة جديدة' : 'Add New Currency'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppSearchableCurrencyPickerField(
+                      selectedPreset: selectedAppCurrency,
+                      onPresetSelected: (appCurrency) {
+                        setDialogState(() {
+                          selectedAppCurrency = appCurrency;
+                          decimalDigits = appCurrency.decimalDigits;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      initialValue: decimalDigits.toString(),
+                      decoration: InputDecoration(
+                        labelText: isArabic ? 'الخانات العشرية' : 'Decimals',
+                        border: const OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) {
+                        final parsed = int.tryParse(val);
+                        if (parsed != null && parsed >= 0 && parsed <= 6) {
+                          setDialogState(() {
+                            decimalDigits = parsed;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: selectedAppCurrency == null
+                      ? null
+                      : () async {
+                          final selected = selectedAppCurrency!;
+                          final draft = CurrencyDraft(
+                            code: selected.code,
+                            nameAr: selected.nameAr,
+                            nameEn: selected.nameEn,
+                            symbol: selected.symbol,
+                            decimalDigits: decimalDigits,
+                            isActive: true,
+                          );
+                          try {
+                            await ref
+                                .read(currencyRepositoryProvider)
+                                .upsert(draft);
+                            ref.invalidate(allCurrenciesProvider);
+                            if (dialogCtx.mounted) {
+                              Navigator.of(dialogCtx).pop();
+                            }
+                            if (mounted) {
+                              showAppSnackBar(
+                                this.context,
+                                message: isArabic
+                                    ? 'تمت إضافة العملة بنجاح'
+                                    : 'Currency added successfully',
+                                isSuccess: true,
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              showAppSnackBar(
+                                this.context,
+                                message: e.toString(),
+                                isSuccess: false,
+                              );
+                            }
+                          }
+                        },
+                  child: Text(isArabic ? 'حفظ' : 'Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
-    if (result == null || !mounted) return;
-    try {
-      // 1. Save Currency Master Record FIRST
-      await ref.read(currencyRepositoryProvider).upsert(result.draft);
-
-      // 2. Assign Functional Currency role if requested
-      if (result.isFunctionalCurrency) {
-        await ref
-            .read(functionalCurrencyServiceProvider)
-            .setFunctionalCurrency(result.draft.code);
-      }
-
-      // 3. Assign Inventory Valuation Currency role if requested
-      if (result.isInventoryValuationCurrency) {
-        final initRepo = ref.read(companyInitializationRepositoryProvider);
-        final state = await initRepo.getState();
-        final currentConfig = await initRepo.getInventoryConfig();
-        final updatedConfig = (currentConfig ??
-                CompanyInventoryConfig(
-                  companyId: state.companyId,
-                  inventoryBaseCurrencyId: result.draft.code,
-                ))
-            .copyWith(inventoryBaseCurrencyId: result.draft.code);
-        await initRepo.saveInventoryConfig(updatedConfig);
-      }
-
-      ref.invalidate(functionalCurrencyStateInfoProvider);
-      ref.invalidate(inventoryValuationCurrencyStateProvider);
-      ref.invalidate(companyInventoryConfigProvider);
-      ref.invalidate(allCurrenciesProvider);
-      ref.invalidate(activeCurrenciesProvider);
-
-      if (!mounted) return;
-      showAppSnackBar(
-        this.context,
-        message: isArabic ? 'تم حفظ العملة وتعيين الأدوار بنجاح' : 'Currency saved and roles updated successfully',
-        isSuccess: true,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      final msg = e is CurrencyValidationException ? e.message : e.toString();
-      showAppSnackBar(this.context, message: msg, isSuccess: false);
-    }
   }
 
-  Future<void> _showEditCurrencyDialog(BuildContext context, Currency currency) async {
+  Future<void> _showEditCurrencyDialog(
+    BuildContext context,
+    Currency currency,
+  ) async {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final funcInfo = ref.read(functionalCurrencyStateInfoProvider).valueOrNull;
-    final valInfo = ref.read(inventoryValuationCurrencyStateProvider).valueOrNull;
+    final nameArCtrl = TextEditingController(text: currency.nameAr);
+    final nameEnCtrl = TextEditingController(text: currency.nameEn);
+    final symbolCtrl = TextEditingController(text: currency.symbol);
+    int decimalDigits = currency.decimalDigits;
 
-    final isFunctional = funcInfo?.currencyCode.toUpperCase() == currency.code.toUpperCase();
-    final isValuation = valInfo?.currencyCode.toUpperCase() == currency.code.toUpperCase();
-
-    final isFunctionalLocked = isFunctional && (funcInfo?.isLocked ?? false);
-    final isValuationLocked = isValuation && (valInfo?.isLocked ?? false);
-
-    final result = await showDialog<_CurrencyFormResult>(
+    await showDialog<void>(
       context: context,
-      builder: (_) => _CurrencyFormDialog(
-        initialCurrency: currency,
-        isCurrentlyFunctionalCurrency: isFunctional,
-        isCurrentlyInventoryValuationCurrency: isValuation,
-        isFunctionalLocked: isFunctionalLocked,
-        isValuationLocked: isValuationLocked,
-      ),
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: Text(
+            isArabic
+                ? 'تعديل العملة (${currency.code})'
+                : 'Edit Currency (${currency.code})',
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameArCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الاسم بالعربي' : 'Arabic Name',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: nameEnCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الاسم بالإنجليزي' : 'English Name',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: symbolCtrl,
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الرمز' : 'Symbol',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  initialValue: decimalDigits.toString(),
+                  decoration: InputDecoration(
+                    labelText: isArabic ? 'الخانات العشرية' : 'Decimals',
+                    border: const OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (val) {
+                    final parsed = int.tryParse(val);
+                    if (parsed != null && parsed >= 0 && parsed <= 6) {
+                      decimalDigits = parsed;
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final draft = CurrencyDraft(
+                  uuid: currency.uuid,
+                  code: currency.code,
+                  nameAr: nameArCtrl.text.trim(),
+                  nameEn: nameEnCtrl.text.trim(),
+                  symbol: symbolCtrl.text.trim(),
+                  decimalDigits: decimalDigits,
+                  isDefault: currency.isDefault,
+                  isActive: currency.isActive,
+                );
+                try {
+                  await ref
+                      .read(currencyRepositoryProvider)
+                      .upsert(draft);
+                  ref.invalidate(allCurrenciesProvider);
+                  if (dialogCtx.mounted) {
+                    Navigator.of(dialogCtx).pop();
+                  }
+                  if (mounted) {
+                    showAppSnackBar(
+                      this.context,
+                      message: isArabic
+                          ? 'تم تحديث العملة بنجاح'
+                          : 'Currency updated successfully',
+                      isSuccess: true,
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    showAppSnackBar(
+                      this.context,
+                      message: e.toString(),
+                      isSuccess: false,
+                    );
+                  }
+                }
+              },
+              child: Text(isArabic ? 'حفظ' : 'Save'),
+            ),
+          ],
+        );
+      },
     );
-    if (result == null || !mounted) return;
+  }
+
+  Future<void> _showSetAsFunctionalCurrencyDialog(
+    BuildContext context,
+    Currency currency,
+  ) async {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final confirmed = await showAppDialog(
+      context: context,
+      title: isArabic
+          ? 'تعيين العملة الرئيسية'
+          : 'Set Main Base Currency',
+      message: isArabic
+          ? 'هل انت متأكد من تعيين ${currency.nameAr} (${currency.code}) كعملة أساسية للنظام؟'
+          : 'Are you sure you want to set ${currency.code} as the functional base currency?',
+      confirmLabel: isArabic ? 'تأكيد' : 'Confirm',
+      cancelLabel: isArabic ? 'إلغاء' : 'Cancel',
+    );
+    if (confirmed != true || !mounted) return;
+
     try {
-      // 1. Update Currency Master Record FIRST
-      await ref.read(currencyRepositoryProvider).upsert(result.draft);
-
-      // 2. Assign or clear Functional Currency role independently
-      if (result.isFunctionalCurrency && !isFunctional) {
-        await ref
-            .read(functionalCurrencyServiceProvider)
-            .setFunctionalCurrency(result.draft.code);
-      } else if (!result.isFunctionalCurrency && isFunctional) {
-        if (!isFunctionalLocked) {
-          await ref.read(currencyRepositoryProvider).setDefaultCurrency('');
-        }
-      }
-
-      // 3. Assign or clear Inventory Valuation Currency role independently
-      if (result.isInventoryValuationCurrency && !isValuation) {
-        final initRepo = ref.read(companyInitializationRepositoryProvider);
-        final state = await initRepo.getState();
-        final currentConfig = await initRepo.getInventoryConfig();
-        final updatedConfig = (currentConfig ??
-                CompanyInventoryConfig(
-                  companyId: state.companyId,
-                  inventoryBaseCurrencyId: result.draft.code,
-                ))
-            .copyWith(inventoryBaseCurrencyId: result.draft.code);
-        await initRepo.saveInventoryConfig(updatedConfig);
-      } else if (!result.isInventoryValuationCurrency && isValuation) {
-        if (!isValuationLocked) {
-          final initRepo = ref.read(companyInitializationRepositoryProvider);
-          final currentConfig = await initRepo.getInventoryConfig();
-          if (currentConfig != null) {
-            await initRepo.saveInventoryConfig(
-              currentConfig.copyWith(inventoryBaseCurrencyId: ''),
-            );
-          }
-        }
-      }
-
+      final repo = ref.read(currencyRepositoryProvider);
+      await repo.setDefaultCurrency(currency.code);
       ref.invalidate(functionalCurrencyStateInfoProvider);
-      ref.invalidate(inventoryValuationCurrencyStateProvider);
-      ref.invalidate(companyInventoryConfigProvider);
       ref.invalidate(allCurrenciesProvider);
-      ref.invalidate(activeCurrenciesProvider);
-
-      if (!mounted) return;
-      showAppSnackBar(
-        this.context,
-        message: isArabic ? 'تم تحديث العملة وتحديث الأدوار بنجاح' : 'Currency and role assignments updated successfully',
-        isSuccess: true,
-      );
+      if (mounted) {
+        showAppSnackBar(
+          this.context,
+          message: isArabic
+              ? 'تم تعيين العملة الرئيسية بنجاح'
+              : 'Base currency set successfully',
+          isSuccess: true,
+        );
+      }
     } catch (e) {
-      if (!mounted) return;
-      final msg = e is CurrencyValidationException ? e.message : e.toString();
-      showAppSnackBar(this.context, message: msg, isSuccess: false);
+      if (mounted) {
+        showAppSnackBar(
+          this.context,
+          message: e.toString(),
+          isSuccess: false,
+        );
+      }
     }
   }
 
   Future<void> _toggleActive(Currency currency) async {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final willDeactivate = currency.isActive;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text(willDeactivate
-            ? (isArabic ? 'تأكيد التعطيل' : 'Confirm Deactivation')
-            : (isArabic ? 'تأكيد التفعيل' : 'Confirm Activation')),
-        content: Text(willDeactivate
-            ? (isArabic
-                ? 'هل أنت تأكد من تعطيل العملة (${currency.code})؟ لن تظهر العملة المعطلة في المعاملات الجديدة.'
-                : 'Are you sure you want to deactivate currency (${currency.code})? Inactive currencies will not appear in new transactions.')
-            : (isArabic
-                ? 'هل أنت تأكد من تفعيل العملة (${currency.code})؟'
-                : 'Are you sure you want to activate currency (${currency.code})?')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(false),
-            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(true),
-            child: Text(willDeactivate
-                ? (isArabic ? 'تعطيل' : 'Deactivate')
-                : (isArabic ? 'تفعيل' : 'Activate')),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) return;
-
     try {
       await ref
           .read(currencyRepositoryProvider)
           .toggleActive(currency.code, !currency.isActive);
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        message: currency.isActive
-            ? (isArabic ? 'تم تعطيل العملة' : 'Currency deactivated')
-            : (isArabic ? 'تم تفعيل العملة' : 'Currency activated'),
-        isSuccess: true,
-      );
+      ref.invalidate(allCurrenciesProvider);
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          message: currency.isActive
+              ? (isArabic ? 'تم تعطيل العملة' : 'Currency deactivated')
+              : (isArabic ? 'تم تفعيل العملة' : 'Currency activated'),
+          isSuccess: true,
+        );
+      }
     } catch (e) {
-      if (!mounted) return;
-      showAppSnackBar(context, message: e.toString(), isSuccess: false);
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          message: e.toString(),
+          isSuccess: false,
+        );
+      }
     }
   }
 
   Future<void> _confirmDelete(BuildContext context, Currency currency) async {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final errorColor = Theme.of(context).colorScheme.error;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text(isArabic ? 'تأكيد الحذف' : 'Confirm Deletion'),
-        content: Text(
-          isArabic
-              ? 'هل أنت تأكد من حذف العملة (${currency.code})؟ لن يؤثر الحذف على المعاملات التاريخية.'
-              : 'Are you sure you want to delete currency (${currency.code})? Historical transactions will remain preserved.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(false),
-            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: errorColor,
-            ),
-            child: Text(isArabic ? 'حذف' : 'Delete'),
-          ),
-        ],
-      ),
+      title: isArabic ? 'حذف العملة' : 'Delete Currency',
+      message: isArabic
+          ? 'هل أنت تأكد من حذف العملة ${currency.nameAr} (${currency.code})؟'
+          : 'Are you sure you want to delete ${currency.code}?',
+      confirmLabel: isArabic ? 'حذف' : 'Delete',
+      cancelLabel: isArabic ? 'إلغاء' : 'Cancel',
+      isDestructive: true,
     );
-
     if (confirmed != true || !mounted) return;
+
     try {
-      await ref.read(currencyRepositoryProvider).deleteByCode(currency.code);
-      if (!mounted) return;
-      showAppSnackBar(
-        this.context,
-        message: isArabic ? 'تم حذف العملة' : 'Currency deleted',
-        isSuccess: true,
-      );
+      await ref
+          .read(currencyRepositoryProvider)
+          .deleteByCode(currency.code);
+      ref.invalidate(allCurrenciesProvider);
+      if (mounted) {
+        showAppSnackBar(
+          this.context,
+          message: isArabic
+              ? 'تم حذف العملة بنجاح'
+              : 'Currency deleted successfully',
+          isSuccess: true,
+        );
+      }
     } catch (e) {
-      if (!mounted) return;
-      showAppSnackBar(this.context, message: e.toString(), isSuccess: false);
+      if (mounted) {
+        showAppSnackBar(
+          this.context,
+          message: e.toString(),
+          isSuccess: false,
+        );
+      }
     }
-  }
-
-  void _showCurrencyDetails(BuildContext context, Currency currency, bool isArabic) {
-    final dateFormat = DateFormat.yMMMd().add_jm();
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text('${currency.code} — ${currency.localizedName(isArabic)}'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _detailRow(isArabic ? 'معرف UUID:' : 'UUID:', currency.uuid),
-              _detailRow(isArabic ? 'الرمز:' : 'Symbol:', currency.symbol),
-              _detailRow(isArabic ? 'الاسم بالعربية:' : 'Arabic Name:', currency.nameAr),
-              _detailRow(isArabic ? 'الاسم بالإنجليزية:' : 'English Name:', currency.nameEn),
-              _detailRow(isArabic ? 'الخانات العشرية:' : 'Decimal Digits:', currency.decimalDigits.toString()),
-              _detailRow(
-                isArabic ? 'الحالة:' : 'Status:',
-                currency.isActive ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'غير نشط' : 'Inactive'),
-              ),
-              _detailRow(
-                isArabic ? 'تاريخ الإنشاء:' : 'Created At:',
-                dateFormat.format(currency.createdAt.toLocal()),
-              ),
-              _detailRow(
-                isArabic ? 'تاريخ التعديل:' : 'Updated At:',
-                dateFormat.format(currency.updatedAt.toLocal()),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: Text(isArabic ? 'إغلاق' : 'Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(child: Text(value, style: const TextStyle(fontFamily: 'monospace'))),
-        ],
-      ),
-    );
-  }
-}
-
-class _CurrencyFormResult {
-  const _CurrencyFormResult({
-    required this.draft,
-    required this.isFunctionalCurrency,
-    required this.isInventoryValuationCurrency,
-  });
-
-  final CurrencyDraft draft;
-  final bool isFunctionalCurrency;
-  final bool isInventoryValuationCurrency;
-}
-
-class _CurrencyFormDialog extends StatefulWidget {
-  const _CurrencyFormDialog({
-    this.initialCurrency,
-    this.existingCodes = const [],
-    this.isCurrentlyFunctionalCurrency = false,
-    this.isCurrentlyInventoryValuationCurrency = false,
-    this.isFunctionalLocked = false,
-    this.isValuationLocked = false,
-  });
-
-  final Currency? initialCurrency;
-  final List<String> existingCodes;
-  final bool isCurrentlyFunctionalCurrency;
-  final bool isCurrentlyInventoryValuationCurrency;
-  final bool isFunctionalLocked;
-  final bool isValuationLocked;
-
-  @override
-  State<_CurrencyFormDialog> createState() => _CurrencyFormDialogState();
-}
-
-class _CurrencyFormDialogState extends State<_CurrencyFormDialog> {
-  late TextEditingController _codeController;
-  late TextEditingController _nameArController;
-  late TextEditingController _nameEnController;
-  late TextEditingController _symbolController;
-  late TextEditingController _decimalsController;
-  late bool _isActive;
-  late bool _isFunctionalCurrency;
-  late bool _isInventoryValuationCurrency;
-  String? _codeError;
-  String? _decimalsError;
-
-  @override
-  void initState() {
-    super.initState();
-    final c = widget.initialCurrency;
-    _codeController = TextEditingController(text: c?.code ?? '');
-    _nameArController = TextEditingController(text: c?.nameAr ?? '');
-    _nameEnController = TextEditingController(text: c?.nameEn ?? '');
-    _symbolController = TextEditingController(text: c?.symbol ?? '');
-    _decimalsController = TextEditingController(text: (c?.decimalDigits ?? 2).toString());
-    _isActive = c?.isActive ?? true;
-    _isFunctionalCurrency = widget.isCurrentlyFunctionalCurrency;
-    _isInventoryValuationCurrency = widget.isCurrentlyInventoryValuationCurrency;
-  }
-
-  @override
-  void dispose() {
-    _codeController.dispose();
-    _nameArController.dispose();
-    _nameEnController.dispose();
-    _symbolController.dispose();
-    _decimalsController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    setState(() {
-      _codeError = null;
-      _decimalsError = null;
-    });
-
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final code = _codeController.text.trim().toUpperCase();
-    final nameAr = _nameArController.text.trim();
-    final nameEn = _nameEnController.text.trim();
-    final symbol = _symbolController.text.trim();
-    final decimalsParsed = int.tryParse(_decimalsController.text.trim());
-
-    if (code.isEmpty) {
-      setState(() => _codeError = isArabic ? 'رمز العملة مطلوب' : 'Currency code is required');
-      return;
-    }
-
-    if (code.length < 2 || code.length > 5) {
-      setState(() => _codeError = isArabic ? 'رمز العملة يجب أن يكون بين 2 و 5 أحرف' : 'Currency code must be 2 to 5 characters');
-      return;
-    }
-
-    if (widget.initialCurrency == null && widget.existingCodes.contains(code)) {
-      setState(() => _codeError = isArabic ? 'رمز العملة مستخدم بالفعل' : 'Currency code already in use');
-      return;
-    }
-
-    if (decimalsParsed == null || decimalsParsed < 0 || decimalsParsed > 6) {
-      setState(() => _decimalsError = isArabic ? 'الخانات العشرية يجب أن تكون بين 0 و 6' : 'Decimal precision must be between 0 and 6');
-      return;
-    }
-
-    final draft = CurrencyDraft(
-      uuid: widget.initialCurrency?.uuid,
-      code: code,
-      nameAr: nameAr,
-      nameEn: nameEn,
-      symbol: symbol,
-      decimalDigits: decimalsParsed,
-      isActive: _isActive,
-    );
-
-    try {
-      draft.validate();
-      Navigator.of(context).pop(
-        _CurrencyFormResult(
-          draft: draft,
-          isFunctionalCurrency: _isFunctionalCurrency,
-          isInventoryValuationCurrency: _isInventoryValuationCurrency,
-        ),
-      );
-    } on CurrencyValidationException catch (e) {
-      showAppSnackBar(context, message: e.message, isSuccess: false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final isEdit = widget.initialCurrency != null;
-
-    return AlertDialog(
-      title: Text(
-        isEdit
-            ? (isArabic ? 'تعديل عملة' : 'Edit Currency')
-            : (isArabic ? 'إضافة عملة جديدة' : 'Add New Currency'),
-      ),
-      content: SizedBox(
-        width: 440,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                controller: _codeController,
-                label: isArabic ? 'رمز العملة (ISO)' : 'Currency Code (ISO)',
-                hint: 'e.g. USD, SAR, YER',
-                enabled: !isEdit,
-                errorText: _codeError,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              AppTextField(
-                controller: _nameArController,
-                label: isArabic ? 'الاسم بالعربية' : 'Arabic Name',
-                hint: 'مثال: دولار أمريكي',
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              AppTextField(
-                controller: _nameEnController,
-                label: isArabic ? 'الاسم بالإنجليزية' : 'English Name',
-                hint: 'e.g. US Dollar',
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              AppTextField(
-                controller: _symbolController,
-                label: isArabic ? 'الرمز' : 'Symbol',
-                hint: r'e.g. $, ر.س, €',
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              AppTextField(
-                controller: _decimalsController,
-                label: isArabic ? 'الخانات العشرية (0-6)' : 'Decimal Precision (0-6)',
-                keyboardType: TextInputType.number,
-                errorText: _decimalsError,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SwitchListTile(
-                title: Text(isArabic ? 'عملة نشطة' : 'Active Currency'),
-                subtitle: Text(
-                  isArabic
-                      ? 'العملات النشطة تظهر في خيارات المعاملات وسعر الصرف.'
-                      : 'Active currencies appear in transaction and rate selectors.',
-                ),
-                value: _isActive,
-                onChanged: (val) => setState(() => _isActive = val),
-              ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Text(
-                  isArabic ? 'أدوار العملة للشركة (Company Roles)' : 'Company Currency Roles',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              CheckboxListTile(
-                title: Text(isArabic ? 'استخدام كعملة وظيفية (رئيسية) للشركة' : 'Use as company main/functional currency'),
-                subtitle: Text(
-                  widget.isFunctionalLocked
-                      ? (isArabic
-                          ? 'مقفلة: توجد قيود محاسبية مرحلة كُتبت بهذه العملة'
-                          : 'Locked: Posted accounting transactions exist')
-                      : (isArabic
-                          ? 'العملة الأساسية للدفاتر والمستندات المحاسبية'
-                          : 'Base accounting & ledger currency'),
-                  style: TextStyle(
-                    color: widget.isFunctionalLocked ? Colors.red.shade700 : null,
-                  ),
-                ),
-                value: _isFunctionalCurrency,
-                onChanged: widget.isFunctionalLocked
-                    ? null
-                    : (val) => setState(() => _isFunctionalCurrency = val ?? false),
-              ),
-              CheckboxListTile(
-                title: Text(isArabic ? 'استخدام كعملة تقييم المخزون' : 'Use as inventory valuation currency'),
-                subtitle: Text(
-                  widget.isValuationLocked
-                      ? (isArabic
-                          ? 'مقفلة: توجد طبقات تكلفة أو سندات مخزنية مسجلة بهذه العملة'
-                          : 'Locked: Inventory transactions or cost layers exist')
-                      : (isArabic
-                          ? 'عملة تقييم التكلفة وطبقات المخزون'
-                          : 'Base currency for inventory cost layers'),
-                  style: TextStyle(
-                    color: widget.isValuationLocked ? Colors.red.shade700 : null,
-                  ),
-                ),
-                value: _isInventoryValuationCurrency,
-                onChanged: widget.isValuationLocked
-                    ? null
-                    : (val) => setState(() => _isInventoryValuationCurrency = val ?? false),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-        ),
-        AppButton(
-          label: isEdit ? (isArabic ? 'تحديث' : 'Update') : (isArabic ? 'حفظ' : 'Save'),
-          onPressed: _submit,
-        ),
-      ],
-    );
   }
 }

@@ -68,7 +68,8 @@ class FxSettlementService {
       entryDate: settlementDate,
       currencyCode: currencyCode,
       baseCurrencyCode: functionalCurrencyCode,
-      description: description ??
+      description:
+          description ??
           'FX Settlement $currencyCode ($settlementExchangeRate vs $originalExchangeRate)',
       sourceType: 'fx_settlement',
       sourceId: settlementUuid,

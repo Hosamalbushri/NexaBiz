@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -13,15 +13,15 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/po
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
-import 'package:stock_count/core/errors/missing_account_exception.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/account_exception.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/inventory/permissions/inventory_permission_package.dart';
 
-import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+import 'package:stock_count/core/setup/setup_core.dart';
 
 class PostingCoordinatorImpl implements PostingCoordinator {
   PostingCoordinatorImpl({
@@ -49,7 +49,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
   final InitializationGuard? _initializationGuard;
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
 
   final Map<String, Completer<void>> _activePostingLocks = {};
 
@@ -384,12 +384,14 @@ class PostingCoordinatorImpl implements PostingCoordinator {
           }
 
           // 5.5. Execute Accounting Posting inside the atomic database transaction
-          final totalDocAmount =
-              dbLines.fold(0.0, (sum, l) => sum + l.totalCost);
+          final totalDocAmount = dbLines.fold(
+            0.0,
+            (sum, l) => sum + l.totalCost,
+          );
           final valuationAmount = value > 0 ? value : null;
           final isOutboundOrIssue =
               document.documentType == InventoryDocumentType.stockIssue ||
-                  document.documentType == InventoryDocumentType.stockAdjustment;
+              document.documentType == InventoryDocumentType.stockAdjustment;
           final docAccountId = await _resolveDocumentAccountId(document);
           await _accountingPoster.postAccountingEntry(
             document: document,

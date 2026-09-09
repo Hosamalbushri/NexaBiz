@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
 import 'customers_sync_handlers.dart';
 

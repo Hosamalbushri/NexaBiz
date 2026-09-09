@@ -22,7 +22,8 @@ class MultiTenantRepositoryGuard {
     }
     if (companyId.trim() != activeCompanyId.trim()) {
       throw CompanyContextMismatchException(
-        message: 'Database operation blocked: target company ($companyId) does not match active session tenant ($activeCompanyId).',
+        message:
+            'Database operation blocked: target company ($companyId) does not match active session tenant ($activeCompanyId).',
         expectedCompanyId: activeCompanyId,
         actualCompanyId: companyId,
       );

@@ -1,5 +1,5 @@
 import 'package:stock_count/core/network/remote_sync_api.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import '../../../data/repositories/cash_register_repository_impl.dart';
 
 /// Cash Register adapter for the shared SyncManager (CR-08).

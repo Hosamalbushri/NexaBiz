@@ -22,12 +22,10 @@ class ReportsRoutes {
   static const String rpPayments = '/reports/rp-payments';
   static const String rpCashMovement = '/reports/rp-cash-movement';
   static const String rpBankMovement = '/reports/rp-bank-movement';
-  static const String rpCustomerReceipts =
-      '/reports/rp-customer-receipts';
+  static const String rpCustomerReceipts = '/reports/rp-customer-receipts';
   static const String rpDailySummary = '/reports/rp-daily-summary';
   static const String rpPeriodSummary = '/reports/rp-period-summary';
-  static const String productStockMovement =
-      '/reports/product-stock-movement';
+  static const String productStockMovement = '/reports/product-stock-movement';
   static const String preview = '/reports/preview';
 
   static void goRoot(BuildContext context) => context.go(root);

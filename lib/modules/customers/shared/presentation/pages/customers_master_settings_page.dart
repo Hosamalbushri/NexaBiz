@@ -33,7 +33,9 @@ class _CustomersMasterSettingsPageState
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isAr ? 'إعدادات وتهيئة موديول العملاء' : 'Customers Module Master Settings',
+        title: isAr
+            ? 'إعدادات وتهيئة موديول العملاء'
+            : 'Customers Module Master Settings',
         showBackButton: true,
       ),
       body: ListView(
@@ -59,7 +61,9 @@ class _CustomersMasterSettingsPageState
 
           // Section 2: Parent CoA Group Settings Menu List
           SettingsGroupLabel(
-            isAr ? 'دليل الحساب الأب وسياسات الائتمان' : 'Parent CoA Account Group',
+            isAr
+                ? 'دليل الحساب الأب وسياسات الائتمان'
+                : 'Parent CoA Account Group',
           ),
           const SettingsGroup(
             children: [
@@ -98,7 +102,9 @@ class _CustomersMasterSettingsPageState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'مركز تهيئة وإعدادات العملاء' : 'Customers Settings Center',
+                  isAr
+                      ? 'مركز تهيئة وإعدادات العملاء'
+                      : 'Customers Settings Center',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -130,4 +136,3 @@ class CustomersSettingsPageBody extends ConsumerWidget {
     return const CustomersSettingsPage();
   }
 }
-

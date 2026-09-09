@@ -3,11 +3,9 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/core/widgets/app_dynamic_report_table.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
-import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
-import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
+import 'package:stock_count/core/routes/routes_core.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/account_statement_report_data_port.dart';
-import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
+
 
 /// Arguments for passing to [AccountStatementReportTablePage] via GoRouter extra.
 class AccountStatementReportTableArgs {

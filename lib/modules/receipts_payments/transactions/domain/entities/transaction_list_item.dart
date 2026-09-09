@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'transaction_status.dart';
 import 'transaction_type.dart';
 

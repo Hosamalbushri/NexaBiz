@@ -7,7 +7,7 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
+import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
 import 'receipts_payments_routes.dart';
 

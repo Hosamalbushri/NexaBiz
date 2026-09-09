@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_count/presentation/providers/inventory_providers.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/modules/inventory/stock_movements/presentation/providers/stock_movements_providers.dart';

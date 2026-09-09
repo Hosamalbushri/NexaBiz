@@ -16,7 +16,7 @@ import 'package:stock_count/modules/inventory/shared/presentation/widgets/invent
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import 'package:stock_count/core/presentation/providers/core_providers.dart';
 import 'package:stock_count/core/domain/ports/posting_port.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import '../../domain/entities/stock_receipt.dart';
 import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';

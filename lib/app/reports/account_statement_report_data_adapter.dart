@@ -248,7 +248,9 @@ class AccountStatementReportDataAdapter
     }
 
     final ref = _toRef(account);
-    final baseCurrency = (await loadFunctionalCurrencyCode()).trim().toUpperCase();
+    final baseCurrency = (await loadFunctionalCurrencyCode())
+        .trim()
+        .toUpperCase();
     final postedFilter = switch (postingFilter) {
       AccountStatementPostingFilter.all => null,
       AccountStatementPostingFilter.posted => true,

@@ -408,10 +408,7 @@ class _CentralSetupCenterWidgetState
         isArabic: isArabic,
         availableAccounts: availableAccounts,
         accountRoles: _knownAccountRoles,
-        status: _calculatePackageStatus(
-          currentPackage,
-          currentPackageFields,
-        ),
+        status: _calculatePackageStatus(currentPackage, currentPackageFields),
         onFieldValueChanged: (key, val) {
           setState(() {
             currentPackageFields[key] = val;
@@ -445,7 +442,7 @@ class _CentralSetupCenterWidgetState
                   final icon = _getPackageIcon(pkg.packageId);
 
                   return Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
+                    padding: const EdgeInsetsDirectional.only(start: 8.0),
                     child: ChoiceChip(
                       selected: isSelected,
                       avatar: CircleAvatar(

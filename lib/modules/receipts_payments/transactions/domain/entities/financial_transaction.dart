@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'financial_transaction_line.dart';
 import 'rp_payment_method.dart';
 import 'transaction_source.dart';

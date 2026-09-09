@@ -56,10 +56,7 @@ class PurchasesModule extends AppModule {
 
   @override
   List<RouteAccessRule> get routeAccessRules => [
-    RouteAccessRule(
-      pathPrefix: '/purchases',
-      anyOf: PurchasesPermissions.view,
-    ),
+    RouteAccessRule(pathPrefix: '/purchases', anyOf: PurchasesPermissions.view),
   ];
 
   @override
@@ -68,7 +65,9 @@ class PurchasesModule extends AppModule {
   @override
   String label(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return l10n.localeName == 'ar' ? 'المشتريات والموردين' : 'Purchases & Suppliers';
+    return l10n.localeName == 'ar'
+        ? 'المشتريات والموردين'
+        : 'Purchases & Suppliers';
   }
 
   @override
@@ -93,4 +92,3 @@ class PurchasesModule extends AppModule {
     ),
   ];
 }
-

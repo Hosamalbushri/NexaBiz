@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import '../entities/company_inventory_config.dart';
 import '../repositories/company_initialization_repository.dart';
 

@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
+import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import 'package:stock_count/modules/sales/permissions/sales_permission_package.dart';
 import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
+
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 
 /// Sales module hub.
 class SalesHomePage extends ConsumerWidget {
@@ -38,6 +39,7 @@ class SalesHomePage extends ConsumerWidget {
         child: ListView(
           padding: AppConstants.pageInsets(context),
           children: [
+            const AppMissingCurrencyGuardBanner(),
             Text(
               l10n.servicesTitle,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -85,7 +87,9 @@ class SalesHomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             AppModuleHubCard(
                   icon: Icons.tune_outlined,
-                  title: l10n.localeName == 'ar' ? 'إعدادات المبيعات' : 'Sales Settings',
+                  title: l10n.localeName == 'ar'
+                      ? 'إعدادات المبيعات'
+                      : 'Sales Settings',
                   subtitle: l10n.localeName == 'ar'
                       ? 'ربط الحسابات وإعدادات موديول المبيعات'
                       : 'Account bindings and sales master settings',
@@ -93,16 +97,10 @@ class SalesHomePage extends ConsumerWidget {
                 )
                 .animate()
                 .fadeIn(delay: 120.ms, duration: 280.ms)
-                .slideY(
-                  begin: 0.04,
-                  end: 0,
-                  delay: 120.ms,
-                  duration: 280.ms,
-                ),
+                .slideY(begin: 0.04, end: 0, delay: 120.ms, duration: 280.ms),
           ],
         ),
       ),
     );
   }
 }
-

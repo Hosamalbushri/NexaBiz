@@ -8,7 +8,8 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_card.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/inventory/warehouses/presentation/pages/warehouses_settings_page.dart';
+import 'package:stock_count/core/routes/routes_core.dart';
+
 
 /// Single authoritative Master Settings Hub for the Sales Module (`/sales/settings`).
 ///
@@ -26,7 +27,9 @@ class SalesMasterSettingsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isAr ? 'إعدادات وتهيئة المبيعات' : 'Sales Module Master Settings',
+        title: isAr
+            ? 'إعدادات وتهيئة المبيعات'
+            : 'Sales Module Master Settings',
         showBackButton: true,
       ),
       body: ListView(
@@ -53,13 +56,9 @@ class SalesMasterSettingsPage extends ConsumerWidget {
                 subtitle: isAr
                     ? 'يتم تهيئة وتخصيص حسابات المبيعات والمردودات وتكلفة البضاعة المباعة لكل مستودع بشكل مستقل'
                     : 'Configure sales revenue and COGS account bindings directly within each warehouse',
-                showChevron: true,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const WarehousesSettingsPage(),
-                  ),
-                ),
+                onTap: () => InventoryRoutes.pushWarehousesSettings(context),
               ),
+
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -91,7 +90,9 @@ class SalesMasterSettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'مركز تهيئة وإعدادات المبيعات' : 'Sales Settings Center',
+                  isAr
+                      ? 'مركز تهيئة وإعدادات المبيعات'
+                      : 'Sales Settings Center',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

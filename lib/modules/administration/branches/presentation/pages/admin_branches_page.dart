@@ -9,8 +9,8 @@ import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dar
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
-import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
+import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import 'package:stock_count/modules/administration/shared/data/admin_api_repository.dart';
 import 'package:stock_count/modules/administration/shared/presentation/providers/admin_providers.dart';
 

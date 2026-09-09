@@ -1,3 +1,1 @@
-library app_spacing;
-
-export '../../core/theme/tokens/app_spacing.dart';
+export 'package:nexabiz_ui/nexabiz_ui.dart';

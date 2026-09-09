@@ -62,10 +62,7 @@ class AccountCurrencyBalanceRepositoryImpl
     final rows = await _db
         .customSelect(
           sql,
-          variables: [
-            Variable.withString(uuid),
-            Variable.withString(cid),
-          ],
+          variables: [Variable.withString(uuid), Variable.withString(cid)],
           readsFrom: {_db.journalLines, _db.journalEntries},
         )
         .get();

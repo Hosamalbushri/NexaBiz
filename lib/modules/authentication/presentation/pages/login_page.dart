@@ -9,7 +9,7 @@ import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/sync/sync_enabled_provider.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/errors/app_failure.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../domain/entities/authentication_mode.dart';

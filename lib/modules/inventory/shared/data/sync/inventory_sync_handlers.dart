@@ -1,12 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_count/data/repositories/inventory_movement_ledger.dart';
 import 'package:stock_count/modules/inventory/stock_count/data/repositories/inventory_repository_impl.dart';
 import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
@@ -287,7 +287,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
   RemoteSyncApi get _remote => _remoteProvider();
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
 
   @override
   Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async {

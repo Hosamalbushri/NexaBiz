@@ -71,8 +71,9 @@ class AccountingEntryBuilder {
     await _validationService.assertCanPost(offsetRef.accountUuid);
 
     final companyInventoryConfig = await _initRepository?.getInventoryConfig();
-    String? resolvedBase =
-        companyInventoryConfig?.inventoryBaseCurrencyId.trim().toUpperCase();
+    String? resolvedBase = companyInventoryConfig?.inventoryBaseCurrencyId
+        .trim()
+        .toUpperCase();
     if (resolvedBase == null || resolvedBase.isEmpty) {
       final funcService = _functionalCurrencyService;
       if (funcService != null) {
@@ -101,8 +102,9 @@ class AccountingEntryBuilder {
           );
 
     final double offsetAmount = totalAmount;
-    final double baseAmount =
-        isBasePosting ? totalAmount : (totalAmount * docRate);
+    final double baseAmount = isBasePosting
+        ? totalAmount
+        : (totalAmount * docRate);
 
     // 1. Inventory Account Line (always in Inventory Base Currency)
     final inventoryLine = JournalLineDraft(

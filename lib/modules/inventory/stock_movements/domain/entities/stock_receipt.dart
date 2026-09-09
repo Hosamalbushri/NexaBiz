@@ -2,7 +2,7 @@ import 'package:stock_count/core/domain/entities/document_ref.dart';
 import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'stock_movement_line.dart';
 
 /// Represents an incoming stock receipt movement document.

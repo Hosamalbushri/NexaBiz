@@ -21,17 +21,20 @@ PermissionPackageDef purchasesPermissionPackage() {
     titleBuilder: (context) => AppLocalizations.of(context).localeName == 'ar'
         ? 'إعدادات وصلاحيات المشتريات'
         : 'Purchases & Suppliers Permissions',
-    subtitleBuilder: (context) => AppLocalizations.of(context).localeName == 'ar'
+    subtitleBuilder: (context) =>
+        AppLocalizations.of(context).localeName == 'ar'
         ? 'إدارة صلاحيات فواتير واستلام المشتريات والموردين'
         : 'Manage purchase invoices, receiving, and supplier controls',
     services: [
       PermissionServiceDef(
         id: 'documents',
         icon: Icons.receipt_long_outlined,
-        titleBuilder: (context) => AppLocalizations.of(context).localeName == 'ar'
+        titleBuilder: (context) =>
+            AppLocalizations.of(context).localeName == 'ar'
             ? 'فواتير وإشعارات المشتريات'
             : 'Purchase Documents',
-        subtitleBuilder: (context) => AppLocalizations.of(context).localeName == 'ar'
+        subtitleBuilder: (context) =>
+            AppLocalizations.of(context).localeName == 'ar'
             ? 'صلاحيات إنشاء واستعراض وترحيل فواتير المشتريات'
             : 'Permissions to create, view, and post purchase invoices',
         operations: [
@@ -55,7 +58,8 @@ PermissionPackageDef purchasesPermissionPackage() {
             code: 'purchases.documents.post',
             icon: Icons.check_circle_outline,
             legacyCodes: const ['purchases.post'],
-            label: (l10n) => l10n.localeName == 'ar' ? 'ترحيل المشتريات' : 'Post Purchases',
+            label: (l10n) =>
+                l10n.localeName == 'ar' ? 'ترحيل المشتريات' : 'Post Purchases',
           ),
         ],
       ),

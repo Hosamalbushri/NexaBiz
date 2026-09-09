@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/presentation/patterns/app_detail_page_pattern.dart';
 import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
+import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import '../../domain/entities/customer_data_source.dart';
 import '../../domain/models/customer_exception.dart';
 import 'package:stock_count/modules/customers/permissions/customers_permission_package.dart';
@@ -55,50 +55,45 @@ class CustomerDetailsPage extends ConsumerWidget {
 
         final accountId = customer.accountId;
 
-        return Scaffold(
-          appBar: CustomAppBar(
-            title: customer.name,
-            showBackButton: true,
-            actions: [
-              PermissionGate(
-                anyOf: CustomersPermissions.update,
-                child: IconButton(
-                  tooltip: l10n.customersEditTitle,
-                  onPressed: () =>
-                      CustomersRoutes.pushEdit(context, customer.id),
-                  icon: const Icon(Icons.edit_outlined),
-                ),
+        return AppDetailPagePattern(
+          title: customer.name,
+          actions: [
+            PermissionGate(
+              anyOf: CustomersPermissions.update,
+              child: IconButton(
+                tooltip: l10n.customersEditTitle,
+                onPressed: () => CustomersRoutes.pushEdit(context, customer.id),
+                icon: const Icon(Icons.edit_outlined),
+              ),
+            ),
+          ],
+          summaryBanner: Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              AppStatusBadge(
+                label: customer.isActive
+                    ? l10n.customersStatusActive
+                    : l10n.customersStatusInactive,
+                tone: customer.isActive
+                    ? AppStatusTone.success
+                    : AppStatusTone.neutral,
+                animate: false,
+              ),
+              AppStatusBadge(
+                label: customer.dataSource == CustomerDataSource.external
+                    ? l10n.customersDataSourceExternal
+                    : l10n.customersDataSourceLocal,
+                tone: customer.dataSource == CustomerDataSource.external
+                    ? AppStatusTone.info
+                    : AppStatusTone.neutral,
+                animate: false,
               ),
             ],
           ),
-          body: ListView(
-            padding: AppConstants.pageInsets(context),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  AppStatusBadge(
-                    label: customer.isActive
-                        ? l10n.customersStatusActive
-                        : l10n.customersStatusInactive,
-                    tone: customer.isActive
-                        ? AppStatusTone.success
-                        : AppStatusTone.neutral,
-                    animate: false,
-                  ),
-                  AppStatusBadge(
-                    label: customer.dataSource == CustomerDataSource.external
-                        ? l10n.customersDataSourceExternal
-                        : l10n.customersDataSourceLocal,
-                    tone: customer.dataSource == CustomerDataSource.external
-                        ? AppStatusTone.info
-                        : AppStatusTone.neutral,
-                    animate: false,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
               AppDetailSurfaceCard(
                 child: Column(
                   children: [

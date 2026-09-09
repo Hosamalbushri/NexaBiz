@@ -1,43 +1,28 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import '../../domain/entities/sale_item.dart';
-import '../../domain/services/sale_calculation_service.dart';
-import 'package:stock_count/core/widgets/app_async_autocomplete_field.dart';
-import '../../domain/services/sale_autocomplete_defaults.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_product_catalog_port.dart';
+import '../../domain/entities/sale_item.dart';
+import '../../domain/services/sale_autocomplete_defaults.dart';
+import '../../domain/services/sale_calculation_service.dart';
 import '../providers/sale_providers.dart';
 import 'sale_status_badge.dart';
 
 export 'sale_products_readonly_table.dart';
 
-/// Fixed multi-column widths for the products spreadsheet.
-class _Cols {
-  static const index = 44.0;
+/// Fixed column width constants for sales products table.
+class _SaleCols {
   static const product = 220.0;
   static const main = 96.0;
   static const sub = 96.0;
   static const price = 128.0;
   static const total = 120.0;
-  static const actions = 48.0;
-
-  /// Matches horizontal padding on header / filled rows.
-  static const hPad = AppSpacing.sm;
-
-  static double get contentWidth =>
-      index + product + main + sub + price + total + actions;
-
-  /// Outer scroll width: columns + side padding (avoids Row overflow).
-  static double get width => contentWidth + hPad * 2;
 }
 
-/// Spreadsheet-style multi-column products editor.
+/// Spreadsheet-style multi-column products editor for Sales Invoices.
 class SaleProductsTable extends ConsumerStatefulWidget {
   const SaleProductsTable({
     super.key,
@@ -69,13 +54,6 @@ class SaleProductsTable extends ConsumerStatefulWidget {
 class _SaleProductsTableState extends ConsumerState<SaleProductsTable> {
   final List<int> _draftRowIds = [];
   var _nextDraftId = 0;
-  final _horizontalScroll = ScrollController();
-
-  @override
-  void dispose() {
-    _horizontalScroll.dispose();
-    super.dispose();
-  }
 
   void _addDraftRow() {
     setState(() => _draftRowIds.add(_nextDraftId++));
@@ -95,101 +73,88 @@ class _SaleProductsTableState extends ConsumerState<SaleProductsTable> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final hasContent = widget.items.isNotEmpty || _draftRowIds.isNotEmpty;
-    final viewportWidth = MediaQuery.sizeOf(context).width;
-    final tableWidth = math.max(_Cols.width, viewportWidth - 48);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _ProductsSectionHeader(title: l10n.salesProducts),
-        const SizedBox(height: AppSpacing.md),
-        if (!hasContent)
-          _EmptyAddCard(
-            onAdd: _addDraftRow,
-            onScan: widget.onScan,
-            addLabel: l10n.salesAddProduct,
-            scanLabel: l10n.salesScanProduct,
-            emptyLabel: l10n.salesProductsEmpty,
-          )
-        else
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+    final columns = [
+      AppEditableTableColumn<SaleItemDraft>(
+        label: l10n.salesProductName,
+        width: _SaleCols.product,
+        headerAlignment: TextAlign.start,
+      ),
+      AppEditableTableColumn<SaleItemDraft>(
+        label: l10n.mainQuantity,
+        width: _SaleCols.main,
+        headerAlignment: TextAlign.center,
+      ),
+      AppEditableTableColumn<SaleItemDraft>(
+        label: l10n.subQuantity,
+        width: _SaleCols.sub,
+        headerAlignment: TextAlign.center,
+      ),
+      AppEditableTableColumn<SaleItemDraft>(
+        label: l10n.salesUnitPrice,
+        width: _SaleCols.price,
+        headerAlignment: TextAlign.center,
+      ),
+      AppEditableTableColumn<SaleItemDraft>(
+        label: l10n.salesTotal,
+        width: _SaleCols.total,
+        headerAlignment: TextAlign.end,
+      ),
+    ];
+
+    return AppEditableTableShell<SaleItemDraft>(
+      items: widget.items,
+      columns: columns,
+      sectionHeader: _ProductsSectionHeader(title: l10n.salesProducts),
+      draftRows: _draftRowIds,
+      draftRowBuilder: (context, draftId) {
+        return _DraftProductRow(
+          key: ValueKey('draft-$draftId'),
+          onProductSelected: (product) {
+            _onDraftProductSelected(draftId, product);
+          },
+          onCancel: () => _removeDraftRow(draftId),
+        );
+      },
+      footerSummaryBuilder: (context) {
+        return _TableFooter(items: widget.items, theme: theme);
+      },
+      onAddRow: _addDraftRow,
+      onScan: widget.onScan,
+      addLabel: widget.items.isEmpty ? l10n.salesAddProduct : l10n.salesAddRow,
+      scanLabel: l10n.salesScanProduct,
+      emptyLabel: l10n.salesProductsEmpty,
+      rowActionsBuilder: (context, index, item) {
+        final scheme = Theme.of(context).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: IconButton(
+            tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+            onPressed: () => widget.onRemove(index),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              size: 20,
+              color: scheme.error.withValues(alpha: 0.85),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Column(
-                children: [
-                  Scrollbar(
-                    controller: _horizontalScroll,
-                    thumbVisibility: true,
-                    radius: const Radius.circular(8),
-                    notificationPredicate: (n) =>
-                        n.metrics.axis == Axis.horizontal,
-                    child: SingleChildScrollView(
-                      controller: _horizontalScroll,
-                      scrollDirection: Axis.horizontal,
-                      child: SizedBox(
-                        width: tableWidth,
-                        child: Column(
-                          children: [
-                            _TableHeader(theme: theme, l10n: l10n),
-                            for (var i = 0; i < widget.items.length; i++)
-                              _FilledProductRow(
-                                index: i,
-                                item: widget.items[i],
-                                striped: i.isOdd,
-                                minUnitPrice: widget.minUnitPriceOf(
-                                  widget.items[i],
-                                ),
-                                onQuantitiesChanged: (main, sub) {
-                                  widget.onQuantitiesChanged(i, main, sub);
-                                },
-                                onUnitPriceChanged: (price) {
-                                  return widget.onUnitPriceChanged(i, price);
-                                },
-                                onUnitPriceBelowMin: widget.onUnitPriceBelowMin,
-                                onRemove: () => widget.onRemove(i),
-                              ),
-                            if (widget.items.isNotEmpty)
-                              _TableFooter(items: widget.items, theme: theme),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  for (final draftId in _draftRowIds)
-                    _DraftProductRow(
-                      key: ValueKey('draft-$draftId'),
-                      onProductSelected: (product) {
-                        _onDraftProductSelected(draftId, product);
-                      },
-                      onCancel: () => _removeDraftRow(draftId),
-                    ),
-                  _TableActionsBar(
-                    onAdd: _addDraftRow,
-                    onScan: widget.onScan,
-                    addLabel: l10n.salesAddRow,
-                    scanLabel: l10n.salesScanProduct,
-                  ),
-                ],
-              ),
-            ),
+            visualDensity: VisualDensity.compact,
           ),
-      ],
+        );
+      },
+      rowCellBuilder: (context, index, item, column) {
+        return _SaleProductCell(
+          index: index,
+          item: item,
+          column: column,
+          minUnitPrice: widget.minUnitPriceOf(item),
+          onQuantitiesChanged: (main, sub) {
+            widget.onQuantitiesChanged(index, main, sub);
+          },
+          onUnitPriceChanged: (price) {
+            return widget.onUnitPriceChanged(index, price);
+          },
+          onUnitPriceBelowMin: widget.onUnitPriceBelowMin,
+        );
+      },
     );
   }
 }
@@ -242,245 +207,156 @@ class _ProductsSectionHeader extends StatelessWidget {
   }
 }
 
-class _TableActionsBar extends StatelessWidget {
-  const _TableActionsBar({
-    required this.onAdd,
-    required this.addLabel,
-    required this.scanLabel,
-    this.onScan,
+class _SaleProductCell extends StatefulWidget {
+  const _SaleProductCell({
+    required this.index,
+    required this.item,
+    required this.column,
+    required this.minUnitPrice,
+    required this.onQuantitiesChanged,
+    required this.onUnitPriceChanged,
+    required this.onUnitPriceBelowMin,
   });
 
-  final VoidCallback onAdd;
-  final VoidCallback? onScan;
-  final String addLabel;
-  final String scanLabel;
+  final int index;
+  final SaleItemDraft item;
+  final AppEditableTableColumn<SaleItemDraft> column;
+  final double minUnitPrice;
+  final void Function(double main, double sub) onQuantitiesChanged;
+  final bool Function(double unitPrice) onUnitPriceChanged;
+  final VoidCallback onUnitPriceBelowMin;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm + 4,
-        AppSpacing.md,
-        AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.92),
-        border: Border(
-          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _AddRowButton(label: addLabel, onTap: onAdd),
-          ),
-          if (onScan != null) ...[
-            const SizedBox(width: AppSpacing.sm),
-            _ScanIconButton(label: scanLabel, onTap: onScan!),
-          ],
-        ],
-      ),
-    );
-  }
+  State<_SaleProductCell> createState() => _SaleProductCellState();
 }
 
-class _AddRowButton extends StatelessWidget {
-  const _AddRowButton({required this.label, required this.onTap});
+class _SaleProductCellState extends State<_SaleProductCell> {
+  double? _liveUnitPrice;
+  var _priceBelowMin = false;
 
-  final String label;
-  final VoidCallback onTap;
+  double get _effectiveUnitPrice => _liveUnitPrice ?? widget.item.unitPrice;
+
+  void _onPriceEdited(double parsed) {
+    final belowMin = parsed < widget.minUnitPrice;
+    setState(() {
+      _liveUnitPrice = parsed;
+      _priceBelowMin = belowMin;
+    });
+
+    if (!belowMin) {
+      final accepted = widget.onUnitPriceChanged(parsed);
+      if (!accepted) {
+        setState(() => _priceBelowMin = true);
+      }
+    }
+  }
+
+  void _onPriceCommitFinished({required bool rejected}) {
+    if (rejected) {
+      setState(() {
+        _liveUnitPrice = widget.item.unitPrice;
+        _priceBelowMin = false;
+      });
+      widget.onUnitPriceBelowMin();
+      return;
+    }
+    setState(() {
+      _liveUnitPrice = null;
+      _priceBelowMin = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final col = widget.column;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Ink(
-          height: 52,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                scheme.primary,
-                Color.lerp(scheme.primary, scheme.primaryContainer, 0.28)!,
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withValues(alpha: 0.28),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: scheme.onPrimary.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.add_rounded,
-                  size: 20,
-                  color: scheme.onPrimary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: scheme.onPrimary,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.1,
-                  ),
-                ),
-              ),
-            ],
+    if (col.width == _SaleCols.product) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Text(
+          widget.item.productName,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            height: 1.25,
           ),
         ),
-      ),
-    );
-  }
-}
+      );
+    }
 
-class _ScanIconButton extends StatelessWidget {
-  const _ScanIconButton({required this.label, required this.onTap});
+    if (col.width == _SaleCols.main) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: AppAmountField(
+          value: widget.item.mainQuantity,
+          decimalPlaces: 3,
+          trimTrailingZeros: true,
+          variant: AppAmountFieldVariant.compact,
+          skipTraversal: true,
+          keepFocusOnSubmit: true,
+          onChanged: (main) =>
+              widget.onQuantitiesChanged(main, widget.item.subQuantity),
+        ),
+      );
+    }
 
-  final String label;
-  final VoidCallback onTap;
+    if (col.width == _SaleCols.sub) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: AppAmountField(
+          value: widget.item.subQuantity,
+          decimalPlaces: 3,
+          trimTrailingZeros: true,
+          variant: AppAmountFieldVariant.compact,
+          skipTraversal: true,
+          keepFocusOnSubmit: true,
+          onChanged: (sub) =>
+              widget.onQuantitiesChanged(widget.item.mainQuantity, sub),
+        ),
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    if (col.width == _SaleCols.price) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: AppAmountField(
+          value: _effectiveUnitPrice,
+          variant: AppAmountFieldVariant.compact,
+          skipTraversal: true,
+          errorText: _priceBelowMin ? l10n.salesPriceBelowCatalogHint : null,
+          onChanged: _onPriceEdited,
+          onSubmitted: (price) {
+            if (price < widget.minUnitPrice) {
+              _onPriceCommitFinished(rejected: true);
+              return;
+            }
+            final accepted = widget.onUnitPriceChanged(price);
+            _onPriceCommitFinished(rejected: !accepted);
+          },
+        ),
+      );
+    }
 
-    return Tooltip(
-      message: label,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          child: Ink(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              color: scheme.primaryContainer.withValues(alpha: 0.55),
-              border: Border.all(color: scheme.primary.withValues(alpha: 0.22)),
-            ),
-            child: Icon(
-              Icons.qr_code_scanner_rounded,
-              color: scheme.primary,
-              size: 24,
-            ),
+    if (col.width == _SaleCols.total) {
+      final line = const SaleCalculationService().calculateLine(
+        widget.item.copyWith(unitPrice: _effectiveUnitPrice),
+      );
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: SaleMoneyText(
+          line.total,
+          textAlign: TextAlign.end,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: _priceBelowMin ? scheme.error : null,
           ),
         ),
-      ),
-    );
-  }
-}
+      );
+    }
 
-class _EmptyAddCard extends StatelessWidget {
-  const _EmptyAddCard({
-    required this.onAdd,
-    required this.addLabel,
-    required this.scanLabel,
-    required this.emptyLabel,
-    this.onScan,
-  });
-
-  final VoidCallback onAdd;
-  final VoidCallback? onScan;
-  final String addLabel;
-  final String scanLabel;
-  final String emptyLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      clipBehavior: Clip.antiAlias,
-      child: CustomPaint(
-        painter: _DashedBorderPainter(
-          color: scheme.outlineVariant.withValues(alpha: 0.75),
-          radius: AppRadius.lg,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.xl,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      scheme.primary.withValues(alpha: 0.16),
-                      scheme.primary.withValues(alpha: 0.06),
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.playlist_add_rounded,
-                  color: scheme.primary,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                emptyLabel,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: [
-                  Expanded(
-                    child: _AddRowButton(label: addLabel, onTap: onAdd),
-                  ),
-                  if (onScan != null) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    _ScanIconButton(label: scanLabel, onTap: onScan!),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
 
@@ -527,16 +403,13 @@ class _TableFooter extends StatelessWidget {
       ),
       child: Row(
         children: [
+          const SizedBox(width: 44.0), // Index col
           SizedBox(
-            width: _Cols.index,
-            child: Text('#', style: style, textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: _Cols.product,
+            width: _SaleCols.product,
             child: Text('المجموع الإجمالي (${items.length})', style: style),
           ),
           SizedBox(
-            width: _Cols.main,
+            width: _SaleCols.main,
             child: Text(
               fmtQty(totalMain),
               style: style?.copyWith(color: scheme.onSurface),
@@ -544,7 +417,7 @@ class _TableFooter extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: _Cols.sub,
+            width: _SaleCols.sub,
             child: Text(
               fmtQty(totalSub),
               style: style?.copyWith(color: scheme.onSurface),
@@ -552,370 +425,21 @@ class _TableFooter extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: _Cols.price,
+            width: _SaleCols.price,
             child: Text('—', style: style, textAlign: TextAlign.center),
           ),
           SizedBox(
-            width: _Cols.total,
+            width: _SaleCols.total,
             child: Text(
               grandTotal.toStringAsFixed(2),
               style: totalStyle,
               textAlign: TextAlign.end,
             ),
           ),
-          const SizedBox(width: _Cols.actions),
+          const SizedBox(width: 48.0), // Actions col
         ],
       ),
     );
-  }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({required this.color, required this.radius});
-
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)),
-      );
-    const dashWidth = 6.0;
-    const dashSpace = 4.0;
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + dashWidth;
-        canvas.drawPath(
-          metric.extractPath(distance, next.clamp(0, metric.length)),
-          paint,
-        );
-        distance = next + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.radius != radius;
-  }
-}
-
-class _TableHeader extends StatelessWidget {
-  const _TableHeader({required this.theme, required this.l10n});
-
-  final ThemeData theme;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = theme.textTheme.labelSmall?.copyWith(
-      fontWeight: FontWeight.w800,
-      letterSpacing: 0.2,
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm + 2,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.55,
-        ),
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: _Cols.index,
-            child: Text('#', style: style, textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: _Cols.product,
-            child: Text(l10n.salesProductName, style: style),
-          ),
-          SizedBox(
-            width: _Cols.main,
-            child: Text(
-              l10n.mainQuantity,
-              style: style,
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(
-            width: _Cols.sub,
-            child: Text(
-              l10n.subQuantity,
-              style: style,
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(
-            width: _Cols.price,
-            child: Text(
-              l10n.salesUnitPrice,
-              style: style,
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(
-            width: _Cols.total,
-            child: Text(
-              l10n.salesTotal,
-              style: style,
-              textAlign: TextAlign.end,
-            ),
-          ),
-          const SizedBox(width: _Cols.actions),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilledProductRow extends StatefulWidget {
-  const _FilledProductRow({
-    required this.index,
-    required this.item,
-    required this.striped,
-    required this.minUnitPrice,
-    required this.onQuantitiesChanged,
-    required this.onUnitPriceChanged,
-    required this.onUnitPriceBelowMin,
-    required this.onRemove,
-  });
-
-  final int index;
-  final SaleItemDraft item;
-  final bool striped;
-  final double minUnitPrice;
-  final void Function(double main, double sub) onQuantitiesChanged;
-  final bool Function(double unitPrice) onUnitPriceChanged;
-  final VoidCallback onUnitPriceBelowMin;
-  final VoidCallback onRemove;
-
-  @override
-  State<_FilledProductRow> createState() => _FilledProductRowState();
-}
-
-class _FilledProductRowState extends State<_FilledProductRow> {
-  /// Live unit price while editing (drives line + invoice totals).
-  double? _liveUnitPrice;
-  var _priceBelowMin = false;
-
-  double get _effectiveUnitPrice => _liveUnitPrice ?? widget.item.unitPrice;
-
-  void _onPriceEdited(double parsed) {
-    final belowMin = parsed < widget.minUnitPrice;
-    setState(() {
-      _liveUnitPrice = parsed;
-      _priceBelowMin = belowMin;
-    });
-
-    if (!belowMin) {
-      final accepted = widget.onUnitPriceChanged(parsed);
-      if (!accepted) {
-        setState(() => _priceBelowMin = true);
-      }
-    }
-  }
-
-  void _onPriceCommitFinished({required bool rejected}) {
-    if (rejected) {
-      setState(() {
-        _liveUnitPrice = widget.item.unitPrice;
-        _priceBelowMin = false;
-      });
-      widget.onUnitPriceBelowMin();
-      return;
-    }
-    setState(() {
-      _liveUnitPrice = null;
-      _priceBelowMin = false;
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant _FilledProductRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.item.unitPrice != widget.item.unitPrice &&
-        _liveUnitPrice == null) {
-      // Parent committed a new price; keep row in sync.
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-    final line = const SaleCalculationService().calculateLine(
-      widget.item.copyWith(unitPrice: _effectiveUnitPrice),
-    );
-
-    return ColoredBox(
-      color: widget.striped
-          ? scheme.surfaceContainerHighest.withValues(alpha: 0.22)
-          : scheme.surface,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.28),
-            ),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.md + 4,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: _Cols.index,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Center(
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '${widget.index + 1}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.product,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  widget.item.productName,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    height: 1.25,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.main,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: AppAmountField(
-                  value: widget.item.mainQuantity,
-                  decimalPlaces: 3,
-                  trimTrailingZeros: true,
-                  variant: AppAmountFieldVariant.compact,
-                  skipTraversal: true,
-                  keepFocusOnSubmit: true,
-                  onChanged: (main) =>
-                      onQuantitiesChangedSafe(main, widget.item.subQuantity),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.sub,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: AppAmountField(
-                  value: widget.item.subQuantity,
-                  decimalPlaces: 3,
-                  trimTrailingZeros: true,
-                  variant: AppAmountFieldVariant.compact,
-                  skipTraversal: true,
-                  keepFocusOnSubmit: true,
-                  onChanged: (sub) =>
-                      onQuantitiesChangedSafe(widget.item.mainQuantity, sub),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.price,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: AppAmountField(
-                  value: _effectiveUnitPrice,
-                  variant: AppAmountFieldVariant.compact,
-                  skipTraversal: true,
-                  errorText: _priceBelowMin
-                      ? l10n.salesPriceBelowCatalogHint
-                      : null,
-                  onChanged: _onPriceEdited,
-                  onSubmitted: (price) {
-                    if (price < widget.minUnitPrice) {
-                      _onPriceCommitFinished(rejected: true);
-                      return;
-                    }
-                    final accepted = widget.onUnitPriceChanged(price);
-                    _onPriceCommitFinished(rejected: !accepted);
-                  },
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.total,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: SaleMoneyText(
-                  line.total,
-                  textAlign: TextAlign.end,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: _priceBelowMin ? scheme.error : null,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.actions,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: IconButton(
-                  tooltip: MaterialLocalizations.of(
-                    context,
-                  ).deleteButtonTooltip,
-                  onPressed: widget.onRemove,
-                  icon: Icon(
-                    Icons.delete_outline_rounded,
-                    size: 20,
-                    color: scheme.error.withValues(alpha: 0.85),
-                  ),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void onQuantitiesChangedSafe(double main, double sub) {
-    widget.onQuantitiesChanged(main, sub);
   }
 }
 

@@ -1,5 +1,5 @@
 import 'package:stock_count/app/settings/company/functional_currency_service.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_repository.dart';
 import 'package:stock_count/modules/currency/domain/repositories/currency_rate_repository.dart';
@@ -13,10 +13,10 @@ class InventoryValuationCurrencyService {
     CurrencyRepository? currencyRepository,
     CurrencyRateRepository? currencyRateRepository,
     CompanyInitializationRepository? initRepository,
-  })  : _functionalCurrencyService = functionalCurrencyService,
-        _currencyRepository = currencyRepository,
-        _currencyRateRepository = currencyRateRepository,
-        _initRepository = initRepository;
+  }) : _functionalCurrencyService = functionalCurrencyService,
+       _currencyRepository = currencyRepository,
+       _currencyRateRepository = currencyRateRepository,
+       _initRepository = initRepository;
 
   final FunctionalCurrencyService _functionalCurrencyService;
   final CurrencyRepository? _currencyRepository;
@@ -33,16 +33,17 @@ class InventoryValuationCurrencyService {
   ///      If missing, throws [CurrencyRateRequiredException].
   /// - Otherwise, defaults to system functional currency.
   Future<Currency> getValuationCurrency([String? companyId]) async {
-    final functionalCurrency =
-        await _functionalCurrencyService.getFunctionalCurrency(companyId);
+    final functionalCurrency = await _functionalCurrencyService
+        .getFunctionalCurrency(companyId);
 
     if (_initRepository == null) {
       return functionalCurrency;
     }
 
     final inventoryConfig = await _initRepository.getInventoryConfig();
-    final inventoryCurrencyCode =
-        inventoryConfig?.inventoryBaseCurrencyId.trim().toUpperCase();
+    final inventoryCurrencyCode = inventoryConfig?.inventoryBaseCurrencyId
+        .trim()
+        .toUpperCase();
 
     if (inventoryCurrencyCode == null ||
         inventoryCurrencyCode.isEmpty ||
@@ -52,8 +53,9 @@ class InventoryValuationCurrencyService {
 
     // Inventory currency differs from system functional currency!
     if (_currencyRepository != null) {
-      final inventoryCurrency =
-          await _currencyRepository.getByCode(inventoryCurrencyCode);
+      final inventoryCurrency = await _currencyRepository.getByCode(
+        inventoryCurrencyCode,
+      );
       if (inventoryCurrency == null || !inventoryCurrency.isActive) {
         throw InvalidFunctionalCurrencyException(
           'عملة تقييم المخزون المحددة ($inventoryCurrencyCode) غير موجودة أو غير نشطة في سجلات المنشأة.',
@@ -63,8 +65,9 @@ class InventoryValuationCurrencyService {
       // MANDATORY FX RATE CHECK:
       // Verify that an exchange rate exists between inventory currency and functional currency
       if (_currencyRateRepository != null) {
-        final rate =
-            await _currencyRateRepository.getByCode(inventoryCurrencyCode);
+        final rate = await _currencyRateRepository.getByCode(
+          inventoryCurrencyCode,
+        );
         final rateValue = rate?.rateToBase ?? 0;
         if (rateValue <= 0) {
           throw CurrencyRateRequiredException(

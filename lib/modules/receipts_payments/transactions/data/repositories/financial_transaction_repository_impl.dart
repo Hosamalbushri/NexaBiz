@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/utils/business_date.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/financial_transaction.dart';
@@ -18,7 +18,7 @@ import '../../domain/repositories/financial_transaction_repository.dart';
 import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
 
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
@@ -811,9 +811,7 @@ class FinancialTransactionRepositoryImpl
       transactionDate: Value((payload['transactionDate'] as int?) ?? now),
       amount: Value((payload['amount'] as num?)?.toDouble() ?? 0),
       currencyCode: Value((payload['currencyCode'] as String?) ?? ''),
-      baseCurrencyCode: Value(
-        (payload['baseCurrencyCode'] as String?) ?? '',
-      ),
+      baseCurrencyCode: Value((payload['baseCurrencyCode'] as String?) ?? ''),
       exchangeRate: Value((payload['exchangeRate'] as num?)?.toDouble() ?? 1),
       counterAmount: Value(
         (payload['counterAmount'] as num?)?.toDouble() ??

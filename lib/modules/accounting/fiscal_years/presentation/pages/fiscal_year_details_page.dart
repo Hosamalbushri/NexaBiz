@@ -13,7 +13,7 @@ import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../domain/entities/accounting_period_status.dart';
 import '../../domain/models/fiscal_year_exception.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';

@@ -187,11 +187,11 @@ class _LoadingCardState extends State<_LoadingCard>
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   height: 1.25,
-                  shadows: const [
+                  shadows: [
                     Shadow(
-                      color: Color(0x66000000),
+                      color: colorScheme.shadow.withValues(alpha: 0.4),
                       blurRadius: 8,
-                      offset: Offset(0, 1),
+                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),

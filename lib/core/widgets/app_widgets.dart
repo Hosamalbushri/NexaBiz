@@ -28,6 +28,7 @@ export 'app_customer_search_field.dart';
 export 'app_expandable_search_bar.dart';
 export 'app_currency_selector.dart';
 export 'app_document_line_table_shell.dart';
+export 'app_editable_table_shell.dart';
 export 'app_rate_field.dart';
 export 'loading_overlay.dart';
 export 'notification_badge.dart';

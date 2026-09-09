@@ -159,7 +159,9 @@ class SalesModule extends AppModule {
           path: ':id',
           name: 'salesDetails',
           builder: (context, state) {
-            final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+            final id = AppRouteParamParser.tryParseInt(
+              state.pathParameters['id'],
+            );
             if (id == null) {
               return const SaleDetailsPage(saleId: -1);
             }
@@ -170,7 +172,9 @@ class SalesModule extends AppModule {
               path: 'edit',
               name: 'salesEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(state.pathParameters['id']);
+                final id = AppRouteParamParser.tryParseInt(
+                  state.pathParameters['id'],
+                );
                 if (id == null) {
                   return const SaleFormPage(saleId: -1);
                 }

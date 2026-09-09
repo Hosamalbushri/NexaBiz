@@ -57,7 +57,9 @@ class FxSettlementEngine {
     }
 
     final origBase = JournalMoney.round(settledAmountFc * originalExchangeRate);
-    final settleBase = JournalMoney.round(settledAmountFc * settlementExchangeRate);
+    final settleBase = JournalMoney.round(
+      settledAmountFc * settlementExchangeRate,
+    );
     final rawDiff = JournalMoney.round(settleBase - origBase);
 
     FxDifferenceType diffType;

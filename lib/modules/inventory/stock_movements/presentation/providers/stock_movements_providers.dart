@@ -10,7 +10,7 @@ import '../../domain/usecases/stock_movement_usecases.dart';
 
 import 'package:stock_count/app/inventory/inventory_app_providers.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
@@ -25,7 +25,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/po
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 
@@ -103,7 +103,9 @@ final inventoryDependencyDetectorProvider =
 final costLayerServiceProvider = Provider<CostLayerService>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
   final initRepo = ref.watch(companyInitializationRepositoryProvider);
-  final functionalCurrencyService = ref.watch(functionalCurrencyServiceProvider);
+  final functionalCurrencyService = ref.watch(
+    functionalCurrencyServiceProvider,
+  );
   return CostLayerServiceImpl(
     db: db,
     readCompanyId: () => ref.read(currentCompanyIdProvider),

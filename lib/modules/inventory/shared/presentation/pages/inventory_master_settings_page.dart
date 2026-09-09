@@ -30,7 +30,9 @@ class InventoryMasterSettingsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isAr ? 'إعدادات وتهيئة موديول المخزون' : 'Inventory Module Master Settings',
+        title: isAr
+            ? 'إعدادات وتهيئة موديول المخزون'
+            : 'Inventory Module Master Settings',
         showBackButton: true,
       ),
       body: ListView(
@@ -42,44 +44,58 @@ class InventoryMasterSettingsPage extends ConsumerWidget {
 
           // Section 1: Master Data Navigation Menu List
           SettingsGroupLabel(
-            isAr ? 'البيانات الرئيسية والتشغيلية' : 'Inventory Master Data & Operations',
+            isAr
+                ? 'البيانات الرئيسية والتشغيلية'
+                : 'Inventory Master Data & Operations',
           ),
           SettingsGroup(
             children: [
               SettingsTile(
                 icon: Icons.warehouse_rounded,
                 iconColor: colorScheme.primary,
-                title: isAr ? 'إدارة المستودعات والمواقع' : 'Warehouses & Locations',
+                title: isAr
+                    ? 'إدارة المستودعات والمواقع'
+                    : 'Warehouses & Locations',
                 subtitle: isAr
                     ? 'تعريف المستودعات، الأفرع، والمواقع التخزينية'
                     : 'Manage warehouses, branches, and storage locations',
                 showChevron: true,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const WarehousesSettingsPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const WarehousesSettingsPage(),
+                  ),
                 ),
               ),
               SettingsTile(
                 icon: Icons.account_tree_rounded,
                 iconColor: Colors.teal,
-                title: isAr ? 'شجرة تصنيفات المنتجات' : 'Product Categories Hierarchy',
+                title: isAr
+                    ? 'شجرة تصنيفات المنتجات'
+                    : 'Product Categories Hierarchy',
                 subtitle: isAr
                     ? 'تنظيم فئات ومجموعات المنتجات الرئيسية والفرعية'
                     : 'Organize category tree and item classification groups',
                 showChevron: true,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CategoriesSettingsPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const CategoriesSettingsPage(),
+                  ),
                 ),
               ),
               SettingsTile(
                 icon: Icons.calculate_outlined,
                 iconColor: Colors.amber.shade800,
-                title: isAr ? 'سياسة تقييم التكلفة المخزنية' : 'Cost Valuation Method',
+                title: isAr
+                    ? 'سياسة عملة وتقييم تكلفة المخزون'
+                    : 'Inventory Valuation Currency & Costing Method',
                 subtitle: isAr
-                    ? 'تحديد طريقة التقييم المحاسبي (المتوسط المرجح / FIFO)'
-                    : 'Configure inventory costing method (Weighted Avg / FIFO)',
+                    ? 'تحديد عملة تقييم التكلفة المخزنية وطريقة الحساب (المتوسط المرجح / FIFO)'
+                    : 'Configure valuation currency and costing method (Weighted Avg / FIFO)',
                 showChevron: true,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CostValuationSettingsPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const CostValuationSettingsPage(),
+                  ),
                 ),
               ),
             ],
@@ -141,7 +157,9 @@ class InventoryMasterSettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'مركز تهيئة وإعدادات المخزون' : 'Inventory Settings Center',
+                  isAr
+                      ? 'مركز تهيئة وإعدادات المخزون'
+                      : 'Inventory Settings Center',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

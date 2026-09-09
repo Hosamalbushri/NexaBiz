@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
@@ -13,11 +12,13 @@ class ProductStockMovementReportDataAdapter
     required this.db,
     this.salesDb,
     required this.loadFunctionalCurrencyCode,
+    this.readCompanyId,
   });
 
   final InventoryDatabase db;
   final SalesDatabase? salesDb;
   final Future<String> Function() loadFunctionalCurrencyCode;
+  final String Function()? readCompanyId;
 
   @override
   Future<ProductStockMovementReportPayload> loadFromFilter({
@@ -30,6 +31,7 @@ class ProductStockMovementReportDataAdapter
       fromDate: filter.fromDate,
       toDate: filter.toDate,
       labels: labels,
+      companyId: filter.companyId,
     );
   }
 
@@ -40,10 +42,34 @@ class ProductStockMovementReportDataAdapter
     DateTime? fromDate,
     DateTime? toDate,
     required ProductStockMovementReportLabels labels,
+    String? companyId,
   }) async {
     await loadFunctionalCurrencyCode();
 
-    // 1. Fetch Product details
+    final activeCompanyId = (companyId != null && companyId.trim().isNotEmpty)
+        ? companyId.trim()
+        : readCompanyId?.call().trim();
+
+    if (activeCompanyId == null || activeCompanyId.isEmpty) {
+      return ProductStockMovementReportPayload(
+        labels: labels,
+        fromDate: fromDate,
+        toDate: toDate,
+        warehouseName: labels.allWarehousesLabel,
+        productCode: productId,
+        productName: productId,
+        mainUnitCapacity: 24,
+        subUnitCapacity: 1,
+        openingBalance: const ProductStockOpeningBalance(),
+        rows: const [],
+        totalIncomingCost: 0.0,
+        totalOutgoingCost: 0.0,
+        totalIncomingQty: 0.0,
+        totalOutgoingQty: 0.0,
+      );
+    }
+
+    // 1. Fetch Product details (tenant scoped)
     String productCode = productId;
     String productName = productId;
     int mainCapacity =
@@ -55,7 +81,9 @@ class ProductStockMovementReportDataAdapter
     final prodQuery =
         await (db.select(db.products)..where(
               (tbl) =>
-                  tbl.uuid.equals(productId) | tbl.itemCode.equals(productId),
+                  (tbl.uuid.equals(productId) |
+                      tbl.itemCode.equals(productId)) &
+                  tbl.companyId.equals(activeCompanyId),
             ))
             .getSingleOrNull();
 
@@ -74,12 +102,16 @@ class ProductStockMovementReportDataAdapter
       return qty * productUnitCost;
     }
 
-    // 2. Fetch Warehouse details
+    // 2. Fetch Warehouse details (tenant scoped)
     String warehouseName = labels.allWarehousesLabel;
     if (warehouseId != null && warehouseId.isNotEmpty) {
-      final whQuery = await (db.select(
-        db.warehouses,
-      )..where((tbl) => tbl.uuid.equals(warehouseId))).getSingleOrNull();
+      final whQuery =
+          await (db.select(db.warehouses)..where(
+                (tbl) =>
+                    tbl.uuid.equals(warehouseId) &
+                    tbl.companyId.equals(activeCompanyId),
+              ))
+              .getSingleOrNull();
       if (whQuery != null) {
         warehouseName = whQuery.name;
       }
@@ -97,36 +129,44 @@ class ProductStockMovementReportDataAdapter
 
     // Fetch Receipts (tenant scoped)
     final receiptsMap = <String, StockReceiptRow>{};
-    final receipts = await (db.select(
-      db.stockReceipts,
-    )..where((tbl) => tbl.deletedAt.isNull())).get();
+    final receipts =
+        await (db.select(db.stockReceipts)
+              ..where((tbl) => tbl.deletedAt.isNull())
+              ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
+            .get();
     for (final r in receipts) {
       receiptsMap[r.uuid] = r;
     }
 
     // Fetch Issues (tenant scoped)
     final issuesMap = <String, StockIssueRow>{};
-    final issues = await (db.select(
-      db.stockIssues,
-    )..where((tbl) => tbl.deletedAt.isNull())).get();
+    final issues =
+        await (db.select(db.stockIssues)
+              ..where((tbl) => tbl.deletedAt.isNull())
+              ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
+            .get();
     for (final i in issues) {
       issuesMap[i.uuid] = i;
     }
 
     // Fetch Transfers (tenant scoped)
     final transfersMap = <String, StockTransferRow>{};
-    final transfers = await (db.select(
-      db.stockTransfers,
-    )..where((tbl) => tbl.deletedAt.isNull())).get();
+    final transfers =
+        await (db.select(db.stockTransfers)
+              ..where((tbl) => tbl.deletedAt.isNull())
+              ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
+            .get();
     for (final t in transfers) {
       transfersMap[t.uuid] = t;
     }
 
     // Fetch Returns (tenant scoped)
     final returnsMap = <String, StockReturnRow>{};
-    final returns = await (db.select(
-      db.stockReturns,
-    )..where((tbl) => tbl.deletedAt.isNull())).get();
+    final returns =
+        await (db.select(db.stockReturns)
+              ..where((tbl) => tbl.deletedAt.isNull())
+              ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
+            .get();
     for (final ret in returns) {
       returnsMap[ret.uuid] = ret;
     }
@@ -245,12 +285,16 @@ class ProductStockMovementReportDataAdapter
       }
     }
 
-    // 3b. Fetch Sales Invoices from SalesDatabase
+    // 3b. Fetch Sales Invoices from SalesDatabase (tenant scoped)
     if (salesDb != null) {
       final salesMap = <String, SaleRow>{};
-      final salesList = await (salesDb!.select(
-        salesDb!.sales,
-      )..where((tbl) => tbl.deletedAt.isNull())).get();
+      final salesList =
+          await (salesDb!.select(salesDb!.sales)..where(
+                (tbl) =>
+                    tbl.companyId.equals(activeCompanyId) &
+                    tbl.deletedAt.isNull(),
+              ))
+              .get();
       for (final s in salesList) {
         // Exclude cancelled sales
         if (s.saleStatus != 'cancelled') {

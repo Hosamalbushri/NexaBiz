@@ -8,8 +8,9 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
+import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 import 'receipts_payments_routes.dart';
 
 /// Receipts & Payments module hub — one entry per service.
@@ -37,6 +38,7 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
+          const AppMissingCurrencyGuardBanner(),
           Text(
             l10n.servicesTitle,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -160,15 +162,9 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
               )
               .animate()
               .fadeIn(delay: 300.ms, duration: 280.ms)
-              .slideY(
-                begin: 0.04,
-                end: 0,
-                delay: 300.ms,
-                duration: 280.ms,
-              ),
+              .slideY(begin: 0.04, end: 0, delay: 300.ms, duration: 280.ms),
         ],
       ),
     );
   }
 }
-

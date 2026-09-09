@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/cost_valuation_providers.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 
 import '../../data/repositories/stock_transfer_repository_impl.dart';
 import '../../domain/entities/stock_transfer.dart';

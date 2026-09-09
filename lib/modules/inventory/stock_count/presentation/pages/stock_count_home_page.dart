@@ -9,7 +9,7 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_shadows.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/modules/inventory/permissions/inventory_permission_package.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 

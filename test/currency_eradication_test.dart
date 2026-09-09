@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/app/sales/accounting_sale_currency_adapter.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_currency_adapter.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';

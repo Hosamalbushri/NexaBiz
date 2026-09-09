@@ -30,4 +30,3 @@ class ReceiptsPaymentsMasterSettingsPage extends ConsumerWidget {
     );
   }
 }
-

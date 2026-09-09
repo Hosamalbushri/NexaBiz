@@ -19,8 +19,8 @@ class CompanyInitializationRepositoryImpl
     this._readCompanyId,
     InventoryDatabase? invDb,
     Future<bool> Function()? hasInventoryActivity,
-  })  : _invDb = invDb,
-        _hasInventoryActivityCustom = hasInventoryActivity;
+  }) : _invDb = invDb,
+       _hasInventoryActivityCustom = hasInventoryActivity;
 
   Box<dynamic>? _box;
   final String Function()? _readCompanyId;

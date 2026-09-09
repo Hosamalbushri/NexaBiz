@@ -10,6 +10,8 @@ import '../../core/logging/app_error_log.dart';
 import '../../core/network/sync_api_config.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../core/tenancy/tenant_context.dart';
+import '../../core/tenancy/tenant_providers.dart';
+import '../../modules/authentication/data/session_context_adapter.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
@@ -23,14 +25,32 @@ import 'package:stock_count/modules/receipts_payments/shared/data/sync/receipts_
 import '../customers/customer_remote_account_ensure.dart';
 import '../notifications/data/notification_hive.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
-import '../settings/company/company_profile_sync_bootstrap.dart';
 import '../settings/settings_repository.dart';
 import '../sync/sync_background_scheduler.dart';
 import '../sync/sync_enabled_provider.dart';
 
+import '../../core/audit/presentation/providers/audit_providers.dart';
+import '../../modules/inventory/data/repositories/inventory_audit_repository.dart';
+import '../../modules/inventory/products/presentation/providers/product_providers.dart';
+
 /// Application-level bootstrap divided into independent, resilient stages.
 class AppBootstrap {
   const AppBootstrap._();
+
+  /// Riverpod override for [sessionContextPortProvider] using [SessionContextAdapter].
+  static Override get sessionContextPortOverride =>
+      sessionContextPortProvider.overrideWith(
+        (ref) => SessionContextAdapter(
+          authState: ref.watch(authStateProvider),
+          localAuthStore: ref.watch(localAuthStoreProvider),
+        ),
+      );
+
+  /// Riverpod override for [auditRepositoryPortProvider] using [InventoryAuditRepository].
+  static Override get auditRepositoryPortOverride =>
+      auditRepositoryPortProvider.overrideWith(
+        (ref) => InventoryAuditRepository(ref.watch(inventoryDatabaseProvider)),
+      );
 
   /// Stage B: Local Storage Initialization
   static Future<void> bootstrapStorage() async {
@@ -114,6 +134,7 @@ class AppBootstrap {
     );
 
     final coordinator = SyncRegistryCoordinator(
+      sessionContext: ref.read(sessionContextPortProvider),
       registrars: [
         const CompanyProfileSyncRegistrar(),
         const InventorySyncRegistrar(),

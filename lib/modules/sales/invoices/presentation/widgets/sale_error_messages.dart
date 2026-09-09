@@ -1,6 +1,7 @@
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/permissions/permission_error_messages.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/widgets/journal_exception_messages.dart';
 import '../../domain/models/sale_exception.dart';
 
@@ -12,6 +13,9 @@ String saleErrorMessage(AppLocalizations l10n, Object error) {
   }
   if (error is JournalException) {
     return journalExceptionMessage(l10n, error);
+  }
+  if (error is CurrencyRequiredException || error is InvalidFunctionalCurrencyException) {
+    return l10n.salesErrorCurrencyRequired;
   }
   if (error is SaleException) {
     if (error.message != null && error.message!.trim().isNotEmpty) {

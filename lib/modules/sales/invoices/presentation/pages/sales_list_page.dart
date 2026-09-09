@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/widgets/app_filter_sheet.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
-import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
+import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/sale_list_item.dart';
 import '../../domain/entities/sale_settlement_type.dart';
@@ -189,143 +187,128 @@ class _SaleListTile extends StatelessWidget {
         ? Icons.payments_rounded
         : Icons.account_balance_rounded;
 
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => SalesRoutes.pushDetails(context, sale.id),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
+    return AppCard(
+      onTap: () => SalesRoutes.pushDetails(context, sale.id),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  Icons.receipt_long_rounded,
+                  color: scheme.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                      child: Icon(
-                        Icons.receipt_long_rounded,
-                        color: scheme.primary,
-                        size: 22,
+                    SaleNumberText(
+                      sale.saleNumber,
+                      showReference: true,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm + 2),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SaleNumberText(
-                            sale.saleNumber,
-                            showReference: true,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            customerName,
-                            maxLines: 2,
-                            softWrap: true,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        SaleMoneyText(
-                          sale.total,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: scheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          sale.currencyCode,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm + 2),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_month_rounded,
-                      size: 14,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      date,
-                      style: theme.textTheme.labelMedium?.copyWith(
+                      customerName,
+                      maxLines: 2,
+                      softWrap: true,
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: scheme.outlineVariant,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Icon(
-                      settlementIcon,
-                      size: 14,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        settlementLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                SaleStatusBadge(
-                  status: sale.saleStatus,
-                  label: _saleStatusLabel(l10n, sale.saleStatus),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  SaleMoneyText(
+                    sale.total,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: scheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    sale.currencyCode,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: AppSpacing.sm + 2),
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_month_rounded,
+                size: 14,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                date,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Container(
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Icon(
+                settlementIcon,
+                size: 14,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  settlementLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SaleStatusBadge(
+            status: sale.saleStatus,
+            label: _saleStatusLabel(l10n, sale.saleStatus),
+          ),
+        ],
       ),
     );
   }

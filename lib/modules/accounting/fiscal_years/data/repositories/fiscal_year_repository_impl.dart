@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/utils/business_date.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/accounting_period_status.dart';

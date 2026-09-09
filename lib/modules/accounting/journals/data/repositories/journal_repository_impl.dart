@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/utils/business_date.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/journal_entry.dart';
@@ -588,7 +588,9 @@ class JournalRepositoryImpl implements JournalRepository {
           sortOrder: row.readTable(_db.journalLines).sortOrder,
           baseDebit: row.readTable(_db.journalLines).baseDebit,
           baseCredit: row.readTable(_db.journalLines).baseCredit,
-          exchangeRateToBase: row.readTable(_db.journalLines).exchangeRateToBase,
+          exchangeRateToBase: row
+              .readTable(_db.journalLines)
+              .exchangeRateToBase,
         ),
     ];
   }

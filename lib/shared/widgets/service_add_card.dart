@@ -41,7 +41,9 @@ class ServiceAddCard extends StatelessWidget {
         : 26.0;
 
     final fill = walletStyle
-        ? (isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF2F4F7))
+        ? (isDark
+                  ? colorScheme.surfaceContainerHigh
+                  : colorScheme.surfaceContainerHighest)
               .withValues(alpha: isDark ? 0.85 : 0.9)
         : colorScheme.surface.withValues(alpha: isDark ? 0.4 : 0.5);
 

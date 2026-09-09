@@ -32,7 +32,9 @@ final defaultCurrencyProvider = FutureProvider<Currency?>((ref) async {
   return repo.getDefaultCurrency();
 });
 
-final functionalCurrencyServiceProvider = Provider<FunctionalCurrencyService>((ref) {
+final functionalCurrencyServiceProvider = Provider<FunctionalCurrencyService>((
+  ref,
+) {
   final settingsRepo = ref.watch(settingsRepositoryProvider);
   final currencyRepo = ref.watch(currencyRepositoryProvider);
   final db = ref.watch(accountingDatabaseProvider);

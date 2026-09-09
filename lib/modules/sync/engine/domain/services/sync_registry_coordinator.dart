@@ -1,13 +1,19 @@
-import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/ports/session_context_port.dart';
+import 'package:stock_count/core/tenancy/tenant_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 /// Central coordinator for tenant-safe, scope-guarded sync module registration.
 class SyncRegistryCoordinator {
-  const SyncRegistryCoordinator({required this.registrars});
+  const SyncRegistryCoordinator({
+    required this.registrars,
+    SessionContextPort? sessionContext,
+  }) : _sessionContext = sessionContext;
 
   /// Registered module registrars.
   final List<SyncModuleRegistrar> registrars;
+
+  /// Abstract session context port.
+  final SessionContextPort? _sessionContext;
 
   /// Evaluates active scope, authentication, and tenant context to register eligible sync handlers.
   ///
@@ -19,13 +25,17 @@ class SyncRegistryCoordinator {
     final manager = ref.read(syncManagerProvider) as SyncManager;
     manager.clearHandlers();
 
-    final authState = ref.read(authStateProvider);
-    final currentCompanyId = ref.read(currentCompanyIdProvider) as String;
+    final sessionPort =
+        _sessionContext ??
+        (ref.read(sessionContextPortProvider) as SessionContextPort);
+
+    final currentCompanyId =
+        sessionPort.currentCompanyId ??
+        (ref.read(currentCompanyIdProvider) as String? ?? '');
     final hasCompanyContext = currentCompanyId.trim().isNotEmpty;
-    final isAuthenticated =
-        authState.canUseRemoteSync || authState.isAuthenticated;
+    final isAuthenticated = sessionPort.isAuthenticated;
     final isSystemScopeActive =
-        !hasCompanyContext || authState.session?.activeCompanyContext == null;
+        !hasCompanyContext || sessionPort.activeCompanyId == null;
 
     final registeredModules = <String>[];
 

@@ -41,31 +41,29 @@ class WarehouseValidator {
         'يلزم تحديد التهيئة والربط المحاسبي للمستودع (أصل المخزون وتكلفة المبيعات)',
       );
     } else {
-      final hasAsset = binding.inventoryAssetAccountId != null &&
+      final hasAsset =
+          binding.inventoryAssetAccountId != null &&
           binding.inventoryAssetAccountId!.trim().isNotEmpty;
-      final hasCogs = binding.cogsAccountId != null &&
+      final hasCogs =
+          binding.cogsAccountId != null &&
           binding.cogsAccountId!.trim().isNotEmpty;
-      final hasAdj = binding.inventoryAdjustmentAccountId != null &&
+      final hasAdj =
+          binding.inventoryAdjustmentAccountId != null &&
           binding.inventoryAdjustmentAccountId!.trim().isNotEmpty;
 
       if (!hasAsset) {
-        errors.add(
-          'حساب أصل المخزون غير محدد لهذا المستودع',
-        );
+        errors.add('حساب أصل المخزون غير محدد لهذا المستودع');
       }
       if (!hasCogs) {
-        errors.add(
-          'حساب تكلفة البضاعة المباعة (COGS) غير محدد لهذا المستودع',
-        );
+        errors.add('حساب تكلفة البضاعة المباعة (COGS) غير محدد لهذا المستودع');
       }
       if (!hasAdj) {
-        warnings.add(
-          'حساب تسويات وانحرافات المخزون غير محدد لهذا المستودع',
-        );
+        warnings.add('حساب تسويات وانحرافات المخزون غير محدد لهذا المستودع');
       }
     }
 
-    final isAccountingReady = binding != null &&
+    final isAccountingReady =
+        binding != null &&
         binding.inventoryAssetAccountId != null &&
         binding.inventoryAssetAccountId!.trim().isNotEmpty &&
         binding.cogsAccountId != null &&

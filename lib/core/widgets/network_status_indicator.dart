@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/localization/app_localizations.dart';
+import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../connectivity/network_status.dart';
 
@@ -36,27 +37,27 @@ class NetworkStatusIndicator extends ConsumerWidget {
     switch (status) {
       case NetworkStatus.online:
         badgeColor = isDark
-            ? const Color(0xFF1B5E20).withValues(alpha: 0.85)
-            : const Color(0xFFE8F5E9);
-        textColor = isDark ? const Color(0xFFA5D6A7) : const Color(0xFF2E7D32);
+            ? AppColors.success.withValues(alpha: 0.85)
+            : AppColors.successContainer;
+        textColor = isDark ? AppColors.successContainer : AppColors.success;
         icon = Icons.wifi_rounded;
         labelText = l10n.syncConnectionOnline;
         break;
 
       case NetworkStatus.offline:
         badgeColor = isDark
-            ? const Color(0xFF37474F).withValues(alpha: 0.85)
-            : const Color(0xFFECEFF1);
-        textColor = isDark ? const Color(0xFFCFD8DC) : const Color(0xFF546E7A);
+            ? AppColors.neutral.withValues(alpha: 0.85)
+            : AppColors.neutralContainer;
+        textColor = isDark ? AppColors.neutralContainer : AppColors.neutral;
         icon = Icons.wifi_off_rounded;
         labelText = l10n.syncConnectionOffline;
         break;
 
       case NetworkStatus.reconnecting:
         badgeColor = isDark
-            ? const Color(0xFF0D47A1).withValues(alpha: 0.85)
-            : const Color(0xFFE3F2FD);
-        textColor = isDark ? const Color(0xFF90CAF9) : const Color(0xFF1565C0);
+            ? AppColors.info.withValues(alpha: 0.85)
+            : AppColors.infoContainer;
+        textColor = isDark ? AppColors.infoContainer : AppColors.info;
         icon = Icons.sync_rounded;
         labelText = l10n.syncStatusSyncing;
         break;

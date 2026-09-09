@@ -32,7 +32,8 @@ import '../presentation/pages/modules_reports_page.dart';
 import '../presentation/pages/not_found_page.dart';
 import '../presentation/pages/platform_reports_page.dart';
 import '../presentation/pages/service_launcher_page.dart';
-import '../../modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
+import '../../modules/currency/presentation/pages/currencies_home_page.dart';
+import '../../modules/currency/presentation/pages/currencies_manage_page.dart';
 import '../../modules/currency/presentation/pages/currency_rates_page.dart';
 
 import '../settings/company/functional_currency_config_page.dart';
@@ -283,8 +284,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         path: 'currencies',
                         name: 'settingsCurrencies',
                         builder: (context, state) =>
-                            const CurrenciesManagePage(),
+                            const CurrenciesHomePage(),
                         routes: [
+                          GoRoute(
+                            path: 'manage',
+                            name: 'settingsCurrenciesManage',
+                            builder: (context, state) =>
+                                const CurrenciesManagePage(),
+                          ),
                           GoRoute(
                             path: 'rates',
                             name: 'settingsCurrencyRates',
@@ -437,15 +444,10 @@ String? evaluateAppRouteRedirect({
     }
   }
 
-  // Capability & Entitlement Gate for Data Sync Settings
-  if (path == AppRoutes.settingsDataSync ||
-      path.startsWith('${AppRoutes.settingsDataSync}/')) {
-    final currentEntitlement =
-        entitlementAsync?.valueOrNull ?? entitlementService?.currentEntitlement;
-    if (currentEntitlement != null &&
-        !currentEntitlement.hasCapability(EntitlementCapability.sync)) {
-      return AppRoutes.settingsSubscription;
-    }
+  // Subscriptions page is disabled for now — redirect to Data Sync
+  if (path == AppRoutes.settingsSubscription ||
+      path.startsWith('${AppRoutes.settingsSubscription}/')) {
+    return AppRoutes.settingsDataSync;
   }
 
   return null;

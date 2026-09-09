@@ -216,7 +216,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         return Scaffold(
           backgroundColor: theme.colorScheme.surfaceContainerLowest,
           appBar: CustomAppBar(
-            title: isArabic ? 'بيانات وإعدادات الشركة' : 'Company Profile & Identity',
+            title: isArabic
+                ? 'بيانات وإعدادات الشركة'
+                : 'Company Profile & Identity',
             showBackButton: true,
           ),
           body: _buildCompanyForm(context, theme, l10n),
@@ -432,13 +434,13 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppButton(
-                  label: isArabic ? 'انتقال إلى سجل العملات' : 'Go to Currency Master',
+                  label: isArabic
+                      ? 'انتقال إلى سجل العملات'
+                      : 'Go to Currency Master',
                   icon: Icons.currency_exchange_outlined,
                   variant: AppButtonVariant.outlined,
                   onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CurrenciesManagePage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => CurrenciesManagePage()),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),

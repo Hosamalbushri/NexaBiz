@@ -1,3 +1,1 @@
-library app_typography;
-
-export '../../core/theme/tokens/app_typography.dart';
+export 'package:nexabiz_ui/nexabiz_ui.dart';

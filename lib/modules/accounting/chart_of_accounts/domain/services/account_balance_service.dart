@@ -1,4 +1,4 @@
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_currency_balance.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_currency_balance_repository.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
@@ -32,9 +32,9 @@ class AccountBalanceService {
     required AccountCurrencyBalanceRepository balanceRepository,
     required JournalRepository journalRepository,
     required CurrencyRepository currencyRepository,
-  })  : _balanceRepo = balanceRepository,
-        _journalRepo = journalRepository,
-        _currencyRepo = currencyRepository;
+  }) : _balanceRepo = balanceRepository,
+       _journalRepo = journalRepository,
+       _currencyRepo = currencyRepository;
 
   final AccountCurrencyBalanceRepository _balanceRepo;
   final JournalRepository _journalRepo;
@@ -45,7 +45,10 @@ class AccountBalanceService {
     String accountUuid, {
     String? companyId,
   }) async {
-    return _balanceRepo.getBalancesForAccount(accountUuid, companyId: companyId);
+    return _balanceRepo.getBalancesForAccount(
+      accountUuid,
+      companyId: companyId,
+    );
   }
 
   /// Generates an account statement strictly for ONE currency.
@@ -58,7 +61,9 @@ class AccountBalanceService {
   }) async {
     final code = currencyCode.trim().toUpperCase();
     if (code.isEmpty) {
-      throw const CurrencyRequiredException('Currency code is required for account statement.');
+      throw const CurrencyRequiredException(
+        'Currency code is required for account statement.',
+      );
     }
 
     final opening = fromDate == null
@@ -103,18 +108,26 @@ class AccountBalanceService {
 
   /// Validates that a currency is active when selecting currency for NEW transactions,
   /// while ensuring historical transactions remain valid and queryable.
-  Future<void> assertCurrencySelectableForTransaction(String currencyCode) async {
+  Future<void> assertCurrencySelectableForTransaction(
+    String currencyCode,
+  ) async {
     final code = currencyCode.trim().toUpperCase();
     if (code.isEmpty) {
-      throw const CurrencyRequiredException('Transaction currency code is required.');
+      throw const CurrencyRequiredException(
+        'Transaction currency code is required.',
+      );
     }
 
     final currency = await _currencyRepo.getByCode(code);
     if (currency == null) {
-      throw CurrencyValidationException('Currency code "$code" is not registered in the system.');
+      throw CurrencyValidationException(
+        'Currency code "$code" is not registered in the system.',
+      );
     }
     if (!currency.isActive) {
-      throw CurrencyValidationException('Currency "$code" is inactive and cannot be selected for new transactions.');
+      throw CurrencyValidationException(
+        'Currency "$code" is inactive and cannot be selected for new transactions.',
+      );
     }
   }
 

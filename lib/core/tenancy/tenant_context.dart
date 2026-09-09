@@ -1,6 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../modules/authentication/presentation/providers/auth_providers.dart';
+export 'tenant_providers.dart';
 
 /// Centralized tenancy context representing the active tenant boundary.
 class TenantContext {
@@ -63,30 +61,3 @@ class TenantContext {
       deviceId.hashCode ^
       isStandalone.hashCode;
 }
-
-/// Provider exposing active [TenantContext].
-///
-/// Rule 4: No silent company fallback. An unassigned or system scope context
-/// resolves to an empty company ID ('').
-final tenantContextProvider = Provider<TenantContext>((ref) {
-  final session = ref.watch(authStateProvider).session;
-  if (session == null) {
-    return TenantContext.empty;
-  }
-  var companyId =
-      session.currentCompanyId?.trim() ?? session.activeCompanyId?.trim() ?? '';
-  if (companyId.isEmpty && session.companies.isNotEmpty) {
-    companyId = session.companies.first.id.trim();
-  }
-  return TenantContext(
-    companyId: companyId,
-    userId: session.user.id,
-    deviceId: session.deviceId,
-    isStandalone: session.user.isSuperAdmin,
-  );
-});
-
-/// Provider exposing current active company ID.
-final currentCompanyIdProvider = Provider<String>((ref) {
-  return ref.watch(tenantContextProvider).companyId;
-});

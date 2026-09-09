@@ -61,6 +61,10 @@ void main() {
 
   group('CURRENCY-UI-02 — Currency Master UI Widget & Integration Tests', () {
     testWidgets('1. Displays list of seeded currencies with codes and symbols', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       await tester.pumpWidget(buildTestApp(db, repository));
       await tester.pumpAndSettle();
 
@@ -89,7 +93,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap 'غير نشط' filter chip
-      await tester.tap(find.text('غير نشط').first);
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is FilterChip &&
+              w.label is Text &&
+              (w.label as Text).data == 'غير نشط',
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('USD'), findsWidgets);

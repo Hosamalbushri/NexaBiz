@@ -1,5 +1,5 @@
 import 'package:stock_count/core/network/remote_sync_api.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
 
 class FinancialTransactionSyncHandler implements SyncEntityHandler {

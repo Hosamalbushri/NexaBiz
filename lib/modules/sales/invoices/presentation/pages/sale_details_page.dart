@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/core/reporting/pdf_document_preview_page.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
-import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/sale.dart';

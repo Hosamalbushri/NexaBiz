@@ -219,7 +219,7 @@ class _AppReportPresetBarState extends State<AppReportPresetBar> {
                   children: [
                     for (final p in _presets) ...[
                       Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsetsDirectional.only(end: 6),
                         child: ChoiceChip(
                           label: Row(
                             mainAxisSize: MainAxisSize.min,

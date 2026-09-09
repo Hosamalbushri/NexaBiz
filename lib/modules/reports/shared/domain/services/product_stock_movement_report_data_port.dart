@@ -167,6 +167,7 @@ abstract class ProductStockMovementReportDataPort {
     DateTime? fromDate,
     DateTime? toDate,
     required ProductStockMovementReportLabels labels,
+    String? companyId,
   });
 
   Future<ProductStockMovementReportPayload> loadFromFilter({

@@ -1,4 +1,4 @@
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/core/utils/decimal_money.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/exchange_rate_engine.dart';
@@ -8,13 +8,12 @@ import 'journal_money.dart';
 /// Fills [JournalLineDraft] base amounts / rates when callers omit them,
 /// utilizing [ExchangeRateEngine] for deterministic fixed-precision multi-currency conversion.
 class JournalBaseAmountResolver {
-  const JournalBaseAmountResolver([
-    this._rates,
-    this._exchangeRateEngine,
-  ]);
+  const JournalBaseAmountResolver([this._rates, this._exchangeRateEngine]);
 
   /// Convenience constructor wrapping legacy repository.
-  factory JournalBaseAmountResolver.fromRepository(CurrencyRateRepository rates) {
+  factory JournalBaseAmountResolver.fromRepository(
+    CurrencyRateRepository rates,
+  ) {
     return JournalBaseAmountResolver(rates);
   }
 
@@ -58,7 +57,9 @@ class JournalBaseAmountResolver {
       } else {
         final decimalRate = DecimalRate.fromDouble(rate);
         final decimalDebit = DecimalMoney.fromDouble(debit);
-        baseDebit = decimalRate.convert(decimalDebit, targetPrecision: 2).toDouble();
+        baseDebit = decimalRate
+            .convert(decimalDebit, targetPrecision: 2)
+            .toDouble();
       }
 
       if (line.baseCredit != null) {
@@ -68,7 +69,9 @@ class JournalBaseAmountResolver {
       } else {
         final decimalRate = DecimalRate.fromDouble(rate);
         final decimalCredit = DecimalMoney.fromDouble(credit);
-        baseCredit = decimalRate.convert(decimalCredit, targetPrecision: 2).toDouble();
+        baseCredit = decimalRate
+            .convert(decimalCredit, targetPrecision: 2)
+            .toDouble();
       }
 
       resolved.add(

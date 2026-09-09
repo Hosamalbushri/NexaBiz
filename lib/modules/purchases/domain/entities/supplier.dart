@@ -36,19 +36,19 @@ class Supplier extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        companyId,
-        nameAr,
-        nameEn,
-        code,
-        taxNumber,
-        phone,
-        email,
-        address,
-        currentBalance,
-        currencyCode,
-        isActive,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    companyId,
+    nameAr,
+    nameEn,
+    code,
+    taxNumber,
+    phone,
+    email,
+    address,
+    currentBalance,
+    currencyCode,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
 }

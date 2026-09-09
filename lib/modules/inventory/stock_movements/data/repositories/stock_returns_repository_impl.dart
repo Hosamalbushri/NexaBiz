@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -14,7 +14,7 @@ import '../../domain/repositories/stock_returns_repository.dart';
 import '../../domain/services/cost_layer_service.dart';
 import '../services/cost_layer_service_impl.dart';
 
-import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+import 'package:stock_count/core/setup/setup_core.dart';
 
 class StockReturnsRepositoryImpl implements StockReturnsRepository {
   StockReturnsRepositoryImpl({
@@ -38,7 +38,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   final InitializationGuard? _initializationGuard;
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
 
   Expression<bool> _scoped($StockReturnsTable tbl) {
     return tbl.companyId.equals(_currentCompanyId);

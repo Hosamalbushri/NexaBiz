@@ -27,6 +27,9 @@ import 'shared/domain/services/rp_report_data_port.dart';
 import 'shared/presentation/pages/report_pdf_preview_page.dart';
 import 'shared/presentation/pages/reports_home_page.dart';
 import 'shared/presentation/pages/reports_routes.dart';
+import '../../core/report_engine/registry/report_registry.dart';
+import 'data/definitions/sales_period_report_spec.dart';
+import 'data/definitions/stock_movement_report_spec.dart';
 
 /// Platform reports module — generic PDF catalog, preview, print/share.
 ///
@@ -39,6 +42,8 @@ class ReportsModule extends AppModule {
   /// Self-registers ReportsModule into the global ModuleRegistry via injection.
   static void register() {
     ModuleRegistry.register(const ReportsModule());
+    ReportRegistry.registerDefinition(stockMovementReportSpec);
+    ReportRegistry.registerDefinition(salesPeriodReportSpec);
   }
 
   /// Self-unregisters ReportsModule from the global ModuleRegistry.

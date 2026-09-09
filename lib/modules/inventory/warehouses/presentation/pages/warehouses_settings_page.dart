@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
+import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
@@ -191,17 +192,18 @@ class WarehousesSettingsPage extends ConsumerWidget {
                                           : 'Warehouses & Locations Setup',
                                       style: theme.textTheme.titleMedium
                                           ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       isAr
                                           ? 'إدارة فروع ومراكز المخزون، سياسات التكلفة، والربط بالدليل المحاسبي'
                                           : 'Manage stock locations, valuation policies, and GL account mapping',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -231,7 +233,9 @@ class WarehousesSettingsPage extends ConsumerWidget {
                                   label: isAr
                                       ? 'المستودع الافتراضي'
                                       : 'Default Warehouse',
-                                  value: defaultWh?.name ?? (isAr ? 'غير محدد' : 'None'),
+                                  value:
+                                      defaultWh?.name ??
+                                      (isAr ? 'غير محدد' : 'None'),
                                   isAccent: true,
                                 ),
                               ),
@@ -396,7 +400,9 @@ class _KpiChip extends StatelessWidget {
           Icon(
             icon,
             size: 18,
-            color: isAccent ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            color: isAccent
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -562,7 +568,9 @@ class _WarehouseCard extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                isAr ? 'المستودع الافتراضي' : 'Default Warehouse',
+                                isAr
+                                    ? 'المستودع الافتراضي'
+                                    : 'Default Warehouse',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: colorScheme.onPrimaryContainer,
                                   fontWeight: FontWeight.bold,
@@ -602,7 +610,7 @@ class _WarehouseCard extends ConsumerWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isReady
-                                      ? const Color(0xFF10B981).withValues(
+                                      ? AppColors.success.withValues(
                                           alpha: 0.15,
                                         )
                                       : colorScheme.errorContainer.withValues(
@@ -613,10 +621,12 @@ class _WarehouseCard extends ConsumerWidget {
                                 child: Text(
                                   isReady
                                       ? (isAr ? 'جاهز محاسبياً' : 'GL Ready')
-                                      : (isAr ? 'غير مكتمل الربط' : 'Incomplete Binding'),
+                                      : (isAr
+                                            ? 'غير مكتمل الربط'
+                                            : 'Incomplete Binding'),
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: isReady
-                                        ? const Color(0xFF047857)
+                                        ? AppColors.success
                                         : colorScheme.onErrorContainer,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -725,4 +735,3 @@ class _WarehouseCard extends ConsumerWidget {
     );
   }
 }
-

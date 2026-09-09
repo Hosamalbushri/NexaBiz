@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import '../../data/repositories/currency_rate_repository_impl.dart';
@@ -29,12 +29,15 @@ final currencyRatesProvider = StreamProvider<List<CurrencyRate>>((ref) {
 });
 
 /// Base currency for rates (from Currency Master / Functional Currency).
-final accountingBaseCurrencyProvider = Provider<AppCurrency>((ref) {
-  final activeCurrencies = ref.watch(activeCurrenciesProvider).valueOrNull ?? [];
+/// Returns `null` if no active currency is configured in system master data.
+/// CRITICAL: Never defaults to SAR or any unconfigured currency.
+final accountingBaseCurrencyProvider = Provider<AppCurrency?>((ref) {
+  final activeCurrencies =
+      ref.watch(activeCurrenciesProvider).valueOrNull ?? [];
   final defaultCurrency = activeCurrencies.cast<Currency?>().firstWhere(
-        (c) => c?.isDefault == true,
-        orElse: () => activeCurrencies.isNotEmpty ? activeCurrencies.first : null,
-      );
+    (c) => c?.isDefault == true,
+    orElse: () => activeCurrencies.isNotEmpty ? activeCurrencies.first : null,
+  );
 
   if (defaultCurrency != null) {
     return AppCurrency(
@@ -46,13 +49,27 @@ final accountingBaseCurrencyProvider = Provider<AppCurrency>((ref) {
     );
   }
 
-  final currencyInfo = ref.watch(functionalCurrencyStateInfoProvider).valueOrNull;
+  final currencyInfo = ref
+      .watch(functionalCurrencyStateInfoProvider)
+      .valueOrNull;
   final code = currencyInfo?.currencyCode ?? '';
   if (code.isNotEmpty) {
-    return AppCurrencies.byCode(code);
+    final masterMatch = activeCurrencies.cast<Currency?>().firstWhere(
+      (c) => c?.code == code,
+      orElse: () => null,
+    );
+    if (masterMatch != null) {
+      return AppCurrency(
+        code: masterMatch.code,
+        nameAr: masterMatch.nameAr,
+        nameEn: masterMatch.nameEn,
+        symbol: masterMatch.symbol,
+        decimalDigits: masterMatch.decimalDigits,
+      );
+    }
   }
 
-  return AppCurrencies.sar;
+  return null;
 });
 
 /// Enabled currencies for rates / future multi-currency balances.
@@ -74,7 +91,15 @@ class CurrencyRateListItem {
 final currencyRateListProvider =
     Provider<AsyncValue<List<CurrencyRateListItem>>>((ref) {
       final base = ref.watch(accountingBaseCurrencyProvider);
+      if (base == null) {
+        return const AsyncData([]);
+      }
+
       final ratesAsync = ref.watch(currencyRatesProvider);
+      final activeCurrencies =
+          ref.watch(activeCurrenciesProvider).valueOrNull ?? [];
+      final activeCodes = {for (final c in activeCurrencies) c.code};
+
       return ratesAsync.whenData((rates) {
         final byCode = {for (final r in rates) r.currencyCode: r};
         final items = <CurrencyRateListItem>[
@@ -87,14 +112,28 @@ final currencyRateListProvider =
 
         final foreignCodes =
             byCode.keys
-                .where((code) => code != base.code)
+                .where((code) => code != base.code && activeCodes.contains(code))
                 .toList(growable: false)
               ..sort();
 
         for (final code in foreignCodes) {
+          final masterCurrency = activeCurrencies.cast<Currency?>().firstWhere(
+            (c) => c?.code == code,
+            orElse: () => null,
+          );
+          final appCurrency = masterCurrency != null
+              ? AppCurrency(
+                  code: masterCurrency.code,
+                  nameAr: masterCurrency.nameAr,
+                  nameEn: masterCurrency.nameEn,
+                  symbol: masterCurrency.symbol,
+                  decimalDigits: masterCurrency.decimalDigits,
+                )
+              : AppCurrencies.byCode(code);
+
           items.add(
             CurrencyRateListItem(
-              currency: AppCurrencies.byCode(code),
+              currency: appCurrency,
               isBase: false,
               rate: byCode[code],
             ),
@@ -104,10 +143,15 @@ final currencyRateListProvider =
       });
     });
 
-/// Catalog currencies from Currency Master and standard catalog that can be added to rate table.
+/// Currencies from system Currency Master data that can be added to rate table.
+/// CRITICAL: ONLY currencies configured in Currency Master database are shown.
+/// Unconfigured default catalog currencies are never displayed.
 final availableCurrenciesToAddProvider = Provider<List<AppCurrency>>((ref) {
   final base = ref.watch(accountingBaseCurrencyProvider);
-  final masterCurrencies = ref.watch(activeCurrenciesProvider).valueOrNull ?? [];
+  if (base == null) return const [];
+
+  final masterCurrencies =
+      ref.watch(activeCurrenciesProvider).valueOrNull ?? [];
   final ratesAsync = ref.watch(currencyRatesProvider);
   final enabled = <String>{base.code};
   final rates = ratesAsync.valueOrNull;
@@ -120,23 +164,18 @@ final availableCurrenciesToAddProvider = Provider<List<AppCurrency>>((ref) {
   final addedCodes = <String>{};
   final result = <AppCurrency>[];
 
-  // 1. Currencies active in master database
+  // ONLY currencies active in master database
   for (final c in masterCurrencies) {
     if (!enabled.contains(c.code) && addedCodes.add(c.code)) {
-      result.add(AppCurrency(
-        code: c.code,
-        nameAr: c.nameAr,
-        nameEn: c.nameEn,
-        symbol: c.symbol,
-        decimalDigits: c.decimalDigits,
-      ));
-    }
-  }
-
-  // 2. Currencies from standard platform catalog
-  for (final c in AppCurrencies.all) {
-    if (!enabled.contains(c.code) && addedCodes.add(c.code)) {
-      result.add(c);
+      result.add(
+        AppCurrency(
+          code: c.code,
+          nameAr: c.nameAr,
+          nameEn: c.nameEn,
+          symbol: c.symbol,
+          decimalDigits: c.decimalDigits,
+        ),
+      );
     }
   }
 

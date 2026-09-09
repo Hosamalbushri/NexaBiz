@@ -6,15 +6,12 @@ import 'package:intl/intl.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/presentation/patterns/app_list_page_pattern.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_search_bar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
 import '../../domain/entities/journal_entry.dart';
 import '../../domain/services/journal_source_category_resolver.dart';
@@ -124,106 +121,81 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isAr = l10n.localeName == 'ar';
     final entriesAsync = ref.watch(journalEntriesProvider);
     final dateFormat = DateFormat.yMMMd();
 
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        backgroundColor: colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: l10n.accountingJournalsTitle,
-          showBackButton: true,
-          bottom: TabBar(
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13.5,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.normal,
-              fontSize: 13.5,
-            ),
-            tabs: [
-              Tab(
-                icon: const Icon(Icons.edit_note_rounded, size: 20),
-                text: isAr ? 'القيود اليومية واليدوية' : 'Daily & Manual',
-              ),
-              Tab(
-                icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                text: isAr ? 'القيود الآلية (النظام)' : 'Automated System',
-              ),
-            ],
-          ),
-        ),
+      child: AppListPagePattern<JournalEntryHeader>(
+        title: l10n.accountingJournalsTitle,
+        searchController: _searchController,
+        searchHint: l10n.accountingJournalsSearchHint,
+        onSearchChanged: _onSearch,
+        isLoading: entriesAsync.isLoading && !entriesAsync.hasValue,
+        errorText: entriesAsync.error?.toString(),
+        onRetry: () => ref.invalidate(journalEntriesProvider),
+        emptyTitle: l10n.accountingJournalsEmptyTitle,
+        emptySubtitle: l10n.accountingJournalsEmptyMessage,
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => AccountingRoutes.pushJournalCreate(context),
           icon: const Icon(Icons.add_rounded),
           label: Text(isAr ? 'إضافة قيد يدوي' : 'Add Manual Entry'),
         ),
-        body: AppContentConstraint(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        items: entriesAsync.valueOrNull ?? const [],
+        contentBuilder: (context, allEntries) {
+          // Split manual vs automated entries
+          final manualEntries = allEntries.where(isManualJournalEntry).toList();
+          final autoEntries = allEntries
+              .where((e) => !isManualJournalEntry(e))
+              .toList();
+
+          return Column(
             children: [
-              Padding(
-                padding: AppConstants.pageInsets(
-                  context,
-                ).copyWith(bottom: 0, top: AppSpacing.sm),
-                child: AppSearchBar(
-                  controller: _searchController,
-                  onChanged: _onSearch,
-                  hint: l10n.accountingJournalsSearchHint,
+              TabBar(
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
                 ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 13.5,
+                ),
+                tabs: [
+                  Tab(
+                    icon: const Icon(Icons.edit_note_rounded, size: 20),
+                    text: isAr ? 'القيود اليومية واليدوية' : 'Daily & Manual',
+                  ),
+                  Tab(
+                    icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                    text: isAr ? 'القيود الآلية (النظام)' : 'Automated System',
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.sm),
               Expanded(
-                child: entriesAsync.when(
-                  loading: () => const AppLoading(),
-                  error: (e, _) => AppErrorState(message: e.toString()),
-                  data: (allEntries) {
-                    if (allEntries.isEmpty) {
-                      return AppEmptyState(
-                        title: l10n.accountingJournalsEmptyTitle,
-                        subtitle: l10n.accountingJournalsEmptyMessage,
-                        icon: Icons.receipt_long_outlined,
-                      );
-                    }
+                child: TabBarView(
+                  children: [
+                    // Tab 0 (Primary): Manual & Daily Journals
+                    _buildManualTab(
+                      context: context,
+                      manualEntries: manualEntries,
+                      isAr: isAr,
+                      dateFormat: dateFormat,
+                    ),
 
-                    // Split manual vs automated entries
-                    final manualEntries = allEntries
-                        .where(isManualJournalEntry)
-                        .toList();
-                    final autoEntries = allEntries
-                        .where((e) => !isManualJournalEntry(e))
-                        .toList();
-
-                    return TabBarView(
-                      children: [
-                        // Tab 0 (Primary): Manual & Daily Journals
-                        _buildManualTab(
-                          context: context,
-                          manualEntries: manualEntries,
-                          isAr: isAr,
-                          dateFormat: dateFormat,
-                        ),
-
-                        // Tab 1: Automated System Journals
-                        _buildAutomatedTab(
-                          context: context,
-                          autoEntries: autoEntries,
-                          isAr: isAr,
-                          dateFormat: dateFormat,
-                        ),
-                      ],
-                    );
-                  },
+                    // Tab 1: Automated System Journals
+                    _buildAutomatedTab(
+                      context: context,
+                      autoEntries: autoEntries,
+                      isAr: isAr,
+                      dateFormat: dateFormat,
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -286,7 +258,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
                           : (groupedAuto[cat]?.length ?? 0);
 
                       return Padding(
-                        padding: const EdgeInsets.only(left: 6.0),
+                        padding: const EdgeInsetsDirectional.only(start: 6.0),
                         child: FilterChip(
                           selected: isSelected,
                           avatar: CircleAvatar(
@@ -539,7 +511,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
     required DateFormat dateFormat,
   }) {
     final theme = Theme.of(context);
-    final manualColor = const Color(0xFF673AB7);
+    final manualColor = AppColors.tertiaryIndigo;
 
     if (manualEntries.isEmpty) {
       return AppEmptyState(

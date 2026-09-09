@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
 import '../../data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/fiscal_year.dart';
@@ -18,6 +18,11 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/peri
 import '../../domain/usecases/journal_usecases.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/providers/currency_rate_providers.dart';
+import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
+import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
+import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+import '../../data/services/journal_builder_impl.dart';
+import '../../domain/services/journal_builder_service.dart';
 
 export 'package:stock_count/modules/accounting/fiscal_years/domain/entities/fiscal_year.dart'
     show AccountingPeriod, FiscalYear, FiscalYearSummary, PeriodClosingRecord;
@@ -82,6 +87,17 @@ final journalPostingServiceProvider = Provider<JournalPostingService>((ref) {
   return JournalPostingService(
     journals: ref.watch(journalRepositoryProvider),
     periodValidator: ref.watch(accountingPeriodValidatorProvider),
+  );
+});
+
+final journalBuilderServiceProvider = Provider<JournalBuilderService>((ref) {
+  return JournalBuilderImpl(
+    accountRepository: ref.watch(accountRepositoryProvider),
+    currencyRateRepository: ref.watch(currencyRateRepositoryProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
+    initRepository: ref.watch(companyInitializationRepositoryProvider),
+    bindingRepo: ref.watch(warehouseAccountingBindingRepositoryProvider),
+    functionalCurrencyService: ref.watch(functionalCurrencyServiceProvider),
   );
 });
 

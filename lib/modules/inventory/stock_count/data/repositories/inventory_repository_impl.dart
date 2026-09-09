@@ -1,6 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import '../../domain/entities/report_summary.dart';
@@ -9,7 +9,7 @@ import '../../domain/models/paged_result.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import 'package:stock_count/modules/inventory/shared/data/inventory_hive.dart';
 
-import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+import 'package:stock_count/core/setup/setup_core.dart';
 
 class InventoryRepositoryImpl implements InventoryRepository {
   InventoryRepositoryImpl({this._syncQueue, this._initializationGuard});

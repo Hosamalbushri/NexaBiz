@@ -1,4 +1,3 @@
-
 /// Standard module identifiers for NexaBiz ERP.
 enum ModuleId {
   administration,

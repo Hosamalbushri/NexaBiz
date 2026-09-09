@@ -190,11 +190,7 @@ class _CashRegisterAccountingConfigPageState
                 e.toString().contains('movements')
             ? 'لا يمكن تغيير الحساب المحاسبي للصندوق لوجود حركات مالية مسجلة عليه.'
             : l10n.cashRegisterLinkFailed(e.toString());
-        showAppSnackBar(
-          context,
-          message: errorMessage,
-          isSuccess: false,
-        );
+        showAppSnackBar(context, message: errorMessage, isSuccess: false);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -730,8 +726,7 @@ class _CashRegisterAccountingConfigPageState
                         variant: AppButtonVariant.outlined,
                         onPressed: _busy
                             ? null
-                            : () =>
-                                _openDefaultRegisterPicker(companyId, l10n),
+                            : () => _openDefaultRegisterPicker(companyId, l10n),
                       ),
                     ],
                   ),
@@ -812,8 +807,10 @@ class _CashRegisterAccountingConfigPageState
               ),
               const SizedBox(width: AppSpacing.xs),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -847,12 +844,12 @@ class _CashRegisterAccountingConfigPageState
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.35),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.35,
+              ),
               borderRadius: BorderRadius.circular(AppRadius.sm),
               border: Border.all(
-                color: theme.colorScheme.outlineVariant
-                    .withValues(alpha: 0.3),
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -873,9 +870,7 @@ class _CashRegisterAccountingConfigPageState
                           ),
                         )
                       : Text(
-                          isAr
-                              ? 'غير مرتبط بحساب محاسبي'
-                              : 'No account linked',
+                          isAr ? 'غير مرتبط بحساب محاسبي' : 'No account linked',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.orange.shade900,
                             fontWeight: FontWeight.w500,

@@ -13,6 +13,7 @@ import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/shared/widgets/service_add_card.dart';
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 import '../models/inventory_service_definition.dart';
 import '../providers/inventory_services_provider.dart';
 import 'package:stock_count/modules/inventory/stock_count/presentation/pages/inventory_customize_sheet.dart';
@@ -60,6 +61,7 @@ class InventoryHomePage extends ConsumerWidget {
           return ListView(
             padding: AppConstants.pageInsets(context),
             children: [
+              const AppMissingCurrencyGuardBanner(),
               Text(
                 l10n.servicesTitle,
                 style: theme.textTheme.titleMedium?.copyWith(

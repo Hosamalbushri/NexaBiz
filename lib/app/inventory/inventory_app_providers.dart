@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/inventory/accounting_inventory_account_adapter.dart';
 import 'package:stock_count/app/inventory/accounting_inventory_voucher_book_adapter.dart';
 import 'package:stock_count/app/inventory/inventory_accounting_poster_adapter.dart';
-import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
 import 'package:stock_count/modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
@@ -11,7 +10,6 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/in
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_voucher_book_port.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 
@@ -34,16 +32,11 @@ final appInventoryAccountPortProvider = Provider<InventoryAccountPort>((ref) {
 /// App-level provider that bridges InventoryAccountingPoster to Accounting implementation.
 final appInventoryAccountingPosterProvider =
     Provider<InventoryAccountingPoster>((ref) {
-      final db = ref.watch(accountingDatabaseProvider);
       final postingService = ref.watch(journalPostingServiceProvider);
-      final initRepo = ref.watch(companyInitializationRepositoryProvider);
-      final functionalCurrencyService = ref.watch(functionalCurrencyServiceProvider);
+      final builderService = ref.watch(journalBuilderServiceProvider);
       return InventoryAccountingPosterAdapter(
-        db,
         journalPostingService: postingService,
-        readCompanyId: () => ref.read(currentCompanyIdProvider),
-        initRepository: initRepo,
-        functionalCurrencyService: functionalCurrencyService,
+        journalBuilder: builderService,
       );
     });
 

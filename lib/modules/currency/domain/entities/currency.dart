@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:stock_count/core/errors/currency_exception.dart';
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 
 @immutable
 class Currency {
@@ -114,13 +114,19 @@ class CurrencyDraft {
   void validate() {
     final normalizedCode = code.trim().toUpperCase();
     if (normalizedCode.isEmpty) {
-      throw const CurrencyValidationException('رمز العملة لا يمكن أن يكون فارغاً.');
+      throw const CurrencyValidationException(
+        'رمز العملة لا يمكن أن يكون فارغاً.',
+      );
     }
     if (decimalDigits < 0 || decimalDigits > 6) {
-      throw const CurrencyValidationException('عدد الخانات العشرية يجب أن يكون بين 0 و 6.');
+      throw const CurrencyValidationException(
+        'عدد الخانات العشرية يجب أن يكون بين 0 و 6.',
+      );
     }
     if (nameAr.trim().isEmpty && nameEn.trim().isEmpty) {
-      throw const CurrencyValidationException('اسم العملة لا يمكن أن يكون فارغاً.');
+      throw const CurrencyValidationException(
+        'اسم العملة لا يمكن أن يكون فارغاً.',
+      );
     }
   }
 }

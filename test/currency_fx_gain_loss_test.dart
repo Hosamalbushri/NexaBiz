@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
-import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_currency_balance_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';

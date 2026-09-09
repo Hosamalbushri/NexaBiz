@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';

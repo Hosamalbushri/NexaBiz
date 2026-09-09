@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/exit/app_exit_scope.dart';
 import '../../app/localization/app_localizations.dart';
+import '../../app/theme/app_colors.dart';
 import 'notification_badge.dart';
 
 /// Base title scale for [CustomAppBar].
@@ -126,17 +127,17 @@ class CustomAppBarStyle {
   /// Light-mode preset with airy surface tones.
   static const CustomAppBarStyle light = CustomAppBarStyle(
     useGradient: false,
-    backgroundColor: Color(0xFFF8FAFC),
-    foregroundColor: Color(0xFF0F172A),
-    shadowColor: Color(0x1A1565C0),
+    backgroundColor: AppColors.lightBackground,
+    foregroundColor: AppColors.darkBackground,
+    shadowColor: AppColors.borderLight,
   );
 
   /// Dark-mode preset with deep, refined contrast.
   static const CustomAppBarStyle dark = CustomAppBarStyle(
     useGradient: false,
-    backgroundColor: Color(0xFF111827),
-    foregroundColor: Color(0xFFF8FAFC),
-    shadowColor: Color(0x33000000),
+    backgroundColor: AppColors.darkBackground,
+    foregroundColor: AppColors.lightBackground,
+    shadowColor: AppColors.borderDark,
   );
 
   CustomAppBarStyle merge(CustomAppBarStyle? other) {

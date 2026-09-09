@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/customer_data_source.dart';

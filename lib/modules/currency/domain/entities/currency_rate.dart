@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 
 /// Exchange rate of a currency against the company base currency.
 class CurrencyRate {

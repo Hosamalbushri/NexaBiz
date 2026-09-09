@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/cash_registers/data/repositories/cash_register_repository_impl.dart';
 import 'package:stock_count/modules/cash_registers/presentation/providers/cash_register_providers.dart';
 import 'cash_registers_sync_handlers.dart';

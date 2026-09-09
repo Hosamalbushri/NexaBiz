@@ -1,12 +1,6 @@
 import 'dart:math' as math;
 
-enum FixedRoundingMode {
-  halfUp,
-  halfEven,
-  truncate,
-  floor,
-  ceil,
-}
+enum FixedRoundingMode { halfUp, halfEven, truncate, floor, ceil }
 
 /// Fixed-precision monetary value backed by integer micro-units ([BigInt]),
 /// completely eliminating binary floating-point rounding errors and drift.
@@ -21,7 +15,10 @@ class DecimalMoney implements Comparable<DecimalMoney> {
   factory DecimalMoney.zero([int scale = defaultScale]) =>
       DecimalMoney._(BigInt.zero, scale);
 
-  factory DecimalMoney.fromMicroUnits(BigInt units, {int scale = defaultScale}) {
+  factory DecimalMoney.fromMicroUnits(
+    BigInt units, {
+    int scale = defaultScale,
+  }) {
     return DecimalMoney._(units, scale);
   }
 
@@ -76,7 +73,9 @@ class DecimalMoney implements Comparable<DecimalMoney> {
     switch (roundingMode) {
       case FixedRoundingMode.halfUp:
         if (remainder >= halfDivisor) {
-          rounded = microUnits.isNegative ? base - BigInt.one : base + BigInt.one;
+          rounded = microUnits.isNegative
+              ? base - BigInt.one
+              : base + BigInt.one;
         } else {
           rounded = base;
         }
@@ -84,10 +83,14 @@ class DecimalMoney implements Comparable<DecimalMoney> {
 
       case FixedRoundingMode.halfEven:
         if (remainder > halfDivisor) {
-          rounded = microUnits.isNegative ? base - BigInt.one : base + BigInt.one;
+          rounded = microUnits.isNegative
+              ? base - BigInt.one
+              : base + BigInt.one;
         } else if (remainder == halfDivisor) {
           if (base.isOdd) {
-            rounded = microUnits.isNegative ? base - BigInt.one : base + BigInt.one;
+            rounded = microUnits.isNegative
+                ? base - BigInt.one
+                : base + BigInt.one;
           } else {
             rounded = base;
           }
@@ -242,7 +245,10 @@ class DecimalRate {
   }) {
     final factor = BigInt.from(10).pow(scale);
     final rawTargetUnits = (amount.microUnits * microRate) ~/ factor;
-    final unrounded = DecimalMoney.fromMicroUnits(rawTargetUnits, scale: amount.scale);
+    final unrounded = DecimalMoney.fromMicroUnits(
+      rawTargetUnits,
+      scale: amount.scale,
+    );
     return unrounded.roundTo(targetPrecision, roundingMode: roundingMode);
   }
 

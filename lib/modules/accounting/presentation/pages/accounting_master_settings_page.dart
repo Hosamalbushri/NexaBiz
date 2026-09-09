@@ -10,7 +10,7 @@ import 'package:stock_count/core/widgets/app_card.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/widgets/accounting_settings_panel.dart';
-import 'package:stock_count/modules/system_setup/presentation/widgets/package_initialization_settings_hub.dart';
+import 'package:stock_count/core/setup/setup_core.dart';
 
 /// Single authoritative Master Settings Hub for the Accounting Module (`/accounting/settings`).
 ///
@@ -37,7 +37,9 @@ class _AccountingMasterSettingsPageState
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isAr ? 'إعدادات وتهيئة النظام المحاسبي' : 'Accounting Module Master Settings',
+        title: isAr
+            ? 'إعدادات وتهيئة النظام المحاسبي'
+            : 'Accounting Module Master Settings',
         showBackButton: true,
       ),
       body: ListView(
@@ -56,13 +58,17 @@ class _AccountingMasterSettingsPageState
               SettingsTile(
                 icon: Icons.currency_exchange_rounded,
                 iconColor: Colors.teal,
-                title: isAr ? 'إدارة العملات وأسعار الصرف اليومية' : 'Manage Currencies & Daily Rates',
+                title: isAr
+                    ? 'إدارة العملات وأسعار الصرف اليومية'
+                    : 'Manage Currencies & Daily Rates',
                 subtitle: isAr
                     ? 'تعريف العملات، تحديد العملة الأساسية، وتحديث أسعار التحويل'
                     : 'Manage active system currencies and daily conversion rates',
                 showChevron: true,
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CurrenciesManagePage()),
+                  MaterialPageRoute(
+                    builder: (_) => const CurrenciesManagePage(),
+                  ),
                 ),
               ),
             ],
@@ -71,7 +77,9 @@ class _AccountingMasterSettingsPageState
 
           // Section 2: Chart of Accounts & Books Setup List Menu Panel
           SettingsGroupLabel(
-            isAr ? 'دليل الحسابات والدفاتر المحاسبية' : 'Chart of Accounts & Book Setup',
+            isAr
+                ? 'دليل الحسابات والدفاتر المحاسبية'
+                : 'Chart of Accounts & Book Setup',
           ),
           const SettingsGroup(
             children: [
@@ -85,7 +93,9 @@ class _AccountingMasterSettingsPageState
 
           // Section 3: Package Account Bindings List Menu
           SettingsGroupLabel(
-            isAr ? 'التهيئة والربط المحاسبي الافتراضي' : 'Accounting Package Account Bindings',
+            isAr
+                ? 'التهيئة والربط المحاسبي الافتراضي'
+                : 'Accounting Package Account Bindings',
           ),
           const SettingsGroup(
             children: [
@@ -121,7 +131,9 @@ class _AccountingMasterSettingsPageState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'مركز تهيئة وإعدادات المحاسبة' : 'Accounting Settings Center',
+                  isAr
+                      ? 'مركز تهيئة وإعدادات المحاسبة'
+                      : 'Accounting Settings Center',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -143,5 +155,3 @@ class _AccountingMasterSettingsPageState
     );
   }
 }
-
-

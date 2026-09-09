@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/sales/invoices/presentation/providers/sale_providers.dart';
 import 'sales_sync_handlers.dart';
 
