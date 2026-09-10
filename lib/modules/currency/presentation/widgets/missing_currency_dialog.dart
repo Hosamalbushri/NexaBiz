@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
 import '../pages/currencies_manage_page.dart';
 
@@ -10,15 +11,16 @@ import '../pages/currencies_manage_page.dart';
 Future<void> showMissingCurrencyDialog(BuildContext context) async {
   final isArabic = Localizations.localeOf(context).languageCode == 'ar';
   final theme = Theme.of(context);
+  final colorScheme = theme.colorScheme;
 
   await showDialog<void>(
     context: context,
     barrierDismissible: true,
     builder: (dialogCtx) => AlertDialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
       titlePadding: EdgeInsets.zero,
       contentPadding: const EdgeInsets.all(AppSpacing.lg),
@@ -26,38 +28,28 @@ Future<void> showMissingCurrencyDialog(BuildContext context) async {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.amber.shade400,
-                  Colors.orange.shade700,
-                ],
-              ),
+              color: colorScheme.errorContainer.withValues(alpha: 0.8),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.orange.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              border: Border.all(
+                color: colorScheme.error.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.currency_exchange_rounded,
-              size: 34,
-              color: Colors.white,
+              size: 30,
+              color: colorScheme.onErrorContainer,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             isArabic ? 'لم يتم تعيين العملة الرئيسية' : 'Base Currency Required',
             textAlign: TextAlign.center,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -67,7 +59,7 @@ Future<void> showMissingCurrencyDialog(BuildContext context) async {
                 : 'The company base currency has not been set yet. Please configure the base currency first to proceed with operations.',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
               height: 1.4,
             ),
           ),
@@ -79,13 +71,19 @@ Future<void> showMissingCurrencyDialog(BuildContext context) async {
                   onPressed: () => Navigator.of(dialogCtx).pop(),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
                   ),
                   child: Text(isArabic ? 'إلغاء' : 'Cancel'),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: ElevatedButton.icon(
+                child: AppButton(
+                  label: isArabic ? 'إعداد العملة' : 'Configure',
+                  icon: Icons.add_circle_outline_rounded,
+                  expand: true,
                   onPressed: () {
                     Navigator.of(dialogCtx).pop();
                     Navigator.of(context).push(
@@ -94,16 +92,6 @@ Future<void> showMissingCurrencyDialog(BuildContext context) async {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                  label: Text(
-                    isArabic ? 'إعداد العملة' : 'Configure Currency',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber.shade800,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
                 ),
               ),
             ],
@@ -114,7 +102,7 @@ Future<void> showMissingCurrencyDialog(BuildContext context) async {
   );
 }
 
-/// A highly-polished, prominent banner widget to display missing currency alerts.
+/// A highly-polished, prominent banner widget to display missing currency alerts using system theme tokens.
 class AppMissingCurrencyBanner extends StatelessWidget {
   const AppMissingCurrencyBanner({
     super.key,
@@ -126,31 +114,18 @@ class AppMissingCurrencyBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.amber.shade50,
-            Colors.orange.shade50,
-          ],
-        ),
+        color: colorScheme.errorContainer.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: Colors.amber.shade300,
+          color: colorScheme.error.withValues(alpha: 0.3),
           width: 1.2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.amber.shade100.withValues(alpha: 0.5),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -158,20 +133,16 @@ class AppMissingCurrencyBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: Colors.amber.shade100,
+                color: colorScheme.errorContainer,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.amber.shade400,
-                  width: 1.5,
-                ),
               ),
               child: Icon(
                 Icons.warning_amber_rounded,
-                color: Colors.amber.shade900,
-                size: 26,
+                color: colorScheme.onErrorContainer,
+                size: 24,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -184,8 +155,8 @@ class AppMissingCurrencyBanner extends StatelessWidget {
                         ? 'تنبيه: لم يتم تعيين العملة الرئيسية للنظام'
                         : 'Warning: Base Currency Not Configured',
                     style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.amber.shade900,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onErrorContainer,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -194,12 +165,14 @@ class AppMissingCurrencyBanner extends StatelessWidget {
                         ? 'لا يمكن إكمال المستندات أو إجراء الحركات حتى يتم تعيين العملة الرئيسية للنظام في دليل العملات.'
                         : 'Cannot process transactions until the system base currency is configured.',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.amber.shade900,
+                      color: colorScheme.onSurfaceVariant,
                       height: 1.35,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  ElevatedButton.icon(
+                  AppButton(
+                    label: isArabic ? 'إضافة وتعيين العملة الرئيسية' : 'Set Up Base Currency',
+                    icon: Icons.add_circle_outline_rounded,
                     onPressed: onConfigurePressed ??
                         () {
                           Navigator.of(context).push(
@@ -208,18 +181,6 @@ class AppMissingCurrencyBanner extends StatelessWidget {
                             ),
                           );
                         },
-                    icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
-                    label: Text(
-                      isArabic ? 'إضافة وتعيين العملة الرئيسية' : 'Set Up Base Currency',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber.shade900,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
                   ),
                 ],
               ),
@@ -232,12 +193,17 @@ class AppMissingCurrencyBanner extends StatelessWidget {
 }
 
 /// Reactive guard banner that automatically listens to system base currency state.
-/// Displays [AppMissingCurrencyBanner] if no functional base currency is configured.
+/// Prevents false positive flickering while base currency state is loading.
 class AppMissingCurrencyGuardBanner extends ConsumerWidget {
   const AppMissingCurrencyGuardBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isLoading = ref.watch(isBaseCurrencyLoadingProvider);
+    if (isLoading) {
+      return const SizedBox.shrink();
+    }
+
     final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
     if (baseCurrency != null) {
       return const SizedBox.shrink();
@@ -245,4 +211,3 @@ class AppMissingCurrencyGuardBanner extends ConsumerWidget {
     return const AppMissingCurrencyBanner();
   }
 }
-

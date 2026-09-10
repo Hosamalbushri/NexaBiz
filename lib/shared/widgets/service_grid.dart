@@ -65,7 +65,7 @@ class ServiceGrid extends StatelessWidget {
             ? 3
             : 2;
 
-        final childAspectRatio = AppBreakpoints.isMobile(width) ? 0.82 : 0.95;
+        final childAspectRatio = AppBreakpoints.isMobile(width) ? 1.15 : 1.25;
         final gap = AppSpacing.md;
         final showAdd = onAddPressed != null;
         final itemCount = modules.length + (showAdd ? 1 : 0);

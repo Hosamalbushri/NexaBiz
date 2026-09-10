@@ -47,6 +47,7 @@ export 'src/widgets/app_field_shell.dart';
 export 'src/widgets/app_form_actions.dart';
 export 'src/widgets/app_page_header.dart';
 export 'src/widgets/app_module_hub_card.dart';
+export 'src/widgets/app_module_hub_grid.dart';
 export 'src/widgets/app_detail_info_row.dart';
 export 'src/widgets/app_detail_surface_card.dart';
 export 'src/widgets/app_expandable_text.dart';

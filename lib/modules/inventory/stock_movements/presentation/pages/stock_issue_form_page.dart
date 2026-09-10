@@ -353,15 +353,10 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
       onSave: _save,
     );
 
-    final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
-
     final body = ListView(
       padding: AppConstants.pageInsets(context),
       children: [
-        if (baseCurrency == null) ...[
-          const AppMissingCurrencyBanner(),
-          const SizedBox(height: AppSpacing.md),
-        ],
+        const AppMissingCurrencyGuardBanner(),
         if (_isPostedLocked) ...[
           AppDocumentLockedBanner(
             message: l10n.localeName == 'ar'

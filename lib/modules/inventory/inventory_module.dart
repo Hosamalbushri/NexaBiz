@@ -10,6 +10,7 @@ import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
+import '../../core/modules/quick_nav_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
@@ -18,6 +19,7 @@ import '../sales/invoices/presentation/providers/sale_providers.dart';
 import '../../core/modules/module_setup_definition.dart';
 import '../../core/setup/setup.dart';
 import 'inventory_module_quick_actions.dart';
+import 'inventory_module_quick_nav.dart';
 import 'inventory_module_settings.dart';
 import 'inventory_module_setup.dart';
 import '../../core/import_engine/presentation/pages/universal_import_page.dart';
@@ -171,6 +173,10 @@ class InventoryModule extends AppModule {
   @override
   List<QuickActionDefinition> get quickActions =>
       buildInventoryQuickActions(moduleId);
+
+  @override
+  List<QuickNavDefinition> get quickNavItems =>
+      buildInventoryQuickNav(moduleId);
 
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>

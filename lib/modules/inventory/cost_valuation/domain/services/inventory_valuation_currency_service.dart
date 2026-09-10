@@ -45,9 +45,13 @@ class InventoryValuationCurrencyService {
         .trim()
         .toUpperCase();
 
-    if (inventoryCurrencyCode == null ||
-        inventoryCurrencyCode.isEmpty ||
-        inventoryCurrencyCode == functionalCurrency.code.toUpperCase()) {
+    if (inventoryCurrencyCode == null || inventoryCurrencyCode.isEmpty) {
+      throw const CurrencyRequiredException(
+        'عملة تقييم المخزون غير محددة بعد. يجب اختيار عملة المخزون الأساسية من الإعدادات.',
+      );
+    }
+
+    if (inventoryCurrencyCode == functionalCurrency.code.toUpperCase()) {
       return functionalCurrency;
     }
 

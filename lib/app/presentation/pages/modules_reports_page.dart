@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/modules/app_module.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import '../../../shared/widgets/service_grid.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
 import '../../router/app_routes.dart';
-import '../../theme/app_breakpoints.dart';
-import '../../theme/app_radius.dart';
-import '../../theme/app_shadows.dart';
 import '../../theme/app_spacing.dart';
 
-/// Screen displaying the hub of all registered business module report cards.
+/// Screen displaying the hub of all registered business module report cards using ServiceGrid.
 class ModulesReportsPage extends ConsumerWidget {
   const ModulesReportsPage({super.key});
 
@@ -65,168 +62,14 @@ class ModulesReportsPage extends ConsumerWidget {
                     ),
                   ),
                 ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide =
-                        AppBreakpoints.isTablet(constraints.maxWidth) ||
-                        AppBreakpoints.isDesktop(constraints.maxWidth);
-
-                    if (isWide) {
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: AppSpacing.md,
-                              mainAxisSpacing: AppSpacing.md,
-                              childAspectRatio: 2.6,
-                            ),
-                        itemCount: modulesWithReports.length,
-                        itemBuilder: (context, index) {
-                          return _ModuleReportCard(
-                            module: modulesWithReports[index],
-                          );
-                        },
-                      );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: modulesWithReports.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) {
-                        return _ModuleReportCard(
-                          module: modulesWithReports[index],
-                        );
-                      },
-                    );
+                ServiceGrid(
+                  modules: modulesWithReports,
+                  onModuleSelected: (module) {
+                    context.push(AppRoutes.moduleReports(module.id));
                   },
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _ModuleReportCard extends ConsumerWidget {
-  const _ModuleReportCard({required this.module});
-
-  final AppModule module;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final title = module.label(context);
-
-    final reportsModule = ref.watch(moduleRegistryProvider).findById('reports');
-    final moduleCategories =
-        reportsModule?.reportCategories
-            .where((c) => c.moduleId == module.id)
-            .toList() ??
-        const [];
-
-    final totalReports = moduleCategories.fold<int>(
-      0,
-      (sum, cat) => sum + cat.reports.length,
-    );
-
-    final subtitle =
-        module.description(context) ??
-        (l10n.localeName == 'ar'
-            ? '$totalReports تقارير متاحة'
-            : '$totalReports reports available');
-
-    return Material(
-      color: colorScheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        onTap: () {
-          context.push(AppRoutes.moduleReports(module.id));
-        },
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-            ),
-            boxShadow: AppShadows.card(theme.brightness),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.7),
-                  ),
-                  child: Icon(
-                    module.icon,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    '$totalReports',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

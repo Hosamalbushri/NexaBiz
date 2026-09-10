@@ -30,7 +30,6 @@ void main() {
         initialLocation: '/dashboard',
         routes: [
           ShellRoute(
-            navigatorKey: appShellNavigatorKey,
             pageBuilder: (context, state, child) {
               return NoTransitionPage<void>(
                 child: AppExitPopScope(

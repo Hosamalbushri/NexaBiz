@@ -207,9 +207,36 @@ Future<void> handleRootSystemBack(
   final id = eventId ?? ++_backEventSeq;
   debugPrint('[NAV-BACK][event=$id] === handleRootSystemBack ENTER ===');
 
+  if (!context.mounted) {
+    return;
+  }
+
   final router = GoRouter.maybeOf(context);
   if (router == null) {
     debugPrint('[NAV-BACK][event=$id] handleRootSystemBack: GoRouter is NULL');
+    return;
+  }
+
+  // 1. Try popping nested navigators first (shell navigator or root navigator)
+  final shellNav = appShellNavigatorKey.currentState;
+  if (shellNav != null && shellNav.mounted && shellNav.canPop()) {
+    debugPrint('[NAV-BACK][event=$id] handleRootSystemBack: popping appShellNavigatorKey');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (shellNav.mounted && shellNav.canPop()) {
+        shellNav.pop();
+      }
+    });
+    return;
+  }
+
+  final rootNav = appRootNavigatorKey.currentState;
+  if (rootNav != null && rootNav.mounted && rootNav.canPop()) {
+    debugPrint('[NAV-BACK][event=$id] handleRootSystemBack: popping appRootNavigatorKey');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (rootNav.mounted && rootNav.canPop()) {
+        rootNav.pop();
+      }
+    });
     return;
   }
 
@@ -225,22 +252,11 @@ Future<void> handleRootSystemBack(
 
   if (path == AppRoutes.dashboard) {
     debugPrint(
-      '[NAV-BACK][event=$id] handleRootSystemBack: Dashboard root reached, prompting exit dialog',
+      '[NAV-BACK][event=$id] handleRootSystemBack: Dashboard root reached, exiting app directly',
     );
-    final dialogContext = appRootNavigatorKey.currentContext ?? context;
-    if (!dialogContext.mounted) {
-      return;
-    }
-
-    final confirmed = await confirmAppExit(dialogContext);
-    if (confirmed) {
-      debugPrint(
-        '[NAV-BACK][event=$id] handleRootSystemBack: Exit confirmed, calling SystemNavigator.pop()',
-      );
-      await SystemNavigator.pop();
-    } else {
-      debugPrint('[NAV-BACK][event=$id] handleRootSystemBack: Exit cancelled');
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemNavigator.pop();
+    });
     return;
   }
 
@@ -248,14 +264,12 @@ Future<void> handleRootSystemBack(
   debugPrint(
     '[NAV-BACK][event=$id] handleRootSystemBack: Navigating to logical parent: $parentRoute',
   );
-  router.go(parentRoute);
+  if (context.mounted) {
+    router.go(parentRoute);
+  }
 }
 
 /// [AppExitPopScope] on the main shell so Android back is handled without activity finish.
-///
-/// Combines dynamic [PopScope] for branch navigation with [WidgetsBindingObserver.didPopRoute]
-/// to explicitly consume system back events (`Future<bool> = true`), suppressing native Android
-/// Activity fallback (`Activity$$ExternalSyntheticLambda1`).
 class AppExitPopScope extends ConsumerStatefulWidget {
   const AppExitPopScope({super.key, required this.child});
 
@@ -281,80 +295,36 @@ class _AppExitPopScopeState extends ConsumerState<AppExitPopScope>
     super.dispose();
   }
 
-  bool get _canPop {
-    if (ref.read(quickActionsOpenProvider)) {
-      return false;
-    }
-
-    final router = GoRouter.maybeOf(context);
-    final path = router?.routerDelegate.currentConfiguration.uri.path;
-    if (path == null) return false;
-
-    if (path == AppRoutes.dashboard) {
-      return false;
-    }
-
-    GlobalKey<NavigatorState>? activeBranch;
-    if (path.startsWith(AppRoutes.dashboard)) {
-      activeBranch = appDashboardBranchKey;
-    } else if (path.startsWith(AppRoutes.services)) {
-      activeBranch = appServicesBranchKey;
-    } else if (path.startsWith(AppRoutes.reports)) {
-      activeBranch = appReportsBranchKey;
-    } else if (path.startsWith(AppRoutes.settings)) {
-      activeBranch = appSettingsBranchKey;
-    }
-
-    if (activeBranch != null && activeBranch.currentState?.canPop() == true) {
-      return true;
-    }
-
-    final isBranchRoot =
-        path == AppRoutes.dashboard ||
-        path == AppRoutes.services ||
-        path == AppRoutes.reports ||
-        path == AppRoutes.settings;
-
-    if (!isBranchRoot && appShellNavigatorKey.currentState?.canPop() == true) {
-      return true;
-    }
-
-    if (appRootNavigatorKey.currentState?.canPop() == true) {
-      return true;
-    }
-
-    return false;
-  }
-
-  Future<void> _onPop(int eventId) async {
+  void _onPop(int eventId) {
     if (_handling) {
       return;
     }
+    _handling = true;
 
     if (ref.read(quickActionsOpenProvider)) {
       ref.read(quickActionsOpenProvider.notifier).state = false;
+      _resetHandling();
       return;
     }
 
-    _handling = true;
-    try {
-      await handleRootSystemBack(context, ref, eventId);
-    } finally {
+    handleRootSystemBack(context, ref, eventId).whenComplete(() {
+      _resetHandling();
+    });
+  }
+
+  void _resetHandling() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _handling = false;
       }
-    }
+    });
   }
 
   @override
   Future<bool> didPopRoute() async {
-    if (_canPop) {
-      return false; // Native pop will occur cleanly via GoRouter
-    }
-
     final eventId = ++_backEventSeq;
     if (_handling) {
-      return true; // Reentrancy guard: consume to prevent duplicate Activity fallback
+      return true; // Reentrancy guard
     }
 
     _onPop(eventId);
@@ -364,7 +334,7 @@ class _AppExitPopScopeState extends ConsumerState<AppExitPopScope>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _canPop,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         final eventId = ++_backEventSeq;
         if (didPop) {

@@ -72,6 +72,18 @@ final accountingBaseCurrencyProvider = Provider<AppCurrency?>((ref) {
   return null;
 });
 
+/// Indicates whether system base currency or active currencies state is currently loading from storage/database.
+/// Prevents false-positive alert flashing during initial loading frames.
+final isBaseCurrencyLoadingProvider = Provider<bool>((ref) {
+  final activeCurrenciesAsync = ref.watch(activeCurrenciesProvider);
+  final functionalCurrencyInfoAsync = ref.watch(functionalCurrencyStateInfoProvider);
+
+  final activeLoading = activeCurrenciesAsync.isLoading && !activeCurrenciesAsync.hasValue;
+  final functionalLoading = functionalCurrencyInfoAsync.isLoading && !functionalCurrencyInfoAsync.hasValue;
+
+  return activeLoading || functionalLoading;
+});
+
 /// Enabled currencies for rates / future multi-currency balances.
 class CurrencyRateListItem {
   const CurrencyRateListItem({

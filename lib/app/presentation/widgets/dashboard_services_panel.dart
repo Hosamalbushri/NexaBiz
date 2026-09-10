@@ -123,8 +123,6 @@ class _PromoStrip extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: on.withValues(alpha: 0.92),
                 fontWeight: FontWeight.w600,

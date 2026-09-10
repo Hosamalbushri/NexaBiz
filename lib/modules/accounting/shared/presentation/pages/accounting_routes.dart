@@ -12,7 +12,6 @@ class AccountingRoutes {
   static const String accountsCreate = '/accounting/accounts/create';
   static const String accountsImport = '/accounting/accounts/import';
   static const String openingSetup = '/accounting/opening-setup';
-  static const String currencyRates = '/settings/currencies/rates';
 
   static const String voucherBooks = '/accounting/voucher-books';
   static const String voucherBooksCreate = '/accounting/voucher-books/new';
@@ -50,12 +49,6 @@ class AccountingRoutes {
   static void goAccounts(BuildContext context) => context.go(accounts);
 
   static void goJournals(BuildContext context) => context.go(journals);
-
-  static void goCurrencyRates(BuildContext context) =>
-      context.go(currencyRates);
-
-  static void pushCurrencyRates(BuildContext context) =>
-      context.push(currencyRates);
 
   static void pushVoucherBooks(BuildContext context) =>
       context.push(voucherBooks);

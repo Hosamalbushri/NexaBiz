@@ -18,6 +18,7 @@ import 'package:stock_count/core/domain/services/device_document_number.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/inventory_valuation_currency_providers.dart';
 import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
+import '../widgets/inventory_document_journal_widget.dart';
 
 class StockReceiptDetailsPage extends ConsumerStatefulWidget {
   const StockReceiptDetailsPage({super.key, required this.receiptId});
@@ -530,6 +531,14 @@ class _StockReceiptDetailsPageState
                     totalLines: receipt.lines.length,
                     totalCost: totalCostSum,
                     currencyCode: receipt.currencyCode,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Accounting Journal Entries Grouped by Currency
+                  InventoryDocumentJournalWidget(
+                    sourceType: 'stock_receipt',
+                    sourceId: receipt.id,
+                    isPosted: receipt.isPosted,
                   ),
 
                   // Notes Card

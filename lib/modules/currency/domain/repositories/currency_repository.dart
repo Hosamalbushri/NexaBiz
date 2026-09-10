@@ -19,5 +19,7 @@ abstract class CurrencyRepository {
 
   Future<void> deleteByCode(String code);
 
+  Future<bool> hasTransactions(String code);
+
   Future<void> ensureDefaultCurrenciesSeeded({String defaultCode = ''});
 }

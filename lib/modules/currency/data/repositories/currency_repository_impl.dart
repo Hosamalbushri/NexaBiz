@@ -26,7 +26,10 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     query.write('ORDER BY is_default DESC, code ASC');
 
     final rows = await _db
-        .customSelect(query.toString(), variables: variables)
+        .customSelect(
+          query.toString(),
+          variables: variables,
+        )
         .get();
 
     return rows.map(_mapRow).toList();
@@ -45,7 +48,11 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     query.write('ORDER BY is_default DESC, code ASC');
 
     return _db
-        .customSelect(query.toString(), variables: variables)
+        .customSelect(
+          query.toString(),
+          variables: variables,
+          readsFrom: {_db.currencyRates},
+        )
         .watch()
         .map((rows) => rows.map(_mapRow).toList());
   }
@@ -211,6 +218,15 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     final trimmed = code.trim().toUpperCase();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
 
+    if (!isActive) {
+      final inUse = await hasTransactions(trimmed);
+      if (inUse) {
+        throw CurrencyValidationException(
+          'لا يمكن تعطيل العملة ($trimmed) لكونها مستخدمة في حركات مسجلة بالمنشأة.',
+        );
+      }
+    }
+
     await _db.customUpdate(
       'UPDATE currencies SET is_active = ?, updated_at = ? WHERE code = ? AND company_id = ?',
       variables: [
@@ -227,8 +243,99 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     final trimmed = code.trim().toUpperCase();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
 
+    // 1. Check if currency has transactions
+    final inUse = await hasTransactions(trimmed);
+    if (inUse) {
+      throw CurrencyValidationException(
+        'لا يمكن حذف العملة ($trimmed) لكونها مستخدمة في حركات مسجلة بالمنشأة.',
+      );
+    }
+
+    // 2. Fetch target currency details
+    final rows = await _db.customSelect(
+      'SELECT is_default, is_active FROM currencies WHERE UPPER(code) = ? AND company_id = ? AND deleted_at IS NULL',
+      variables: [
+        Variable.withString(trimmed),
+        Variable.withString(_currentCompanyId),
+      ],
+    ).get();
+
+    if (rows.isNotEmpty) {
+      final isDefault = (rows.first.read<int>('is_default')) == 1;
+      final isActive = (rows.first.read<int>('is_active')) == 1;
+
+      // Rule 1: Cannot delete System Base Currency
+      if (isDefault) {
+        throw CurrencyValidationException(
+          'لا يمكن حذف العملة ($trimmed) لكونها العملة الرئيسية للنظام.',
+        );
+      }
+
+      // Rule 2: Cannot delete Active currency (Must deactivate first)
+      if (isActive) {
+        throw CurrencyValidationException(
+          'لا يمكن حذف العملة ($trimmed) وهي نشطة. يرجى تعطيلها أولاً.',
+        );
+      }
+    }
+
+    // Rule 3: Cannot delete Inventory Valuation Currency
+    try {
+      final settingsRow = await _db.customSelect(
+        "SELECT value FROM settings WHERE key = 'company_inventory_valuation_currency' AND company_id = ?",
+        variables: [Variable.withString(_currentCompanyId)],
+      ).get();
+      if (settingsRow.isNotEmpty) {
+        final valCurrency =
+            settingsRow.first.read<String>('value').trim().toUpperCase();
+        if (valCurrency == trimmed) {
+          throw CurrencyValidationException(
+            'لا يمكن حذف العملة ($trimmed) لكونها عملة تقييم المخزون المعتمدة بالمنشأة.',
+          );
+        }
+      }
+    } catch (e) {
+      if (e is CurrencyValidationException) rethrow;
+    }
+
+    // Rule 4: Check if currency has exchange rate history/records
+    try {
+      final rateRows = await _db.customSelect(
+        'SELECT COUNT(*) as cnt FROM currency_rates WHERE UPPER(currency_code) = ? AND company_id = ?',
+        variables: [
+          Variable.withString(trimmed),
+          Variable.withString(_currentCompanyId),
+        ],
+      ).get();
+      if (rateRows.isNotEmpty && (rateRows.first.read<int>('cnt')) > 0) {
+        throw CurrencyValidationException(
+          'لا يمكن حذف العملة ($trimmed) لوجود أسعار صرف مسجلة لها.',
+        );
+      }
+    } catch (e) {
+      if (e is CurrencyValidationException) rethrow;
+    }
+
+    // Rule 5: Check if currency is linked to any account in chart of accounts
+    try {
+      final accRows = await _db.customSelect(
+        'SELECT COUNT(*) as cnt FROM accounts WHERE UPPER(currency_code) = ? AND company_id = ? AND deleted_at IS NULL',
+        variables: [
+          Variable.withString(trimmed),
+          Variable.withString(_currentCompanyId),
+        ],
+      ).get();
+      if (accRows.isNotEmpty && (accRows.first.read<int>('cnt')) > 0) {
+        throw CurrencyValidationException(
+          'لا يمكن حذف العملة ($trimmed) لارتباطها بحسابات مالية في دليل الحسابات.',
+        );
+      }
+    } catch (e) {
+      if (e is CurrencyValidationException) rethrow;
+    }
+
     await _db.customUpdate(
-      'UPDATE currencies SET deleted_at = ?, updated_at = ? WHERE code = ? AND company_id = ?',
+      'UPDATE currencies SET deleted_at = ?, updated_at = ? WHERE UPPER(code) = ? AND company_id = ?',
       variables: [
         Variable.withInt(now),
         Variable.withInt(now),
@@ -236,6 +343,83 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
         Variable.withString(_currentCompanyId),
       ],
     );
+  }
+
+  @override
+  Future<bool> hasTransactions(String code) async {
+    final trimmed = code.trim().toUpperCase();
+    if (trimmed.isEmpty) return false;
+
+    // Check accounting journal lines
+    try {
+      final journalRows = await _db.customSelect(
+        '''
+        SELECT COUNT(*) as cnt FROM journal_lines jl
+        INNER JOIN journal_entries je ON jl.entry_uuid = je.uuid
+        WHERE UPPER(jl.currency_code) = ? AND je.company_id = ? AND je.deleted_at IS NULL
+        ''',
+        variables: [
+          Variable.withString(trimmed),
+          Variable.withString(_currentCompanyId),
+        ],
+      ).get();
+      if (journalRows.isNotEmpty && (journalRows.first.read<int>('cnt')) > 0) {
+        return true;
+      }
+    } catch (_) {}
+
+    // Check stock receipts
+    try {
+      final receiptRows = await _db.customSelect(
+        '''
+        SELECT COUNT(*) as cnt FROM stock_receipts
+        WHERE UPPER(currency_code) = ? AND company_id = ? AND deleted_at IS NULL
+        ''',
+        variables: [
+          Variable.withString(trimmed),
+          Variable.withString(_currentCompanyId),
+        ],
+      ).get();
+      if (receiptRows.isNotEmpty && (receiptRows.first.read<int>('cnt')) > 0) {
+        return true;
+      }
+    } catch (_) {}
+
+    // Check stock issues
+    try {
+      final issueRows = await _db.customSelect(
+        '''
+        SELECT COUNT(*) as cnt FROM stock_issues
+        WHERE UPPER(currency_code) = ? AND company_id = ? AND deleted_at IS NULL
+        ''',
+        variables: [
+          Variable.withString(trimmed),
+          Variable.withString(_currentCompanyId),
+        ],
+      ).get();
+      if (issueRows.isNotEmpty && (issueRows.first.read<int>('cnt')) > 0) {
+        return true;
+      }
+    } catch (_) {}
+
+    // Check cost layers
+    try {
+      final layerRows = await _db.customSelect(
+        '''
+        SELECT COUNT(*) as cnt FROM inventory_cost_layers
+        WHERE UPPER(currency_code) = ? AND company_id = ? AND deleted_at IS NULL
+        ''',
+        variables: [
+          Variable.withString(trimmed),
+          Variable.withString(_currentCompanyId),
+        ],
+      ).get();
+      if (layerRows.isNotEmpty && (layerRows.first.read<int>('cnt')) > 0) {
+        return true;
+      }
+    } catch (_) {}
+
+    return false;
   }
 
   @override

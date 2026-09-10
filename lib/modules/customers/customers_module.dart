@@ -12,6 +12,7 @@ import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
+import '../../core/modules/quick_nav_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
@@ -19,6 +20,7 @@ import '../sales/invoices/presentation/providers/sale_providers.dart';
 import '../../core/setup/setup.dart';
 import 'accounts/presentation/pages/customers_accounts_page.dart';
 import 'customers_module_quick_actions.dart';
+import 'customers_module_quick_nav.dart';
 import 'customers_module_settings.dart';
 import 'customers_module_setup.dart';
 import 'directory/presentation/pages/customer_details_page.dart';
@@ -122,6 +124,10 @@ class CustomersModule extends AppModule {
   @override
   List<QuickActionDefinition> get quickActions =>
       buildCustomersQuickActions(moduleId);
+
+  @override
+  List<QuickNavDefinition> get quickNavItems =>
+      buildCustomersQuickNav(moduleId);
 
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>

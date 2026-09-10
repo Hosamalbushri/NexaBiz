@@ -423,10 +423,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     Color foreground,
     CustomAppBarStyle resolvedStyle,
   ) {
-    if (leading != null) {
-      return leading;
-    }
-
     if (searching) {
       return _CustomAppBarIconButton(
         icon: Icons.arrow_back_rounded,
@@ -437,14 +433,28 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     }
 
+    final backBtn = showBackButton
+        ? _CustomAppBarIconButton(
+            icon: Icons.arrow_back_rounded,
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: onBack ?? () => _defaultBack(context),
+            foregroundColor: foreground,
+            size: resolvedStyle.actionButtonSize,
+          )
+        : null;
+
+    if (leading != null) {
+      if (backBtn != null) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [backBtn, leading!],
+        );
+      }
+      return leading;
+    }
+
     if (showBackButton) {
-      return _CustomAppBarIconButton(
-        icon: Icons.arrow_back_rounded,
-        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        onPressed: onBack ?? () => _defaultBack(context),
-        foregroundColor: foreground,
-        size: resolvedStyle.actionButtonSize,
-      );
+      return backBtn;
     }
 
     if (showMenuButton) {

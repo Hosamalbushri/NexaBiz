@@ -21,6 +21,8 @@ import 'package:stock_count/modules/accounting/shared/presentation/providers/cur
 import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/services/warehouse_accounting_validation_service_impl.dart';
 import '../../data/services/journal_builder_impl.dart';
 import '../../domain/services/journal_builder_service.dart';
 
@@ -90,6 +92,15 @@ final journalPostingServiceProvider = Provider<JournalPostingService>((ref) {
   );
 });
 
+final warehouseAccountingValidationServiceProvider =
+    Provider<WarehouseAccountingValidationService>((ref) {
+      return WarehouseAccountingValidationServiceImpl(
+        ref.watch(accountingDatabaseProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
+        functionalCurrencyService: ref.watch(functionalCurrencyServiceProvider),
+      );
+    });
+
 final journalBuilderServiceProvider = Provider<JournalBuilderService>((ref) {
   return JournalBuilderImpl(
     accountRepository: ref.watch(accountRepositoryProvider),
@@ -97,6 +108,7 @@ final journalBuilderServiceProvider = Provider<JournalBuilderService>((ref) {
     readCompanyId: () => ref.read(currentCompanyIdProvider),
     initRepository: ref.watch(companyInitializationRepositoryProvider),
     bindingRepo: ref.watch(warehouseAccountingBindingRepositoryProvider),
+    validationService: ref.watch(warehouseAccountingValidationServiceProvider),
     functionalCurrencyService: ref.watch(functionalCurrencyServiceProvider),
   );
 });
@@ -208,3 +220,15 @@ final journalEntryByUuidProvider = FutureProvider.autoDispose
     .family<JournalEntry?, String>((ref, uuid) {
       return ref.watch(getJournalEntryByUuidUseCaseProvider).call(uuid);
     });
+
+typedef SourceDocArg = ({String sourceType, String sourceId});
+
+final journalBySourceProvider = FutureProvider.autoDispose
+    .family<JournalEntry?, SourceDocArg>((ref, arg) {
+      final companyId = ref.watch(currentCompanyIdProvider);
+      if (companyId.isEmpty) return null;
+      return ref
+          .watch(journalRepositoryProvider)
+          .findBySource(sourceType: arg.sourceType, sourceId: arg.sourceId);
+    });
+

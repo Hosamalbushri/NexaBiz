@@ -16,7 +16,10 @@ import '../../core/widgets/custom_app_bar.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../notifications/presentation/providers/notifications_provider.dart';
+import '../presentation/pages/quick_nav_customize_sheet.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
+import '../presentation/providers/quick_nav_items_provider.dart';
+import '../presentation/providers/quick_nav_settings_provider.dart';
 import '../router/app_routes.dart';
 import '../sync/app_bar_sync_actions.dart';
 import '../sync/sync_enabled_provider.dart';
@@ -52,6 +55,7 @@ class PlatformSettingsPage extends ConsumerWidget {
       appBar: CustomAppBar(
         title: l10n.settingsTitle,
         centerTitle: true,
+        showBackButton: true,
         leading: const AppBarSyncActions(),
         showNotifications: true,
         notificationCount: unread,
@@ -78,6 +82,7 @@ class _PlatformSettingsBody extends ConsumerWidget {
         ref.watch(syncOverviewProvider).asData?.value ?? SyncOverview.initial();
     final syncEnabled = ref.watch(syncEnabledProvider);
     final repository = ref.read(settingsRepositoryProvider);
+    final quickNavSettings = ref.watch(quickNavSettingsProvider);
     final registry = ref.watch(moduleRegistryProvider);
     final categories = registry.allSettingsCategories;
     final pageInsets = AppConstants.pageInsets(context);
@@ -202,6 +207,96 @@ class _PlatformSettingsBody extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const Divider(height: 1),
+                    const SizedBox(height: AppSpacing.xs),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      value: quickNavSettings.enabled,
+                      onChanged: (val) {
+                        ref
+                            .read(quickNavSettingsProvider.notifier)
+                            .toggleEnabled(val);
+                      },
+                      title: Text(
+                        'زر التنقل السريع العائم',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'تفعيل زر عائم قابل للسحب للتنقل المباشر بين الموديولات',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      secondary: Icon(
+                        Icons.widgets_outlined,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    if (quickNavSettings.enabled) ...[
+                      ListTile(
+                        leading: Icon(
+                          Icons.tune_rounded,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('تخصيص اختصارات التنقل السريع'),
+                        subtitle:
+                            const Text('اختيار وإعادة ترتيب اختصارات القائمة السريعة'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () async {
+                          final notifier =
+                              ref.read(quickNavItemsProvider.notifier);
+                          final available = notifier.availableItems;
+                          final currentSelected =
+                              ref.read(quickNavItemsProvider).valueOrNull ?? [];
+                          final currentIds =
+                              currentSelected.map((e) => e.id).toList();
+
+                          final result =
+                              await QuickNavCustomizeSheet.show(
+                            context,
+                            availableItems: available,
+                            initiallySelectedIds: currentIds,
+                            initialSectionOrder: notifier.currentSectionOrder,
+                          );
+
+                          if (result != null) {
+                            await notifier.saveCustomization(
+                              selectedIds: result.selectedIds,
+                              sectionOrder: result.sectionOrder,
+                            );
+                            if (context.mounted) {
+                              showAppSnackBar(
+                                context,
+                                message: 'تم حفظ اختصارات ورتيب الأقسام بنجاح',
+                                isSuccess: true,
+                              );
+                            }
+                          }
+                        },
+                      ),
+                      if (quickNavSettings.position != null)
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              ref
+                                  .read(quickNavSettingsProvider.notifier)
+                                  .resetPosition();
+                              showAppSnackBar(
+                                context,
+                                message:
+                                    'تم إعادة ضبط موقع زر التنقل السريع إلى الموقع الافتراضي',
+                                isSuccess: true,
+                              );
+                            },
+                            icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                            label: const Text('إعادة ضبط موقع الزر للافتراضي'),
+                          ),
+                        ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),

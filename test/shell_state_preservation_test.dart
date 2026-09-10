@@ -5,11 +5,23 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/router/app_navigator_keys.dart';
 import 'package:stock_count/app/router/app_routes.dart';
+import 'package:stock_count/app/presentation/providers/quick_nav_settings_provider.dart';
+import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/app/shell/app_shell.dart';
+
+class _TestQuickNavNotifier extends QuickNavSettingsNotifier {
+  _TestQuickNavNotifier() : super(SettingsRepository());
+
+  @override
+  Future<void> loadSettings() async {}
+}
 
 void main() {
   Widget buildShellTestApp({required Widget child, required String location}) {
     return ProviderScope(
+      overrides: [
+        quickNavSettingsProvider.overrideWith((ref) => _TestQuickNavNotifier()),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -28,10 +40,8 @@ void main() {
         initialLocation: '/dashboard',
         routes: [
           ShellRoute(
-            navigatorKey: appShellNavigatorKey,
-            pageBuilder: (context, state, child) => NoTransitionPage(
-              child: AppShell(location: state.uri.path, child: child),
-            ),
+            builder: (context, state, child) =>
+                AppShell(location: state.uri.path, child: child),
             routes: [
               StatefulShellRoute.indexedStack(
                 builder: (context, state, navigationShell) => navigationShell,
@@ -103,6 +113,9 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            quickNavSettingsProvider.overrideWith((ref) => _TestQuickNavNotifier()),
+          ],
           child: MaterialApp.router(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

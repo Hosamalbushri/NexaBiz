@@ -19,6 +19,8 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 
 import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
 import 'package:stock_count/modules/currency/domain/entities/currency_rate.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse_accounting_binding.dart';
 import 'package:stock_count/modules/system_setup/data/repositories/company_initialization_repository_impl.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_inventory_config.dart';
 
@@ -540,6 +542,93 @@ void main() {
 
       final valCurrency = await valuationCurrencyService.getValuationCurrency(companyId);
       expect(valCurrency.code, equals('SAR'));
+    });
+
+    test('15. Warehouse with transactions or journal entries blocks unbinding or modifying accounts', () async {
+      final bindingRepo = WarehouseAccountingBindingRepositoryImpl(
+        invDb,
+        () => companyId,
+        accountingDb: accDb,
+      );
+
+      const whId = 'WH-BOUND-01';
+
+      // Save initial binding
+      await bindingRepo.saveBinding(
+        WarehouseAccountingBinding(
+          id: 'BIND-01',
+          warehouseId: whId,
+          inventoryAssetAccountId: 'ACC-ASSET-01',
+          cogsAccountId: 'ACC-COGS-01',
+          companyId: companyId,
+        ),
+      );
+
+      // Create a cost layer for whId
+      await costLayerService.createLayer(
+        CostLayer(
+          itemCode: 'ITEM-WH-01',
+          warehouseId: whId,
+          movementUuid: '00000000-0000-4000-8000-000000000099',
+          movementType: 'receipt',
+          receivedDate: DateTime.now().toUtc(),
+          receivedQty: 10,
+          unitCost: 100,
+          inventoryCurrencyId: 'YER',
+          companyId: companyId,
+        ),
+      );
+
+      // Attempting to delete binding must throw StateError due to cost layer
+      expect(
+        () async => await bindingRepo.deleteBinding(whId),
+        throwsA(isA<StateError>()),
+      );
+
+      // Test Journal Entry protection: Create binding for WH-BOUND-02 with no inventory movements but with accounting journal lines
+      const whId2 = 'WH-BOUND-02';
+      const accUuid2 = '00000000-0000-4000-8000-000000000202';
+      await bindingRepo.saveBinding(
+        WarehouseAccountingBinding(
+          id: 'BIND-02',
+          warehouseId: whId2,
+          inventoryAssetAccountId: accUuid2,
+          cogsAccountId: 'ACC-COGS-02',
+          companyId: companyId,
+        ),
+      );
+
+      // Insert a journal line for accUuid2 into accDb
+      await accDb.into(accDb.journalLines).insert(
+        JournalLinesCompanion.insert(
+          uuid: '00000000-0000-4000-8000-000000000100',
+          entryUuid: '00000000-0000-4000-8000-000000000101',
+          accountUuid: accUuid2,
+          currencyCode: 'YER',
+          debit: const Value(5000),
+          baseDebit: const Value(5000),
+        ),
+      );
+
+      // Attempting to delete binding for WH-BOUND-02 must throw StateError due to journal entry
+      expect(
+        () async => await bindingRepo.deleteBinding(whId2),
+        throwsA(isA<StateError>()),
+      );
+
+      // Attempting to modify bound account must throw StateError
+      expect(
+        () async => await bindingRepo.saveBinding(
+          WarehouseAccountingBinding(
+            id: 'BIND-01',
+            warehouseId: whId,
+            inventoryAssetAccountId: 'ACC-ASSET-MODIFIED',
+            cogsAccountId: 'ACC-COGS-01',
+            companyId: companyId,
+          ),
+        ),
+        throwsA(isA<StateError>()),
+      );
     });
   });
 }

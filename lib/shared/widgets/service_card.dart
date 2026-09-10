@@ -5,6 +5,7 @@ import '../../app/localization/app_localizations.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/widgets/app_description_hint.dart';
 import '../../core/widgets/app_status_badge.dart';
 
 /// Card representing a single business module on the service launcher /
@@ -314,15 +315,16 @@ class _WalletTileContent extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Flexible(
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    height: 1.15,
-                    fontSize: titleSize,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      height: 1.15,
+                      fontSize: titleSize,
+                    ),
                   ),
                 ),
               ),
@@ -395,73 +397,92 @@ class _DefaultTileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.md,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Container(
-            width: iconBox,
-            height: iconBox,
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(
-                alpha: isDark ? 0.18 : 0.09,
-              ),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            child: Icon(
-              module.icon,
-              color: colorScheme.primary,
-              size: iconSize,
-            ),
-          ),
-          SizedBox(height: gap),
-          Flexible(
-            child: Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: titleWeight,
-                letterSpacing: -0.2,
-                height: 1.2,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          if (canShowSubtitle) ...[
-            const SizedBox(height: 4),
-            Flexible(
-              child: Text(
-                subtitle!,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.80),
-                  height: 1.35,
-                  fontSize: 11.5,
+    final primary = colorScheme.primary;
+    final boxDimension = iconBox.clamp(40.0, 48.0).toDouble();
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Ambient soft radial glow background
+        Positioned(
+          top: 2,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              width: boxDimension * 1.4,
+              height: boxDimension * 1.4,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    primary.withValues(alpha: isDark ? 0.12 : 0.07),
+                    primary.withValues(alpha: 0.0),
+                  ],
                 ),
               ),
             ),
-          ],
-          if (!enabled) ...[
-            const SizedBox(height: 4),
-            AppStatusBadge(
-              label: l10n.moduleComingSoon,
-              tone: AppStatusTone.neutral,
-              animate: false,
+          ),
+        ),
+
+        // Main Centered Content
+        Padding(
+          padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              // Icon directly without background container — enlarged size
+              Icon(
+                module.icon,
+                color: primary,
+                size: 38.0,
+              ),
+
+              const SizedBox(height: 8),
+
+              // Title text — adaptive height for complete text visibility
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                    height: 1.25,
+                    fontSize: 13.0,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+
+              if (!enabled) ...[
+                const SizedBox(height: 6),
+                AppStatusBadge(
+                  label: l10n.moduleComingSoon,
+                  tone: AppStatusTone.neutral,
+                  animate: false,
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Subtle, non-bothersome Top-End Hint Button (i)
+        if (subtitle != null && subtitle!.trim().isNotEmpty)
+          PositionedDirectional(
+            top: 6,
+            end: 6,
+            child: AppDescriptionHintButton(
+              title: title,
+              description: subtitle!,
+              icon: module.icon,
+              size: 16.0,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
             ),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

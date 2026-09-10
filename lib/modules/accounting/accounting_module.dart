@@ -22,6 +22,7 @@ import '../../core/setup/setup.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
+import '../../core/modules/quick_nav_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/presentation/providers/core_providers.dart';
@@ -34,13 +35,12 @@ import '../../core/modules/module_setup_definition.dart';
 import '../system_setup/presentation/providers/system_setup_providers.dart';
 import '../cash_registers/presentation/providers/cash_register_providers.dart';
 import 'accounting_module_quick_actions.dart';
+import 'accounting_module_quick_nav.dart';
 import 'accounting_module_settings.dart';
 import 'accounting_module_setup.dart';
 import 'chart_of_accounts/data/repositories/account_repository_impl.dart';
 import '../../core/import_engine/presentation/pages/universal_import_page.dart';
 
-import '../authentication/presentation/providers/auth_providers.dart';
-import 'chart_of_accounts/import/account_import_profile.dart';
 import 'chart_of_accounts/presentation/pages/account_details_page.dart';
 import 'chart_of_accounts/presentation/pages/account_form_page.dart';
 import 'chart_of_accounts/presentation/pages/accounts_opening_setup_page.dart';
@@ -59,7 +59,6 @@ import 'shared/presentation/pages/accounting_home_page.dart';
 
 import 'shared/presentation/pages/accounting_reports_page.dart';
 import 'shared/presentation/pages/accounting_routes.dart';
-import 'shared/presentation/pages/currency_rates_page.dart';
 import 'shared/presentation/providers/accounting_mode_providers.dart';
 import 'shared/presentation/providers/currency_providers.dart';
 import 'shared/presentation/providers/currency_rate_providers.dart';
@@ -192,6 +191,10 @@ class AccountingModule extends AppModule {
       buildAccountingQuickActions(moduleId);
 
   @override
+  List<QuickNavDefinition> get quickNavItems =>
+      buildAccountingQuickNav(moduleId);
+
+  @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>
       buildAccountingSettingsCategories(moduleId);
 
@@ -213,11 +216,6 @@ class AccountingModule extends AppModule {
           builder: (context, state) => const AccountsOpeningSetupPage(),
         ),
 
-        GoRoute(
-          path: 'currency-rates',
-          name: 'accountingCurrencyRates',
-          builder: (context, state) => const CurrencyRatesPage(),
-        ),
         GoRoute(
           path: 'fiscal-years',
           name: 'accountingFiscalYears',
@@ -466,6 +464,7 @@ class AccountingModule extends AppModule {
           return currency.code;
         },
         rates: ref.watch(currencyRateRepositoryProvider),
+        currencyRepository: ref.watch(currencyRepositoryProvider),
       );
     }),
     saleTreasuryAccountPortProvider.overrideWith((ref) {
@@ -504,6 +503,7 @@ class AccountingModule extends AppModule {
           return currency.code;
         },
         rates: ref.watch(currencyRateRepositoryProvider),
+        currencyRepository: ref.watch(currencyRepositoryProvider),
       );
     }),
   ];

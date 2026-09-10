@@ -8,6 +8,7 @@ import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
+import '../../core/modules/quick_nav_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/setup/setup.dart';
@@ -16,7 +17,7 @@ import 'permissions/receipts_payments_permission_package.dart';
 import 'posting/presentation/pages/rp_posting_service_page.dart';
 import 'presentation/pages/receipts_payments_master_settings_page.dart';
 import 'receipts_payments_module_quick_actions.dart';
-
+import 'receipts_payments_module_quick_nav.dart';
 import 'receipts_payments_module_settings.dart';
 import 'receipts_payments_module_setup.dart';
 import 'shared/presentation/pages/receipts_payments_home_page.dart';
@@ -128,6 +129,10 @@ class ReceiptsPaymentsModule extends AppModule {
   @override
   List<QuickActionDefinition> get quickActions =>
       buildReceiptsPaymentsQuickActions(moduleId);
+
+  @override
+  List<QuickNavDefinition> get quickNavItems =>
+      buildReceiptsPaymentsQuickNav(moduleId);
 
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>

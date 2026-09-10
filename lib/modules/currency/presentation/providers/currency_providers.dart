@@ -50,3 +50,9 @@ final functionalCurrencyProvider = FutureProvider<Currency>((ref) async {
   final companyId = ref.watch(currentCompanyIdProvider);
   return service.getFunctionalCurrency(companyId);
 });
+
+final currencyHasTransactionsProvider =
+    FutureProvider.family<bool, String>((ref, code) async {
+  final repo = ref.watch(currencyRepositoryProvider);
+  return repo.hasTransactions(code);
+});

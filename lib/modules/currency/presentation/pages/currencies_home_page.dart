@@ -58,6 +58,8 @@ class CurrenciesHomePage extends ConsumerWidget {
             // Base Functional Currency Status Banner
             _BaseCurrencyStatusCard(
               baseCurrency: baseCurrency,
+              isLoading: functionalCurrencyAsync.isLoading &&
+                  !functionalCurrencyAsync.hasValue,
               isArabic: isArabic,
             )
                 .animate()
@@ -177,15 +179,52 @@ class CurrenciesHomePage extends ConsumerWidget {
 class _BaseCurrencyStatusCard extends StatelessWidget {
   const _BaseCurrencyStatusCard({
     required this.baseCurrency,
+    this.isLoading = false,
     required this.isArabic,
   });
 
   final dynamic baseCurrency;
+  final bool isLoading;
   final bool isArabic;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (isLoading) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              isArabic
+                  ? 'جاري تحميل تفاصيل العملة الرئيسية...'
+                  : 'Loading base currency details...',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final isConfigured = baseCurrency != null;
 
     return Container(

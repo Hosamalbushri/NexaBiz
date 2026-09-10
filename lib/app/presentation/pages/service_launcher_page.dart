@@ -29,6 +29,7 @@ class ServiceLauncherPage extends ConsumerWidget {
       appBar: CustomAppBar(
         title: l10n.navigationServices,
         centerTitle: true,
+        showBackButton: true,
         leading: const AppBarSyncActions(),
         showNotifications: true,
         notificationCount: unread,
@@ -45,9 +46,7 @@ class ServiceLauncherPage extends ConsumerWidget {
               if (!module.isEnabled) {
                 return;
               }
-              // Prefer go over push — see dashboard module launch comment
-              // (go_router ShellRouteMatch duplicate page keys).
-              context.go(module.rootRoute);
+              context.push(module.rootRoute);
             },
           ),
         ),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../permissions/permission_defs.dart';
 import 'module_settings_definition.dart';
 import 'module_setup_definition.dart';
+import 'quick_nav_definition.dart';
 import 'quick_action_definition.dart';
 import 'report_category_definition.dart';
 import 'route_access_rule.dart';
@@ -81,6 +82,11 @@ abstract class AppModule {
   ///
   /// Keep empty when the module has no quick actions.
   List<QuickActionDefinition> get quickActions => const [];
+
+  /// Quick navigation items contributed by this module to the shell quick nav sheet.
+  ///
+  /// Keep empty when the module has no quick navigation items.
+  List<QuickNavDefinition> get quickNavItems => const [];
 
   /// Report categories contributed by this module to the platform Reports page.
   ///

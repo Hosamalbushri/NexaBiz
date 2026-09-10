@@ -12,6 +12,8 @@ import 'package:stock_count/modules/currency/domain/services/functional_currency
 import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_accounting_binding_repository.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_money.dart';
+import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 
 class MissingCompanyContextException implements Exception {
   const MissingCompanyContextException([
@@ -35,6 +37,7 @@ class JournalBuilderImpl implements JournalBuilderService {
     WarehouseAccountingValidationService? validationService,
     FunctionalCurrencyService? functionalCurrencyService,
   }) : _accountRepository = accountRepository,
+       _currencyRateRepository = currencyRateRepository,
        _readCompanyId = readCompanyId,
        _initRepository = initRepository,
        _bindingRepo = bindingRepo,
@@ -42,6 +45,7 @@ class JournalBuilderImpl implements JournalBuilderService {
        _functionalCurrencyService = functionalCurrencyService;
 
   final AccountRepository _accountRepository;
+  final CurrencyRateRepository _currencyRateRepository;
   final String Function()? _readCompanyId;
   final CompanyInitializationRepository? _initRepository;
   final WarehouseAccountingBindingRepository? _bindingRepo;
@@ -175,11 +179,6 @@ class JournalBuilderImpl implements JournalBuilderService {
   }
 
   Future<String> _resolveCompanyBaseCurrency() async {
-    final inventoryConfig = await _initRepository?.getInventoryConfig();
-    if (inventoryConfig != null &&
-        inventoryConfig.inventoryBaseCurrencyId.trim().isNotEmpty) {
-      return inventoryConfig.inventoryBaseCurrencyId.trim().toUpperCase();
-    }
     final funcService = _functionalCurrencyService;
     if (funcService != null) {
       try {
@@ -194,6 +193,36 @@ class JournalBuilderImpl implements JournalBuilderService {
     return 'SAR';
   }
 
+  Future<String> _resolveInventoryCurrency() async {
+    final inventoryConfig = await _initRepository?.getInventoryConfig();
+    if (inventoryConfig != null &&
+        inventoryConfig.inventoryBaseCurrencyId.trim().isNotEmpty) {
+      return inventoryConfig.inventoryBaseCurrencyId.trim().toUpperCase();
+    }
+    return await _resolveCompanyBaseCurrency();
+  }
+
+  Future<double> _resolveRateToBase({
+    required String currencyCode,
+    required String baseCurrencyCode,
+    double? fallbackRate,
+  }) async {
+    final code = currencyCode.trim().toUpperCase();
+    final base = baseCurrencyCode.trim().toUpperCase();
+    if (code == base) return 1.0;
+    try {
+      final rateObj = await _currencyRateRepository.getByCode(code);
+      if (rateObj != null && rateObj.rateToBase > 0) {
+        return rateObj.rateToBase;
+      }
+    } catch (_) {}
+    return ExchangeRateValidator.validate(
+      currencyCode: code,
+      baseCurrencyCode: base,
+      exchangeRate: fallbackRate ?? 1.0,
+    );
+  }
+
   @override
   Future<JournalEntryDraft> buildReceiptJournal({
     required InventoryDocumentRef document,
@@ -206,6 +235,7 @@ class JournalBuilderImpl implements JournalBuilderService {
     final sourceType = document.documentType.storageValue;
     final sourceId = document.documentId;
     final baseCurrency = await _resolveCompanyBaseCurrency();
+    final invCurrency = await _resolveInventoryCurrency();
     const voucherTypeStr = 'أمر توريد';
 
     final resolvedInventory = await _resolveCompanyAccount(
@@ -226,30 +256,53 @@ class JournalBuilderImpl implements JournalBuilderService {
         : baseCurrency;
 
     final bool isBasePosting = useBaseCurrencyForPosting;
-
     final String docCurrency = isBasePosting ? baseCurrency : rawDocCurrency;
     final double docRate = isBasePosting
         ? 1.0
-        : ExchangeRateValidator.validate(
+        : await _resolveRateToBase(
             currencyCode: docCurrency,
             baseCurrencyCode: baseCurrency,
-            exchangeRate: document.exchangeRate,
+            fallbackRate: document.exchangeRate,
           );
 
-    final double offsetAmount = isBasePosting
-        ? (valuationAmount ?? totalAmount)
-        : totalAmount;
+    final double invRate = await _resolveRateToBase(
+      currencyCode: invCurrency,
+      baseCurrencyCode: baseCurrency,
+    );
 
-    final double calculatedBaseValuation = isBasePosting
-        ? offsetAmount
-        : (valuationAmount ?? (totalAmount * docRate));
+    // --- Multi-Currency Amount Resolution ---
+    // totalAmount & valuationAmount from PostingCoordinator are ALWAYS in document currency.
+    // baseTotal = total expressed in base/functional currency (YER).
+    // invAmount = total expressed in inventory valuation currency (SAR).
+    // Both sides (inventory debit, offset credit) must have equal baseDebit/baseCredit.
+
+    final double docTotal = JournalMoney.round(valuationAmount ?? totalAmount);
+
+    final double baseTotal = isBasePosting
+        ? docTotal
+        : JournalMoney.round(docTotal * docRate);
+
+    final double offsetAmount = isBasePosting ? baseTotal : docTotal;
+    final double offsetBaseCredit = baseTotal;
+
+    // Convert document-currency total into inventory valuation currency
+    final double invAmount = (invCurrency == docCurrency)
+        ? docTotal
+        : (invCurrency == baseCurrency)
+            ? baseTotal
+            : JournalMoney.round(baseTotal / (invRate > 0 ? invRate : 1.0));
+
+    // Base equivalent for inventory line MUST equal baseTotal for balance
+    final double invBaseDebit = baseTotal;
 
     final inventoryLine = JournalLineDraft(
       accountUuid: resolvedInventory,
-      debit: calculatedBaseValuation,
+      debit: invAmount,
       credit: 0.0,
-      currencyCode: baseCurrency,
-      exchangeRateToBase: 1.0,
+      currencyCode: invCurrency,
+      exchangeRateToBase: invRate,
+      baseDebit: invBaseDebit,
+      baseCredit: 0.0,
       lineDescription: 'مخزون - ${document.documentNumber}',
       sortOrder: 1,
     );
@@ -260,9 +313,13 @@ class JournalBuilderImpl implements JournalBuilderService {
       credit: offsetAmount,
       currencyCode: docCurrency,
       exchangeRateToBase: docRate,
+      baseDebit: 0.0,
+      baseCredit: offsetBaseCredit,
       lineDescription: 'مخزون - ${document.documentNumber}',
       sortOrder: 2,
     );
+
+    final isMultiCurrency = (docCurrency != invCurrency) || (docCurrency != baseCurrency) || (invCurrency != baseCurrency);
 
     return JournalEntryDraft(
       entryDate: document.documentDate,
@@ -270,6 +327,7 @@ class JournalBuilderImpl implements JournalBuilderService {
       voucherType: voucherTypeStr,
       currencyCode: docCurrency,
       baseCurrencyCode: baseCurrency,
+      allowUnbalancedMultiCurrency: isMultiCurrency,
       description:
           'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
       isPosted: isPosted,
@@ -291,6 +349,7 @@ class JournalBuilderImpl implements JournalBuilderService {
     final sourceType = document.documentType.storageValue;
     final sourceId = document.documentId;
     final baseCurrency = await _resolveCompanyBaseCurrency();
+    final invCurrency = await _resolveInventoryCurrency();
 
     final isAdjustment =
         document.documentType == InventoryDocumentType.stockAdjustment;
@@ -310,15 +369,63 @@ class JournalBuilderImpl implements JournalBuilderService {
       voucherTypeStr: voucherTypeStr,
     );
 
-    final double offsetAmount = valuationAmount ?? totalAmount;
-    final double calculatedBaseValuation = offsetAmount;
+    final String rawDocCurrency = document.currencyCode.trim().isNotEmpty
+        ? document.currencyCode.trim().toUpperCase()
+        : baseCurrency;
+
+    final bool isBasePosting = useBaseCurrencyForPosting;
+    final String docCurrency = isBasePosting ? baseCurrency : rawDocCurrency;
+    final double docRate = isBasePosting
+        ? 1.0
+        : await _resolveRateToBase(
+            currencyCode: docCurrency,
+            baseCurrencyCode: baseCurrency,
+            fallbackRate: document.exchangeRate,
+          );
+
+    final double invRate = await _resolveRateToBase(
+      currencyCode: invCurrency,
+      baseCurrencyCode: baseCurrency,
+    );
+
+    // --- Multi-Currency Amount Resolution ---
+    // totalAmount & valuationAmount from PostingCoordinator are ALWAYS in document currency.
+    // baseTotal = total in base/functional currency (YER).
+    // invAmount = total in inventory valuation currency (SAR).
+    // Both sides must have equal baseDebit/baseCredit.
+
+    final double docTotal = JournalMoney.round(valuationAmount ?? totalAmount);
+
+    final double baseTotal = isBasePosting
+        ? docTotal
+        : JournalMoney.round(docTotal * docRate);
+
+    // Convert document-currency total into inventory valuation currency
+    final double invAmount = (invCurrency == docCurrency)
+        ? docTotal
+        : (invCurrency == baseCurrency)
+            ? baseTotal
+            : JournalMoney.round(baseTotal / (invRate > 0 ? invRate : 1.0));
+
+    // Base equivalent for inventory line MUST equal baseTotal for balance
+    final double invBaseCredit = baseTotal;
+
+    final double offsetAmount = (docCurrency == baseCurrency)
+        ? baseTotal
+        : (docCurrency == invCurrency
+            ? invAmount
+            : docTotal);
+
+    final double offsetBaseDebit = baseTotal;
 
     final inventoryLine = JournalLineDraft(
       accountUuid: resolvedInventory,
       debit: 0.0,
-      credit: calculatedBaseValuation,
-      currencyCode: baseCurrency,
-      exchangeRateToBase: 1.0,
+      credit: invAmount,
+      currencyCode: invCurrency,
+      exchangeRateToBase: invRate,
+      baseDebit: 0.0,
+      baseCredit: invBaseCredit,
       lineDescription: 'مخزون - ${document.documentNumber}',
       sortOrder: 2,
     );
@@ -327,18 +434,23 @@ class JournalBuilderImpl implements JournalBuilderService {
       accountUuid: resolvedOffset,
       debit: offsetAmount,
       credit: 0.0,
-      currencyCode: baseCurrency,
-      exchangeRateToBase: 1.0,
+      currencyCode: docCurrency,
+      exchangeRateToBase: docRate,
+      baseDebit: offsetBaseDebit,
+      baseCredit: 0.0,
       lineDescription: 'مخزون - ${document.documentNumber}',
       sortOrder: 1,
     );
+
+    final isMultiCurrency = (docCurrency != invCurrency) || (docCurrency != baseCurrency) || (invCurrency != baseCurrency);
 
     return JournalEntryDraft(
       entryDate: document.documentDate,
       voucherNumber: document.documentNumber,
       voucherType: voucherTypeStr,
-      currencyCode: baseCurrency,
+      currencyCode: docCurrency,
       baseCurrencyCode: baseCurrency,
+      allowUnbalancedMultiCurrency: isMultiCurrency,
       description:
           'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
       isPosted: isPosted,
@@ -358,6 +470,7 @@ class JournalBuilderImpl implements JournalBuilderService {
     final sourceType = document.documentType.storageValue;
     final sourceId = document.documentId;
     final baseCurrency = await _resolveCompanyBaseCurrency();
+    final invCurrency = await _resolveInventoryCurrency();
     const voucherTypeStr = 'أمر تحويل مخزني';
 
     final sourceWarehouseId = document.warehouseId;
@@ -375,14 +488,31 @@ class JournalBuilderImpl implements JournalBuilderService {
       voucherTypeStr: voucherTypeStr,
     );
 
-    final debitAccount = destAssetAccount;
-    final creditAccount = sourceAssetAccount;
+    final double invRate = await _resolveRateToBase(
+      currencyCode: invCurrency,
+      baseCurrencyCode: baseCurrency,
+    );
+
+    // --- Multi-Currency Amount Resolution ---
+    // valuationAmount from PostingCoordinator is in document currency.
+    final double docTotal = JournalMoney.round(valuationAmount ?? totalAmount);
+    final double docRate = document.exchangeRate > 0 ? document.exchangeRate : 1.0;
+
+    final double baseTotal = JournalMoney.round(docTotal * docRate);
+
+    // Convert to inventory valuation currency
+    final double invAmount = (invCurrency == baseCurrency)
+        ? baseTotal
+        : JournalMoney.round(baseTotal / (invRate > 0 ? invRate : 1.0));
+
+    // Base equivalent MUST equal baseTotal for balance
+    final double invBaseAmount = baseTotal;
 
     return JournalEntryDraft(
       entryDate: document.documentDate,
       voucherNumber: document.documentNumber,
       voucherType: voucherTypeStr,
-      currencyCode: baseCurrency,
+      currencyCode: invCurrency,
       baseCurrencyCode: baseCurrency,
       description:
           'قيد نقل مخزني محايد قيمياً للمستند: ${document.documentNumber}',
@@ -391,20 +521,24 @@ class JournalBuilderImpl implements JournalBuilderService {
       sourceId: sourceId,
       lines: [
         JournalLineDraft(
-          accountUuid: debitAccount,
-          debit: totalAmount,
+          accountUuid: destAssetAccount,
+          debit: invAmount,
           credit: 0.0,
-          currencyCode: baseCurrency,
-          exchangeRateToBase: 1.0,
+          currencyCode: invCurrency,
+          exchangeRateToBase: invRate,
+          baseDebit: invBaseAmount,
+          baseCredit: 0.0,
           lineDescription: 'تحويل مخزني (إلى) - ${document.documentNumber}',
           sortOrder: 1,
         ),
         JournalLineDraft(
-          accountUuid: creditAccount,
+          accountUuid: sourceAssetAccount,
           debit: 0.0,
-          credit: totalAmount,
-          currencyCode: baseCurrency,
-          exchangeRateToBase: 1.0,
+          credit: invAmount,
+          currencyCode: invCurrency,
+          exchangeRateToBase: invRate,
+          baseDebit: 0.0,
+          baseCredit: invBaseAmount,
           lineDescription: 'تحويل مخزني (من) - ${document.documentNumber}',
           sortOrder: 2,
         ),

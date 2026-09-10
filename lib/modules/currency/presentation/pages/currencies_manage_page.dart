@@ -8,10 +8,13 @@ import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/inventory_valuation_currency_providers.dart';
+import 'package:stock_count/modules/system_setup/domain/entities/company_inventory_config.dart';
+import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 
 import '../../domain/entities/app_currency.dart';
 import '../../domain/entities/currency.dart';
 import '../providers/currency_providers.dart';
+import '../providers/currency_rate_providers.dart';
 import '../providers/functional_currency_providers.dart';
 import '../widgets/app_searchable_currency_picker.dart';
 
@@ -29,6 +32,19 @@ class CurrenciesManagePage extends ConsumerStatefulWidget {
 class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
   String _searchQuery = '';
   _CurrencyFilter _filter = _CurrencyFilter.all;
+
+  void _invalidateAllCurrencyProviders() {
+    ref.invalidate(allCurrenciesProvider);
+    ref.invalidate(activeCurrenciesProvider);
+    ref.invalidate(defaultCurrencyProvider);
+    ref.invalidate(functionalCurrencyProvider);
+    ref.invalidate(functionalCurrencyStateInfoProvider);
+    ref.invalidate(accountingBaseCurrencyProvider);
+    ref.invalidate(currencyRateListProvider);
+    ref.invalidate(availableCurrenciesToAddProvider);
+    ref.invalidate(inventoryValuationCurrencyStateProvider);
+    ref.invalidate(companyInventoryConfigProvider);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,11 +98,10 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
       isLoading: currenciesAsync.isLoading && !currenciesAsync.hasValue,
       error: currenciesAsync.error,
       onRetry: () {
-        ref.invalidate(allCurrenciesProvider);
+        _invalidateAllCurrencyProviders();
       },
       onRefresh: () async {
-        ref.invalidate(allCurrenciesProvider);
-        ref.invalidate(functionalCurrencyStateInfoProvider);
+        _invalidateAllCurrencyProviders();
       },
       emptyTitle: isArabic ? 'لا توجد عملات' : 'No Currencies Found',
       emptyMessage: isArabic
@@ -173,6 +188,11 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
         funcCode.isNotEmpty && currency.code.toUpperCase() == funcCode;
     final isVal =
         valCode.isNotEmpty && currency.code.toUpperCase() == valCode;
+
+    final hasTxns = ref
+            .watch(currencyHasTransactionsProvider(currency.code))
+            .valueOrNull ??
+        false;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -315,16 +335,28 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                           child: Row(
                             children: [
                               Icon(
-                                currency.isActive
-                                    ? Icons.block_rounded
-                                    : Icons.check_circle_outline_rounded,
+                                (currency.isActive && hasTxns)
+                                    ? Icons.lock_outline_rounded
+                                    : (currency.isActive
+                                        ? Icons.block_rounded
+                                        : Icons.check_circle_outline_rounded),
                                 size: 20,
+                                color: (currency.isActive && hasTxns)
+                                    ? theme.colorScheme.outline
+                                    : null,
                               ),
                               const SizedBox(width: AppSpacing.xs),
                               Text(
                                 currency.isActive
-                                    ? (isArabic ? 'تعطيل' : 'Deactivate')
+                                    ? (hasTxns
+                                        ? (isArabic
+                                            ? 'تعطيل (مقفلة لوجود حركات)'
+                                            : 'Deactivate (Locked)')
+                                        : (isArabic ? 'تعطيل' : 'Deactivate'))
                                     : (isArabic ? 'تفعيل' : 'Activate'),
+                                style: (currency.isActive && hasTxns)
+                                    ? TextStyle(color: theme.colorScheme.outline)
+                                    : null,
                               ),
                             ],
                           ),
@@ -334,15 +366,25 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                           child: Row(
                             children: [
                               Icon(
-                                Icons.delete_outline_rounded,
+                                hasTxns
+                                    ? Icons.lock_outline_rounded
+                                    : Icons.delete_outline_rounded,
                                 size: 20,
-                                color: theme.colorScheme.error,
+                                color: hasTxns
+                                    ? theme.colorScheme.outline
+                                    : theme.colorScheme.error,
                               ),
                               const SizedBox(width: AppSpacing.xs),
                               Text(
-                                isArabic ? 'حذف' : 'Delete',
+                                hasTxns
+                                    ? (isArabic
+                                        ? 'حذف (مقفلة لوجود حركات)'
+                                        : 'Delete (Locked)')
+                                    : (isArabic ? 'حذف' : 'Delete'),
                                 style: TextStyle(
-                                  color: theme.colorScheme.error,
+                                  color: hasTxns
+                                      ? theme.colorScheme.outline
+                                      : theme.colorScheme.error,
                                 ),
                               ),
                             ],
@@ -383,6 +425,14 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                             ? 'تقييم المخزون'
                             : 'Inventory Valuation',
                         tone: AppStatusTone.warning,
+                        animate: false,
+                      ),
+                    if (hasTxns)
+                      AppStatusBadge(
+                        label: isArabic
+                            ? 'مقفلة (توجد حركات)'
+                            : 'Locked (Has Txns)',
+                        tone: AppStatusTone.neutral,
                         animate: false,
                       ),
                   ],
@@ -483,6 +533,18 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     AppCurrency? selectedAppCurrency;
     int decimalDigits = 2;
+    bool isDefault = false;
+    bool isInventoryValuation = false;
+
+    final existingCurrencies =
+        ref.read(allCurrenciesProvider).valueOrNull ?? [];
+    final existingCodes =
+        existingCurrencies.map((c) => c.code.toUpperCase()).toSet();
+
+    final funcInfo = ref.read(functionalCurrencyStateInfoProvider).valueOrNull;
+    final valInfo = ref.read(inventoryValuationCurrencyStateProvider).valueOrNull;
+    final isFuncLocked = funcInfo?.isLocked ?? false;
+    final isValLocked = valInfo?.isLocked ?? false;
 
     await showDialog<void>(
       context: context,
@@ -497,6 +559,7 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                   children: [
                     AppSearchableCurrencyPickerField(
                       selectedPreset: selectedAppCurrency,
+                      excludedCodes: existingCodes,
                       onPresetSelected: (appCurrency) {
                         setDialogState(() {
                           selectedAppCurrency = appCurrency;
@@ -521,6 +584,65 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                         }
                       },
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        isArabic ? 'العملة الرئيسية للنظام' : 'System Base Currency',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        isFuncLocked
+                            ? (isArabic
+                                ? 'مقفلة: لا يمكن تعيين عملة رئيسية لوجود قيود محاسبية بالمنشأة'
+                                : 'Locked: Accounting entries exist for company')
+                            : (isArabic
+                                ? 'تعيين كعملة محددة للحسابات والقوائم المالية'
+                                : 'Set as system functional base currency'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isFuncLocked ? Theme.of(context).colorScheme.error : null,
+                        ),
+                      ),
+                      value: isDefault,
+                      onChanged: isFuncLocked
+                          ? null
+                          : (val) {
+                              setDialogState(() {
+                                isDefault = val;
+                              });
+                            },
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        isArabic
+                            ? 'عملة تقييم المخزون'
+                            : 'Inventory Valuation Currency',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        isValLocked
+                            ? (isArabic
+                                ? 'مقفلة: لا يمكن تعيين عملة مخزون لوجود حركات مخزون بالمنشأة'
+                                : 'Locked: Inventory movements exist for company')
+                            : (isArabic
+                                ? 'تعيين كعملة معتمدة لحساب تكلفة المخزون'
+                                : 'Set as company inventory valuation currency'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isValLocked ? Theme.of(context).colorScheme.error : null,
+                        ),
+                      ),
+                      value: isInventoryValuation,
+                      onChanged: isValLocked
+                          ? null
+                          : (val) {
+                              setDialogState(() {
+                                isInventoryValuation = val;
+                              });
+                            },
+                    ),
                   ],
                 ),
               ),
@@ -540,13 +662,48 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                             nameEn: selected.nameEn,
                             symbol: selected.symbol,
                             decimalDigits: decimalDigits,
+                            isDefault: isDefault,
                             isActive: true,
                           );
                           try {
                             await ref
                                 .read(currencyRepositoryProvider)
                                 .upsert(draft);
-                            ref.invalidate(allCurrenciesProvider);
+
+                            if (isDefault) {
+                              await ref
+                                  .read(currencyRepositoryProvider)
+                                  .setDefaultCurrency(selected.code);
+                            }
+
+                            if (isInventoryValuation) {
+                              final initRepo = ref.read(
+                                companyInitializationRepositoryProvider,
+                              );
+                              final existingConfig =
+                                  await initRepo.getInventoryConfig();
+                              final state = await initRepo.getState();
+                              await initRepo.saveInventoryConfig(
+                                CompanyInventoryConfig(
+                                  companyId: state.companyId,
+                                  inventoryBaseCurrencyId: selected.code,
+                                  defaultCostingMethod:
+                                      existingConfig?.defaultCostingMethod ??
+                                      'FIFO',
+                                  allowNegativeStock:
+                                      existingConfig?.allowNegativeStock ??
+                                      false,
+                                  autoPostAccountingEntries:
+                                      existingConfig
+                                          ?.autoPostAccountingEntries ??
+                                      true,
+                                  updatedAt: DateTime.now().toUtc(),
+                                ),
+                              );
+                            }
+
+                            _invalidateAllCurrencyProviders();
+
                             if (dialogCtx.mounted) {
                               Navigator.of(dialogCtx).pop();
                             }
@@ -589,107 +746,220 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
     final symbolCtrl = TextEditingController(text: currency.symbol);
     int decimalDigits = currency.decimalDigits;
 
+    final funcInfo = ref.read(functionalCurrencyStateInfoProvider).valueOrNull;
+    final valInfo = ref.read(inventoryValuationCurrencyStateProvider).valueOrNull;
+    final isFuncLocked = funcInfo?.isLocked ?? false;
+    final isValLocked = valInfo?.isLocked ?? false;
+
+    final currentFuncCode = funcInfo?.currencyCode.toUpperCase() ?? '';
+    final currentValCode = valInfo?.currencyCode.toUpperCase() ?? '';
+
+    bool isDefault =
+        currency.isDefault ||
+        currentFuncCode == currency.code.toUpperCase();
+    bool isInventoryValuation =
+        currentValCode == currency.code.toUpperCase();
+
     await showDialog<void>(
       context: context,
       builder: (dialogCtx) {
-        return AlertDialog(
-          title: Text(
-            isArabic
-                ? 'تعديل العملة (${currency.code})'
-                : 'Edit Currency (${currency.code})',
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameArCtrl,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'الاسم بالعربي' : 'Arabic Name',
-                    border: const OutlineInputBorder(),
-                  ),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(
+                isArabic
+                    ? 'تعديل العملة (${currency.code})'
+                    : 'Edit Currency (${currency.code})',
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameArCtrl,
+                      decoration: InputDecoration(
+                        labelText: isArabic ? 'الاسم بالعربي' : 'Arabic Name',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextFormField(
+                      controller: nameEnCtrl,
+                      decoration: InputDecoration(
+                        labelText:
+                            isArabic ? 'الاسم بالإنجليزي' : 'English Name',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextFormField(
+                      controller: symbolCtrl,
+                      decoration: InputDecoration(
+                        labelText: isArabic ? 'الرمز' : 'Symbol',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextFormField(
+                      initialValue: decimalDigits.toString(),
+                      decoration: InputDecoration(
+                        labelText: isArabic ? 'الخانات العشرية' : 'Decimals',
+                        border: const OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) {
+                        final parsed = int.tryParse(val);
+                        if (parsed != null && parsed >= 0 && parsed <= 6) {
+                          setDialogState(() {
+                            decimalDigits = parsed;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        isArabic ? 'العملة الرئيسية للنظام' : 'System Base Currency',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        isFuncLocked
+                            ? (isArabic
+                                ? 'مقفلة: توجد قيود محاسبية مسجلة ولا يمكن تغيير العملة الرئيسية'
+                                : 'Locked: Accounting entries exist; base currency locked')
+                            : (isArabic
+                                ? 'تعيين كعملة محددة للحسابات والقوائم المالية'
+                                : 'Set as system functional base currency'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isFuncLocked ? Theme.of(context).colorScheme.error : null,
+                        ),
+                      ),
+                      value: isDefault,
+                      onChanged: isFuncLocked
+                          ? null
+                          : (val) {
+                              setDialogState(() {
+                                isDefault = val;
+                              });
+                            },
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        isArabic
+                            ? 'عملة تقييم المخزون'
+                            : 'Inventory Valuation Currency',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        isValLocked
+                            ? (isArabic
+                                ? 'مقفلة: توجد حركات مخزون مسجلة ولا يمكن تغيير عملة التقييم'
+                                : 'Locked: Inventory movements exist; valuation currency locked')
+                            : (isArabic
+                                ? 'تعيين كعملة معتمدة لحساب تكلفة المخزون'
+                                : 'Set as company inventory valuation currency'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isValLocked ? Theme.of(context).colorScheme.error : null,
+                        ),
+                      ),
+                      value: isInventoryValuation,
+                      onChanged: isValLocked
+                          ? null
+                          : (val) {
+                              setDialogState(() {
+                                isInventoryValuation = val;
+                              });
+                            },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: nameEnCtrl,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'الاسم بالإنجليزي' : 'English Name',
-                    border: const OutlineInputBorder(),
-                  ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: Text(isArabic ? 'إلغاء' : 'Cancel'),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: symbolCtrl,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'الرمز' : 'Symbol',
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  initialValue: decimalDigits.toString(),
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'الخانات العشرية' : 'Decimals',
-                    border: const OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (val) {
-                    final parsed = int.tryParse(val);
-                    if (parsed != null && parsed >= 0 && parsed <= 6) {
-                      decimalDigits = parsed;
+                ElevatedButton(
+                  onPressed: () async {
+                    final draft = CurrencyDraft(
+                      uuid: currency.uuid,
+                      code: currency.code,
+                      nameAr: nameArCtrl.text.trim(),
+                      nameEn: nameEnCtrl.text.trim(),
+                      symbol: symbolCtrl.text.trim(),
+                      decimalDigits: decimalDigits,
+                      isDefault: isDefault,
+                      isActive: currency.isActive,
+                    );
+                    try {
+                      await ref
+                          .read(currencyRepositoryProvider)
+                          .upsert(draft);
+
+                      if (isDefault && !isFuncLocked) {
+                        await ref
+                            .read(currencyRepositoryProvider)
+                            .setDefaultCurrency(currency.code);
+                      }
+
+                      if (isInventoryValuation && !isValLocked) {
+                        final initRepo = ref.read(
+                          companyInitializationRepositoryProvider,
+                        );
+                        final existingConfig =
+                            await initRepo.getInventoryConfig();
+                        final state = await initRepo.getState();
+                        await initRepo.saveInventoryConfig(
+                          CompanyInventoryConfig(
+                            companyId: state.companyId,
+                            inventoryBaseCurrencyId: currency.code,
+                            defaultCostingMethod:
+                                existingConfig?.defaultCostingMethod ??
+                                'FIFO',
+                            allowNegativeStock:
+                                existingConfig?.allowNegativeStock ??
+                                false,
+                            autoPostAccountingEntries:
+                                existingConfig?.autoPostAccountingEntries ??
+                                true,
+                            updatedAt: DateTime.now().toUtc(),
+                          ),
+                        );
+                      }
+
+                      _invalidateAllCurrencyProviders();
+
+                      if (dialogCtx.mounted) {
+                        Navigator.of(dialogCtx).pop();
+                      }
+                      if (mounted) {
+                        showAppSnackBar(
+                          this.context,
+                          message: isArabic
+                              ? 'تم تحديث العملة بنجاح'
+                              : 'Currency updated successfully',
+                          isSuccess: true,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        showAppSnackBar(
+                          this.context,
+                          message: e.toString(),
+                          isSuccess: false,
+                        );
+                      }
                     }
                   },
+                  child: Text(isArabic ? 'حفظ' : 'Save'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final draft = CurrencyDraft(
-                  uuid: currency.uuid,
-                  code: currency.code,
-                  nameAr: nameArCtrl.text.trim(),
-                  nameEn: nameEnCtrl.text.trim(),
-                  symbol: symbolCtrl.text.trim(),
-                  decimalDigits: decimalDigits,
-                  isDefault: currency.isDefault,
-                  isActive: currency.isActive,
-                );
-                try {
-                  await ref
-                      .read(currencyRepositoryProvider)
-                      .upsert(draft);
-                  ref.invalidate(allCurrenciesProvider);
-                  if (dialogCtx.mounted) {
-                    Navigator.of(dialogCtx).pop();
-                  }
-                  if (mounted) {
-                    showAppSnackBar(
-                      this.context,
-                      message: isArabic
-                          ? 'تم تحديث العملة بنجاح'
-                          : 'Currency updated successfully',
-                      isSuccess: true,
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    showAppSnackBar(
-                      this.context,
-                      message: e.toString(),
-                      isSuccess: false,
-                    );
-                  }
-                }
-              },
-              child: Text(isArabic ? 'حفظ' : 'Save'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -700,6 +970,18 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
     Currency currency,
   ) async {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final funcInfo = ref.read(functionalCurrencyStateInfoProvider).valueOrNull;
+    if (funcInfo?.isLocked == true) {
+      showAppSnackBar(
+        context,
+        message: isArabic
+            ? 'مقفلة: لا يمكن تغيير العملة الرئيسية للنظام لوجود قيود محاسبية مسجلة بالمنشأة'
+            : 'Cannot change system base currency because accounting entries exist',
+        isSuccess: false,
+      );
+      return;
+    }
+
     final confirmed = await showAppDialog(
       context: context,
       title: isArabic
@@ -716,8 +998,7 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
     try {
       final repo = ref.read(currencyRepositoryProvider);
       await repo.setDefaultCurrency(currency.code);
-      ref.invalidate(functionalCurrencyStateInfoProvider);
-      ref.invalidate(allCurrenciesProvider);
+      _invalidateAllCurrencyProviders();
       if (mounted) {
         showAppSnackBar(
           this.context,
@@ -740,11 +1021,28 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
 
   Future<void> _toggleActive(Currency currency) async {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final currentFuncCode =
+        ref.read(functionalCurrencyStateInfoProvider).valueOrNull?.currencyCode.toUpperCase() ?? '';
+    final currentValCode =
+        ref.read(inventoryValuationCurrencyStateProvider).valueOrNull?.currencyCode.toUpperCase() ?? '';
+    final code = currency.code.toUpperCase();
+
+    if (currency.isActive && (code == currentFuncCode || code == currentValCode)) {
+      showAppSnackBar(
+        context,
+        message: isArabic
+            ? 'لا يمكن تعطيل العملة الرئيسية للنظام أو عملة تقييم المخزون الحالية'
+            : 'Cannot deactivate active system base currency or inventory valuation currency',
+        isSuccess: false,
+      );
+      return;
+    }
+
     try {
       await ref
           .read(currencyRepositoryProvider)
           .toggleActive(currency.code, !currency.isActive);
-      ref.invalidate(allCurrenciesProvider);
+      _invalidateAllCurrencyProviders();
       if (mounted) {
         showAppSnackBar(
           context,
@@ -767,6 +1065,23 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
 
   Future<void> _confirmDelete(BuildContext context, Currency currency) async {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final currentFuncCode =
+        ref.read(functionalCurrencyStateInfoProvider).valueOrNull?.currencyCode.toUpperCase() ?? '';
+    final currentValCode =
+        ref.read(inventoryValuationCurrencyStateProvider).valueOrNull?.currencyCode.toUpperCase() ?? '';
+    final code = currency.code.toUpperCase();
+
+    if (code == currentFuncCode || code == currentValCode) {
+      showAppSnackBar(
+        context,
+        message: isArabic
+            ? 'لا يمكن حذف العملة الرئيسية للنظام أو عملة تقييم المخزون الحالية'
+            : 'Cannot delete active system base currency or inventory valuation currency',
+        isSuccess: false,
+      );
+      return;
+    }
+
     final confirmed = await showAppDialog(
       context: context,
       title: isArabic ? 'حذف العملة' : 'Delete Currency',
@@ -783,7 +1098,7 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
       await ref
           .read(currencyRepositoryProvider)
           .deleteByCode(currency.code);
-      ref.invalidate(allCurrenciesProvider);
+      _invalidateAllCurrencyProviders();
       if (mounted) {
         showAppSnackBar(
           this.context,

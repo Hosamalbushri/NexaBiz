@@ -69,6 +69,13 @@ class SettingsKeys {
 
   /// UTC timestamp of initialization completion.
   static const String deviceInitAt = 'device_init_at';
+
+  /// Quick navigation floating button user settings.
+  static const String quickNavEnabled = 'quick_nav_enabled';
+  static const String quickNavPositionX = 'quick_nav_position_x';
+  static const String quickNavPositionY = 'quick_nav_position_y';
+  static const String quickNavItemsPrefix = 'quick_nav_items_';
+  static const String quickNavSectionOrderPrefix = 'quick_nav_section_order_';
 }
 
 /// Mode used to initialize the device database.
@@ -123,8 +130,12 @@ class SettingsRepository {
     if (_box != null && _box!.isOpen) {
       return _box!;
     }
-    _box = await Hive.openBox<dynamic>(HiveBoxes.settings);
-    return _box!;
+    try {
+      _box = await Hive.openBox<dynamic>(HiveBoxes.settings);
+      return _box!;
+    } catch (_) {
+      throw StateError('Settings box unavailable');
+    }
   }
 
   Future<ThemeMode> loadThemeMode() async {
@@ -757,6 +768,77 @@ class SettingsRepository {
       '${SettingsKeys.companyCloudStatePrefix}${state.localCompanyId}',
       state.toMap(),
     );
+  }
+
+  Future<bool> loadQuickNavEnabled() async {
+    try {
+      final box = await _settingsBox;
+      final value = box.get(SettingsKeys.quickNavEnabled);
+      if (value is bool) return value;
+      return true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> saveQuickNavEnabled(bool enabled) async {
+    try {
+      final box = await _settingsBox;
+      await box.put(SettingsKeys.quickNavEnabled, enabled);
+    } catch (_) {}
+  }
+
+  Future<Offset?> loadQuickNavPosition() async {
+    try {
+      final box = await _settingsBox;
+      final x = box.get(SettingsKeys.quickNavPositionX);
+      final y = box.get(SettingsKeys.quickNavPositionY);
+      if (x is num && y is num) {
+        return Offset(x.toDouble(), y.toDouble());
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveQuickNavPosition(double? x, double? y) async {
+    final box = await _settingsBox;
+    if (x == null || y == null) {
+      await box.delete(SettingsKeys.quickNavPositionX);
+      await box.delete(SettingsKeys.quickNavPositionY);
+      return;
+    }
+    await box.put(SettingsKeys.quickNavPositionX, x);
+    await box.put(SettingsKeys.quickNavPositionY, y);
+  }
+
+  Future<List<String>?> loadQuickNavItems(String companyId) async {
+    final box = await _settingsBox;
+    final raw = box.get('${SettingsKeys.quickNavItemsPrefix}$companyId');
+    if (raw is List) {
+      return raw.map((e) => e.toString()).toList();
+    }
+    return null;
+  }
+
+  Future<void> saveQuickNavItems(List<String> itemIds, String companyId) async {
+    final box = await _settingsBox;
+    await box.put('${SettingsKeys.quickNavItemsPrefix}$companyId', itemIds);
+  }
+
+  Future<List<String>?> loadQuickNavSectionOrder(String companyId) async {
+    final box = await _settingsBox;
+    final raw = box.get('${SettingsKeys.quickNavSectionOrderPrefix}$companyId');
+    if (raw is List) {
+      return raw.map((e) => e.toString()).toList();
+    }
+    return null;
+  }
+
+  Future<void> saveQuickNavSectionOrder(List<String> sectionIds, String companyId) async {
+    final box = await _settingsBox;
+    await box.put('${SettingsKeys.quickNavSectionOrderPrefix}$companyId', sectionIds);
   }
 
   Future<void> resetSettings() async {

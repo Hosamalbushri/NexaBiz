@@ -6,6 +6,7 @@ import 'app_module.dart';
 import 'module_settings_definition.dart';
 import 'module_setup_definition.dart';
 import 'quick_action_definition.dart';
+import 'quick_nav_definition.dart';
 import 'report_category_definition.dart';
 import 'route_access_rule.dart';
 
@@ -143,6 +144,21 @@ class ModuleRegistry {
     for (final action in allQuickActions) {
       if (action.id == id) {
         return action;
+      }
+    }
+    return null;
+  }
+
+  /// All quick navigation items contributed by enabled modules.
+  List<QuickNavDefinition> get allQuickNavItems {
+    return [for (final module in enabledModules) ...module.quickNavItems];
+  }
+
+  /// Find a quick navigation definition across all registered modules by id.
+  QuickNavDefinition? findQuickNavById(String id) {
+    for (final item in allQuickNavItems) {
+      if (item.id == id) {
+        return item;
       }
     }
     return null;

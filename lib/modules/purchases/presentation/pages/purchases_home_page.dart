@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
+import '../../../../app/constants/app_constants.dart';
+import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/auth/presentation/widgets/permission_gate_core.dart';
+import '../../../../core/widgets/app_responsive.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../shared/providers/module_hub_view_mode_provider.dart';
+import '../../../currency/presentation/widgets/missing_currency_dialog.dart';
+import '../../permissions/purchases_permission_package.dart';
+import '../../shared/presentation/pages/purchases_routes.dart';
 
 /// Purchases Management Dashboard & Home Page
 class PurchasesHomePage extends ConsumerWidget {
@@ -10,100 +19,167 @@ class PurchasesHomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final viewMode = ref.watch(moduleHubViewModeProvider);
+    final isGrid = viewMode == ModuleHubViewMode.grid;
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: 'إدارة المشتريات والموردين',
+        title: l10n.localeName == 'ar'
+            ? 'المشتريات والموردين'
+            : 'Purchases & Suppliers',
         showBackButton: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            tooltip: 'إعدادات المشتريات',
-            onPressed: () => context.push('/purchases/settings'),
+            tooltip: l10n.settingsTitle,
+            onPressed: () => PurchasesRoutes.pushSettings(context),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: AppContentConstraint(
         child: ListView(
+          padding: AppConstants.pageInsets(context),
           children: [
-            Card(
-              elevation: 2,
-              child: ListTile(
-                leading: const Icon(
-                  Icons.people_alt_outlined,
-                  color: Colors.indigo,
-                ),
-                title: const Text('دليل الموردين (Suppliers)'),
-                subtitle: const Text(
-                  'إدارة بيانات الموردين وأرصدتهم والحسابات المربوطة',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  // Navigate to suppliers catalog
-                },
+            const AppMissingCurrencyGuardBanner(),
+            AppModuleHubHeader(
+              title: l10n.servicesTitle,
+              subtitle: l10n.localeName == 'ar'
+                  ? 'إدارة أوامر الشراء، فواتير المشتريات، والموردين'
+                  : 'Purchase Orders, Vendor Invoices, and Supplier Catalog',
+              trailing: AppViewModeToggle<ModuleHubViewMode>(
+                options: [
+                  AppViewModeOption(
+                    value: ModuleHubViewMode.grid,
+                    icon: Icons.grid_view_rounded,
+                    tooltip: l10n.localeName == 'ar' ? 'عرض شبكي' : 'Grid View',
+                  ),
+                  AppViewModeOption(
+                    value: ModuleHubViewMode.list,
+                    icon: Icons.view_list_rounded,
+                    tooltip: l10n.localeName == 'ar' ? 'عرض قائمة' : 'List View',
+                  ),
+                ],
+                selected: viewMode,
+                onChanged: (mode) =>
+                    ref.read(moduleHubViewModeProvider.notifier).setMode(mode),
               ),
             ),
-            const SizedBox(height: 12),
-            Card(
-              elevation: 2,
-              child: ListTile(
-                leading: const Icon(
-                  Icons.receipt_long_outlined,
-                  color: Colors.teal,
+            const SizedBox(height: AppSpacing.lg),
+            AppModuleHubView(
+              isGrid: isGrid,
+              children: [
+                isGrid
+                    ? AppModuleHubTile(
+                        icon: Icons.people_alt_outlined,
+                        title: l10n.localeName == 'ar'
+                            ? 'دليل الموردين'
+                            : 'Suppliers Directory',
+                        subtitle: l10n.localeName == 'ar'
+                            ? 'إدارة بيانات الموردين وأرصدتهم والحسابات المربوطة'
+                            : 'Manage supplier profiles, balances, and linked accounts',
+                        onTap: () => PurchasesRoutes.pushSuppliers(context),
+                      )
+                    : AppModuleHubCard(
+                        icon: Icons.people_alt_outlined,
+                        title: l10n.localeName == 'ar'
+                            ? 'دليل الموردين'
+                            : 'Suppliers Directory',
+                        subtitle: l10n.localeName == 'ar'
+                            ? 'إدارة بيانات الموردين وأرصدتهم والحسابات المربوطة'
+                            : 'Manage supplier profiles, balances, and linked accounts',
+                        onTap: () => PurchasesRoutes.pushSuppliers(context),
+                      ),
+                PermissionGate(
+                  anyOf: PurchasesPermissions.view,
+                  child: isGrid
+                      ? AppModuleHubTile(
+                          icon: Icons.receipt_long_outlined,
+                          title: l10n.localeName == 'ar'
+                              ? 'فواتير المشتريات'
+                              : 'Purchase Invoices',
+                          subtitle: l10n.localeName == 'ar'
+                              ? 'إنشاء واستعراض فواتير المشتريات وترحيل قيود المخزون'
+                              : 'Create, review, and post vendor purchase invoices',
+                          animationDelay: const Duration(milliseconds: 60),
+                          onTap: () => PurchasesRoutes.pushInvoices(context),
+                        )
+                      : AppModuleHubCard(
+                          icon: Icons.receipt_long_outlined,
+                          title: l10n.localeName == 'ar'
+                              ? 'فواتير المشتريات'
+                              : 'Purchase Invoices',
+                          subtitle: l10n.localeName == 'ar'
+                              ? 'إنشاء واستعراض فواتير المشتريات وترحيل قيود المخزون'
+                              : 'Create, review, and post vendor purchase invoices',
+                          onTap: () => PurchasesRoutes.pushInvoices(context),
+                        ),
                 ),
-                title: const Text('فواتير المشتريات (Purchase Invoices)'),
-                subtitle: const Text(
-                  'إنشاء واستعراض فواتير المشتريات وترحيل قيود المخزون',
+                PermissionGate(
+                  anyOf: PurchasesPermissions.view,
+                  child: isGrid
+                      ? AppModuleHubTile(
+                          icon: Icons.inventory_2_outlined,
+                          title: l10n.localeName == 'ar'
+                              ? 'إشعارات الاستلام والمخزون'
+                              : 'Goods Receipts',
+                          subtitle: l10n.localeName == 'ar'
+                              ? 'متابعة الشحنات المستلمة ومطابقة أوامر الشراء'
+                              : 'Track incoming shipments and match purchase orders',
+                          animationDelay: const Duration(milliseconds: 120),
+                          onTap: () => PurchasesRoutes.pushReceipts(context),
+                        )
+                      : AppModuleHubCard(
+                          icon: Icons.inventory_2_outlined,
+                          title: l10n.localeName == 'ar'
+                              ? 'إشعارات الاستلام والمخزون'
+                              : 'Goods Receipts',
+                          subtitle: l10n.localeName == 'ar'
+                              ? 'متابعة الشحنات المستلمة ومطابقة أوامر الشراء'
+                              : 'Track incoming shipments and match purchase orders',
+                          onTap: () => PurchasesRoutes.pushReceipts(context),
+                        ),
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  // Navigate to purchase invoices list
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              elevation: 2,
-              child: ListTile(
-                leading: const Icon(
-                  Icons.inventory_2_outlined,
-                  color: Colors.orange,
-                ),
-                title: const Text('إشعارات الاستلام والمخزون (Goods Receipts)'),
-                subtitle: const Text(
-                  'متابعة الشحنات المستلمة ومطابقة أوامر الشراء',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  // Navigate to receiving notes
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              elevation: 2,
-              child: ListTile(
-                leading: const Icon(
-                  Icons.tune_outlined,
-                  color: Colors.blueGrey,
-                ),
-                title: const Text('إعدادات المشتريات (Purchases Settings)'),
-                subtitle: const Text(
-                  'ربط الحسابات المحاسبية وإعدادات موديول المشتريات',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () => context.push('/purchases/settings'),
-              ),
+                isGrid
+                    ? AppModuleHubTile(
+                        icon: Icons.tune_outlined,
+                        title: l10n.localeName == 'ar'
+                            ? 'إعدادات المشتريات'
+                            : 'Purchases Settings',
+                        subtitle: l10n.localeName == 'ar'
+                            ? 'ربط الحسابات المحاسبية وإعدادات موديول المشتريات'
+                            : 'Account bindings and purchases master settings',
+                        animationDelay: const Duration(milliseconds: 180),
+                        onTap: () => PurchasesRoutes.pushSettings(context),
+                      )
+                    : AppModuleHubCard(
+                        icon: Icons.tune_outlined,
+                        title: l10n.localeName == 'ar'
+                            ? 'إعدادات المشتريات'
+                            : 'Purchases Settings',
+                        subtitle: l10n.localeName == 'ar'
+                            ? 'ربط الحسابات المحاسبية وإعدادات موديول المشتريات'
+                            : 'Account bindings and purchases master settings',
+                        onTap: () => PurchasesRoutes.pushSettings(context),
+                      ),
+              ],
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Open create purchase invoice form
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('فاتورة مشتريات جديدة'),
+      floatingActionButton: PermissionGate(
+        anyOf: PurchasesPermissions.create,
+        child: FloatingActionButton.extended(
+          onPressed: () => PurchasesRoutes.pushCreateInvoice(context),
+          icon: const Icon(Icons.add),
+          label: Text(
+            l10n.localeName == 'ar'
+                ? 'فاتورة مشتريات جديدة'
+                : 'New Purchase Invoice',
+          ),
+        ),
       ),
     );
   }

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
+import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/custom_app_bar.dart';
+import 'package:stock_count/shared/providers/module_hub_view_mode_provider.dart';
+import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 import 'package:stock_count/modules/sales/permissions/sales_permission_package.dart';
 import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
-
-import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 
 /// Sales module hub.
 class SalesHomePage extends ConsumerWidget {
@@ -21,6 +22,8 @@ class SalesHomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final viewMode = ref.watch(moduleHubViewModeProvider);
+    final isGrid = viewMode == ModuleHubViewMode.grid;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
@@ -40,64 +43,85 @@ class SalesHomePage extends ConsumerWidget {
           padding: AppConstants.pageInsets(context),
           children: [
             const AppMissingCurrencyGuardBanner(),
-            Text(
-              l10n.servicesTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              l10n.moduleSalesDescription,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.4,
+            AppModuleHubHeader(
+              title: l10n.servicesTitle,
+              subtitle: l10n.moduleSalesDescription,
+              trailing: AppViewModeToggle<ModuleHubViewMode>(
+                options: [
+                  AppViewModeOption(
+                    value: ModuleHubViewMode.grid,
+                    icon: Icons.grid_view_rounded,
+                    tooltip: l10n.localeName == 'ar' ? 'عرض شبكي' : 'Grid View',
+                  ),
+                  AppViewModeOption(
+                    value: ModuleHubViewMode.list,
+                    icon: Icons.view_list_rounded,
+                    tooltip: l10n.localeName == 'ar' ? 'عرض قائمة' : 'List View',
+                  ),
+                ],
+                selected: viewMode,
+                onChanged: (mode) =>
+                    ref.read(moduleHubViewModeProvider.notifier).setMode(mode),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            AppModuleHubCard(
-                  icon: Icons.receipt_long_outlined,
-                  title: l10n.salesListTitle,
-                  subtitle: l10n.salesListCardSubtitle,
-                  onTap: () => SalesRoutes.goList(context),
-                )
-                .animate()
-                .fadeIn(duration: 280.ms)
-                .slideY(begin: 0.04, end: 0, duration: 280.ms),
-            const SizedBox(height: AppSpacing.md),
-            PermissionGate(
-              anyOf: SalesPermissions.create,
-              child:
-                  AppModuleHubCard(
-                        icon: Icons.add_shopping_cart_outlined,
-                        title: l10n.salesCreateTitle,
-                        subtitle: l10n.salesCreateCardSubtitle,
-                        onTap: () => SalesRoutes.pushCreate(context),
+            AppModuleHubView(
+              isGrid: isGrid,
+              children: [
+                isGrid
+                    ? AppModuleHubTile(
+                        icon: Icons.receipt_long_outlined,
+                        title: l10n.salesListTitle,
+                        subtitle: l10n.salesListCardSubtitle,
+                        onTap: () => SalesRoutes.goList(context),
                       )
-                      .animate()
-                      .fadeIn(delay: 60.ms, duration: 280.ms)
-                      .slideY(
-                        begin: 0.04,
-                        end: 0,
-                        delay: 60.ms,
-                        duration: 280.ms,
+                    : AppModuleHubCard(
+                        icon: Icons.receipt_long_outlined,
+                        title: l10n.salesListTitle,
+                        subtitle: l10n.salesListCardSubtitle,
+                        onTap: () => SalesRoutes.goList(context),
                       ),
+                PermissionGate(
+                  anyOf: SalesPermissions.create,
+                  child: isGrid
+                      ? AppModuleHubTile(
+                          icon: Icons.add_shopping_cart_outlined,
+                          title: l10n.salesCreateTitle,
+                          subtitle: l10n.salesCreateCardSubtitle,
+                          animationDelay: const Duration(milliseconds: 60),
+                          onTap: () => SalesRoutes.pushCreate(context),
+                        )
+                      : AppModuleHubCard(
+                          icon: Icons.add_shopping_cart_outlined,
+                          title: l10n.salesCreateTitle,
+                          subtitle: l10n.salesCreateCardSubtitle,
+                          onTap: () => SalesRoutes.pushCreate(context),
+                        ),
+                ),
+                isGrid
+                    ? AppModuleHubTile(
+                        icon: Icons.tune_outlined,
+                        title: l10n.localeName == 'ar'
+                            ? 'إعدادات المبيعات'
+                            : 'Sales Settings',
+                        subtitle: l10n.localeName == 'ar'
+                            ? 'ربط الحسابات وإعدادات موديول المبيعات'
+                            : 'Account bindings and sales master settings',
+                        animationDelay: const Duration(milliseconds: 120),
+                        onTap: () => context.push('/sales/settings'),
+                      )
+                    : AppModuleHubCard(
+                        icon: Icons.tune_outlined,
+                        title: l10n.localeName == 'ar'
+                            ? 'إعدادات المبيعات'
+                            : 'Sales Settings',
+                        subtitle: l10n.localeName == 'ar'
+                            ? 'ربط الحسابات وإعدادات موديول المبيعات'
+                            : 'Account bindings and sales master settings',
+                        onTap: () => context.push('/sales/settings'),
+                      ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            AppModuleHubCard(
-                  icon: Icons.tune_outlined,
-                  title: l10n.localeName == 'ar'
-                      ? 'إعدادات المبيعات'
-                      : 'Sales Settings',
-                  subtitle: l10n.localeName == 'ar'
-                      ? 'ربط الحسابات وإعدادات موديول المبيعات'
-                      : 'Account bindings and sales master settings',
-                  onTap: () => context.push('/sales/settings'),
-                )
-                .animate()
-                .fadeIn(delay: 120.ms, duration: 280.ms)
-                .slideY(begin: 0.04, end: 0, delay: 120.ms, duration: 280.ms),
           ],
         ),
       ),

@@ -421,8 +421,8 @@ class JournalRepositoryImpl implements JournalRepository {
       'je.is_posted AS is_posted, '
       'je.source_type AS source_type, '
       'je.source_id AS source_id, '
-      'COALESCE(SUM(jl.debit), 0.0) AS total_debit, '
-      'COALESCE(SUM(jl.credit), 0.0) AS total_credit '
+      'COALESCE(SUM(CASE WHEN jl.base_debit > 0 THEN jl.base_debit ELSE jl.debit END), 0.0) AS total_debit, '
+      'COALESCE(SUM(CASE WHEN jl.base_credit > 0 THEN jl.base_credit ELSE jl.credit END), 0.0) AS total_credit '
       'FROM journal_entries je '
       'LEFT JOIN journal_lines jl ON jl.entry_uuid = je.uuid '
       'WHERE je.deleted_at IS NULL AND je.company_id = ? ',

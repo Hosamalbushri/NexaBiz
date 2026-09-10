@@ -203,12 +203,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       ShellRoute(
-        navigatorKey: appShellNavigatorKey,
-        pageBuilder: (context, state, child) {
-          return NoTransitionPage<void>(
-            child: AppExitPopScope(
-              child: AppShell(location: state.uri.path, child: child),
-            ),
+        builder: (context, state, child) {
+          return AppExitPopScope(
+            child: AppShell(location: state.uri.path, child: child),
           );
         },
         routes: [

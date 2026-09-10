@@ -1,17 +1,20 @@
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
+import 'package:stock_count/modules/currency/domain/repositories/currency_repository.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_currency_port.dart';
 
 import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 
-/// App adapter: R&P currencies → company base + Accounting rates.
+/// App adapter: R&P currencies → company base + Accounting rates + master currencies.
 class AccountingRpCurrencyAdapter implements RpCurrencyPort {
   AccountingRpCurrencyAdapter({
     required this._baseCurrencyReader,
     required this._rates,
+    this.currencyRepository,
   });
 
   final Future<String> Function() _baseCurrencyReader;
   final CurrencyRateRepository _rates;
+  final CurrencyRepository? currencyRepository;
 
   Future<String> _normalizedBase() async {
     final code = (await _baseCurrencyReader()).trim().toUpperCase();
@@ -34,6 +37,7 @@ class AccountingRpCurrencyAdapter implements RpCurrencyPort {
       RpCurrencyRef(code: base, rateToBase: 1, isBase: true),
     ];
     final seen = <String>{base};
+
     for (final rate in rates) {
       final code = rate.currencyCode.trim().toUpperCase();
       if (code.isEmpty || seen.contains(code)) {
@@ -44,6 +48,22 @@ class AccountingRpCurrencyAdapter implements RpCurrencyPort {
         RpCurrencyRef(code: code, rateToBase: rate.rateToBase, isBase: false),
       );
     }
+
+    final repo = currencyRepository;
+    if (repo != null) {
+      final activeMaster = await repo.getAll(includeInactive: false);
+      for (final m in activeMaster) {
+        final code = m.code.trim().toUpperCase();
+        if (code.isEmpty || seen.contains(code)) {
+          continue;
+        }
+        seen.add(code);
+        out.add(
+          RpCurrencyRef(code: code, rateToBase: 1, isBase: false),
+        );
+      }
+    }
+
     return out;
   }
 
@@ -58,13 +78,25 @@ class AccountingRpCurrencyAdapter implements RpCurrencyPort {
       return RpCurrencyRef(code: base, rateToBase: 1, isBase: true);
     }
     final rate = await _rates.getByCode(normalized);
-    if (rate == null) {
-      return null;
+    if (rate != null) {
+      return RpCurrencyRef(
+        code: rate.currencyCode.trim().toUpperCase(),
+        rateToBase: rate.rateToBase,
+        isBase: false,
+      );
     }
-    return RpCurrencyRef(
-      code: rate.currencyCode.trim().toUpperCase(),
-      rateToBase: rate.rateToBase,
-      isBase: false,
-    );
+    final repo = currencyRepository;
+    if (repo != null) {
+      final activeMaster = await repo.getAll(includeInactive: false);
+      final master = activeMaster.where((c) => c.code.toUpperCase() == normalized).firstOrNull;
+      if (master != null) {
+        return RpCurrencyRef(
+          code: master.code.toUpperCase(),
+          rateToBase: 1,
+          isBase: false,
+        );
+      }
+    }
+    return null;
   }
 }

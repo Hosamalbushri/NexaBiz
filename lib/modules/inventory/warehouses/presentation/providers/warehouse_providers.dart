@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 
@@ -50,9 +51,11 @@ final warehouseStocksProvider =
 final warehouseAccountingBindingRepositoryProvider =
     Provider<WarehouseAccountingBindingRepository>((ref) {
       final db = ref.watch(inventoryDatabaseProvider);
+      final accDb = ref.watch(accountingDatabaseProvider);
       return WarehouseAccountingBindingRepositoryImpl(
         db,
         () => ref.read(currentCompanyIdProvider),
+        accountingDb: accDb,
       );
     });
 

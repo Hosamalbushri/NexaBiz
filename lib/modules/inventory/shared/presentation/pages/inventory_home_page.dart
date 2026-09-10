@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
@@ -12,6 +13,7 @@ import 'package:stock_count/core/widgets/app_bottom_sheet.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
+import 'package:stock_count/shared/providers/module_hub_view_mode_provider.dart';
 import 'package:stock_count/shared/widgets/service_add_card.dart';
 import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
 import '../models/inventory_service_definition.dart';
@@ -58,22 +60,30 @@ class InventoryHomePage extends ConsumerWidget {
         ),
         data: (_) {
           final services = controller.resolveServices();
-          return ListView(
-            padding: AppConstants.pageInsets(context),
+          return AppContentConstraint(
+            child: ListView(
+              padding: AppConstants.pageInsets(context),
             children: [
               const AppMissingCurrencyGuardBanner(),
-              Text(
-                l10n.servicesTitle,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                l10n.moduleInventoryDescription,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.35,
+              AppModuleHubHeader(
+                title: l10n.servicesTitle,
+                subtitle: l10n.moduleInventoryDescription,
+                trailing: AppViewModeToggle<ModuleHubViewMode>(
+                  options: [
+                    AppViewModeOption(
+                      value: ModuleHubViewMode.grid,
+                      icon: Icons.grid_view_rounded,
+                      tooltip: l10n.localeName == 'ar' ? 'عرض شبكي' : 'Grid View',
+                    ),
+                    AppViewModeOption(
+                      value: ModuleHubViewMode.list,
+                      icon: Icons.view_list_rounded,
+                      tooltip: l10n.localeName == 'ar' ? 'عرض قائمة' : 'List View',
+                    ),
+                  ],
+                  selected: ref.watch(moduleHubViewModeProvider),
+                  onChanged: (mode) =>
+                      ref.read(moduleHubViewModeProvider.notifier).setMode(mode),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -90,7 +100,8 @@ class InventoryHomePage extends ConsumerWidget {
                   customizeLabel: l10n.inventoryCustomizeServices,
                 ),
             ],
-          );
+          ),
+        );
         },
       ),
     );
@@ -341,21 +352,17 @@ class _InventoryServiceCard extends StatelessWidget {
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
-                      height: 1.15,
+                      height: 1.2,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Flexible(
                     child: Text(
                       subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,

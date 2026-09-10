@@ -231,6 +231,9 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
     } else if (txn.transactionType.isTransfer) {
       final to = allocations.first;
       final rate = _headerRate(txn);
+      final toAmount = JournalMoney.round(to.amount);
+      final toBase = JournalMoney.round(toAmount * rate);
+      final fromBase = JournalMoney.round(cashAmount * rate);
       final toNarrative = _accountLineDescription(
         accountName: to.accountName ?? txn.counterAccountName,
         fallbackNarrative: fallbackNarrative,
@@ -242,10 +245,12 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       lines.add(
         JournalLineDraft(
           accountUuid: to.accountId,
-          debit: JournalMoney.round(to.amount),
+          debit: toAmount,
           credit: 0,
           currencyCode: to.currencyCode.trim().toUpperCase(),
           exchangeRateToBase: rate,
+          baseDebit: toBase,
+          baseCredit: 0,
           lineDescription: toNarrative,
           sortOrder: 0,
         ),
@@ -257,12 +262,15 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           credit: cashAmount,
           currencyCode: cashCurrency,
           exchangeRateToBase: rate,
+          baseDebit: 0,
+          baseCredit: fromBase,
           lineDescription: fromNarrative,
           sortOrder: 1,
         ),
       );
     } else if (txn.transactionType.isReceipt) {
       final cashRate = _headerRate(txn);
+      final cashBase = JournalMoney.round(cashAmount * cashRate);
       final cashNarrative = cashBoxLineDescription(
         txn: txn,
         allocations: allocations,
@@ -275,12 +283,17 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           credit: 0,
           currencyCode: cashCurrency,
           exchangeRateToBase: cashRate,
+          baseDebit: cashBase,
+          baseCredit: 0,
           lineDescription: cashNarrative,
           sortOrder: 0,
         ),
       );
       for (var i = 0; i < allocations.length; i++) {
         final line = allocations[i];
+        final lineRate = _lineRate(txn, line);
+        final lineAmount = JournalMoney.round(line.amount);
+        final lineBase = JournalMoney.round(lineAmount * lineRate);
         final narrative = line.description?.trim().isNotEmpty == true
             ? line.description!.trim()
             : fallbackNarrative;
@@ -288,9 +301,11 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           JournalLineDraft(
             accountUuid: line.accountId,
             debit: 0,
-            credit: JournalMoney.round(line.amount),
+            credit: lineAmount,
             currencyCode: line.currencyCode.trim().toUpperCase(),
-            exchangeRateToBase: _lineRate(txn, line),
+            exchangeRateToBase: lineRate,
+            baseDebit: 0,
+            baseCredit: lineBase,
             lineDescription: narrative,
             sortOrder: i + 1,
           ),
@@ -298,6 +313,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       }
     } else {
       final cashRate = _headerRate(txn);
+      final cashBase = JournalMoney.round(cashAmount * cashRate);
       final cashNarrative = cashBoxLineDescription(
         txn: txn,
         allocations: allocations,
@@ -305,16 +321,21 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       );
       for (var i = 0; i < allocations.length; i++) {
         final line = allocations[i];
+        final lineRate = _lineRate(txn, line);
+        final lineAmount = JournalMoney.round(line.amount);
+        final lineBase = JournalMoney.round(lineAmount * lineRate);
         final narrative = line.description?.trim().isNotEmpty == true
             ? line.description!.trim()
             : fallbackNarrative;
         lines.add(
           JournalLineDraft(
             accountUuid: line.accountId,
-            debit: JournalMoney.round(line.amount),
+            debit: lineAmount,
             credit: 0,
             currencyCode: line.currencyCode.trim().toUpperCase(),
-            exchangeRateToBase: _lineRate(txn, line),
+            exchangeRateToBase: lineRate,
+            baseDebit: lineBase,
+            baseCredit: 0,
             lineDescription: narrative,
             sortOrder: i,
           ),
@@ -327,6 +348,8 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           credit: cashAmount,
           currencyCode: cashCurrency,
           exchangeRateToBase: cashRate,
+          baseDebit: 0,
+          baseCredit: cashBase,
           lineDescription: cashNarrative,
           sortOrder: allocations.length,
         ),

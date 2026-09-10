@@ -37,6 +37,7 @@ class CurrencyRatesPage extends ConsumerWidget {
     final base = ref.watch(accountingBaseCurrencyProvider);
     final listAsync = ref.watch(currencyRateListProvider);
     final availableToAdd = ref.watch(availableCurrenciesToAddProvider);
+    final isBaseLoading = ref.watch(isBaseCurrencyLoadingProvider);
 
     final listWidget = listAsync.when(
       loading: () => const AppLoading(),
@@ -47,6 +48,9 @@ class CurrencyRatesPage extends ConsumerWidget {
         return AppErrorState(message: message);
       },
       data: (items) {
+        if (isBaseLoading) {
+          return const AppLoading();
+        }
         if (items.isEmpty) {
           final hasAvailableToAdd = availableToAdd.isNotEmpty;
           return AppEmptyState(
@@ -215,7 +219,11 @@ class CurrencyRatesPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // System Base Default Currency Card
-              _SystemDefaultCurrencyCard(base: base, isArabic: isArabic),
+              _SystemDefaultCurrencyCard(
+                base: base,
+                isLoading: isBaseLoading,
+                isArabic: isArabic,
+              ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 isArabic
@@ -680,15 +688,52 @@ class _CurrencyRateEditDialogState extends State<_CurrencyRateEditDialog> {
 class _SystemDefaultCurrencyCard extends StatelessWidget {
   const _SystemDefaultCurrencyCard({
     required this.base,
+    this.isLoading = false,
     required this.isArabic,
   });
 
   final AppCurrency? base;
+  final bool isLoading;
   final bool isArabic;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (isLoading) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              isArabic
+                  ? 'جاري التحقق من العملة الافتراضية للنظام...'
+                  : 'Checking system base currency...',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final isConfigured = base != null;
 
     return Container(

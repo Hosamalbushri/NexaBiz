@@ -22,10 +22,7 @@ class QuickActionRunner {
 
     final path = action.routePath;
     if (path != null && path.isNotEmpty) {
-      // go avoids stacking over StatefulShellRoute (duplicate page keys when a
-      // shell tab is opened later). Nested module routes still work; back uses
-      // CustomAppBar / PopScope fallbacks when the stack is empty.
-      router.go(path);
+      router.push(path);
     }
   }
 }

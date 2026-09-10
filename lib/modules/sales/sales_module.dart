@@ -9,6 +9,7 @@ import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
+import '../../core/modules/quick_nav_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
@@ -25,6 +26,7 @@ import '../../core/modules/module_setup_definition.dart';
 import '../../core/setup/setup.dart';
 import 'permissions/sales_permission_package.dart';
 import 'sales_module_quick_actions.dart';
+import 'sales_module_quick_nav.dart';
 import 'sales_module_settings.dart';
 import 'sales_module_setup.dart';
 import 'shared/presentation/pages/sales_routes.dart';
@@ -101,9 +103,14 @@ class SalesModule extends AppModule {
     return AppLocalizations.of(context).moduleSalesDescription;
   }
 
+
   @override
   List<QuickActionDefinition> get quickActions =>
       buildSalesQuickActions(moduleId);
+
+  @override
+  List<QuickNavDefinition> get quickNavItems =>
+      buildSalesQuickNav(moduleId);
 
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>

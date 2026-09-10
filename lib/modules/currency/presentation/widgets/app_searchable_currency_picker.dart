@@ -8,11 +8,13 @@ class AppSearchableCurrencyPickerField extends StatelessWidget {
     super.key,
     required this.onPresetSelected,
     this.selectedPreset,
+    this.excludedCodes,
     this.enabled = true,
   });
 
   final ValueChanged<AppCurrency> onPresetSelected;
   final AppCurrency? selectedPreset;
+  final Set<String>? excludedCodes;
   final bool enabled;
 
   @override
@@ -31,6 +33,7 @@ class AppSearchableCurrencyPickerField extends StatelessWidget {
                 context,
                 onSelected: onPresetSelected,
                 selectedPreset: selectedPreset,
+                excludedCodes: excludedCodes,
               )
           : null,
       prefix: Icon(
@@ -91,6 +94,7 @@ Future<void> showAppSearchableCurrencyPicker(
   BuildContext context, {
   required ValueChanged<AppCurrency> onSelected,
   AppCurrency? selectedPreset,
+  Set<String>? excludedCodes,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -99,6 +103,7 @@ Future<void> showAppSearchableCurrencyPicker(
     builder: (ctx) => _SearchableCurrencyPickerSheet(
       onSelected: onSelected,
       selectedPreset: selectedPreset,
+      excludedCodes: excludedCodes,
     ),
   );
 }
@@ -107,10 +112,12 @@ class _SearchableCurrencyPickerSheet extends StatefulWidget {
   const _SearchableCurrencyPickerSheet({
     required this.onSelected,
     this.selectedPreset,
+    this.excludedCodes,
   });
 
   final ValueChanged<AppCurrency> onSelected;
   final AppCurrency? selectedPreset;
+  final Set<String>? excludedCodes;
 
   @override
   State<_SearchableCurrencyPickerSheet> createState() =>
@@ -134,6 +141,10 @@ class _SearchableCurrencyPickerSheetState
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     final filteredList = AppCurrencies.all.where((c) {
+      if (widget.excludedCodes != null &&
+          widget.excludedCodes!.contains(c.code.toUpperCase())) {
+        return false;
+      }
       if (_query.isEmpty) return true;
       final q = _query.toLowerCase();
       final matchCode = c.code.toLowerCase().contains(q);

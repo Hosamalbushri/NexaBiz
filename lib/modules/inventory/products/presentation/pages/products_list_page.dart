@@ -635,8 +635,6 @@ class _ProductListCard extends StatelessWidget {
                       children: [
                         Text(
                           product.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                             height: 1.2,
@@ -645,8 +643,6 @@ class _ProductListCard extends StatelessWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           '${l10n.packSize} ${product.packSize} · ${l10n.price} ${_formatPrice(product.price)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -750,8 +746,6 @@ class _ProductGridCard extends StatelessWidget {
                       children: [
                         Text(
                           product.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             height: 1.2,
@@ -760,8 +754,6 @@ class _ProductGridCard extends StatelessWidget {
                         const Spacer(),
                         Text(
                           '${l10n.packSize} ${product.packSize}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -769,8 +761,6 @@ class _ProductGridCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '${l10n.price} ${_formatPrice(product.price)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w700,

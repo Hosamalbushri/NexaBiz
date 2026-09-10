@@ -298,13 +298,15 @@ class _DashboardCoverCard extends StatelessWidget {
                       Icon(slide.icon, color: on, size: 22),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          slide.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: on,
-                            fontWeight: FontWeight.w700,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            slide.label,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: on,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -318,16 +320,18 @@ class _DashboardCoverCard extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
-                  Text(
-                    slide.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: on,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.8,
-                      height: 1.05,
-                      fontFeatures: const [ui.FontFeature.tabularFigures()],
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      slide.value,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: on,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.8,
+                        height: 1.05,
+                        fontFeatures: const [ui.FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),

@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-
 import 'package:stock_count/app/router/app_routes.dart';
-import 'package:stock_count/app/theme/app_breakpoints.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_shadows.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/modules/app_module.dart';
 import 'package:stock_count/core/modules/module_providers.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
+import 'package:stock_count/shared/providers/module_hub_view_mode_provider.dart';
 
-/// Catalog of report categories owned by ReportsModule matching PlatformReportsPage design.
+/// Catalog of report categories owned by ReportsModule matching standard module grid/list layout.
 class ReportsHomePage extends ConsumerWidget {
   const ReportsHomePage({super.key});
 
@@ -24,6 +22,8 @@ class ReportsHomePage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final viewMode = ref.watch(moduleHubViewModeProvider);
+    final isGrid = viewMode == ModuleHubViewMode.grid;
 
     final registry = ref.watch(moduleRegistryProvider);
 
@@ -34,8 +34,8 @@ class ReportsHomePage extends ConsumerWidget {
     // Extract unique module IDs configured within ReportsModule
     final moduleIdsWithReports =
         (isReportsModuleActive && reportsModule != null)
-        ? reportsModule.reportCategories.map((c) => c.moduleId).toSet()
-        : <String>{};
+            ? reportsModule.reportCategories.map((c) => c.moduleId).toSet()
+            : <String>{};
 
     final modulesWithReports = [
       for (final m in registry.modules)
@@ -53,77 +53,69 @@ class ReportsHomePage extends ConsumerWidget {
                 subtitle: l10n.platformReportsServiceComingSoon,
               ),
             )
-          : ListView(
-              padding: AppConstants.pageInsets(context),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: Text(
-                    l10n.selectModuleReportsPrompt,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+          : AppContentConstraint(
+              child: ListView(
+                padding: AppConstants.pageInsets(context),
+                children: [
+                  AppModuleHubHeader(
+                    title: l10n.servicesTitle,
+                    subtitle: l10n.selectModuleReportsPrompt,
+                    trailing: AppViewModeToggle<ModuleHubViewMode>(
+                      options: [
+                        AppViewModeOption(
+                          value: ModuleHubViewMode.grid,
+                          icon: Icons.grid_view_rounded,
+                          tooltip: l10n.localeName == 'ar'
+                              ? 'عرض شبكي'
+                              : 'Grid View',
+                        ),
+                        AppViewModeOption(
+                          value: ModuleHubViewMode.list,
+                          icon: Icons.view_list_rounded,
+                          tooltip: l10n.localeName == 'ar'
+                              ? 'عرض قائمة'
+                              : 'List View',
+                        ),
+                      ],
+                      selected: viewMode,
+                      onChanged: (mode) => ref
+                          .read(moduleHubViewModeProvider.notifier)
+                          .setMode(mode),
                     ),
                   ),
-                ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide =
-                        AppBreakpoints.isTablet(constraints.maxWidth) ||
-                        AppBreakpoints.isDesktop(constraints.maxWidth);
-
-                    if (isWide) {
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: AppSpacing.md,
-                              mainAxisSpacing: AppSpacing.md,
-                              childAspectRatio: 2.6,
-                            ),
-                        itemCount: modulesWithReports.length,
-                        itemBuilder: (context, index) {
-                          return _ModuleReportCard(
-                            module: modulesWithReports[index],
-                          );
-                        },
-                      );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: modulesWithReports.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) {
-                        return _ModuleReportCard(
-                          module: modulesWithReports[index],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.lg),
+                  AppModuleHubView(
+                    isGrid: isGrid,
+                    children: [
+                      for (var i = 0; i < modulesWithReports.length; i++)
+                        _buildReportItem(
+                          context,
+                          ref,
+                          modulesWithReports[i],
+                          i,
+                          isGrid,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
     );
   }
-}
 
-class _ModuleReportCard extends ConsumerWidget {
-  const _ModuleReportCard({required this.module});
-
-  final AppModule module;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget _buildReportItem(
+    BuildContext context,
+    WidgetRef ref,
+    module,
+    int index,
+    bool isGrid,
+  ) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final title = module.label(context);
 
-    final reportsModule = ref.watch(moduleRegistryProvider).findById('reports');
+    final reportsModule = ref
+        .watch(moduleRegistryProvider)
+        .findById('reports');
     final moduleCategories =
         reportsModule?.reportCategories
             .where((c) => c.moduleId == module.id)
@@ -141,92 +133,23 @@ class _ModuleReportCard extends ConsumerWidget {
             ? '$totalReports تقارير متاحة'
             : '$totalReports reports available');
 
-    return Material(
-      color: colorScheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        onTap: () {
-          context.push(AppRoutes.moduleReports(module.id));
-        },
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-            ),
-            boxShadow: AppShadows.card(theme.brightness),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.7),
-                  ),
-                  child: Icon(
-                    module.icon,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: Text(
-                    '$totalReports',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    final onTap = () => context.push(AppRoutes.moduleReports(module.id));
+
+    if (isGrid) {
+      return AppModuleHubTile(
+        icon: module.icon,
+        title: title,
+        subtitle: subtitle,
+        animationDelay: Duration(milliseconds: index * 40),
+        onTap: onTap,
+      );
+    }
+
+    return AppModuleHubCard(
+      icon: module.icon,
+      title: title,
+      subtitle: subtitle,
+      onTap: onTap,
     );
   }
 }

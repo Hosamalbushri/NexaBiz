@@ -45,7 +45,7 @@ class DashboardRecentOperations extends ConsumerWidget {
             ),
             const Spacer(),
             TextButton(
-              onPressed: () => context.go(SalesRoutes.list),
+              onPressed: () => context.push(SalesRoutes.list),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero,

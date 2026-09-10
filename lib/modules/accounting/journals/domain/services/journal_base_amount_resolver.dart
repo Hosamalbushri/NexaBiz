@@ -111,6 +111,10 @@ class JournalBaseAmountResolver {
     final diffCents = totalBaseDebitCents - totalBaseCreditCents;
     if (diffCents == 0) return;
 
+    // Only balance minor penny rounding discrepancies (e.g. <= 5 cents).
+    // Larger differences represent legitimate multi-currency FX gain/loss or unbalanced drafts.
+    if (diffCents.abs() > 5) return;
+
     // Adjust the largest credit line if diff > 0, or largest debit line if diff < 0.
     if (diffCents > 0) {
       int maxCreditIndex = -1;

@@ -225,7 +225,6 @@ class _SaleListTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       customerName,
-                      maxLines: 2,
                       softWrap: true,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
@@ -293,8 +292,6 @@ class _SaleListTile extends StatelessWidget {
               Flexible(
                 child: Text(
                   settlementLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,

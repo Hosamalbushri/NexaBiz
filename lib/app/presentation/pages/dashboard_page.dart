@@ -76,7 +76,7 @@ class DashboardPage extends ConsumerWidget {
                       if (!module.isEnabled) {
                         return;
                       }
-                      context.go(module.rootRoute);
+                      context.push(module.rootRoute);
                     },
                   ),
                   const SizedBox(height: AppSpacing.md),

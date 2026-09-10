@@ -17,6 +17,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
+import '../widgets/inventory_document_journal_widget.dart';
 
 class StockIssueDetailsPage extends ConsumerStatefulWidget {
   const StockIssueDetailsPage({super.key, required this.issueId});
@@ -531,6 +532,14 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
                     totalLines: issue.lines.length,
                     totalCost: totalCostSum,
                     currencyCode: issue.currencyCode,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Accounting Journal Entries Grouped by Currency
+                  InventoryDocumentJournalWidget(
+                    sourceType: 'stock_issue',
+                    sourceId: issue.id,
+                    isPosted: issue.isPosted,
                   ),
 
                   // Notes Card

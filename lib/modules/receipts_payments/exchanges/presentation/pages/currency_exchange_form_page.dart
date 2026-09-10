@@ -481,9 +481,10 @@ class _CurrencyExchangeFormPageState
     final dateLabel = DateFormat('d/M/yyyy').format(_date);
 
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final isCurrencyLoading = ref.watch(isBaseCurrencyLoadingProvider);
     final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
 
-    if (_loading) {
+    if (_loading || isCurrencyLoading) {
       return Scaffold(
         backgroundColor: scheme.surfaceContainerLowest,
         appBar: CustomAppBar(title: title, showBackButton: true),

@@ -95,11 +95,19 @@ class _AppShellState extends ConsumerState<AppShell>
     }
     final target = items[index].path;
     final currentIndex = selectedNavigationIndex(widget.location);
-    if (index == currentIndex && widget.location == target) {
-      return;
-    }
+
     if (_quickActionsOpen) {
       _closeQuickActions();
+    }
+
+    // Pop any pushed module routes above the shell so bottom tab selection is immediate
+    final navigator = Navigator.of(context);
+    while (navigator.canPop()) {
+      navigator.pop();
+    }
+
+    if (index == currentIndex && widget.location == target) {
+      return;
     }
     context.go(target);
   }

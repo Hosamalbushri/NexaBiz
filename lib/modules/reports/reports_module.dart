@@ -6,9 +6,11 @@ import '../../app/localization/app_localizations.dart';
 import '../../app/reports/reports_app_providers.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
+import '../../core/modules/quick_nav_definition.dart';
 import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
+import 'reports_module_quick_nav.dart';
 import 'financial_reports/presentation/pages/account_statement_report_page.dart';
 import 'financial_reports/presentation/pages/account_statement_report_table_page.dart';
 import 'financial_reports/presentation/pages/balance_sheet_report_page.dart';
@@ -99,6 +101,10 @@ class ReportsModule extends AppModule {
   String? description(BuildContext context) {
     return AppLocalizations.of(context).moduleReportsDescription;
   }
+
+  @override
+  List<QuickNavDefinition> get quickNavItems =>
+      buildReportsQuickNav(moduleId);
 
   @override
   bool get hasSettings => true;

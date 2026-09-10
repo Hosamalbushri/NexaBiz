@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/settings/company/app_currency.dart';
+import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_card.dart';
@@ -22,7 +24,7 @@ import '../providers/journal_providers.dart';
 import '../widgets/journal_exception_messages.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
 
-/// Full journal entry detail (header + lines).
+/// Full journal entry detail (header + currency-grouped lines).
 class JournalEntryDetailsPage extends ConsumerWidget {
   const JournalEntryDetailsPage({super.key, required this.entryUuid});
 
@@ -69,8 +71,22 @@ class JournalEntryDetailsPage extends ConsumerWidget {
 
         final linked =
             entry.sourceType != null && entry.sourceType!.trim().isNotEmpty;
-        final totalDebit = entry.lines.fold<double>(0, (s, l) => s + l.debit);
-        final totalCredit = entry.lines.fold<double>(0, (s, l) => s + l.credit);
+
+        // Group lines by currency
+        final Map<String, List<JournalLine>> groupedLines = {};
+        for (final line in entry.lines) {
+          final code = line.currencyCode.trim().toUpperCase();
+          groupedLines.putIfAbsent(code, () => []).add(line);
+        }
+
+        final totalBaseDebit = entry.lines.fold<double>(
+          0.0,
+          (s, l) => s + l.baseDebit,
+        );
+        final totalBaseCredit = entry.lines.fold<double>(
+          0.0,
+          (s, l) => s + l.baseCredit,
+        );
 
         return Scaffold(
           appBar: CustomAppBar(
@@ -89,70 +105,30 @@ class JournalEntryDetailsPage extends ConsumerWidget {
           body: ListView(
             padding: AppConstants.pageInsets(context),
             children: [
-              AppCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            entry.voucherType,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        AppStatusBadge(
-                          label: entry.isPosted
-                              ? l10n.accountingJournalPosted
-                              : l10n.accountingJournalUnposted,
-                          tone: entry.isPosted
-                              ? AppStatusTone.success
-                              : AppStatusTone.warning,
-                          animate: false,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    _row(
-                      l10n.accountingJournalFieldDate,
-                      dateFormat.format(entry.entryDate.toLocal()),
-                    ),
-                    _row(
-                      l10n.accountingJournalFieldCurrency,
-                      entry.currencyCode,
-                    ),
-                    if (entry.description != null &&
-                        entry.description!.trim().isNotEmpty)
-                      _row(
-                        l10n.accountingJournalFieldDescription,
-                        entry.description!,
-                      ),
-                    if (linked)
-                      _row(
-                        l10n.accountingJournalFieldStatus,
-                        l10n.accountingJournalSourceLinked(entry.sourceType!),
-                      ),
-                    _row(
-                      l10n.accountingJournalTotals,
-                      '${totalDebit.toStringAsFixed(2)} / ${totalCredit.toStringAsFixed(2)}',
-                    ),
-                  ],
-                ),
+              // --- Header Card ---
+              _HeaderCard(
+                entry: entry,
+                linked: linked,
+                dateFormat: dateFormat,
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text(
-                l10n.accountingJournalLines,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+
+              // --- Currency-Grouped Lines ---
+              for (final group in groupedLines.entries) ...[
+                _CurrencyGroupCard(
+                  currencyCode: group.key,
+                  lines: group.value,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              for (final line in entry.lines) ...[
-                AppCard(child: _LineTile(line: line)),
                 const SizedBox(height: AppSpacing.sm),
               ],
+
+              // --- Base Currency Totals Footer ---
+              const SizedBox(height: AppSpacing.xs),
+              _BaseTotalsFooter(
+                totalBaseDebit: totalBaseDebit,
+                totalBaseCredit: totalBaseCredit,
+              ),
+
               const SizedBox(height: AppSpacing.lg),
               AppButton(
                 label: l10n.accountingJournalVoid,
@@ -164,24 +140,6 @@ class JournalEntryDetailsPage extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(width: 120, child: Text(label)),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -249,52 +207,401 @@ class JournalEntryDetailsPage extends ConsumerWidget {
   }
 }
 
-class _LineTile extends ConsumerWidget {
-  const _LineTile({required this.line});
+// ─── Header Card ────────────────────────────────────────────────────────────
+
+class _HeaderCard extends StatelessWidget {
+  const _HeaderCard({
+    required this.entry,
+    required this.linked,
+    required this.dateFormat,
+  });
+
+  final JournalEntry entry;
+  final bool linked;
+  final DateFormat dateFormat;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  Icons.receipt_long_rounded,
+                  color: scheme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  entry.voucherType,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              AppStatusBadge(
+                label: entry.isPosted
+                    ? l10n.accountingJournalPosted
+                    : l10n.accountingJournalUnposted,
+                tone: entry.isPosted
+                    ? AppStatusTone.success
+                    : AppStatusTone.warning,
+                animate: false,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _infoRow(
+            l10n.accountingJournalFieldDate,
+            dateFormat.format(entry.entryDate.toLocal()),
+            scheme,
+          ),
+          _infoRow(
+            l10n.accountingJournalFieldCurrency,
+            entry.currencyCode,
+            scheme,
+          ),
+          if (entry.description != null &&
+              entry.description!.trim().isNotEmpty)
+            _infoRow(
+              l10n.accountingJournalFieldDescription,
+              entry.description!,
+              scheme,
+            ),
+          if (linked)
+            _infoRow(
+              l10n.accountingJournalFieldStatus,
+              l10n.accountingJournalSourceLinked(entry.sourceType!),
+              scheme,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Currency Group Card ────────────────────────────────────────────────────
+
+class _CurrencyGroupCard extends StatelessWidget {
+  const _CurrencyGroupCard({
+    required this.currencyCode,
+    required this.lines,
+  });
+
+  final String currencyCode;
+  final List<JournalLine> lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final currency = AppCurrencies.byCode(currencyCode);
+
+    final double groupDebit = lines.fold(0.0, (sum, line) => sum + line.debit);
+    final double groupCredit = lines.fold(0.0, (sum, line) => sum + line.credit);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Currency Header Strip
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: scheme.secondaryContainer.withValues(alpha: 0.35),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadius.lg - 1),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${currency.nameAr} (${currency.code})',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onSecondaryContainer,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'مدين: ${groupDebit.toStringAsFixed(2)} ${currency.symbol}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.blue.shade800,
+                      ),
+                    ),
+                    Text(
+                      'دائن: ${groupCredit.toStringAsFixed(2)} ${currency.symbol}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.amber.shade900,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Lines List
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Column(
+              children: [
+                for (final line in lines) ...[
+                  _JournalLineRow(line: line, currencySymbol: currency.symbol),
+                  if (line != lines.last) const Divider(height: 12),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Journal Line Row ───────────────────────────────────────────────────────
+
+class _JournalLineRow extends ConsumerWidget {
+  const _JournalLineRow({
+    required this.line,
+    required this.currencySymbol,
+  });
 
   final JournalLine line;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
     final accountAsync = ref.watch(accountByUuidProvider(line.accountUuid));
-    final accountLabel = accountAsync.maybeWhen(
+
+    final isDebit = line.debit > 0;
+    final amount = isDebit ? line.debit : line.credit;
+    final baseAmount = isDebit ? line.baseDebit : line.baseCredit;
+
+    final accountTitle = accountAsync.maybeWhen(
       data: (account) => account == null
           ? line.accountUuid
           : '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
       orElse: () => line.accountUuid,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          accountLabel,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Text(
-              '${l10n.accountingJournalDebit}: ${line.debit.toStringAsFixed(2)}',
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Text(
-              '${l10n.accountingJournalCredit}: ${line.credit.toStringAsFixed(2)}',
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top row: icon + account name
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isDebit
+                      ? Colors.blue.shade50
+                      : Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(
+                  isDebit ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                  color: isDebit ? Colors.blue.shade800 : Colors.amber.shade900,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  accountTitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ),
+            ],
+          ),
+          if (line.lineDescription != null &&
+              line.lineDescription!.trim().isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(right: 36),
+              child: Text(
+                line.lineDescription!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
             ),
           ],
-        ),
-        if (line.lineDescription != null &&
-            line.lineDescription!.trim().isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(
-            line.lineDescription!,
-            style: Theme.of(context).textTheme.bodySmall,
+          // Amount row
+          Padding(
+            padding: const EdgeInsets.only(right: 36, top: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${isDebit ? "مدين" : "دائن"}: ${amount.toStringAsFixed(2)} $currencySymbol',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: isDebit ? Colors.blue.shade900 : Colors.amber.shade900,
+                  ),
+                ),
+                if (line.exchangeRateToBase > 0 && line.exchangeRateToBase != 1.0)
+                  Flexible(
+                    child: Text(
+                      'معادل: ${baseAmount.toStringAsFixed(2)} (×${line.exchangeRateToBase.toStringAsFixed(2)})',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
-      ],
+      ),
+    );
+  }
+}
+
+// ─── Base Currency Totals Footer ────────────────────────────────────────────
+
+class _BaseTotalsFooter extends StatelessWidget {
+  const _BaseTotalsFooter({
+    required this.totalBaseDebit,
+    required this.totalBaseCredit,
+  });
+
+  final double totalBaseDebit;
+  final double totalBaseCredit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isBalanced = (totalBaseDebit - totalBaseCredit).abs() < 0.01;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: isBalanced
+              ? Colors.green.shade300
+              : Colors.red.shade300,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isBalanced
+                      ? Icons.check_circle_rounded
+                      : Icons.warning_amber_rounded,
+                  size: 18,
+                  color: isBalanced
+                      ? Colors.green.shade700
+                      : Colors.red.shade700,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    isBalanced ? 'القيد متوازن' : 'القيد غير متوازن',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isBalanced
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${totalBaseDebit.toStringAsFixed(2)} / ${totalBaseCredit.toStringAsFixed(2)}',
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: scheme.primary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

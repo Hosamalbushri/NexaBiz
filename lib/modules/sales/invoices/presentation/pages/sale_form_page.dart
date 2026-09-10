@@ -375,10 +375,11 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
     ref.watch(saleComposerProvider);
     final l10n = AppLocalizations.of(context);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final isCurrencyLoading = ref.watch(isBaseCurrencyLoadingProvider);
     final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
     final composer = ref.read(saleComposerProvider.notifier);
 
-    if (_loading) {
+    if (_loading || isCurrencyLoading) {
       return _shell(body: const SizedBox.expand());
     }
 

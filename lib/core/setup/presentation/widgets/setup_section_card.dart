@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_description_hint.dart';
 import '../../../domain/entities/account_role.dart';
 import '../../setup.dart';
 import 'setup_field_renderer.dart';
@@ -46,24 +47,28 @@ class SetupSectionCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (description.isNotEmpty) ...[
+                      const SizedBox(width: 4),
+                      AppDescriptionHintButton(
+                        title: title,
+                        description: description,
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
           ),
-          if (description.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              description,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
           const SizedBox(height: AppSpacing.md),
           const Divider(height: 1),
           const SizedBox(height: AppSpacing.sm),

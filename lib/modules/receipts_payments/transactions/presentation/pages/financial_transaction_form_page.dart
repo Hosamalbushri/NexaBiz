@@ -340,6 +340,7 @@ class _FinancialTransactionFormPageState
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final isCurrencyLoading = ref.watch(isBaseCurrencyLoadingProvider);
     final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
     final state = ref.watch(transactionComposerProvider);
     final type = state.transactionType;
@@ -347,7 +348,7 @@ class _FinancialTransactionFormPageState
         ? l10n.rpEditTitle
         : (type.isReceipt ? l10n.rpFormTitleReceipt : l10n.rpFormTitlePayment);
 
-    if (_loading) {
+    if (_loading || isCurrencyLoading) {
       return AppResponsiveScaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(title: title, showBackButton: true),
