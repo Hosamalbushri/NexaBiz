@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 /// Semantic color tokens for NexaBiz ERP System.
 ///
@@ -46,4 +47,29 @@ class AppColors {
   /// Dynamic helper to resolve muted text color by brightness.
   static Color mutedText(Brightness brightness) =>
       brightness == Brightness.dark ? mutedTextDark : mutedTextLight;
+
+  /// Dynamic context-aware shadcn color scheme accessor
+  static shadcn.ColorScheme colorSchemeOf(BuildContext context) {
+    return shadcn.Theme.of(context).colorScheme;
+  }
+
+  /// Context-aware background color
+  static Color backgroundOf(BuildContext context) =>
+      shadcn.Theme.of(context).colorScheme.background;
+
+  /// Context-aware foreground color
+  static Color foregroundOf(BuildContext context) =>
+      shadcn.Theme.of(context).colorScheme.foreground;
+
+  /// Context-aware primary color
+  static Color primaryOf(BuildContext context) =>
+      shadcn.Theme.of(context).colorScheme.primary;
+
+  /// Context-aware card color
+  static Color cardOf(BuildContext context) =>
+      shadcn.Theme.of(context).colorScheme.card;
+
+  /// Context-aware border color
+  static Color borderOf(BuildContext context) =>
+      shadcn.Theme.of(context).colorScheme.border;
 }

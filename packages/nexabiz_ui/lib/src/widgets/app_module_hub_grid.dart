@@ -5,7 +5,6 @@ import '../theme/app_breakpoints.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
-import 'app_module_hub_card.dart';
 
 /// Single item descriptor for module hub pages.
 class AppModuleHubItem {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/app_routes.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/app_lock/presentation/widgets/app_lock_settings_section.dart';
@@ -64,8 +65,10 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
       final canAuth = await biometrics.isAvailable();
       if (!canAuth) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.authBiometricsNotAvailable)),
+          showAppSnackBar(
+            context,
+            message: l10n.authBiometricsNotAvailable,
+            isSuccess: false,
           );
         }
         return;
@@ -78,9 +81,11 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
 
       if (!authenticated) {
         if (mounted) {
-          ScaffoldMessenger.of(
+          showAppSnackBar(
             context,
-          ).showSnackBar(SnackBar(content: Text(l10n.authBiometricFailed)));
+            message: l10n.authBiometricFailed,
+            isSuccess: false,
+          );
         }
         return;
       }
@@ -222,9 +227,11 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
 
         if (bioToken == null || bioToken.isEmpty) {
           if (mounted) {
-            ScaffoldMessenger.of(
+            showAppSnackBar(
               context,
-            ).showSnackBar(SnackBar(content: Text(l10n.authBiometricFailed)));
+              message: l10n.authBiometricFailed,
+              isSuccess: false,
+            );
           }
           await store.setBiometricEnabled(enabled: false, mode: mode);
           return;

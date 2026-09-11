@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/modules/module_providers.dart';
@@ -162,10 +162,17 @@ class _AdminPermissionsCatalogPageState
   }
 }
 
-class _PackageCard extends StatelessWidget {
+class _PackageCard extends StatefulWidget {
   const _PackageCard({required this.package});
 
   final PermissionPackageDef package;
+
+  @override
+  State<_PackageCard> createState() => _PackageCardState();
+}
+
+class _PackageCardState extends State<_PackageCard> {
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -178,53 +185,122 @@ class _PackageCard extends StatelessWidget {
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         clipBehavior: Clip.antiAlias,
-        child: ExpansionTile(
-          initiallyExpanded: false,
-          leading: CircleAvatar(
-            backgroundColor: scheme.primaryContainer,
-            foregroundColor: scheme.onPrimaryContainer,
-            child: Icon(package.icon),
-          ),
-          title: Text(
-            package.title(context),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
-          subtitle: Text(package.subtitle(context)),
-          children: [
-            for (final svc in package.services)
-              ExpansionTile(
-                initiallyExpanded: false,
-                tilePadding: const EdgeInsetsDirectional.only(
-                  start: AppSpacing.md,
-                  end: AppSpacing.md,
-                ),
-                childrenPadding: EdgeInsets.zero,
-                leading: Icon(svc.icon),
-                title: Text(
-                  svc.title(context),
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
+          child: shadcn.Collapsible(
+            isExpanded: _expanded,
+            onExpansionChanged: (expanded) {
+              setState(() {
+                _expanded = !expanded;
+              });
+            },
+            children: [
+              shadcn.CollapsibleTrigger(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: scheme.primaryContainer,
+                    foregroundColor: scheme.onPrimaryContainer,
+                    child: Icon(widget.package.icon),
+                  ),
+                  title: Text(
+                    widget.package.title(context),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  subtitle: Text(widget.package.subtitle(context)),
+                  trailing: AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_down_rounded),
                   ),
                 ),
-                subtitle: Text(svc.subtitle(context)),
-                children: [
-                  for (final op in svc.operations)
-                    ListTile(
-                      contentPadding: const EdgeInsetsDirectional.only(
-                        start: AppSpacing.lg,
-                        end: 16,
-                      ),
-                      leading: Icon(op.icon, size: 22, color: scheme.primary),
-                      title: Text(op.label(context)),
-                      dense: true,
-                    ),
-                ],
               ),
-          ],
+              shadcn.CollapsibleContent(
+                child: Column(
+                  children: [
+                    for (final svc in widget.package.services)
+                      _ServiceTile(service: svc),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+class _ServiceTile extends StatefulWidget {
+  const _ServiceTile({required this.service});
+
+  final PermissionServiceDef service;
+
+  @override
+  State<_ServiceTile> createState() => _ServiceTileState();
+}
+
+class _ServiceTileState extends State<_ServiceTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return shadcn.Collapsible(
+      isExpanded: _expanded,
+      onExpansionChanged: (expanded) {
+        setState(() {
+          _expanded = !expanded;
+        });
+      },
+      children: [
+        shadcn.CollapsibleTrigger(
+          child: ListTile(
+            contentPadding: const EdgeInsetsDirectional.only(
+              start: AppSpacing.md,
+              end: AppSpacing.md,
+            ),
+            leading: Icon(widget.service.icon),
+            title: Text(
+              widget.service.title(context),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            subtitle: Text(widget.service.subtitle(context)),
+            trailing: AnimatedRotation(
+              turns: _expanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(Icons.keyboard_arrow_down_rounded),
+            ),
+          ),
+        ),
+        shadcn.CollapsibleContent(
+          child: Column(
+            children: [
+              for (final op in widget.service.operations)
+                ListTile(
+                  contentPadding: const EdgeInsetsDirectional.only(
+                    start: AppSpacing.lg,
+                    end: 16,
+                  ),
+                  leading: Icon(op.icon, size: 22, color: scheme.primary),
+                  title: Text(op.label(context)),
+                  dense: true,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+

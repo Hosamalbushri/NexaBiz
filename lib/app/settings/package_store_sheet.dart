@@ -8,6 +8,7 @@ import '../../core/entitlements/presentation/providers/entitlement_providers.dar
 import '../../core/entitlements/presentation/providers/subscription_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
+import '../../core/widgets/app_snackbar.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_spacing.dart';
 
@@ -125,11 +126,10 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
 
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.subscriptionActivatedSuccess),
-            backgroundColor: Colors.green,
-          ),
+        showAppSnackBar(
+          context,
+          message: l10n.subscriptionActivatedSuccess,
+          isSuccess: true,
         );
         Navigator.of(context).pop();
       }

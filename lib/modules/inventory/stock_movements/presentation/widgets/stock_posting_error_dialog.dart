@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_button.dart';
 
 enum StockPostingErrorCategory {
   configuration,
@@ -211,26 +212,17 @@ Future<void> showStockPostingErrorDialog(
           spacing: AppSpacing.xs,
           overflowSpacing: AppSpacing.xs,
           children: [
-            TextButton(
+            AppButton(
+              label: 'إغلاق',
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('إغلاق'),
             ),
             if (actionLabel != null && onAction != null)
-              ElevatedButton.icon(
+              AppButton(
+                label: actionLabel,
+                icon: Icons.arrow_forward_rounded,
+                trailingIcon: true,
                 onPressed: onAction,
-                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                label: Text(
-                  actionLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: iconColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                ),
               ),
           ],
         ),

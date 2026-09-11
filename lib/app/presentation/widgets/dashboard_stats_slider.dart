@@ -1,8 +1,8 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../../localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -53,43 +53,19 @@ class DashboardStatsSlider extends StatefulWidget {
 }
 
 class _DashboardStatsSliderState extends State<DashboardStatsSlider> {
-  static const _autoPlayInterval = Duration(seconds: 4);
-  static const _animDuration = Duration(milliseconds: 520);
-  static const _viewportFraction = 0.86;
-
-  late final PageController _controller;
-  Timer? _autoPlay;
+  late final shadcn.CarouselController _controller;
   var _index = 0;
-  var _userInteracting = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = PageController(viewportFraction: _viewportFraction);
-    _startAutoPlay();
+    _controller = shadcn.CarouselController();
   }
 
   @override
   void dispose() {
-    _autoPlay?.cancel();
     _controller.dispose();
     super.dispose();
-  }
-
-  void _startAutoPlay() {
-    _autoPlay?.cancel();
-    _autoPlay = Timer.periodic(_autoPlayInterval, (_) {
-      if (!mounted || _userInteracting || !_controller.hasClients) {
-        return;
-      }
-      final count = 3;
-      final next = (_index + 1) % count;
-      _controller.animateToPage(
-        next,
-        duration: _animDuration,
-        curve: Curves.easeInOutCubic,
-      );
-    });
   }
 
   List<_StatSlide> _slides(
@@ -158,69 +134,33 @@ class _DashboardStatsSliderState extends State<DashboardStatsSlider> {
     final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final slides = _slides(l10n, colorScheme, isDark: isDark);
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SizedBox(
           height: 188,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (notification is ScrollStartNotification &&
-                  notification.dragDetails != null) {
-                _userInteracting = true;
-                _autoPlay?.cancel();
-              } else if (notification is ScrollEndNotification) {
-                _userInteracting = false;
-                _startAutoPlay();
-              }
-              return false;
+          child: shadcn.Carousel(
+            controller: _controller,
+            itemCount: slides.length,
+            transition: const shadcn.CarouselTransition.sliding(gap: 12),
+            sizeConstraint: const shadcn.CarouselSizeConstraint.fractional(0.86),
+            autoplaySpeed: const Duration(seconds: 4),
+            onIndexChanged: (i) => setState(() => _index = i),
+            itemBuilder: (context, index) {
+              final slide = slides[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 6,
+                ),
+                child: _DashboardCoverCard(
+                  slide: slide,
+                  theme: theme,
+                  active: index == _index,
+                ),
+              );
             },
-            child: PageView.builder(
-              controller: _controller,
-              itemCount: slides.length,
-              padEnds: true,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (context, index) {
-                final slide = slides[index];
-                return AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, _) {
-                    var page = _index.toDouble();
-                    if (_controller.hasClients &&
-                        _controller.position.haveDimensions) {
-                      page = _controller.page ?? page;
-                    }
-                    final delta = (page - index).clamp(-1.0, 1.0);
-                    final abs = delta.abs();
-                    final scale = 1.0 - (abs * 0.1);
-                    final tilt = (isRtl ? -delta : delta) * 0.42;
-                    final yLift = abs * 10.0;
-
-                    return Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.identity()
-                        ..setEntry(3, 2, 0.00135)
-                        ..translateByDouble(0.0, yLift, 0.0, 1.0)
-                        ..rotateY(tilt)
-                        ..scaleByDouble(scale, scale, 1.0, 1.0),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 6,
-                        ),
-                        child: _DashboardCoverCard(
-                          slide: slide,
-                          theme: theme,
-                          active: index == _index,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),

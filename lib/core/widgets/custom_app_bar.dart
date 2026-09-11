@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/exit/app_exit_scope.dart';
 import '../../app/localization/app_localizations.dart';
 import '../../app/theme/app_colors.dart';
+import 'app_avatar.dart';
 import 'notification_badge.dart';
 
 /// Base title scale for [CustomAppBar].
@@ -965,39 +966,13 @@ class _CustomAppBarAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Semantics(
       button: onTap != null,
-      child: Material(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.45),
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: image != null
-                ? DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(image: image!, fit: BoxFit.cover),
-                    ),
-                  )
-                : Center(
-                    child: Text(
-                      (initials ?? '').trim().isEmpty
-                          ? '?'
-                          : initials!.trim().substring(0, 1).toUpperCase(),
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-          ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AppAvatar(
+          name: initials,
+          size: size,
         ),
       ),
     );

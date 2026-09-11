@@ -465,105 +465,116 @@ class _ProductsToolbar extends StatelessWidget {
           horizontal: AppSpacing.xs,
           vertical: AppSpacing.xs,
         ),
-        child: Row(
-          children: [
-            AppViewModeToggle<ProductsViewMode>(
-              selected: viewMode,
-              options: [
-                AppViewModeOption(
-                  value: ProductsViewMode.list,
-                  icon: Icons.view_list_rounded,
-                  tooltip: l10n.productsViewList,
-                ),
-                AppViewModeOption(
-                  value: ProductsViewMode.grid,
-                  icon: Icons.grid_view_rounded,
-                  tooltip: l10n.productsViewGrid,
-                ),
-              ],
-              onChanged: onViewModeChanged,
-            ),
-            const Spacer(),
-            Tooltip(
-              message: l10n.productsScanBarcode,
-              child: Material(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: InkWell(
-                  onTap: onScan,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  child: SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: Icon(
-                      Icons.qr_code_scanner_outlined,
-                      color: colorScheme.onSurfaceVariant,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 360;
+            return Row(
+              children: [
+                AppViewModeToggle<ProductsViewMode>(
+                  selected: viewMode,
+                  options: [
+                    AppViewModeOption(
+                      value: ProductsViewMode.list,
+                      icon: Icons.view_list_rounded,
+                      tooltip: l10n.productsViewList,
                     ),
-                  ),
+                    AppViewModeOption(
+                      value: ProductsViewMode.grid,
+                      icon: Icons.grid_view_rounded,
+                      tooltip: l10n.productsViewGrid,
+                    ),
+                  ],
+                  onChanged: onViewModeChanged,
                 ),
-              ),
-            ),
-            if (onImport != null) ...[
-              const SizedBox(width: AppSpacing.xs),
-              Tooltip(
-                message: l10n.productsImportTitle,
-                child: Material(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  child: InkWell(
-                    onTap: onImport,
+                const Spacer(),
+                Tooltip(
+                  message: l10n.productsScanBarcode,
+                  child: Material(
+                    color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Icon(
-                        Icons.upload_file_outlined,
-                        color: colorScheme.onSurfaceVariant,
+                    child: InkWell(
+                      onTap: onScan,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          Icons.qr_code_scanner_outlined,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-            if (onAdd != null) ...[
-              const SizedBox(width: AppSpacing.sm),
-              Material(
-                color: colorScheme.primary,
-                elevation: 2,
-                shadowColor: colorScheme.primary.withValues(alpha: 0.45),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: InkWell(
-                  onTap: onAdd,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.add_rounded,
-                          size: 20,
-                          color: colorScheme.onPrimary,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          l10n.productsAdd,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: colorScheme.onPrimary,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.1,
+                if (onImport != null) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  Tooltip(
+                    message: l10n.productsImportTitle,
+                    child: Material(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: InkWell(
+                        onTap: onImport,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Icon(
+                            Icons.upload_file_outlined,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
-          ],
+                ],
+                if (onAdd != null) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  Tooltip(
+                    message: l10n.productsAdd,
+                    child: Material(
+                      color: colorScheme.primary,
+                      elevation: 2,
+                      shadowColor: colorScheme.primary.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: InkWell(
+                        onTap: onAdd,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal:
+                                isCompact ? AppSpacing.sm : AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.add_rounded,
+                                size: 20,
+                                color: colorScheme.onPrimary,
+                              ),
+                              if (!isCompact) ...[
+                                const SizedBox(width: AppSpacing.xs),
+                                Text(
+                                  l10n.productsAdd,
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: colorScheme.onPrimary,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.1,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );

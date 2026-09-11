@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/modules/report_category_definition.dart';
 import '../../../core/widgets/app_empty_state.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
@@ -248,12 +249,11 @@ class _ReportItemCard extends StatelessWidget {
         onTap: available
             ? () => context.push(item.path!)
             : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.platformReportsServiceComingSoon),
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 2),
-                  ),
+                showAppSnackBar(
+                  context,
+                  message: l10n.platformReportsServiceComingSoon,
+                  isSuccess: false,
+                  duration: const Duration(seconds: 2),
                 );
               },
         child: Ink(

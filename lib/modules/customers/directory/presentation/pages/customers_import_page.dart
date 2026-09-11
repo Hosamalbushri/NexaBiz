@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
@@ -434,54 +435,40 @@ class _SampleSpreadsheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Table(
-      border: TableBorder.all(
-        color: colorScheme.outlineVariant.withValues(alpha: 0.7),
-        width: 1,
-      ),
-      defaultColumnWidth: const IntrinsicColumnWidth(),
-      children: [
-        TableRow(
-          decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest),
-          children: [
+    return shadcn.Table(
+      rows: [
+        shadcn.TableHeader(
+          cells: [
             for (final header in headers)
-              _SheetCell(text: header, isHeader: true),
+              shadcn.TableCell(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Text(
+                    header,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
           ],
         ),
-        TableRow(
-          decoration: BoxDecoration(color: colorScheme.surface),
-          children: [for (final value in values) _SheetCell(text: value)],
+        shadcn.TableRow(
+          cells: [
+            for (final value in values)
+              shadcn.TableCell(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Text(value),
+                ),
+              ),
+          ],
         ),
       ],
-    );
-  }
-}
-
-class _SheetCell extends StatelessWidget {
-  const _SheetCell({required this.text, this.isHeader = false});
-
-  final String text;
-  final bool isHeader;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Text(
-        text,
-        style:
-            (isHeader ? theme.textTheme.labelMedium : theme.textTheme.bodySmall)
-                ?.copyWith(
-                  fontWeight: isHeader ? FontWeight.w800 : FontWeight.w500,
-                ),
-      ),
     );
   }
 }

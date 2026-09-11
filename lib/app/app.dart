@@ -4,18 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
+import 'package:stock_count/modules/sync/sync.dart';
 
+import '../core/auth/presentation/providers/auth_state_core.dart';
 import '../core/di/app_providers.dart';
 import '../core/entitlements/domain/entities/entitlement.dart';
 import '../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../core/notifications/notification_type.dart';
-import 'package:stock_count/modules/sync/sync.dart';
 import '../core/widgets/app_snackbar.dart';
 import '../core/widgets/app_update_gate.dart';
 import '../core/widgets/loading_overlay.dart';
 import '../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../modules/app_lock/presentation/widgets/app_lock_gate_barrier.dart';
-import '../core/auth/presentation/providers/auth_state_core.dart';
 import 'localization/app_localizations.dart';
 import 'notifications/presentation/providers/notifications_provider.dart';
 import 'notifications/presentation/widgets/notification_toast_host.dart';
@@ -23,6 +24,10 @@ import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
 /// Root application widget for the modular business platform.
+///
+/// Uses [shadcn.ShadcnApp.router] as the single canonical application root,
+/// providing shadcn themes, overlays, localizations, and GoRouter integration,
+/// with Material fallback theme for backward-compatible Material widgets.
 class BusinessPlatformApp extends ConsumerStatefulWidget {
   const BusinessPlatformApp({super.key});
 
@@ -173,17 +178,26 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
 
-    return MaterialApp.router(
+    return shadcn.ShadcnApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       routerConfig: _router!,
-      themeMode: themeMode,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      themeMode: _toShadcnThemeMode(themeMode),
+      theme: AppTheme.shadcnLight(),
+      darkTheme: AppTheme.shadcnDark(),
+      materialTheme: switch (themeMode) {
+        ThemeMode.dark => AppTheme.dark(),
+        ThemeMode.light => AppTheme.light(),
+        ThemeMode.system =>
+          MediaQuery.platformBrightnessOf(context) == Brightness.dark
+              ? AppTheme.dark()
+              : AppTheme.light(),
+      },
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
+        NexaBizShadcnLocalizationsDelegate.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -199,4 +213,11 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
       },
     );
   }
+
+  shadcn.ThemeMode _toShadcnThemeMode(ThemeMode mode) => switch (mode) {
+        ThemeMode.system => shadcn.ThemeMode.system,
+        ThemeMode.light => shadcn.ThemeMode.light,
+        ThemeMode.dark => shadcn.ThemeMode.dark,
+      };
 }
+

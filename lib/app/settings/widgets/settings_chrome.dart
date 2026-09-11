@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
@@ -141,7 +142,8 @@ class SettingsTile extends StatelessWidget {
   }
 }
 
-/// Collapsible settings accordion with the same header chrome as [SettingsTile].
+/// Collapsible settings accordion with the same header chrome as [SettingsTile],
+/// composed on top of canonical `shadcn.Collapsible` primitives.
 class SettingsExpandableSection extends StatefulWidget {
   const SettingsExpandableSection({
     super.key,
@@ -177,52 +179,36 @@ class SettingsExpandableSection extends StatefulWidget {
       _SettingsExpandableSectionState();
 }
 
-class _SettingsExpandableSectionState extends State<SettingsExpandableSection>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+class _SettingsExpandableSectionState extends State<SettingsExpandableSection> {
   late bool _expanded;
 
   @override
   void initState() {
     super.initState();
     _expanded = widget.initiallyExpanded;
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-      value: _expanded ? 1 : 0,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() {
-      _expanded = !_expanded;
-      if (_expanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final showBody = widget.maintainState || _expanded;
 
     return _SettingsSurface(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: shadcn.Collapsible(
+        isExpanded: _expanded,
+        onExpansionChanged: (expanded) {
+          setState(() {
+            _expanded = !expanded;
+          });
+        },
         children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: _toggle,
+          shadcn.CollapsibleTrigger(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                setState(() {
+                  _expanded = !_expanded;
+                });
+              },
               child: _SettingsHeaderRow(
                 icon: widget.icon,
                 iconColor: widget.iconColor,
@@ -231,42 +217,34 @@ class _SettingsExpandableSectionState extends State<SettingsExpandableSection>
                 trailing: widget.trailing,
                 showChevron: true,
                 chevronColor: colorScheme.onSurfaceVariant,
-                chevronTurns: Tween<double>(begin: 0, end: 0.25).animate(
-                  CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-                ),
+                chevronTurns: AlwaysStoppedAnimation(_expanded ? 0.25 : 0.0),
               ),
             ),
           ),
-          if (showBody)
-            SizeTransition(
-              sizeFactor: CurvedAnimation(
-                parent: _controller,
-                curve: Curves.easeInOut,
-              ),
-              axisAlignment: -1,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Divider(
-                    height: 1,
-                    indent: 68,
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+          shadcn.CollapsibleContent(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Divider(
+                  height: 1,
+                  indent: 68,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    widget.dense ? AppSpacing.xs : AppSpacing.sm,
+                    AppSpacing.md,
+                    widget.dense ? AppSpacing.sm : AppSpacing.md,
                   ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      widget.dense ? AppSpacing.xs : AppSpacing.sm,
-                      AppSpacing.md,
-                      widget.dense ? AppSpacing.sm : AppSpacing.md,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: widget.children,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: widget.children,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );

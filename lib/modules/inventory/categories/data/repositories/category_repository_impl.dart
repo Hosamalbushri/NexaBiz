@@ -58,6 +58,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<void> saveCategory(Category category) async {
     await _db.transaction(() async {
+      final effectiveCompanyId = category.companyId ?? _currentCompanyId;
+
       // 1. Cross-tenant modification rejection
       if (category.companyId != null &&
           category.companyId!.isNotEmpty &&
@@ -65,30 +67,51 @@ class CategoryRepositoryImpl implements CategoryRepository {
         throw const JournalException(JournalException.notFound);
       }
 
-      final existing =
-          await (_db.select(_db.categories)
-                ..where((tbl) => tbl.uuid.equals(category.id) & _scoped(tbl)))
-              .getSingleOrNull();
+      // Check if UUID exists in table (including soft-deleted records)
+      final existingRecord = await (_db.select(_db.categories)
+            ..where((tbl) => tbl.uuid.equals(category.id)))
+          .getSingleOrNull();
 
       // Prevent cross-tenant record overwrite
-      if (existing == null) {
-        final crossTenantCheck = await (_db.select(
-          _db.categories,
-        )..where((tbl) => tbl.uuid.equals(category.id))).getSingleOrNull();
-        if (crossTenantCheck != null) {
-          throw const JournalException(JournalException.notFound);
+      if (existingRecord != null && existingRecord.companyId != effectiveCompanyId) {
+        throw const JournalException(JournalException.notFound);
+      }
+
+      // Prevent duplicate code in the same warehouse and company (including soft-deleted records)
+      final duplicateCodeRecord = await (_db.select(_db.categories)
+            ..where((tbl) =>
+                tbl.code.equals(category.code) &
+                tbl.warehouseId.equals(category.warehouseId) &
+                tbl.uuid.equals(category.id).not() &
+                tbl.companyId.equals(effectiveCompanyId)))
+          .getSingleOrNull();
+
+      if (duplicateCodeRecord != null) {
+        if (duplicateCodeRecord.deletedAt != null) {
+          // If a soft-deleted record occupies this code, rename its code to release the SQLite unique index slot
+          final freedCode =
+              '${duplicateCodeRecord.code}_del_${DateTime.now().millisecondsSinceEpoch}';
+          await (_db.update(_db.categories)
+                ..where((tbl) => tbl.uuid.equals(duplicateCodeRecord.uuid)))
+              .write(CategoriesCompanion(code: Value(freedCode)));
+        } else {
+          throw JournalException(
+            'duplicate_code',
+            'كود التصنيف "${category.code}" مستخدم بالفعل في هذا المستودع',
+          );
         }
       }
 
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
       final newVersion =
-          (existing?.version ?? category.version) + (existing == null ? 0 : 1);
-      final effectiveCompanyId = category.companyId ?? _currentCompanyId;
+          (existingRecord?.version ?? category.version) + (existingRecord == null ? 0 : 1);
 
-      if (existing != null) {
-        await (_db.update(
-          _db.categories,
-        )..where((tbl) => tbl.uuid.equals(category.id) & _scoped(tbl))).write(
+      if (existingRecord != null) {
+        await (_db.update(_db.categories)
+              ..where((tbl) =>
+                  tbl.uuid.equals(category.id) &
+                  tbl.companyId.equals(effectiveCompanyId)))
+            .write(
           CategoriesCompanion(
             name: Value(category.name),
             code: Value(category.code),
@@ -101,12 +124,11 @@ class CategoryRepositoryImpl implements CategoryRepository {
             updatedAt: Value(now),
             version: Value(newVersion),
             companyId: Value(effectiveCompanyId),
+            deletedAt: const Value(null),
           ),
         );
       } else {
-        await _db
-            .into(_db.categories)
-            .insert(
+        await _db.into(_db.categories).insert(
               CategoriesCompanion(
                 uuid: Value(category.id),
                 name: Value(category.name),

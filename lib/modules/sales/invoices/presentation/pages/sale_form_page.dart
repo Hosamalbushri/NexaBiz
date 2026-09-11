@@ -629,7 +629,11 @@ class _InvoiceMetaRow extends StatelessWidget {
           child: AppDateField(
             label: l10n.salesDate,
             value: saleDate,
-            onChanged: onDateChanged,
+            onChanged: (picked) {
+              if (picked != null) {
+                onDateChanged(picked);
+              }
+            },
             dateFormat: 'd/M/yyyy',
             density: AppFieldDensity.compact,
           ),

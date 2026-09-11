@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
-import 'package:skeletonizer/skeletonizer.dart';
 
 import '../theme/app_spacing.dart';
 
@@ -27,16 +26,11 @@ class AppLoading extends StatelessWidget {
 
     switch (style) {
       case AppLoadingStyle.circular:
-        final hasShadcnTheme =
-            context.findAncestorWidgetOfExactType<shadcn.ComponentTheme>() != null ||
-                context.findAncestorWidgetOfExactType<shadcn.Theme>() != null;
         return Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              hasShadcnTheme
-                  ? const shadcn.CircularProgressIndicator()
-                  : const CircularProgressIndicator(),
+              shadcn.CircularProgressIndicator(value: progress),
               const SizedBox(height: AppSpacing.md),
               Text(label),
             ],
@@ -51,14 +45,13 @@ class AppLoading extends StatelessWidget {
             children: [
               Text(label),
               const SizedBox(height: AppSpacing.sm),
-              LinearProgressIndicator(value: progress),
+              shadcn.Progress(progress: progress),
             ],
           ),
         );
       case AppLoadingStyle.skeletonList:
-        return Skeletonizer(
-          enabled: true,
-          child: ListView.separated(
+        return shadcn.SkeletonExtension(
+          ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: skeletonItemCount,
             separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
@@ -72,7 +65,7 @@ class AppLoading extends StatelessWidget {
               );
             },
           ),
-        );
+        ).asSkeleton();
     }
   }
 }

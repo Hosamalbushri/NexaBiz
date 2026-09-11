@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../../core/widgets/app_button.dart';
@@ -207,11 +208,10 @@ class _SyncProgressModalState extends ConsumerState<SyncProgressModal> {
               const SizedBox(height: AppSpacing.xs),
               ClipRRect(
                 borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: overview.progress.totalSteps > 0
+                child: shadcn.Progress(
+                  progress: overview.progress.totalSteps > 0
                       ? overview.progress.fraction
                       : null,
-                  minHeight: 8,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),

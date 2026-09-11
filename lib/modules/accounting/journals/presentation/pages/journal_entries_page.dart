@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
@@ -386,9 +387,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
     required bool isAr,
     required DateFormat dateFormat,
   }) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final activeCategories = AutomatedSourceCategory.values
         .where(
           (c) =>
@@ -414,91 +413,13 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
         final cat = activeCategories[idx];
         final catEntries = groupedAuto[cat]!;
         final catColor = cat.color(colorScheme);
-        final totalDebit = catEntries.fold(0.0, (sum, e) => sum + e.totalDebit);
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: Material(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            clipBehavior: Clip.antiAlias,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(
-                  color: catColor.withValues(alpha: 0.3),
-                  width: 1.5,
-                ),
-              ),
-              child: Theme(
-                data: theme.copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  initiallyExpanded: true,
-                  leading: CircleAvatar(
-                    backgroundColor: catColor.withValues(alpha: 0.12),
-                    child: Icon(cat.icon, color: catColor, size: 20),
-                  ),
-                  title: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          cat.label(l10n),
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: catColor,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: catColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${catEntries.length}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: catColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  subtitle: Text(
-                    '${isAr ? 'إجمالي المبالغ' : 'Total Amount'}: ${totalDebit.toStringAsFixed(2)} SAR',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  children: catEntries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 4,
-                      ),
-                      child: _JournalHeaderTile(
-                        entry: entry,
-                        icon: cat.icon,
-                        badgeColor: catColor,
-                        dateLabel: dateFormat.format(entry.entryDate.toLocal()),
-                        onTap: () => AccountingRoutes.pushJournalDetails(
-                          context,
-                          entry.uuid,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ),
+        return _AutomatedCategoryCard(
+          category: cat,
+          entries: catEntries,
+          catColor: catColor,
+          isAr: isAr,
+          dateFormat: dateFormat,
         );
       },
     );
@@ -595,6 +516,154 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AutomatedCategoryCard extends StatefulWidget {
+  const _AutomatedCategoryCard({
+    required this.category,
+    required this.entries,
+    required this.catColor,
+    required this.isAr,
+    required this.dateFormat,
+  });
+
+  final AutomatedSourceCategory category;
+  final List<JournalEntryHeader> entries;
+  final Color catColor;
+  final bool isAr;
+  final DateFormat dateFormat;
+
+  @override
+  State<_AutomatedCategoryCard> createState() => _AutomatedCategoryCardState();
+}
+
+class _AutomatedCategoryCardState extends State<_AutomatedCategoryCard> {
+  bool _expanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final totalDebit = widget.entries.fold(0.0, (sum, e) => sum + e.totalDebit);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Material(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: widget.catColor.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+          ),
+          child: shadcn.Collapsible(
+            isExpanded: _expanded,
+            onExpansionChanged: (expanded) {
+              setState(() {
+                _expanded = !expanded;
+              });
+            },
+            children: [
+              shadcn.CollapsibleTrigger(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: widget.catColor.withValues(alpha: 0.12),
+                        child: Icon(widget.category.icon, color: widget.catColor, size: 20),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    widget.category.label(l10n),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.catColor,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: widget.catColor.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${widget.entries.length}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.catColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${widget.isAr ? 'إجمالي المبالغ' : 'Total Amount'}: ${totalDebit.toStringAsFixed(2)} SAR',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: _expanded ? 0.5 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: const Icon(Icons.keyboard_arrow_down_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              shadcn.CollapsibleContent(
+                child: Column(
+                  children: widget.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 4,
+                      ),
+                      child: _JournalHeaderTile(
+                        entry: entry,
+                        icon: widget.category.icon,
+                        badgeColor: widget.catColor,
+                        dateLabel: widget.dateFormat.format(entry.entryDate.toLocal()),
+                        onTap: () => AccountingRoutes.pushJournalDetails(
+                          context,
+                          entry.uuid,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

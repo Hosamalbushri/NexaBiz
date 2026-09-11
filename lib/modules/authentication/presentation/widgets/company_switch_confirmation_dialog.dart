@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../../../../app/bootstrap/app_bootstrap.dart';
 import '../../../../app/localization/app_localizations.dart';
@@ -253,26 +254,20 @@ class _CompanySwitchAuthDialogState extends State<_CompanySwitchAuthDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        shadcn.GhostButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
           child: const Text('إلغاء'),
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-          ),
+        shadcn.PrimaryButton(
           onPressed: _isLoading ? null : _submit,
-          child: _isLoading
+          leading: _isLoading
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
+                  width: 16,
+                  height: 16,
+                  child: shadcn.CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('تأكيد ودخول'),
+              : null,
+          child: const Text('تأكيد ودخول'),
         ),
       ],
     );

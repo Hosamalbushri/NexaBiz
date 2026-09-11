@@ -1173,7 +1173,7 @@ packages:
     source: hosted
     version: "9.29.0"
   shadcn_flutter:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: shadcn_flutter
       sha256: "52ce655e0d81e2fc5fa9e69a3871c1b98bd4fb34f62e7a58e9810a5bfe101955"

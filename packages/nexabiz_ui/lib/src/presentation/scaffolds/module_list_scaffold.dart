@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../patterns/app_list_page_pattern.dart';
 
@@ -137,7 +138,7 @@ class ModuleListScaffold<T> extends StatelessWidget {
         }
 
         if (onRefresh != null) {
-          content = RefreshIndicator(onRefresh: onRefresh!, child: content);
+          content = shadcn.RefreshTrigger(onRefresh: onRefresh, child: content);
         }
 
         return content;

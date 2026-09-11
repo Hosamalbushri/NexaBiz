@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
-enum AppButtonVariant { filled, elevated, outlined, text, tonal }
+import '../theme/app_dimensions.dart';
+
+enum AppButtonVariant { filled, elevated, outlined, text, tonal, destructive }
 
 /// Design-system button wrapping shadcn_flutter button primitives.
 ///
 /// Preserves NexaBiz API: [label], [onPressed], [variant], [icon],
-/// [trailingIcon], [isLoading], [expand].
+/// [trailingIcon], [isLoading], [expand], [isCompact].
 class AppButton extends StatelessWidget {
   const AppButton({
     super.key,
@@ -18,6 +20,7 @@ class AppButton extends StatelessWidget {
     this.trailingIcon = false,
     this.isLoading = false,
     this.expand = false,
+    this.isCompact = false,
   });
 
   final String label;
@@ -27,95 +30,87 @@ class AppButton extends StatelessWidget {
   final bool trailingIcon;
   final bool isLoading;
   final bool expand;
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null && !isLoading;
-    final hasShadcnTheme =
-        context.findAncestorWidgetOfExactType<shadcn.ComponentTheme>() != null ||
-            context.findAncestorWidgetOfExactType<shadcn.Theme>() != null;
 
-    final child = isLoading
-        ? SizedBox(
-            width: 18,
-            height: 18,
-            child: hasShadcnTheme
-                ? const shadcn.CircularProgressIndicator(strokeWidth: 2)
-                : const CircularProgressIndicator(strokeWidth: 2),
+    final leadingWidget = isLoading
+        ? const SizedBox(
+            width: 16,
+            height: 16,
+            child: shadcn.CircularProgressIndicator(strokeWidth: 2),
           )
-        : icon == null
-        ? Text(label)
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            children: trailingIcon
-                ? [
-                    Flexible(
-                      child: Text(label, overflow: TextOverflow.ellipsis),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(icon, size: 20),
-                  ]
-                : [
-                    Icon(icon, size: 20),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(label, overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-          );
+        : (icon != null && !trailingIcon ? Icon(icon, size: 18) : null);
+
+    final trailingWidget =
+        !isLoading && icon != null && trailingIcon ? Icon(icon, size: 18) : null;
+
+    final childWidget = Text(
+      label,
+      textAlign: TextAlign.center,
+      overflow: TextOverflow.ellipsis,
+    );
 
     final VoidCallback? handler = enabled ? onPressed : null;
+    final buttonDensity = isCompact ? shadcn.ButtonDensity.compact : shadcn.ButtonDensity.normal;
 
-    final Widget button = hasShadcnTheme
-        ? switch (variant) {
-            AppButtonVariant.filled => shadcn.PrimaryButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.elevated => shadcn.SecondaryButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.outlined => shadcn.OutlineButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.text => shadcn.GhostButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.tonal => shadcn.SecondaryButton(
-              onPressed: handler,
-              child: child,
-            ),
-          }
-        : switch (variant) {
-            AppButtonVariant.filled => FilledButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.elevated => ElevatedButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.outlined => OutlinedButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.text => TextButton(
-              onPressed: handler,
-              child: child,
-            ),
-            AppButtonVariant.tonal => FilledButton.tonal(
-              onPressed: handler,
-              child: child,
-            ),
-          };
+    final Widget button = switch (variant) {
+      AppButtonVariant.filled => shadcn.PrimaryButton(
+          onPressed: handler,
+          density: buttonDensity,
+          leading: leadingWidget,
+          trailing: trailingWidget,
+          child: childWidget,
+        ),
+      AppButtonVariant.elevated => shadcn.SecondaryButton(
+          onPressed: handler,
+          density: buttonDensity,
+          leading: leadingWidget,
+          trailing: trailingWidget,
+          child: childWidget,
+        ),
+      AppButtonVariant.outlined => shadcn.OutlineButton(
+          onPressed: handler,
+          density: buttonDensity,
+          leading: leadingWidget,
+          trailing: trailingWidget,
+          child: childWidget,
+        ),
+      AppButtonVariant.text => shadcn.GhostButton(
+          onPressed: handler,
+          density: buttonDensity,
+          leading: leadingWidget,
+          trailing: trailingWidget,
+          child: childWidget,
+        ),
+      AppButtonVariant.tonal => shadcn.SecondaryButton(
+          onPressed: handler,
+          density: buttonDensity,
+          leading: leadingWidget,
+          trailing: trailingWidget,
+          child: childWidget,
+        ),
+      AppButtonVariant.destructive => shadcn.DestructiveButton(
+          onPressed: handler,
+          density: buttonDensity,
+          leading: leadingWidget,
+          trailing: trailingWidget,
+          child: childWidget,
+        ),
+    };
 
-    final wrapped = expand
-        ? SizedBox(width: double.infinity, child: button)
-        : button;
+    final double height = isCompact
+        ? AppDimensions.buttonHeightCompact
+        : AppDimensions.buttonHeight;
 
-    return wrapped.animate().fadeIn(duration: 160.ms);
+    final sized = SizedBox(
+      height: height,
+      width: expand ? double.infinity : null,
+      child: button,
+    );
+
+    return sized.animate().fadeIn(duration: 160.ms);
   }
 }

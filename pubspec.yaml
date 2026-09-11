@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   nexabiz_ui:
     path: packages/nexabiz_ui
+  shadcn_flutter: ^0.0.53
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2

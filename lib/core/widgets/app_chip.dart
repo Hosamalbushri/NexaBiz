@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-
-import '../theme/tokens/tokens.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 enum AppChipVariant { choice, filter, action }
 
-/// Canonical chip primitive for NexaBiz ERP.
+/// Canonical chip primitive for NexaBiz ERP backed natively by `shadcn_flutter`.
 class AppChip extends StatelessWidget {
   const AppChip({
     super.key,
@@ -20,38 +19,30 @@ class AppChip extends StatelessWidget {
   final bool selected;
   final ValueChanged<bool>? onSelected;
   final VoidCallback? onPressed;
-  final IconData? icon;
+  final Widget? icon;
   final AppChipVariant variant;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    final leadingIcon = icon == null ? null : Icon(icon, size: AppIcons.xs);
+    final labelWidget = Text(label);
 
     switch (variant) {
       case AppChipVariant.choice:
       case AppChipVariant.filter:
-        return FilterChip(
-          label: Text(label),
-          selected: selected,
-          onSelected: onSelected,
-          avatar: leadingIcon,
-          visualDensity: VisualDensity.compact,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.pill),
-          ),
+        return shadcn.Chip(
+          leading: icon,
+          style: selected
+              ? const shadcn.ButtonStyle.primary()
+              : const shadcn.ButtonStyle.outline(),
+          onPressed: onSelected != null ? () => onSelected!(!selected) : null,
+          child: labelWidget,
         );
       case AppChipVariant.action:
-        return ActionChip(
-          label: Text(label),
+        return shadcn.Chip(
+          leading: icon,
+          style: const shadcn.ButtonStyle.secondary(),
           onPressed: onPressed,
-          avatar: leadingIcon,
-          visualDensity: VisualDensity.compact,
-          backgroundColor: scheme.surfaceContainerHigh,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.pill),
-          ),
+          child: labelWidget,
         );
     }
   }

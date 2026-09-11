@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
@@ -67,15 +68,11 @@ Future<void> showMissingCurrencyDialog(BuildContext context) async {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: AppButton(
+                  label: isArabic ? 'إلغاء' : 'Cancel',
+                  variant: AppButtonVariant.outlined,
+                  expand: true,
                   onPressed: () => Navigator.of(dialogCtx).pop(),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                  ),
-                  child: Text(isArabic ? 'إلغاء' : 'Cancel'),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -113,77 +110,39 @@ class AppMissingCurrencyBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: colorScheme.errorContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: colorScheme.error.withValues(alpha: 0.3),
-          width: 1.2,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: shadcn.Alert.destructive(
+        leading: const Icon(Icons.warning_amber_rounded),
+        title: Text(
+          isArabic
+              ? 'تنبيه: لم يتم تعيين العملة الرئيسية للنظام'
+              : 'Warning: Base Currency Not Configured',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
+        content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colorScheme.errorContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.warning_amber_rounded,
-                color: colorScheme.onErrorContainer,
-                size: 24,
-              ),
+            Text(
+              isArabic
+                  ? 'لا يمكن إكمال المستندات أو إجراء الحركات حتى يتم تعيين العملة الرئيسية للنظام في دليل العملات.'
+                  : 'Cannot process transactions until the system base currency is configured.',
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isArabic
-                        ? 'تنبيه: لم يتم تعيين العملة الرئيسية للنظام'
-                        : 'Warning: Base Currency Not Configured',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onErrorContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isArabic
-                        ? 'لا يمكن إكمال المستندات أو إجراء الحركات حتى يتم تعيين العملة الرئيسية للنظام في دليل العملات.'
-                        : 'Cannot process transactions until the system base currency is configured.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.35,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppButton(
-                    label: isArabic ? 'إضافة وتعيين العملة الرئيسية' : 'Set Up Base Currency',
-                    icon: Icons.add_circle_outline_rounded,
-                    onPressed: onConfigurePressed ??
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const CurrenciesManagePage(),
-                            ),
-                          );
-                        },
-                  ),
-                ],
-              ),
+            const SizedBox(height: AppSpacing.sm),
+            AppButton(
+              label: isArabic ? 'إضافة وتعيين العملة الرئيسية' : 'Set Up Base Currency',
+              icon: Icons.add_circle_outline_rounded,
+              onPressed: onConfigurePressed ??
+                  () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const CurrenciesManagePage(),
+                      ),
+                    );
+                  },
             ),
           ],
         ),

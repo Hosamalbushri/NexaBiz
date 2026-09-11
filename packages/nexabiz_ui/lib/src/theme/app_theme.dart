@@ -1,5 +1,6 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import 'app_colors.dart';
 import 'app_typography.dart';
@@ -23,6 +24,42 @@ class AppTheme {
     tertiaryContainer: Color(0xFFC5CAE9),
     error: AppColors.error,
   );
+
+  /// Native shadcn_flutter Light ThemeData
+  static shadcn.ThemeData shadcnLight({
+    double radius = 0.5,
+    double surfaceOpacity = 0.95,
+    double surfaceBlur = 4.0,
+  }) {
+    return shadcn.ThemeData(
+      colorScheme: shadcn.ColorSchemes.lightSlate.copyWith(
+        primary: () => AppColors.primaryBlue,
+        primaryForeground: () => Colors.white,
+        ring: () => AppColors.primaryBlue,
+      ),
+      radius: radius,
+      surfaceOpacity: surfaceOpacity,
+      surfaceBlur: surfaceBlur,
+    );
+  }
+
+  /// Native shadcn_flutter Dark ThemeData
+  static shadcn.ThemeData shadcnDark({
+    double radius = 0.5,
+    double surfaceOpacity = 0.95,
+    double surfaceBlur = 4.0,
+  }) {
+    return shadcn.ThemeData.dark(
+      colorScheme: shadcn.ColorSchemes.darkSlate.copyWith(
+        primary: () => AppColors.primaryBlue,
+        primaryForeground: () => Colors.white,
+        ring: () => AppColors.primaryBlue,
+      ),
+      radius: radius,
+      surfaceOpacity: surfaceOpacity,
+      surfaceBlur: surfaceBlur,
+    );
+  }
 
   static ThemeData light() {
     final base = FlexThemeData.light(

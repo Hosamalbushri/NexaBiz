@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 /// Border radius tokens for surfaces, inputs, buttons, and dialogs.
 class AppRadii {
@@ -34,6 +35,22 @@ class AppRadii {
   static final BorderRadius radiusControl = BorderRadius.circular(control);
   static final BorderRadius radiusSurface = BorderRadius.circular(surface);
   static final BorderRadius radiusDialog = BorderRadius.circular(dialog);
+
+  /// Dynamic context-aware radius getters delegating directly to shadcn ThemeData
+  static double xsOf(BuildContext context) => shadcn.Theme.of(context).radiusXs;
+  static double smOf(BuildContext context) => shadcn.Theme.of(context).radiusSm;
+  static double mdOf(BuildContext context) => shadcn.Theme.of(context).radiusMd;
+  static double lgOf(BuildContext context) => shadcn.Theme.of(context).radiusLg;
+  static double xlOf(BuildContext context) => shadcn.Theme.of(context).radiusXl;
+
+  static BorderRadius borderRadiusSmOf(BuildContext context) =>
+      shadcn.Theme.of(context).borderRadiusSm;
+  static BorderRadius borderRadiusMdOf(BuildContext context) =>
+      shadcn.Theme.of(context).borderRadiusMd;
+  static BorderRadius borderRadiusLgOf(BuildContext context) =>
+      shadcn.Theme.of(context).borderRadiusLg;
+  static BorderRadius borderRadiusXlOf(BuildContext context) =>
+      shadcn.Theme.of(context).borderRadiusXl;
 }
 
 /// Alias class for [AppRadii] for design token backwards compatibility.
@@ -55,4 +72,15 @@ abstract class AppRadius {
   static final BorderRadius radiusLg = AppRadii.radiusLg;
   static final BorderRadius radiusXl = AppRadii.radiusXl;
   static final BorderRadius radiusPill = AppRadii.radiusPill;
+
+  static double smOf(BuildContext context) => AppRadii.smOf(context);
+  static double mdOf(BuildContext context) => AppRadii.mdOf(context);
+  static double lgOf(BuildContext context) => AppRadii.lgOf(context);
+
+  static BorderRadius borderRadiusSmOf(BuildContext context) =>
+      AppRadii.borderRadiusSmOf(context);
+  static BorderRadius borderRadiusMdOf(BuildContext context) =>
+      AppRadii.borderRadiusMdOf(context);
+  static BorderRadius borderRadiusLgOf(BuildContext context) =>
+      AppRadii.borderRadiusLgOf(context);
 }

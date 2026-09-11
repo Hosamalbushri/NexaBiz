@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import '../../import_engine.dart';
 
 /// Reusable Import Job Details UI screen displaying full metrics, timing, and error summary.
@@ -33,7 +34,7 @@ class ImportJobDetailsPage extends StatelessWidget {
                   Text('Company: ${job.companyId} | User: ${job.userId}'),
                   Text('Profile: $profileId | Source: ${job.source}'),
                   const SizedBox(height: 12.0),
-                  LinearProgressIndicator(value: job.progress),
+                  shadcn.Progress(progress: job.progress),
                   const SizedBox(height: 8.0),
                   Text('Status: ${job.status.name.toUpperCase()}'),
                 ],

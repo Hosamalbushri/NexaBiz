@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 
 /// Shared pagination control used across inventory list / grid screens.
+///
+/// Refactored to compose [shadcn.Pagination] internally while maintaining the
+/// 0-indexed page index application contract, page-size selection, and item range stats.
 class AppPaginationBar extends StatelessWidget {
   const AppPaginationBar({
     super.key,
@@ -38,13 +42,13 @@ class AppPaginationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final canPrev = page > 0;
-    final canNext = totalPages > 0 && page < totalPages - 1;
     final from = totalCount == 0 ? 0 : page * pageSize + 1;
     final to = totalCount == 0
         ? 0
         : ((page + 1) * pageSize).clamp(0, totalCount);
-    final pageLabel = 'Page ${totalPages == 0 ? 0 : page + 1} of $totalPages';
+
+    final safe1BasedPage = totalPages <= 0 ? 1 : (page + 1).clamp(1, totalPages);
+    final safeTotalPages = totalPages <= 0 ? 1 : totalPages;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -66,52 +70,33 @@ class AppPaginationBar extends StatelessWidget {
                 onChanged: onPageSizeChanged!,
               )
             else
-              Expanded(
-                child: Text(
-                  '$from - $to of $totalCount',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Text(
+                '$from - $to of $totalCount',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            const Spacer(),
             const SizedBox(width: AppSpacing.xs),
-            _PaginationIconButton(
-              tooltip: 'Previous page',
-              icon: Icons.chevron_left_rounded,
-              enabled: canPrev,
-              onPressed: () => onPageChanged(page - 1),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  child: Text(
-                    pageLabel,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: shadcn.Pagination(
+                    page: safe1BasedPage,
+                    totalPages: safeTotalPages,
+                    maxPages: compact ? 3 : 5,
+                    showSkipToFirstPage: !compact,
+                    showSkipToLastPage: !compact,
+                    onPageChanged: (new1BasedPage) {
+                      onPageChanged(new1BasedPage - 1);
+                    },
                   ),
                 ),
               ),
-            ),
-            _PaginationIconButton(
-              tooltip: 'Next page',
-              icon: Icons.chevron_right_rounded,
-              enabled: canNext,
-              onPressed: () => onPageChanged(page + 1),
             ),
           ],
         ),
@@ -177,53 +162,6 @@ class _PageSizeSelector extends StatelessWidget {
               }
               onChanged(value);
             },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PaginationIconButton extends StatelessWidget {
-  const _PaginationIconButton({
-    required this.tooltip,
-    required this.icon,
-    required this.enabled,
-    required this.onPressed,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final accent = enabled
-        ? colorScheme.primary
-        : colorScheme.onSurface.withValues(alpha: 0.28);
-    final background = enabled
-        ? colorScheme.primary.withValues(alpha: 0.10)
-        : colorScheme.onSurface.withValues(alpha: 0.04);
-
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: tooltip,
-      child: Tooltip(
-        message: tooltip,
-        child: Material(
-          color: background,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: enabled ? onPressed : null,
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              child: Center(child: Icon(icon, size: 22, color: accent)),
-            ),
           ),
         ),
       ),

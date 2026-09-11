@@ -21,7 +21,10 @@ void main() {
       db: db,
       systemDefaultMethod: CostValuationMethod.weightedAverage,
     );
-    costLayerService = CostLayerServiceImpl(db: db);
+    costLayerService = CostLayerServiceImpl(
+      db: db,
+      readCompanyId: () => '00000000-0000-4000-8000-000000000001',
+    );
     postingEngine = PostingEngineImpl(db, costLayerService, resolver);
   });
 
@@ -303,6 +306,7 @@ void main() {
                 uuid: const Value(whId),
                 code: const Value('WH-SANAA'),
                 name: const Value('Sana\'a Warehouse'),
+                companyId: const Value('00000000-0000-4000-8000-000000000001'),
                 createdAt: Value(DateTime.now().millisecondsSinceEpoch),
                 updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
               ),
@@ -330,6 +334,7 @@ void main() {
                 itemCode: const Value(itemCode),
                 name: const Value('Fresh Juice'),
                 categoryId: const Value('cat-juices'),
+                companyId: const Value('00000000-0000-4000-8000-000000000001'),
                 packSize: const Value(1),
                 price: const Value(100.0),
                 createdAt: Value(DateTime.now().millisecondsSinceEpoch),

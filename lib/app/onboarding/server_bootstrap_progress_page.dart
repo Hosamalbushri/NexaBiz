@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/network_status_indicator.dart';
@@ -194,12 +195,10 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.xs),
                     ],
 
-                    LinearProgressIndicator(
-                      value: state.progressPercentage > 0
+                    shadcn.Progress(
+                      progress: state.progressPercentage > 0
                           ? state.progressPercentage
                           : null,
-                      backgroundColor: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
@@ -421,12 +420,11 @@ class _ProgressStageTile extends StatelessWidget {
     final leadingIcon = isCompleted
         ? const Icon(Icons.check_circle, color: Colors.green)
         : isActive
-        ? SizedBox(
+        ? const SizedBox(
             width: 20,
             height: 20,
-            child: CircularProgressIndicator(
+            child: shadcn.CircularProgressIndicator(
               strokeWidth: 2.5,
-              color: colorScheme.primary,
             ),
           )
         : Icon(Icons.radio_button_unchecked, color: colorScheme.outline);

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 
 /// Form section header with expandable/collapsible content container.
 ///
 /// Enables progressive disclosure for advanced settings and secondary form fields,
-/// keeping forms compact and readable on small screens.
+/// keeping forms compact and readable on small screens, composed on top of canonical
+/// `shadcn.Collapsible` primitives.
 class AppExpandableFormSection extends StatefulWidget {
   const AppExpandableFormSection({
     super.key,
@@ -64,18 +66,27 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
           ),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
+        child: shadcn.Collapsible(
+          isExpanded: _expanded,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _expanded = !expanded;
+            });
+          },
           children: [
-            InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm + 2,
-                ),
+            shadcn.CollapsibleTrigger(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  setState(() {
+                    _expanded = !_expanded;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm + 2,
+                  ),
                 child: Row(
                   children: [
                     if (widget.icon != null) ...[
@@ -159,9 +170,9 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
                 ),
               ),
             ),
-            AnimatedCrossFade(
-              firstChild: const SizedBox.shrink(),
-              secondChild: Padding(
+          ),
+          shadcn.CollapsibleContent(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
                   0,
@@ -179,10 +190,6 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
                   ],
                 ),
               ),
-              crossFadeState: _expanded
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 220),
             ),
           ],
         ),
@@ -190,3 +197,4 @@ class _AppExpandableFormSectionState extends State<AppExpandableFormSection> {
     );
   }
 }
+

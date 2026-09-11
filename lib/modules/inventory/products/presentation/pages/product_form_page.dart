@@ -16,7 +16,6 @@ import 'package:stock_count/core/notifications/notification_type.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_expandable_form_section.dart';
-import 'package:stock_count/core/widgets/app_form_section.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
-import '../theme/tokens/tokens.dart';
-
-/// Canonical avatar primitive for NexaBiz ERP.
+/// Canonical avatar primitive adapter for NexaBiz ERP.
+///
+/// Wraps and delegates directly to `shadcn.Avatar` for uniform avatar rendering,
+/// image loading error fallbacks, and intelligent initials generation.
 class AppAvatar extends StatelessWidget {
   const AppAvatar({
     super.key,
@@ -19,38 +21,25 @@ class AppAvatar extends StatelessWidget {
   final Color? backgroundColor;
   final Color? foregroundColor;
 
-  String get _initials {
-    if (name == null || name!.trim().isEmpty) return '?';
-    final parts = name!.trim().split(RegExp(r'\s+'));
-    if (parts.length == 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final bg = backgroundColor ?? scheme.primaryContainer;
-    final fg = foregroundColor ?? scheme.onPrimaryContainer;
+    final initials = (name != null && name!.trim().isNotEmpty)
+        ? shadcn.Avatar.getInitials(name!)
+        : '?';
 
     if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return CircleAvatar(
-        radius: size / 2,
-        backgroundImage: NetworkImage(imageUrl!),
-        backgroundColor: bg,
+      return shadcn.Avatar.network(
+        photoUrl: imageUrl!,
+        initials: initials,
+        size: size,
+        backgroundColor: backgroundColor,
       );
     }
 
-    return CircleAvatar(
-      radius: size / 2,
-      backgroundColor: bg,
-      child: Text(
-        _initials,
-        style: TextStyle(
-          fontSize: size * 0.4,
-          fontWeight: FontWeight.w700,
-          color: fg,
-        ),
-      ),
+    return shadcn.Avatar(
+      initials: initials,
+      size: size,
+      backgroundColor: backgroundColor,
     );
   }
 }
