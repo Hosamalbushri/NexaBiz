@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/app_data_table.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 void main() {
   group('AppBreakpoints Tests', () {
     test('Correctly identifies compact, medium, and expanded tiers', () {

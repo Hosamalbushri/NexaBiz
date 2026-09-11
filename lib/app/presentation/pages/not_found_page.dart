@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../localization/app_localizations.dart';
 import '../../router/app_routes.dart';
 import '../../theme/app_spacing.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Shown when GoRouter cannot match a location.
 class NotFoundPage extends StatelessWidget {

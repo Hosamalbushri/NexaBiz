@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Modal bottom sheet or page for inspecting synchronization outbox operations.
 class SyncInspectorSheet extends ConsumerStatefulWidget {

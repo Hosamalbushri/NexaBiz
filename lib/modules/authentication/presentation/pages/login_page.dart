@@ -11,9 +11,9 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/errors/app_failure.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import '../../../../core/utils/id_generator.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../domain/entities/authentication_mode.dart';
 import '../providers/auth_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Single unified, state-of-the-art sign-in page without mode tabs or extra steps.
 class LoginPage extends ConsumerStatefulWidget {

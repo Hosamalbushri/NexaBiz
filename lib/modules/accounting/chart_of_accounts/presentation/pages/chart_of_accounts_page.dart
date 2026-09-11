@@ -3,15 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/models/account_tree_node.dart';
 import '../../domain/services/account_labels.dart';
@@ -126,10 +122,10 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
           showCloseSearch: _searchExpanded,
           onCloseSearch: () => _setSearchExpanded(false),
           actions: [
-            IconButton(
+            AppIconButton(
               tooltip: l10n.accountingImportTitle,
               onPressed: () => AccountingRoutes.pushAccountsImport(context),
-              icon: const Icon(Icons.upload_file_outlined),
+              icon: Icons.upload_file_outlined,
             ),
           ],
         ),
@@ -202,7 +198,7 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
                           ),
                           if (isSearchEmpty) ...[
                             const SizedBox(height: AppSpacing.md),
-                            ElevatedButton.icon(
+                            AppButton(
                               onPressed: () async {
                                 try {
                                   await ref
@@ -229,8 +225,8 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
                                   }
                                 }
                               },
-                              icon: const Icon(Icons.account_tree_rounded),
-                              label: Text(l10n.accountingGenerateDefaultChart),
+                              icon: Icons.account_tree_rounded,
+                              label: l10n.accountingGenerateDefaultChart,
                             ),
                           ],
                         ],

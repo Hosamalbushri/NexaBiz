@@ -3,17 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../../core/auth/presentation/providers/auth_state_core.dart';
-import '../../../core/widgets/app_responsive.dart';
 import '../../theme/app_breakpoints.dart';
 import '../models/quick_action_definition.dart';
 import '../providers/quick_actions_provider.dart';
 import '../quick_action_runner.dart';
 import 'quick_actions_customize_sheet.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Opens the quick-actions sheet as a modal (fallback / non-shell hosts).
 Future<void> showQuickActionsSheet(BuildContext context) {

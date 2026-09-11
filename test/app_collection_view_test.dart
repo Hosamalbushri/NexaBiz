@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/widgets/app_collection_view.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 void main() {
   Widget wrap(Widget child) {
     return MaterialApp(home: Scaffold(body: child));

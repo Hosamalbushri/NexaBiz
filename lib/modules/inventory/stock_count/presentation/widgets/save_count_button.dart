@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 class SaveCountButton extends StatelessWidget {
   const SaveCountButton({
     super.key,

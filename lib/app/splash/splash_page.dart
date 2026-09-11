@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/app_providers.dart';
-import '../../core/widgets/app_error_state.dart';
 import '../../core/auth/presentation/providers/auth_state_core.dart';
 import '../bootstrap/app_initialization.dart';
 import '../bootstrap/app_initialization_state.dart';
@@ -12,6 +11,7 @@ import '../localization/app_localizations.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../router/app_routes.dart';
 import 'widgets/splash_brand.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Application splash: waits for [appInitializationProvider], then enters app.
 ///

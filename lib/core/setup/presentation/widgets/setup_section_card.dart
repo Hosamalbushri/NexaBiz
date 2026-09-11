@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_description_hint.dart';
 import '../../../domain/entities/account_role.dart';
 import '../../setup.dart';
 import 'setup_field_renderer.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Card container widget for rendering a [SetupSection] and its fields.
 class SetupSectionCard extends StatelessWidget {

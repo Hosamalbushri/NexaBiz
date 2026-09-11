@@ -5,8 +5,6 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_expandable_text.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/presentation/providers/core_providers.dart';
 import 'package:stock_count/core/domain/ports/posting_port.dart';
@@ -19,6 +17,7 @@ import 'package:stock_count/modules/inventory/cost_valuation/presentation/provid
 import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
 import '../widgets/inventory_document_journal_widget.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class StockReceiptDetailsPage extends ConsumerStatefulWidget {
   const StockReceiptDetailsPage({super.key, required this.receiptId});

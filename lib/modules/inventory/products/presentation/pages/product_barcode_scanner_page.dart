@@ -7,9 +7,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../widgets/barcode_scanner_overlay.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Full-screen barcode / QR entry: camera when supported, otherwise manual input.
 class ProductBarcodeScannerPage extends StatefulWidget {

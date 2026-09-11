@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/app_pagination_bar.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 void main() {
   group('Phase 5 — Accessibility, RTL & Interaction Tests', () {
     testWidgets(

@@ -7,13 +7,12 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/utils/digit_normalization.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/products/domain/models/catalog_search_field.dart';
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/modules/inventory/products/presentation/widgets/catalog_search_field_selector.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Core catalog product filter matching engine.
 List<Product> filterCatalogProducts({

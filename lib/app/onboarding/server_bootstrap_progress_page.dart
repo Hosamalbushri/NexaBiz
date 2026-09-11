@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
-import '../../core/widgets/app_button.dart';
 import '../../core/widgets/network_status_indicator.dart';
 import '../bootstrap/app_initialization.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import '../theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Dedicated initialization and completion screen for server-based device onboarding.
 class ServerBootstrapProgressPage extends ConsumerWidget {

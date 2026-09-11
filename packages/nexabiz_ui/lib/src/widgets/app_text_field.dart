@@ -3,7 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import 'app_field_shell.dart';
 
-/// Design-system text field primitive for NexaBiz ERP backed by shadcn_flutter.
+/// Design-system text field primitive for NexaBiz ERP.
+///
+/// Mirroring the exact visual styling of [AppSelectField] (Warehouse Cost Valuation Field):
+/// - Primary-tinted 20px prefix icons
+/// - `FontWeight.w600` input text styling
+/// - Matching hint text color & typography
+/// - Seamless [AppFieldShell] surface container integration
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
@@ -55,10 +61,34 @@ class AppTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final colorScheme = theme.colorScheme;
+    final shadcnTheme = shadcn.Theme.of(context);
+
     final hasShadcnTheme =
         context.findAncestorWidgetOfExactType<shadcn.ComponentTheme>() != null ||
             context.findAncestorWidgetOfExactType<shadcn.Theme>() != null;
+
+    final bodyMediumStyle = theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: enabled
+              ? colorScheme.onSurface
+              : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ) ??
+        TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: enabled
+              ? colorScheme.onSurface
+              : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        );
+
+    final hintTextStyle = theme.textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        ) ??
+        TextStyle(
+          fontSize: 14,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        );
 
     final childInput = hasShadcnTheme
         ? shadcn.TextField(
@@ -74,10 +104,9 @@ class AppTextField extends StatelessWidget {
             textInputAction: textInputAction,
             inputFormatters: inputFormatters,
             onChanged: onChanged != null ? (value) => onChanged!(value) : null,
-            onSubmitted: onSubmitted != null
-                ? (value) => onSubmitted!(value)
-                : null,
-            placeholder: hint != null ? Text(hint!) : null,
+            onSubmitted:
+                onSubmitted != null ? (value) => onSubmitted!(value) : null,
+            placeholder: hint != null ? Text(hint!, style: hintTextStyle) : null,
             border: const Border(),
           )
         : TextField(
@@ -94,10 +123,7 @@ class AppTextField extends StatelessWidget {
             inputFormatters: inputFormatters,
             onChanged: onChanged,
             onSubmitted: onSubmitted,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
-            ),
+            style: bodyMediumStyle,
             decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
@@ -107,10 +133,18 @@ class AppTextField extends StatelessWidget {
               errorBorder: InputBorder.none,
               contentPadding: EdgeInsets.zero,
               hintText: hint,
-              hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
+              hintStyle: hintTextStyle,
             ),
+          );
+
+    final prefixWidget = prefixIcon == null
+        ? null
+        : Icon(
+            prefixIcon,
+            size: 20,
+            color: enabled
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           );
 
     return AppFieldShell(
@@ -121,9 +155,8 @@ class AppTextField extends StatelessWidget {
       density: density,
       enabled: enabled,
       readOnly: readOnly,
-      prefix: prefixIcon == null
-          ? null
-          : Icon(prefixIcon, size: 20, color: scheme.primary),
+      focusNode: focusNode,
+      prefix: prefixWidget,
       suffix: suffixIcon,
       child: childInput,
     );

@@ -1,3 +1,4 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,6 @@ import 'package:printing/printing.dart';
 import '../../app/localization/app_localizations.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
-import '../widgets/app_snackbar.dart';
 import '../widgets/custom_app_bar.dart';
 import 'report_exception.dart';
 import 'report_file_actions.dart';

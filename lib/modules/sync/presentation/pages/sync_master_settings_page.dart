@@ -7,10 +7,10 @@ import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/sync/sync_settings_section.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
 import 'package:stock_count/modules/sync/presentation/pages/admin_sync_conflict_page.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Single authoritative Master Settings Hub for Sync Engine Module (`/sync/settings`).
 ///

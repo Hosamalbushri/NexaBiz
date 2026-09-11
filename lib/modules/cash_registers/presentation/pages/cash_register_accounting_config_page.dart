@@ -5,12 +5,6 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
@@ -19,6 +13,7 @@ import 'package:stock_count/modules/system_setup/presentation/providers/system_s
 import '../../domain/entities/cash_register.dart';
 import '../../domain/services/default_cash_register_resolver.dart';
 import '../providers/cash_register_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Cash Register & Accounting Bindings Configuration Page matching the standardized Module Settings design pattern.
 class CashRegisterAccountingConfigPage extends ConsumerStatefulWidget {

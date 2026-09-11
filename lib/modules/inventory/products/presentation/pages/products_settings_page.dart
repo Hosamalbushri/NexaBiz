@@ -5,8 +5,8 @@ import '../../../../../app/constants/app_constants.dart';
 import '../../../../../app/localization/app_localizations.dart';
 import '../../../../../app/settings/widgets/settings_chrome.dart';
 import '../../../../../app/theme/app_spacing.dart';
-import '../../../../../core/widgets/app_snackbar.dart';
 import '../../../../../core/widgets/custom_app_bar.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Dedicated settings page for the Products catalog service unit.
 class ProductsSettingsPage extends ConsumerStatefulWidget {

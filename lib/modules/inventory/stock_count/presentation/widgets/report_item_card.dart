@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
 import '../../domain/entities/inventory_item.dart';
 import 'status_badge.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class ReportItemCard extends StatelessWidget {
   const ReportItemCard({super.key, required this.item});

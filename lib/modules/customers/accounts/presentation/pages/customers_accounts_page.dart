@@ -5,15 +5,11 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/services/customer_account_link_port.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
 import 'package:stock_count/modules/customers/shared/presentation/pages/customers_routes.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Lists Chart of Accounts children under the customers parent group.
 ///

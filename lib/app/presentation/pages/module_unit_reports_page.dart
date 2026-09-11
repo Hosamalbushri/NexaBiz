@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/modules/module_providers.dart';
 import '../../../core/modules/report_category_definition.dart';
-import '../../../core/widgets/app_empty_state.dart';
-import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
@@ -13,6 +11,7 @@ import '../../theme/app_breakpoints.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_shadows.dart';
 import '../../theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Screen displaying sub-module unit reports for a selected module.
 class ModuleUnitReportsPage extends ConsumerWidget {

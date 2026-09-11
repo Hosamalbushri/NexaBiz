@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Widget displaying the accounting journal entry associated with an inventory document,
 /// grouped clearly by currency with complete line details and base currency values.

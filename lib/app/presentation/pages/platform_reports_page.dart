@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/modules/module_providers.dart';
-import '../../../core/widgets/app_empty_state.dart';
-import '../../../core/widgets/app_responsive.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../shared/widgets/service_grid.dart';
 import '../../constants/app_constants.dart';
@@ -13,6 +11,7 @@ import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
 import '../../sync/app_bar_sync_actions.dart';
 import '../../theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Dynamic platform reports hub — renders module report cards directly using ServiceGrid.
 class PlatformReportsPage extends ConsumerWidget {

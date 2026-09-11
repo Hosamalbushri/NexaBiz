@@ -69,6 +69,7 @@ export 'src/widgets/app_select_field.dart';
 export 'src/widgets/app_snackbar.dart';
 export 'src/widgets/app_surface.dart';
 export 'src/widgets/app_icon_button.dart';
+export 'src/widgets/app_icon_avatar.dart';
 export 'src/widgets/app_tree.dart';
 export 'src/widgets/app_form.dart';
 export 'src/widgets/app_split_view.dart';

@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/modules/currency/domain/entities/currency.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Canonical currency dropdown & picker selector component for NexaBiz ERP.
 ///

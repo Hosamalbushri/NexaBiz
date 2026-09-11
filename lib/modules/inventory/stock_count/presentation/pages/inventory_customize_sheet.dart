@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/models/inventory_service_definition.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Choose which inventory services appear on the hub and drag to reorder them.
 class InventoryCustomizeSheet extends StatefulWidget {

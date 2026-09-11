@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_dynamic_report_table.dart'
     as table;
-import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import '../../application/universal_report_execution_controller.dart';
 import '../../domain/adapters/report_dataset_compatibility_adapter.dart';
 import '../../domain/models/report_dataset.dart';
@@ -11,6 +10,7 @@ import '../../domain/models/report_page.dart';
 import '../../domain/models/report_summary.dart';
 import '../../domain/services/report_drill_down_handler.dart';
 import '../../export/pdf_report_exporter.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Full-screen Table View page supporting incremental infinite scrolling & real-time KPI updates.
 class UniversalReportTableViewPage extends StatefulWidget {

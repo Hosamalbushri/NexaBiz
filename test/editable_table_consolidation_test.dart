@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/app_editable_table_shell.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dart';
 import 'package:stock_count/modules/sales/invoices/presentation/widgets/sale_products_table.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 void main() {
   group('Phase 2 — Editable Line-Item Table Architecture Tests', () {

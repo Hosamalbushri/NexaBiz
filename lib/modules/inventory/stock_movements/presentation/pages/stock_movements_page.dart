@@ -6,12 +6,12 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 import 'package:stock_count/modules/inventory/warehouses/presentation/pages/stock_transfers_list_page.dart';
 import 'stock_issues_list_page.dart';
 import 'stock_receipts_list_page.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Stock Movements Hub Page ('الحركة') matching the Sales Module Hub layout.
 class StockMovementsPage extends ConsumerStatefulWidget {

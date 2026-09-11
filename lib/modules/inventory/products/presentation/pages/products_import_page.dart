@@ -8,14 +8,11 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/stock_count/domain/models/import_validation_exception.dart';
 import '../../domain/models/product_exception.dart';
 import '../providers/product_import_provider.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class ProductsImportPage extends ConsumerWidget {
   const ProductsImportPage({super.key});

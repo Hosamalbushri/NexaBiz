@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Reusable KPI tile for metrics, balance summaries, and status cards.
 class AppKpiTile extends StatelessWidget {

@@ -5,10 +5,10 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
 import 'customers_routes.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Hub list of all Customers-module settings.
 class CustomersSettingsPage extends ConsumerWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class InventoryStatusBadge extends StatelessWidget {
   const InventoryStatusBadge({

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stock_count/app/router/app_routes.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 enum StockPostingErrorCategory {
   configuration,
@@ -48,8 +47,9 @@ class StockPostingErrorDetails {
         category: StockPostingErrorCategory.configuration,
         actionLabel: 'الذهاب للتهيئة المحاسبية',
         onAction: () {
-          Navigator.of(context).pop();
-          context.push(AppRoutes.settingsSetup);
+          if (context.mounted) {
+            context.push(AppRoutes.settingsSetup);
+          }
         },
       );
     }
@@ -64,7 +64,6 @@ class StockPostingErrorDetails {
         actionLabel: onEditRequested != null ? 'تعديل المستند' : null,
         onAction: onEditRequested != null
             ? () {
-                Navigator.of(context).pop();
                 onEditRequested();
               }
             : null,
@@ -106,127 +105,44 @@ Future<void> showStockPostingErrorDialog(
   String? actionLabel,
   VoidCallback? onAction,
 }) async {
-  final theme = Theme.of(context);
-  final scheme = theme.colorScheme;
-
-  final (icon, iconColor, headerBg) = switch (category) {
-    StockPostingErrorCategory.configuration => (
-      Icons.settings_suggest_rounded,
-      Colors.orange.shade800,
-      Colors.orange.shade50,
-    ),
-    StockPostingErrorCategory.zeroCost => (
-      Icons.monetization_on_outlined,
-      Colors.amber.shade900,
-      Colors.amber.shade50,
-    ),
-    StockPostingErrorCategory.closedPeriod => (
-      Icons.edit_calendar_rounded,
-      Colors.purple.shade800,
-      Colors.purple.shade50,
-    ),
-    StockPostingErrorCategory.shortage => (
-      Icons.inventory_2_outlined,
-      Colors.red.shade800,
-      Colors.red.shade50,
-    ),
-    StockPostingErrorCategory.permission => (
-      Icons.lock_rounded,
-      Colors.deepOrange.shade800,
-      Colors.deepOrange.shade50,
-    ),
-    _ => (
-      Icons.error_outline_rounded,
-      scheme.error,
-      scheme.errorContainer.withValues(alpha: 0.3),
-    ),
+  final iconData = switch (category) {
+    StockPostingErrorCategory.configuration => Icons.settings_suggest_rounded,
+    StockPostingErrorCategory.zeroCost => Icons.monetization_on_outlined,
+    StockPostingErrorCategory.closedPeriod => Icons.edit_calendar_rounded,
+    StockPostingErrorCategory.shortage => Icons.inventory_2_outlined,
+    StockPostingErrorCategory.permission => Icons.lock_rounded,
+    _ => Icons.error_outline_rounded,
   };
 
-  await showDialog<void>(
+  final hasAction = actionLabel != null && onAction != null;
+
+  await AppDialog.show<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      iconPadding: EdgeInsets.zero,
-      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      title: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(color: headerBg, shape: BoxShape.circle),
-            child: Icon(icon, size: 36, color: iconColor),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: scheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Text(
-                message,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.4,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSurface,
-                ),
-              ),
-            ),
-            if (subtitle != null && subtitle.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.3,
-                ),
-              ),
-            ],
-          ],
+    title: title,
+    description: subtitle,
+    icon: iconData,
+    isDestructive: true,
+    size: AppDialogSize.medium,
+    cancelLabel: 'إغلاق',
+    confirmLabel: hasAction ? actionLabel : 'إغلاق',
+    onConfirm: hasAction ? onAction : null,
+    child: Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.red.withValues(alpha: 0.3),
         ),
       ),
-      actions: [
-        OverflowBar(
-          alignment: MainAxisAlignment.end,
-          spacing: AppSpacing.xs,
-          overflowSpacing: AppSpacing.xs,
-          children: [
-            AppButton(
-              label: 'إغلاق',
-              variant: AppButtonVariant.text,
-              onPressed: () => Navigator.of(ctx).pop(),
-            ),
-            if (actionLabel != null && onAction != null)
-              AppButton(
-                label: actionLabel,
-                icon: Icons.arrow_forward_rounded,
-                trailingIcon: true,
-                onPressed: onAction,
-              ),
-          ],
+      child: Text(
+        message,
+        style: const TextStyle(
+          fontSize: 14,
+          height: 1.45,
+          fontWeight: FontWeight.w600,
         ),
-      ],
+      ),
     ),
   );
 }

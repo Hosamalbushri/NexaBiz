@@ -5,10 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
 import 'package:stock_count/modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Accounting module settings bundle (embedded in the Settings module hub).
 class AccountingSettingsPanel extends ConsumerWidget {

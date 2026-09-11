@@ -2,19 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_collection_view.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_pagination_bar.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/app_view_mode_toggle.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../domain/entities/product.dart';
@@ -449,133 +441,68 @@ class _ProductsToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.45),
-        ),
+    return AppSurface(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xs,
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: AppSpacing.xs,
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isCompact = constraints.maxWidth < 360;
-            return Row(
-              children: [
-                AppViewModeToggle<ProductsViewMode>(
-                  selected: viewMode,
-                  options: [
-                    AppViewModeOption(
-                      value: ProductsViewMode.list,
-                      icon: Icons.view_list_rounded,
-                      tooltip: l10n.productsViewList,
-                    ),
-                    AppViewModeOption(
-                      value: ProductsViewMode.grid,
-                      icon: Icons.grid_view_rounded,
-                      tooltip: l10n.productsViewGrid,
-                    ),
-                  ],
-                  onChanged: onViewModeChanged,
-                ),
-                const Spacer(),
-                Tooltip(
-                  message: l10n.productsScanBarcode,
-                  child: Material(
-                    color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: InkWell(
-                      onTap: onScan,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: Icon(
-                          Icons.qr_code_scanner_outlined,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+      variant: AppSurfaceVariant.flat,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 360;
+          return Row(
+            children: [
+              AppViewModeToggle<ProductsViewMode>(
+                selected: viewMode,
+                options: [
+                  AppViewModeOption(
+                    value: ProductsViewMode.list,
+                    icon: Icons.view_list_rounded,
+                    tooltip: l10n.productsViewList,
                   ),
-                ),
-                if (onImport != null) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  Tooltip(
-                    message: l10n.productsImportTitle,
-                    child: Material(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      child: InkWell(
-                        onTap: onImport,
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        child: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Icon(
-                            Icons.upload_file_outlined,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ),
+                  AppViewModeOption(
+                    value: ProductsViewMode.grid,
+                    icon: Icons.grid_view_rounded,
+                    tooltip: l10n.productsViewGrid,
                   ),
                 ],
-                if (onAdd != null) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  Tooltip(
-                    message: l10n.productsAdd,
-                    child: Material(
-                      color: colorScheme.primary,
-                      elevation: 2,
-                      shadowColor: colorScheme.primary.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      child: InkWell(
-                        onTap: onAdd,
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal:
-                                isCompact ? AppSpacing.sm : AppSpacing.md,
-                            vertical: AppSpacing.sm,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.add_rounded,
-                                size: 20,
-                                color: colorScheme.onPrimary,
-                              ),
-                              if (!isCompact) ...[
-                                const SizedBox(width: AppSpacing.xs),
-                                Text(
-                                  l10n.productsAdd,
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: colorScheme.onPrimary,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.1,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                onChanged: onViewModeChanged,
+              ),
+              const Spacer(),
+              AppIconButton(
+                icon: Icons.qr_code_scanner_outlined,
+                tooltip: l10n.productsScanBarcode,
+                onPressed: onScan,
+              ),
+              if (onImport != null) ...[
+                const SizedBox(width: AppSpacing.xs),
+                AppIconButton(
+                  icon: Icons.upload_file_outlined,
+                  tooltip: l10n.productsImportTitle,
+                  onPressed: onImport,
+                ),
               ],
-            );
-          },
-        ),
+              if (onAdd != null) ...[
+                const SizedBox(width: AppSpacing.xs),
+                if (isCompact)
+                  AppIconButton(
+                    variant: AppIconButtonVariant.primary,
+                    icon: Icons.add_rounded,
+                    tooltip: l10n.productsAdd,
+                    onPressed: onAdd,
+                  )
+                else
+                  AppButton(
+                    variant: AppButtonVariant.filled,
+                    onPressed: onAdd,
+                    icon: Icons.add_rounded,
+                    label: l10n.productsAdd,
+                  ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -606,77 +533,58 @@ class _ProductListCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return RepaintBoundary(
-      child: Material(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: InkWell(
-          onTap: onEdit,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: ColoredBox(
-                      color: colorScheme.primary.withValues(alpha: 0.12),
-                      child: SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Icon(
-                          Icons.inventory_2_outlined,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          product.name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          '${l10n.packSize} ${product.packSize} · ${l10n.price} ${_formatPrice(product.price)}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        _ProductCodeBadge(code: product.itemCode),
-                      ],
-                    ),
-                  ),
-                  if (onDelete != null)
-                    IconButton(
-                      tooltip: l10n.productsDelete,
-                      onPressed: onDelete,
-                      icon: Icon(
-                        Icons.delete_outline_rounded,
-                        color: colorScheme.error,
-                      ),
-                    ),
-                ],
+    return AppSurface(
+      onTap: onEdit,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: ColoredBox(
+              color: colorScheme.primary.withValues(alpha: 0.12),
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Icon(
+                  Icons.inventory_2_outlined,
+                  color: colorScheme.primary,
+                ),
               ),
             ),
           ),
-        ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  '${l10n.packSize} ${product.packSize} · ${l10n.price} ${_formatPrice(product.price)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _ProductCodeBadge(code: product.itemCode),
+              ],
+            ),
+          ),
+          if (onDelete != null)
+            AppIconButton(
+              icon: Icons.delete_outline_rounded,
+              color: colorScheme.error,
+              tooltip: l10n.productsDelete,
+              onPressed: onDelete,
+            ),
+        ],
       ),
     );
   }
@@ -700,96 +608,75 @@ class _ProductGridCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return RepaintBoundary(
-      child: Material(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: InkWell(
-          onTap: onEdit,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        child: ColoredBox(
-                          color: colorScheme.primary.withValues(alpha: 0.12),
-                          child: SizedBox(
-                            width: 36,
-                            height: 36,
-                            child: Icon(
-                              Icons.inventory_2_outlined,
-                              color: colorScheme.primary,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      if (onDelete != null)
-                        IconButton(
-                          tooltip: l10n.productsDelete,
-                          visualDensity: VisualDensity.compact,
-                          onPressed: onDelete,
-                          icon: Icon(
-                            Icons.delete_outline_rounded,
-                            color: colorScheme.error,
-                            size: 20,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          product.name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${l10n.packSize} ${product.packSize}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${l10n.price} ${_formatPrice(product.price)}',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: _ProductCodeBadge(code: product.itemCode),
-                        ),
-                      ],
+    return AppSurface(
+      onTap: onEdit,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                child: ColoredBox(
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Icon(
+                      Icons.inventory_2_outlined,
+                      color: colorScheme.primary,
+                      size: 20,
                     ),
                   ),
-                ],
+                ),
               ),
+              const Spacer(),
+              if (onDelete != null)
+                AppIconButton(
+                  icon: Icons.delete_outline_rounded,
+                  color: colorScheme.error,
+                  tooltip: l10n.productsDelete,
+                  onPressed: onDelete,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  product.name,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${l10n.packSize} ${product.packSize}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${l10n.price} ${_formatPrice(product.price)}',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: _ProductCodeBadge(code: product.itemCode),
+                ),
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -803,30 +690,10 @@ class _ProductCodeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(AppRadius.xs),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: 3,
-        ),
-        child: Text(
-          code,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: colorScheme.onPrimaryContainer,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ),
+    return AppStatusBadge(
+      label: code,
+      tone: AppStatusTone.neutral,
+      animate: false,
     );
   }
 }

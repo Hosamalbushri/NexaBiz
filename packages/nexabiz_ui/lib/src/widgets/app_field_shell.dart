@@ -1,51 +1,47 @@
 import 'package:flutter/material.dart';
-import '../theme/app_radius.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
+
 import '../theme/app_spacing.dart';
 
 /// Heights for standardized form field density.
 enum AppFieldDensity {
-  /// Compact density (38px height) — ideal for table cells or dense headers.
+  /// Compact density (36px height) — ideal for table cells or dense headers.
   compact,
 
-  /// Standard density (48px height) — default for standard ERP forms.
+  /// Standard density (44px height) — default for standard ERP forms.
   standard,
 
-  /// Large density (56px height) — ideal for primary touch / search inputs.
+  /// Large density (52px height) — ideal for primary touch / search inputs.
   large,
 }
 
 extension AppFieldDensityX on AppFieldDensity {
   double get height => switch (this) {
-    AppFieldDensity.compact => 38.0,
-    AppFieldDensity.standard => 48.0,
-    AppFieldDensity.large => 56.0,
-  };
+        AppFieldDensity.compact => 36.0,
+        AppFieldDensity.standard => 44.0,
+        AppFieldDensity.large => 52.0,
+      };
 
   EdgeInsetsGeometry get contentPadding => switch (this) {
-    AppFieldDensity.compact => const EdgeInsets.symmetric(
-      horizontal: 10,
-      vertical: 8,
-    ),
-    AppFieldDensity.standard => const EdgeInsets.symmetric(
-      horizontal: 12,
-      vertical: 12,
-    ),
-    AppFieldDensity.large => const EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 16,
-    ),
-  };
+        AppFieldDensity.compact => const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 6,
+          ),
+        AppFieldDensity.standard => const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
+        AppFieldDensity.large => const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
+      };
 }
 
 /// Canonical presentation shell for NexaBiz ERP form fields.
 ///
-/// Standardizes:
-/// - Label typography, required asterisk (`*`)
-/// - Field heights & content padding via [AppFieldDensity]
-/// - Helper text & error text presentation
-/// - Focus, error, disabled, and read-only visual decorations
-/// - Accessibility [Semantics]
-class AppFieldShell extends StatelessWidget {
+/// Fully aligned with [AppDropdown] and `shadcn_flutter.Select` design specifications.
+class AppFieldShell extends StatefulWidget {
   const AppFieldShell({
     super.key,
     required this.child,
@@ -56,10 +52,14 @@ class AppFieldShell extends StatelessWidget {
     this.density = AppFieldDensity.standard,
     this.enabled = true,
     this.readOnly = false,
-    this.focused = false,
+    this.focused,
     this.prefix,
+    this.showPrefixDivider = false,
     this.suffix,
+    this.shortcutHint,
+    this.onClear,
     this.onTap,
+    this.focusNode,
   });
 
   final Widget child;
@@ -70,111 +70,169 @@ class AppFieldShell extends StatelessWidget {
   final AppFieldDensity density;
   final bool enabled;
   final bool readOnly;
-  final bool focused;
+  final bool? focused;
   final Widget? prefix;
+  final bool showPrefixDivider;
   final Widget? suffix;
+  final String? shortcutHint;
+  final VoidCallback? onClear;
   final VoidCallback? onTap;
+  final FocusNode? focusNode;
+
+  @override
+  State<AppFieldShell> createState() => _AppFieldShellState();
+}
+
+class _AppFieldShellState extends State<AppFieldShell> {
+  bool _isHovered = false;
+  bool _isFocusedInternal = false;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final hasError = errorText != null && errorText!.isNotEmpty;
+    final theme = shadcn.Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    final borderColor = hasError
-        ? scheme.error
-        : focused
-        ? scheme.primary
-        : scheme.outlineVariant.withValues(alpha: 0.5);
+    final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
+    final isFocused = widget.focused ?? _isFocusedInternal;
 
-    final fillColor = !enabled
-        ? scheme.surfaceContainerHighest.withValues(alpha: 0.3)
-        : readOnly
-        ? scheme.surfaceContainerHighest.withValues(alpha: 0.15)
-        : scheme.surface;
+    final fillColor = !widget.enabled
+        ? colorScheme.muted.withValues(alpha: 0.5)
+        : widget.readOnly
+            ? colorScheme.muted.withValues(alpha: 0.3)
+            : colorScheme.card;
 
-    return Semantics(
-      label: label,
-      enabled: enabled,
-      readOnly: readOnly,
-      hint: errorText,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (label != null && label!.isNotEmpty) ...[
-            Text.rich(
-              TextSpan(
-                text: label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: !enabled
-                      ? scheme.onSurface.withValues(alpha: 0.38)
-                      : scheme.onSurface,
-                ),
-                children: [
-                  if (required)
-                    TextSpan(
-                      text: ' *',
-                      style: TextStyle(
-                        color: scheme.error,
-                        fontWeight: FontWeight.w900,
+    Color borderColor;
+    if (hasError) {
+      borderColor = colorScheme.destructive;
+    } else if (isFocused) {
+      borderColor = colorScheme.primary;
+    } else if (_isHovered && widget.enabled) {
+      borderColor = colorScheme.foreground.withValues(alpha: 0.35);
+    } else {
+      borderColor = colorScheme.border;
+    }
+
+    return Focus(
+      focusNode: widget.focusNode,
+      onFocusChange: (focused) {
+        setState(() {
+          _isFocusedInternal = focused;
+        });
+      },
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Semantics(
+          label: widget.label,
+          enabled: widget.enabled,
+          readOnly: widget.readOnly,
+          hint: widget.errorText,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.label case final String lbl when lbl.isNotEmpty) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      lbl,
+                      style: theme.typography.small.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: widget.enabled
+                            ? colorScheme.foreground
+                            : colorScheme.mutedForeground,
                       ),
                     ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-          ],
-          InkWell(
-            onTap: enabled && !readOnly ? onTap : null,
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              constraints: BoxConstraints(minHeight: density.height),
-              padding: density.contentPadding,
-              decoration: BoxDecoration(
-                color: fillColor,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                border: Border.all(
-                  color: borderColor,
-                  width: focused || hasError ? 1.5 : 1.0,
+                    if (widget.required) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: colorScheme.destructive,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 6),
+              ],
+              InkWell(
+                onTap: widget.enabled && !widget.readOnly ? widget.onTap : null,
+                borderRadius: BorderRadius.circular(6),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 140),
+                  curve: Curves.easeOutCubic,
+                  constraints: BoxConstraints(minHeight: widget.density.height),
+                  padding: widget.density.contentPadding,
+                  decoration: BoxDecoration(
+                    color: fillColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: borderColor,
+                      width: isFocused || hasError ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      if (widget.prefix != null) ...[
+                        widget.prefix!,
+                        if (widget.showPrefixDivider) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 1,
+                            height: 14,
+                            color: colorScheme.border,
+                          ),
+                          const SizedBox(width: 8),
+                        ] else
+                          const SizedBox(width: 8),
+                      ],
+                      Expanded(child: widget.child),
+                      if (widget.onClear != null &&
+                          widget.enabled &&
+                          !widget.readOnly) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: widget.onClear,
+                          child: Icon(
+                            Icons.cancel_rounded,
+                            size: 16,
+                            color: colorScheme.mutedForeground,
+                          ),
+                        ),
+                      ],
+                      if (widget.suffix != null) ...[
+                        const SizedBox(width: 8),
+                        widget.suffix!,
+                      ],
+                    ],
+                  ),
                 ),
               ),
-              child: Row(
-                children: [
-                  if (prefix != null) ...[
-                    prefix!,
-                    const SizedBox(width: AppSpacing.xs + 2),
-                  ],
-                  Expanded(child: child),
-                  if (suffix != null) ...[
-                    const SizedBox(width: AppSpacing.xs + 2),
-                    suffix!,
-                  ],
-                ],
-              ),
-            ),
+              if (hasError) ...[
+                const SizedBox(height: 4),
+                Text(
+                  widget.errorText!,
+                  style: theme.typography.small.copyWith(
+                    color: colorScheme.destructive,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ] else if (widget.helperText case final String helper
+                  when helper.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  helper,
+                  style: theme.typography.small.copyWith(
+                    color: colorScheme.mutedForeground,
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (hasError) ...[
-            const SizedBox(height: 4),
-            Text(
-              errorText!,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ] else if (helperText != null && helperText!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              helperText!,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

@@ -3,15 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/models/account_exception.dart';
@@ -20,6 +13,7 @@ import '../providers/account_providers.dart';
 import '../widgets/account_exception_messages.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
 import 'package:stock_count/core/routes/reports_routes_core.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 
 /// Account details — prepared for future balance / ledger sections.
@@ -71,48 +65,66 @@ class AccountDetailsPage extends ConsumerWidget {
             ? null
             : ref.watch(accountByUuidProvider(account.parentId!));
 
-        return Scaffold(
-          appBar: CustomAppBar(
-            title: AccountLabels.displayName(l10n, account),
-            showBackButton: true,
-            actions: [
-              if (account.isGroup && account.isActive)
-                IconButton(
-                  tooltip: l10n.accountingAddChildAccount,
-                  icon: const Icon(Icons.add_box_outlined),
-                  onPressed: () => AccountingRoutes.pushAccountsCreate(
-                    context,
-                    parentId: account.uuid,
-                  ),
-                ),
+        return AppDetailPagePattern(
+          title: AccountLabels.displayName(l10n, account),
+          actions: [
+            if (account.isGroup && account.isActive)
               IconButton(
-                tooltip: l10n.accountingEditAccount,
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: () =>
-                    AccountingRoutes.pushAccountEdit(context, account.id),
+                tooltip: l10n.accountingAddChildAccount,
+                icon: const Icon(Icons.add_box_outlined),
+                onPressed: () => AccountingRoutes.pushAccountsCreate(
+                  context,
+                  parentId: account.uuid,
+                ),
+              ),
+            IconButton(
+              tooltip: l10n.accountingEditAccount,
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () =>
+                  AccountingRoutes.pushAccountEdit(context, account.id),
+            ),
+          ],
+          summaryBanner: Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              AppStatusBadge(
+                label: account.isActive
+                    ? l10n.accountingAccountActive
+                    : l10n.accountingAccountInactive,
+                tone: account.isActive
+                    ? AppStatusTone.success
+                    : AppStatusTone.neutral,
+                animate: false,
+              ),
+              AppStatusBadge(
+                label: account.isGroup
+                    ? l10n.accountingAccountGroup
+                    : l10n.accountingAccountPosting,
+                tone: AppStatusTone.info,
+                animate: false,
               ),
             ],
           ),
-          body: ListView(
-            padding: AppConstants.pageInsets(context),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppCard(
+              AppDetailSurfaceCard(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldName,
                       value: AccountLabels.displayName(l10n, account),
                     ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldCode,
                       value: account.accountCode,
                     ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldType,
                       value: AccountLabels.typeLabel(l10n, account.accountType),
                     ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldParent,
                       value: parentAsync == null
                           ? l10n.accountingRootAccount
@@ -124,30 +136,18 @@ class AccountDetailsPage extends ConsumerWidget {
                               error: (_, _) => '…',
                             ),
                     ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldNormalBalance,
                       value: AccountLabels.normalBalanceLabel(
                         l10n,
                         account.normalBalance,
                       ),
                     ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldLevel,
                       value: '${account.level}',
                     ),
-                    _DetailRow(
-                      label: l10n.accountingFieldKind,
-                      value: account.isGroup
-                          ? l10n.accountingAccountGroup
-                          : l10n.accountingAccountPosting,
-                    ),
-                    _DetailRow(
-                      label: l10n.accountingFieldStatus,
-                      value: account.isActive
-                          ? l10n.accountingAccountActive
-                          : l10n.accountingAccountInactive,
-                    ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldSystem,
                       value: account.isSystemAccount
                           ? l10n.accountingYes
@@ -155,15 +155,15 @@ class AccountDetailsPage extends ConsumerWidget {
                     ),
                     if (account.description != null &&
                         account.description!.isNotEmpty)
-                      _DetailRow(
+                      AppDetailInfoRow(
                         label: l10n.accountingFieldDescription,
                         value: account.description!,
                       ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldCreatedAt,
                       value: dateFormat.format(account.createdAt.toLocal()),
                     ),
-                    _DetailRow(
+                    AppDetailInfoRow(
                       label: l10n.accountingFieldUpdatedAt,
                       value: dateFormat.format(account.updatedAt.toLocal()),
                     ),
@@ -178,7 +178,7 @@ class AccountDetailsPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              AppCard(
+              AppDetailSurfaceCard(
                 child: Column(
                   children: [
                     ListTile(
@@ -325,42 +325,5 @@ class AccountDetailsPage extends ConsumerWidget {
         isSuccess: false,
       );
     }
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

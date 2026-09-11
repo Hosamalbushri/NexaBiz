@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_spacing.dart';
 import '../../core/modules/app_module.dart';
-import '../../core/widgets/app_empty_state.dart';
 import 'service_grid.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Generic service launcher that lists modules without knowing their types.
 class ServiceLauncher extends StatelessWidget {

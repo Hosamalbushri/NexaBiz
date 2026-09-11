@@ -4,7 +4,6 @@ import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 

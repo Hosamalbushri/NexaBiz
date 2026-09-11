@@ -10,8 +10,8 @@ import '../../sync/app_bar_sync_actions.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/auth/presentation/providers/auth_state_core.dart';
-import '../../../core/widgets/app_responsive.dart';
 import '../../../shared/widgets/service_launcher.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Services branch: launches business modules via the module registry.
 class ServiceLauncherPage extends ConsumerWidget {

@@ -8,12 +8,6 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_select_field.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/app_text_field.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../../domain/entities/transaction_type.dart';
@@ -28,11 +22,11 @@ import 'package:stock_count/app/exit/app_exit_scope.dart';
 import '../widgets/rp_entry_lines_table.dart';
 import 'package:stock_count/core/widgets/app_filter_sheet.dart';
 import 'package:stock_count/core/widgets/app_kpi_tile.dart';
-import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
 import '../widgets/rp_error_messages.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
 import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class FinancialTransactionFormPage extends ConsumerStatefulWidget {
   const FinancialTransactionFormPage({

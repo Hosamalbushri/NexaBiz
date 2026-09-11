@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/app_routes.dart';
-import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/app_lock/presentation/widgets/app_lock_settings_section.dart';
@@ -14,6 +13,7 @@ import '../theme/app_spacing.dart';
 import 'widgets/settings_chrome.dart';
 
 import '../../modules/authentication/domain/entities/authentication_mode.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Dedicated security settings (Authentication, Change Password, Biometrics & App Lock PIN).
 class SecuritySettingsPage extends ConsumerStatefulWidget {

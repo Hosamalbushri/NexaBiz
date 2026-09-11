@@ -1,7 +1,7 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/digit_normalization.dart';
-import 'app_text_field.dart';
 
 /// Search field with consistent styling and clear action.
 class AppSearchBar extends StatefulWidget {

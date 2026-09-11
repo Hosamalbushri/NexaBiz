@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
-import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import '../../domain/entities/journal_entry.dart';
@@ -50,6 +45,7 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
   final _descriptionController = TextEditingController();
   var _entryDate = DateTime.now();
   var _currencyCode = 'SAR';
+  final _currencyController = TextEditingController(text: 'SAR');
   var _isPosted = true;
   var _saving = false;
   var _hydrated = false;
@@ -59,6 +55,7 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
   void dispose() {
     _voucherController.dispose();
     _descriptionController.dispose();
+    _currencyController.dispose();
     super.dispose();
   }
 
@@ -70,6 +67,7 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
     _descriptionController.text = entry.description ?? '';
     _entryDate = entry.entryDate.toLocal();
     _currencyCode = entry.currencyCode;
+    _currencyController.text = entry.currencyCode;
     _isPosted = entry.isPosted;
     _lines
       ..clear()
@@ -101,6 +99,7 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
     if (!_hydrated && !widget.isEditing) {
       if (defaultCurrency != null && defaultCurrency.isNotEmpty) {
         _currencyCode = defaultCurrency;
+        _currencyController.text = defaultCurrency;
       }
       _hydrated = true;
     }
@@ -156,39 +155,22 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
                       }
                     },
                   ),
-                  TextFormField(
+                  AppTextField(
                     controller: _voucherController,
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingJournalFieldVoucherNumber,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.accountingJournalFieldVoucherNumber;
-                      }
-                      return null;
-                    },
+                    label: l10n.accountingJournalFieldVoucherNumber,
+                    required: true,
                   ),
-                  TextFormField(
+                  AppTextField(
                     controller: _descriptionController,
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingJournalFieldDescription,
-                    ),
+                    label: l10n.accountingJournalFieldDescription,
                     maxLines: 2,
                   ),
-                  TextFormField(
-                    initialValue: _currencyCode,
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingJournalFieldCurrency,
-                    ),
-                    textCapitalization: TextCapitalization.characters,
+                  AppTextField(
+                    controller: _currencyController,
+                    label: l10n.accountingJournalFieldCurrency,
+                    required: true,
                     onChanged: (value) =>
                         _currencyCode = value.trim().toUpperCase(),
-                    validator: (value) {
-                      if (value == null || value.trim().length < 3) {
-                        return l10n.accountingJournalFieldCurrency;
-                      }
-                      return null;
-                    },
                   ),
                 ],
               ),
@@ -366,10 +348,12 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
           },
         ),
         const SizedBox(height: AppSpacing.xs),
-        OutlinedButton.icon(
+        const SizedBox(height: AppSpacing.xs),
+        AppButton(
+          label: l10n.accountingJournalAddLine,
+          icon: Icons.add,
+          variant: AppButtonVariant.outlined,
           onPressed: () => setState(() => widget.lines.add(_LineForm())),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.accountingJournalAddLine),
         ),
       ],
     );
@@ -384,59 +368,48 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
     final mediaWidth = MediaQuery.of(context).size.width;
     final isCompact = mediaWidth < 500;
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value: line.accountUuid,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingJournalAccount,
-                    ),
-                    items: [
-                      for (final account in posting)
-                        DropdownMenuItem(
-                          value: account.uuid,
-                          child: Text(
+    return AppSurface(
+      variant: AppSurfaceVariant.outlined,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: AppSelectField<String?>(
+                  value: line.accountUuid,
+                  label: l10n.accountingJournalAccount,
+                  required: true,
+                  items: [
+                    for (final account in posting)
+                      AppSelectItem<String?>(
+                        value: account.uuid,
+                        label:
                             '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => line.accountUuid = value),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.accountingJournalPickAccount;
-                      }
-                      return null;
-                    },
-                  ),
+                      ),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => line.accountUuid = value),
                 ),
-                if (widget.lines.length > 2) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        widget.lines.removeAt(index);
-                      });
-                    },
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    tooltip: l10n.localeName == 'ar'
-                        ? 'حذف السطر'
-                        : 'Delete line',
-                  ),
-                ],
+              ),
+              if (widget.lines.length > 2) ...[
+                const SizedBox(width: AppSpacing.xs),
+                AppIconButton(
+                  icon: Icons.delete_outline,
+                  color: Colors.red,
+                  tooltip: l10n.localeName == 'ar'
+                      ? 'حذف السطر'
+                      : 'Delete line',
+                  onPressed: () {
+                    setState(() {
+                      widget.lines.removeAt(index);
+                    });
+                  },
+                ),
               ],
-            ),
+            ],
+          ),
             const SizedBox(height: AppSpacing.sm),
             if (isCompact) ...[
               AppAmountField(
@@ -497,7 +470,6 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
             ],
           ],
         ),
-      ),
-    );
+      );
   }
 }

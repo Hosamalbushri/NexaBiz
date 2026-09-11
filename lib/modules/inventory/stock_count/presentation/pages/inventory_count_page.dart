@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/services/counting_calculator.dart';
 import '../../domain/entities/inventory_item.dart';
@@ -21,6 +19,7 @@ import 'package:stock_count/modules/inventory/products/presentation/widgets/pack
 import '../widgets/quantity_input_card.dart';
 import '../widgets/selected_item_card.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class InventoryCountPage extends ConsumerStatefulWidget {
   const InventoryCountPage({super.key});

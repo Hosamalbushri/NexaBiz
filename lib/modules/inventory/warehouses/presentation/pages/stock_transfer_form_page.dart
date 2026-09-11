@@ -5,13 +5,13 @@ import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 
 import '../../domain/entities/stock_transfer.dart';
 import '../providers/stock_transfer_providers.dart';
 import '../providers/warehouse_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class _TransferItemRow {
   _TransferItemRow({

@@ -9,11 +9,11 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/modules/module_providers.dart';
 import 'package:stock_count/core/permissions/permission_defs.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/modules/administration/shared/data/admin_api_repository.dart';
 import 'package:stock_count/modules/administration/shared/presentation/providers/admin_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Role editor organized as Package → Service → Operation.
 class AdminRoleEditorPage extends ConsumerStatefulWidget {

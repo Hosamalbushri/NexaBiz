@@ -4,8 +4,7 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/utils/grouped_decimal_input.dart';
-import 'package:stock_count/core/widgets/app_text_field.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 class QuantityInputCard extends StatelessWidget {
   const QuantityInputCard({
     super.key,

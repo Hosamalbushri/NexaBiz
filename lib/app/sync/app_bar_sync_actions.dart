@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
-import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/network_status_indicator.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import 'sync_enabled_provider.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// App-bar sync actions — hidden entirely when sync is disabled.
 ///

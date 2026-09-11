@@ -187,7 +187,7 @@ class _SaleListTile extends StatelessWidget {
         ? Icons.payments_rounded
         : Icons.account_balance_rounded;
 
-    return AppCard(
+    return AppSurface(
       onTap: () => SalesRoutes.pushDetails(context, sale.id),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(

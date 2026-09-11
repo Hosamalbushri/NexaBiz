@@ -8,9 +8,9 @@ import '../../core/entitlements/presentation/providers/entitlement_providers.dar
 import '../../core/entitlements/presentation/providers/subscription_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
-import '../../core/widgets/app_snackbar.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class PackageStoreSheet extends ConsumerStatefulWidget {
   const PackageStoreSheet({super.key, this.initialCapability});

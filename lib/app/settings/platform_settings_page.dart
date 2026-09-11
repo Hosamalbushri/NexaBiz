@@ -1,17 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:stock_count/modules/sync/sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/di/app_providers.dart';
 import '../../core/modules/module_providers.dart';
-import '../../core/modules/module_settings_definition.dart';
 import '../../core/widgets/app_dialog.dart';
-import '../../core/widgets/app_responsive.dart';
-import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
@@ -22,10 +18,6 @@ import '../presentation/providers/quick_nav_items_provider.dart';
 import '../presentation/providers/quick_nav_settings_provider.dart';
 import '../router/app_routes.dart';
 import '../sync/app_bar_sync_actions.dart';
-import '../sync/sync_enabled_provider.dart';
-import '../theme/app_radius.dart';
-import '../theme/app_shadows.dart';
-import '../theme/app_spacing.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/presentation/widgets/company_selection_sheet.dart';
 import 'company/company_profile.dart';
@@ -45,10 +37,6 @@ class PlatformSettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final registry = ref.watch(moduleRegistryProvider);
-    final categories = registry.allSettingsCategories;
     final unread = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
@@ -78,13 +66,8 @@ class _PlatformSettingsBody extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final packageInfo = ref.watch(packageInfoProvider);
     final companyAsync = ref.watch(companyProfileProvider);
-    final syncOverview =
-        ref.watch(syncOverviewProvider).asData?.value ?? SyncOverview.initial();
-    final syncEnabled = ref.watch(syncEnabledProvider);
     final repository = ref.read(settingsRepositoryProvider);
     final quickNavSettings = ref.watch(quickNavSettingsProvider);
-    final registry = ref.watch(moduleRegistryProvider);
-    final categories = registry.allSettingsCategories;
     final pageInsets = AppConstants.pageInsets(context);
 
     return AppContentConstraint(

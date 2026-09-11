@@ -4,9 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_loading.dart';
-import '../../../core/widgets/app_responsive.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
@@ -20,6 +17,7 @@ import '../providers/quick_actions_panel_provider.dart';
 import '../widgets/dashboard_recent_operations.dart';
 import '../widgets/dashboard_services_panel.dart';
 import 'dashboard_customize_sheet.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Platform dashboard with user-customizable service shortcuts.
 class DashboardPage extends ConsumerWidget {

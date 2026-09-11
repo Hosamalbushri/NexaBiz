@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/modules/app_module.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_snackbar.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_spacing.dart';
 import '../providers/dashboard_services_provider.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Pick and reorder which modules appear on the Dashboard.
 ///

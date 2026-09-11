@@ -8,15 +8,13 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_account_search_picker.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/app_status_badge.dart';
 import '../../../../modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import '../../domain/entities/import_job_status.dart';
 import '../../domain/entities/import_profile.dart';
 import '../../registry/import_profile_registry.dart';
 import '../providers/import_ui_providers.dart';
 import '../widgets/step_dynamic_assignments.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Strategy for resolving parent account in Chart of Accounts import.
 enum ParentAccountStrategy {

@@ -6,7 +6,6 @@ import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/auth/presentation/widgets/permission_gate_core.dart';
-import '../../../../core/widgets/app_responsive.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../shared/providers/module_hub_view_mode_provider.dart';
 import '../../../currency/presentation/widgets/missing_currency_dialog.dart';

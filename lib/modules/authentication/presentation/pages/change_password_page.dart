@@ -10,11 +10,11 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/password_validator.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../../../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../../domain/models/password_change_exception.dart';
 import '../providers/auth_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 const _kBrandIcon = 'assets/branding/nexabiz_app_icon.png';
 

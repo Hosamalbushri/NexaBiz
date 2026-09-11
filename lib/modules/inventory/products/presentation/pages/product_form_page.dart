@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
@@ -14,11 +15,7 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/notifications/notification_type.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_expandable_form_section.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
-import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/product.dart';
@@ -265,82 +262,58 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
               AppResponsiveForm(
                 maxColumns: 2,
                 children: [
-                  TextFormField(
+                  AppTextField(
                     controller: _codeController,
                     readOnly: true,
-                    enableInteractiveSelection: true,
-                    decoration: InputDecoration(
-                      labelText: l10n.codeLabel,
-                      helperText: l10n.productsItemCodeAutoHint,
-                      prefixIcon: const Icon(Icons.qr_code_outlined),
-                      suffixIcon: _generatingCode
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                    label: l10n.codeLabel,
+                    required: true,
+                    helperText: l10n.productsItemCodeAutoHint,
+                    prefixIcon: Icons.qr_code_outlined,
+                    suffixIcon: _generatingCode
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
                               ),
-                            )
-                          : Icon(
-                              Icons.lock_outline,
-                              color: theme.colorScheme.onSurfaceVariant,
                             ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.productsInvalidForm;
-                      }
-                      return null;
-                    },
+                          )
+                        : Icon(
+                            Icons.lock_outline,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                   ),
-                  TextFormField(
+                  AppTextField(
                     controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: l10n.itemName,
-                      prefixIcon: const Icon(Icons.edit_note_outlined),
-                    ),
+                    label: l10n.itemName,
+                    required: true,
+                    prefixIcon: Icons.edit_note_outlined,
                     textInputAction: TextInputAction.next,
                     onChanged: widget.isEditing ? (_) => setState(() {}) : null,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.productsInvalidForm;
-                      }
-                      return null;
-                    },
                   ),
-                  TextFormField(
+                  AppTextField(
                     controller: _packSizeController,
                     readOnly: widget.isEditing,
-                    enableInteractiveSelection: true,
-                    decoration: InputDecoration(
-                      labelText: l10n.packSize,
-                      hintText: widget.isEditing
-                          ? null
-                          : l10n.packSizeRequiredHint,
-                      helperText: widget.isEditing
-                          ? l10n.productsFieldLockedHint
-                          : null,
-                      prefixIcon: const Icon(Icons.numbers_outlined),
-                      suffixIcon: widget.isEditing
-                          ? Icon(
-                              Icons.lock_outline,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            )
-                          : null,
-                    ),
+                    label: l10n.packSize,
+                    required: true,
+                    hint: widget.isEditing
+                        ? null
+                        : l10n.packSizeRequiredHint,
+                    helperText: widget.isEditing
+                        ? l10n.productsFieldLockedHint
+                        : null,
+                    prefixIcon: Icons.numbers_outlined,
+                    suffixIcon: widget.isEditing
+                        ? Icon(
+                            Icons.lock_outline,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          )
+                        : null,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     textInputAction: TextInputAction.next,
-                    validator: (value) {
-                      final pack = int.tryParse(value?.trim() ?? '');
-                      if (pack == null || pack <= 0) {
-                        return l10n.invalidPackSize;
-                      }
-                      return null;
-                    },
                   ),
                   Consumer(
                     builder: (context, ref, child) {
@@ -352,35 +325,23 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                         loading: () => const SizedBox.shrink(),
                         error: (_, _) => const SizedBox.shrink(),
                         data: (categories) {
-                          return DropdownButtonFormField<String?>(
-                            initialValue: _categoryId,
-                            isExpanded: true,
-                            decoration: InputDecoration(
-                              labelText: isAr
-                                  ? 'تصنيف المنتج'
-                                  : 'Product Category',
-                              prefixIcon: const Icon(Icons.category_outlined),
-                            ),
+                          return AppSelectField<String?>(
+                            value: _categoryId,
+                            label: isAr
+                                ? 'تصنيف المنتج'
+                                : 'Product Category',
+                            prefixIcon: Icons.category_outlined,
                             items: [
-                              DropdownMenuItem<String?>(
+                              AppSelectItem<String?>(
                                 value: null,
-                                child: Text(
-                                  isAr
-                                      ? '-- بدون تصنيف --'
-                                      : '-- Uncategorized --',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
+                                label: isAr
+                                    ? '-- بدون تصنيف --'
+                                    : '-- Uncategorized --',
                               ),
                               ...categories.map((cat) {
-                                return DropdownMenuItem<String?>(
+                                return AppSelectItem<String?>(
                                   value: cat.id,
-                                  child: Text(
-                                    '${cat.name} (${cat.code})',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  label: '${cat.name} (${cat.code})',
                                 );
                               }),
                             ],
@@ -453,54 +414,36 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                 icon: Icons.calculate_outlined,
                 initiallyExpanded: _costValuationMethod != null,
                 badgeText: _costValuationMethod?.name.toUpperCase(),
-                child: DropdownButtonFormField<CostValuationMethod?>(
-                  initialValue: _costValuationMethod,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.localeName == 'ar'
-                        ? 'طريقة احتساب التكلفة'
-                        : 'Cost Valuation Method',
-                    prefixIcon: const Icon(Icons.calculate_outlined),
-                  ),
+                child: AppSelectField<CostValuationMethod?>(
+                  value: _costValuationMethod,
+                  label: l10n.localeName == 'ar'
+                      ? 'طريقة احتساب التكلفة'
+                      : 'Cost Valuation Method',
+                  prefixIcon: Icons.calculate_outlined,
                   items: [
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: null,
-                      child: Text(
-                        l10n.localeName == 'ar'
-                            ? 'افتراضي (وراثة من التصنيف / المستودع)'
-                            : 'Inherit from Category / Warehouse',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      label: l10n.localeName == 'ar'
+                          ? 'افتراضي (وراثة من التصنيف / المستودع)'
+                          : 'Inherit from Category / Warehouse',
                     ),
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: CostValuationMethod.fifo,
-                      child: Text(
-                        l10n.localeName == 'ar'
-                            ? 'FIFO - الوارد أولاً يصدر أولاً'
-                            : 'FIFO',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: l10n.localeName == 'ar'
+                          ? 'FIFO - الوارد أولاً يصدر أولاً'
+                          : 'FIFO',
                     ),
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: CostValuationMethod.lifo,
-                      child: Text(
-                        l10n.localeName == 'ar'
-                            ? 'LIFO - الوارد أخيراً يصدر أولاً'
-                            : 'LIFO',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: l10n.localeName == 'ar'
+                          ? 'LIFO - الوارد أخيراً يصدر أولاً'
+                          : 'LIFO',
                     ),
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: CostValuationMethod.weightedAverage,
-                      child: Text(
-                        l10n.localeName == 'ar'
-                            ? 'Weighted Average - المتوسط المرجح'
-                            : 'Weighted Average',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: l10n.localeName == 'ar'
+                          ? 'Weighted Average - المتوسط المرجح'
+                          : 'Weighted Average',
                     ),
                   ],
                   onChanged: (val) =>
@@ -706,10 +649,18 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   Future<void> _save(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    if (_generatingCode) {
-      return;
-    }
-    if (!_formKey.currentState!.validate()) {
+    final code = _codeController.text.trim();
+    final name = _nameController.text.trim();
+    final packSize = int.tryParse(_packSizeController.text.trim());
+
+    if (code.isEmpty || name.isEmpty || packSize == null || packSize <= 0) {
+      showAppSnackBar(
+        context,
+        message: packSize == null || packSize <= 0
+            ? l10n.invalidPackSize
+            : l10n.productsInvalidForm,
+        isSuccess: false,
+      );
       return;
     }
     if (_price < 0) {

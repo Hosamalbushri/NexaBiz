@@ -3,9 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/app_confirmation_dialog.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 void main() {
   group('Phase 1D: Loading & Confirmation Consolidation Tests', () {
     testWidgets('1. AppLoading renders circular and linear indicators correctly', (tester) async {

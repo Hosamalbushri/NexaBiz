@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
+
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 
@@ -31,7 +33,7 @@ class StockTransfersListPage extends ConsumerWidget {
     });
 
     final content = transfersAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const AppLoading(),
       error: (err, stack) => Center(
         child: Text(
           l10n.localeName == 'ar'
@@ -60,35 +62,16 @@ class StockTransfersListPage extends ConsumerWidget {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.compare_arrows_outlined,
-                        size: 64,
-                        color: colorScheme.outline,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        l10n.localeName == 'ar'
-                            ? 'لا توجد عمليات تحويل مسجلة'
-                            : 'No stock transfers found',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            InventoryRoutes.pushStockTransfersNew(context),
-                        icon: const Icon(Icons.add),
-                        label: Text(
-                          l10n.localeName == 'ar'
-                              ? 'إنشاء أول تحويل مخزني'
-                              : 'Create First Transfer',
-                        ),
-                      ),
-                    ],
+                  child: AppEmptyState(
+                    title: l10n.localeName == 'ar'
+                        ? 'لا توجد عمليات تحويل مسجلة'
+                        : 'No stock transfers found',
+                    icon: Icons.compare_arrows_outlined,
+                    actionLabel: l10n.localeName == 'ar'
+                        ? 'إنشاء أول تحويل مخزني'
+                        : 'Create First Transfer',
+                    onAction: () =>
+                        InventoryRoutes.pushStockTransfersNew(context),
                   ),
                 ),
               )
@@ -100,116 +83,109 @@ class StockTransfersListPage extends ConsumerWidget {
                     warehouseMap[item.toWarehouseId] ?? item.toWarehouseId;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: Card(
-                    elevation: 0,
-                    color: colorScheme.surfaceContainerLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: colorScheme.outlineVariant),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '#${item.transferNumber}',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                              Text(
-                                _formatDate(item.transferDate),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.localeName == 'ar'
-                                          ? 'من مستودع'
-                                          : 'From Warehouse',
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                    Text(
-                                      fromName,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_forward_rounded,
+                  child: AppSurface(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '#${item.transferNumber}',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
                                 color: colorScheme.primary,
                               ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      l10n.localeName == 'ar'
-                                          ? 'إلى مستودع'
-                                          : 'To Warehouse',
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                    Text(
-                                      toName,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                            Text(
+                              _formatDate(item.transferDate),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
                               ),
-                            ],
-                          ),
-                          const Divider(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${l10n.localeName == 'ar' ? 'عدد الأصناف' : 'Items'}: ${item.lines.length}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.localeName == 'ar'
+                                        ? 'من مستودع'
+                                        : 'From Warehouse',
+                                    style: theme.textTheme.labelSmall
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                  Text(
+                                    fromName,
+                                    style: theme.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => _confirmDeleteTransfer(
-                                  context,
-                                  ref,
-                                  item.id,
-                                ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              color: colorScheme.primary,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    l10n.localeName == 'ar'
+                                        ? 'إلى مستودع'
+                                        : 'To Warehouse',
+                                    style: theme.textTheme.labelSmall
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                  Text(
+                                    toName,
+                                    style: theme.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${l10n.localeName == 'ar' ? 'عدد الأصناف' : 'Items'}: ${item.lines.length}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            AppIconButton(
+                              icon: Icons.delete_outline_rounded,
+                              color: colorScheme.error,
+                              tooltip: l10n.localeName == 'ar'
+                                  ? 'إلغاء التحويل'
+                                  : 'Delete Transfer',
+                              onPressed: () => _confirmDeleteTransfer(
+                                context,
+                                ref,
+                                item.id,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -224,7 +200,6 @@ class StockTransfersListPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
         title: l10n.localeName == 'ar'
             ? 'التحويل بين المستودعات'
@@ -244,40 +219,27 @@ class StockTransfersListPage extends ConsumerWidget {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
   }
 
-  void _confirmDeleteTransfer(BuildContext context, WidgetRef ref, String id) {
+  Future<void> _confirmDeleteTransfer(
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+  ) async {
     final l10n = AppLocalizations.of(context);
-    showDialog(
+    final confirm = await showAppDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          l10n.localeName == 'ar' ? 'تأكيد الغاء التحويل' : 'Delete Transfer',
-        ),
-        content: Text(
-          l10n.localeName == 'ar'
-              ? 'هل أنت تأكد من رغبتك في إغلاق وإلغاء أمر التحويل هذا؟'
-              : 'Are you sure you want to delete this transfer?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.localeName == 'ar' ? 'إلغاء' : 'Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await ref
-                  .read(stockTransferControllerProvider.notifier)
-                  .deleteTransfer(id);
-            },
-            child: Text(
-              l10n.localeName == 'ar' ? 'حذف' : 'Delete',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+      title: l10n.localeName == 'ar' ? 'تأكيد إلغاء التحويل' : 'Delete Transfer',
+      message: l10n.localeName == 'ar'
+          ? 'هل أنت تأكد من رغبتك في إغلاق وإلغاء أمر التحويل هذا؟'
+          : 'Are you sure you want to delete this transfer?',
+      confirmLabel: MaterialLocalizations.of(context).deleteButtonTooltip,
+      isDestructive: true,
     );
+
+    if (confirm && context.mounted) {
+      await ref
+          .read(stockTransferControllerProvider.notifier)
+          .deleteTransfer(id);
+    }
   }
 }
 
@@ -301,16 +263,9 @@ class _MovementCategoryActionHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final isAr = AppLocalizations.of(context).localeName == 'ar';
 
-    return Container(
+    return AppSurface(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-        ),
-      ),
+      variant: AppSurfaceVariant.flat,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -356,24 +311,19 @@ class _MovementCategoryActionHeader extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ElevatedButton.icon(
+                child: AppButton(
                   onPressed: onNewPressed,
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(isAr ? 'إنشاء امر جديد' : 'Create New'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
+                  icon: Icons.add_rounded,
+                  label: isAr ? 'إنشاء امر جديد' : 'Create New',
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: OutlinedButton.icon(
+                child: AppButton(
+                  variant: AppButtonVariant.outlined,
                   onPressed: () {},
-                  icon: const Icon(Icons.list_alt_rounded, size: 18),
-                  label: Text(isAr ? 'عرض كل الأوامر' : 'View All'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
+                  icon: Icons.list_alt_rounded,
+                  label: isAr ? 'عرض كل الأوامر' : 'View All',
                 ),
               ),
             ],

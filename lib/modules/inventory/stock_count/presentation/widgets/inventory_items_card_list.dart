@@ -5,11 +5,10 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_pagination_bar.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import 'package:stock_count/modules/inventory/products/presentation/models/products_view_mode.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Shared list/grid preference for inventory item cards (search + reports).
 final inventoryItemsViewModeProvider = StateProvider<ProductsViewMode>(
@@ -99,8 +98,20 @@ class InventoryItemsCardList extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  _InventoryViewModeToggle(
-                    viewMode: viewMode,
+                  AppViewModeToggle<ProductsViewMode>(
+                    options: [
+                      AppViewModeOption(
+                        value: ProductsViewMode.list,
+                        icon: Icons.view_list_rounded,
+                        tooltip: localization.productsViewList,
+                      ),
+                      AppViewModeOption(
+                        value: ProductsViewMode.grid,
+                        icon: Icons.grid_view_rounded,
+                        tooltip: localization.productsViewGrid,
+                      ),
+                    ],
+                    selected: viewMode,
                     onChanged: (mode) {
                       ref.read(inventoryItemsViewModeProvider.notifier).state =
                           mode;
@@ -364,93 +375,6 @@ class InventoryItemGridCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InventoryViewModeToggle extends StatelessWidget {
-  const _InventoryViewModeToggle({
-    required this.viewMode,
-    required this.onChanged,
-  });
-
-  final ProductsViewMode viewMode;
-  final ValueChanged<ProductsViewMode> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _ViewModeIconButton(
-            selected: viewMode == ProductsViewMode.list,
-            tooltip: l10n.productsViewList,
-            icon: Icons.view_list_rounded,
-            onTap: () => onChanged(ProductsViewMode.list),
-          ),
-          _ViewModeIconButton(
-            selected: viewMode == ProductsViewMode.grid,
-            tooltip: l10n.productsViewGrid,
-            icon: Icons.grid_view_rounded,
-            onTap: () => onChanged(ProductsViewMode.grid),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ViewModeIconButton extends StatelessWidget {
-  const _ViewModeIconButton({
-    required this.selected,
-    required this.tooltip,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: selected
-            ? colorScheme.primary.withValues(alpha: 0.14)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.sm - 2),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.sm - 2),
-          child: SizedBox(
-            width: 40,
-            height: 36,
-            child: Icon(
-              icon,
-              size: 20,
-              color: selected
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
             ),
           ),
         ),

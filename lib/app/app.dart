@@ -12,7 +12,6 @@ import '../core/di/app_providers.dart';
 import '../core/entitlements/domain/entities/entitlement.dart';
 import '../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../core/notifications/notification_type.dart';
-import '../core/widgets/app_snackbar.dart';
 import '../core/widgets/app_update_gate.dart';
 import '../core/widgets/loading_overlay.dart';
 import '../modules/app_lock/presentation/providers/app_lock_providers.dart';
@@ -22,6 +21,7 @@ import 'notifications/presentation/providers/notifications_provider.dart';
 import 'notifications/presentation/widgets/notification_toast_host.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Root application widget for the modular business platform.
 ///

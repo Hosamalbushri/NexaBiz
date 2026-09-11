@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
 import 'currencies_manage_page.dart';
@@ -13,6 +12,7 @@ import 'currency_rates_page.dart';
 import 'functional_currency_config_page.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/pages/cost_valuation_settings_page.dart';
 import '../providers/functional_currency_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Currency module home page — displays core currency services & configuration options.
 class CurrenciesHomePage extends ConsumerWidget {

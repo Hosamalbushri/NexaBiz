@@ -5,9 +5,8 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_text_field.dart';
 import '../../domain/services/pack_size_parser.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Warning + required pack-size entry when an item has no usable pack.
 class PackSizeRequiredCard extends StatelessWidget {

@@ -6,13 +6,11 @@ import 'package:stock_count/modules/administration/shared/presentation/admin_loc
 import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import 'package:stock_count/modules/administration/shared/data/admin_api_repository.dart';
 import 'package:stock_count/modules/administration/shared/presentation/providers/admin_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class AdminBranchesPage extends ConsumerStatefulWidget {
   const AdminBranchesPage({super.key});
@@ -140,21 +138,12 @@ class _AdminBranchesPageState extends ConsumerState<AdminBranchesPage> {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Chip(
-                label: Text(
-                  branch.isActive ? l10n.statusActive : l10n.statusInactive,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: branch.isActive
-                        ? Colors.green.shade800
-                        : Colors.grey.shade700,
-                  ),
-                ),
-                backgroundColor: branch.isActive
-                    ? Colors.green.shade50
-                    : Colors.grey.shade200,
-                side: BorderSide.none,
-                visualDensity: VisualDensity.compact,
+              AppStatusBadge(
+                label: branch.isActive ? l10n.statusActive : l10n.statusInactive,
+                tone: branch.isActive
+                    ? AppStatusTone.success
+                    : AppStatusTone.neutral,
+                animate: false,
               ),
               PopupMenuButton<String>(
                 onSelected: (val) async {

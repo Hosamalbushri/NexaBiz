@@ -1,3 +1,4 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
@@ -5,7 +6,6 @@ import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 import '../notifications/app_notification.dart';
 import '../notifications/notification_type.dart';
-import 'app_button.dart';
 
 /// Visual tokens for a [NotificationType].
 class NotificationVisuals {

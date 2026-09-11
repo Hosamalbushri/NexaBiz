@@ -5,8 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
-import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_snackbar.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/domain/entities/authentication_mode.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
@@ -21,6 +19,7 @@ import 'sync_session_state.dart';
 import 'sync_status_indicator.dart';
 import 'widgets/sync_inspector_sheet.dart';
 import 'widgets/sync_progress_modal.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Platform sync settings content with modern accordion section structure.
 class SyncSettingsSection extends ConsumerStatefulWidget {

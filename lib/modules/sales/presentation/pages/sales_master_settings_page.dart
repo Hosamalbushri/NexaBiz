@@ -6,7 +6,7 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/routes/routes_core.dart';
 
@@ -68,8 +68,9 @@ class SalesMasterSettingsPage extends ConsumerWidget {
   }
 
   Widget _buildHeroHeader(ThemeData theme, bool isAr) {
-    return AppCard(
-      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+    return AppSurface(
+      variant: AppSurfaceVariant.outlined,
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
           Container(

@@ -11,8 +11,8 @@ import 'app_page_shell.dart';
 
 /// Canonical List Page Pattern for NexaBiz ERP screens.
 ///
-/// Standardizes Header + Search/Filter Toolbar + Content (Loading/Error/Empty/Table/Grid)
-/// + Pagination Bar + Primary FAB layout.
+/// Standardizes Header (Centered Title + Back Button + Top Filter) + Search/Filter Toolbar
+/// + Content (Loading/Error/Empty/Table/Grid) + Pagination Bar + Primary FAB layout.
 class AppListPagePattern<T> extends StatelessWidget {
   const AppListPagePattern({
     super.key,
@@ -22,18 +22,22 @@ class AppListPagePattern<T> extends StatelessWidget {
     this.subtitle,
     this.breadcrumbs,
     this.headerActions,
+    this.centerTitle = true,
+    this.showBackButton,
+    this.onBackTap,
     this.searchController,
     this.onSearchChanged,
     this.onSearchClear,
-    this.searchHint = 'Search...',
+    this.searchHint = 'بحث...',
     this.onFilterTap,
     this.activeFilterCount = 0,
     this.activeFilterChips = const [],
+    this.showFilterInHeader = true,
     this.isLoading = false,
     this.errorText,
     this.onRetry,
-    this.emptyTitle = 'No records found',
-    this.emptySubtitle = 'Try adjusting your search query or filters',
+    this.emptyTitle = 'لا توجد سجلات',
+    this.emptySubtitle = 'جرّب تعديل كلمة البحث أو تصفية البيانات',
     this.onEmptyAction,
     this.emptyActionLabel,
     this.page = 0,
@@ -48,6 +52,9 @@ class AppListPagePattern<T> extends StatelessWidget {
   final String? subtitle;
   final List<String>? breadcrumbs;
   final List<Widget>? headerActions;
+  final bool centerTitle;
+  final bool? showBackButton;
+  final VoidCallback? onBackTap;
 
   final List<T> items;
   final Widget Function(BuildContext context, List<T> items) contentBuilder;
@@ -60,6 +67,7 @@ class AppListPagePattern<T> extends StatelessWidget {
   final VoidCallback? onFilterTap;
   final int activeFilterCount;
   final List<Widget> activeFilterChips;
+  final bool showFilterInHeader;
 
   // Feedback states
   final bool isLoading;
@@ -92,14 +100,19 @@ class AppListPagePattern<T> extends StatelessWidget {
             subtitle: subtitle,
             breadcrumbs: breadcrumbs,
             actions: headerActions,
+            centerTitle: centerTitle,
+            showBackButton: showBackButton,
+            onBack: onBackTap,
+            onFilterTap: showFilterInHeader ? onFilterTap : null,
+            filterCount: activeFilterCount,
           ),
-          if (onSearchChanged != null || onFilterTap != null)
+          if (onSearchChanged != null || (!showFilterInHeader && onFilterTap != null))
             AppSearchToolbar(
               searchController: searchController,
               onSearchChanged: onSearchChanged,
               onSearchClear: onSearchClear,
               searchHint: searchHint,
-              onFilterTap: onFilterTap,
+              onFilterTap: showFilterInHeader ? null : onFilterTap,
               filterCount: activeFilterCount,
             ),
           if (activeFilterChips.isNotEmpty) ...[

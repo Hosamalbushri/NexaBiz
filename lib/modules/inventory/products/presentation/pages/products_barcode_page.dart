@@ -10,9 +10,7 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/animated_qr_illustration.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/models/catalog_search_field.dart';
@@ -22,6 +20,7 @@ import '../../domain/services/product_qr_payload_builder.dart';
 import '../providers/product_providers.dart';
 import '../widgets/catalog_expandable_search.dart';
 import 'product_barcode_scanner_page.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Manage product barcodes: search/scan, generate, preview, print/share.
 class ProductsBarcodePage extends ConsumerStatefulWidget {

@@ -7,11 +7,6 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
 import 'currencies_manage_page.dart';
@@ -19,6 +14,7 @@ import '../../domain/entities/app_currency.dart';
 import '../../domain/entities/currency_rate.dart';
 import '../providers/currency_rate_providers.dart';
 import '../widgets/missing_currency_dialog.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Enabled currencies and their rates vs company base (add on demand).
 class CurrencyRatesPage extends ConsumerWidget {

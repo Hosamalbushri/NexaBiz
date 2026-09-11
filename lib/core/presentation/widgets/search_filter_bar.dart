@@ -1,6 +1,6 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/material.dart';
 
-import '../../widgets/app_search_toolbar.dart';
 
 /// Standardized search and filter bar component.
 ///

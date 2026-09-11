@@ -7,7 +7,6 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/shared/providers/module_hub_view_mode_provider.dart';
 import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';

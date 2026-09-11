@@ -8,9 +8,9 @@ enum AppIconButtonVariant { standard, primary, destructive, outline, ghost }
 
 /// Canonical icon button primitive for NexaBiz ERP.
 ///
-/// Enforces WCAG AA touch targets (min 48x48px) with token-driven sizing,
-/// tooltip support, badge counter, loading state, and variant styling.
-class AppIconButton extends StatelessWidget {
+/// Modernized with interactive hover micro-animations, touch target enforcement,
+/// tooltip support, badge counter, and variant styling.
+class AppIconButton extends StatefulWidget {
   const AppIconButton({
     super.key,
     required this.icon,
@@ -33,18 +33,25 @@ class AppIconButton extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) {
-    final enabled = onPressed != null && !isLoading;
+  State<AppIconButton> createState() => _AppIconButtonState();
+}
 
-    final childWidget = isLoading
+class _AppIconButtonState extends State<AppIconButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onPressed != null && !widget.isLoading;
+
+    final childWidget = widget.isLoading
         ? SizedBox(
-            width: iconSize,
-            height: iconSize,
+            width: widget.iconSize,
+            height: widget.iconSize,
             child: const shadcn.CircularProgressIndicator(strokeWidth: 2.0),
           )
-        : Icon(icon, size: iconSize, color: color);
+        : Icon(widget.icon, size: widget.iconSize, color: widget.color);
 
-    final Widget badgedChild = badgeCount != null && badgeCount! > 0
+    final Widget badgedChild = widget.badgeCount != null && widget.badgeCount! > 0
         ? Stack(
             clipBehavior: Clip.none,
             children: [
@@ -53,16 +60,16 @@ class AppIconButton extends StatelessWidget {
                 top: -4,
                 right: -4,
                 child: shadcn.PrimaryBadge(
-                  child: Text('$badgeCount'),
+                  child: Text('${widget.badgeCount}'),
                 ),
               ),
             ],
           )
         : childWidget;
 
-    final VoidCallback? handler = enabled ? onPressed : null;
+    final VoidCallback? handler = enabled ? widget.onPressed : null;
 
-    Widget button = switch (variant) {
+    Widget button = switch (widget.variant) {
       AppIconButtonVariant.standard => shadcn.GhostButton(
           onPressed: handler,
           density: shadcn.ButtonDensity.icon,
@@ -95,17 +102,26 @@ class AppIconButton extends StatelessWidget {
         ),
     };
 
-    button = ConstrainedBox(
-      constraints: const BoxConstraints(
-        minWidth: AppDimensions.minTouchTarget,
-        minHeight: AppDimensions.minTouchTarget,
+    button = MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered && enabled ? 1.08 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: AppDimensions.minTouchTarget,
+            minHeight: AppDimensions.minTouchTarget,
+          ),
+          child: button,
+        ),
       ),
-      child: button,
     );
 
-    if (tooltip != null && tooltip!.isNotEmpty) {
+    if (widget.tooltip != null && widget.tooltip!.isNotEmpty) {
       button = shadcn.Tooltip(
-        tooltip: (context) => Text(tooltip!),
+        tooltip: (context) => Text(widget.tooltip!),
         child: button,
       );
     }

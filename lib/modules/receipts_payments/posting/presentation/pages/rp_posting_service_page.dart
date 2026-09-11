@@ -12,7 +12,6 @@ import 'package:stock_count/app/theme/app_shadows.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
@@ -23,6 +22,7 @@ import '../providers/rp_posting_service_provider.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/utils/rp_labels.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/widgets/rp_error_messages.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/widgets/transaction_status_badge.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Bulk post / unpost for receipts, payments, transfers, and exchanges.
 class RpPostingServicePage extends ConsumerStatefulWidget {

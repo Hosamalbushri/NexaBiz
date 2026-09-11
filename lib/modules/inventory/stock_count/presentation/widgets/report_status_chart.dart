@@ -4,8 +4,8 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
 import '../../domain/entities/report_summary.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class _StatusSlice {
   const _StatusSlice(this.label, this.count, this.color);

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_report_query_filter_panel.dart';
 import '../../application/universal_report_execution_controller.dart';
 import '../../data/providers/report_data_provider.dart';
@@ -13,6 +12,7 @@ import '../../export/pdf_report_exporter.dart';
 import '../widgets/app_dynamic_filter_generator.dart';
 import '../widgets/app_report_preset_bar.dart';
 import 'universal_report_table_view_page.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Universal Master Report Viewer Screen for NexaBiz ERP.
 /// Renders report filter options and triggers paged execution table view or PDF print preview.

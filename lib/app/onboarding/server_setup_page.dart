@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/network/server_validator.dart';
-import '../../core/widgets/app_button.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import '../sync/sync_enabled_provider.dart';
 import '../theme/app_spacing.dart';
 import '../constants/app_constants.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// First-launch server setup: enter server address, validate, then sign in.
 ///

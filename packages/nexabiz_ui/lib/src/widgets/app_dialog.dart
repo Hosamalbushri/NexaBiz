@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../theme/tokens/tokens.dart';
 import 'app_button.dart';
+import 'app_icon_avatar.dart';
 
-/// Predefined canonical width variants for NexaBiz dialogs.
+/// Predefined canonical width variants for NexaBiz dialogs with enhanced breathing room.
 enum AppDialogSize {
-  /// Small dialog (max-width: 400px). Ideal for simple alerts, confirmations, or small prompts.
-  small(400),
+  /// Small dialog (max-width: 460px). Ideal for simple alerts, confirmations, or small prompts.
+  small(460),
 
-  /// Medium dialog (max-width: 560px). Ideal for standard forms, quick detail cards, or selectors.
-  medium(560),
+  /// Medium dialog (max-width: 640px). Ideal for standard forms, quick detail cards, or selectors.
+  medium(640),
 
-  /// Large dialog (max-width: 720px). Ideal for multi-section forms, detailed tables, or trees.
-  large(720),
+  /// Large dialog (max-width: 880px). Ideal for multi-section forms, detailed tables, or trees.
+  large(880),
 
   /// Fullscreen dialog (fills available viewport width & height).
   fullscreen(double.infinity);
@@ -22,12 +24,14 @@ enum AppDialogSize {
   final double maxWidth;
 }
 
+/// Semantic tones for confirmation and alert dialogs.
+enum AppDialogTone { primary, info, warning, danger }
+
 /// Canonical NexaBiz Central Dialog Component (`NexaBizDialog<T>`).
 ///
-/// Centralizes application dialog presentation, responsive sizing, scrolling content bounds,
-/// title/description header layout, loading/error UI presentation, and action bar area.
-///
-/// Completely domain-independent and form-independent.
+/// Next-generation, world-class UI design inspired by Linear & Vercel design systems.
+/// Features a 24px squircle rounded surface, crisp dark contrast, subtle top highlight,
+/// glowing compact avatar pill, centered layout, and minimalist glassmorphic close controls.
 class AppDialog<T> extends StatelessWidget {
   const AppDialog({
     super.key,
@@ -39,10 +43,10 @@ class AppDialog<T> extends StatelessWidget {
     this.errorMessage,
     this.isLoading = false,
     this.size = AppDialogSize.medium,
-    this.padding = const EdgeInsets.all(AppSpacing.lg),
+    this.padding = const EdgeInsets.all(AppSpacing.xl),
     this.contentPadding = const EdgeInsets.symmetric(
-      horizontal: AppSpacing.lg,
-      vertical: AppSpacing.md,
+      horizontal: 24,
+      vertical: 18,
     ),
     required this.child,
     this.actions,
@@ -52,6 +56,11 @@ class AppDialog<T> extends StatelessWidget {
     this.onCancel,
     this.isDestructive = false,
     this.showCloseButton = true,
+    this.showActions = true,
+    this.showCancelButton = true,
+    this.showConfirmButton = true,
+    this.centerHeader = true,
+    this.centerContent = true,
   });
 
   /// Optional dialog title string or custom widget.
@@ -88,7 +97,6 @@ class AppDialog<T> extends StatelessWidget {
   final Widget child;
 
   /// Custom list of action widgets for the bottom action bar.
-  /// If provided, overrides default confirm/cancel buttons.
   final List<Widget>? actions;
 
   /// Label for the primary confirm button (default: 'Confirm').
@@ -109,6 +117,21 @@ class AppDialog<T> extends StatelessWidget {
   /// Whether to display a close button in the header trailing area.
   final bool showCloseButton;
 
+  /// Whether to show the bottom action bar.
+  final bool showActions;
+
+  /// Whether to include the cancel button when using default actions.
+  final bool showCancelButton;
+
+  /// Whether to include the confirm button when using default actions.
+  final bool showConfirmButton;
+
+  /// Whether to center-align the header title and description text inside the middle column.
+  final bool centerHeader;
+
+  /// Whether to center-align the main dialog body content.
+  final bool centerContent;
+
   /// Static helper to display the canonical dialog and return a typed result `T?`.
   static Future<T?> show<T>({
     required BuildContext context,
@@ -120,8 +143,11 @@ class AppDialog<T> extends StatelessWidget {
     String? errorMessage,
     bool isLoading = false,
     AppDialogSize size = AppDialogSize.medium,
-    EdgeInsetsGeometry padding = const EdgeInsets.all(AppSpacing.lg),
-    EdgeInsetsGeometry contentPadding = const EdgeInsets.all(AppSpacing.lg),
+    EdgeInsetsGeometry padding = const EdgeInsets.all(AppSpacing.xl),
+    EdgeInsetsGeometry contentPadding = const EdgeInsets.symmetric(
+      horizontal: 24,
+      vertical: 18,
+    ),
     required Widget child,
     List<Widget>? actions,
     String confirmLabel = 'Confirm',
@@ -130,6 +156,11 @@ class AppDialog<T> extends StatelessWidget {
     VoidCallback? onCancel,
     bool isDestructive = false,
     bool showCloseButton = true,
+    bool showActions = true,
+    bool showCancelButton = true,
+    bool showConfirmButton = true,
+    bool centerHeader = true,
+    bool centerContent = true,
     bool barrierDismissible = true,
     bool useRootNavigator = true,
   }) {
@@ -156,9 +187,84 @@ class AppDialog<T> extends StatelessWidget {
           onCancel: onCancel,
           isDestructive: isDestructive,
           showCloseButton: showCloseButton,
+          showActions: showActions,
+          showCancelButton: showCancelButton,
+          showConfirmButton: showConfirmButton,
+          centerHeader: centerHeader,
+          centerContent: centerContent,
           child: child,
         );
       },
+    );
+  }
+
+  /// Unified static helper to show a confirmation dialog directly using the single `AppDialog` component.
+  static Future<bool?> confirm({
+    required BuildContext context,
+    required String title,
+    required String message,
+    String confirmLabel = 'Confirm',
+    String cancelLabel = 'Cancel',
+    AppDialogTone tone = AppDialogTone.warning,
+    VoidCallback? onConfirm,
+    VoidCallback? onCancel,
+    Widget? customBody,
+    bool barrierDismissible = true,
+  }) {
+    final avatarTone = switch (tone) {
+      AppDialogTone.primary => AppIconAvatarTone.primary,
+      AppDialogTone.info => AppIconAvatarTone.info,
+      AppDialogTone.warning => AppIconAvatarTone.warning,
+      AppDialogTone.danger => AppIconAvatarTone.error,
+    };
+
+    final iconData = switch (tone) {
+      AppDialogTone.primary => Icons.help_outline_rounded,
+      AppDialogTone.info => Icons.info_outline_rounded,
+      AppDialogTone.warning => Icons.warning_amber_rounded,
+      AppDialogTone.danger => Icons.error_outline_rounded,
+    };
+
+    return show<bool>(
+      context: context,
+      title: title,
+      size: AppDialogSize.small,
+      isDestructive: tone == AppDialogTone.danger,
+      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel,
+      onConfirm: onConfirm,
+      onCancel: onCancel,
+      barrierDismissible: barrierDismissible,
+      centerHeader: true,
+      centerContent: true,
+      leading: AppIconAvatar(
+        icon: iconData,
+        tone: avatarTone,
+        size: AppIconAvatarSize.md,
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (customBody != null) ...[
+              const SizedBox(height: 14),
+              customBody,
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -184,120 +290,142 @@ class AppDialog<T> extends StatelessWidget {
     final theme = shadcn.Theme.of(context);
     final colorScheme = theme.colorScheme;
     final mediaQuery = MediaQuery.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final isFullscreen = size == AppDialogSize.fullscreen;
     final hasHeader = title != null || description != null || icon != null || leading != null || trailing != null || showCloseButton;
-    final hasActions = actions != null || onConfirm != null || onCancel != null || isLoading;
+    final renderActions = showActions && (actions == null || actions!.isNotEmpty);
 
-    final resolvedLeading = leading ?? (icon != null
-        ? Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDestructive
-                    ? [
-                        colorScheme.destructive.withValues(alpha: 0.18),
-                        colorScheme.destructive.withValues(alpha: 0.08),
-                      ]
-                    : [
-                        colorScheme.primary.withValues(alpha: 0.18),
-                        colorScheme.primary.withValues(alpha: 0.08),
-                      ],
-              ),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: isDestructive
-                    ? colorScheme.destructive.withValues(alpha: 0.3)
-                    : colorScheme.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Icon(
-              icon,
-              size: 22,
-              color: isDestructive ? colorScheme.destructive : colorScheme.primary,
-            ),
+    // Sleek Vercel/Linear dark slate container in Dark Mode, crisp white in Light Mode
+    final dialogBgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFFFFFFF);
+    final borderColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE5E7EB);
+    final footerBgColor = isDark ? const Color(0xFF090D16) : const Color(0xFFF9FAFB);
+
+    final rawAvatar = leading ?? (icon != null
+        ? AppIconAvatar(
+            icon: icon!,
+            tone: isDestructive ? AppIconAvatarTone.error : AppIconAvatarTone.primary,
+            size: AppIconAvatarSize.sm,
           )
         : null);
 
-    Widget headerWidget = const SizedBox.shrink();
-    if (hasHeader) {
-      headerWidget = Container(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
-        decoration: BoxDecoration(
-          color: colorScheme.card,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (resolvedLeading != null) ...[
-                  resolvedLeading,
-                  const SizedBox(width: AppSpacing.md),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (title != null)
-                        Text(
-                          title!,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                            color: colorScheme.foreground,
-                          ),
-                        ),
-                      if (description != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          description!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            height: 1.35,
-                            color: colorScheme.mutedForeground,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+    final resolvedLeading = rawAvatar != null
+        ? Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: (isDestructive ? colorScheme.destructive : colorScheme.primary).withValues(alpha: isDark ? 0.3 : 0.2),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isDestructive ? colorScheme.destructive : colorScheme.primary).withValues(alpha: isDark ? 0.15 : 0.08),
+                  blurRadius: 10,
+                  spreadRadius: 0,
                 ),
-                if (trailing case final Widget body) body,
-                if (showCloseButton && trailing == null)
-                  Material(
-                    color: colorScheme.mutedForeground.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: colorScheme.mutedForeground,
-                      ),
-                      onPressed: isLoading
-                          ? null
-                          : () {
-                              final nav = Navigator.of(context);
-                              onCancel?.call();
-                              if (context.mounted && nav.canPop()) {
-                                nav.pop(null);
-                              }
-                            },
-                    ),
-                  ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Divider(
-              height: 1,
-              thickness: 1,
-              color: colorScheme.border.withValues(alpha: 0.5),
+            child: rawAvatar,
+          )
+        : null;
+
+    final closeButtonWidget = showCloseButton && trailing == null
+        ? Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: isLoading
+                  ? null
+                  : () {
+                      final nav = Navigator.of(context);
+                      onCancel?.call();
+                      if (context.mounted && nav.canPop()) {
+                        nav.pop(null);
+                      }
+                    },
+              child: Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: colorScheme.border.withValues(alpha: isDark ? 0.3 : 0.6),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 15,
+                  color: colorScheme.mutedForeground,
+                ),
+              ),
             ),
+          )
+        : null;
+
+    Widget headerWidget = const SizedBox.shrink();
+    if (hasHeader) {
+      final Widget leftSlotWidget = resolvedLeading ?? (showCloseButton && trailing == null ? const SizedBox(width: 28) : const SizedBox.shrink());
+      final Widget rightSlotWidget = trailing ?? (closeButtonWidget ?? (resolvedLeading != null ? const SizedBox(width: 28) : const SizedBox.shrink()));
+
+      headerWidget = Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 20, 16),
+        decoration: BoxDecoration(
+          color: dialogBgColor,
+          border: Border(
+            bottom: BorderSide(
+              color: borderColor,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Slot 1: Leading Icon Avatar
+            leftSlotWidget,
+            if (resolvedLeading != null) const SizedBox(width: 14),
+
+            // Slot 2: Title & Description Column
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: centerHeader ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                children: [
+                  if (title != null)
+                    Text(
+                      title!,
+                      textAlign: centerHeader ? TextAlign.center : TextAlign.start,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                        color: colorScheme.foreground,
+                      ),
+                    ),
+                  if (description != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      description!,
+                      textAlign: centerHeader ? TextAlign.center : TextAlign.start,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.45,
+                        color: colorScheme.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Slot 3: Close Control / Trailing Action
+            if (rightSlotWidget is! SizedBox || (rightSlotWidget as SizedBox).width != 0)
+              const SizedBox(width: 12),
+            rightSlotWidget,
           ],
         ),
       );
@@ -306,13 +434,13 @@ class AppDialog<T> extends StatelessWidget {
     Widget errorBannerWidget = const SizedBox.shrink();
     if (errorMessage case final String msg when msg.trim().isNotEmpty) {
       errorBannerWidget = Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+        margin: const EdgeInsets.fromLTRB(24, 12, 24, 4),
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: colorScheme.destructive.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(theme.radiusMd),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: colorScheme.destructive.withValues(alpha: 0.5),
+            color: colorScheme.destructive.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -320,12 +448,13 @@ class AppDialog<T> extends StatelessWidget {
             Icon(
               Icons.error_outline_rounded,
               color: colorScheme.destructive,
-              size: 20,
+              size: 18,
             ),
-            const SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 errorMessage!,
+                textAlign: centerHeader ? TextAlign.center : TextAlign.start,
                 style: TextStyle(
                   fontSize: 13,
                   color: colorScheme.destructive,
@@ -339,9 +468,15 @@ class AppDialog<T> extends StatelessWidget {
     }
 
     Widget actionsWidget = const SizedBox.shrink();
-    if (hasActions) {
-      final defaultActionButtons = actions ??
-          [
+    if (renderActions) {
+      List<Widget> defaultActionButtons;
+      if (actions != null) {
+        defaultActionButtons = actions!;
+      } else {
+        final buttons = <Widget>[];
+
+        if (showCancelButton && confirmLabel != cancelLabel) {
+          buttons.add(
             Expanded(
               child: AppButton(
                 label: cancelLabel,
@@ -358,7 +493,15 @@ class AppDialog<T> extends StatelessWidget {
                       },
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+          );
+        }
+
+        if (showConfirmButton) {
+          if (buttons.isNotEmpty) {
+            buttons.add(const SizedBox(width: 12));
+          }
+
+          buttons.add(
             Expanded(
               child: AppButton(
                 label: confirmLabel,
@@ -376,15 +519,19 @@ class AppDialog<T> extends StatelessWidget {
                       },
               ),
             ),
-          ];
+          );
+        }
+
+        defaultActionButtons = buttons;
+      }
 
       actionsWidget = Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
         decoration: BoxDecoration(
-          color: colorScheme.card,
+          color: footerBgColor,
           border: Border(
             top: BorderSide(
-              color: colorScheme.border.withValues(alpha: 0.5),
+              color: borderColor,
               width: 1,
             ),
           ),
@@ -396,45 +543,68 @@ class AppDialog<T> extends StatelessWidget {
       );
     }
 
-    // Responsive Constraints setup
     final maxDialogWidth = size.maxWidth;
     final viewportHeight = mediaQuery.size.height;
     final maxDialogHeight = isFullscreen ? viewportHeight : viewportHeight * 0.88;
 
     final dialogSurface = Material(
-      color: colorScheme.card,
-      elevation: 12,
-      shadowColor: Colors.black.withValues(alpha: 0.25),
+      color: dialogBgColor,
+      elevation: 0,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(isFullscreen ? 0 : AppRadius.lg),
+        borderRadius: BorderRadius.circular(isFullscreen ? 0 : 24.0),
         side: BorderSide(
-          color: colorScheme.border.withValues(alpha: 0.6),
+          color: borderColor,
           width: 1,
         ),
       ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxDialogWidth,
-          maxHeight: maxDialogHeight,
-        ),
-        child: Column(
-          mainAxisSize: isFullscreen ? MainAxisSize.max : MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            headerWidget,
-            errorBannerWidget,
-            Flexible(
-              child: SingleChildScrollView(
-                padding: contentPadding,
-                child: child,
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(isFullscreen ? 0 : 24.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.15),
+              blurRadius: 36,
+              spreadRadius: -4,
+              offset: const Offset(0, 16),
             ),
-            actionsWidget,
           ],
         ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: maxDialogWidth,
+            maxHeight: maxDialogHeight,
+          ),
+          child: Column(
+            mainAxisSize: isFullscreen ? MainAxisSize.max : MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              headerWidget,
+              errorBannerWidget,
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: contentPadding,
+                  child: centerContent
+                      ? Center(
+                          child: DefaultTextStyle.merge(
+                            textAlign: TextAlign.center,
+                            child: child,
+                          ),
+                        )
+                      : child,
+                ),
+              ),
+              actionsWidget,
+            ],
+          ),
+        ),
       ),
-    );
+    ).animate().scale(
+          duration: 200.ms,
+          curve: Curves.easeOutCubic,
+          begin: const Offset(0.96, 0.96),
+          end: const Offset(1.0, 1.0),
+        ).fadeIn(duration: 180.ms);
 
     if (isFullscreen) {
       return Dialog.fullscreen(child: dialogSurface);
@@ -444,8 +614,8 @@ class AppDialog<T> extends StatelessWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.lg,
+        horizontal: 20,
+        vertical: 24,
       ),
       child: dialogSurface,
     );

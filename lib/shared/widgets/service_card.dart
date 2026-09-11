@@ -6,8 +6,7 @@ import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/widgets/app_description_hint.dart';
-import '../../core/widgets/app_status_badge.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 /// Card representing a single business module on the service launcher /
 /// dashboard.
 class ServiceCard extends StatelessWidget {

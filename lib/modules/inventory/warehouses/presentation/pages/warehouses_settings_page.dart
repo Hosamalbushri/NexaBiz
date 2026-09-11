@@ -6,7 +6,6 @@ import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 
@@ -14,6 +13,7 @@ import '../../domain/entities/warehouse.dart';
 import '../../domain/services/warehouse_validator.dart';
 import '../providers/warehouse_providers.dart';
 import 'warehouse_form_page.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class WarehousesSettingsPage extends ConsumerWidget {
   const WarehousesSettingsPage({super.key});

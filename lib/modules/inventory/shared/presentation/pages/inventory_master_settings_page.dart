@@ -5,8 +5,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/categories/presentation/pages/categories_settings_page.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/pages/cost_valuation_settings_page.dart';
@@ -135,8 +134,9 @@ class InventoryMasterSettingsPage extends ConsumerWidget {
   }
 
   Widget _buildHeroHeader(ThemeData theme, bool isAr) {
-    return AppCard(
-      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
+    return AppSurface(
+      variant: AppSurfaceVariant.outlined,
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
           Container(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/item_status.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class StatusBadge extends StatelessWidget {
   const StatusBadge({super.key, required this.status});

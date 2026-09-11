@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
-import 'package:stock_count/core/widgets/app_customer_search_field.dart';
 import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
 import 'package:stock_count/modules/customers/directory/domain/usecases/customer_usecases.dart';
 import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/app_async_autocomplete_field.dart';
-import 'package:stock_count/core/widgets/app_customer_search_field.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_customer_lookup_port.dart';
 import '../providers/rp_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 const _kDebounceMs = 300;
 const _kMinQueryLength = 2;

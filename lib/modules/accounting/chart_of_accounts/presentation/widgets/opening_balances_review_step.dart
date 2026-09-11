@@ -7,14 +7,12 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
 import '../../domain/models/account_import_row.dart'
     show AccountImportException;
 import '../../domain/services/account_import_opening_journal.dart';
 import '../providers/account_opening_setup_provider.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/providers/currency_rate_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Step 3: per-currency review and post opening journal vs Capital 3100.
 class OpeningBalancesReviewStep extends ConsumerWidget {

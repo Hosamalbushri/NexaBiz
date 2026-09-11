@@ -15,9 +15,7 @@ import 'package:stock_count/core/widgets/app_document_locked_banner.dart';
 import 'package:stock_count/core/widgets/app_document_meta_chip.dart';
 import 'package:stock_count/core/widgets/app_document_option_card.dart';
 import 'package:stock_count/core/widgets/app_document_sticky_summary.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_filter_sheet.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/widgets/app_account_search_picker.dart';
 import 'package:stock_count/app/providers/currency_rate_providers.dart';
@@ -25,13 +23,13 @@ import 'package:stock_count/modules/currency/presentation/widgets/missing_curren
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
-import 'package:stock_count/core/widgets/app_document_line_table_shell.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
 import '../../domain/services/inventory_account_port.dart';
 import '../../domain/services/inventory_voucher_book_port.dart';
 import '../providers/stock_issue_composer_provider.dart';
 import '../providers/stock_movements_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Multi-column spreadsheet layout dimensions matching SaleProductsTable.
 class _Cols {

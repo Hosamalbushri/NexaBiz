@@ -5,14 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/presentation/patterns/app_list_page_pattern.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
 import '../../domain/entities/journal_entry.dart';
 import '../../domain/services/journal_source_category_resolver.dart';
@@ -694,54 +693,42 @@ class _JournalHeaderTile extends StatelessWidget {
           '${entry.voucherNumber}, ${entry.voucherType}, $dateLabel, ${l10n.accountingJournalDebit}: ${entry.totalDebit.toStringAsFixed(2)}, ${l10n.accountingJournalCredit}: ${entry.totalCredit.toStringAsFixed(2)}',
       hint: l10n.accountingJournalDetails,
       button: true,
-      child: Material(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          onTap: onTap,
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(AppRadius.xs),
-                        ),
-                        child: Icon(icon, size: 16, color: badgeColor),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Text(
-                          entry.voucherNumber,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      AppStatusBadge(
-                        label: entry.isPosted
-                            ? l10n.accountingJournalPosted
-                            : l10n.accountingJournalUnposted,
-                        tone: entry.isPosted
-                            ? AppStatusTone.success
-                            : AppStatusTone.warning,
-                        animate: false,
-                      ),
-                    ],
+      child: AppSurface(
+        onTap: onTap,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
+                  child: Icon(icon, size: 16, color: badgeColor),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    entry.voucherNumber,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                AppStatusBadge(
+                  label: entry.isPosted
+                      ? l10n.accountingJournalPosted
+                      : l10n.accountingJournalUnposted,
+                  tone: entry.isPosted
+                      ? AppStatusTone.success
+                      : AppStatusTone.warning,
+                  animate: false,
+                ),
+              ],
+            ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -814,9 +801,6 @@ class _JournalHeaderTile extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
       ),
     );
   }

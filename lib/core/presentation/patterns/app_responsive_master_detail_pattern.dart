@@ -1,7 +1,7 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/tokens/tokens.dart';
-import '../../widgets/app_card.dart';
 
 /// Canonical Responsive Master-Detail Layout Pattern for NexaBiz ERP.
 ///

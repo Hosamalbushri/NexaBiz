@@ -10,11 +10,9 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_responsive.dart';
-import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/services/first_run_setup_coordinator.dart';
 import '../providers/system_setup_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class FirstRunSetupWizardPage extends ConsumerStatefulWidget {
   const FirstRunSetupWizardPage({super.key});

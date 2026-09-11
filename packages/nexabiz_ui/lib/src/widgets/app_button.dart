@@ -6,11 +6,11 @@ import '../theme/app_dimensions.dart';
 
 enum AppButtonVariant { filled, elevated, outlined, text, tonal, destructive }
 
-/// Design-system button wrapping shadcn_flutter button primitives.
+/// Modernized design-system button wrapping shadcn_flutter button primitives.
 ///
-/// Preserves NexaBiz API: [label], [onPressed], [variant], [icon],
-/// [trailingIcon], [isLoading], [expand], [isCompact].
-class AppButton extends StatelessWidget {
+/// Features subtle hover scale feedback, localized text handling, crisp icon alignment,
+/// and responsive density.
+class AppButton extends StatefulWidget {
   const AppButton({
     super.key,
     required this.label,
@@ -33,30 +33,40 @@ class AppButton extends StatelessWidget {
   final bool isCompact;
 
   @override
-  Widget build(BuildContext context) {
-    final enabled = onPressed != null && !isLoading;
+  State<AppButton> createState() => _AppButtonState();
+}
 
-    final leadingWidget = isLoading
+class _AppButtonState extends State<AppButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onPressed != null && !widget.isLoading;
+
+    final leadingWidget = widget.isLoading
         ? const SizedBox(
             width: 16,
             height: 16,
             child: shadcn.CircularProgressIndicator(strokeWidth: 2),
           )
-        : (icon != null && !trailingIcon ? Icon(icon, size: 18) : null);
+        : (widget.icon != null && !widget.trailingIcon ? Icon(widget.icon, size: 18) : null);
 
     final trailingWidget =
-        !isLoading && icon != null && trailingIcon ? Icon(icon, size: 18) : null;
+        !widget.isLoading && widget.icon != null && widget.trailingIcon
+            ? Icon(widget.icon, size: 18)
+            : null;
 
     final childWidget = Text(
-      label,
+      widget.label,
       textAlign: TextAlign.center,
       overflow: TextOverflow.ellipsis,
     );
 
-    final VoidCallback? handler = enabled ? onPressed : null;
-    final buttonDensity = isCompact ? shadcn.ButtonDensity.compact : shadcn.ButtonDensity.normal;
+    final VoidCallback? handler = enabled ? widget.onPressed : null;
+    final buttonDensity =
+        widget.isCompact ? shadcn.ButtonDensity.compact : shadcn.ButtonDensity.normal;
 
-    final Widget button = switch (variant) {
+    final Widget button = switch (widget.variant) {
       AppButtonVariant.filled => shadcn.PrimaryButton(
           onPressed: handler,
           density: buttonDensity,
@@ -101,16 +111,25 @@ class AppButton extends StatelessWidget {
         ),
     };
 
-    final double height = isCompact
+    final double height = widget.isCompact
         ? AppDimensions.buttonHeightCompact
         : AppDimensions.buttonHeight;
 
-    final sized = SizedBox(
-      height: height,
-      width: expand ? double.infinity : null,
-      child: button,
+    final Widget interactiveButton = MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered && enabled ? 1.02 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: SizedBox(
+          height: height,
+          width: widget.expand ? double.infinity : null,
+          child: button,
+        ),
+      ),
     );
 
-    return sized.animate().fadeIn(duration: 160.ms);
+    return interactiveButton.animate().fadeIn(duration: 160.ms);
   }
 }

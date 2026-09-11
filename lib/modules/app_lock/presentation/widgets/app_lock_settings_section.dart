@@ -5,10 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/entities/app_lock_state.dart';
 import '../providers/app_lock_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Settings UI for enabling/disabling App Lock and configuring policy.
 class AppLockSettingsSection extends ConsumerWidget {

@@ -5,17 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_card.dart';
-import '../../core/widgets/app_snackbar.dart';
-import '../../core/widgets/app_currency_selector.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../../modules/authentication/data/local_auth_store.dart';
-import 'company/app_currency.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
 import '../../modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
@@ -186,7 +182,6 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     }
   }
 
-  String? _activeSubSection;
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +241,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          AppCard(
+          AppSurface(
+            variant: AppSurfaceVariant.outlined,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -311,7 +307,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppCard(
+          AppSurface(
+            variant: AppSurfaceVariant.outlined,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -369,7 +366,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppCard(
+          AppSurface(
+            variant: AppSurfaceVariant.outlined,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -412,7 +410,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppCard(
+          AppSurface(
+            variant: AppSurfaceVariant.outlined,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -472,7 +471,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppCard(
+          AppSurface(
+            variant: AppSurfaceVariant.outlined,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -498,7 +498,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppCard(
+          AppSurface(
+            variant: AppSurfaceVariant.outlined,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -560,21 +561,6 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   }
 }
 
-class _SetupMenuItem {
-  const _SetupMenuItem({
-    required this.id,
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final String id;
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-}
 
 class _LogoPreview extends StatelessWidget {
   const _LogoPreview({required this.path, required this.busy});

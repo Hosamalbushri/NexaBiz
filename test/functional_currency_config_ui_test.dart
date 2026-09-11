@@ -10,7 +10,6 @@ import 'package:stock_count/app/settings/company/functional_currency_config_page
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_currency_selector.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
@@ -21,6 +20,7 @@ import 'package:stock_count/modules/accounting/shared/presentation/providers/cur
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class FakeSettingsRepository extends SettingsRepository {
   CompanyProfile _profile = const CompanyProfile();

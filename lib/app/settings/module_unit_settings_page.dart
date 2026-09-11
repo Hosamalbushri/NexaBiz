@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/modules/module_settings_definition.dart';
-import '../../core/widgets/app_empty_state.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
@@ -10,6 +9,7 @@ import '../theme/app_breakpoints.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Screen displaying sub-module unit cards for a selected module's settings category.
 class ModuleUnitSettingsPage extends StatelessWidget {

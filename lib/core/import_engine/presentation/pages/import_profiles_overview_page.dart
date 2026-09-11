@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/app_status_badge.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/import_profile.dart';
 import '../../registry/import_profile_registry.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Settings page displaying all registered Import profiles and their field schemas.
 class ImportProfilesOverviewPage extends StatelessWidget {

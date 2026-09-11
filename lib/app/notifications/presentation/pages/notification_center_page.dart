@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/app_notification.dart';
-import '../../../../core/widgets/app_empty_state.dart';
-import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/notification_tile.dart';
 import '../../../constants/app_constants.dart';
@@ -12,6 +10,7 @@ import '../../../localization/app_localizations.dart';
 import '../../../theme/app_radius.dart';
 import '../../../theme/app_spacing.dart';
 import '../providers/notifications_provider.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Platform Notification Center — history, read state, and actions.
 class NotificationCenterPage extends ConsumerWidget {

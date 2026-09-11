@@ -9,9 +9,9 @@ import '../../../../app/settings/widgets/settings_chrome.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/modules/app_module.dart';
 import '../../../../core/modules/module_providers.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../domain/entities/system_setup_state.dart';
 import '../../system_setup_module.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Runtime settings hub hosted by the Settings module.
 ///

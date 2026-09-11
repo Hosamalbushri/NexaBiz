@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
 import 'package:stock_count/modules/currency/domain/entities/currency.dart';
 import 'package:stock_count/modules/currency/presentation/pages/currencies_manage_page.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 import 'package:stock_count/modules/currency/presentation/providers/functional_currency_providers.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/inventory_valuation_currency_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 void main() {
   group('Phase 6 — Module UI Adoption & Implementation Enforcement Tests', () {

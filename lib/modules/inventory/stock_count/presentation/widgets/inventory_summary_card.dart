@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
 import '../../domain/services/counting_calculator.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class InventorySummaryCard extends StatelessWidget {
   const InventorySummaryCard({super.key, required this.preview});

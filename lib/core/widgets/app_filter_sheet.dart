@@ -1,7 +1,7 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/material.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
-import 'app_button.dart';
 
 /// Modal bottom sheet container for multi-criteria search & filtering on mobile devices.
 ///

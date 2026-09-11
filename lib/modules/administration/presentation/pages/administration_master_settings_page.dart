@@ -6,7 +6,6 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
 import 'package:stock_count/modules/administration/branches/presentation/pages/admin_branches_page.dart';
@@ -14,6 +13,7 @@ import 'package:stock_count/modules/administration/companies/presentation/pages/
 import 'package:stock_count/modules/administration/devices/presentation/pages/admin_devices_page.dart';
 import 'package:stock_count/modules/administration/roles/presentation/pages/admin_roles_page.dart';
 import 'package:stock_count/modules/administration/users/presentation/pages/admin_users_page.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Single authoritative Master Settings Hub for Administration Module (`/administration/settings`).
 ///

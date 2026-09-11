@@ -1,7 +1,7 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/tokens/tokens.dart';
-import 'app_card.dart';
 
 /// Canonical KPI / metric summary card composite for NexaBiz dashboards & modules.
 class AppSummaryCard extends StatelessWidget {

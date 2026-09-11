@@ -1,8 +1,8 @@
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../app/theme/app_spacing.dart';
-import 'app_responsive.dart';
 
 /// Shows a themed modal bottom sheet.
 ///

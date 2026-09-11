@@ -3,15 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_form_section.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
-import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/entities/account_type.dart';
@@ -213,19 +210,12 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
           showBackButton: true,
         ),
         bottomActions: AppBottomActions(
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _saving ? null : _save,
-              icon: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_outlined),
-              label: Text(l10n.accountingSaveAccount),
-            ),
+          child: AppButton(
+            label: l10n.accountingSaveAccount,
+            icon: Icons.save_outlined,
+            expand: true,
+            isLoading: _saving,
+            onPressed: _saving ? null : _save,
           ),
         ),
         body: Form(
@@ -255,53 +245,33 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                       ),
                     )
                   else
-                    TextFormField(
+                    AppTextField(
                       controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: l10n.accountingFieldName,
-                      ),
+                      label: l10n.accountingFieldName,
+                      required: true,
                       textInputAction: TextInputAction.next,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return l10n.accountingErrorNameRequired;
-                        }
-                        return null;
-                      },
                     ),
-                  TextFormField(
+                  AppTextField(
                     controller: _codeController,
                     enabled: !systemLocked,
+                    label: l10n.accountingFieldCode,
+                    required: true,
+                    helperText: systemLocked
+                        ? l10n.accountingSystemAccountHint
+                        : l10n.accountingFieldCodeHelper,
                     onChanged: (_) => _codeAutoFilled = false,
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingFieldCode,
-                      helperText: systemLocked
-                          ? l10n.accountingSystemAccountHint
-                          : l10n.accountingFieldCodeHelper,
-                      suffixIcon: widget.isEditing || systemLocked
-                          ? null
-                          : IconButton(
-                              tooltip: l10n.accountingGenerateCode,
-                              onPressed: _generatingCode || _parentId == null
-                                  ? null
-                                  : () => _assignCodeFromParent(force: true),
-                              icon: _generatingCode
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.auto_awesome),
-                            ),
-                    ),
+                    suffixIcon: widget.isEditing || systemLocked
+                        ? null
+                        : AppIconButton(
+                            icon: _generatingCode
+                                ? Icons.hourglass_empty
+                                : Icons.auto_awesome,
+                            tooltip: l10n.accountingGenerateCode,
+                            onPressed: _generatingCode || _parentId == null
+                                ? null
+                                : () => _assignCodeFromParent(force: true),
+                          ),
                     textInputAction: TextInputAction.next,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.accountingErrorCodeRequired;
-                      }
-                      return null;
-                    },
                   ),
                 ],
               ),
@@ -322,23 +292,20 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                         for (final p in parents)
                           if (!widget.isEditing || p.uuid != _existing?.uuid) p,
                       ];
-                      return DropdownButtonFormField<String?>(
-                        // ignore: deprecated_member_use
+                      return AppSelectField<String?>(
                         value: _parentId,
-                        decoration: InputDecoration(
-                          labelText: l10n.accountingFieldParent,
-                        ),
+                        label: l10n.accountingFieldParent,
+                        enabled: !systemLocked,
                         items: [
-                          DropdownMenuItem<String?>(
+                          AppSelectItem<String?>(
                             value: null,
-                            child: Text(l10n.accountingRootAccount),
+                            label: l10n.accountingRootAccount,
                           ),
                           for (final parent in options)
-                            DropdownMenuItem<String?>(
+                            AppSelectItem<String?>(
                               value: parent.uuid,
-                              child: Text(
-                                '${parent.accountCode} — ${AccountLabels.displayName(l10n, parent)}',
-                              ),
+                              label:
+                                  '${parent.accountCode} — ${AccountLabels.displayName(l10n, parent)}',
                             ),
                         ],
                         onChanged: systemLocked
@@ -347,20 +314,18 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                       );
                     },
                   ),
-                  DropdownButtonFormField<AccountType>(
-                    // ignore: deprecated_member_use
+                  AppSelectField<AccountType>(
                     value: _accountType,
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingFieldType,
-                      helperText: _parentId == null
-                          ? null
-                          : l10n.accountingTypeInheritedHint,
-                    ),
+                    label: l10n.accountingFieldType,
+                    helperText: _parentId == null
+                        ? null
+                        : l10n.accountingTypeInheritedHint,
+                    enabled: !systemLocked && _parentId == null,
                     items: [
                       for (final type in AccountType.values)
-                        DropdownMenuItem(
+                        AppSelectItem(
                           value: type,
-                          child: Text(AccountLabels.typeLabel(l10n, type)),
+                          label: AccountLabels.typeLabel(l10n, type),
                         ),
                     ],
                     onChanged: systemLocked || _parentId != null
@@ -379,11 +344,9 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                     : 'Description & Options',
                 icon: Icons.tune_outlined,
               ),
-              TextFormField(
+              AppTextField(
                 controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: l10n.accountingFieldDescription,
-                ),
+                label: l10n.accountingFieldDescription,
                 maxLines: 3,
                 textInputAction: TextInputAction.newline,
               ),

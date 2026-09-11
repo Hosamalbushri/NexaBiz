@@ -3,18 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_card.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/journal_entry.dart';
 import '../../domain/models/journal_exception.dart';
@@ -23,6 +15,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/pr
 import '../providers/journal_providers.dart';
 import '../widgets/journal_exception_messages.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Full journal entry detail (header + currency-grouped lines).
 class JournalEntryDetailsPage extends ConsumerWidget {
@@ -33,7 +26,6 @@ class JournalEntryDetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final async = ref.watch(journalEntryByUuidProvider(entryUuid));
     final dateFormat = DateFormat.yMMMd();
 
@@ -88,22 +80,34 @@ class JournalEntryDetailsPage extends ConsumerWidget {
           (s, l) => s + l.baseCredit,
         );
 
-        return Scaffold(
-          appBar: CustomAppBar(
-            title: entry.voucherNumber,
-            showBackButton: true,
-            actions: [
-              if (!linked)
-                IconButton(
-                  tooltip: l10n.accountingJournalEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () =>
-                      AccountingRoutes.pushJournalEdit(context, entry.uuid),
-                ),
+        return AppDetailPagePattern(
+          title: entry.voucherNumber,
+          actions: [
+            if (!linked)
+              IconButton(
+                tooltip: l10n.accountingJournalEdit,
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () =>
+                    AccountingRoutes.pushJournalEdit(context, entry.uuid),
+              ),
+          ],
+          summaryBanner: Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              AppStatusBadge(
+                label: entry.isPosted
+                    ? l10n.accountingJournalPosted
+                    : l10n.accountingJournalUnposted,
+                tone: entry.isPosted
+                    ? AppStatusTone.success
+                    : AppStatusTone.warning,
+                animate: false,
+              ),
             ],
           ),
-          body: ListView(
-            padding: AppConstants.pageInsets(context),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // --- Header Card ---
               _HeaderCard(
@@ -226,7 +230,7 @@ class _HeaderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return AppCard(
+    return AppDetailSurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -265,59 +269,25 @@ class _HeaderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          _infoRow(
-            l10n.accountingJournalFieldDate,
-            dateFormat.format(entry.entryDate.toLocal()),
-            scheme,
+          AppDetailInfoRow(
+            label: l10n.accountingJournalFieldDate,
+            value: dateFormat.format(entry.entryDate.toLocal()),
           ),
-          _infoRow(
-            l10n.accountingJournalFieldCurrency,
-            entry.currencyCode,
-            scheme,
+          AppDetailInfoRow(
+            label: l10n.accountingJournalFieldCurrency,
+            value: entry.currencyCode,
           ),
           if (entry.description != null &&
               entry.description!.trim().isNotEmpty)
-            _infoRow(
-              l10n.accountingJournalFieldDescription,
-              entry.description!,
-              scheme,
+            AppDetailInfoRow(
+              label: l10n.accountingJournalFieldDescription,
+              value: entry.description!,
             ),
           if (linked)
-            _infoRow(
-              l10n.accountingJournalFieldStatus,
-              l10n.accountingJournalSourceLinked(entry.sourceType!),
-              scheme,
+            AppDetailInfoRow(
+              label: l10n.accountingJournalFieldStatus,
+              value: l10n.accountingJournalSourceLinked(entry.sourceType!),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoRow(String label, String value, ColorScheme scheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: scheme.onSurfaceVariant,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ),
         ],
       ),
     );

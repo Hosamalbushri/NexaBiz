@@ -7,16 +7,12 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../domain/entities/accounting_period_status.dart';
 import '../../domain/models/fiscal_year_exception.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Periods table + FX summary for one fiscal year.
 class FiscalYearDetailsPage extends ConsumerWidget {

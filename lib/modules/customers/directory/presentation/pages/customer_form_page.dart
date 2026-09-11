@@ -11,16 +11,13 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 
 import 'package:stock_count/core/widgets/app_expandable_form_section.dart';
-import 'package:stock_count/core/widgets/app_form_section.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
-import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/customer_data_source.dart';
 import '../../domain/models/customer_exception.dart';
 import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
 import '../providers/customer_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class CustomerFormPage extends ConsumerStatefulWidget {
   const CustomerFormPage({super.key, this.customerId});

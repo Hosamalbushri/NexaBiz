@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-
 import '../providers/inventory_valuation_currency_providers.dart';
 
 import 'package:stock_count/modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class InventoryValuationCurrencyCard extends ConsumerWidget {
   const InventoryValuationCurrencyCard({super.key});

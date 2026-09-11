@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/modules/quick_nav_definition.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_snackbar.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_spacing.dart';
 import '../providers/quick_nav_items_provider.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Structured result returned from customization sheet.
 class QuickNavCustomizationResult {

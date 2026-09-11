@@ -9,11 +9,11 @@ import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import '../providers/admin_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Administration hub with clear entry points for access control.
 class AdministrationHomePage extends ConsumerWidget {

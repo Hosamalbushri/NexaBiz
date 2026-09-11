@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/core/widgets/app_customer_search_field.dart';
 import 'package:stock_count/modules/sales/invoices/presentation/widgets/sale_customer_search_field.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_customer_lookup_port.dart';
 import 'package:stock_count/modules/sales/invoices/presentation/providers/sale_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class FakeSaleCustomerLookupPort implements SaleCustomerLookupPort {
   FakeSaleCustomerLookupPort(this.customers);

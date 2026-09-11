@@ -4,9 +4,6 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
-
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/inventory_valuation_currency_providers.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_inventory_config.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
@@ -17,6 +14,7 @@ import '../providers/currency_providers.dart';
 import '../providers/currency_rate_providers.dart';
 import '../providers/functional_currency_providers.dart';
 import '../widgets/app_searchable_currency_picker.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 enum _CurrencyFilter { all, activeOnly, inactiveOnly }
 

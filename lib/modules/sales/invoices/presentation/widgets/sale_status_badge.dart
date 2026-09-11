@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_money_text.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/sale_status.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class SaleStatusBadge extends StatelessWidget {
   const SaleStatusBadge({super.key, required this.status, required this.label});

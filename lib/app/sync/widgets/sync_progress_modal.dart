@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import 'package:stock_count/modules/sync/sync.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Modal bottom sheet displaying real-time synchronization or pull progress,
 /// keeping results visible upon completion until manually dismissed.

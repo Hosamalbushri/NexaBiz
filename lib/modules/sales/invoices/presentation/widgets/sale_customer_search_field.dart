@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_customer_search_field.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_customer_lookup_port.dart';
 import '../providers/sale_providers.dart';
 import '../../domain/services/sale_autocomplete_defaults.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Sales-specific customer search field wrapper built on canonical [AppCustomerSearchField].
 class SaleCustomerSearchField extends ConsumerWidget {

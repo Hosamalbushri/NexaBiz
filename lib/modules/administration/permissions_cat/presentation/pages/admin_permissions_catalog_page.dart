@@ -8,9 +8,9 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/modules/module_providers.dart';
 import 'package:stock_count/core/permissions/permission_defs.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Browse permissions as Package → Service → Operation.
 ///

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/widgets/app_document_line_table_shell.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 void main() {
   group('AppDocumentLineTableShell Widget Tests', () {
     testWidgets('renders rows and index column correctly', (

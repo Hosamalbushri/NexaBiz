@@ -4,12 +4,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/entities/account_type.dart';
 import '../../domain/models/account_tree_node.dart';
 import '../../domain/services/account_labels.dart';
 import 'account_type_style.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Reusable hierarchical Chart of Accounts tree.
 ///

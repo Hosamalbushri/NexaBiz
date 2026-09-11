@@ -10,10 +10,6 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
@@ -32,6 +28,7 @@ import 'package:stock_count/modules/receipts_payments/transactions/presentation/
 import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
 import 'package:stock_count/modules/currency/presentation/widgets/missing_currency_dialog.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Slim form: transfer amount between two cash-box accounts.
 class CashBoxTransferFormPage extends ConsumerStatefulWidget {

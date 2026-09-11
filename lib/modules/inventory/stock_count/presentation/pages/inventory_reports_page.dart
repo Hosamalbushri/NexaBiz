@@ -8,11 +8,6 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/reporting/pdf_document_preview_page.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_bottom_sheet.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/widgets/app_kpi_tile.dart';
 import '../../domain/entities/inventory_item.dart';
@@ -28,6 +23,7 @@ import 'package:stock_count/modules/inventory/products/presentation/widgets/cata
 import '../widgets/report_items_data_grid.dart';
 import '../widgets/report_status_chart.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class InventoryReportsPage extends ConsumerStatefulWidget {
   const InventoryReportsPage({super.key, this.embedded = false});

@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import '../pages/customers_settings_page.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Customers module settings bundle (embedded in the Settings module hub).
 class CustomersSettingsPanel extends ConsumerWidget {

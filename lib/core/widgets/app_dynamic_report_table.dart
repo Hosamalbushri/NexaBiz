@@ -3,8 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 /// Specification for a grouped header spanning multiple table columns.
 class ReportGroupHeaderSpec {
   const ReportGroupHeaderSpec({

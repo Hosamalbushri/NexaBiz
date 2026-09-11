@@ -6,13 +6,11 @@ import 'package:stock_count/modules/administration/shared/presentation/admin_loc
 import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
 import 'package:stock_count/modules/administration/shared/data/admin_api_repository.dart';
 import 'package:stock_count/modules/administration/shared/presentation/providers/admin_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class AdminCompaniesPage extends ConsumerStatefulWidget {
   const AdminCompaniesPage({super.key});
@@ -104,20 +102,12 @@ class _AdminCompaniesPageState extends ConsumerState<AdminCompaniesPage> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-              Chip(
-                label: Text(
-                  company.isActive ? l10n.statusActive : l10n.statusInactive,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: company.isActive
-                        ? Colors.green.shade800
-                        : Colors.red.shade800,
-                  ),
-                ),
-                backgroundColor: company.isActive
-                    ? Colors.green.shade50
-                    : Colors.red.shade50,
-                visualDensity: VisualDensity.compact,
+              AppStatusBadge(
+                label: company.isActive ? l10n.statusActive : l10n.statusInactive,
+                tone: company.isActive
+                    ? AppStatusTone.success
+                    : AppStatusTone.error,
+                animate: false,
               ),
             ],
           ),

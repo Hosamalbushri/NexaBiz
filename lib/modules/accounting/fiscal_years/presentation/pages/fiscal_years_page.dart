@@ -6,10 +6,10 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
-import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/accounting_period_status.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Lists configured fiscal years using canonical [ModuleListScaffold].
 class FiscalYearsPage extends ConsumerWidget {

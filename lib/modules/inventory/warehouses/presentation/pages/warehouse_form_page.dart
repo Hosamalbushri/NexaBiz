@@ -8,7 +8,6 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/widgets/app_account_search_picker.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
@@ -776,26 +775,12 @@ class _FormSectionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return AppSurface(
+      variant: AppSurfaceVariant.outlined,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Row(
               children: [
                 Container(
@@ -845,7 +830,6 @@ class _FormSectionCard extends StatelessWidget {
             child,
           ],
         ),
-      ),
     );
   }
 }

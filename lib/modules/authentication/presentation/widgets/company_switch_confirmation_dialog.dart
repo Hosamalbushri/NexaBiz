@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../../../../app/bootstrap/app_bootstrap.dart';
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/app_confirmation_dialog.dart';
 import '../../domain/entities/auth_user.dart';
 import '../providers/auth_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Shows a 2-step confirmation and re-authentication dialog flow for switching companies.
 /// Returns true if company switch succeeded, false otherwise.
@@ -33,11 +31,15 @@ Future<bool> showCompanySwitchConfirmationFlow(
   if (confirmed != true) return false;
   if (!context.mounted) return false;
 
-  // Step 2: Email & Password Re-Authentication Dialog
-  final authSuccess = await showDialog<bool>(
+  // Step 2: Email & Password Re-Authentication Dialog using AppDialog
+  final authSuccess = await AppDialog.show<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (dialogCtx) => _CompanySwitchAuthDialog(
+    size: AppDialogSize.small,
+    title: 'المصادقة للانتقال',
+    description: 'شركة: ${targetCompany.name}',
+    icon: Icons.lock_person_rounded,
+    child: _CompanySwitchAuthForm(
       targetCompany: targetCompany,
       initialEmail: ref.read(authStateProvider).session?.user.email ?? '',
       ref: ref,
@@ -47,23 +49,23 @@ Future<bool> showCompanySwitchConfirmationFlow(
   return authSuccess ?? false;
 }
 
-class _CompanySwitchAuthDialog extends StatefulWidget {
+class _CompanySwitchAuthForm extends StatefulWidget {
   final AuthCompany targetCompany;
   final String initialEmail;
   final WidgetRef ref;
 
-  const _CompanySwitchAuthDialog({
+  const _CompanySwitchAuthForm({
     required this.targetCompany,
     required this.initialEmail,
     required this.ref,
   });
 
   @override
-  State<_CompanySwitchAuthDialog> createState() =>
-      _CompanySwitchAuthDialogState();
+  State<_CompanySwitchAuthForm> createState() =>
+      _CompanySwitchAuthFormState();
 }
 
-class _CompanySwitchAuthDialogState extends State<_CompanySwitchAuthDialog> {
+class _CompanySwitchAuthFormState extends State<_CompanySwitchAuthForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
@@ -136,140 +138,112 @@ class _CompanySwitchAuthDialogState extends State<_CompanySwitchAuthDialog> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Form(
+      key: _formKey,
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Text(
+            'يرجى إدخال البريد الإلكتروني وكلمة المرور لتأكيد الدخول إلى الشركة:',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _emailController,
+            enabled: !_isLoading,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'البريد الإلكتروني / اسم المستخدم *',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+            validator: (val) => val == null || val.trim().isEmpty
+                ? 'يرجى إدخال البريد الإلكتروني'
+                : null,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _passwordController,
+            enabled: !_isLoading,
+            obscureText: _obscurePassword,
+            decoration: InputDecoration(
+              labelText: 'كلمة المرور *',
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
+            ),
+            validator: (val) => val == null || val.trim().isEmpty
+                ? 'يرجى إدخال كلمة المرور'
+                : null,
+          ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: colorScheme.errorContainer.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: colorScheme.error),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: colorScheme.error,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              Icon(Icons.lock_person_rounded, color: colorScheme.primary),
+              Expanded(
+                child: AppButton(
+                  label: 'إلغاء',
+                  variant: AppButtonVariant.outlined,
+                  expand: true,
+                  onPressed: _isLoading
+                      ? null
+                      : () => Navigator.of(context).pop(false),
+                ),
+              ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text(
-                  'المصادقة للانتقال',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: AppButton(
+                  label: 'تأكيد ودخول',
+                  isLoading: _isLoading,
+                  expand: true,
+                  onPressed: _isLoading ? null : _submit,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'شركة: ${widget.targetCompany.name}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
           ),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'يرجى إدخال البريد الإلكتروني وكلمة المرور لتأكيد الدخول إلى الشركة:',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _emailController,
-                enabled: !_isLoading,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'البريد الإلكتروني / اسم المستخدم *',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-                validator: (val) => val == null || val.trim().isEmpty
-                    ? 'يرجى إدخال البريد الإلكتروني'
-                    : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _passwordController,
-                enabled: !_isLoading,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'كلمة المرور *',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                ),
-                validator: (val) => val == null || val.trim().isEmpty
-                    ? 'يرجى إدخال كلمة المرور'
-                    : null,
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: colorScheme.errorContainer.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    border: Border.all(color: colorScheme.error),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: colorScheme.error,
-                        size: 20,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.error,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        shadcn.GhostButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
-          child: const Text('إلغاء'),
-        ),
-        shadcn.PrimaryButton(
-          onPressed: _isLoading ? null : _submit,
-          leading: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: shadcn.CircularProgressIndicator(strokeWidth: 2),
-                )
-              : null,
-          child: const Text('تأكيد ودخول'),
-        ),
-      ],
     );
   }
 }
