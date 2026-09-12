@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../data/datasources/pdf_barcode_label_printer.dart';
 import '../../data/datasources/product_excel_import_datasource.dart';
 import '../../data/datasources/thermal_barcode_label_printer.dart';
@@ -24,22 +24,13 @@ import 'package:stock_count/modules/inventory/stock_count/domain/services/produc
 import '../../domain/usecases/product_usecases.dart';
 import '../models/products_view_mode.dart';
 
-final inventoryDatabaseProvider = Provider<InventoryDatabase>((ref) {
-  // Keep the DB alive for the process; autoDispose list streams must not
-  // close it mid-open or the UI stays on AsyncLoading forever.
-  final db = InventoryDatabase(
-    name: tenantScopedName(
-      'inventory_products',
-      ref.watch(sessionCompanyIdProvider),
-    ),
-  );
-  ref.onDispose(db.close);
-  return db;
+final inventoryDatabaseProvider = Provider<NexabizDatabase>((ref) {
+  return ref.watch(nexabizDatabaseProvider);
 });
 
 final productRepositoryImplProvider = Provider<ProductRepositoryImpl>((ref) {
   return ProductRepositoryImpl(
-    ref.watch(inventoryDatabaseProvider),
+    ref.watch(nexabizDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
     readCompanyId: () => ref.read(currentCompanyIdProvider),
   );

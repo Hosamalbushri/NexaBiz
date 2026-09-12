@@ -70,7 +70,7 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         stage: InitializationStage.database,
         stageDetails: 'Opening database engine',
       );
-      await AppBootstrap.bootstrapDatabase();
+      await AppBootstrap.bootstrapDatabase(_ref);
 
       // 3. System Configuration
       state = state.copyWith(

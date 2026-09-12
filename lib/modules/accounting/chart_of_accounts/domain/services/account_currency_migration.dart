@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 class AccountCurrencyMigrationReport {
   const AccountCurrencyMigrationReport({
@@ -19,7 +19,7 @@ class AccountCurrencyMigrationReport {
 class AccountCurrencyMigration {
   AccountCurrencyMigration(this._db);
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
 
   /// Audits all historical journal lines for missing or unassigned currency codes.
   /// Rule: Unknown historical currency must NEVER be guessed or silently defaulted.

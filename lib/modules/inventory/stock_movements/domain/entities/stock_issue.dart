@@ -40,7 +40,7 @@ class StockIssue {
   final String? accountName;
   final String currencyCode;
   final double exchangeRate;
-  final int? voucherBookId;
+  final String? voucherBookId;
   final String? warehouse;
   final String? notes;
   final DateTime issueDate;
@@ -86,7 +86,7 @@ class StockIssue {
     bool clearAccountName = false,
     String? currencyCode,
     double? exchangeRate,
-    int? voucherBookId,
+    String? voucherBookId,
     bool clearVoucherBookId = false,
     String? warehouse,
     bool clearWarehouse = false,

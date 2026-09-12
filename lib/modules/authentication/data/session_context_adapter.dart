@@ -4,6 +4,9 @@ import '../domain/entities/auth_user.dart';
 import '../presentation/providers/auth_providers.dart';
 import 'local_auth_store.dart';
 
+import 'package:stock_count/core/tenancy/scope_context.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
+
 /// Adapter implementation of [SessionContextPort] for the authentication module.
 ///
 /// Converts module-level authentication state and [LocalAuthStore] data into
@@ -48,4 +51,19 @@ class SessionContextAdapter implements SessionContextPort {
 
   @override
   bool get isStandalone => authState.session?.user.isSuperAdmin ?? false;
+
+  @override
+  ScopeContext get scope {
+    final String activeId = activeCompanyId?.trim() ?? currentCompanyId?.trim() ?? '';
+    if (activeId.isNotEmpty) {
+      return CompanyScope(activeId);
+    }
+    if (companies.length == 1) {
+      return CompanyScope(companies.first.id.trim());
+    }
+    if (isStandalone && companies.isEmpty) {
+      return const CompanyScope(kLegacyLocalCompanyId);
+    }
+    return const SystemScope();
+  }
 }

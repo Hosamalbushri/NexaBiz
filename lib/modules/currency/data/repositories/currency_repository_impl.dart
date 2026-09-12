@@ -1,14 +1,14 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../domain/entities/currency.dart';
 import '../../domain/repositories/currency_repository.dart';
 
 class CurrencyRepositoryImpl implements CurrencyRepository {
   CurrencyRepositoryImpl(this._db, {required this._readCompanyId});
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   final String Function() _readCompanyId;
 
   String get _currentCompanyId => _readCompanyId().trim();
@@ -138,6 +138,9 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
         await _db.customUpdate(
           '''
           UPDATE currencies SET
+            code = ?,
+            currency_code = ?,
+            name = ?,
             name_ar = ?,
             name_en = ?,
             symbol = ?,
@@ -145,9 +148,12 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
             is_default = ?,
             is_active = ?,
             updated_at = ?
-          WHERE code = ? AND company_id = ?
+          WHERE (code = ? OR currency_code = ?) AND company_id = ?
           ''',
           variables: [
+            Variable.withString(code),
+            Variable.withString(code),
+            Variable.withString(draft.nameAr.trim()),
             Variable.withString(draft.nameAr.trim()),
             Variable.withString(draft.nameEn.trim()),
             Variable.withString(draft.symbol.trim()),
@@ -156,6 +162,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
             Variable.withBool(draft.isActive),
             Variable.withInt(now),
             Variable.withString(code),
+            Variable.withString(code),
             Variable.withString(_currentCompanyId),
           ],
         );
@@ -163,13 +170,15 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
         await _db.customInsert(
           '''
           INSERT INTO currencies (
-            uuid, code, name_ar, name_en, symbol, decimal_digits,
+            uuid, code, currency_code, name, name_ar, name_en, symbol, decimal_digits,
             is_default, is_active, created_at, updated_at, company_id
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ''',
           variables: [
             Variable.withString(uuid),
             Variable.withString(code),
+            Variable.withString(code),
+            Variable.withString(draft.nameAr.trim()),
             Variable.withString(draft.nameAr.trim()),
             Variable.withString(draft.nameEn.trim()),
             Variable.withString(draft.symbol.trim()),

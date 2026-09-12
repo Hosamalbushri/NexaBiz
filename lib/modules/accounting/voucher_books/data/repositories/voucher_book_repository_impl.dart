@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/models/voucher_book_exception.dart';
@@ -18,7 +18,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     this._readCompanyId,
   }) : _validator = validator ?? const VoucherBookValidator();
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   final VoucherBookValidator _validator;
   final String Function()? _readCompanyId;
 
@@ -51,11 +51,11 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     VoucherBookType.journal: 'القيود',
   };
 
-  VoucherBook _map(VoucherBookRow row) {
+  VoucherBook _map(VoucherBookData row) {
     return VoucherBook(
       id: row.id,
       uuid: row.uuid,
-      parentId: row.parentId,
+      parentId: row.parentUuid,
       name: row.name,
       bookType: VoucherBookType.fromStorage(row.bookType),
       isGroup: row.isGroup,
@@ -63,14 +63,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       endNumber: row.endNumber,
       isActive: row.isActive,
       notes: row.notes,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        row.createdAt,
-        isUtc: true,
-      ),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        row.updatedAt,
-        isUtc: true,
-      ),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     );
   }
 
@@ -183,7 +177,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   Future<List<VoucherBook>> getChildren(String parentUuid) async {
     final rows =
         await (_db.select(_db.voucherBooks)
-              ..where((t) => t.parentId.equals(parentUuid) & _scoped(t))
+              ..where((t) => t.parentUuid.equals(parentUuid) & _scoped(t))
               ..orderBy([
                 (t) => OrderingTerm.asc(t.bookType),
                 (t) => OrderingTerm.asc(t.name),
@@ -194,7 +188,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
 
   @override
   Future<void> ensureDefaultSections() async {
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final all = await getAll();
     final groupsByType = <VoucherBookType, VoucherBook>{
       for (final g in all.where((b) => b.isGroup && b.parentId == null))
@@ -214,17 +208,17 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
           .into(_db.voucherBooks)
           .insert(
             VoucherBooksCompanion.insert(
-              uuid: uuid,
-              parentId: const Value(null),
+              uuid: Value(uuid),
+              parentUuid: const Value(null),
               name: name,
               bookType: section.storageValue,
               isGroup: const Value(true),
               nextNumber: const Value(1),
               endNumber: const Value(9999),
               isActive: const Value(true),
-              createdAt: nowMs,
-              updatedAt: nowMs,
-              companyId: Value(_currentCompanyId),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+              companyId: _currentCompanyId,
             ),
           );
       groupsByType[section] = VoucherBook(
@@ -236,8 +230,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         currentNumber: 1,
         endNumber: 9999,
         isActive: true,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(nowMs, isUtc: true),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(nowMs, isUtc: true),
+        createdAt: now,
+        updatedAt: now,
       );
     }
 
@@ -265,8 +259,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
             _db.voucherBooks,
           )..where((t) => t.id.equals(child.id))).write(
             VoucherBooksCompanion(
-              parentId: Value(rpHubUuid),
-              updatedAt: Value(nowMs),
+              parentUuid: Value(rpHubUuid),
+              updatedAt: Value(now),
             ),
           );
         }
@@ -297,8 +291,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         _db.voucherBooks,
       )..where((t) => t.id.equals(book.id))).write(
         VoucherBooksCompanion(
-          parentId: Value(sectionUuid),
-          updatedAt: Value(nowMs),
+          parentUuid: Value(sectionUuid),
+          updatedAt: Value(now),
         ),
       );
     }
@@ -307,7 +301,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   @override
   Future<void> seedDefaultBooks() async {
     await ensureDefaultSections();
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final refreshed = await getAll();
     final groupUuidBySection = <VoucherBookType, String>{
       for (final g in refreshed.where((b) => b.isGroup && b.parentId == null))
@@ -331,8 +325,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
           .into(_db.voucherBooks)
           .insert(
             VoucherBooksCompanion.insert(
-              uuid: generateUuidV4(),
-              parentId: Value(sectionUuid),
+              uuid: Value(generateUuidV4()),
+              parentUuid: Value(sectionUuid),
               name: seed.nameAr,
               bookType: seed.bookType.storageValue,
               isGroup: const Value(false),
@@ -340,9 +334,9 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
               endNumber: Value(seed.endNumber),
               isActive: const Value(true),
               notes: Value(seed.nameEn),
-              createdAt: nowMs,
-              updatedAt: nowMs,
-              companyId: Value(_currentCompanyId),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+              companyId: _currentCompanyId,
             ),
           );
       (leavesBySectionAndType[sectionUuid] ??= {}).add(seed.bookType);
@@ -380,14 +374,14 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   Future<VoucherBook> create(VoucherBookDraft draft) async {
     _validator.validate(draft);
     await _assertParentValid(draft);
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final notes = draft.notes?.trim();
     final id = await _db
         .into(_db.voucherBooks)
         .insert(
           VoucherBooksCompanion.insert(
-            uuid: generateUuidV4(),
-            parentId: Value(draft.isGroup ? null : draft.parentId?.trim()),
+            uuid: Value(generateUuidV4()),
+            parentUuid: Value(draft.isGroup ? null : draft.parentId?.trim()),
             name: draft.name.trim(),
             bookType: draft.bookType.storageValue,
             isGroup: Value(draft.isGroup),
@@ -395,9 +389,9 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
             endNumber: Value(draft.isGroup ? 9999 : draft.endNumber),
             isActive: Value(draft.isActive),
             notes: Value(notes == null || notes.isEmpty ? null : notes),
-            createdAt: nowMs,
-            updatedAt: nowMs,
-            companyId: Value(_currentCompanyId),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: _currentCompanyId,
           ),
         );
     final created = await getById(id);
@@ -415,13 +409,13 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       throw const VoucherBookException('Cannot change group/leaf role');
     }
     await _assertParentValid(draft);
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final notes = draft.notes?.trim();
     await (_db.update(
       _db.voucherBooks,
     )..where((t) => t.id.equals(id) & _scoped(t))).write(
       VoucherBooksCompanion(
-        parentId: Value(draft.isGroup ? null : draft.parentId?.trim()),
+        parentUuid: Value(draft.isGroup ? null : draft.parentId?.trim()),
         name: Value(draft.name.trim()),
         bookType: Value(draft.bookType.storageValue),
         nextNumber: Value(
@@ -430,7 +424,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         endNumber: Value(draft.isGroup ? existing.endNumber : draft.endNumber),
         isActive: Value(draft.isActive),
         notes: Value(notes == null || notes.isEmpty ? null : notes),
-        updatedAt: Value(nowMs),
+        updatedAt: Value(now),
         companyId: Value(_currentCompanyId),
       ),
     );
@@ -488,11 +482,11 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       final remaining = row.endNumber - start + 1;
       final take = size > remaining ? remaining : size;
       final end = start + take - 1;
-      final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final now = DateTime.now().toUtc();
       await (_db.update(_db.voucherBooks)..where((t) => t.id.equals(id))).write(
         VoucherBooksCompanion(
           nextNumber: Value(end + 1),
-          updatedAt: Value(nowMs),
+          updatedAt: Value(now),
         ),
       );
       return (start: start, end: end);

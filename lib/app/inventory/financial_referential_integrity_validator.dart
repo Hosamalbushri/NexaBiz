@@ -1,18 +1,18 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 /// Centralized domain validator enforcing referential integrity and controlled deletion
 /// rules across inventory and accounting tables to prevent orphan financial records.
 class FinancialReferentialIntegrityValidator {
   FinancialReferentialIntegrityValidator({
-    required this._invDb,
-    this._accDb,
+    NexabizDatabase? invDb,
+    NexabizDatabase? accDb,
     this._readCompanyId,
-  });
+  })  : _invDb = (invDb ?? accDb)!,
+        _accDb = accDb ?? invDb;
 
-  final InventoryDatabase _invDb;
-  final AccountingDatabase? _accDb;
+  final NexabizDatabase _invDb;
+  final NexabizDatabase? _accDb;
   final String Function()? _readCompanyId;
 
   String? get _companyId => _readCompanyId?.call();

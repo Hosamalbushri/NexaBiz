@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_count/presentation/providers/inventory_providers.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
@@ -10,7 +10,7 @@ import 'inventory_sync_handlers.dart';
 /// Registers Inventory sync adapters with the shared [SyncManager].
 void registerInventorySyncHandlers(Ref ref) {
   final manager = ref.read(syncManagerProvider);
-  final db = ref.read(inventoryDatabaseProvider);
+  final db = ref.read(nexabizDatabaseProvider);
   final coordinator = ref.read(postingCoordinatorProvider);
   final engine = ref.read(postingEngineProvider);
   String companyIdReader() => ref.read(authorizationContextProvider).companyId;

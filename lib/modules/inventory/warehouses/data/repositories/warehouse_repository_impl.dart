@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 
 import '../../domain/entities/product_warehouse_stock.dart';
@@ -16,7 +16,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
     String Function()? readCompanyId,
   ]) : _readCompanyId = readCompanyId;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final String Function()? _readCompanyId;
 
@@ -45,7 +45,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
   @override
   Future<List<Warehouse>> getAllWarehouses() async {
     final query = _db.select(_db.warehouses)
-      ..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.isActive.equals(true));
     final rows = await query.get();
     return rows.map(_mapRowToWarehouse).toList();
   }
@@ -53,7 +53,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
   @override
   Stream<List<Warehouse>> watchAllWarehouses() {
     final query = _db.select(_db.warehouses)
-      ..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.isActive.equals(true));
     return query.watch().map((rows) => rows.map(_mapRowToWarehouse).toList());
   }
 
@@ -61,7 +61,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
   Future<Warehouse?> getWarehouseById(String id) async {
     final query = _db.select(_db.warehouses)
       ..where(
-        (tbl) => _scoped(tbl) & tbl.uuid.equals(id) & tbl.deletedAt.isNull(),
+        (tbl) => _scoped(tbl) & tbl.uuid.equals(id) & tbl.isActive.equals(true),
       );
     final row = await query.getSingleOrNull();
     return row == null ? null : _mapRowToWarehouse(row);
@@ -72,7 +72,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
     final query = _db.select(_db.warehouses)
       ..where(
         (tbl) =>
-            _scoped(tbl) & tbl.isDefault.equals(true) & tbl.deletedAt.isNull(),
+            _scoped(tbl) & tbl.isDefault.equals(true) & tbl.isActive.equals(true),
       );
     final row = await query.getSingleOrNull();
     if (row != null) {
@@ -88,7 +88,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
               (tbl) =>
                   _scoped(tbl) &
                   tbl.isDefault.equals(true) &
-                  tbl.deletedAt.isNull(),
+                  tbl.isActive.equals(true),
             ))
             .getSingleOrNull();
 
@@ -98,7 +98,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
 
     final anyWarehouse = await (_db.select(
       _db.warehouses,
-    )..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull())).getSingleOrNull();
+    )..where((tbl) => _scoped(tbl) & tbl.isActive.equals(true))).getSingleOrNull();
 
     if (anyWarehouse != null) {
       return _mapRowToWarehouse(anyWarehouse);
@@ -132,8 +132,6 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       }
 
       final now = DateTime.now().toUtc();
-      final newVersion =
-          (existing?.version ?? warehouse.version) + (existing == null ? 0 : 1);
       final effectiveCompanyId = warehouse.companyId ?? _currentCompanyId;
 
       if (warehouse.isDefault) {
@@ -156,9 +154,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
             address: Value(warehouse.address),
             phone: Value(warehouse.phone),
             managerName: Value(warehouse.managerName),
-            updatedAt: Value(now.millisecondsSinceEpoch),
-            syncStatus: const Value('pending'),
-            version: Value(newVersion),
+            updatedAt: Value(now),
             companyId: Value(effectiveCompanyId),
           ),
         );
@@ -175,17 +171,15 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
                 address: Value(warehouse.address),
                 phone: Value(warehouse.phone),
                 managerName: Value(warehouse.managerName),
-                createdAt: Value(warehouse.createdAt.millisecondsSinceEpoch),
-                updatedAt: Value(now.millisecondsSinceEpoch),
-                syncStatus: const Value('pending'),
-                version: Value(newVersion),
+                createdAt: Value(warehouse.createdAt),
+                updatedAt: Value(now),
                 companyId: Value(effectiveCompanyId),
               ),
             );
       }
 
       await _enqueueWarehouse(
-        warehouse.copyWith(version: newVersion, companyId: effectiveCompanyId),
+        warehouse.copyWith(companyId: effectiveCompanyId),
         existing == null ? SyncOperationType.create : SyncOperationType.update,
       );
     });
@@ -207,24 +201,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
         );
       }
 
-      // Safeguard 2: Cannot delete warehouse referenced by active categories
-      final categoryCountQuery = _db.selectOnly(_db.categories)
-        ..addColumns([_db.categories.uuid.count()])
-        ..where(
-          _db.categories.warehouseId.equals(id) &
-              _db.categories.companyId.equals(_currentCompanyId) &
-              _db.categories.deletedAt.isNull(),
-        );
-      final catRow = await categoryCountQuery.getSingle();
-      final catCount = catRow.read(_db.categories.uuid.count()) ?? 0;
-      if (catCount > 0) {
-        throw const JournalException(
-          'warehouse_in_use',
-          'Cannot delete warehouse referenced by active categories',
-        );
-      }
-
-      // Safeguard 3: Cannot delete warehouse referenced by active stock issues
+      // Safeguard 2: Cannot delete warehouse referenced by active stock issues
       final issueCountQuery = _db.selectOnly(_db.stockIssues)
         ..addColumns([_db.stockIssues.id.count()])
         ..where(
@@ -241,7 +218,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
         );
       }
 
-      // Safeguard 4: Cannot delete warehouse referenced by active stock transfers
+      // Safeguard 3: Cannot delete warehouse referenced by active stock transfers
       final transferCountQuery = _db.selectOnly(_db.stockTransfers)
         ..addColumns([_db.stockTransfers.uuid.count()])
         ..where(
@@ -261,21 +238,18 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       }
 
       final now = DateTime.now().toUtc();
-      final newVersion = existing.version + 1;
 
       await (_db.update(
         _db.warehouses,
       )..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl))).write(
         WarehousesCompanion(
-          deletedAt: Value(now.millisecondsSinceEpoch),
-          updatedAt: Value(now.millisecondsSinceEpoch),
-          syncStatus: const Value('pending'),
-          version: Value(newVersion),
+          isActive: const Value(false),
+          updatedAt: Value(now),
         ),
       );
 
       await _enqueueWarehouse(
-        existing.copyWith(version: newVersion, deletedAt: now),
+        existing.copyWith(isActive: false, deletedAt: now),
         SyncOperationType.delete,
       );
     });
@@ -378,7 +352,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
     });
   }
 
-  Warehouse _mapRowToWarehouse(WarehouseRow row) {
+  Warehouse _mapRowToWarehouse(WarehouseData row) {
     return Warehouse(
       id: row.uuid,
       code: row.code,
@@ -388,19 +362,11 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       address: row.address,
       phone: row.phone,
       managerName: row.managerName,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        row.createdAt,
-        isUtc: true,
-      ),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        row.updatedAt,
-        isUtc: true,
-      ),
-      version: row.version,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      version: 1,
       companyId: row.companyId,
-      deletedAt: row.deletedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+      deletedAt: null,
     );
   }
 

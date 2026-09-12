@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import '../entities/currency.dart';
 import '../repositories/currency_repository.dart';
@@ -22,7 +22,7 @@ class FunctionalCurrencyService {
 
   final SettingsRepository settingsRepository;
   final CurrencyRepository currencyRepository;
-  final AccountingDatabase? db;
+  final NexabizDatabase? db;
 
   /// Retrieves and validates the company's active functional currency.
   ///

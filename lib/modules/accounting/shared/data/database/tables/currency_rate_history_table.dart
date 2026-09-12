@@ -17,8 +17,10 @@ class CurrencyRateHistory extends Table {
 
   TextColumn get notes => text().nullable()();
 
+  TextColumn get companyId => text().nullable()();
+
   @override
   List<Set<Column<Object>>>? get uniqueKeys => [
-    {currencyCode, asOfDate},
+    {companyId, currencyCode, asOfDate},
   ];
 }

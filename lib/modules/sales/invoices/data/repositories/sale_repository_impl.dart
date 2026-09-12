@@ -22,7 +22,7 @@ import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_quantity_math.dart';
 import '../../domain/services/device_sale_number.dart';
 import '../../domain/services/sale_validator.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/sales/permissions/sales_permission_package.dart';
@@ -37,7 +37,7 @@ class SaleRepositoryImpl implements SaleRepository {
     this._readCompanyId,
   });
 
-  final SalesDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final SaleValidator _validator;
   final SaleCalculationService _calculator;
@@ -657,7 +657,9 @@ class SaleRepositoryImpl implements SaleRepository {
     final rows =
         await (_db.selectOnly(_db.sales)
               ..addColumns([_db.sales.saleNumber])
-              ..where(_scoped(_db.sales)))
+              ..where(_scoped(_db.sales))
+              ..orderBy([OrderingTerm.desc(_db.sales.id)])
+              ..limit(100))
             .get();
     var maxSeq = minExclusive ?? 0;
     for (final row in rows) {

@@ -76,8 +76,7 @@ class AtomicBootstrapInstaller {
           }
         }
 
-        // 3. Extract currency & company details from snapshot entities and persist profile.
-        String currencyCode = 'YER';
+        // 3. Extract company details from snapshot entities and persist profile.
         String profileName = companyName;
         String? legalName;
         String? taxNumber;
@@ -101,12 +100,6 @@ class AtomicBootstrapInstaller {
             if (name != null && name.isNotEmpty) {
               profileName = name;
             }
-            final code = (payload['defaultCurrencyCode'] as String?)
-                ?.trim()
-                .toUpperCase();
-            if (code != null && code.isNotEmpty) {
-              currencyCode = code;
-            }
             legalName = payload['legalName'] as String?;
             taxNumber = payload['taxNumber'] as String?;
             commercialRegister = payload['commercialRegister'] as String?;
@@ -122,31 +115,6 @@ class AtomicBootstrapInstaller {
             }
             invoiceHeaderRight = payload['invoiceHeaderRight'] as String?;
             invoiceHeaderLeft = payload['invoiceHeaderLeft'] as String?;
-          }
-        } else {
-          if (entitiesByType.containsKey('currency_rate')) {
-            final rates = entitiesByType['currency_rate'] ?? [];
-            for (final rate in rates) {
-              final payload =
-                  (rate['payload'] as Map<String, dynamic>?) ?? rate;
-              final code = (payload['currencyCode'] as String?)?.toUpperCase();
-              if (code != null && code.isNotEmpty) {
-                currencyCode = code;
-                break;
-              }
-            }
-          } else if (entitiesByType.containsKey('fiscal_year')) {
-            final years = entitiesByType['fiscal_year'] ?? [];
-            for (final year in years) {
-              final payload =
-                  (year['payload'] as Map<String, dynamic>?) ?? year;
-              final code = (payload['baseCurrencyCode'] as String?)
-                  ?.toUpperCase();
-              if (code != null && code.isNotEmpty) {
-                currencyCode = code;
-                break;
-              }
-            }
           }
         }
 

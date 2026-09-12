@@ -1,8 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../domain/models/report_cursor.dart';
 import '../../domain/models/report_dataset.dart';
 import '../../domain/models/report_execution_context.dart';
@@ -17,13 +16,12 @@ import 'report_data_provider.dart';
 class StockMovementReportDataProvider
     implements ReportDataProvider, PagedReportDataProvider<ReportRowData> {
   StockMovementReportDataProvider({
-    required this.inventoryDb,
-    this.salesDb,
+    required NexabizDatabase db,
     this.companyName = 'شركة نكسا بيز NexaBiz',
-  });
+  }) : _db = db;
 
-  final InventoryDatabase inventoryDb;
-  final SalesDatabase? salesDb;
+  final NexabizDatabase _db;
+  NexabizDatabase get inventoryDb => _db;
   final String companyName;
 
   @override

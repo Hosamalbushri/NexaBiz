@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_currency_balance.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_currency_balance_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 class AccountCurrencyBalanceRepositoryImpl
     implements AccountCurrencyBalanceRepository {
@@ -11,7 +11,7 @@ class AccountCurrencyBalanceRepositoryImpl
     String Function()? readCompanyId,
   }) : _readCompanyId = readCompanyId;
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   final String Function()? _readCompanyId;
 
   String _currentCompanyId(String? overrideCompanyId) {

@@ -424,7 +424,7 @@ class AccountingModule extends AppModule {
         onUuidRemapped: (oldUuid, newUuid) async {
           await ref
               .read(customerRepositoryImplProvider)
-              .remapAccountId(fromUuid: oldUuid, toUuid: newUuid);
+              .remapAccountId(customerUuid: oldUuid, accountId: newUuid);
           await ref
               .read(journalRepositoryImplProvider)
               .remapAccountUuid(fromUuid: oldUuid, toUuid: newUuid);

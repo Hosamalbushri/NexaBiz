@@ -1,3 +1,5 @@
+import '../../tenancy/scope_context.dart';
+
 /// Company information data transfer object for session context.
 class CompanyInfo {
   /// Creates an immutable [CompanyInfo] instance.
@@ -35,4 +37,8 @@ abstract class SessionContextPort {
 
   /// Whether the session is operating as standalone / super admin mode.
   bool get isStandalone;
+
+  /// Active operational scope context (System, Company, Global, or Contextual).
+  ScopeContext get scope;
 }
+

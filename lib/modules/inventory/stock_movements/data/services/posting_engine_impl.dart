@@ -1,8 +1,10 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
@@ -26,7 +28,7 @@ class PostingEngineImpl implements PostingEngine {
        _initializationGuard = initializationGuard,
        _stockValidationService = stockValidationService;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final CostLayerService _costLayerService;
   final CostMethodInheritanceResolver? _inheritanceResolver;
   final String Function()? _readCompanyId;
@@ -37,8 +39,13 @@ class PostingEngineImpl implements PostingEngine {
       _stockValidationService ??
       StockValidationServiceImpl(_db, _readCompanyId);
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call();
+    return MultiTenantRepositoryGuard.enforceCompanyContext(
+      companyId: id,
+      activeCompanyId: id,
+    );
+  }
 
   @override
   Future<double> applyInboundPosting({
@@ -670,42 +677,6 @@ class PostingEngineImpl implements PostingEngine {
     if (deltaQty < 0) {
       final reqQty = -deltaQty;
 
-      // 1. Check overall product table stock
-      final prodQuery = _db.select(_db.products)
-        ..where(
-          (p) =>
-              p.itemCode.equals(itemCode) &
-              p.companyId.equals(effectiveCompanyId),
-        );
-      final prods = await prodQuery.get();
-
-      final availProd = prods.isNotEmpty ? prods.first.onHandQty : 0.0;
-      if (availProd < reqQty - 0.000001) {
-        throw JournalException(
-          JournalException.insufficientStock,
-          'Insufficient product stock available for $itemCode. Required: $reqQty, Available: $availProd',
-        );
-      }
-
-      final p = prods.first;
-      final newQty = p.onHandQty + deltaQty;
-      final updatedProdCount =
-          await (_db.update(_db.products)..where(
-                (tbl) =>
-                    tbl.id.equals(p.id) &
-                    tbl.companyId.equals(effectiveCompanyId) &
-                    tbl.onHandQty.isBiggerOrEqualValue(reqQty),
-              ))
-              .write(ProductsCompanion(onHandQty: Value(newQty)));
-
-      if (updatedProdCount == 0) {
-        throw JournalException(
-          JournalException.insufficientStock,
-          'Insufficient product stock available for $itemCode due to concurrent inventory consumption.',
-        );
-      }
-
-      // 2. Check warehouse-specific stock if warehouseId is provided
       if (warehouseId != null && warehouseId.isNotEmpty) {
         final whQuery = _db.select(_db.productWarehouseStocks)
           ..where(
@@ -756,28 +727,16 @@ class PostingEngineImpl implements PostingEngine {
         );
       final prods = await prodQuery.get();
 
-      if (prods.isNotEmpty) {
-        final p = prods.first;
-        final newQty = p.onHandQty + deltaQty;
-        await (_db.update(_db.products)..where(
-              (tbl) =>
-                  tbl.id.equals(p.id) &
-                  tbl.companyId.equals(effectiveCompanyId),
-            ))
-            .write(ProductsCompanion(onHandQty: Value(newQty)));
-      } else {
-        await _db
-            .into(_db.products)
-            .insert(
+      if (prods.isEmpty) {
+        await _db.into(_db.products).insert(
               ProductsCompanion(
                 uuid: Value(generateUuidV4()),
                 itemCode: Value(itemCode),
                 name: Value(itemCode),
                 packSize: const Value(1),
                 price: const Value(0.0),
-                onHandQty: Value(deltaQty),
-                createdAt: Value(DateTime.now().millisecondsSinceEpoch),
-                updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+                createdAt: Value(DateTime.now()),
+                updatedAt: Value(DateTime.now()),
                 companyId: Value(effectiveCompanyId),
               ),
             );

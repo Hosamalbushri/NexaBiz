@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import '../../domain/services/inventory_dependency_detector.dart';
@@ -9,11 +11,16 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
   InventoryDependencyDetectorImpl(this._db, [String Function()? readCompanyId])
     : _readCompanyId = readCompanyId;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final String Function()? _readCompanyId;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call();
+    return MultiTenantRepositoryGuard.enforceCompanyContext(
+      companyId: id,
+      activeCompanyId: id,
+    );
+  }
 
   @override
   Future<List<InventoryDocumentRef>> findDependentDocuments({

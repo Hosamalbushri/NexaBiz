@@ -373,9 +373,7 @@ class StockIssueComposerNotifier
         accountName: state.account?.name,
         currencyCode: state.currencyCode,
         exchangeRate: state.exchangeRate,
-        voucherBookId: state.voucherBook != null
-            ? int.tryParse(state.voucherBook!.bookId)
-            : null,
+        voucherBookId: state.voucherBook?.bookId,
         warehouse: state.warehouse,
         notes: state.notes,
         lines: state.lines.map((l) {

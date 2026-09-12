@@ -1,7 +1,8 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
@@ -278,7 +279,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
   @override
   final bool preferServerWhenLocalSynced;
   final RemoteSyncApi Function() _remoteProvider;
-  final InventoryDatabase? _db;
+  final NexabizDatabase? _db;
   final PostingCoordinator? _postingCoordinator;
   final PostingEngine? _postingEngine;
   final String Function()? _readCompanyId;
@@ -286,8 +287,13 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
   RemoteSyncApi get _remote => _remoteProvider();
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call();
+    return MultiTenantRepositoryGuard.enforceCompanyContext(
+      companyId: id,
+      activeCompanyId: id,
+    );
+  }
 
   @override
   Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async {
@@ -325,27 +331,32 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
   @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {
-    final db = _db;
-    if (db == null) return;
-
     final payload = Map<String, dynamic>.from(change.payload);
     final payloadCompanyId =
         payload['companyId']?.toString() ??
         payload['company_id']?.toString() ??
         payload['tenantId']?.toString();
 
-    // 1. TENANT SECURITY GUARD: Reject cross-tenant sync payload
-    if (payloadCompanyId != null &&
-        payloadCompanyId.isNotEmpty &&
-        payloadCompanyId != _currentCompanyId) {
+    // 1. TENANT SECURITY GUARD: Reject malformed or missing company identity in sync payload
+    if (payloadCompanyId == null || payloadCompanyId.trim().isEmpty) {
+      throw const MissingCompanyContextException(
+        'Sync operation rejected: remote payload missing companyId',
+      );
+    }
+
+    // 2. TENANT SECURITY GUARD: Reject cross-tenant sync payload
+    if (payloadCompanyId.trim() != _currentCompanyId.trim()) {
       throw ArgumentError(
         'Cross-tenant sync change rejected: payload companyId ($payloadCompanyId) does not match current tenant ($_currentCompanyId)',
       );
     }
 
+    final db = _db;
+    if (db == null) return;
+
     final entityId = _normalizeUuid(change.entityId);
     final now = DateTime.now().toUtc();
-    final effectiveCompanyId = payloadCompanyId ?? _currentCompanyId;
+    final effectiveCompanyId = payloadCompanyId.trim();
 
     switch (entityType) {
       case 'stock_receipt':
@@ -404,7 +415,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
   }
 
   Future<void> _applyStockReceipt(
-    InventoryDatabase db,
+    NexabizDatabase db,
     String entityId,
     SyncRemoteChange change,
     Map<String, dynamic> payload,
@@ -611,7 +622,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
   }
 
   Future<void> _applyStockIssue(
-    InventoryDatabase db,
+    NexabizDatabase db,
     String entityId,
     SyncRemoteChange change,
     Map<String, dynamic> payload,
@@ -648,9 +659,11 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       final rawVoucherBookId =
           payload['voucherBookId'] ?? payload['voucher_book_id'];
-      final voucherBookIdInt = rawVoucherBookId != null
-          ? int.tryParse(rawVoucherBookId.toString())
-          : null;
+      final voucherBookIdStr = rawVoucherBookId?.toString().trim();
+      final effectiveVoucherBookId =
+          (voucherBookIdStr != null && voucherBookIdStr.isNotEmpty)
+              ? voucherBookIdStr
+              : null;
 
       final companion = StockIssuesCompanion(
         uuid: Value(entityId),
@@ -677,7 +690,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               (payload['exchange_rate'] as num?)?.toDouble() ??
               1.0,
         ),
-        voucherBookId: Value(voucherBookIdInt),
+        voucherBookId: Value(effectiveVoucherBookId),
         warehouse: Value(payload['warehouse']?.toString()),
         notes: Value(payload['notes']?.toString()),
         issueDate: Value(
@@ -819,7 +832,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
   }
 
   Future<void> _applyStockTransfer(
-    InventoryDatabase db,
+    NexabizDatabase db,
     String entityId,
     SyncRemoteChange change,
     Map<String, dynamic> payload,
@@ -1001,7 +1014,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
   }
 
   Future<void> _applyStockReturn(
-    InventoryDatabase db,
+    NexabizDatabase db,
     String entityId,
     SyncRemoteChange change,
     Map<String, dynamic> payload,
@@ -1186,7 +1199,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
   }
 
   Future<void> _applyInventoryReversal(
-    InventoryDatabase db,
+    NexabizDatabase db,
     String entityId,
     SyncRemoteChange change,
     Map<String, dynamic> payload,

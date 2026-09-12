@@ -9,7 +9,7 @@ import 'package:stock_count/core/report_engine/domain/models/report_page.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_context.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_summary.dart';
 import 'package:stock_count/core/report_engine/domain/services/paged_report_data_provider.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 /// SQL-Native, Paged Data Provider querying Sales Invoices for the Unified ERP Report Engine.
 /// Strictly read-only, keyset paginated, tenant-isolated, and memory efficient.
@@ -20,7 +20,7 @@ class SalesPeriodReportDataProvider
     this.companyName = 'شركة نكسا بيز NexaBiz',
   });
 
-  final SalesDatabase salesDb;
+  final NexabizDatabase salesDb;
   final String companyName;
 
   @override

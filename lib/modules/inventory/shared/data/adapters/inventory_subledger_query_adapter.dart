@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/domain/services/inventory_subledger_port.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
   InventorySubledgerQueryAdapter({required this._inventoryDb});
 
-  final InventoryDatabase _inventoryDb;
+  final NexabizDatabase _inventoryDb;
 
   @override
   Future<double> calculateSubledgerValuation({

@@ -7,14 +7,14 @@ import '../../domain/entities/accounting_period_status.dart';
 import '../../domain/entities/fiscal_year.dart';
 import '../../domain/models/fiscal_year_exception.dart';
 import '../../domain/repositories/fiscal_year_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 class FiscalYearRepositoryImpl implements FiscalYearRepository {
   FiscalYearRepositoryImpl(this._db, {this._syncQueue, this._readCompanyId});
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final String Function()? _readCompanyId;
 
@@ -136,7 +136,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
     }
     final row =
         await (_db.select(_db.accounts)..where(
-              (t) => t.accountCode.equals(normalized) & t.deletedAt.isNull(),
+              (t) => t.accountCode.equals(normalized) & t.isActive.equals(true),
             ))
             .getSingleOrNull();
     return row?.uuid;
@@ -156,7 +156,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
     }
     final row =
         await (_db.select(_db.accounts)
-              ..where((t) => t.uuid.equals(uuid) & t.deletedAt.isNull()))
+              ..where((t) => t.uuid.equals(uuid) & t.isActive.equals(true)))
             .getSingleOrNull();
     return row?.uuid ?? uuid;
   }

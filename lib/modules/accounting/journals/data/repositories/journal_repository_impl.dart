@@ -14,7 +14,7 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 import '../../domain/services/journal_balance_validator.dart';
 import '../../domain/services/journal_base_amount_resolver.dart';
 import '../../domain/services/journal_money.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
@@ -31,7 +31,7 @@ class JournalRepositoryImpl implements JournalRepository {
     this._readCompanyId,
   });
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   final AccountRepository _accounts;
   final PeriodValidatorPort _periodValidator;
   final CurrencyRateRepository? _rates;

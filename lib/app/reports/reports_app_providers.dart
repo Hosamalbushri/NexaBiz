@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/core/report_engine/report_engine.dart';
 import 'package:stock_count/modules/reports/providers/sales_period_report_provider.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
@@ -43,7 +44,7 @@ List<Override> buildReportsAppProviderOverrides() {
       final companyName =
           ref.watch(companyProfileProvider).valueOrNull?.name ?? 'NexaBiz ERP';
       return SalesPeriodReportDataProvider(
-        salesDb: ref.watch(salesDatabaseProvider),
+        salesDb: ref.watch(nexabizDatabaseProvider),
         companyName: companyName,
       );
     }),
@@ -51,8 +52,7 @@ List<Override> buildReportsAppProviderOverrides() {
       final companyName =
           ref.watch(companyProfileProvider).valueOrNull?.name ?? 'NexaBiz ERP';
       return StockMovementReportDataProvider(
-        inventoryDb: ref.watch(inventoryDatabaseProvider),
-        salesDb: ref.watch(salesDatabaseProvider),
+        db: ref.watch(nexabizDatabaseProvider),
         companyName: companyName,
       );
     }),
@@ -101,8 +101,7 @@ List<Override> buildReportsAppProviderOverrides() {
     }),
     productStockMovementReportDataPortProvider.overrideWith((ref) {
       return ProductStockMovementReportDataAdapter(
-        db: ref.watch(inventoryDatabaseProvider),
-        salesDb: ref.watch(salesDatabaseProvider),
+        db: ref.watch(nexabizDatabaseProvider),
         loadFunctionalCurrencyCode: () async {
           final c = await ref
               .read(currencyRepositoryProvider)

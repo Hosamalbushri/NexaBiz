@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 
 import '../../data/repositories/warehouse_repository_impl.dart';
@@ -14,7 +13,7 @@ import '../../domain/entities/warehouse_accounting_binding.dart';
 import '../../domain/repositories/warehouse_accounting_binding_repository.dart';
 
 final warehouseRepositoryProvider = Provider<WarehouseRepository>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
+  final db = ref.watch(nexabizDatabaseProvider);
   final syncQueue = ref.watch(syncQueueProvider);
   return WarehouseRepositoryImpl(
     db,
@@ -50,12 +49,10 @@ final warehouseStocksProvider =
 
 final warehouseAccountingBindingRepositoryProvider =
     Provider<WarehouseAccountingBindingRepository>((ref) {
-      final db = ref.watch(inventoryDatabaseProvider);
-      final accDb = ref.watch(accountingDatabaseProvider);
+      final db = ref.watch(nexabizDatabaseProvider);
       return WarehouseAccountingBindingRepositoryImpl(
         db,
         () => ref.read(currentCompanyIdProvider),
-        accountingDb: accDb,
       );
     });
 

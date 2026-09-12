@@ -2,14 +2,14 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/audit/domain/ports/audit_repository_port.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
-/// Drift-based implementation of [AuditRepositoryPort] using [InventoryDatabase].
+/// Drift-based implementation of [AuditRepositoryPort] using [NexabizDatabase].
 class InventoryAuditRepository implements AuditRepositoryPort {
-  /// Creates an [InventoryAuditRepository] backed by [InventoryDatabase].
+  /// Creates an [InventoryAuditRepository] backed by [NexabizDatabase].
   InventoryAuditRepository(this._db);
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
 
   @override
   Future<void> record(AuditEntry entry) async {

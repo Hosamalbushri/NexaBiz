@@ -6,7 +6,7 @@ import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_docu
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 
-import '../../../shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../domain/entities/stock_issue.dart';
 import '../../domain/entities/stock_movement_line.dart';
 import '../../domain/entities/stock_receipt.dart';
@@ -16,14 +16,18 @@ import 'package:stock_count/core/setup/setup_core.dart';
 
 class StockMovementsRepositoryImpl implements StockMovementsRepository {
   StockMovementsRepositoryImpl({
-    required this._db,
-    this._syncQueue,
-    this._accountingPoster,
-    this._readCompanyId,
-    this._initializationGuard,
-  });
+    required NexabizDatabase db,
+    SyncQueue? syncQueue,
+    InventoryAccountingPoster? accountingPoster,
+    String Function()? readCompanyId,
+    InitializationGuard? initializationGuard,
+  })  : _db = db,
+        _syncQueue = syncQueue,
+        _accountingPoster = accountingPoster,
+        _readCompanyId = readCompanyId,
+        _initializationGuard = initializationGuard;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final InventoryAccountingPoster? _accountingPoster;
   final String Function()? _readCompanyId;
@@ -712,6 +716,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
           'id': issue.id,
           'issueNumber': issue.issueNumber,
           'destination': issue.destination,
+          'voucherBookId': issue.voucherBookId,
           'notes': issue.notes,
           'issueDate': issue.issueDate.toUtc().millisecondsSinceEpoch,
           'status': issue.status.name,

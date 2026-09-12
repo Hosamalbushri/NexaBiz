@@ -12,6 +12,7 @@ import 'package:stock_count/core/sync/sync_core.dart';
 import '../../../../core/tenancy/session_company.dart';
 import '../../../../core/tenancy/tenant_lifecycle.dart';
 export '../../../../core/tenancy/tenant_lifecycle.dart';
+import '../../../../core/database/canonical_database_provider.dart';
 import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../data/auth_repository_impl.dart';
 import '../../../../core/tenancy/tenant_providers.dart';
@@ -101,7 +102,9 @@ List<Override> authenticationOverrides() => [
 ];
 
 final localAuthStoreProvider = Provider<LocalAuthStore>((ref) {
-  return LocalAuthStore();
+  return LocalAuthStore(
+    identityRepository: ref.watch(canonicalIdentityRepositoryProvider),
+  );
 });
 
 final localAuthRepositoryProvider = Provider<LocalAuthRepository>((ref) {

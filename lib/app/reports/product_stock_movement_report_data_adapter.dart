@@ -1,22 +1,21 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
 
 /// Concrete implementation of [ProductStockMovementReportDataPort]
-/// reading directly from [InventoryDatabase] and [SalesDatabase].
+/// reading directly from [NexabizDatabase].
 class ProductStockMovementReportDataAdapter
     implements ProductStockMovementReportDataPort {
   ProductStockMovementReportDataAdapter({
     required this.db,
-    this.salesDb,
+    NexabizDatabase? salesDb,
     required this.loadFunctionalCurrencyCode,
     this.readCompanyId,
-  });
+  }) : salesDb = db;
 
-  final InventoryDatabase db;
-  final SalesDatabase? salesDb;
+  final NexabizDatabase db;
+  final NexabizDatabase salesDb;
   final Future<String> Function() loadFunctionalCurrencyCode;
   final String Function()? readCompanyId;
 
@@ -90,7 +89,7 @@ class ProductStockMovementReportDataAdapter
     if (prodQuery != null) {
       productCode = prodQuery.itemCode;
       productName = prodQuery.name;
-      productUnitCost = prodQuery.unitCost;
+      productUnitCost = prodQuery.price;
       if (prodQuery.packSize > 0) {
         mainCapacity = prodQuery.packSize;
       }

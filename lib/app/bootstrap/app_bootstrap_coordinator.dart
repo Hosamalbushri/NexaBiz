@@ -163,7 +163,7 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
 
       // 1. Infrastructure Initialization
       await AppBootstrap.bootstrapStorage();
-      await AppBootstrap.bootstrapDatabase();
+      await AppBootstrap.bootstrapDatabase(_ref);
       await AppBootstrap.bootstrapConfig(_ref);
 
       // 2. Detect Persistence Authority Initialization State

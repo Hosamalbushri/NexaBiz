@@ -1,20 +1,20 @@
 import 'package:drift/drift.dart';
 
-import 'package:stock_count/core/tenancy/company_context_resolver.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import '../../domain/entities/product.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
-import '../../domain/models/catalog_search_field.dart';
 import 'package:stock_count/modules/inventory/stock_count/domain/models/paged_result.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/models/catalog_search_field.dart';
 import '../../domain/models/product_exception.dart';
 import '../../domain/repositories/product_repository.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl(this._db, {this._syncQueue, this._readCompanyId});
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final String Function()? _readCompanyId;
 
@@ -34,7 +34,7 @@ class ProductRepositoryImpl implements ProductRepository {
       t.companyId.equals(_currentCompanyId);
 
   Expression<bool> _scoped($ProductsTable t) =>
-      t.deletedAt.isNull() & _tenantScoped(t);
+      t.isActive.equals(true) & _tenantScoped(t);
 
   CostValuationMethod? _parseCostValuationMethod(String? str) {
     if (str == null) return null;
@@ -44,7 +44,7 @@ class ProductRepositoryImpl implements ProductRepository {
     return null;
   }
 
-  Product _map(ProductRow row) {
+  Product _map(ProductData row) {
     return Product(
       id: row.id,
       uuid: row.uuid,
@@ -53,26 +53,16 @@ class ProductRepositoryImpl implements ProductRepository {
       barcode: row.barcode,
       packSize: row.packSize,
       price: row.price,
-      onHandQty: row.onHandQty,
-      unitCost: row.unitCost,
-      categoryId: row.categoryId,
-      costValuationMethod: _parseCostValuationMethod(row.costValuationMethod),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        row.createdAt,
-        isUtc: true,
-      ),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        row.updatedAt,
-        isUtc: true,
-      ),
-      syncStatus: SyncStatusX.fromStorage(row.syncStatus),
-      lastSyncedAt: row.lastSyncedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
-      version: row.version,
-      deletedAt: row.deletedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+      onHandQty: 0.0,
+      unitCost: 0.0,
+      categoryId: row.categoryUuid,
+      costValuationMethod: null,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      syncStatus: SyncStatus.synced,
+      lastSyncedAt: null,
+      version: 1,
+      deletedAt: row.isActive ? null : row.updatedAt,
     );
   }
 
@@ -251,14 +241,14 @@ class ProductRepositoryImpl implements ProductRepository {
         cases: [
           CaseWhen(
             t.name.collate(Collate.noCase).equals(normalized),
-            then: const Constant(0),
+            then: const Constant(1),
           ),
           CaseWhen(
             t.name.collate(Collate.noCase).like(prefix),
-            then: const Constant(1),
+            then: const Constant(2),
           ),
         ],
-        orElse: const Constant(2),
+        orElse: const Constant(3),
       );
     }
     if (searchField == CatalogSearchField.code) {
@@ -266,14 +256,14 @@ class ProductRepositoryImpl implements ProductRepository {
         cases: [
           CaseWhen(
             t.itemCode.collate(Collate.noCase).equals(normalized),
-            then: const Constant(0),
+            then: const Constant(1),
           ),
           CaseWhen(
             t.itemCode.collate(Collate.noCase).like(prefix),
-            then: const Constant(1),
+            then: const Constant(2),
           ),
         ],
-        orElse: const Constant(2),
+        orElse: const Constant(3),
       );
     }
     if (searchField == CatalogSearchField.barcode) {
@@ -281,22 +271,19 @@ class ProductRepositoryImpl implements ProductRepository {
         cases: [
           CaseWhen(
             t.barcode.collate(Collate.noCase).equals(normalized),
-            then: const Constant(0),
+            then: const Constant(1),
           ),
           CaseWhen(
             t.barcode.collate(Collate.noCase).like(prefix),
-            then: const Constant(1),
+            then: const Constant(2),
           ),
         ],
-        orElse: const Constant(2),
+        orElse: const Constant(3),
       );
     }
+
     return CaseWhenExpression<int>(
       cases: [
-        CaseWhen(
-          t.barcode.collate(Collate.noCase).equals(normalized),
-          then: const Constant(0),
-        ),
         CaseWhen(
           t.itemCode.collate(Collate.noCase).equals(normalized),
           then: const Constant(1),
@@ -401,26 +388,21 @@ class ProductRepositoryImpl implements ProductRepository {
     await _assertUnique(itemCode: code, barcode: barcode);
 
     final now = DateTime.now().toUtc();
-    final nowMs = now.millisecondsSinceEpoch;
     final uuid = generateUuidV4();
     final id = await _db
         .into(_db.products)
         .insert(
           ProductsCompanion.insert(
-            uuid: uuid,
+            uuid: Value(uuid),
             itemCode: code,
             name: name,
             barcode: Value(barcode),
-            packSize: draft.packSize,
-            price: draft.price,
-            unitCost: Value(draft.unitCost),
-            categoryId: Value(draft.categoryId),
-            costValuationMethod: Value(draft.costValuationMethod?.name),
-            createdAt: nowMs,
-            updatedAt: nowMs,
-            syncStatus: const Value('pending'),
-            version: const Value(1),
-            companyId: Value(_currentCompanyId),
+            packSize: Value(draft.packSize),
+            price: Value(draft.price),
+            categoryUuid: Value(draft.categoryId),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: _currentCompanyId,
           ),
         );
     final created = await getById(id);
@@ -445,7 +427,6 @@ class ProductRepositoryImpl implements ProductRepository {
     await _assertUnique(itemCode: code, barcode: barcode, excludingId: id);
 
     final now = DateTime.now().toUtc();
-    final nextVersion = existing.version + 1;
     await (_db.update(
       _db.products,
     )..where((t) => t.id.equals(id) & _scoped(t))).write(
@@ -455,12 +436,8 @@ class ProductRepositoryImpl implements ProductRepository {
         barcode: Value(barcode),
         packSize: Value(draft.packSize),
         price: Value(draft.price),
-        unitCost: Value(draft.unitCost),
-        categoryId: Value(draft.categoryId),
-        costValuationMethod: Value(draft.costValuationMethod?.name),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
+        categoryUuid: Value(draft.categoryId),
+        updatedAt: Value(now),
         companyId: Value(_currentCompanyId),
       ),
     );
@@ -513,10 +490,8 @@ class ProductRepositoryImpl implements ProductRepository {
       _db.products,
     )..where((t) => t.id.equals(id) & _scoped(t))).write(
       ProductsCompanion(
-        deletedAt: Value(now.millisecondsSinceEpoch),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
+        isActive: const Value(false),
+        updatedAt: Value(now),
       ),
     );
     final tombstone = existing.copyWith(
@@ -534,23 +509,17 @@ class ProductRepositoryImpl implements ProductRepository {
     required int remoteVersion,
     DateTime? syncedAt,
   }) async {
-    final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
+    final now = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(
       _db.products,
     )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       ProductsCompanion(
-        syncStatus: const Value('synced'),
-        lastSyncedAt: Value(stamp),
-        version: Value(remoteVersion),
+        updatedAt: Value(now),
       ),
     );
   }
 
-  Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.products)
-          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
-        .write(const ProductsCompanion(syncStatus: Value('conflict')));
-  }
+  Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
     final uuid = payload['uuid']?.toString();
@@ -559,24 +528,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
     final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
     final existing = await getByUuid(uuid);
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
-    final version = (payload['version'] as num?)?.toInt() ?? 1;
-
-    if (existing != null &&
-        (existing.syncStatus.needsUpload ||
-            existing.syncStatus == SyncStatus.conflict ||
-            existing.syncStatus == SyncStatus.syncing)) {
-      if (version > existing.version) {
-        await markConflict(uuid);
-      }
-      return;
-    }
-
-    // Stale remote: incoming version <= local version → skip (idempotent pull).
-    if (existing != null && version <= existing.version) {
-      return;
-    }
+    final now = DateTime.now().toUtc();
 
     if (existing == null) {
       if (deletedAtMs != null) {
@@ -586,22 +538,15 @@ class ProductRepositoryImpl implements ProductRepository {
           .into(_db.products)
           .insert(
             ProductsCompanion.insert(
-              uuid: uuid,
+              uuid: Value(uuid),
               itemCode: payload['itemCode']?.toString() ?? uuid,
               name: payload['name']?.toString() ?? '',
               barcode: Value(payload['barcode']?.toString()),
-              packSize: (payload['packSize'] as num?)?.toInt() ?? 1,
-              price: (payload['price'] as num?)?.toDouble() ?? 0,
-              onHandQty: Value((payload['onHandQty'] as num?)?.toDouble() ?? 0),
-              unitCost: Value((payload['unitCost'] as num?)?.toDouble() ?? 0),
-              createdAt: (payload['createdAt'] as num?)?.toInt() ?? updatedAt,
-              updatedAt: updatedAt,
-              syncStatus: const Value('synced'),
-              lastSyncedAt: Value(nowMs),
-              version: Value(version),
-              companyId: Value(
-                payload['companyId']?.toString() ?? _currentCompanyId,
-              ),
+              packSize: Value((payload['packSize'] as num?)?.toInt() ?? 1),
+              price: Value((payload['price'] as num?)?.toDouble() ?? 0),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+              companyId: payload['companyId']?.toString() ?? _currentCompanyId,
             ),
           );
       return;
@@ -618,17 +563,8 @@ class ProductRepositoryImpl implements ProductRepository {
           (payload['packSize'] as num?)?.toInt() ?? existing.packSize,
         ),
         price: Value((payload['price'] as num?)?.toDouble() ?? existing.price),
-        onHandQty: Value(
-          (payload['onHandQty'] as num?)?.toDouble() ?? existing.onHandQty,
-        ),
-        unitCost: Value(
-          (payload['unitCost'] as num?)?.toDouble() ?? existing.unitCost,
-        ),
-        updatedAt: Value(updatedAt),
-        syncStatus: const Value('synced'),
-        lastSyncedAt: Value(nowMs),
-        version: Value(version),
-        deletedAt: Value(deletedAtMs),
+        updatedAt: Value(now),
+        isActive: Value(deletedAtMs == null),
       ),
     );
   }
@@ -645,7 +581,6 @@ class ProductRepositoryImpl implements ProductRepository {
     var inserted = 0;
     var updated = 0;
     final now = DateTime.now().toUtc();
-    final nowMs = now.millisecondsSinceEpoch;
     final touched = <Product>[];
 
     final existingRows = await (_db.select(_db.products)..where(_scoped)).get();
@@ -689,18 +624,15 @@ class ProductRepositoryImpl implements ProductRepository {
                 .into(_db.products)
                 .insert(
                   ProductsCompanion.insert(
-                    uuid: uuid,
+                    uuid: Value(uuid),
                     itemCode: code,
                     name: name,
                     barcode: Value(barcode),
-                    packSize: draft.packSize,
-                    price: draft.price,
-                    unitCost: Value(draft.unitCost),
-                    createdAt: nowMs,
-                    updatedAt: nowMs,
-                    syncStatus: const Value('pending'),
-                    version: const Value(1),
-                    companyId: Value(_currentCompanyId),
+                    packSize: Value(draft.packSize),
+                    price: Value(draft.price),
+                    createdAt: Value(now),
+                    updatedAt: Value(now),
+                    companyId: _currentCompanyId,
                   ),
                 );
             final created = Product(
@@ -739,10 +671,7 @@ class ProductRepositoryImpl implements ProductRepository {
                 barcode: Value(barcode),
                 packSize: Value(draft.packSize),
                 price: Value(draft.price),
-                unitCost: Value(draft.unitCost),
-                updatedAt: Value(nowMs),
-                syncStatus: const Value('pending'),
-                version: Value(nextVersion),
+                updatedAt: Value(now),
               ),
             );
             final oldBarcode = existing.barcode;
@@ -811,28 +740,14 @@ class ProductRepositoryImpl implements ProductRepository {
         throw const ProductException(ProductException.notFound);
       }
 
-      final nextQty = row.onHandQty + delta;
-      if (nextQty < -1e-9) {
-        throw const ProductException(ProductException.insufficientStock);
-      }
-
       final now = DateTime.now().toUtc();
-      final nextVersion = row.version + 1;
-      final updatedRows =
-          await (_db.update(
-            _db.products,
-          )..where((t) => t.id.equals(row.id) & _scoped(t))).write(
-            ProductsCompanion(
-              onHandQty: Value(nextQty < 0 ? 0 : nextQty),
-              updatedAt: Value(now.millisecondsSinceEpoch),
-              syncStatus: const Value('pending'),
-              version: Value(nextVersion),
-              companyId: Value(_currentCompanyId),
-            ),
-          );
-      if (updatedRows == 0) {
-        throw const ProductException(ProductException.notFound);
-      }
+      await (_db.update(
+        _db.products,
+      )..where((t) => t.id.equals(row.id) & _scoped(t))).write(
+        ProductsCompanion(
+          updatedAt: Value(now),
+        ),
+      );
 
       final updated = await getById(row.id);
       if (updated == null) {

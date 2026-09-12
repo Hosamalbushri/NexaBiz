@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse_accounting_binding.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_accounting_binding_repository.dart';
 
@@ -23,9 +22,9 @@ class WarehouseAccountingBindingRepositoryImpl
     this.accountingDb,
   });
 
-  final InventoryDatabase db;
+  final NexabizDatabase db;
   final String Function()? readCompanyId;
-  final AccountingDatabase? accountingDb;
+  final NexabizDatabase? accountingDb;
 
   String get _currentCompanyId {
     final id = readCompanyId?.call();
@@ -46,7 +45,7 @@ class WarehouseAccountingBindingRepositoryImpl
                 (tbl) =>
                     tbl.companyId.equals(companyId) &
                     tbl.isDefault.equals(true) &
-                    tbl.deletedAt.isNull(),
+                    tbl.isActive.equals(true),
               ))
               .getSingleOrNull();
       if (defaultWh != null) {
@@ -55,7 +54,7 @@ class WarehouseAccountingBindingRepositoryImpl
         final anyWh =
             await (db.select(db.warehouses)..where(
                   (tbl) =>
-                      tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
+                      tbl.companyId.equals(companyId) & tbl.isActive.equals(true),
                 ))
                 .getSingleOrNull();
         if (anyWh != null) {
@@ -68,7 +67,7 @@ class WarehouseAccountingBindingRepositoryImpl
                 (tbl) =>
                     (tbl.code.equals(targetId) | tbl.uuid.equals(targetId)) &
                     tbl.companyId.equals(companyId) &
-                    tbl.deletedAt.isNull(),
+                    tbl.isActive.equals(true),
               ))
               .getSingleOrNull();
       if (whByCode != null) {
@@ -80,8 +79,7 @@ class WarehouseAccountingBindingRepositoryImpl
         ? await (db.select(db.warehouseAccountingBindings)..where(
                 (tbl) =>
                     tbl.warehouseId.equals(targetId) &
-                    tbl.companyId.equals(companyId) &
-                    tbl.deletedAt.isNull(),
+                    tbl.companyId.equals(companyId),
               ))
               .getSingleOrNull()
         : null;
@@ -92,7 +90,7 @@ class WarehouseAccountingBindingRepositoryImpl
                 (tbl) =>
                     tbl.companyId.equals(companyId) &
                     tbl.isDefault.equals(true) &
-                    tbl.deletedAt.isNull(),
+                    tbl.isActive.equals(true),
               ))
               .getSingleOrNull();
       if (defaultWh != null && defaultWh.uuid != targetId) {
@@ -100,8 +98,7 @@ class WarehouseAccountingBindingRepositoryImpl
             await (db.select(db.warehouseAccountingBindings)..where(
                   (tbl) =>
                       tbl.warehouseId.equals(defaultWh.uuid) &
-                      tbl.companyId.equals(companyId) &
-                      tbl.deletedAt.isNull(),
+                      tbl.companyId.equals(companyId),
                 ))
                 .getSingleOrNull();
       }
@@ -109,7 +106,7 @@ class WarehouseAccountingBindingRepositoryImpl
 
     row ??=
         await (db.select(db.warehouseAccountingBindings)..where(
-              (tbl) => tbl.companyId.equals(companyId) & tbl.deletedAt.isNull(),
+              (tbl) => tbl.companyId.equals(companyId),
             ))
             .getSingleOrNull();
 
@@ -262,8 +259,7 @@ class WarehouseAccountingBindingRepositoryImpl
         await (db.select(db.warehouseAccountingBindings)..where(
               (tbl) =>
                   tbl.warehouseId.equals(binding.warehouseId) &
-                  tbl.companyId.equals(companyId) &
-                  tbl.deletedAt.isNull(),
+                  tbl.companyId.equals(companyId),
             ))
             .getSingleOrNull();
 

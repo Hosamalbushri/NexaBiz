@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/auth/ports/session_context_port.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/core/tenancy/tenant_providers.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
 
 class MockSessionContext implements SessionContextPort {
   MockSessionContext({
@@ -35,6 +35,21 @@ class MockSessionContext implements SessionContextPort {
 
   @override
   final bool isStandalone;
+
+  @override
+  ScopeContext get scope {
+    final String activeId = activeCompanyId?.trim() ?? currentCompanyId?.trim() ?? '';
+    if (activeId.isNotEmpty) {
+      return CompanyScope(activeId);
+    }
+    if (companies.length == 1) {
+      return CompanyScope(companies.first.id.trim());
+    }
+    if (isStandalone && companies.isEmpty) {
+      return const CompanyScope(kLegacyLocalCompanyId);
+    }
+    return const SystemScope();
+  }
 }
 
 void main() {

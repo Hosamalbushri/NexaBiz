@@ -29,6 +29,9 @@ class UnauthenticatedSessionContextAdapter implements SessionContextPort {
 
   @override
   bool get isStandalone => true;
+
+  @override
+  ScopeContext get scope => const SystemScope();
 }
 
 /// Provider for [SessionContextPort].
@@ -53,26 +56,27 @@ final tenantContextProvider = Provider<TenantContext>((ref) {
       ? currentCompanyId
       : activeCompanyId;
 
-  // Clarified Rule 4 fallback: Auto-assign company ONLY if exactly one company exists.
-  // When multiple companies exist or context is unassigned, do not silently fallback.
-  if (companyId.isEmpty && sessionContext.companies.length == 1) {
-    companyId = sessionContext.companies.first.id.trim();
-  }
-
-  // Standalone offline / single tenant local mode fallback
-  if (companyId.isEmpty && sessionContext.isStandalone) {
-    companyId = kLegacyLocalCompanyId;
-  }
+  // Rule 4: No silent company fallback.
+  // An unassigned context resolves to an empty company ID ('') with SystemScope or ContextualScope.
 
   if (!sessionContext.isAuthenticated && companyId.isEmpty) {
     return TenantContext.empty;
   }
 
+  final ScopeContext scope = companyId.isNotEmpty
+      ? CompanyScope(companyId)
+      : sessionContext.scope;
+
+  final String effectiveCompanyId = (companyId.isEmpty && scope is CompanyScope)
+      ? scope.companyId
+      : companyId;
+
   return TenantContext(
-    companyId: companyId,
+    companyId: effectiveCompanyId,
     userId: sessionContext.userId,
     deviceId: sessionContext.deviceId,
     isStandalone: sessionContext.isStandalone,
+    scope: scope,
   );
 });
 

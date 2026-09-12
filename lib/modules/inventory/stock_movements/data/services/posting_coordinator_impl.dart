@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -25,19 +27,28 @@ import 'package:stock_count/core/setup/setup_core.dart';
 
 class PostingCoordinatorImpl implements PostingCoordinator {
   PostingCoordinatorImpl({
-    required this._db,
-    required this._stockValidationService,
-    required this._dependencyDetector,
-    required this._postingEngine,
-    this._periodValidator,
-    required this._accountingPoster,
-    required this._permissionGuard,
-    this._readCompanyId,
-    this._syncQueue,
-    this._initializationGuard,
-  });
+    required NexabizDatabase db,
+    required StockValidationService stockValidationService,
+    required InventoryDependencyDetector dependencyDetector,
+    required PostingEngine postingEngine,
+    PeriodValidatorPort? periodValidator,
+    required InventoryAccountingPoster accountingPoster,
+    required PermissionGuard permissionGuard,
+    String Function()? readCompanyId,
+    SyncQueue? syncQueue,
+    InitializationGuard? initializationGuard,
+  })  : _db = db,
+        _stockValidationService = stockValidationService,
+        _dependencyDetector = dependencyDetector,
+        _postingEngine = postingEngine,
+        _periodValidator = periodValidator,
+        _accountingPoster = accountingPoster,
+        _permissionGuard = permissionGuard,
+        _readCompanyId = readCompanyId,
+        _syncQueue = syncQueue,
+        _initializationGuard = initializationGuard;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final StockValidationService _stockValidationService;
   final InventoryDependencyDetector _dependencyDetector;
   final PostingEngine _postingEngine;
@@ -48,8 +59,13 @@ class PostingCoordinatorImpl implements PostingCoordinator {
   final SyncQueue? _syncQueue;
   final InitializationGuard? _initializationGuard;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call();
+    return MultiTenantRepositoryGuard.enforceCompanyContext(
+      companyId: id,
+      activeCompanyId: id,
+    );
+  }
 
   final Map<String, Completer<void>> _activePostingLocks = {};
 

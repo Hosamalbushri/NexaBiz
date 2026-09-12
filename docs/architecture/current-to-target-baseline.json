@@ -1,0 +1,314 @@
+{
+  "current_architecture": {
+    "grade": "PARTIALLY DECOUPLED / MULTI-DATABASE LEGACY",
+    "flutter_stack": {
+      "state_management": "Riverpod",
+      "persistence": "Drift (SQLite) & Hive",
+      "routing": "GoRouter",
+      "modules": [
+        "accounting",
+        "administration",
+        "app_lock",
+        "authentication",
+        "cash_registers",
+        "currency",
+        "customers",
+        "inventory",
+        "purchases",
+        "receipts_payments",
+        "reports",
+        "sales",
+        "sync",
+        "system_setup"
+      ]
+    },
+    "laravel_stack": {
+      "framework": "Laravel 11",
+      "packages": [
+        "NexaBiz/Identity",
+        "NexaBiz/Entitlements",
+        "NexaBiz/Synchronization",
+        "NexaBiz/Initialization",
+        "NexaBiz/Core",
+        "NexaBiz/Audit"
+      ]
+    },
+    "databases": [
+      "inventory.sqlite",
+      "accounting.sqlite",
+      "sales.sqlite",
+      "customers.sqlite",
+      "receipts_payments.sqlite"
+    ]
+  },
+  "target_architecture": {
+    "canonical_database": "nexabiz.sqlite",
+    "architecture_pattern": "Clean Architecture / Ports & Adapters",
+    "principles": [
+      "Offline-First Operation",
+      "Local-First Autonomy",
+      "Multi-Company Tenant Isolation",
+      "Central Accounting Gateway",
+      "Central Inventory Movement Engine",
+      "Central Costing Engine",
+      "Deterministic FX & Base Currency Resolution",
+      "Standardized UI Component System (shadcn_flutter)"
+    ]
+  },
+  "domains": [
+    "identity",
+    "entitlements",
+    "synchronization",
+    "audit",
+    "product_master",
+    "warehouse_management",
+    "inventory_operations",
+    "inventory_costing",
+    "sales_ordering",
+    "customers_receivables",
+    "treasury_cash",
+    "financial_vouchers",
+    "general_ledger",
+    "currency_management",
+    "system_configuration"
+  ],
+  "business_authorities": [
+    {
+      "concept": "Stock Balance",
+      "current_class": "InventoryLedgerServiceImpl / StockValidationServiceImpl",
+      "duplicate_authority": true,
+      "duplicate_note": "Calculated via stock_movement_ledgers AND queried from product_warehouse_stocks projection"
+    },
+    {
+      "concept": "Journal Posting",
+      "current_class": "JournalPostingService / PostingCoordinatorImpl",
+      "duplicate_authority": true,
+      "duplicate_note": "Inventory movements post via InventoryAccountingPosterAdapter while Sales post via SalesPostingOrchestrator"
+    },
+    {
+      "concept": "Inventory Cost",
+      "current_class": "InventoryCostCalculatorImpl / CostLayerServiceImpl",
+      "duplicate_authority": false
+    },
+    {
+      "concept": "Customer Balance",
+      "current_class": "CustomerSubledgerQueryAdapter",
+      "duplicate_authority": false
+    },
+    {
+      "concept": "Tenant Context",
+      "current_class": "TenantContext",
+      "duplicate_authority": false
+    }
+  ],
+  "databases": [
+    {
+      "legacy_db": "inventory.sqlite",
+      "table": "products",
+      "target_table": "products",
+      "target_owner": "product_master",
+      "data_migration_required": true,
+      "retirement_condition": "Full consumer redirection complete"
+    },
+    {
+      "legacy_db": "inventory.sqlite",
+      "table": "warehouses",
+      "target_table": "warehouses",
+      "target_owner": "warehouse_management",
+      "data_migration_required": true,
+      "retirement_condition": "Full consumer redirection complete"
+    },
+    {
+      "legacy_db": "inventory.sqlite",
+      "table": "stock_movement_ledgers",
+      "target_table": "stock_movement_ledgers",
+      "target_owner": "inventory_operations",
+      "data_migration_required": true,
+      "retirement_condition": "Direct ledger query deprecation"
+    },
+    {
+      "legacy_db": "inventory.sqlite",
+      "table": "inventory_cost_layers",
+      "target_table": "inventory_cost_layers",
+      "target_owner": "inventory_costing",
+      "data_migration_required": true,
+      "retirement_condition": "Costing engine consolidation"
+    },
+    {
+      "legacy_db": "accounting.sqlite",
+      "table": "accounts",
+      "target_table": "accounts",
+      "target_owner": "general_ledger",
+      "data_migration_required": true,
+      "retirement_condition": "Chart of accounts unification"
+    },
+    {
+      "legacy_db": "accounting.sqlite",
+      "table": "journal_entries",
+      "target_table": "journal_entries",
+      "target_owner": "general_ledger",
+      "data_migration_required": true,
+      "retirement_condition": "Central Accounting Gateway adoption"
+    },
+    {
+      "legacy_db": "sales.sqlite",
+      "table": "sales",
+      "target_table": "sales",
+      "target_owner": "sales_ordering",
+      "data_migration_required": true,
+      "retirement_condition": "Sales domain service adoption"
+    },
+    {
+      "legacy_db": "customers.sqlite",
+      "table": "customers",
+      "target_table": "customers",
+      "target_owner": "customers_receivables",
+      "data_migration_required": true,
+      "retirement_condition": "Customer subledger consolidation"
+    },
+    {
+      "legacy_db": "receipts_payments.sqlite",
+      "table": "financial_transactions",
+      "target_table": "vouchers",
+      "target_owner": "financial_vouchers",
+      "data_migration_required": true,
+      "retirement_condition": "Voucher gateway consolidation"
+    }
+  ],
+  "current_to_target_mapping": [
+    {
+      "current_component": "lib/modules/authentication",
+      "target_domain": "identity",
+      "strategy": "ADAPT",
+      "risk": "Low"
+    },
+    {
+      "current_component": "lib/modules/administration",
+      "target_domain": "entitlements",
+      "strategy": "WRAP",
+      "risk": "Low"
+    },
+    {
+      "current_component": "lib/modules/inventory/stock_movements",
+      "target_domain": "inventory_operations",
+      "strategy": "MERGE",
+      "risk": "High"
+    },
+    {
+      "current_component": "lib/modules/inventory/cost_valuation",
+      "target_domain": "inventory_costing",
+      "strategy": "MERGE",
+      "risk": "High"
+    },
+    {
+      "current_component": "lib/modules/accounting/journals",
+      "target_domain": "general_ledger",
+      "strategy": "MERGE",
+      "risk": "High"
+    }
+  ],
+  "violations": [
+    {
+      "id": "VIOLATION-001",
+      "file": "lib/modules/accounting/shared/domain/services/document_posting_orchestrator.dart",
+      "line_range": "111-128",
+      "issue": "Multi-database cross-connection compensate calls break ACID transaction atomicity during posting failures.",
+      "severity": "HIGH"
+    },
+    {
+      "id": "VIOLATION-002",
+      "file": "test/tenant_isolation_security_test.dart",
+      "line_range": "84-114",
+      "issue": "Legacy test helpers instantiate Drift companion objects without mandatory companyId scoping.",
+      "severity": "HIGH"
+    },
+    {
+      "id": "VIOLATION-003",
+      "file": "lib/modules/inventory/shared/data/database/tables/warehouse_accounting_bindings_table.dart",
+      "line_range": "15-40",
+      "issue": "Hardcoded account fallback IDs (ACC-1001) used when semantic role mapping is missing.",
+      "severity": "MEDIUM"
+    }
+  ],
+  "duplications": [
+    {
+      "area": "Accounting Posting Derivation",
+      "components": [
+        "InventoryAccountingPosterAdapter",
+        "SalesPostingOrchestrator"
+      ]
+    },
+    {
+      "area": "Unit Cost Calculation",
+      "components": [
+        "InventoryCostCalculatorImpl",
+        "ProductImportPreviewCalculator"
+      ]
+    }
+  ],
+  "dependencies": [
+    "Identity & Auth",
+    "Tenant Context",
+    "Master Data",
+    "Inventory Movement Engine",
+    "Costing Engine",
+    "Central Accounting Gateway",
+    "Customer AR Subledger",
+    "Sales Ordering",
+    "Treasury & Vouchers",
+    "Currency / FX",
+    "Sync Engine",
+    "Import Engine",
+    "UI Standardization"
+  ],
+  "migration_phases": [
+    "PHASE 00 — Architecture Discovery & Baseline",
+    "PHASE 01 — Identity & Session Scope",
+    "PHASE 02 — Tenant Isolation Structuring",
+    "PHASE 03 — Master Data Adapter Layer",
+    "PHASE 04 — Inventory Movement Engine",
+    "PHASE 05 — Central Costing Engine",
+    "PHASE 06 — Central Accounting Gateway",
+    "PHASE 07 — Accounts Receivable Subledger",
+    "PHASE 08 — Sales Ordering Consolidation",
+    "PHASE 09 — Treasury & Vouchers",
+    "PHASE 10 — Currency & FX Standardization",
+    "PHASE 11 — Configuration & System Setup",
+    "PHASE 12 — Canonical Database Migration (nexabiz.sqlite)",
+    "PHASE 13 — Synchronization Engine Alignment",
+    "PHASE 14 — Universal Import System",
+    "PHASE 15 — UI System Standardization (shadcn_flutter)",
+    "PHASE 16 — Legacy Database Retirement",
+    "PHASE 17 — Final Hardening & Verification"
+  ],
+  "recommended_first_phase": {
+    "name": "Phase 01 / Phase 03 Boundary: SetupWarehouseLookupPort & WarehouseRepositoryAdapter",
+    "target_domain": "warehouse_management",
+    "why_first": "Warehouse lookup is a read-only, foundational master-data port required by Setup, Inventory, and Sales, presenting zero blast radius.",
+    "affected_files": [
+      "lib/modules/inventory/warehouses/domain/ports/setup_warehouse_lookup_port.dart",
+      "lib/modules/inventory/warehouses/data/adapters/warehouse_repository_adapter.dart"
+    ],
+    "risk": "Low",
+    "measurability": "100% unit-testable"
+  },
+  "risks": [
+    {
+      "risk": "Cross-database atomicity loss during rollback",
+      "level": "High"
+    },
+    {
+      "risk": "Tenant leakage via un-scoped raw queries",
+      "level": "High"
+    }
+  ],
+  "validation": {
+    "test_command": "/home/hosam/Downloads/flutter-sdk/flutter/bin/flutter test",
+    "analyze_command": "/home/hosam/Downloads/flutter-sdk/flutter/bin/flutter analyze",
+    "passed_tests": 613,
+    "failed_tests": 105,
+    "static_analysis_issues": 2159
+  },
+  "explicit_statement": "NO PRODUCTION MIGRATION WAS PERFORMED DURING THIS PHASE.",
+  "final_status": "ARCHITECTURE PLAN — READY"
+}

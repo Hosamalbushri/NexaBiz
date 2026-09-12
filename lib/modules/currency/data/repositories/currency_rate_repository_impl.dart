@@ -1,17 +1,23 @@
+// ignore_for_file: prefer_initializing_formals
 import 'package:drift/drift.dart';
 
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/utils/business_date.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import '../../domain/entities/currency_rate.dart';
 import '../../domain/repositories/currency_rate_repository.dart';
 
 class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
-  CurrencyRateRepositoryImpl(this._db, {this._syncQueue, this._readCompanyId});
+  CurrencyRateRepositoryImpl(
+    this._db, {
+    SyncQueue? syncQueue,
+    String Function()? readCompanyId,
+  })  : _syncQueue = syncQueue,
+        _readCompanyId = readCompanyId;
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final String Function()? _readCompanyId;
 
@@ -28,6 +34,9 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
   }
 
   Expression<bool> _tenantScoped($CurrencyRatesTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _tenantScopedHistory($CurrencyRateHistoryTable t) =>
       t.companyId.equals(_currentCompanyId);
 
   Expression<bool> _scoped($CurrencyRatesTable t) => _tenantScoped(t);
@@ -105,6 +114,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
         await (_db.select(_db.currencyRateHistory)
               ..where(
                 (t) =>
+                    _tenantScopedHistory(t) &
                     t.currencyCode.equals(code) &
                     t.asOfDate.isSmallerOrEqualValue(dayMs),
               )
@@ -132,7 +142,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     }
     final rows =
         await (_db.select(_db.currencyRateHistory)
-              ..where((t) => t.currencyCode.equals(code))
+              ..where((t) => _tenantScopedHistory(t) & t.currencyCode.equals(code))
               ..orderBy([(t) => OrderingTerm.desc(t.asOfDate)])
               ..limit(limit))
             .get();
@@ -155,12 +165,19 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     required double rateToBase,
     required DateTime asOf,
     String? notes,
+    String? companyId,
   }) async {
+    final effectiveCompanyId = companyId?.trim().isNotEmpty == true
+        ? companyId!.trim()
+        : _currentCompanyId;
     final dayMs = _dayMs(asOf);
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
     final existing =
         await (_db.select(_db.currencyRateHistory)..where(
-              (t) => t.currencyCode.equals(code) & t.asOfDate.equals(dayMs),
+              (t) =>
+                  t.companyId.equals(effectiveCompanyId) &
+                  t.currencyCode.equals(code) &
+                  t.asOfDate.equals(dayMs),
             ))
             .getSingleOrNull();
     if (existing == null) {
@@ -173,6 +190,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
               rateToBase: rateToBase,
               createdAt: nowMs,
               notes: Value(notes == null || notes.isEmpty ? null : notes),
+              companyId: Value(effectiveCompanyId),
             ),
           );
       return;
@@ -183,6 +201,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
       CurrencyRateHistoryCompanion(
         rateToBase: Value(rateToBase),
         notes: Value(notes == null || notes.isEmpty ? null : notes),
+        companyId: Value(effectiveCompanyId),
       ),
     );
   }
@@ -196,6 +215,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
           'asOfDate': entry.asOfDate.toUtc().millisecondsSinceEpoch,
           'rateToBase': entry.rateToBase,
           'notes': entry.notes,
+          'companyId': _currentCompanyId,
         },
     ];
   }
@@ -219,6 +239,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
           'history': await _historyPayload(rate.currencyCode),
           'version': rate.version,
           'updatedAt': rate.updatedAt.toUtc().millisecondsSinceEpoch,
+          'companyId': _currentCompanyId,
         },
       ),
     );
@@ -307,7 +328,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     )..where((t) => t.currencyCode.equals(code) & _scoped(t))).go();
     await (_db.delete(
       _db.currencyRateHistory,
-    )..where((t) => t.currencyCode.equals(code))).go();
+    )..where((t) => t.currencyCode.equals(code) & _tenantScopedHistory(t))).go();
   }
 
   Future<void> markSynced({
@@ -348,6 +369,8 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
       return;
     }
 
+    final targetCompanyId = payload['companyId']?.toString() ?? _currentCompanyId;
+
     if (existingByUuid != null &&
         (existingByUuid.syncStatus.needsUpload ||
             existingByUuid.syncStatus == SyncStatus.conflict ||
@@ -369,7 +392,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
       )..where((t) => t.uuid.equals(uuid))).go();
       await (_db.delete(
         _db.currencyRateHistory,
-      )..where((t) => t.currencyCode.equals(code))).go();
+      )..where((t) => t.currencyCode.equals(code) & t.companyId.equals(targetCompanyId))).go();
       await _syncQueue?.removeForEntity(entityType: entityType, entityId: uuid);
       return;
     }
@@ -393,12 +416,10 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
             syncStatus: const Value('synced'),
             lastSyncedAt: Value(nowMs),
             version: Value(version),
-            companyId: Value(
-              payload['companyId']?.toString() ?? _currentCompanyId,
-            ),
+            companyId: Value(targetCompanyId),
           ),
         );
-        await _applyHistoryPayload(code, payload['history']);
+        await _applyHistoryPayload(code, payload['history'], targetCompanyId);
         await _syncQueue?.removeForEntity(
           entityType: entityType,
           entityId: oldUuid,
@@ -424,12 +445,10 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
               version: Value(version),
-              companyId: Value(
-                payload['companyId']?.toString() ?? _currentCompanyId,
-              ),
+              companyId: Value(targetCompanyId),
             ),
           );
-      await _applyHistoryPayload(code, payload['history']);
+      await _applyHistoryPayload(code, payload['history'], targetCompanyId);
       return;
     }
 
@@ -446,13 +465,17 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(nowMs),
         version: Value(version),
-        companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
+        companyId: Value(targetCompanyId),
       ),
     );
-    await _applyHistoryPayload(code, payload['history']);
+    await _applyHistoryPayload(code, payload['history'], targetCompanyId);
   }
 
-  Future<void> _applyHistoryPayload(String code, Object? rawHistory) async {
+  Future<void> _applyHistoryPayload(
+    String code,
+    Object? rawHistory,
+    String companyId,
+  ) async {
     if (rawHistory is! List) {
       return;
     }
@@ -471,6 +494,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
         rateToBase: rate,
         asOf: DateTime.fromMillisecondsSinceEpoch(asOfMs, isUtc: true),
         notes: map['notes']?.toString(),
+        companyId: companyId,
       );
     }
   }

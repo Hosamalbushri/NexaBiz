@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 import 'package:stock_count/core/domain/services/inventory_subledger_port.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
 
 enum ReconciliationIssueType {
@@ -76,11 +78,16 @@ class InventoryAccountingReconciliationEngine {
   });
 
   final InventorySubledgerQueryPort _inventorySubledgerQuery;
-  final AccountingDatabase _accountingDb;
+  final NexabizDatabase _accountingDb;
   final String Function()? _readCompanyId;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call();
+    return MultiTenantRepositoryGuard.enforceCompanyContext(
+      companyId: id,
+      activeCompanyId: id,
+    );
+  }
 
   /// Calculate total inventory subledger valuation based on open, non-deleted cost layers
   Future<double> calculateSubledgerValuation({String? companyId}) async {
@@ -97,9 +104,8 @@ class InventoryAccountingReconciliationEngine {
         await (_accountingDb.select(_accountingDb.accounts)..where(
               (tbl) =>
                   tbl.companyId.equals(targetCompanyId) &
-                  tbl.deletedAt.isNull() &
+                  tbl.isActive.equals(true) &
                   (tbl.accountCode.equals('1230') |
-                      tbl.description.equals('system:inventory') |
                       tbl.name.like('%Inventory%')),
             ))
             .get();

@@ -1,12 +1,12 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
-import '../../../shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../domain/entities/stock_movement_line.dart';
 import '../../domain/entities/stock_return.dart';
 import '../../domain/enums/cost_valuation_method.dart';
@@ -18,7 +18,7 @@ import 'package:stock_count/core/setup/setup_core.dart';
 
 class StockReturnsRepositoryImpl implements StockReturnsRepository {
   StockReturnsRepositoryImpl({
-    required InventoryDatabase db,
+    required NexabizDatabase db,
     this._syncQueue,
     CostLayerService? costLayerService,
     this._valuationMethod = CostValuationMethod.fifo,
@@ -30,15 +30,20 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
            CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
        _readCompanyId = readCompanyId;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final CostLayerService _costLayerService;
   final CostValuationMethod _valuationMethod;
   final String Function()? _readCompanyId;
   final InitializationGuard? _initializationGuard;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? kLegacyLocalCompanyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call();
+    return MultiTenantRepositoryGuard.enforceCompanyContext(
+      companyId: id,
+      activeCompanyId: id,
+    );
+  }
 
   Expression<bool> _scoped($StockReturnsTable tbl) {
     return tbl.companyId.equals(_currentCompanyId);
@@ -339,34 +344,63 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
         .toList();
   }
 
-  Future<void> _adjustProductQty(String itemCode, double delta) async {
-    final product =
-        await (_db.select(_db.products)..where(
-              (tbl) =>
-                  tbl.itemCode.equals(itemCode) &
-                  (tbl.companyId.equals(_currentCompanyId) |
-                      tbl.companyId.isNull()),
-            ))
-            .getSingleOrNull();
-
-    if (product != null) {
-      final newQty = product.onHandQty + delta;
-      final updatedUnitCost = await _costLayerService.getWeightedAverageCost(
-        itemCode,
+  Future<void> _adjustProductQty(String itemCode, double deltaQty) async {
+    final effectiveCompanyId = _currentCompanyId;
+    final prodQuery = _db.select(_db.products)
+      ..where(
+        (p) =>
+            p.itemCode.equals(itemCode) &
+            p.companyId.equals(effectiveCompanyId),
       );
-      await (_db.update(_db.products)..where(
-            (tbl) =>
-                tbl.itemCode.equals(itemCode) &
-                (tbl.companyId.equals(_currentCompanyId) |
-                    tbl.companyId.isNull()),
+    final prods = await prodQuery.get();
+
+    if (prods.isEmpty) {
+      await _db.into(_db.products).insert(
+            ProductsCompanion(
+              uuid: Value(generateUuidV4()),
+              itemCode: Value(itemCode),
+              name: Value(itemCode),
+              packSize: const Value(1),
+              price: const Value(0.0),
+              createdAt: Value(DateTime.now()),
+              updatedAt: Value(DateTime.now()),
+              companyId: Value(effectiveCompanyId),
+            ),
+          );
+    }
+
+    final whQuery = _db.select(_db.productWarehouseStocks)
+      ..where(
+        (w) =>
+            w.itemCode.equals(itemCode) &
+            w.companyId.equals(effectiveCompanyId),
+      );
+
+    final whStocks = await whQuery.get();
+
+    if (whStocks.isNotEmpty) {
+      final whStock = whStocks.first;
+      final newWhQty = whStock.onHandQty + deltaQty;
+      await (_db.update(_db.productWarehouseStocks)..where(
+            (w) =>
+                w.uuid.equals(whStock.uuid) &
+                w.companyId.equals(effectiveCompanyId),
           ))
           .write(
-            ProductsCompanion(
-              onHandQty: Value(newQty),
-              unitCost: Value(
-                updatedUnitCost > 0 ? updatedUnitCost : product.unitCost,
-              ),
-              updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+            ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty)),
+          );
+    } else {
+      await _db
+          .into(_db.productWarehouseStocks)
+          .insert(
+            ProductWarehouseStocksCompanion(
+              uuid: Value(generateUuidV4()),
+              itemCode: Value(itemCode),
+              warehouseId: const Value('MAIN'),
+              onHandQty: Value(deltaQty),
+              createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+              updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+              companyId: Value(effectiveCompanyId),
             ),
           );
     }

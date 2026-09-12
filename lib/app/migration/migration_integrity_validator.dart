@@ -1,5 +1,4 @@
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 /// Pre-migration snapshot capturing financial and document invariants.
 class MigrationSnapshot {
@@ -68,10 +67,12 @@ class MigrationDiagnosticReport {
 
 /// Service providing pre-migration audits, safe tenant remediation, and post-migration financial verification.
 class MigrationIntegrityValidator {
-  MigrationIntegrityValidator({required this.invDb, required this.accDb});
+  MigrationIntegrityValidator({required NexabizDatabase invDb, NexabizDatabase? accDb})
+      : invDb = invDb,
+        accDb = accDb ?? invDb;
 
-  final InventoryDatabase invDb;
-  final AccountingDatabase accDb;
+  final NexabizDatabase invDb;
+  final NexabizDatabase accDb;
 
   /// Audits pre-migration state and compiles a diagnostic report.
   Future<MigrationDiagnosticReport> auditPreMigration() async {

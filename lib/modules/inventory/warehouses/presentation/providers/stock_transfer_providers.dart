@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/cost_valuation_providers.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
-import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 
 import '../../data/repositories/stock_transfer_repository_impl.dart';
@@ -11,7 +11,7 @@ import '../../domain/repositories/stock_transfer_repository.dart';
 final stockTransferRepositoryProvider = Provider<StockTransferRepository>((
   ref,
 ) {
-  final db = ref.watch(inventoryDatabaseProvider);
+  final db = ref.watch(nexabizDatabaseProvider);
   final syncQueue = ref.watch(syncQueueProvider);
   final valuationMethod = ref.watch(costValuationMethodProvider);
   final costLayerService = CostLayerServiceImpl(db: db);

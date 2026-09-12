@@ -27,12 +27,13 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/st
 
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
 
 final stockMovementsRepositoryProvider = Provider<StockMovementsRepository>((
   ref,
 ) {
-  final db = ref.watch(inventoryDatabaseProvider);
+  final db = ref.watch(nexabizDatabaseProvider);
   final accountingPoster = ref.watch(inventoryAccountingPosterProvider);
   return StockMovementsRepositoryImpl(
     db: db,
@@ -84,7 +85,7 @@ final inventoryAccountPortProvider = Provider<InventoryAccountPort>((ref) {
 });
 
 final stockValidationServiceProvider = Provider<StockValidationService>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
+  final db = ref.watch(nexabizDatabaseProvider);
   return StockValidationServiceImpl(
     db,
     () => ref.read(currentCompanyIdProvider),
@@ -93,7 +94,7 @@ final stockValidationServiceProvider = Provider<StockValidationService>((ref) {
 
 final inventoryDependencyDetectorProvider =
     Provider<InventoryDependencyDetector>((ref) {
-      final db = ref.watch(inventoryDatabaseProvider);
+      final db = ref.watch(nexabizDatabaseProvider);
       return InventoryDependencyDetectorImpl(
         db,
         () => ref.read(currentCompanyIdProvider),
@@ -101,7 +102,7 @@ final inventoryDependencyDetectorProvider =
     });
 
 final costLayerServiceProvider = Provider<CostLayerService>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
+  final db = ref.watch(nexabizDatabaseProvider);
   final initRepo = ref.watch(companyInitializationRepositoryProvider);
   final functionalCurrencyService = ref.watch(
     functionalCurrencyServiceProvider,
@@ -115,7 +116,7 @@ final costLayerServiceProvider = Provider<CostLayerService>((ref) {
 });
 
 final postingEngineProvider = Provider<PostingEngine>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
+  final db = ref.watch(nexabizDatabaseProvider);
   final costLayerService = ref.watch(costLayerServiceProvider);
   return PostingEngineImpl(
     db,
@@ -132,7 +133,7 @@ final inventoryAccountingPosterProvider = Provider<InventoryAccountingPoster>((
 });
 
 final postingCoordinatorProvider = Provider<PostingCoordinator>((ref) {
-  final db = ref.watch(inventoryDatabaseProvider);
+  final db = ref.watch(nexabizDatabaseProvider);
   final validationService = ref.watch(stockValidationServiceProvider);
   final dependencyDetector = ref.watch(inventoryDependencyDetectorProvider);
   final postingEngine = ref.watch(postingEngineProvider);
@@ -170,6 +171,6 @@ final inventoryPostingAccountsFutureProvider =
 
 final inventorySubledgerQueryPortProviderImpl =
     Provider<InventorySubledgerQueryPort>((ref) {
-      final db = ref.watch(inventoryDatabaseProvider);
+      final db = ref.watch(nexabizDatabaseProvider);
       return InventorySubledgerQueryAdapter(inventoryDb: db);
     });

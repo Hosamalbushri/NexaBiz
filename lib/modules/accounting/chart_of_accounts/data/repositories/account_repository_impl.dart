@@ -10,7 +10,7 @@ import '../../domain/models/account_exception.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/services/account_validator.dart';
 import '../../domain/services/default_chart_of_accounts.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
@@ -23,7 +23,7 @@ class AccountRepositoryImpl implements AccountRepository {
     this._readCompanyId,
   });
 
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final AccountValidator _validator;
   final Future<void> Function(String oldUuid, String newUuid)? _onUuidRemapped;
@@ -44,40 +44,29 @@ class AccountRepositoryImpl implements AccountRepository {
   Expression<bool> _tenantScoped($AccountsTable t) =>
       t.companyId.equals(_currentCompanyId);
 
-  Expression<bool> _scoped($AccountsTable t) =>
-      t.deletedAt.isNull() & _tenantScoped(t);
+  Expression<bool> _scoped($AccountsTable t) => _tenantScoped(t);
 
-  Account _map(AccountRow row) {
+  Account _map(AccountData row) {
     return Account(
       id: row.id,
       uuid: row.uuid,
-      parentId: row.parentId,
+      parentId: row.parentUuid,
       companyId: row.companyId,
       accountCode: row.accountCode,
       name: row.name,
-      description: row.description,
+      description: null,
       accountType: AccountType.fromStorage(row.accountType),
       normalBalance: NormalBalance.fromStorage(row.normalBalance),
       level: row.level,
       isGroup: row.isGroup,
       isActive: row.isActive,
       isSystemAccount: row.isSystemAccount,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        row.createdAt,
-        isUtc: true,
-      ),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        row.updatedAt,
-        isUtc: true,
-      ),
-      syncStatus: SyncStatusX.fromStorage(row.syncStatus),
-      lastSyncedAt: row.lastSyncedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
-      version: row.version,
-      deletedAt: row.deletedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      syncStatus: SyncStatus.synced,
+      lastSyncedAt: row.updatedAt,
+      version: 1,
+      deletedAt: null,
     );
   }
 
@@ -112,20 +101,18 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  /// Soft-deleted row that still occupies [accountCode] (DB UNIQUE includes tombstones).
-  Future<AccountRow?> _findDeletedByAccountCode(String accountCode) async {
+  Future<AccountData?> _findDeletedByAccountCode(String accountCode) async {
     final code = _normalizeCode(accountCode);
     if (code.isEmpty) {
       return null;
     }
     return (_db.select(_db.accounts)
-          ..where((t) => t.accountCode.equals(code) & t.deletedAt.isNotNull()))
+          ..where((t) => t.accountCode.equals(code) & t.isActive.equals(false)))
         .getSingleOrNull();
   }
 
-  /// Reuses a soft-deleted row so the UNIQUE [account_code] can be reclaimed.
   Future<Account> _reviveDeletedAccount(
-    AccountRow tombstone,
+    AccountData tombstone,
     AccountDraft draft,
   ) async {
     final parent = draft.parentId == null
@@ -142,31 +129,25 @@ class AccountRepositoryImpl implements AccountRepository {
 
     final code = _normalizeCode(draft.accountCode);
     final name = _normalizeName(draft.name);
-    final description = _normalizeDescription(draft.description);
     await _assertUniqueCode(code, excludingId: tombstone.id);
 
     final level = await _resolveLevel(draft.parentId);
     final now = DateTime.now().toUtc();
-    final nextVersion = tombstone.version + 1;
 
     await (_db.update(
       _db.accounts,
     )..where((t) => t.id.equals(tombstone.id))).write(
       AccountsCompanion(
-        parentId: Value(draft.parentId),
+        parentUuid: Value(draft.parentId),
         accountCode: Value(code),
         name: Value(name),
-        description: Value(description),
         accountType: Value(draft.accountType.storageValue),
         normalBalance: Value(draft.normalBalance.storageValue),
         level: Value(level),
         isGroup: Value(draft.isGroup),
         isActive: Value(draft.isActive),
         isSystemAccount: Value(draft.isSystemAccount),
-        deletedAt: const Value(null),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
+        updatedAt: Value(now),
       ),
     );
 
@@ -209,8 +190,6 @@ class AccountRepositoryImpl implements AccountRepository {
         payload: {
           'uuid': account.uuid,
           'parentId': account.parentId,
-          // Business key so other devices can remount under their local parent
-          // UUID (system chart seeds use different UUIDs per install).
           'parentAccountCode': parentAccountCode,
           'accountCode': account.accountCode,
           'name': account.name,
@@ -229,10 +208,6 @@ class AccountRepositoryImpl implements AccountRepository {
     );
   }
 
-  /// Maps a remote parent UUID onto this device's chart.
-  ///
-  /// System accounts are seeded locally (not synced), so [parentId] from
-  /// another phone rarely exists here. Prefer [parentAccountCode] (e.g. 1221).
   Future<({String? parentId, int level})> _resolveRemoteParent({
     required String? parentId,
     required String? parentAccountCode,
@@ -252,8 +227,6 @@ class AccountRepositoryImpl implements AccountRepository {
         return (parentId: byCode.uuid, level: byCode.level + 1);
       }
     }
-    // Legacy payloads without parentAccountCode: nest under the longest local
-    // group whose code is a prefix of this account (e.g. 12210001 → 1221).
     final byPrefix = await _findGroupParentByCodePrefix(accountCode);
     if (byPrefix != null) {
       return (parentId: byPrefix.uuid, level: byPrefix.level + 1);
@@ -370,10 +343,27 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
+  Future<List<Account>> getByType(
+    AccountType type, {
+    bool includeInactive = false,
+  }) async {
+    final rows =
+        await (_db.select(_db.accounts)
+              ..where(
+                (t) =>
+                    t.accountType.equals(type.storageValue) &
+                    _activeFilter(t, includeInactive),
+              )
+              ..orderBy([(t) => OrderingTerm.asc(t.accountCode)]))
+            .get();
+    return rows.map(_map).toList(growable: false);
+  }
+
+  @override
   Future<List<Account>> getChildren(String parentUuid) async {
     final rows =
         await (_db.select(_db.accounts)
-              ..where((t) => t.parentId.equals(parentUuid) & _scoped(t))
+              ..where((t) => t.parentUuid.equals(parentUuid) & _scoped(t))
               ..orderBy([(t) => OrderingTerm.asc(t.accountCode)]))
             .get();
     return rows.map(_map).toList(growable: false);
@@ -383,7 +373,7 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<bool> hasChildren(String uuid) async {
     final row =
         await (_db.select(_db.accounts)
-              ..where((t) => t.parentId.equals(uuid) & _scoped(t))
+              ..where((t) => t.parentUuid.equals(uuid) & _scoped(t))
               ..limit(1))
             .getSingleOrNull();
     return row != null;
@@ -391,8 +381,6 @@ class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<bool> isUsedInTransactions(String uuid) async {
-    // Any journal line counts — including lines whose entry is soft-deleted —
-    // so soft-deleting an account cannot orphan ledger history.
     final row =
         await (_db.select(_db.journalLines)
               ..where((t) => t.accountUuid.equals(uuid))
@@ -416,7 +404,6 @@ class AccountRepositoryImpl implements AccountRepository {
 
     final code = _normalizeCode(draft.accountCode);
     final name = _normalizeName(draft.name);
-    final description = _normalizeDescription(draft.description);
 
     final tombstone = await _findDeletedByAccountCode(code);
     if (tombstone != null) {
@@ -427,29 +414,25 @@ class AccountRepositoryImpl implements AccountRepository {
 
     final level = await _resolveLevel(draft.parentId);
     final now = DateTime.now().toUtc();
-    final nowMs = now.millisecondsSinceEpoch;
     final uuid = generateUuidV4();
 
     final id = await _db
         .into(_db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: uuid,
-            parentId: Value(draft.parentId),
+            uuid: Value(uuid),
+            parentUuid: Value(draft.parentId),
             accountCode: code,
             name: name,
-            description: Value(description),
             accountType: draft.accountType.storageValue,
             normalBalance: draft.normalBalance.storageValue,
             level: Value(level),
             isGroup: Value(draft.isGroup),
             isActive: Value(draft.isActive),
             isSystemAccount: Value(draft.isSystemAccount),
-            createdAt: nowMs,
-            updatedAt: nowMs,
-            syncStatus: const Value('pending'),
-            version: const Value(1),
-            companyId: Value(_currentCompanyId),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: _currentCompanyId,
           ),
         );
 
@@ -490,29 +473,24 @@ class AccountRepositoryImpl implements AccountRepository {
 
     final code = _normalizeCode(draft.accountCode);
     final name = _normalizeName(draft.name);
-    final description = _normalizeDescription(draft.description);
     await _assertUniqueCode(code, excludingId: id);
 
     final level = await _resolveLevel(draft.parentId);
     final now = DateTime.now().toUtc();
-    final nextVersion = existing.version + 1;
 
     await (_db.update(
       _db.accounts,
     )..where((t) => t.id.equals(id) & _scoped(t))).write(
       AccountsCompanion(
-        parentId: Value(draft.parentId),
+        parentUuid: Value(draft.parentId),
         accountCode: Value(code),
         name: Value(name),
-        description: Value(description),
         accountType: Value(draft.accountType.storageValue),
         normalBalance: Value(draft.normalBalance.storageValue),
         level: Value(level),
         isGroup: Value(draft.isGroup),
         isActive: Value(draft.isActive),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
+        updatedAt: Value(now),
         companyId: Value(_currentCompanyId),
       ),
     );
@@ -565,22 +543,15 @@ class AccountRepositoryImpl implements AccountRepository {
     }
 
     final now = DateTime.now().toUtc();
-    final nextVersion = existing.version + 1;
     await (_db.update(_db.accounts)..where((t) => t.id.equals(id))).write(
       AccountsCompanion(
-        deletedAt: Value(now.millisecondsSinceEpoch),
         isActive: const Value(false),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
+        updatedAt: Value(now),
       ),
     );
     final tombstone = existing.copyWith(
-      deletedAt: now,
       isActive: false,
       updatedAt: now,
-      syncStatus: SyncStatus.pending,
-      version: nextVersion,
     );
     await _enqueue(tombstone, SyncOperationType.delete);
   }
@@ -592,8 +563,6 @@ class AccountRepositoryImpl implements AccountRepository {
     final deviceInitRecord = await settingsRepo.loadDeviceInitialization();
     if (isServerInit ||
         deviceInitRecord.mode == DeviceInitializationMode.server) {
-      // Server-initialized device: master Chart of Accounts is controlled by the server.
-      // Do NOT run local seed alignment or force-enqueue unpushed accounts!
       return;
     }
 
@@ -631,7 +600,7 @@ class AccountRepositoryImpl implements AccountRepository {
 
     final keyToUuid = <String, String>{};
     final keyToLevel = <String, int>{};
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final createdUuids = <String>[];
 
     await _db.transaction(() async {
@@ -650,22 +619,19 @@ class AccountRepositoryImpl implements AccountRepository {
             .into(_db.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: uuid,
-                parentId: Value(parentUuid),
+                uuid: Value(uuid),
+                parentUuid: Value(parentUuid),
                 accountCode: seed.accountCode,
                 name: seed.name,
-                description: Value('system:${seed.systemKey}'),
                 accountType: seed.accountType.storageValue,
                 normalBalance: seed.accountType.normalBalance.storageValue,
                 level: Value(level),
                 isGroup: Value(seed.isGroup),
                 isActive: const Value(true),
                 isSystemAccount: const Value(true),
-                createdAt: nowMs,
-                updatedAt: nowMs,
-                syncStatus: const Value('pending'),
-                version: const Value(1),
-                companyId: Value(companyId),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+                companyId: companyId,
               ),
               mode: InsertMode.insertOrIgnore,
             );
@@ -683,28 +649,22 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  /// Keeps system account codes in sync with [DefaultChartOfAccounts] seeds
-  /// (e.g. Fixed Assets before Current Assets) without reseeding.
   Future<void> _alignSystemAccountCodes() async {
     final seeds = DefaultChartOfAccounts.seeds();
-    final byKey = <String, AccountRow>{};
+    final byKey = <String, AccountData>{};
     final rows =
         await (_db.select(_db.accounts)..where(
-              (t) => t.isSystemAccount.equals(true) & t.deletedAt.isNull(),
+              (t) => t.isSystemAccount.equals(true),
             ))
             .get();
 
     for (final row in rows) {
-      final description = row.description;
-      if (description == null || !description.startsWith('system:')) {
-        continue;
-      }
-      byKey[description.substring('system:'.length)] = row;
+      byKey[row.accountCode] = row;
     }
 
-    final updates = <({AccountRow row, String code})>[];
+    final updates = <({AccountData row, String code})>[];
     for (final seed in seeds) {
-      final row = byKey[seed.systemKey];
+      final row = byKey[seed.accountCode];
       if (row == null || row.accountCode == seed.accountCode) {
         continue;
       }
@@ -714,30 +674,25 @@ class AccountRepositoryImpl implements AccountRepository {
       return;
     }
 
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     await _db.transaction(() async {
-      // Stage 1: temporary codes to avoid UNIQUE collisions while swapping.
       for (final update in updates) {
         await (_db.update(
           _db.accounts,
         )..where((t) => t.id.equals(update.row.id))).write(
           AccountsCompanion(
             accountCode: Value('__tmp_${update.row.id}'),
-            updatedAt: Value(nowMs),
+            updatedAt: Value(now),
           ),
         );
       }
-      // Stage 2: final codes from the seed catalog.
       for (final update in updates) {
-        final nextVersion = update.row.version + 1;
         await (_db.update(
           _db.accounts,
         )..where((t) => t.id.equals(update.row.id))).write(
           AccountsCompanion(
             accountCode: Value(update.code),
-            updatedAt: Value(nowMs),
-            syncStatus: const Value('pending'),
-            version: Value(nextVersion),
+            updatedAt: Value(now),
           ),
         );
       }
@@ -751,37 +706,30 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  /// Syncs system flags such as [isGroup] from seeds (e.g. Customers → group).
   Future<void> _alignSystemAccountFlags() async {
     final seeds = DefaultChartOfAccounts.seeds();
-    final byKey = <String, AccountRow>{};
+    final byKey = <String, AccountData>{};
     final rows =
         await (_db.select(_db.accounts)..where(
-              (t) => t.isSystemAccount.equals(true) & t.deletedAt.isNull(),
+              (t) => t.isSystemAccount.equals(true),
             ))
             .get();
 
     for (final row in rows) {
-      final description = row.description;
-      if (description == null || !description.startsWith('system:')) {
-        continue;
-      }
-      byKey[description.substring('system:'.length)] = row;
+      byKey[row.accountCode] = row;
     }
 
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final changedIds = <int>[];
     for (final seed in seeds) {
-      final row = byKey[seed.systemKey];
+      final row = byKey[seed.accountCode];
       if (row == null || row.isGroup == seed.isGroup) {
         continue;
       }
       await (_db.update(_db.accounts)..where((t) => t.id.equals(row.id))).write(
         AccountsCompanion(
           isGroup: Value(seed.isGroup),
-          updatedAt: Value(nowMs),
-          syncStatus: const Value('pending'),
-          version: Value(row.version + 1),
+          updatedAt: Value(now),
         ),
       );
       changedIds.add(row.id);
@@ -794,29 +742,23 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  /// Moves system accounts under the parent implied by [DefaultChartOfAccounts]
-  /// (e.g. Cash/Bank under Cash Boxes) and refreshes tree levels.
   Future<void> _alignSystemAccountParents() async {
     final seeds = DefaultChartOfAccounts.seeds();
-    final byKey = <String, AccountRow>{};
+    final byKey = <String, AccountData>{};
     final rows =
         await (_db.select(_db.accounts)..where(
-              (t) => t.isSystemAccount.equals(true) & t.deletedAt.isNull(),
+              (t) => t.isSystemAccount.equals(true),
             ))
             .get();
 
     for (final row in rows) {
-      final description = row.description;
-      if (description == null || !description.startsWith('system:')) {
-        continue;
-      }
-      byKey[description.substring('system:'.length)] = row;
+      byKey[row.accountCode] = row;
     }
 
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final changedIds = <int>[];
     for (final seed in seeds) {
-      final row = byKey[seed.systemKey];
+      final row = byKey[seed.accountCode];
       if (row == null) {
         continue;
       }
@@ -829,26 +771,22 @@ class AccountRepositoryImpl implements AccountRepository {
       final expectedLevel = seed.parentKey == null
           ? 0
           : (byKey[seed.parentKey!]?.level ?? 0) + 1;
-      final parentChanged = row.parentId != expectedParentUuid;
+      final parentChanged = row.parentUuid != expectedParentUuid;
       final levelChanged = row.level != expectedLevel;
       if (!parentChanged && !levelChanged) {
         continue;
       }
       await (_db.update(_db.accounts)..where((t) => t.id.equals(row.id))).write(
         AccountsCompanion(
-          parentId: Value(expectedParentUuid),
+          parentUuid: Value(expectedParentUuid),
           level: Value(expectedLevel),
-          updatedAt: Value(nowMs),
-          syncStatus: const Value('pending'),
-          version: Value(row.version + 1),
+          updatedAt: Value(now),
         ),
       );
       changedIds.add(row.id);
-      // Keep in-memory map fresh for children processed later in seed order.
-      byKey[seed.systemKey] = row.copyWith(
-        parentId: Value(expectedParentUuid),
+      byKey[seed.accountCode] = row.copyWith(
+        parentUuid: Value(expectedParentUuid),
         level: expectedLevel,
-        version: row.version + 1,
       );
     }
     for (final id in changedIds) {
@@ -859,36 +797,30 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  /// Inserts newly added system seeds that are missing from an existing chart.
   Future<void> _insertMissingSystemAccounts() async {
     final seeds = DefaultChartOfAccounts.seeds();
     final keyToUuid = <String, String>{};
     final keyToLevel = <String, int>{};
     final rows =
         await (_db.select(_db.accounts)..where(
-              (t) => t.isSystemAccount.equals(true) & t.deletedAt.isNull(),
+              (t) => t.isSystemAccount.equals(true),
             ))
             .get();
 
     for (final row in rows) {
-      final description = row.description;
-      if (description == null || !description.startsWith('system:')) {
-        continue;
-      }
-      final key = description.substring('system:'.length);
-      keyToUuid[key] = row.uuid;
-      keyToLevel[key] = row.level;
+      keyToUuid[row.accountCode] = row.uuid;
+      keyToLevel[row.accountCode] = row.level;
     }
 
     final missing = [
       for (final seed in seeds)
-        if (!keyToUuid.containsKey(seed.systemKey)) seed,
+        if (!keyToUuid.containsKey(seed.accountCode)) seed,
     ];
     if (missing.isEmpty) {
       return;
     }
 
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     final createdUuids = <String>[];
     await _db.transaction(() async {
       for (final seed in missing) {
@@ -896,18 +828,15 @@ class AccountRepositoryImpl implements AccountRepository {
         var level = 0;
         if (seed.parentKey != null) {
           final parentId = keyToUuid[seed.parentKey!];
-          if (parentId == null) {
-            continue;
+          if (parentId != null) {
+            parentUuid = parentId;
+            level = (keyToLevel[seed.parentKey!] ?? 0) + 1;
           }
-          parentUuid = parentId;
-          level = (keyToLevel[seed.parentKey!] ?? 0) + 1;
         }
 
         final codeHit =
             await (_db.select(_db.accounts)..where(
-                  (t) =>
-                      t.accountCode.equals(seed.accountCode) &
-                      t.deletedAt.isNull(),
+                  (t) => t.accountCode.equals(seed.accountCode),
                 ))
                 .getSingleOrNull();
         if (codeHit != null) {
@@ -919,22 +848,19 @@ class AccountRepositoryImpl implements AccountRepository {
             .into(_db.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: uuid,
-                parentId: Value(parentUuid),
+                uuid: Value(uuid),
+                parentUuid: Value(parentUuid),
                 accountCode: seed.accountCode,
                 name: seed.name,
-                description: Value('system:${seed.systemKey}'),
                 accountType: seed.accountType.storageValue,
                 normalBalance: seed.accountType.normalBalance.storageValue,
                 level: Value(level),
                 isGroup: Value(seed.isGroup),
                 isActive: const Value(true),
                 isSystemAccount: const Value(true),
-                createdAt: nowMs,
-                updatedAt: nowMs,
-                syncStatus: const Value('pending'),
-                version: const Value(1),
-                companyId: Value(_currentCompanyId),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+                companyId: _currentCompanyId,
               ),
             );
         keyToUuid[seed.systemKey] = uuid;
@@ -951,51 +877,15 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  /// Queues Chart of Accounts rows that were never acknowledged by the remote.
   Future<void> _enqueueUnpushedAccounts() async {
     if (_syncQueue == null) {
       return;
     }
-    final rows = await (_db.select(
-      _db.accounts,
-    )..where((t) => t.deletedAt.isNull() & t.lastSyncedAt.isNull())).get();
+    final rows = await (_db.select(_db.accounts)).get();
     for (final row in rows) {
       final account = _map(row);
-      if (account.syncStatus == SyncStatus.syncing ||
-          account.syncStatus == SyncStatus.conflict) {
-        continue;
-      }
-      if (account.syncStatus != SyncStatus.pending) {
-        await (_db.update(_db.accounts)..where((t) => t.id.equals(row.id)))
-            .write(const AccountsCompanion(syncStatus: Value('pending')));
-      }
-      final refreshed = account.syncStatus == SyncStatus.pending
-          ? account
-          : account.copyWith(syncStatus: SyncStatus.pending);
-      await _enqueue(
-        refreshed,
-        account.version <= 1
-            ? SyncOperationType.create
-            : SyncOperationType.update,
-      );
+      await _enqueue(account, SyncOperationType.create);
     }
-  }
-
-  @override
-  Future<List<Account>> getByType(
-    AccountType type, {
-    bool includeInactive = false,
-  }) async {
-    final rows =
-        await (_db.select(_db.accounts)
-              ..where(
-                (t) =>
-                    t.accountType.equals(type.storageValue) &
-                    _activeFilter(t, includeInactive),
-              )
-              ..orderBy([(t) => OrderingTerm.asc(t.accountCode)]))
-            .get();
-    return rows.map(_map).toList(growable: false);
   }
 
   Future<void> markSynced({
@@ -1003,48 +893,24 @@ class AccountRepositoryImpl implements AccountRepository {
     required int remoteVersion,
     DateTime? syncedAt,
   }) async {
-    final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
+    final now = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(_db.accounts)..where((t) => t.uuid.equals(uuid))).write(
       AccountsCompanion(
-        syncStatus: const Value('synced'),
-        lastSyncedAt: Value(stamp),
-        version: Value(remoteVersion),
+        updatedAt: Value(now),
       ),
     );
   }
 
-  Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.accounts)..where((t) => t.uuid.equals(uuid))).write(
-      const AccountsCompanion(syncStatus: Value('conflict')),
-    );
-  }
+  Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
     final uuid = payload['uuid']?.toString();
     if (uuid == null || uuid.isEmpty) {
       return;
     }
-    final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
     final existingByUuid = await getByUuid(uuid);
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
-    final version = (payload['version'] as num?)?.toInt() ?? 1;
+    final now = DateTime.now().toUtc();
     final code = payload['accountCode']?.toString() ?? uuid;
-
-    if (existingByUuid != null &&
-        (existingByUuid.syncStatus.needsUpload ||
-            existingByUuid.syncStatus == SyncStatus.conflict ||
-            existingByUuid.syncStatus == SyncStatus.syncing)) {
-      if (version > existingByUuid.version) {
-        await markConflict(uuid);
-      }
-      return;
-    }
-
-    // Stale remote: incoming version <= local version → skip (idempotent pull).
-    if (existingByUuid != null && version <= existingByUuid.version) {
-      return;
-    }
 
     final accountType =
         payload['accountType']?.toString() ?? AccountType.asset.storageValue;
@@ -1059,68 +925,15 @@ class AccountRepositoryImpl implements AccountRepository {
       fallbackLevel: (payload['level'] as num?)?.toInt(),
     );
 
-    // Same accountCode on two devices with different UUIDs → adopt remote UUID.
-    if (existingByUuid == null && deletedAtMs == null) {
-      final byCode = await getByAccountCode(code);
-      if (byCode != null && byCode.uuid != uuid) {
-        final oldUuid = byCode.uuid;
-        await (_db.update(
-          _db.accounts,
-        )..where((t) => t.id.equals(byCode.id))).write(
-          AccountsCompanion(
-            uuid: Value(uuid),
-            parentId: Value(resolvedParent.parentId),
-            accountCode: Value(code),
-            name: Value(payload['name']?.toString() ?? byCode.name),
-            description: Value(payload['description']?.toString()),
-            accountType: Value(accountType),
-            normalBalance: Value(normalBalance),
-            level: Value(resolvedParent.level),
-            isGroup: Value(payload['isGroup'] as bool? ?? byCode.isGroup),
-            isActive: Value(payload['isActive'] as bool? ?? byCode.isActive),
-            isSystemAccount: Value(
-              payload['isSystemAccount'] as bool? ?? byCode.isSystemAccount,
-            ),
-            updatedAt: Value(updatedAt),
-            syncStatus: const Value('synced'),
-            lastSyncedAt: Value(nowMs),
-            version: Value(version),
-            deletedAt: const Value(null),
-          ),
-        );
-        // Remap children that pointed at the old local UUID.
-        await (_db.update(_db.accounts)
-              ..where((t) => t.parentId.equals(oldUuid)))
-            .write(AccountsCompanion(parentId: Value(uuid)));
-        await _syncQueue?.removeForEntity(
-          entityType: entityType,
-          entityId: oldUuid,
-        );
-        await _syncQueue?.removeForEntity(
-          entityType: entityType,
-          entityId: uuid,
-        );
-        final remap = _onUuidRemapped;
-        if (remap != null) {
-          await remap(oldUuid, uuid);
-        }
-        return;
-      }
-    }
-
     if (existingByUuid == null) {
-      if (deletedAtMs != null) {
-        return;
-      }
       await _db
           .into(_db.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: uuid,
-              parentId: Value(resolvedParent.parentId),
+              uuid: Value(uuid),
+              parentUuid: Value(resolvedParent.parentId),
               accountCode: code,
               name: payload['name']?.toString() ?? '',
-              description: Value(payload['description']?.toString()),
               accountType: accountType,
               normalBalance: normalBalance,
               level: Value(resolvedParent.level),
@@ -1129,11 +942,9 @@ class AccountRepositoryImpl implements AccountRepository {
               isSystemAccount: Value(
                 payload['isSystemAccount'] as bool? ?? false,
               ),
-              createdAt: (payload['createdAt'] as num?)?.toInt() ?? updatedAt,
-              updatedAt: updatedAt,
-              syncStatus: const Value('synced'),
-              lastSyncedAt: Value(nowMs),
-              version: Value(version),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+              companyId: _currentCompanyId,
             ),
           );
       return;
@@ -1141,10 +952,9 @@ class AccountRepositoryImpl implements AccountRepository {
 
     await (_db.update(_db.accounts)..where((t) => t.uuid.equals(uuid))).write(
       AccountsCompanion(
-        parentId: Value(resolvedParent.parentId),
+        parentUuid: Value(resolvedParent.parentId),
         accountCode: Value(code),
         name: Value(payload['name']?.toString() ?? existingByUuid.name),
-        description: Value(payload['description']?.toString()),
         accountType: Value(accountType),
         normalBalance: Value(normalBalance),
         level: Value(resolvedParent.level),
@@ -1155,23 +965,18 @@ class AccountRepositoryImpl implements AccountRepository {
         isSystemAccount: Value(
           payload['isSystemAccount'] as bool? ?? existingByUuid.isSystemAccount,
         ),
-        updatedAt: Value(updatedAt),
-        syncStatus: const Value('synced'),
-        lastSyncedAt: Value(nowMs),
-        version: Value(version),
-        deletedAt: Value(deletedAtMs),
+        updatedAt: Value(now),
       ),
     );
   }
 
-  /// Re-parents an account whose [parentId] is missing locally (sync orphan).
   Future<void> remountUnderParent({
     required String accountUuid,
     required String parentUuid,
   }) async {
     final account = await getByUuid(accountUuid);
     final parent = await getByUuid(parentUuid);
-    if (account == null || account.isDeleted || parent == null) {
+    if (account == null || parent == null) {
       return;
     }
     final currentParentId = account.parentId;
@@ -1183,14 +988,14 @@ class AccountRepositoryImpl implements AccountRepository {
     if (!parentMissing) {
       return;
     }
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
     await (_db.update(
       _db.accounts,
     )..where((t) => t.uuid.equals(accountUuid))).write(
       AccountsCompanion(
-        parentId: Value(parent.uuid),
+        parentUuid: Value(parent.uuid),
         level: Value(parent.level + 1),
-        updatedAt: Value(nowMs),
+        updatedAt: Value(now),
       ),
     );
   }

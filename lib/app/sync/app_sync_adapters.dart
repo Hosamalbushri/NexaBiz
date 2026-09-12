@@ -21,7 +21,8 @@ import 'package:stock_count/modules/receipts_payments/transactions/domain/entiti
 
 import 'package:stock_count/modules/sync/sync.dart';
 
-/// Counter implementations for LocalDatasetInspector
+import 'package:stock_count/core/database/canonical_database_provider.dart';
+
 class AccountingRecordCounter implements LocalDatasetRecordCounter {
   const AccountingRecordCounter(this.ref);
   final Ref ref;
@@ -30,7 +31,7 @@ class AccountingRecordCounter implements LocalDatasetRecordCounter {
   Future<int> countRecords() async {
     var cnt = 0;
     try {
-      final db = ref.read(accountingDatabaseProvider);
+      final db = ref.read(nexabizDatabaseProvider);
       final r1 = await db
           .customSelect(
             'SELECT COUNT(*) as cnt FROM accounts WHERE deleted_at IS NULL',
@@ -56,19 +57,13 @@ class InventoryRecordCounter implements LocalDatasetRecordCounter {
   Future<int> countRecords() async {
     var cnt = 0;
     try {
-      final db = ref.read(inventoryDatabaseProvider);
+      final db = ref.read(nexabizDatabaseProvider);
       final r1 = await db
           .customSelect(
-            'SELECT COUNT(*) as cnt FROM products WHERE deleted_at IS NULL',
+            'SELECT COUNT(*) as cnt FROM products WHERE is_active = 1',
           )
           .getSingleOrNull();
       cnt += (r1?.read<num>('cnt') ?? 0).toInt();
-      final r2 = await db
-          .customSelect(
-            'SELECT COUNT(*) as cnt FROM inventory_items WHERE deleted_at IS NULL',
-          )
-          .getSingleOrNull();
-      cnt += (r2?.read<num>('cnt') ?? 0).toInt();
     } catch (_) {}
     return cnt;
   }
@@ -82,19 +77,13 @@ class CustomerRecordCounter implements LocalDatasetRecordCounter {
   Future<int> countRecords() async {
     var cnt = 0;
     try {
-      final db = ref.read(customersDatabaseProvider);
+      final db = ref.read(nexabizDatabaseProvider);
       final r1 = await db
           .customSelect(
             'SELECT COUNT(*) as cnt FROM customers WHERE deleted_at IS NULL',
           )
           .getSingleOrNull();
       cnt += (r1?.read<num>('cnt') ?? 0).toInt();
-      final r2 = await db
-          .customSelect(
-            'SELECT COUNT(*) as cnt FROM suppliers WHERE deleted_at IS NULL',
-          )
-          .getSingleOrNull();
-      cnt += (r2?.read<num>('cnt') ?? 0).toInt();
     } catch (_) {}
     return cnt;
   }
@@ -108,19 +97,13 @@ class SaleRecordCounter implements LocalDatasetRecordCounter {
   Future<int> countRecords() async {
     var cnt = 0;
     try {
-      final db = ref.read(salesDatabaseProvider);
+      final db = ref.read(nexabizDatabaseProvider);
       final r1 = await db
           .customSelect(
             'SELECT COUNT(*) as cnt FROM sales WHERE deleted_at IS NULL',
           )
           .getSingleOrNull();
       cnt += (r1?.read<num>('cnt') ?? 0).toInt();
-      final r2 = await db
-          .customSelect(
-            'SELECT COUNT(*) as cnt FROM purchases WHERE deleted_at IS NULL',
-          )
-          .getSingleOrNull();
-      cnt += (r2?.read<num>('cnt') ?? 0).toInt();
     } catch (_) {}
     return cnt;
   }
@@ -134,7 +117,7 @@ class RpRecordCounter implements LocalDatasetRecordCounter {
   Future<int> countRecords() async {
     var cnt = 0;
     try {
-      final db = ref.read(receiptsPaymentsDatabaseProvider);
+      final db = ref.read(nexabizDatabaseProvider);
       final r1 = await db
           .customSelect(
             'SELECT COUNT(*) as cnt FROM financial_transactions WHERE deleted_at IS NULL',
@@ -273,7 +256,7 @@ class ProductInitialCloudScanner implements InitialCloudEntityScanner {
     required String companyId,
     required String deviceId,
   }) async {
-    final db = ref.read(inventoryDatabaseProvider);
+    final db = ref.read(nexabizDatabaseProvider);
     final rows = await (db.select(
       db.products,
     )..where((t) => t.companyId.equals(companyId))).get();

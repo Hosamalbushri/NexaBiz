@@ -1,3 +1,4 @@
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_count/presentation/providers/inventory_providers.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
@@ -16,7 +17,7 @@ class InventorySyncRegistrar implements SyncModuleRegistrar {
 
   @override
   List<SyncEntityHandler> buildHandlers(dynamic ref) {
-    final db = ref.read(inventoryDatabaseProvider);
+    final db = ref.read(nexabizDatabaseProvider);
     final coordinator = ref.read(postingCoordinatorProvider);
     final engine = ref.read(postingEngineProvider);
     String companyIdReader() =>

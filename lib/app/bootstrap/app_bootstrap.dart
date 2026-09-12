@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../core/database/canonical_database_provider.dart';
 import '../../core/database/hive_boxes.dart';
 import '../../core/database/hive_initializer.dart';
 import '../../core/di/app_providers.dart';
@@ -49,7 +50,7 @@ class AppBootstrap {
   /// Riverpod override for [auditRepositoryPortProvider] using [InventoryAuditRepository].
   static Override get auditRepositoryPortOverride =>
       auditRepositoryPortProvider.overrideWith(
-        (ref) => InventoryAuditRepository(ref.watch(inventoryDatabaseProvider)),
+        (ref) => InventoryAuditRepository(ref.watch(nexabizDatabaseProvider)),
       );
 
   /// Stage B: Local Storage Initialization
@@ -59,11 +60,14 @@ class AppBootstrap {
   }
 
   /// Stage C: Local Database & Sync Boxes Initialization
-  static Future<void> bootstrapDatabase() async {
+  static Future<void> bootstrapDatabase([dynamic ref]) async {
     await openSyncQueueBox();
     await openSyncCursorBox();
     await openSyncMetricsBox();
     await openSyncOsWakeBox();
+    if (ref != null) {
+      await ref.read(canonicalDatabaseManagerProvider).openDatabase();
+    }
   }
 
   /// Stage D: Configuration Initialization
@@ -189,7 +193,7 @@ class AppBootstrap {
   /// Master runner for backwards-compatibility callers.
   static Future<void> initialize(Ref ref) async {
     await bootstrapStorage();
-    await bootstrapDatabase();
+    await bootstrapDatabase(ref);
     await bootstrapConfig(ref);
     await bootstrapAuth(ref);
     await bootstrapSync(ref);

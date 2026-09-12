@@ -3,7 +3,7 @@ import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
-import '../../../shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../domain/entities/cost_consumption.dart';
 import '../../domain/entities/cost_layer.dart';
 import '../../domain/enums/cost_valuation_method.dart';
@@ -14,13 +14,16 @@ import 'package:stock_count/modules/currency/domain/services/functional_currency
 
 class CostLayerServiceImpl implements CostLayerService {
   CostLayerServiceImpl({
-    required this._db,
-    this._readCompanyId,
-    this._initRepository,
-    this._functionalCurrencyService,
-  });
+    required NexabizDatabase db,
+    String Function()? readCompanyId,
+    CompanyInitializationRepository? initRepository,
+    FunctionalCurrencyService? functionalCurrencyService,
+  })  : _db = db,
+        _readCompanyId = readCompanyId,
+        _initRepository = initRepository,
+        _functionalCurrencyService = functionalCurrencyService;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final String Function()? _readCompanyId;
   final CompanyInitializationRepository? _initRepository;
   final FunctionalCurrencyService? _functionalCurrencyService;
@@ -843,6 +846,6 @@ class CostLayerServiceImpl implements CostLayerService {
       );
     final product = await query.getSingleOrNull();
     if (product == null) return 0.0;
-    return product.unitCost > 0 ? product.unitCost : 0.0;
+    return product.price > 0 ? product.price : 0.0;
   }
 }

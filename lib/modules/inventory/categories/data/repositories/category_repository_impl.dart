@@ -1,15 +1,16 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 
 class CategoryRepositoryImpl implements CategoryRepository {
-  CategoryRepositoryImpl(this._db, {this._readCompanyId});
+  CategoryRepositoryImpl(this._db, {String Function()? readCompanyId})
+      : _readCompanyId = readCompanyId;
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
   final String Function()? _readCompanyId;
 
   String get _currentCompanyId {
@@ -22,33 +23,32 @@ class CategoryRepositoryImpl implements CategoryRepository {
     return cid;
   }
 
-  Expression<bool> _scoped($CategoriesTable tbl) {
-    return tbl.companyId.equals(_currentCompanyId) & tbl.deletedAt.isNull();
+  Expression<bool> _scoped($ProductCategoriesTable tbl) {
+    return tbl.companyId.equals(_currentCompanyId) & tbl.isActive.equals(true);
   }
 
   @override
   Future<List<Category>> getAllCategories() async {
-    final query = _db.select(_db.categories)..where(_scoped);
+    final query = _db.select(_db.productCategories)..where(_scoped);
     final rows = await query.get();
     return rows.map(_mapRowToEntity).toList();
   }
 
   @override
   Stream<List<Category>> watchAllCategories() {
-    final query = _db.select(_db.categories)..where(_scoped);
+    final query = _db.select(_db.productCategories)..where(_scoped);
     return query.watch().map((rows) => rows.map(_mapRowToEntity).toList());
   }
 
   @override
   Stream<List<Category>> watchCategoriesForWarehouse(String warehouseId) {
-    final query = _db.select(_db.categories)
-      ..where((tbl) => tbl.warehouseId.equals(warehouseId) & _scoped(tbl));
+    final query = _db.select(_db.productCategories)..where(_scoped);
     return query.watch().map((rows) => rows.map(_mapRowToEntity).toList());
   }
 
   @override
   Future<Category?> getCategoryById(String id) async {
-    final query = _db.select(_db.categories)
+    final query = _db.select(_db.productCategories)
       ..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
@@ -60,88 +60,65 @@ class CategoryRepositoryImpl implements CategoryRepository {
     await _db.transaction(() async {
       final effectiveCompanyId = category.companyId ?? _currentCompanyId;
 
-      // 1. Cross-tenant modification rejection
       if (category.companyId != null &&
           category.companyId!.isNotEmpty &&
           category.companyId != _currentCompanyId) {
         throw const JournalException(JournalException.notFound);
       }
 
-      // Check if UUID exists in table (including soft-deleted records)
-      final existingRecord = await (_db.select(_db.categories)
+      final existingRecord = await (_db.select(_db.productCategories)
             ..where((tbl) => tbl.uuid.equals(category.id)))
           .getSingleOrNull();
 
-      // Prevent cross-tenant record overwrite
       if (existingRecord != null && existingRecord.companyId != effectiveCompanyId) {
         throw const JournalException(JournalException.notFound);
       }
 
-      // Prevent duplicate code in the same warehouse and company (including soft-deleted records)
-      final duplicateCodeRecord = await (_db.select(_db.categories)
+      final duplicateCodeRecord = await (_db.select(_db.productCategories)
             ..where((tbl) =>
                 tbl.code.equals(category.code) &
-                tbl.warehouseId.equals(category.warehouseId) &
                 tbl.uuid.equals(category.id).not() &
                 tbl.companyId.equals(effectiveCompanyId)))
           .getSingleOrNull();
 
       if (duplicateCodeRecord != null) {
-        if (duplicateCodeRecord.deletedAt != null) {
-          // If a soft-deleted record occupies this code, rename its code to release the SQLite unique index slot
-          final freedCode =
-              '${duplicateCodeRecord.code}_del_${DateTime.now().millisecondsSinceEpoch}';
-          await (_db.update(_db.categories)
-                ..where((tbl) => tbl.uuid.equals(duplicateCodeRecord.uuid)))
-              .write(CategoriesCompanion(code: Value(freedCode)));
-        } else {
-          throw JournalException(
-            'duplicate_code',
-            'كود التصنيف "${category.code}" مستخدم بالفعل في هذا المستودع',
-          );
-        }
+        throw JournalException(
+          'duplicate_code',
+          'كود التصنيف "${category.code}" مستخدم بالفعل',
+        );
       }
 
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      final newVersion =
-          (existingRecord?.version ?? category.version) + (existingRecord == null ? 0 : 1);
+      final now = DateTime.now().toUtc();
 
       if (existingRecord != null) {
-        await (_db.update(_db.categories)
+        await (_db.update(_db.productCategories)
               ..where((tbl) =>
                   tbl.uuid.equals(category.id) &
                   tbl.companyId.equals(effectiveCompanyId)))
             .write(
-          CategoriesCompanion(
+          ProductCategoriesCompanion(
             name: Value(category.name),
             code: Value(category.code),
-            warehouseId: Value(category.warehouseId),
-            parentId: Value(category.parentId),
+            parentUuid: Value(category.parentId),
             level: Value(category.level),
             isGroup: Value(category.isGroup),
             isActive: Value(category.isActive),
-            costValuationMethod: Value(category.costValuationMethod?.name),
             updatedAt: Value(now),
-            version: Value(newVersion),
             companyId: Value(effectiveCompanyId),
-            deletedAt: const Value(null),
           ),
         );
       } else {
-        await _db.into(_db.categories).insert(
-              CategoriesCompanion(
+        await _db.into(_db.productCategories).insert(
+              ProductCategoriesCompanion(
                 uuid: Value(category.id),
                 name: Value(category.name),
                 code: Value(category.code),
-                warehouseId: Value(category.warehouseId),
-                parentId: Value(category.parentId),
+                parentUuid: Value(category.parentId),
                 level: Value(category.level),
                 isGroup: Value(category.isGroup),
                 isActive: Value(category.isActive),
-                costValuationMethod: Value(category.costValuationMethod?.name),
                 createdAt: Value(now),
                 updatedAt: Value(now),
-                version: Value(newVersion),
                 companyId: Value(effectiveCompanyId),
               ),
             );
@@ -152,18 +129,16 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<void> deleteCategory(String id) async {
     await _db.transaction(() async {
-      // 1. Verify tenant ownership
       final category = await getCategoryById(id);
       if (category == null) {
         throw const JournalException(JournalException.notFound);
       }
 
-      // 2. Safeguard check: Subcategories referencing this category
-      final subcategoryCountQuery = _db.selectOnly(_db.categories)
-        ..addColumns([_db.categories.uuid.count()])
-        ..where(_db.categories.parentId.equals(id) & _scoped(_db.categories));
+      final subcategoryCountQuery = _db.selectOnly(_db.productCategories)
+        ..addColumns([_db.productCategories.uuid.count()])
+        ..where(_db.productCategories.parentUuid.equals(id) & _scoped(_db.productCategories));
       final subcatRow = await subcategoryCountQuery.getSingle();
-      final subcatCount = subcatRow.read(_db.categories.uuid.count()) ?? 0;
+      final subcatCount = subcatRow.read(_db.productCategories.uuid.count()) ?? 0;
       if (subcatCount > 0) {
         throw const JournalException(
           'category_in_use',
@@ -171,13 +146,12 @@ class CategoryRepositoryImpl implements CategoryRepository {
         );
       }
 
-      // 3. Safeguard check: Products referencing this category
       final productCountQuery = _db.selectOnly(_db.products)
         ..addColumns([_db.products.id.count()])
         ..where(
-          _db.products.categoryId.equals(id) &
+          _db.products.categoryUuid.equals(id) &
               _db.products.companyId.equals(_currentCompanyId) &
-              _db.products.deletedAt.isNull(),
+              _db.products.isActive.equals(true),
         );
       final prodRow = await productCountQuery.getSingle();
       final prodCount = prodRow.read(_db.products.id.count()) ?? 0;
@@ -188,51 +162,34 @@ class CategoryRepositoryImpl implements CategoryRepository {
         );
       }
 
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final now = DateTime.now().toUtc();
       await (_db.update(
-        _db.categories,
+        _db.productCategories,
       )..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl))).write(
-        CategoriesCompanion(
-          deletedAt: Value(now),
+        ProductCategoriesCompanion(
+          isActive: const Value(false),
           updatedAt: Value(now),
-          version: Value(category.version + 1),
         ),
       );
     });
   }
 
-  CostValuationMethod? _parseCostValuationMethod(String? str) {
-    if (str == null) return null;
-    for (final method in CostValuationMethod.values) {
-      if (method.name == str) return method;
-    }
-    return null;
-  }
-
-  Category _mapRowToEntity(CategoryRow row) {
+  Category _mapRowToEntity(ProductCategoryData row) {
     return Category(
       id: row.uuid,
       code: row.code,
       name: row.name,
-      warehouseId: row.warehouseId,
-      parentId: row.parentId,
+      warehouseId: '',
+      parentId: row.parentUuid,
       level: row.level,
       isGroup: row.isGroup,
       isActive: row.isActive,
-      costValuationMethod: _parseCostValuationMethod(row.costValuationMethod),
-      version: row.version,
+      costValuationMethod: null,
+      version: 1,
       companyId: row.companyId,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        row.createdAt,
-        isUtc: true,
-      ),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        row.updatedAt,
-        isUtc: true,
-      ),
-      deletedAt: row.deletedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      deletedAt: null,
     );
   }
 }

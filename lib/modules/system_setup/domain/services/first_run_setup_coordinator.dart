@@ -95,10 +95,10 @@ class FirstRunSetupCoordinator {
 
   /// Checks if the initial application setup has been completed.
   Future<bool> isFirstRunCompleted() async {
-    final onboardingDone = await settingsRepository.loadOnboardingCompleted();
-    if (!onboardingDone) return false;
     final hasAdmin = await authStore.hasConfiguredAdmin();
-    return hasAdmin;
+    if (!hasAdmin) return false;
+    final onboardingDone = await settingsRepository.loadOnboardingCompleted();
+    return onboardingDone;
   }
 
   /// Validates payload parameters before executing atomic setup.

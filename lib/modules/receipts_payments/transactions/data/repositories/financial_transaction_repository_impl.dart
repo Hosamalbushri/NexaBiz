@@ -15,7 +15,7 @@ import '../../domain/models/financial_transaction_exception.dart';
 import '../../domain/models/transaction_list_filter.dart';
 import '../../domain/models/transaction_paged_result.dart';
 import '../../domain/repositories/financial_transaction_repository.dart';
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
@@ -33,7 +33,7 @@ class FinancialTransactionRepositoryImpl
     this._readCompanyId,
   });
 
-  final ReceiptsPaymentsDatabase _db;
+  final NexabizDatabase _db;
   final PeriodValidatorPort? _periodValidator;
   final PermissionGuard _permissionGuard;
   final SyncQueue? _syncQueue;

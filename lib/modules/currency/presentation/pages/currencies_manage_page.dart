@@ -904,29 +904,49 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                             .setDefaultCurrency(currency.code);
                       }
 
-                      if (isInventoryValuation && !isValLocked) {
+                      if (!isValLocked) {
                         final initRepo = ref.read(
                           companyInitializationRepositoryProvider,
                         );
                         final existingConfig =
                             await initRepo.getInventoryConfig();
                         final state = await initRepo.getState();
-                        await initRepo.saveInventoryConfig(
-                          CompanyInventoryConfig(
-                            companyId: state.companyId,
-                            inventoryBaseCurrencyId: currency.code,
-                            defaultCostingMethod:
-                                existingConfig?.defaultCostingMethod ??
-                                'FIFO',
-                            allowNegativeStock:
-                                existingConfig?.allowNegativeStock ??
-                                false,
-                            autoPostAccountingEntries:
-                                existingConfig?.autoPostAccountingEntries ??
-                                true,
-                            updatedAt: DateTime.now().toUtc(),
-                          ),
-                        );
+
+                        if (isInventoryValuation) {
+                          await initRepo.saveInventoryConfig(
+                            CompanyInventoryConfig(
+                              companyId: state.companyId,
+                              inventoryBaseCurrencyId: currency.code,
+                              defaultCostingMethod:
+                                  existingConfig?.defaultCostingMethod ??
+                                  'FIFO',
+                              allowNegativeStock:
+                                  existingConfig?.allowNegativeStock ??
+                                  false,
+                              autoPostAccountingEntries:
+                                  existingConfig?.autoPostAccountingEntries ??
+                                  true,
+                              updatedAt: DateTime.now().toUtc(),
+                            ),
+                          );
+                        } else if (currentValCode == currency.code.toUpperCase()) {
+                          await initRepo.saveInventoryConfig(
+                            CompanyInventoryConfig(
+                              companyId: state.companyId,
+                              inventoryBaseCurrencyId: '',
+                              defaultCostingMethod:
+                                  existingConfig?.defaultCostingMethod ??
+                                  'FIFO',
+                              allowNegativeStock:
+                                  existingConfig?.allowNegativeStock ??
+                                  false,
+                              autoPostAccountingEntries:
+                                  existingConfig?.autoPostAccountingEntries ??
+                                  true,
+                              updatedAt: DateTime.now().toUtc(),
+                            ),
+                          );
+                        }
                       }
 
                       _invalidateAllCurrencyProviders();

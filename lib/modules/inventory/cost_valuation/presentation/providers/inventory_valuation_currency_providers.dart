@@ -5,7 +5,7 @@ import 'package:stock_count/modules/accounting/shared/domain/entities/currency.d
 import 'package:stock_count/modules/accounting/shared/presentation/providers/currency_providers.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_rate_providers.dart';
-import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 
 import '../../domain/services/inventory_valuation_currency_service.dart';
@@ -67,7 +67,7 @@ final inventoryValuationCurrencyStateProvider =
           authState.session?.user.isSuperAdmin == true;
 
       final service = ref.watch(inventoryValuationCurrencyServiceProvider);
-      final db = ref.watch(inventoryDatabaseProvider);
+      final db = ref.watch(nexabizDatabaseProvider);
 
       const scopeLabel = 'سجل المخزون / نطاق الشركة (Company Inventory Book)';
 

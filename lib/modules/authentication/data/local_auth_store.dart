@@ -5,6 +5,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../../core/database/encrypted_hive_box.dart';
 import '../../../core/database/hive_boxes.dart';
+import '../../../core/database/repositories/canonical_identity_migrator.dart';
+import '../../../core/database/repositories/canonical_identity_repository.dart';
 import '../../../core/utils/id_generator.dart';
 import '../domain/entities/active_company_context.dart';
 import '../domain/entities/auth_session.dart';
@@ -25,31 +27,69 @@ class CompanyCreationException implements Exception {
   String toString() => message;
 }
 
+class LocalAuthUserExportRecord {
+  const LocalAuthUserExportRecord({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.passwordSalt,
+    required this.passwordHash,
+    required this.status,
+    required this.isSuperAdmin,
+  });
+
+  final String id;
+  final String name;
+  final String email;
+  final String passwordSalt;
+  final String passwordHash;
+  final String status;
+  final bool isSuperAdmin;
+}
+
+class LegacyIdentityExport {
+  const LegacyIdentityExport({
+    required this.users,
+    required this.companies,
+    required this.memberships,
+  });
+
+  final List<LocalAuthUserExportRecord> users;
+  final List<AuthCompany> companies;
+  final List<UserCompanyMembership> memberships;
+}
+
 /// Offline identity store (Hive). No network required.
 class LocalAuthStore {
   LocalAuthStore({
     Box<dynamic>? box,
     LocalBruteForceProtector? bruteForceProtector,
-  }) : _injectedBox = box,
-       _bruteForceProtector = bruteForceProtector ?? LocalBruteForceProtector();
+    this._identityRepository,
+  })  : _injectedBox = box,
+        _bruteForceProtector = bruteForceProtector ?? LocalBruteForceProtector();
+
+
 
   final Box<dynamic>? _injectedBox;
   final LocalBruteForceProtector _bruteForceProtector;
+  final CanonicalIdentityRepository? _identityRepository;
   final Set<String> _terminatedSessionIds = {};
+
+  CanonicalIdentityRepository? get identityRepository => _identityRepository;
 
   LocalBruteForceProtector get bruteForceProtector => _bruteForceProtector;
 
   static const boxName = HiveBoxes.localAuthEncrypted;
   static const _legacyBoxName = HiveBoxes.localAuth;
-  static const _usersKey = 'users';
   static const _companiesKey = 'companies';
+  static const _usersKey = 'users';
   static const _membershipsKey = 'memberships';
   static const _sessionKey = 'session_snapshot';
-  static const _seededKey = 'seeded_v1';
+  static const _seededKey = 'is_seeded';
 
   Future<Box<dynamic>> _box() async {
     final injected = _injectedBox;
-    if (injected != null && injected.isOpen) {
+    if (injected != null) {
       return injected;
     }
     if (Hive.isBoxOpen(boxName)) {
@@ -61,12 +101,42 @@ class LocalAuthStore {
     );
   }
 
-  /// Ensures super admin permissions are synced for existing users.
+  Future<LegacyIdentityExport> exportLegacyIdentityRecords() async {
+    final box = await _box();
+    final hiveUsers = _readUsers(box);
+    return LegacyIdentityExport(
+      users: hiveUsers
+          .map(
+            (u) => LocalAuthUserExportRecord(
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              passwordSalt: u.passwordSalt,
+              passwordHash: u.passwordHash,
+              status: u.status,
+              isSuperAdmin: u.isSuperAdmin,
+            ),
+          )
+          .toList(),
+      companies: _readCompanies(box),
+      memberships: _readMemberships(box),
+    );
+  }
+
+  /// Ensures super admin permissions are synced for existing users and migrates to canonical database.
   Future<void> ensureSeeded() async {
     final box = await _box();
     final users = _readUsers(box);
     if (users.isNotEmpty) {
       await _syncSuperAdminPermissions(box, users);
+    }
+    final identityRepo = _identityRepository;
+    if (identityRepo != null) {
+      final migrator = CanonicalIdentityMigrator(
+        identityRepository: identityRepo,
+        localAuthStore: this,
+      );
+      await migrator.migrateIfNeeded();
     }
   }
 
@@ -605,12 +675,26 @@ class LocalAuthStore {
         dirty = true;
       } else if (snapshot.currentCompanyId != null) {
         final cid = snapshot.currentCompanyId!;
-        final companyExists = allCompanies.any((c) => c.id == cid);
+        final identityRepo = _identityRepository;
         final memberships = _readMemberships(box);
-        final hasActiveMembership = memberships.any(
+
+        bool companyExists = allCompanies.any((c) => c.id == cid);
+        bool hasActiveMembership = memberships.any(
           (m) =>
               m.userId == snapshot.user.id && m.companyId == cid && m.isActive,
         );
+
+        if ((!companyExists || !hasActiveMembership) && identityRepo != null) {
+          final canonicalComp = await identityRepo.getCompanyByUuid(cid);
+          final canonicalMem = await identityRepo.validateMembership(
+            userUuid: snapshot.user.id,
+            companyUuid: cid,
+          );
+          if (canonicalComp != null && canonicalMem != null) {
+            companyExists = true;
+            hasActiveMembership = true;
+          }
+        }
 
         if (!companyExists || !hasActiveMembership) {
           snapshot = snapshot.copyWith(
@@ -623,6 +707,7 @@ class LocalAuthStore {
           dirty = true;
         }
       }
+
 
       if (isOwnerOrAdmin && snapshot.currentCompanyId != null) {
         final merged = {...snapshot.permissions, ...kAllLocalPermissions};
@@ -740,8 +825,8 @@ class LocalAuthStore {
     }
 
     return session;
-    return session;
   }
+
 
   Future<AuthSessionSnapshot?> switchCompany({
     required AuthSessionSnapshot current,
@@ -756,16 +841,31 @@ class LocalAuthStore {
     final box = await _box();
 
     // 1. Validate Membership in Target Company (Rule 3)
+    final identityRepo = _identityRepository;
+    final canonicalMembership = identityRepo != null
+        ? await identityRepo.validateMembership(
+            userUuid: current.user.id,
+            companyUuid: companyId,
+          )
+        : null;
+
     final memberships = _readMemberships(box);
     var membership = memberships.firstWhere(
       (m) =>
           m.userId == current.user.id && m.companyId == companyId && m.isActive,
-      orElse: () => const UserCompanyMembership(
-        userId: '',
-        companyId: '',
-        role: '',
-        status: 'inactive',
-      ),
+      orElse: () => canonicalMembership != null
+          ? UserCompanyMembership(
+              userId: canonicalMembership.userUuid,
+              companyId: canonicalMembership.companyUuid,
+              role: canonicalMembership.role,
+              status: canonicalMembership.status,
+            )
+          : const UserCompanyMembership(
+              userId: '',
+              companyId: '',
+              role: '',
+              status: 'inactive',
+            ),
     );
 
     if (!membership.isActive || membership.companyId != companyId) {
@@ -774,6 +874,10 @@ class LocalAuthStore {
     }
 
     // 2. Validate Company Exists
+    final canonicalCompany = identityRepo != null
+        ? await identityRepo.getCompanyByUuid(companyId)
+        : null;
+
     AuthCompany? company;
     for (final c in _readCompanies(box)) {
       if (c.id == companyId) {
@@ -781,12 +885,25 @@ class LocalAuthStore {
         break;
       }
     }
+    if (company == null && canonicalCompany != null) {
+      company = AuthCompany(
+        id: canonicalCompany.uuid,
+        name: canonicalCompany.name,
+        code: canonicalCompany.code,
+        role: membership.role,
+      );
+    }
     if (company == null) {
       // Rule 12: Preserve current session context on failure
       return null;
     }
 
+
     // 3. Validate User Status
+    final canonicalUser = identityRepo != null
+        ? await identityRepo.getUserByUuid(current.user.id)
+        : null;
+
     final users = _readUsers(box);
     _LocalUserRecord? user;
     for (final u in users) {
@@ -795,13 +912,17 @@ class LocalAuthStore {
         break;
       }
     }
-    if (user == null) {
+
+    final isUserActive = (user != null && user.status == 'active') ||
+        (canonicalUser != null && canonicalUser.status == 'active');
+
+    if (!isUserActive) {
       // Rule 12: Preserve current session context on failure
       return null;
     }
 
     // 4. Build Target Company permissions
-    final stored = user.permissionsByCompany[companyId];
+    final stored = user?.permissionsByCompany[companyId];
     final isOwnerOrAdmin =
         membership.role == 'Owner' ||
         membership.role == LocalAuthDefaults.adminRole;
@@ -831,7 +952,14 @@ class LocalAuthStore {
       companyCode: company.code,
     );
 
-    final authorizedCompanies = _readAuthorizedCompanies(box, current.user);
+    final targetCompany = company;
+    var authorizedCompanies = _readAuthorizedCompanies(box, current.user);
+    if (!authorizedCompanies.any((c) => c.id == targetCompany.id)) {
+      authorizedCompanies = [...authorizedCompanies, targetCompany];
+    }
+
+
+
 
     final next = current.copyWith(
       currentCompanyId: companyId,
@@ -843,6 +971,7 @@ class LocalAuthStore {
       capturedAt: DateTime.now().toUtc(),
       sessionId: stableSessionId,
     );
+
 
     await saveSession(next);
     return next;
@@ -875,9 +1004,10 @@ class LocalAuthStore {
     }
 
     final salt = generateUuidV4();
+    final newHash = hashPassword(newPassword, salt);
     final updated = user.copyWith(
       passwordSalt: salt,
-      passwordHash: hashPassword(newPassword, salt),
+      passwordHash: newHash,
       mustChangePassword: false,
     );
     await _writeUsers(box, [
@@ -885,7 +1015,17 @@ class LocalAuthStore {
         if (u.id == userId) updated else u,
     ]);
 
+    final identityRepo = identityRepository;
+
+    if (identityRepo != null) {
+      await identityRepo.updateUserPassword(
+        userUuid: userId,
+        passwordHash: newHash,
+      );
+    }
+
     final existing = await loadSession();
+
     if (existing == null || existing.user.id != userId) {
       throw const PasswordChangeException(PasswordChangeException.notFound);
     }
@@ -1134,7 +1274,24 @@ class LocalAuthStore {
       await _writeUsers(box, updatedUsers);
       await _writeMemberships(box, [...memberships, ...addedMemberships]);
 
+      final identityRepo = _identityRepository;
+      if (identityRepo != null) {
+        final adminUserRecord = updatedUsers.firstWhere((u) => u.id == adminUserId);
+        await identityRepo.createTenantWithAdmin(
+          userEmail: adminUserRecord.email,
+          userName: adminUserRecord.name,
+          passwordHash: adminUserRecord.passwordHash,
+          companyName: newCompany.name,
+          companyCode: newCompany.code,
+          userUuid: adminUserRecord.id,
+          companyUuid: newCompany.id,
+          membershipUuid: generateUuidV4(),
+        );
+      }
+
+
       final currentSession = await loadSession();
+
       if (currentSession != null) {
         final isCreatorAdmin = (currentSession.user.id == adminUserId);
         if (isCreatorAdmin) {
@@ -1159,13 +1316,20 @@ class LocalAuthStore {
 
       return newCompany;
     } catch (e) {
-      if (origCompanies != null) await box.put(_companiesKey, origCompanies);
-      if (origUsers != null) await box.put(_usersKey, origUsers);
-      if (origMemberships != null)
+      if (origCompanies != null) {
+        await box.put(_companiesKey, origCompanies);
+      }
+      if (origUsers != null) {
+        await box.put(_usersKey, origUsers);
+      }
+      if (origMemberships != null) {
         await box.put(_membershipsKey, origMemberships);
+      }
       rethrow;
     }
   }
+
+
 
   Future<AuthCompany> createCompany({
     required String name,

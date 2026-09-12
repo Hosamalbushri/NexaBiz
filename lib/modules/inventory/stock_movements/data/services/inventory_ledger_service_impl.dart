@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_ledger_entry.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/stock_ledger_transaction_type.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_ledger_service.dart';
 
 class InventoryLedgerServiceImpl implements InventoryLedgerService {
-  InventoryLedgerServiceImpl({required InventoryDatabase db}) : _db = db;
+  InventoryLedgerServiceImpl(this._db);
 
-  final InventoryDatabase _db;
+  final NexabizDatabase _db;
 
   @override
   Future<double> calculateLedgerStockBalance({

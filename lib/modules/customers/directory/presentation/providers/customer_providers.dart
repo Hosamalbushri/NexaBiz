@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
 import '../../data/repositories/customer_repository_impl.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/repositories/customer_repository.dart';
@@ -16,20 +16,13 @@ import '../../domain/services/customer_code_generator.dart';
 import '../../domain/usecases/customer_usecases.dart';
 import 'package:stock_count/modules/customers/accounts/domain/usecases/ensure_customer_account_links.dart';
 
-final customersDatabaseProvider = Provider<CustomersDatabase>((ref) {
-  final db = CustomersDatabase(
-    name: tenantScopedName(
-      'customers_master',
-      ref.watch(sessionCompanyIdProvider),
-    ),
-  );
-  ref.onDispose(db.close);
-  return db;
+final customersDatabaseProvider = Provider<NexabizDatabase>((ref) {
+  return ref.watch(nexabizDatabaseProvider);
 });
 
 final customerRepositoryImplProvider = Provider<CustomerRepositoryImpl>((ref) {
   return CustomerRepositoryImpl(
-    ref.watch(customersDatabaseProvider),
+    ref.watch(nexabizDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
     readCompanyId: () => ref.read(currentCompanyIdProvider),
   );

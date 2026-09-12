@@ -32,7 +32,14 @@ QueryExecutor encryptedDriftDatabase({required String name}) {
             'without SQLCipher (configure pub hooks sqlite3: sqlite3mc).',
           );
         }
-        return NativeDatabase.createBackgroundConnection(File(dbPath));
+        return NativeDatabase.createBackgroundConnection(
+          File(dbPath),
+          setup: (db) {
+            db.execute('PRAGMA foreign_keys = ON;');
+            db.execute('PRAGMA journal_mode = WAL;');
+            db.execute('PRAGMA busy_timeout = 5000;');
+          },
+        );
       }
 
       final keySeed = await DriftEncryptionKeyStore().getOrCreateKey();
@@ -47,6 +54,9 @@ QueryExecutor encryptedDriftDatabase({required String name}) {
             'SQLite3MultipleCiphers not linked — check pubspec hooks',
           );
           db.execute("PRAGMA key = '$escapedKey';");
+          db.execute('PRAGMA foreign_keys = ON;');
+          db.execute('PRAGMA journal_mode = WAL;');
+          db.execute('PRAGMA busy_timeout = 5000;');
         },
       );
     }),
@@ -75,6 +85,9 @@ String escapeSqlString(String source) {
 }
 
 Future<String> _databasePath(String name) async {
+  if (p.isAbsolute(name)) {
+    return name.endsWith('.sqlite') ? name : '$name.sqlite';
+  }
   final dir = await getApplicationDocumentsDirectory();
   return p.join(dir.path, '$name.sqlite');
 }
@@ -146,3 +159,5 @@ Future<bool> _isPlaintextDatabase(String dbPath) async {
     db.close();
   }
 }
+
+

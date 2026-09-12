@@ -1,8 +1,9 @@
 import 'dart:convert';
+import 'package:drift/drift.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../core/database/hive_boxes.dart';
+import '../../../../core/database/nexabiz_database.dart';
 import '../../../authentication/data/local_auth_store.dart';
-import '../../../inventory/shared/data/database/inventory_database.dart';
 import '../../domain/entities/company_accounting_config.dart';
 import '../../domain/entities/company_initialization_state.dart';
 import '../../domain/entities/company_inventory_config.dart';
@@ -17,19 +18,20 @@ class CompanyInitializationRepositoryImpl
   CompanyInitializationRepositoryImpl({
     this._box,
     this._readCompanyId,
-    InventoryDatabase? invDb,
+    // ignore: prefer_initializing_formals
+    NexabizDatabase? invDb,
     Future<bool> Function()? hasInventoryActivity,
   }) : _invDb = invDb,
        _hasInventoryActivityCustom = hasInventoryActivity;
 
   Box<dynamic>? _box;
   final String Function()? _readCompanyId;
-  final InventoryDatabase? _invDb;
+  final NexabizDatabase? _invDb;
   final Future<bool> Function()? _hasInventoryActivityCustom;
 
   Future<bool> _hasInventoryActivity() async {
     if (_hasInventoryActivityCustom != null) {
-      return await _hasInventoryActivityCustom!();
+      return await _hasInventoryActivityCustom();
     }
     final db = _invDb;
     if (db == null) return false;
@@ -123,21 +125,51 @@ class CompanyInitializationRepositoryImpl
     final box = await _initBox;
     final raw = box.get(_inventoryKey(companyId));
 
+    CompanyInventoryConfig? config;
     if (raw is Map) {
-      return CompanyInventoryConfig.fromJson(Map<dynamic, dynamic>.from(raw));
-    }
-    if (raw is String && raw.isNotEmpty) {
+      config = CompanyInventoryConfig.fromJson(Map<dynamic, dynamic>.from(raw));
+    } else if (raw is String && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is Map) {
-          return CompanyInventoryConfig.fromJson(
+          config = CompanyInventoryConfig.fromJson(
             Map<dynamic, dynamic>.from(decoded),
           );
         }
       } catch (_) {}
     }
 
-    return null;
+    // Sync with canonical SQLite settings table
+    final invDb = _invDb;
+    if (invDb != null) {
+      try {
+        final rows = await invDb.customSelect(
+          "SELECT value FROM settings WHERE key = 'company_inventory_valuation_currency' AND company_id = ? LIMIT 1",
+          variables: [Variable.withString(companyId)],
+        ).get();
+
+        if (rows.isNotEmpty) {
+          final valCurrency =
+              rows.first.read<String>('value').trim().toUpperCase();
+          if (valCurrency.isNotEmpty) {
+            if (config == null) {
+              config = CompanyInventoryConfig(
+                companyId: companyId,
+                inventoryBaseCurrencyId: valCurrency,
+                defaultCostingMethod: 'FIFO',
+                allowNegativeStock: false,
+                autoPostAccountingEntries: true,
+                updatedAt: DateTime.now().toUtc(),
+              );
+            } else if (config.inventoryBaseCurrencyId != valCurrency) {
+              config = config.copyWith(inventoryBaseCurrencyId: valCurrency);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    return config;
   }
 
   @override
@@ -148,6 +180,7 @@ class CompanyInitializationRepositoryImpl
     // Invariant constraint check: ONE inventory base currency per tenant once posted inventory activity exists.
     if (existing != null &&
         existing.inventoryBaseCurrencyId.isNotEmpty &&
+        config.inventoryBaseCurrencyId.isNotEmpty &&
         existing.inventoryBaseCurrencyId !=
             config.inventoryBaseCurrencyId.toUpperCase()) {
       final hasTx = await _hasInventoryActivity();
@@ -166,6 +199,22 @@ class CompanyInitializationRepositoryImpl
 
     final box = await _initBox;
     await box.put(_inventoryKey(companyId), scopedConfig.toJson());
+
+    // Also persist to canonical SQLite settings table for unified cross-module persistence
+    final activeInvDb = _invDb;
+    if (activeInvDb != null) {
+      try {
+        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+        await activeInvDb.customStatement(
+          '''
+          INSERT INTO settings (key, value, company_id, updated_at)
+          VALUES ('company_inventory_valuation_currency', ?, ?, ?)
+          ON CONFLICT(key, company_id) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+          ''',
+          [config.inventoryBaseCurrencyId.toUpperCase(), companyId, now],
+        );
+      } catch (_) {}
+    }
 
     // Update initialization state flag
     final state = await getState();

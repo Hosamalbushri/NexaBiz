@@ -103,8 +103,8 @@ class InstallationIntegrityValidator {
           hasConfiguredAdmin ||
           systemSetupStatus != null;
 
-      // 1. Fresh / Uninitialized detection
-      if (!isAnyInitMarked) {
+      // 1. Fresh / Uninitialized detection (Requires setup if no configured admin exists)
+      if (!isAnyInitMarked || !hasConfiguredAdmin) {
         return const InstallationIntegrityResult.uninitialized();
       }
 

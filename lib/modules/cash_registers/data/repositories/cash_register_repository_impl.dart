@@ -3,7 +3,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:drift/native.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../domain/entities/cash_register.dart';
 import '../../domain/repositories/cash_register_repository.dart';
 
@@ -13,10 +14,10 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
   CashRegisterRepositoryImpl({
     required this.accountRepository,
-    AccountingDatabase? db,
+    NexabizDatabase? db,
     this.settingsBox,
     List<CashRegister>? initialRegisters,
-  }) : _db = db ?? AccountingDatabase.memory() {
+  }) : _db = db ?? NexabizDatabase.connect(NativeDatabase.memory()) {
     if (initialRegisters != null && initialRegisters.isNotEmpty) {
       for (final reg in initialRegisters) {
         _seedRegisterIfMissing(reg);
@@ -25,7 +26,7 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   }
 
   final AccountRepository accountRepository;
-  final AccountingDatabase _db;
+  final NexabizDatabase _db;
   Box<dynamic>? settingsBox;
   final Map<String, String> _inMemoryDefaults = {};
 
@@ -60,45 +61,30 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     return dbUuid.replaceAll(RegExp(r'_+$'), '');
   }
 
-  CashRegister _rowToEntity(CashRegisterRow row) {
+  CashRegister _rowToEntity(CashRegisterData row) {
     return CashRegister(
       id: _denormalizeUuid(row.uuid),
       companyId: row.companyId,
       name: row.name,
       code: row.code,
       isActive: row.isActive,
-      accountingAccountId: row.accountingAccountId,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        row.createdAt,
-        isUtc: true,
-      ),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        row.updatedAt,
-        isUtc: true,
-      ),
+      accountingAccountId: row.accountUuid,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     );
   }
 
   CashRegistersCompanion _entityToCompanion(CashRegister entity) {
-    final isLinked =
-        entity.accountingAccountId != null &&
-        entity.accountingAccountId!.trim().isNotEmpty;
     return CashRegistersCompanion(
       uuid: Value(_normalizeUuid(entity.id)),
       companyId: Value(entity.companyId),
       name: Value(entity.name),
       code: Value(entity.code),
       description: const Value.absent(),
-      accountingAccountId: Value(entity.accountingAccountId),
-      accountingLinkStatus: Value(
-        isLinked ? 'ACCOUNTING_READY' : 'ACCOUNTING_NOT_LINKED',
-      ),
+      accountUuid: Value(entity.accountingAccountId),
       isActive: Value(entity.isActive),
-      createdAt: Value(entity.createdAt.millisecondsSinceEpoch),
-      updatedAt: Value(entity.updatedAt.millisecondsSinceEpoch),
-      syncStatus: const Value('synced'),
-      version: const Value(1),
-      deletedAt: const Value(null),
+      createdAt: Value(entity.createdAt),
+      updatedAt: Value(entity.updatedAt),
     );
   }
 
@@ -180,8 +166,7 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
   @override
   Future<List<CashRegister>> getCashRegisters(String companyId) async {
-    final query = _db.select(_db.cashRegisters)
-      ..where((tbl) => tbl.deletedAt.isNull());
+    final query = _db.select(_db.cashRegisters);
     final trimmedCompany = companyId.trim();
     if (trimmedCompany.isNotEmpty) {
       query.where((tbl) => tbl.companyId.equals(trimmedCompany));
@@ -197,7 +182,7 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   }) async {
     final normalizedId = _normalizeUuid(registerId);
     final query = _db.select(_db.cashRegisters)
-      ..where((tbl) => tbl.uuid.equals(normalizedId) & tbl.deletedAt.isNull());
+      ..where((tbl) => tbl.uuid.equals(normalizedId));
     if (companyId != null && companyId.trim().isNotEmpty) {
       query.where((tbl) => tbl.companyId.equals(companyId.trim()));
     }
@@ -402,9 +387,8 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
     final now = DateTime.now().toUtc();
     final companion = CashRegistersCompanion(
-      accountingAccountId: Value(account.uuid),
-      accountingLinkStatus: const Value('ACCOUNTING_READY'),
-      updatedAt: Value(now.millisecondsSinceEpoch),
+      accountUuid: Value(account.uuid),
+      updatedAt: Value(now),
     );
 
     final normalizedId = _normalizeUuid(registerId);
@@ -468,9 +452,8 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
     final now = DateTime.now().toUtc();
     final companion = CashRegistersCompanion(
-      accountingAccountId: const Value(null),
-      accountingLinkStatus: const Value('ACCOUNTING_NOT_LINKED'),
-      updatedAt: Value(now.millisecondsSinceEpoch),
+      accountUuid: const Value(null),
+      updatedAt: Value(now),
     );
 
     final normalizedId = _normalizeUuid(registerId);
@@ -531,13 +514,9 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   @override
   Future<void> deleteCashRegister(String registerId) async {
     final normalizedId = _normalizeUuid(registerId);
-    await (_db.update(
+    await (_db.delete(
       _db.cashRegisters,
-    )..where((tbl) => tbl.uuid.equals(normalizedId))).write(
-      CashRegistersCompanion(
-        deletedAt: Value(DateTime.now().millisecondsSinceEpoch),
-      ),
-    );
+    )..where((tbl) => tbl.uuid.equals(normalizedId))).go();
   }
 
   Future<void> markSynced({
@@ -550,21 +529,12 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       _db.cashRegisters,
     )..where((t) => t.uuid.equals(normalized))).write(
       CashRegistersCompanion(
-        syncStatus: const Value('synced'),
-        version: Value(remoteVersion),
-        updatedAt: Value(
-          (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch,
-        ),
+        updatedAt: Value(syncedAt ?? DateTime.now().toUtc()),
       ),
     );
   }
 
-  Future<void> markConflict(String uuid) async {
-    final normalized = _normalizeUuid(uuid);
-    await (_db.update(_db.cashRegisters)
-          ..where((t) => t.uuid.equals(normalized)))
-        .write(const CashRegistersCompanion(syncStatus: Value('conflict')));
-  }
+  Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
     final uuid = payload['uuid'] as String?;
@@ -576,12 +546,6 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     final code = payload['code'] as String? ?? 'REG';
     final isActive = payload['isActive'] as bool? ?? true;
     final accountId = payload['accountingAccountId'] as String?;
-    final version = payload['version'] as int? ?? 1;
-    final updatedAtMs =
-        payload['updatedAt'] as int? ?? DateTime.now().millisecondsSinceEpoch;
-    final deletedAtMs = payload['deletedAt'] as int?;
-
-    final isLinked = accountId != null && accountId.trim().isNotEmpty;
 
     final companion = CashRegistersCompanion(
       uuid: Value(normalized),
@@ -589,15 +553,8 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       name: Value(name),
       code: Value(code),
       isActive: Value(isActive),
-      accountingAccountId: Value(accountId),
-      accountingLinkStatus: Value(
-        isLinked ? 'ACCOUNTING_READY' : 'ACCOUNTING_NOT_LINKED',
-      ),
-      syncStatus: const Value('synced'),
-      version: Value(version),
-      createdAt: Value(updatedAtMs),
-      updatedAt: Value(updatedAtMs),
-      deletedAt: Value(deletedAtMs),
+      accountUuid: Value(accountId),
+      updatedAt: Value(DateTime.now().toUtc()),
     );
 
     final existing = await (_db.select(

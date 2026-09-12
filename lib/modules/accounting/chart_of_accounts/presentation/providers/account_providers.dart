@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
-import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import '../../data/repositories/account_repository_impl.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/entities/account_type.dart';
@@ -16,15 +15,8 @@ import '../../domain/services/account_code_generator.dart';
 import '../../domain/services/account_validator.dart';
 import '../../domain/usecases/account_usecases.dart';
 
-final accountingDatabaseProvider = Provider<AccountingDatabase>((ref) {
-  final db = AccountingDatabase(
-    name: tenantScopedName(
-      'accounting_accounts',
-      ref.watch(sessionCompanyIdProvider),
-    ),
-  );
-  ref.onDispose(db.close);
-  return db;
+final accountingDatabaseProvider = Provider<NexabizDatabase>((ref) {
+  return ref.watch(nexabizDatabaseProvider);
 });
 
 final accountRepositoryImplProvider = Provider<AccountRepositoryImpl>((ref) {

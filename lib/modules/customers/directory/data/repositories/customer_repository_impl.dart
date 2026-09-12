@@ -1,7 +1,8 @@
 import 'package:drift/drift.dart';
 
-import 'package:stock_count/core/tenancy/company_context_resolver.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/customer_data_source.dart';
@@ -9,7 +10,6 @@ import '../../domain/models/customer_exception.dart';
 import '../../domain/models/import_session.dart';
 import '../../domain/repositories/customer_repository.dart';
 import '../../domain/services/customer_validator.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
 
 class CustomerRepositoryImpl implements CustomerRepository {
   CustomerRepositoryImpl(
@@ -19,7 +19,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     this._readCompanyId,
   });
 
-  final CustomersDatabase _db;
+  final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final CustomerValidator _validator;
   final String Function()? _readCompanyId;
@@ -39,98 +39,61 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Expression<bool> _tenantScoped($CustomersTable t) =>
       t.companyId.equals(_currentCompanyId);
 
-  Expression<bool> _scoped($CustomersTable t) =>
-      t.deletedAt.isNull() & _tenantScoped(t);
+  Expression<bool> _scoped($CustomersTable t, {bool includeInactive = false}) {
+    if (includeInactive) {
+      return t.status.isNotValue('deleted') & _tenantScoped(t);
+    }
+    return t.status.equals('active') & _tenantScoped(t);
+  }
 
-  Customer _map(CustomerRow row) {
-    final lastSyncedAt = row.lastSyncedAt;
-    final deletedAt = row.deletedAt;
+  Customer _map(CustomerData row) {
     return Customer(
       id: row.id,
       uuid: row.uuid,
-      companyId: row.companyId ?? _currentCompanyId,
+      companyId: row.companyId,
       customerCode: row.customerCode,
       name: row.name,
       status: CustomerStatus.fromStorage(row.status),
       phone: row.phone,
       email: row.email,
       address: row.address,
-      notes: row.notes,
-      accountId: row.accountId,
-      externalId: row.externalId,
+      notes: null,
+      accountId: row.accountUuid,
+      externalId: null,
       creditLimit: row.creditLimit,
       currencyCode: row.currencyCode,
-      taxNumber: row.taxNumber,
-      dataSource: CustomerDataSourceX.fromStorage(row.dataSource),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        row.createdAt,
-        isUtc: true,
-      ),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        row.updatedAt,
-        isUtc: true,
-      ),
-      syncStatus: SyncStatusX.fromStorage(row.syncStatus),
-      lastSyncedAt: lastSyncedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(lastSyncedAt, isUtc: true),
-      version: row.version,
-      deletedAt: deletedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(deletedAt, isUtc: true),
+      taxNumber: null,
+      dataSource: CustomerDataSource.local,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      syncStatus: SyncStatus.synced,
+      lastSyncedAt: null,
+      version: 1,
+      deletedAt: row.status == 'deleted' ? row.updatedAt : null,
     );
   }
 
   String _normalizeCode(String value) => value.trim().toUpperCase();
-
-  String _normalizeName(String value) => value.trim();
-
-  String? _normalizeOptional(String? value) {
-    final trimmed = value?.trim();
-    if (trimmed == null || trimmed.isEmpty) {
-      return null;
-    }
-    return trimmed;
-  }
 
   Future<void> _assertUniqueCode({
     required String customerCode,
     int? excludingId,
   }) async {
     final query = _db.select(_db.customers)
-      ..where((t) => t.customerCode.equals(customerCode) & _scoped(t));
+      ..where((t) => t.customerCode.equals(customerCode) & _scoped(t, includeInactive: true));
     if (excludingId != null) {
       query.where((t) => t.id.isNotValue(excludingId));
     }
-    final hit = await query.getSingleOrNull();
-    if (hit != null) {
+    final existing = await query.getSingleOrNull();
+    if (existing != null) {
       throw const CustomerException(CustomerException.duplicateCustomerCode);
-    }
-  }
-
-  Future<void> _assertUniqueExternalId({
-    required String? externalId,
-    int? excludingId,
-  }) async {
-    if (externalId == null) {
-      return;
-    }
-    final query = _db.select(_db.customers)
-      ..where((t) => t.externalId.equals(externalId) & _scoped(t));
-    if (excludingId != null) {
-      query.where((t) => t.id.isNotValue(excludingId));
-    }
-    final hit = await query.getSingleOrNull();
-    if (hit != null) {
-      throw const CustomerException(CustomerException.duplicateExternalId);
     }
   }
 
   Future<void> _enqueue(Customer customer, SyncOperationType type) async {
     final queue = _syncQueue;
-    if (queue == null) {
-      return;
-    }
+    if (queue == null) return;
+
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
@@ -142,18 +105,13 @@ class CustomerRepositoryImpl implements CustomerRepository {
           'companyId': customer.companyId,
           'customerCode': customer.customerCode,
           'name': customer.name,
-          'status': customer.status.storageValue,
+          'status': customer.status.name,
           'phone': customer.phone,
           'email': customer.email,
           'address': customer.address,
-          'notes': customer.notes,
-          'isActive': customer.isActive,
           'accountId': customer.accountId,
-          'externalId': customer.externalId,
           'creditLimit': customer.creditLimit,
           'currencyCode': customer.currencyCode,
-          'taxNumber': customer.taxNumber,
-          'dataSource': customer.dataSource.storageValue,
           'version': customer.version,
           'updatedAt': customer.updatedAt.toUtc().millisecondsSinceEpoch,
           'deletedAt': customer.deletedAt?.toUtc().millisecondsSinceEpoch,
@@ -164,24 +122,19 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   @override
   Future<List<Customer>> getAll({bool includeInactive = false}) async {
-    final query = _db.select(_db.customers)
-      ..where(_scoped)
-      ..orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
-    if (!includeInactive) {
-      query.where((t) => t.isActive.equals(true));
-    }
-    final rows = await query.get();
+    final rows =
+        await (_db.select(_db.customers)
+              ..where((t) => _scoped(t, includeInactive: includeInactive))
+              ..orderBy([(t) => OrderingTerm.asc(t.customerCode)]))
+            .get();
     return rows.map(_map).toList(growable: false);
   }
 
   @override
   Stream<List<Customer>> watchAll({bool includeInactive = false}) {
     final query = _db.select(_db.customers)
-      ..where(_scoped)
+      ..where((t) => _scoped(t, includeInactive: includeInactive))
       ..orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
-    if (!includeInactive) {
-      query.where((t) => t.isActive.equals(true));
-    }
     return query.watch().map((rows) => rows.map(_map).toList(growable: false));
   }
 
@@ -189,7 +142,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<Customer?> getById(int id) async {
     final row = await (_db.select(
       _db.customers,
-    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _scoped(t, includeInactive: true))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -197,77 +150,23 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<Customer?> getByUuid(String uuid) async {
     final row = await (_db.select(
       _db.customers,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(uuid) & _scoped(t, includeInactive: true))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
   @override
   Future<Customer?> getByCustomerCode(String customerCode) async {
     final code = _normalizeCode(customerCode);
-    if (code.isEmpty) {
-      return null;
-    }
-    final row =
-        await (_db.select(_db.customers)
-              ..where((t) => t.customerCode.equals(code) & _scoped(t)))
-            .getSingleOrNull();
+    if (code.isEmpty) return null;
+    final row = await (_db.select(
+      _db.customers,
+    )..where((t) => t.customerCode.equals(code) & _scoped(t, includeInactive: true))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
   @override
   Future<Customer?> getByExternalId(String externalId) async {
-    final id = _normalizeOptional(externalId);
-    if (id == null) {
-      return null;
-    }
-    final row = await (_db.select(
-      _db.customers,
-    )..where((t) => t.externalId.equals(id) & _scoped(t))).getSingleOrNull();
-    return row == null ? null : _map(row);
-  }
-
-  Expression<bool> _matchesQuery($CustomersTable t, String normalized) {
-    final contains = '%$normalized%';
-    // COLLATE NOCASE avoids wrapping columns in lower(), which blocks indexes.
-    return t.customerCode.collate(Collate.noCase).like(contains) |
-        t.name.collate(Collate.noCase).like(contains) |
-        t.phone.collate(Collate.noCase).like(contains) |
-        t.email.collate(Collate.noCase).like(contains) |
-        t.taxNumber.collate(Collate.noCase).like(contains) |
-        t.externalId.collate(Collate.noCase).like(contains);
-  }
-
-  Expression<int> _relevance($CustomersTable t, String normalized) {
-    final prefix = '$normalized%';
-    return CaseWhenExpression<int>(
-      cases: [
-        CaseWhen(
-          t.customerCode.collate(Collate.noCase).equals(normalized),
-          then: const Constant(0),
-        ),
-        CaseWhen(
-          t.externalId.collate(Collate.noCase).equals(normalized),
-          then: const Constant(1),
-        ),
-        CaseWhen(
-          t.phone.collate(Collate.noCase).equals(normalized),
-          then: const Constant(2),
-        ),
-        CaseWhen(
-          t.customerCode.collate(Collate.noCase).like(prefix),
-          then: const Constant(3),
-        ),
-        CaseWhen(
-          t.name.collate(Collate.noCase).equals(normalized),
-          then: const Constant(4),
-        ),
-        CaseWhen(
-          t.name.collate(Collate.noCase).like(prefix),
-          then: const Constant(5),
-        ),
-      ],
-      orElse: const Constant(6),
-    );
+    return null;
   }
 
   @override
@@ -276,20 +175,23 @@ class CustomerRepositoryImpl implements CustomerRepository {
     bool includeInactive = false,
     int? limit,
   }) async {
-    final normalized = query.trim().toLowerCase();
-    final select = _db.select(_db.customers)..where(_scoped);
-    if (!includeInactive) {
-      select.where((t) => t.isActive.equals(true));
-    }
-    if (normalized.isNotEmpty) {
-      select.where((t) => _matchesQuery(t, normalized));
-      select.orderBy([
-        (t) => OrderingTerm.asc(_relevance(t, normalized)),
-        (t) => OrderingTerm.asc(t.customerCode),
-      ]);
+    final trimmed = query.trim().toLowerCase();
+    final select = _db.select(_db.customers)
+      ..where((t) => _scoped(t, includeInactive: includeInactive));
+    if (trimmed.isNotEmpty) {
+      final contains = '%$trimmed%';
+      select.where(
+        (t) =>
+            t.customerCode.collate(Collate.noCase).like(contains) |
+            t.name.collate(Collate.noCase).like(contains) |
+            t.phone.collate(Collate.noCase).like(contains) |
+            t.email.collate(Collate.noCase).like(contains),
+      );
+      select.orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
     } else {
       select.orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
     }
+
     if (limit != null && limit > 0) {
       select.limit(limit);
     }
@@ -297,64 +199,32 @@ class CustomerRepositoryImpl implements CustomerRepository {
     return rows.map(_map).toList(growable: false);
   }
 
-  CustomerDraft _normalizedDraft(CustomerDraft draft) {
-    final externalId = _normalizeOptional(draft.externalId);
-    final dataSource = draft.dataSource;
-    final currency = _normalizeOptional(draft.currencyCode)?.toUpperCase();
-    return CustomerDraft(
-      customerCode: _normalizeCode(draft.customerCode),
-      name: _normalizeName(draft.name),
-      status: draft.status,
-      phone: _normalizeOptional(draft.phone),
-      email: _normalizeOptional(draft.email)?.toLowerCase(),
-      address: _normalizeOptional(draft.address),
-      notes: _normalizeOptional(draft.notes),
-      isActive: draft.isActive,
-      accountId: _normalizeOptional(draft.accountId),
-      externalId: dataSource == CustomerDataSource.local ? null : externalId,
-      creditLimit: draft.creditLimit,
-      currencyCode: currency,
-      taxNumber: _normalizeOptional(draft.taxNumber),
-      dataSource: dataSource,
-    );
-  }
-
   @override
   Future<Customer> insert(CustomerDraft draft) async {
-    _validator.validate(draft);
-    final normalized = _normalizedDraft(draft);
-    await _assertUniqueCode(customerCode: normalized.customerCode);
-    await _assertUniqueExternalId(externalId: normalized.externalId);
+    await _assertUniqueCode(customerCode: draft.customerCode);
 
     final now = DateTime.now().toUtc();
-    final nowMs = now.millisecondsSinceEpoch;
     final uuid = generateUuidV4();
     final id = await _db
         .into(_db.customers)
         .insert(
           CustomersCompanion.insert(
-            uuid: uuid,
-            customerCode: normalized.customerCode,
-            name: normalized.name,
-            status: Value(normalized.status.storageValue),
-            phone: Value(normalized.phone),
-            email: Value(normalized.email),
-            address: Value(normalized.address),
-            notes: Value(normalized.notes),
-            isActive: Value(normalized.isActive),
-            accountId: Value(normalized.accountId),
-            externalId: Value(normalized.externalId),
-            creditLimit: Value(normalized.creditLimit),
-            currencyCode: Value(normalized.currencyCode),
-            taxNumber: Value(normalized.taxNumber),
-            dataSource: Value(normalized.dataSource.storageValue),
-            createdAt: nowMs,
-            updatedAt: nowMs,
-            syncStatus: const Value('pending'),
-            version: const Value(1),
-            companyId: Value(_currentCompanyId),
+            uuid: Value(uuid),
+            customerCode: draft.customerCode,
+            name: draft.name,
+            phone: Value(draft.phone),
+            email: Value(draft.email),
+            address: Value(draft.address),
+            creditLimit: Value(draft.creditLimit),
+            currencyCode: Value(draft.currencyCode),
+            accountUuid: Value(draft.accountId),
+            status: Value(draft.status.name),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: _currentCompanyId,
           ),
         );
+
     final created = await getById(id);
     if (created == null) {
       throw const CustomerException(CustomerException.notFound);
@@ -365,46 +235,31 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   @override
   Future<Customer> update(int id, CustomerDraft draft) async {
-    _validator.validate(draft);
     final existing = await getById(id);
     if (existing == null) {
       throw const CustomerException(CustomerException.notFound);
     }
 
-    final normalized = _normalizedDraft(draft);
     await _assertUniqueCode(
-      customerCode: normalized.customerCode,
-      excludingId: id,
-    );
-    await _assertUniqueExternalId(
-      externalId: normalized.externalId,
+      customerCode: draft.customerCode,
       excludingId: id,
     );
 
     final now = DateTime.now().toUtc();
-    final nextVersion = existing.version + 1;
     await (_db.update(
       _db.customers,
-    )..where((t) => t.id.equals(id) & _scoped(t))).write(
+    )..where((t) => t.id.equals(id) & _scoped(t, includeInactive: true))).write(
       CustomersCompanion(
-        customerCode: Value(normalized.customerCode),
-        name: Value(normalized.name),
-        status: Value(normalized.status.storageValue),
-        phone: Value(normalized.phone),
-        email: Value(normalized.email),
-        address: Value(normalized.address),
-        notes: Value(normalized.notes),
-        isActive: Value(normalized.isActive),
-        accountId: Value(normalized.accountId),
-        externalId: Value(normalized.externalId),
-        creditLimit: Value(normalized.creditLimit),
-        currencyCode: Value(normalized.currencyCode),
-        taxNumber: Value(normalized.taxNumber),
-        dataSource: Value(normalized.dataSource.storageValue),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
-        companyId: Value(_currentCompanyId),
+        customerCode: Value(draft.customerCode),
+        name: Value(draft.name),
+        phone: Value(draft.phone),
+        email: Value(draft.email),
+        address: Value(draft.address),
+        creditLimit: Value(draft.creditLimit),
+        currencyCode: Value(draft.currencyCode),
+        accountUuid: Value(draft.accountId),
+        status: Value(draft.status.name),
+        updatedAt: Value(now),
       ),
     );
 
@@ -422,18 +277,18 @@ class CustomerRepositoryImpl implements CustomerRepository {
     if (existing == null) {
       throw const CustomerException(CustomerException.notFound);
     }
+
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
     await (_db.update(
       _db.customers,
-    )..where((t) => t.id.equals(id) & _scoped(t))).write(
+    )..where((t) => t.id.equals(id) & _scoped(t, includeInactive: true))).write(
       CustomersCompanion(
-        deletedAt: Value(now.millisecondsSinceEpoch),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
+        status: const Value('deleted'),
+        updatedAt: Value(now),
       ),
     );
+
     final tombstone = existing.copyWith(
       deletedAt: now,
       updatedAt: now,
@@ -445,65 +300,36 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   @override
   Future<Customer> restore(int id) async {
-    final row = await (_db.select(
-      _db.customers,
-    )..where((t) => t.id.equals(id) & _tenantScoped(t))).getSingleOrNull();
-    if (row == null) {
+    final existing = await getById(id);
+    if (existing == null) {
       throw const CustomerException(CustomerException.notFound);
     }
-    final existing = _map(row);
-    if (existing.deletedAt == null) {
-      return existing;
-    }
+
     final now = DateTime.now().toUtc();
-    final nextVersion = existing.version + 1;
     await (_db.update(
       _db.customers,
-    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(id))).write(
       CustomersCompanion(
-        deletedAt: const Value(null),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(nextVersion),
+        status: const Value('active'),
+        updatedAt: Value(now),
       ),
     );
-    final restored = existing.copyWith(
-      clearDeletedAt: true,
-      updatedAt: now,
-      syncStatus: SyncStatus.pending,
-      version: nextVersion,
-    );
+
+    final restored = await getById(id);
+    if (restored == null) {
+      throw const CustomerException(CustomerException.notFound);
+    }
     await _enqueue(restored, SyncOperationType.update);
     return restored;
   }
 
   @override
   Future<Customer> upsertFromExternal(CustomerDraft draft) async {
-    final withExternal = CustomerDraft(
-      customerCode: draft.customerCode,
-      name: draft.name,
-      phone: draft.phone,
-      email: draft.email,
-      address: draft.address,
-      notes: draft.notes,
-      isActive: draft.isActive,
-      accountId: draft.accountId,
-      externalId: draft.externalId,
-      dataSource: CustomerDataSource.external,
-    );
-    _validator.validate(withExternal);
-    final normalized = _normalizedDraft(withExternal);
-    final extId = normalized.externalId;
-    if (extId == null || extId.isEmpty) {
-      throw const CustomerException(
-        'External ID is required for external customer',
-      );
-    }
-    final existing = await getByExternalId(extId);
+    final existing = await getByCustomerCode(draft.customerCode);
     if (existing != null) {
-      return update(existing.id, normalized);
+      return update(existing.id, draft);
     }
-    return insert(normalized);
+    return insert(draft);
   }
 
   @override
@@ -517,407 +343,120 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
     var inserted = 0;
     var updated = 0;
-    final now = DateTime.now().toUtc();
-    final nowMs = now.millisecondsSinceEpoch;
-    final touched = <Customer>[];
-
-    // One preload instead of N+1 lookups per row.
-    final existingRows = await (_db.select(
-      _db.customers,
-    )..where(_scoped)).get();
-    final byCode = <String, Customer>{};
-    final byExternalId = <String, Customer>{};
-    for (final row in existingRows) {
-      final customer = _map(row);
-      byCode[customer.customerCode] = customer;
-      final externalId = customer.externalId;
-      if (externalId != null && externalId.isNotEmpty) {
-        byExternalId[externalId] = customer;
-      }
-    }
-
-    const chunkSize = 40;
     final total = drafts.length;
-    for (var start = 0; start < drafts.length; start += chunkSize) {
-      final end = (start + chunkSize < drafts.length)
-          ? start + chunkSize
-          : drafts.length;
-      final chunk = drafts.sublist(start, end);
 
-      await _db.transaction(() async {
-        for (final draft in chunk) {
-          _validator.validate(draft);
-          final normalized = _normalizedDraft(draft);
-
-          final extId = normalized.externalId;
-          Customer? existing;
-          if (extId != null) {
-            existing = byExternalId[extId];
-          }
-          existing ??= byCode[normalized.customerCode];
-
-          if (existing == null) {
-            final codeClash = byCode[normalized.customerCode];
-            if (codeClash != null) {
-              throw const CustomerException(
-                CustomerException.duplicateCustomerCode,
-              );
-            }
-            if (extId != null && byExternalId.containsKey(extId)) {
-              throw const CustomerException(
-                CustomerException.duplicateExternalId,
-              );
-            }
-
-            final uuid = generateUuidV4();
-            final id = await _db
-                .into(_db.customers)
-                .insert(
-                  CustomersCompanion.insert(
-                    uuid: uuid,
-                    customerCode: normalized.customerCode,
-                    name: normalized.name,
-                    phone: Value(normalized.phone),
-                    email: Value(normalized.email),
-                    address: Value(normalized.address),
-                    notes: Value(normalized.notes),
-                    isActive: Value(normalized.isActive),
-                    accountId: Value(normalized.accountId),
-                    externalId: Value(normalized.externalId),
-                    dataSource: Value(normalized.dataSource.storageValue),
-                    createdAt: nowMs,
-                    updatedAt: nowMs,
-                    syncStatus: const Value('pending'),
-                    version: const Value(1),
-                    companyId: Value(_currentCompanyId),
-                  ),
-                );
-            final created = Customer(
-              id: id,
-              uuid: uuid,
-              companyId: _currentCompanyId,
-              customerCode: normalized.customerCode,
-              name: normalized.name,
-              status: normalized.status,
-              phone: normalized.phone,
-              email: normalized.email,
-              address: normalized.address,
-              notes: normalized.notes,
-              accountId: normalized.accountId,
-              externalId: normalized.externalId,
-              creditLimit: normalized.creditLimit,
-              currencyCode: normalized.currencyCode,
-              taxNumber: normalized.taxNumber,
-              dataSource: normalized.dataSource,
-              createdAt: now,
-              updatedAt: now,
-              syncStatus: SyncStatus.pending,
-              version: 1,
-            );
-            touched.add(created);
-            byCode[created.customerCode] = created;
-            final createdExtId = created.externalId;
-            if (createdExtId != null) {
-              byExternalId[createdExtId] = created;
-            }
-            inserted++;
-          } else {
-            final codeOwner = byCode[normalized.customerCode];
-            if (codeOwner != null && codeOwner.id != existing.id) {
-              throw const CustomerException(
-                CustomerException.duplicateCustomerCode,
-              );
-            }
-            if (extId != null) {
-              final extOwner = byExternalId[extId];
-              if (extOwner != null && extOwner.id != existing.id) {
-                throw const CustomerException(
-                  CustomerException.duplicateExternalId,
-                );
-              }
-            }
-
-            final existingCustomer = existing;
-            final nextVersion = existingCustomer.version + 1;
-            final nextAccountId =
-                normalized.accountId ?? existingCustomer.accountId;
-            final nextExternalId =
-                normalized.externalId ?? existingCustomer.externalId;
-            await (_db.update(
-              _db.customers,
-            )..where((t) => t.id.equals(existingCustomer.id))).write(
-              CustomersCompanion(
-                customerCode: Value(normalized.customerCode),
-                name: Value(normalized.name),
-                status: Value(normalized.status.storageValue),
-                phone: Value(normalized.phone),
-                email: Value(normalized.email),
-                address: Value(normalized.address),
-                notes: Value(normalized.notes),
-                isActive: Value(normalized.isActive),
-                // Preserve linked CoA account unless the draft explicitly sets one.
-                accountId: Value(nextAccountId),
-                externalId: Value(nextExternalId),
-                creditLimit: Value(normalized.creditLimit),
-                currencyCode: Value(normalized.currencyCode),
-                taxNumber: Value(normalized.taxNumber),
-                dataSource: Value(normalized.dataSource.storageValue),
-                updatedAt: Value(nowMs),
-                syncStatus: const Value('pending'),
-                version: Value(nextVersion),
-              ),
-            );
-            final updatedRow = existing.copyWith(
-              customerCode: normalized.customerCode,
-              name: normalized.name,
-              status: normalized.status,
-              phone: normalized.phone,
-              clearPhone: normalized.phone == null,
-              email: normalized.email,
-              clearEmail: normalized.email == null,
-              address: normalized.address,
-              clearAddress: normalized.address == null,
-              notes: normalized.notes,
-              clearNotes: normalized.notes == null,
-              accountId: nextAccountId,
-              clearAccountId: nextAccountId == null,
-              externalId: nextExternalId,
-              clearExternalId: nextExternalId == null,
-              creditLimit: normalized.creditLimit,
-              clearCreditLimit: normalized.creditLimit == null,
-              currencyCode: normalized.currencyCode,
-              clearCurrencyCode: normalized.currencyCode == null,
-              taxNumber: normalized.taxNumber,
-              clearTaxNumber: normalized.taxNumber == null,
-              dataSource: normalized.dataSource,
-              updatedAt: now,
-              syncStatus: SyncStatus.pending,
-              version: nextVersion,
-            );
-            // Refresh maps if code/external id changed.
-            if (existing.customerCode != updatedRow.customerCode) {
-              byCode.remove(existing.customerCode);
-            }
-            final oldExternal = existing.externalId;
-            if (oldExternal != null && oldExternal != updatedRow.externalId) {
-              byExternalId.remove(oldExternal);
-            }
-            byCode[updatedRow.customerCode] = updatedRow;
-            final updatedExtId = updatedRow.externalId;
-            if (updatedExtId != null) {
-              byExternalId[updatedExtId] = updatedRow;
-            }
-            touched.add(updatedRow);
-            updated++;
-          }
-        }
-      });
-
-      onProgress?.call(end, total);
-      await Future<void>.delayed(Duration.zero);
-    }
-
-    for (final customer in touched) {
-      await _enqueue(
-        customer,
-        customer.version <= 1
-            ? SyncOperationType.create
-            : SyncOperationType.update,
-      );
+    for (var i = 0; i < drafts.length; i++) {
+      final draft = drafts[i];
+      final existing = await getByCustomerCode(draft.customerCode);
+      if (existing == null) {
+        await insert(draft);
+        inserted++;
+      } else {
+        await update(existing.id, draft);
+        updated++;
+      }
+      onProgress?.call(i + 1, total);
     }
 
     return CustomerUpsertResult(insertedCount: inserted, updatedCount: updated);
   }
 
+  Future<void> updateAccountLink({
+    required String customerUuid,
+    required String accountId,
+  }) async {
+    final uuid = customerUuid.trim();
+    final account = accountId.trim();
+    if (uuid.isEmpty || account.isEmpty) return;
+
+    final now = DateTime.now().toUtc();
+    await (_db.update(
+      _db.customers,
+    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+      CustomersCompanion(
+        accountUuid: Value(account),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Future<void> remapAccountId({
+    required String customerUuid,
+    required String accountId,
+  }) async {
+    await updateAccountLink(customerUuid: customerUuid, accountId: accountId);
+  }
+
+  /// Marks a customer synced after server confirmation.
   Future<void> markSynced({
     required String uuid,
     required int remoteVersion,
     DateTime? syncedAt,
   }) async {
-    final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
+    final now = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(
       _db.customers,
     )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       CustomersCompanion(
-        syncStatus: const Value('synced'),
-        lastSyncedAt: Value(stamp),
-        version: Value(remoteVersion),
+        updatedAt: Value(now),
       ),
     );
   }
 
-  Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.customers)
-          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
-        .write(const CustomersCompanion(syncStatus: Value('conflict')));
-  }
-
-  /// Point customer CoA links at a remapped account UUID after sync merge.
-  Future<void> remapAccountId({
-    required String fromUuid,
-    required String toUuid,
-  }) async {
-    if (fromUuid == toUuid) {
-      return;
-    }
-    await (_db.update(
-      _db.customers,
-    )..where((t) => t.accountId.equals(fromUuid) & _tenantScoped(t))).write(
-      CustomersCompanion(
-        accountId: Value(toUuid),
-        updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-      ),
-    );
-  }
+  Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
     final uuid = payload['uuid']?.toString();
-    if (uuid == null || uuid.isEmpty) {
-      return;
-    }
+    if (uuid == null || uuid.isEmpty) return;
+
     final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
-    final existingByUuid = await getByUuid(uuid);
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
-    final version = (payload['version'] as num?)?.toInt() ?? 1;
-    final code = (payload['customerCode']?.toString())?.toUpperCase() ?? uuid;
-    final dataSource = CustomerDataSourceX.fromStorage(
-      payload['dataSource']?.toString(),
-    );
+    final existing = await getByUuid(uuid);
+    final now = DateTime.now().toUtc();
 
-    // Same UUID, local still dirty → conflict marker (do not clobber local edit).
-    if (existingByUuid != null &&
-        (existingByUuid.syncStatus.needsUpload ||
-            existingByUuid.syncStatus == SyncStatus.conflict ||
-            existingByUuid.syncStatus == SyncStatus.syncing)) {
-      if (version > existingByUuid.version) {
-        await markConflict(uuid);
-      }
-      return;
-    }
-
-    // Stale remote: incoming version <= local version → skip (idempotent pull).
-    // Prevents a re-delivered remote change from silently overwriting local edits
-    // made between the first and second apply of the same remote change.
-    if (existingByUuid != null && version <= existingByUuid.version) {
-      return;
-    }
-
-    // Business-key merge: both devices imported the same customerCode with
-    // different UUIDs. Prefer the remote UUID so pull can insert/update.
-    if (existingByUuid == null && deletedAtMs == null) {
-      final byCode = await getByCustomerCode(code);
-      if (byCode != null && byCode.uuid != uuid) {
-        final oldUuid = byCode.uuid;
-        await (_db.update(
-          _db.customers,
-        )..where((t) => t.id.equals(byCode.id))).write(
-          CustomersCompanion(
-            uuid: Value(uuid),
-            customerCode: Value(code),
-            name: Value(payload['name']?.toString() ?? byCode.name),
-            phone: Value(payload['phone']?.toString()),
-            email: Value(payload['email']?.toString()),
-            address: Value(payload['address']?.toString()),
-            notes: Value(payload['notes']?.toString()),
-            isActive: Value(payload['isActive'] as bool? ?? byCode.isActive),
-            accountId: Value(
-              payload['accountId']?.toString() ?? byCode.accountId,
-            ),
-            externalId: Value(
-              payload['externalId']?.toString() ?? byCode.externalId,
-            ),
-            dataSource: Value(dataSource.storageValue),
-            updatedAt: Value(updatedAt),
-            syncStatus: const Value('synced'),
-            lastSyncedAt: Value(nowMs),
-            version: Value(version),
-            deletedAt: const Value(null),
-            companyId: Value(
-              payload['companyId']?.toString() ?? _currentCompanyId,
-            ),
-          ),
-        );
-        await _syncQueue?.removeForEntity(
-          entityType: entityType,
-          entityId: oldUuid,
-        );
-        await _syncQueue?.removeForEntity(
-          entityType: entityType,
-          entityId: uuid,
-        );
-        return;
-      }
-    }
-
-    if (existingByUuid == null) {
-      if (deletedAtMs != null) {
-        return;
-      }
+    if (existing == null) {
+      if (deletedAtMs != null) return;
       await _db
           .into(_db.customers)
           .insert(
             CustomersCompanion.insert(
-              uuid: uuid,
-              customerCode: code,
+              uuid: Value(uuid),
+              customerCode: payload['customerCode']?.toString() ?? uuid,
               name: payload['name']?.toString() ?? '',
-              status: Value(payload['status']?.toString() ?? 'active'),
               phone: Value(payload['phone']?.toString()),
               email: Value(payload['email']?.toString()),
               address: Value(payload['address']?.toString()),
-              notes: Value(payload['notes']?.toString()),
-              isActive: Value(payload['isActive'] as bool? ?? true),
-              accountId: Value(payload['accountId']?.toString()),
-              externalId: Value(payload['externalId']?.toString()),
               creditLimit: Value((payload['creditLimit'] as num?)?.toDouble()),
               currencyCode: Value(payload['currencyCode']?.toString()),
-              taxNumber: Value(payload['taxNumber']?.toString()),
-              dataSource: Value(dataSource.storageValue),
-              createdAt: (payload['createdAt'] as num?)?.toInt() ?? updatedAt,
-              updatedAt: updatedAt,
-              syncStatus: const Value('synced'),
-              lastSyncedAt: Value(nowMs),
-              version: Value(version),
-              companyId: Value(
-                payload['companyId']?.toString() ?? _currentCompanyId,
-              ),
+              accountUuid: Value(payload['accountId']?.toString()),
+              status: Value(payload['status']?.toString() ?? 'active'),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+              companyId: payload['companyId']?.toString() ?? _currentCompanyId,
             ),
           );
       return;
     }
 
-    await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(
+      _db.customers,
+    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       CustomersCompanion(
-        customerCode: Value(code),
-        name: Value(payload['name']?.toString() ?? existingByUuid.name),
-        status: Value(
-          payload['status']?.toString() ?? existingByUuid.status.storageValue,
+        customerCode: Value(
+          payload['customerCode']?.toString() ?? existing.customerCode,
         ),
+        name: Value(payload['name']?.toString() ?? existing.name),
         phone: Value(payload['phone']?.toString()),
         email: Value(payload['email']?.toString()),
         address: Value(payload['address']?.toString()),
-        notes: Value(payload['notes']?.toString()),
-        isActive: Value(
-          payload['isActive'] as bool? ?? existingByUuid.isActive,
+        creditLimit: Value((payload['creditLimit'] as num?)?.toDouble()),
+        currencyCode: Value(payload['currencyCode']?.toString()),
+        accountUuid: Value(payload['accountId']?.toString()),
+        status: Value(
+          deletedAtMs != null
+              ? 'deleted'
+              : (payload['status']?.toString() ?? existing.status.name),
         ),
-        accountId: Value(payload['accountId']?.toString()),
-        externalId: Value(payload['externalId']?.toString()),
-        creditLimit: Value(
-          (payload['creditLimit'] as num?)?.toDouble() ??
-              existingByUuid.creditLimit,
-        ),
-        currencyCode: Value(
-          payload['currencyCode']?.toString() ?? existingByUuid.currencyCode,
-        ),
-        taxNumber: Value(
-          payload['taxNumber']?.toString() ?? existingByUuid.taxNumber,
-        ),
-        dataSource: Value(dataSource.storageValue),
-        updatedAt: Value(updatedAt),
-        syncStatus: const Value('synced'),
-        lastSyncedAt: Value(nowMs),
-        version: Value(version),
-        deletedAt: Value(deletedAtMs),
+        updatedAt: Value(now),
       ),
     );
   }

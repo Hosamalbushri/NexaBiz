@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
-import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
 import '../../data/datasources/sale_invoice_pdf_printer.dart';
 import '../../data/repositories/sale_repository_impl.dart';
 import '../../domain/entities/sale.dart';
@@ -25,17 +23,13 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_voucher_bo
 import '../../domain/services/device_sale_number.dart';
 import '../../domain/usecases/sale_usecases.dart';
 
-final salesDatabaseProvider = Provider<SalesDatabase>((ref) {
-  final db = SalesDatabase(
-    name: tenantScopedName('sales_master', ref.watch(sessionCompanyIdProvider)),
-  );
-  ref.onDispose(db.close);
-  return db;
+final salesDatabaseProvider = Provider<NexabizDatabase>((ref) {
+  return ref.watch(nexabizDatabaseProvider);
 });
 
 final saleRepositoryImplProvider = Provider<SaleRepositoryImpl>((ref) {
   return SaleRepositoryImpl(
-    ref.watch(salesDatabaseProvider),
+    ref.watch(nexabizDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
     readCompanyId: () => ref.read(currentCompanyIdProvider),
   );

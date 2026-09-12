@@ -5,7 +5,6 @@ import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
 import '../../data/repositories/financial_transaction_repository_impl.dart';
 import '../../domain/entities/financial_transaction.dart';
 import '../../domain/entities/transaction_dashboard_summary.dart';
@@ -18,17 +17,11 @@ import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_voucher_book_port.dart';
 import '../../domain/usecases/financial_transaction_usecases.dart';
 
-final receiptsPaymentsDatabaseProvider = Provider<ReceiptsPaymentsDatabase>((
-  ref,
-) {
-  final db = ReceiptsPaymentsDatabase(
-    name: tenantScopedName(
-      'receipts_payments',
-      ref.watch(sessionCompanyIdProvider),
-    ),
-  );
-  ref.onDispose(db.close);
-  return db;
+import 'package:stock_count/core/database/canonical_database_provider.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+
+final receiptsPaymentsDatabaseProvider = Provider<NexabizDatabase>((ref) {
+  return ref.watch(nexabizDatabaseProvider);
 });
 
 final financialTransactionRepositoryImplProvider =

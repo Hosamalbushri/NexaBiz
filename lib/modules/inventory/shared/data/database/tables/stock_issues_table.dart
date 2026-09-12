@@ -20,7 +20,7 @@ class StockIssues extends Table {
 
   RealColumn get exchangeRate => real().withDefault(const Constant(1))();
 
-  IntColumn get voucherBookId => integer().nullable()();
+  TextColumn get voucherBookId => text().nullable()();
 
   TextColumn get warehouse => text().nullable()();
 

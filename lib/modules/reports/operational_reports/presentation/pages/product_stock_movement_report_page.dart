@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
+import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/core/report_engine/report_engine.dart';
 import 'package:stock_count/modules/reports/data/definitions/stock_movement_report_spec.dart';
 import 'package:stock_count/modules/reports/shared/presentation/providers/reports_providers.dart';
@@ -21,8 +22,7 @@ class ProductStockMovementReportPage extends ConsumerWidget {
     final provider =
         ref.watch(stockMovementReportEngineDataProvider) ??
         StockMovementReportDataProvider(
-          inventoryDb: null as dynamic,
-          salesDb: null as dynamic,
+          db: ref.watch(nexabizDatabaseProvider),
           companyName: companyName,
         );
 
