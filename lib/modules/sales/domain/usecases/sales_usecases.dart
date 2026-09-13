@@ -1,3 +1,4 @@
+import 'package:stock_count/core/audit/domain/services/audit_trail_service.dart';
 import 'package:stock_count/core/domain/entities/document_ref.dart';
 import 'package:stock_count/core/domain/entities/document_status.dart';
 import 'package:stock_count/core/domain/ports/posting_port.dart';
@@ -7,6 +8,8 @@ import 'package:stock_count/modules/accounting/shared/domain/services/accounting
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 import 'package:stock_count/modules/sales/invoices/domain/repositories/sale_repository.dart';
+import 'package:stock_count/modules/sync/engine/domain/entities/sync_operation.dart';
+import 'package:stock_count/modules/sync/engine/domain/services/sync_queue.dart';
 
 sealed class SaleOrchestrationResult {
   const SaleOrchestrationResult();
@@ -42,6 +45,8 @@ class PostSaleInvoiceUseCase {
   final JournalPostingService _journalPostingService;
   final AccountingEntryBuilder _entryBuilder;
   final CanonicalTransactionOrchestrator _orchestrator;
+  final AuditTrailService? _auditTrailService;
+  final SyncQueue? _syncQueue;
 
   PostSaleInvoiceUseCase({
     required SaleRepository saleRepository,
@@ -49,11 +54,15 @@ class PostSaleInvoiceUseCase {
     required JournalPostingService journalPostingService,
     required AccountingEntryBuilder entryBuilder,
     required CanonicalTransactionOrchestrator orchestrator,
+    AuditTrailService? auditTrailService,
+    SyncQueue? syncQueue,
   })  : _saleRepository = saleRepository,
         _postingCoordinator = postingCoordinator,
         _journalPostingService = journalPostingService,
         _entryBuilder = entryBuilder,
-        _orchestrator = orchestrator;
+        _orchestrator = orchestrator,
+        _auditTrailService = auditTrailService,
+        _syncQueue = syncQueue;
 
   Future<SaleOrchestrationResult> execute({
     required String saleUuid,
@@ -61,7 +70,7 @@ class PostSaleInvoiceUseCase {
     String? userId,
   }) async {
     try {
-      final sale = await _saleRepository.getByUuid(saleUuid);
+      final sale = await _saleRepository.getById(saleUuid);
       if (sale == null) {
         return SaleOrchestrationFailure(
           saleUuid: saleUuid,
@@ -79,7 +88,7 @@ class PostSaleInvoiceUseCase {
       return await _orchestrator.runInTransaction(
         (context) async {
           final docRef = DocumentRef(
-            documentId: sale.uuid,
+            documentId: sale.id,
             documentNumber: sale.saleNumber,
             documentType: DocumentType.salesInvoice,
             documentDate: sale.saleDate,
@@ -103,7 +112,7 @@ class PostSaleInvoiceUseCase {
 
           // 2. Build and post Journal Entries
           final postingData = SaleInvoicePostingData(
-            uuid: sale.uuid,
+            uuid: sale.id,
             saleNumber: sale.saleNumber,
             saleDate: sale.saleDate,
             settlementType: sale.settlementType == SaleSettlementType.credit
@@ -128,21 +137,52 @@ class PostSaleInvoiceUseCase {
 
           await _journalPostingService.voidBySource(
             sourceType: 'sale',
-            sourceId: sale.uuid,
+            sourceId: sale.id,
           );
           await _journalPostingService.voidBySource(
             sourceType: 'sale_cogs',
-            sourceId: sale.uuid,
+            sourceId: sale.id,
           );
 
           String? primaryJournalUuid;
           for (final draft in drafts) {
             final entry = await _journalPostingService.post(draft);
-            primaryJournalUuid ??= entry.uuid;
+            primaryJournalUuid ??= entry.id;
+          }
+
+          // 3. Record Audit Event inside transaction
+          if (_auditTrailService != null) {
+            await _auditTrailService!.recordEvent(
+              documentId: sale.id,
+              documentType: 'sales_invoice',
+              eventType: 'posted',
+              userId: userId ?? context.userId,
+              companyId: companyId,
+              notes: 'Sale Invoice ${sale.saleNumber} posted',
+            );
+          }
+
+          // 4. Enqueue Sync Operation inside transaction
+          if (_syncQueue != null) {
+            await _syncQueue!.enqueue(
+              SyncOperation.create(
+                entityType: 'sales_invoice',
+                entityId: sale.id,
+                type: SyncOperationType.update,
+                companyId: companyId,
+                payload: {
+                  'uuid': sale.id,
+                  'saleNumber': sale.saleNumber,
+                  'saleStatus': SaleStatus.posted.name,
+                  'journalEntryUuid': primaryJournalUuid,
+                  'companyId': companyId,
+                },
+              ),
+            );
           }
 
           return SaleOrchestrationSuccess(
-            saleUuid: sale.uuid,
+            saleUuid: sale.id,
             journalEntryUuid: primaryJournalUuid,
             message: 'تم ترحيل فاتورة المبيعات وحركات المخزون والقيود المحاسبية بنجاح',
           );
@@ -165,16 +205,22 @@ class UnpostSaleInvoiceUseCase {
   final PostingCoordinatorPort _postingCoordinator;
   final JournalPostingService _journalPostingService;
   final CanonicalTransactionOrchestrator _orchestrator;
+  final AuditTrailService? _auditTrailService;
+  final SyncQueue? _syncQueue;
 
   UnpostSaleInvoiceUseCase({
     required SaleRepository saleRepository,
     required PostingCoordinatorPort postingCoordinator,
     required JournalPostingService journalPostingService,
     required CanonicalTransactionOrchestrator orchestrator,
+    AuditTrailService? auditTrailService,
+    SyncQueue? syncQueue,
   })  : _saleRepository = saleRepository,
         _postingCoordinator = postingCoordinator,
         _journalPostingService = journalPostingService,
-        _orchestrator = orchestrator;
+        _orchestrator = orchestrator,
+        _auditTrailService = auditTrailService,
+        _syncQueue = syncQueue;
 
   Future<SaleOrchestrationResult> execute({
     required String saleUuid,
@@ -182,7 +228,7 @@ class UnpostSaleInvoiceUseCase {
     String? userId,
   }) async {
     try {
-      final sale = await _saleRepository.getByUuid(saleUuid);
+      final sale = await _saleRepository.getById(saleUuid);
       if (sale == null) {
         return SaleOrchestrationFailure(
           saleUuid: saleUuid,
@@ -193,7 +239,7 @@ class UnpostSaleInvoiceUseCase {
       return await _orchestrator.runInTransaction(
         (context) async {
           final docRef = DocumentRef(
-            documentId: sale.uuid,
+            documentId: sale.id,
             documentNumber: sale.saleNumber,
             documentType: DocumentType.salesInvoice,
             documentDate: sale.saleDate,
@@ -214,15 +260,45 @@ class UnpostSaleInvoiceUseCase {
 
           await _journalPostingService.voidBySource(
             sourceType: 'sale',
-            sourceId: sale.uuid,
+            sourceId: sale.id,
           );
           await _journalPostingService.voidBySource(
             sourceType: 'sale_cogs',
-            sourceId: sale.uuid,
+            sourceId: sale.id,
           );
 
+          // Record Audit Event inside transaction
+          if (_auditTrailService != null) {
+            await _auditTrailService!.recordEvent(
+              documentId: sale.id,
+              documentType: 'sales_invoice',
+              eventType: 'unposted',
+              userId: userId ?? context.userId,
+              companyId: companyId,
+              notes: 'Sale Invoice ${sale.saleNumber} unposted',
+            );
+          }
+
+          // Enqueue Sync Operation inside transaction
+          if (_syncQueue != null) {
+            await _syncQueue!.enqueue(
+              SyncOperation.create(
+                entityType: 'sales_invoice',
+                entityId: sale.id,
+                type: SyncOperationType.update,
+                companyId: companyId,
+                payload: {
+                  'uuid': sale.id,
+                  'saleNumber': sale.saleNumber,
+                  'saleStatus': SaleStatus.unposted.name,
+                  'companyId': companyId,
+                },
+              ),
+            );
+          }
+
           return SaleOrchestrationSuccess(
-            saleUuid: sale.uuid,
+            saleUuid: sale.id,
             message: 'تم إلغاء ترحيل فاتورة المبيعات وعكس القيود بنجاح',
           );
         },

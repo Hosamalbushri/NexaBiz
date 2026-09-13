@@ -31,7 +31,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
       return null;
     }
     return LinkedAccountRef(
-      accountId: account.uuid,
+      accountId: account.id,
       code: account.accountCode,
       name: account.name,
       isPosting: account.isPostingAccount,
@@ -67,8 +67,8 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
 
     final parentAccount = scope.parentAccount;
     final isScoped =
-        scope.accounts.any((a) => a.uuid == account.uuid) ||
-        (parentAccount != null && parentAccount.uuid == account.uuid);
+        scope.accounts.any((a) => a.id == account.id) ||
+        (parentAccount != null && parentAccount.id == account.id);
     if (!isScoped) {
       return null;
     }
@@ -90,7 +90,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     account ??= await _accounts.getByAccountCode(trimmed);
     if (account == null) return null;
     final nonNullAccount = account;
-    final isScoped = scope.accounts.any((a) => a.uuid == nonNullAccount.uuid);
+    final isScoped = scope.accounts.any((a) => a.id == nonNullAccount.id);
     if (!isScoped) {
       return null;
     }
@@ -120,7 +120,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
         .take(limit)
         .map(
           (a) => LinkedAccountRef(
-            accountId: a.uuid,
+            accountId: a.id,
             code: a.accountCode,
             name: a.name,
             isPosting: true,
@@ -147,7 +147,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
       return null;
     }
     final trimmed = input.trim();
-    if (trimmed == parentAccount.uuid || trimmed == parentAccount.accountCode) {
+    if (trimmed == parentAccount.id || trimmed == parentAccount.accountCode) {
       return _map(parentAccount, requirePosting: false, requireGroup: true);
     }
     return null;
@@ -206,7 +206,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     if (!scope.isReady || parentAccount == null) {
       return null;
     }
-    if (parentId.trim() != parentAccount.uuid) {
+    if (parentId.trim() != parentAccount.id) {
       return null;
     }
 
@@ -226,7 +226,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     final existing = await _accounts.getByAccountCode(code);
     if (existing != null && !existing.isDeleted) {
       final underParent = await isUnderParent(
-        accountId: existing.uuid,
+        accountId: existing.id,
         parentId: parentUuid,
       );
       if (underParent && existing.canPost) {
@@ -244,7 +244,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
               description: existing.description,
             ),
           );
-          final refreshed = await _accounts.getByUuid(existing.uuid);
+          final refreshed = await _accounts.getByUuid(existing.id);
           return _map(refreshed, requirePosting: true, requireGroup: false);
         }
         return _map(existing, requirePosting: true, requireGroup: false);
@@ -273,7 +273,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     if (!scope.isReady || parentAccount == null) {
       return const [];
     }
-    if (parentId.trim() != parentAccount.uuid) {
+    if (parentId.trim() != parentAccount.id) {
       return const [];
     }
 
@@ -285,7 +285,7 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
       }
       refs.add(
         LinkedAccountRef(
-          accountId: account.uuid,
+          accountId: account.id,
           code: account.accountCode,
           name: account.name,
           isPosting: account.isPostingAccount,

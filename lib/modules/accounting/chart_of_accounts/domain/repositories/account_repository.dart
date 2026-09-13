@@ -7,33 +7,33 @@ abstract class AccountRepository {
 
   Stream<List<Account>> watchAll({bool includeInactive = false});
 
-  Future<Account?> getById(int id);
+  Future<Account?> getById(String id);
 
-  Future<Account?> getByUuid(String uuid);
+  Future<Account?> getByUuid(String id) => getById(id);
 
-  /// Batch lookup by UUID (missing ids are omitted from the result).
-  Future<List<Account>> getByUuids(Iterable<String> uuids);
+  /// Batch lookup by ID (missing ids are omitted from the result).
+  Future<List<Account>> getByUuids(Iterable<String> ids);
 
   Future<Account?> getByAccountCode(String accountCode);
 
   Future<List<Account>> search(String query, {bool includeInactive = false});
 
-  Future<List<Account>> getChildren(String parentUuid);
+  Future<List<Account>> getChildren(String parentId);
 
-  Future<bool> hasChildren(String uuid);
+  Future<bool> hasChildren(String id);
 
-  /// True when any journal line references this account UUID.
-  Future<bool> isUsedInTransactions(String uuid);
+  /// True when any journal line references this account ID.
+  Future<bool> isUsedInTransactions(String id);
 
   Future<Account> insert(AccountDraft draft);
 
-  Future<Account> update(int id, AccountDraft draft);
+  Future<Account> update(String id, AccountDraft draft);
 
   /// Soft-deletes / deactivates. Prefer deactivate for used accounts.
-  Future<void> deactivate(int id);
+  Future<void> deactivate(String id);
 
   /// Soft-delete tombstone (sync delete). Blocked for system / in-use accounts.
-  Future<void> softDelete(int id);
+  Future<void> softDelete(String id);
 
   /// Ensures default system accounts exist (idempotent).
   Future<void> ensureDefaultChartSeeded();

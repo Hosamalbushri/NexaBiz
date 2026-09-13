@@ -50,25 +50,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
   String _defaultKey(String companyId) => 'default_cash_register_$companyId';
 
-  String _normalizeUuid(String rawId) {
-    final trimmed = rawId.trim();
-    if (trimmed.length == 36) return trimmed;
-    if (trimmed.length > 36) return trimmed.substring(0, 36);
-    return trimmed.padRight(36, '_');
-  }
-
-  String _denormalizeUuid(String dbUuid) {
-    return dbUuid.replaceAll(RegExp(r'_+$'), '');
-  }
-
   CashRegister _rowToEntity(CashRegisterData row) {
     return CashRegister(
-      id: _denormalizeUuid(row.uuid),
+      id: row.id,
       companyId: row.companyId,
       name: row.name,
       code: row.code,
       isActive: row.isActive,
-      accountingAccountId: row.accountUuid,
+      accountingAccountId: row.accountId,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );
@@ -76,12 +65,12 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
   CashRegistersCompanion _entityToCompanion(CashRegister entity) {
     return CashRegistersCompanion(
-      uuid: Value(_normalizeUuid(entity.id)),
+      id: Value(entity.id),
       companyId: Value(entity.companyId),
       name: Value(entity.name),
       code: Value(entity.code),
       description: const Value.absent(),
-      accountUuid: Value(entity.accountingAccountId),
+      accountId: Value(entity.accountingAccountId),
       isActive: Value(entity.isActive),
       createdAt: Value(entity.createdAt),
       updatedAt: Value(entity.updatedAt),
@@ -180,9 +169,8 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     String registerId, {
     String? companyId,
   }) async {
-    final normalizedId = _normalizeUuid(registerId);
     final query = _db.select(_db.cashRegisters)
-      ..where((tbl) => tbl.uuid.equals(normalizedId));
+      ..where((tbl) => tbl.id.equals(registerId.trim()));
     if (companyId != null && companyId.trim().isNotEmpty) {
       query.where((tbl) => tbl.companyId.equals(companyId.trim()));
     }
@@ -278,10 +266,9 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
       updated = await _validateAndApplyLink(updated);
     }
 
-    final normalizedId = _normalizeUuid(register.id);
     final rowsAffected =
         await (_db.update(_db.cashRegisters)
-              ..where((tbl) => tbl.uuid.equals(normalizedId)))
+              ..where((tbl) => tbl.id.equals(register.id.trim())))
             .write(_entityToCompanion(updated));
 
     if (rowsAffected == 0) {
@@ -324,14 +311,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
           await accountRepository.getByAccountCode(boundAccountId);
       final targetUuids = <String>{
         boundAccountId,
-        if (currentAccount != null) currentAccount.uuid,
+        if (currentAccount != null) currentAccount.id,
         if (currentAccount != null) currentAccount.accountCode,
       };
 
       for (final uuid in targetUuids) {
         final hasMovements =
             await (_db.select(_db.journalLines)
-                  ..where((tbl) => tbl.accountUuid.equals(uuid))
+                  ..where((tbl) => tbl.accountId.equals(uuid))
                   ..limit(1))
                 .get()
                 .then((rows) => rows.isNotEmpty);
@@ -387,21 +374,20 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
     final now = DateTime.now().toUtc();
     final companion = CashRegistersCompanion(
-      accountUuid: Value(account.uuid),
+      accountId: Value(account.id),
       updatedAt: Value(now),
     );
 
-    final normalizedId = _normalizeUuid(registerId);
     await (_db.update(
       _db.cashRegisters,
-    )..where((tbl) => tbl.uuid.equals(normalizedId))).write(companion);
+    )..where((tbl) => tbl.id.equals(registerId.trim()))).write(companion);
 
     final readBack = await getCashRegisterById(registerId);
     if (readBack == null ||
         !readBack.isLinked ||
-        readBack.accountingAccountId != account.uuid) {
+        readBack.accountingAccountId != account.id) {
       throw CashRegisterException(
-        'Database link read-back verification failed for register $registerId and account ${account.uuid}',
+        'Database link read-back verification failed for register $registerId and account ${account.id}',
       );
     }
     return readBack;
@@ -429,14 +415,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
           await accountRepository.getByAccountCode(boundAccountId);
       final targetUuids = <String>{
         boundAccountId,
-        if (account != null) account.uuid,
+        if (account != null) account.id,
         if (account != null) account.accountCode,
       };
 
       for (final uuid in targetUuids) {
         final hasMovements =
             await (_db.select(_db.journalLines)
-                  ..where((tbl) => tbl.accountUuid.equals(uuid))
+                  ..where((tbl) => tbl.accountId.equals(uuid))
                   ..limit(1))
                 .get()
                 .then((rows) => rows.isNotEmpty);
@@ -452,14 +438,13 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
 
     final now = DateTime.now().toUtc();
     final companion = CashRegistersCompanion(
-      accountUuid: const Value(null),
+      accountId: const Value(null),
       updatedAt: Value(now),
     );
 
-    final normalizedId = _normalizeUuid(registerId);
     await (_db.update(
       _db.cashRegisters,
-    )..where((tbl) => tbl.uuid.equals(normalizedId))).write(companion);
+    )..where((tbl) => tbl.id.equals(registerId.trim()))).write(companion);
 
     final readBack = await getCashRegisterById(registerId);
     if (readBack == null ||
@@ -508,15 +493,14 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
         code: 'ACCOUNT_TYPE_MISMATCH',
       );
     }
-    return register.copyWith(accountingAccountId: account.uuid);
+    return register.copyWith(accountingAccountId: account.id);
   }
 
   @override
   Future<void> deleteCashRegister(String registerId) async {
-    final normalizedId = _normalizeUuid(registerId);
     await (_db.delete(
       _db.cashRegisters,
-    )..where((tbl) => tbl.uuid.equals(normalizedId))).go();
+    )..where((tbl) => tbl.id.equals(registerId.trim()))).go();
   }
 
   Future<void> markSynced({
@@ -524,10 +508,9 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
     required int remoteVersion,
     DateTime? syncedAt,
   }) async {
-    final normalized = _normalizeUuid(uuid);
     await (_db.update(
       _db.cashRegisters,
-    )..where((t) => t.uuid.equals(normalized))).write(
+    )..where((t) => t.id.equals(uuid.trim()))).write(
       CashRegistersCompanion(
         updatedAt: Value(syncedAt ?? DateTime.now().toUtc()),
       ),
@@ -537,34 +520,34 @@ class CashRegisterRepositoryImpl implements CashRegisterRepository {
   Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid'] as String?;
-    if (uuid == null || uuid.trim().isEmpty) return;
-    final normalized = _normalizeUuid(uuid);
+    final id = payload['id'] as String? ?? payload['uuid'] as String?;
+    if (id == null || id.trim().isEmpty) return;
+    final trimmedId = id.trim();
 
     final companyId = payload['companyId'] as String? ?? 'default';
     final name = payload['name'] as String? ?? 'Cash Register';
     final code = payload['code'] as String? ?? 'REG';
     final isActive = payload['isActive'] as bool? ?? true;
-    final accountId = payload['accountingAccountId'] as String?;
+    final accountId = payload['accountingAccountId'] as String? ?? payload['accountId'] as String?;
 
     final companion = CashRegistersCompanion(
-      uuid: Value(normalized),
+      id: Value(trimmedId),
       companyId: Value(companyId),
       name: Value(name),
       code: Value(code),
       isActive: Value(isActive),
-      accountUuid: Value(accountId),
+      accountId: Value(accountId),
       updatedAt: Value(DateTime.now().toUtc()),
     );
 
     final existing = await (_db.select(
       _db.cashRegisters,
-    )..where((t) => t.uuid.equals(normalized))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmedId))).getSingleOrNull();
 
     if (existing != null) {
       await (_db.update(
         _db.cashRegisters,
-      )..where((t) => t.uuid.equals(normalized))).write(companion);
+      )..where((t) => t.id.equals(trimmedId))).write(companion);
     } else {
       await _db.into(_db.cashRegisters).insert(companion);
     }

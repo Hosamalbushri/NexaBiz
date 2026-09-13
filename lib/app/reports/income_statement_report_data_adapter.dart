@@ -41,7 +41,7 @@ class IncomeStatementReportDataAdapter
     );
 
     final allAccounts = await accounts.getAll();
-    final accountMap = {for (final a in allAccounts) a.uuid: a};
+    final accountMap = {for (final a in allAccounts) a.id: a};
 
     final revenueItems = <IncomeStatementLineItem>[];
     final cogsItems = <IncomeStatementLineItem>[];

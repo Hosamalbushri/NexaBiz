@@ -158,7 +158,11 @@ class PostingCoordinatorImpl implements PostingCoordinator {
             // Idempotent return: Document is ALREADY posted in the database!
             final dbLines =
                 await (_db.select(_db.stockMovementLines)..where(
-                      (tbl) => tbl.movementUuid.equals(document.documentId),
+                      (tbl) =>
+                          tbl.receiptId.equals(document.documentId) |
+                          tbl.issueId.equals(document.documentId) |
+                          tbl.returnId.equals(document.documentId) |
+                          tbl.transferId.equals(document.documentId),
                     ))
                     .get();
             double value = 0.0;
@@ -212,7 +216,11 @@ class PostingCoordinatorImpl implements PostingCoordinator {
           // 2. Fetch line items
           final dbLines =
               await (_db.select(_db.stockMovementLines)..where(
-                    (tbl) => tbl.movementUuid.equals(document.documentId),
+                    (tbl) =>
+                        tbl.receiptId.equals(document.documentId) |
+                        tbl.issueId.equals(document.documentId) |
+                        tbl.returnId.equals(document.documentId) |
+                        tbl.transferId.equals(document.documentId),
                   ))
                   .get();
 
@@ -268,7 +276,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
               final inboundLines = dbLines
                   .map(
                     (l) => InboundLineData(
-                      lineUuid: l.uuid,
+                      lineUuid: l.id,
                       itemCode: l.itemCode,
                       itemName: l.itemName,
                       quantity: l.quantity,
@@ -289,7 +297,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
               final outboundLines = dbLines
                   .map(
                     (l) => OutboundLineData(
-                      lineUuid: l.uuid,
+                      lineUuid: l.id,
                       itemCode: l.itemCode,
                       itemName: l.itemName,
                       quantity: l.quantity,
@@ -308,7 +316,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
               final transferLines = dbLines
                   .map(
                     (l) => TransferLineData(
-                      lineUuid: l.uuid,
+                      lineUuid: l.id,
                       itemCode: l.itemCode,
                       itemName: l.itemName,
                       quantity: l.quantity,
@@ -318,7 +326,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
 
               final trs = await (_db.select(
                 _db.stockTransfers,
-              )..where((tbl) => tbl.uuid.equals(document.documentId))).get();
+              )..where((tbl) => tbl.id.equals(document.documentId))).get();
 
               final fromWh = trs.isNotEmpty
                   ? trs.first.fromWarehouseId
@@ -336,7 +344,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
                 InventoryDocumentType.stockReturn) {
               final returns = await (_db.select(
                 _db.stockReturns,
-              )..where((tbl) => tbl.uuid.equals(document.documentId))).get();
+              )..where((tbl) => tbl.id.equals(document.documentId))).get();
 
               if (returns.isNotEmpty) {
                 final ret = returns.first;
@@ -347,7 +355,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
                   final outboundLines = dbLines
                       .map(
                         (l) => OutboundLineData(
-                          lineUuid: l.uuid,
+                          lineUuid: l.id,
                           itemCode: l.itemCode,
                           itemName: l.itemName,
                           quantity: l.quantity,
@@ -364,7 +372,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
                   final inboundLines = dbLines
                       .map(
                         (l) => InboundLineData(
-                          lineUuid: l.uuid,
+                          lineUuid: l.id,
                           itemCode: l.itemCode,
                           itemName: l.itemName,
                           quantity: l.quantity,
@@ -464,7 +472,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
                   'lines': dbLines
                       .map(
                         (l) => {
-                          'lineUuid': l.uuid,
+                          'lineUuid': l.id,
                           'itemCode': l.itemCode,
                           'itemName': l.itemName,
                           'quantity': l.quantity,
@@ -666,31 +674,35 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       case InventoryDocumentType.stockReceipt:
         final rec =
             await (_db.select(_db.stockReceipts)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return rec?.status;
       case InventoryDocumentType.stockIssue:
         final iss =
             await (_db.select(_db.stockIssues)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return iss?.status;
       case InventoryDocumentType.stockReturn:
         final ret =
             await (_db.select(_db.stockReturns)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return ret?.status;
       case InventoryDocumentType.stockTransfer:
         final tr =
             await (_db.select(_db.stockTransfers)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return tr?.status;
       default:
-        final lines = await (_db.select(
-          _db.stockMovementLines,
-        )..where((tbl) => tbl.movementUuid.equals(document.documentId))).get();
+        final lines = await (_db.select(_db.stockMovementLines)..where(
+              (tbl) =>
+                  tbl.receiptId.equals(document.documentId) |
+                  tbl.issueId.equals(document.documentId) |
+                  tbl.returnId.equals(document.documentId) |
+                  tbl.transferId.equals(document.documentId),
+            )).get();
         if (lines.isNotEmpty && lines.every((l) => l.postedAt != null)) {
           return 'posted';
         }
@@ -703,25 +715,25 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       case InventoryDocumentType.stockReceipt:
         final rec =
             await (_db.select(_db.stockReceipts)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return rec?.companyId;
       case InventoryDocumentType.stockIssue:
         final iss =
             await (_db.select(_db.stockIssues)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return iss?.companyId;
       case InventoryDocumentType.stockReturn:
         final ret =
             await (_db.select(_db.stockReturns)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return ret?.companyId;
       case InventoryDocumentType.stockTransfer:
         final tr =
             await (_db.select(_db.stockTransfers)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return tr?.companyId;
       default:
@@ -740,7 +752,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       case InventoryDocumentType.stockReceipt:
         await (_db.update(_db.stockReceipts)..where(
               (tbl) =>
-                  tbl.uuid.equals(documentId) &
+                  tbl.id.equals(documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -754,7 +766,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       case InventoryDocumentType.stockIssue:
         await (_db.update(_db.stockIssues)..where(
               (tbl) =>
-                  tbl.uuid.equals(documentId) &
+                  tbl.id.equals(documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -768,7 +780,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       case InventoryDocumentType.stockReturn:
         await (_db.update(_db.stockReturns)..where(
               (tbl) =>
-                  tbl.uuid.equals(documentId) &
+                  tbl.id.equals(documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -782,7 +794,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       case InventoryDocumentType.stockTransfer:
         await (_db.update(_db.stockTransfers)..where(
               (tbl) =>
-                  tbl.uuid.equals(documentId) &
+                  tbl.id.equals(documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -806,13 +818,13 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       case InventoryDocumentType.stockReceipt:
         final rec =
             await (_db.select(_db.stockReceipts)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return rec?.accountId;
       case InventoryDocumentType.stockIssue:
         final iss =
             await (_db.select(_db.stockIssues)
-                  ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  ..where((tbl) => tbl.id.equals(document.documentId)))
                 .getSingleOrNull();
         return iss?.accountId;
       default:
@@ -848,7 +860,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         .into(_db.inventoryAuditTrail)
         .insert(
           InventoryAuditTrailCompanion(
-            uuid: Value(eventUuid),
+            id: Value(eventUuid),
             documentId: Value(documentId),
             documentType: Value(documentType),
             eventType: Value(eventType),

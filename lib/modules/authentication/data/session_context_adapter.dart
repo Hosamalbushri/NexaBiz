@@ -61,9 +61,6 @@ class SessionContextAdapter implements SessionContextPort {
     if (companies.length == 1) {
       return CompanyScope(companies.first.id.trim());
     }
-    if (isStandalone && companies.isEmpty) {
-      return const CompanyScope(kLegacyLocalCompanyId);
-    }
     return const SystemScope();
   }
 }

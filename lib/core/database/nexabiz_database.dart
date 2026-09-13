@@ -41,9 +41,13 @@ import 'package:stock_count/modules/accounting/shared/data/database/tables/perio
 import 'package:stock_count/core/database/tables/suppliers_table.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/tables/currency_rates_table.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/tables/currency_rate_history_table.dart';
+import 'package:stock_count/modules/accounting/shared/data/database/tables/account_currency_balances_table.dart';
 import 'package:stock_count/modules/purchases/shared/data/database/tables/purchases_table.dart';
 import 'package:stock_count/modules/purchases/shared/data/database/tables/purchase_items_table.dart';
 import 'package:stock_count/modules/purchases/shared/data/database/tables/purchase_payments_table.dart';
+import 'package:stock_count/core/database/migration/legacy_database_migrator.dart';
+
+import 'package:drift/native.dart';
 
 part 'nexabiz_database.g.dart';
 
@@ -88,6 +92,7 @@ part 'nexabiz_database.g.dart';
   PeriodClosingRecords,
   CurrencyRates,
   CurrencyRateHistory,
+  AccountCurrencyBalances,
   // Phase 3H Purchases Tables:
   Purchases,
   PurchaseItems,
@@ -98,11 +103,16 @@ class NexabizDatabase extends _$NexabizDatabase {
   NexabizDatabase({String name = 'nexabiz'})
       : super(encryptedDriftDatabase(name: name));
 
+  /// In-memory database for testing and isolated verification.
+  factory NexabizDatabase.memory() {
+    return NexabizDatabase.connect(NativeDatabase.memory());
+  }
+
   /// Constructor allowing custom [QueryExecutor] injection (e.g. for testing/isolation).
   NexabizDatabase.connect(super.connection);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -117,6 +127,14 @@ class NexabizDatabase extends _$NexabizDatabase {
           );
         },
         onUpgrade: (m, from, to) async {
+          // Perform production-safe transformation for existing legacy databases
+          final legacyMigrator = LegacyDatabaseMigrator(this);
+          await legacyMigrator.migrateFromLegacy(
+            migrator: m,
+            fromVersion: from,
+            toVersion: to,
+          );
+
           if (from < 2) {
             await m.createTable(users);
             await m.createTable(companies);
@@ -183,6 +201,9 @@ class NexabizDatabase extends _$NexabizDatabase {
             await _safeCreateTable(m, currencyRates);
             await _safeCreateTable(m, currencyRateHistory);
           }
+          if (from < 13) {
+            await _safeCreateTable(m, accountCurrencyBalances);
+          }
         },
         beforeOpen: (details) async {
           // Enable foreign keys
@@ -194,6 +215,7 @@ class NexabizDatabase extends _$NexabizDatabase {
           await _safeCreateTable(m, periodClosingRecords);
           await _safeCreateTable(m, currencyRates);
           await _safeCreateTable(m, currencyRateHistory);
+          await _safeCreateTable(m, accountCurrencyBalances);
         },
       );
 

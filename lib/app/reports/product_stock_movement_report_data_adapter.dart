@@ -80,7 +80,7 @@ class ProductStockMovementReportDataAdapter
     final prodQuery =
         await (db.select(db.products)..where(
               (tbl) =>
-                  (tbl.uuid.equals(productId) |
+                  (tbl.id.equals(productId) |
                       tbl.itemCode.equals(productId)) &
                   tbl.companyId.equals(activeCompanyId),
             ))
@@ -107,7 +107,7 @@ class ProductStockMovementReportDataAdapter
       final whQuery =
           await (db.select(db.warehouses)..where(
                 (tbl) =>
-                    tbl.uuid.equals(warehouseId) &
+                    tbl.id.equals(warehouseId) &
                     tbl.companyId.equals(activeCompanyId),
               ))
               .getSingleOrNull();
@@ -117,12 +117,11 @@ class ProductStockMovementReportDataAdapter
     }
 
     // 3. Fetch all Stock Movements for this product
-    // We join lines with receipts, issues, transfers, and returns.
     final allLines =
         await (db.select(db.stockMovementLines)..where(
               (tbl) =>
                   tbl.itemCode.equals(productCode) |
-                  tbl.movementUuid.equals(productId),
+                  tbl.productId.equals(productId),
             ))
             .get();
 
@@ -134,7 +133,7 @@ class ProductStockMovementReportDataAdapter
               ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
             .get();
     for (final r in receipts) {
-      receiptsMap[r.uuid] = r;
+      receiptsMap[r.id] = r;
     }
 
     // Fetch Issues (tenant scoped)
@@ -145,7 +144,7 @@ class ProductStockMovementReportDataAdapter
               ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
             .get();
     for (final i in issues) {
-      issuesMap[i.uuid] = i;
+      issuesMap[i.id] = i;
     }
 
     // Fetch Transfers (tenant scoped)
@@ -156,7 +155,7 @@ class ProductStockMovementReportDataAdapter
               ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
             .get();
     for (final t in transfers) {
-      transfersMap[t.uuid] = t;
+      transfersMap[t.id] = t;
     }
 
     // Fetch Returns (tenant scoped)
@@ -167,7 +166,7 @@ class ProductStockMovementReportDataAdapter
               ..where((tbl) => tbl.companyId.equals(activeCompanyId)))
             .get();
     for (final ret in returns) {
-      returnsMap[ret.uuid] = ret;
+      returnsMap[ret.id] = ret;
     }
 
     // Build unified raw movements list
@@ -181,8 +180,11 @@ class ProductStockMovementReportDataAdapter
         line.unitCost,
       );
 
-      if (receiptsMap.containsKey(line.movementUuid)) {
-        final rec = receiptsMap[line.movementUuid]!;
+      final movementId = line.receiptId ?? line.issueId ?? line.transferId ?? line.returnId;
+      if (movementId == null) continue;
+
+      if (line.receiptId != null && receiptsMap.containsKey(line.receiptId)) {
+        final rec = receiptsMap[line.receiptId]!;
         final date = DateTime.fromMillisecondsSinceEpoch(rec.receiptDate);
         rawMovements.add(
           _RawMovementItem(
@@ -190,7 +192,7 @@ class ProductStockMovementReportDataAdapter
             docType: 'أمر توريد',
             voucherBook: 'د/وارد من الرئيسي',
             docNum: rec.receiptNumber,
-            docUuid: rec.uuid,
+            docUuid: rec.id,
             isIncoming: true,
             quantity: line.quantity,
             mainQuantity: line.mainQuantity,
@@ -200,8 +202,8 @@ class ProductStockMovementReportDataAdapter
             warehouseId: null,
           ),
         );
-      } else if (issuesMap.containsKey(line.movementUuid)) {
-        final iss = issuesMap[line.movementUuid]!;
+      } else if (line.issueId != null && issuesMap.containsKey(line.issueId)) {
+        final iss = issuesMap[line.issueId]!;
         final date = DateTime.fromMillisecondsSinceEpoch(iss.issueDate);
         rawMovements.add(
           _RawMovementItem(
@@ -209,7 +211,7 @@ class ProductStockMovementReportDataAdapter
             docType: 'أمر صرف',
             voucherBook: iss.accountName ?? 'د/صرف للرئيسي',
             docNum: iss.issueNumber,
-            docUuid: iss.uuid,
+            docUuid: iss.id,
             isIncoming: false,
             quantity: line.quantity,
             mainQuantity: line.mainQuantity,
@@ -219,8 +221,8 @@ class ProductStockMovementReportDataAdapter
             warehouseId: iss.warehouse,
           ),
         );
-      } else if (transfersMap.containsKey(line.movementUuid)) {
-        final tr = transfersMap[line.movementUuid]!;
+      } else if (line.transferId != null && transfersMap.containsKey(line.transferId)) {
+        final tr = transfersMap[line.transferId]!;
         final date = DateTime.fromMillisecondsSinceEpoch(tr.transferDate);
         // Transfer Out from source
         if (warehouseId == null || warehouseId == tr.fromWarehouseId) {
@@ -230,7 +232,7 @@ class ProductStockMovementReportDataAdapter
               docType: 'تحويل مخزني',
               voucherBook: 'تحويل صادرة',
               docNum: tr.transferNumber,
-              docUuid: tr.uuid,
+              docUuid: tr.id,
               isIncoming: false,
               quantity: line.quantity,
               mainQuantity: line.mainQuantity,
@@ -249,7 +251,7 @@ class ProductStockMovementReportDataAdapter
               docType: 'تحويل مخزني',
               voucherBook: 'تحويل واردة',
               docNum: tr.transferNumber,
-              docUuid: tr.uuid,
+              docUuid: tr.id,
               isIncoming: true,
               quantity: line.quantity,
               mainQuantity: line.mainQuantity,
@@ -260,8 +262,8 @@ class ProductStockMovementReportDataAdapter
             ),
           );
         }
-      } else if (returnsMap.containsKey(line.movementUuid)) {
-        final ret = returnsMap[line.movementUuid]!;
+      } else if (line.returnId != null && returnsMap.containsKey(line.returnId)) {
+        final ret = returnsMap[line.returnId]!;
         final date = DateTime.fromMillisecondsSinceEpoch(ret.returnDate);
         final isSalesReturn = ret.returnType == 'sales_return';
         rawMovements.add(
@@ -271,7 +273,7 @@ class ProductStockMovementReportDataAdapter
             voucherBook:
                 ret.partyName ?? (isSalesReturn ? 'مردود بيع' : 'مردود شراء'),
             docNum: ret.returnNumber,
-            docUuid: ret.uuid,
+            docUuid: ret.id,
             isIncoming: isSalesReturn, // Sales return is incoming to stock
             quantity: line.quantity,
             mainQuantity: line.mainQuantity,
@@ -297,7 +299,7 @@ class ProductStockMovementReportDataAdapter
       for (final s in salesList) {
         // Exclude cancelled sales
         if (s.saleStatus != 'cancelled') {
-          salesMap[s.uuid] = s;
+          salesMap[s.id] = s;
         }
       }
 
@@ -310,8 +312,8 @@ class ProductStockMovementReportDataAdapter
               .get();
 
       for (final item in saleItems) {
-        if (salesMap.containsKey(item.saleUuid)) {
-          final sale = salesMap[item.saleUuid]!;
+        if (salesMap.containsKey(item.saleId)) {
+          final sale = salesMap[item.saleId]!;
           final date = DateTime.fromMillisecondsSinceEpoch(
             sale.saleDate > 0 ? sale.saleDate : sale.createdAt,
           );
@@ -327,7 +329,7 @@ class ProductStockMovementReportDataAdapter
                         ? 'مبيعات نقدية'
                         : 'مبيعات آجلة'),
               docNum: sale.saleNumber,
-              docUuid: sale.uuid,
+              docUuid: sale.id,
               isIncoming: false,
               quantity: item.quantity,
               mainQuantity: item.mainQuantity,

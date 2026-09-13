@@ -53,7 +53,7 @@ class WarehouseAccountingValidationServiceImpl
     final account =
         await (_accountingDb.select(_accountingDb.accounts)..where(
               (tbl) =>
-                  (tbl.uuid.equals(target) | tbl.accountCode.equals(target)),
+                  (tbl.id.equals(target) | tbl.accountCode.equals(target)),
             ))
             .getSingleOrNull();
 
@@ -119,6 +119,6 @@ class WarehouseAccountingValidationServiceImpl
     // Check 7: Alignment with Inventory Valuation Currency
     // Multi-currency accounts and offset accounts (payable, COGS, etc.)
     // are allowed to participate in multi-currency transactions.
-    return WarehouseAccountingValidationSuccess(accountUuid: account.uuid);
+    return WarehouseAccountingValidationSuccess(accountUuid: account.id);
   }
 }

@@ -33,9 +33,8 @@ class CanonicalIdentityMigrator {
     // Upsert Companies
     for (final company in hiveData.companies) {
       await identityRepository.upsertCompany(
-
         CompaniesCompanion.insert(
-          uuid: company.id,
+          id: Value(company.id),
           code: company.code,
           name: company.name,
           status: const Value('active'),
@@ -47,7 +46,7 @@ class CanonicalIdentityMigrator {
     for (final user in hiveData.users) {
       await identityRepository.upsertUser(
         UsersCompanion.insert(
-          uuid: user.id,
+          id: Value(user.id),
           email: user.email,
           name: user.name,
           passwordHash: Value(user.passwordHash),
@@ -61,9 +60,9 @@ class CanonicalIdentityMigrator {
     for (final membership in hiveData.memberships) {
       await identityRepository.upsertMembership(
         CompanyMembershipsCompanion.insert(
-          uuid: generateUuidV4(),
-          userUuid: membership.userId,
-          companyUuid: membership.companyId,
+          id: Value(generateUuidV7()),
+          userId: membership.userId,
+          companyId: membership.companyId,
           role: Value(membership.role),
           status: Value(membership.status),
         ),

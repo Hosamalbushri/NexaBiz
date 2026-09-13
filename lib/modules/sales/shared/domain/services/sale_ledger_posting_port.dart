@@ -1,3 +1,4 @@
+import 'package:stock_count/core/errors/unconfigured_integration_exception.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
 
 /// Posts local ledger journals for sales (standalone cash + credit).
@@ -20,11 +21,25 @@ abstract class SaleLedgerPostingPort {
 }
 
 class NoOpSaleLedgerPostingPort implements SaleLedgerPostingPort {
-  const NoOpSaleLedgerPostingPort();
+  const NoOpSaleLedgerPostingPort({this.isIntegratedMode = false});
+
+  final bool isIntegratedMode;
 
   @override
-  Future<void> syncSale(Sale sale) async {}
+  Future<void> syncSale(Sale sale) async {
+    if (isIntegratedMode) {
+      throw const UnconfiguredIntegrationException(
+        'Integrated Mode active: Sales ledger posting port is missing or unconfigured.',
+      );
+    }
+  }
 
   @override
-  Future<void> voidSale(Sale sale) async {}
+  Future<void> voidSale(Sale sale) async {
+    if (isIntegratedMode) {
+      throw const UnconfiguredIntegrationException(
+        'Integrated Mode active: Sales ledger posting port is missing or unconfigured.',
+      );
+    }
+  }
 }

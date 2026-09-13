@@ -14,11 +14,7 @@ class AccountValidationServiceImpl implements AccountValidationService {
     if (byUuid != null) return byUuid;
     final byCode = await _accountRepository.getByAccountCode(trimmed);
     if (byCode != null) return byCode;
-    final numericId = int.tryParse(trimmed);
-    if (numericId != null) {
-      return await _accountRepository.getById(numericId);
-    }
-    return null;
+    return await _accountRepository.getById(trimmed);
   }
 
   @override

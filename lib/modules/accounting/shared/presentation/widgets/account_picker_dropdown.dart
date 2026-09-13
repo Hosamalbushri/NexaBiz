@@ -44,7 +44,7 @@ class AccountPickerDropdown extends ConsumerWidget {
     return accountsAsync.when(
       data: (eligibleAccounts) {
         final currentSelection =
-            eligibleAccounts.any((a) => a.uuid == selectedUuid)
+            eligibleAccounts.any((a) => a.id == selectedUuid)
             ? selectedUuid
             : null;
 
@@ -64,7 +64,7 @@ class AccountPickerDropdown extends ConsumerWidget {
               hint: Text(l10n.accountingSearchHint),
               items: eligibleAccounts.map((account) {
                 return DropdownMenuItem<String>(
-                  value: account.uuid,
+                  value: account.id,
                   child: Text(
                     '${account.accountCode} - ${AccountLabels.displayName(l10n, account)}',
                     overflow: TextOverflow.ellipsis,

@@ -158,7 +158,7 @@ class CashRegisterInitializerService {
             : 'Main Cash Register',
         code: targetCode,
         isActive: true,
-        accountingAccountId: targetAccount?.uuid,
+        accountingAccountId: targetAccount?.id,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -178,11 +178,11 @@ class CashRegisterInitializerService {
 
     // 5. Apply account link if targetAccount was resolved and not yet linked
     if (targetAccount != null &&
-        currentReg.accountingAccountId != targetAccount.uuid) {
+        currentReg.accountingAccountId != targetAccount.id) {
       try {
         currentReg = await cashRegisterRepository.linkAccountingAccount(
           registerId: currentReg.id,
-          accountId: targetAccount.uuid,
+          accountId: targetAccount.id,
           companyId: companyId,
         );
       } catch (e) {

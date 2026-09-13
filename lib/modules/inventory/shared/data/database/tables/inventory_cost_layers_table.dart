@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Inventory Cost Layers table (Perpetual inventory cost tracking).
 ///
@@ -7,10 +8,11 @@ import 'package:drift/drift.dart';
 /// in both inventory valuation currency and original document currency.
 @DataClassName('InventoryCostLayerRow')
 class InventoryCostLayers extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
-  /// Client-generated UUID for offline-safe identity / sync.
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Product UUID.
+  TextColumn get productId => text().nullable()();
 
   /// Product item code associated with this layer.
   TextColumn get itemCode => text().withLength(min: 1, max: 128)();
@@ -18,7 +20,7 @@ class InventoryCostLayers extends Table {
   /// Warehouse identifier where this layer belongs.
   TextColumn get warehouseId => text().nullable()();
 
-  /// Movement UUID that created this layer (e.g. StockReceipt.uuid).
+  /// Movement UUID that created this layer (e.g. StockReceipt.id).
   TextColumn get movementUuid => text().withLength(min: 36, max: 36)();
 
   /// Type of movement ('receipt', 'return_receipt', 'adjustment', 'opening').
@@ -90,4 +92,12 @@ class InventoryCostLayers extends Table {
 
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+      ];
 }

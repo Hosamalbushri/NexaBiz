@@ -49,8 +49,7 @@ class AccountRepositoryImpl implements AccountRepository {
   Account _map(AccountData row) {
     return Account(
       id: row.id,
-      uuid: row.uuid,
-      parentId: row.parentUuid,
+      parentId: row.parentAccountId,
       companyId: row.companyId,
       accountCode: row.accountCode,
       name: row.name,
@@ -81,15 +80,7 @@ class AccountRepositoryImpl implements AccountRepository {
 
   String _normalizeName(String value) => value.trim();
 
-  String? _normalizeDescription(String? value) {
-    final trimmed = value?.trim();
-    if (trimmed == null || trimmed.isEmpty) {
-      return null;
-    }
-    return trimmed;
-  }
-
-  Future<void> _assertUniqueCode(String accountCode, {int? excludingId}) async {
+  Future<void> _assertUniqueCode(String accountCode, {String? excludingId}) async {
     final query = _db.select(_db.accounts)
       ..where((t) => t.accountCode.equals(accountCode) & _scoped(t));
     if (excludingId != null) {
@@ -117,7 +108,7 @@ class AccountRepositoryImpl implements AccountRepository {
   ) async {
     final parent = draft.parentId == null
         ? null
-        : await getByUuid(draft.parentId!);
+        : await getById(draft.parentId!);
     final existing = _map(tombstone);
     final all = await getAll(includeInactive: true);
     _validator.validateHierarchy(
@@ -138,7 +129,7 @@ class AccountRepositoryImpl implements AccountRepository {
       _db.accounts,
     )..where((t) => t.id.equals(tombstone.id))).write(
       AccountsCompanion(
-        parentUuid: Value(draft.parentId),
+        parentAccountId: Value(draft.parentId),
         accountCode: Value(code),
         name: Value(name),
         accountType: Value(draft.accountType.storageValue),
@@ -163,7 +154,7 @@ class AccountRepositoryImpl implements AccountRepository {
     if (parentId == null) {
       return 0;
     }
-    final parent = await getByUuid(parentId);
+    final parent = await getById(parentId);
     if (parent == null || parent.isDeleted) {
       throw const AccountException(AccountException.invalidParent);
     }
@@ -178,17 +169,17 @@ class AccountRepositoryImpl implements AccountRepository {
     String? parentAccountCode;
     final parentId = account.parentId;
     if (parentId != null) {
-      final parent = await getByUuid(parentId);
+      final parent = await getById(parentId);
       parentAccountCode = parent?.accountCode;
     }
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
-        entityId: account.uuid,
+        entityId: account.id,
         type: type,
         baseVersion: account.version,
         payload: {
-          'uuid': account.uuid,
+          'id': account.id,
           'parentId': account.parentId,
           'parentAccountCode': parentAccountCode,
           'accountCode': account.accountCode,
@@ -215,21 +206,21 @@ class AccountRepositoryImpl implements AccountRepository {
     required int? fallbackLevel,
   }) async {
     if (parentId != null && parentId.isNotEmpty) {
-      final byUuid = await getByUuid(parentId);
-      if (byUuid != null && !byUuid.isDeleted) {
-        return (parentId: byUuid.uuid, level: byUuid.level + 1);
+      final byId = await getById(parentId);
+      if (byId != null && !byId.isDeleted) {
+        return (parentId: byId.id, level: byId.level + 1);
       }
     }
     final code = parentAccountCode?.trim();
     if (code != null && code.isNotEmpty) {
       final byCode = await getByAccountCode(code);
       if (byCode != null && !byCode.isDeleted) {
-        return (parentId: byCode.uuid, level: byCode.level + 1);
+        return (parentId: byCode.id, level: byCode.level + 1);
       }
     }
     final byPrefix = await _findGroupParentByCodePrefix(accountCode);
     if (byPrefix != null) {
-      return (parentId: byPrefix.uuid, level: byPrefix.level + 1);
+      return (parentId: byPrefix.id, level: byPrefix.level + 1);
     }
     return (parentId: parentId, level: fallbackLevel ?? 0);
   }
@@ -276,7 +267,7 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Account?> getById(int id) async {
+  Future<Account?> getById(String id) async {
     final row = await (_db.select(
       _db.accounts,
     )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
@@ -284,12 +275,7 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Account?> getByUuid(String uuid) async {
-    final row = await (_db.select(
-      _db.accounts,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).getSingleOrNull();
-    return row == null ? null : _map(row);
-  }
+  Future<Account?> getByUuid(String uuid) => getById(uuid);
 
   @override
   Future<List<Account>> getByUuids(Iterable<String> uuids) async {
@@ -302,7 +288,7 @@ class AccountRepositoryImpl implements AccountRepository {
     }
     final rows = await (_db.select(
       _db.accounts,
-    )..where((t) => t.uuid.isIn(ids) & _scoped(t))).get();
+    )..where((t) => t.id.isIn(ids) & _scoped(t))).get();
     return rows.map(_map).toList(growable: false);
   }
 
@@ -360,30 +346,30 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<List<Account>> getChildren(String parentUuid) async {
+  Future<List<Account>> getChildren(String parentId) async {
     final rows =
         await (_db.select(_db.accounts)
-              ..where((t) => t.parentUuid.equals(parentUuid) & _scoped(t))
+              ..where((t) => t.parentAccountId.equals(parentId) & _scoped(t))
               ..orderBy([(t) => OrderingTerm.asc(t.accountCode)]))
             .get();
     return rows.map(_map).toList(growable: false);
   }
 
   @override
-  Future<bool> hasChildren(String uuid) async {
+  Future<bool> hasChildren(String id) async {
     final row =
         await (_db.select(_db.accounts)
-              ..where((t) => t.parentUuid.equals(uuid) & _scoped(t))
+              ..where((t) => t.parentAccountId.equals(id) & _scoped(t))
               ..limit(1))
             .getSingleOrNull();
     return row != null;
   }
 
   @override
-  Future<bool> isUsedInTransactions(String uuid) async {
+  Future<bool> isUsedInTransactions(String id) async {
     final row =
         await (_db.select(_db.journalLines)
-              ..where((t) => t.accountUuid.equals(uuid))
+              ..where((t) => t.accountId.equals(id))
               ..limit(1))
             .getSingleOrNull();
     return row != null;
@@ -393,7 +379,7 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<Account> insert(AccountDraft draft) async {
     final parent = draft.parentId == null
         ? null
-        : await getByUuid(draft.parentId!);
+        : await getById(draft.parentId!);
     final all = await getAll(includeInactive: true);
     _validator.validateHierarchy(
       draft: draft,
@@ -414,14 +400,14 @@ class AccountRepositoryImpl implements AccountRepository {
 
     final level = await _resolveLevel(draft.parentId);
     final now = DateTime.now().toUtc();
-    final uuid = generateUuidV4();
+    final id = generateUuidV7();
 
-    final id = await _db
+    await _db
         .into(_db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: Value(uuid),
-            parentUuid: Value(draft.parentId),
+            id: Value(id),
+            parentAccountId: Value(draft.parentId),
             accountCode: code,
             name: name,
             accountType: draft.accountType.storageValue,
@@ -445,7 +431,7 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Account> update(int id, AccountDraft draft) async {
+  Future<Account> update(String id, AccountDraft draft) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const AccountException(AccountException.notFound);
@@ -453,7 +439,7 @@ class AccountRepositoryImpl implements AccountRepository {
 
     final parent = draft.parentId == null
         ? null
-        : await getByUuid(draft.parentId!);
+        : await getById(draft.parentId!);
     final all = await getAll(includeInactive: true);
     _validator.validateHierarchy(
       draft: draft,
@@ -482,7 +468,7 @@ class AccountRepositoryImpl implements AccountRepository {
       _db.accounts,
     )..where((t) => t.id.equals(id) & _scoped(t))).write(
       AccountsCompanion(
-        parentUuid: Value(draft.parentId),
+        parentAccountId: Value(draft.parentId),
         accountCode: Value(code),
         name: Value(name),
         accountType: Value(draft.accountType.storageValue),
@@ -504,7 +490,7 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<void> deactivate(int id) async {
+  Future<void> deactivate(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const AccountException(AccountException.notFound);
@@ -527,7 +513,7 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<void> softDelete(int id) async {
+  Future<void> softDelete(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const AccountException(AccountException.notFound);
@@ -535,10 +521,10 @@ class AccountRepositoryImpl implements AccountRepository {
     if (existing.isSystemAccount) {
       throw const AccountException(AccountException.systemAccountProtected);
     }
-    if (await hasChildren(existing.uuid)) {
+    if (await hasChildren(existing.id)) {
       throw const AccountException(AccountException.hasChildren);
     }
-    if (await isUsedInTransactions(existing.uuid)) {
+    if (await isUsedInTransactions(existing.id)) {
       throw const AccountException(AccountException.accountInUse);
     }
 
@@ -574,7 +560,6 @@ class AccountRepositoryImpl implements AccountRepository {
     if (existing.isNotEmpty) {
       await _alignSystemAccountCodes();
       await _alignSystemAccountFlags();
-      await _insertMissingSystemAccounts();
       await _alignSystemAccountParents();
       await _enqueueUnpushedAccounts();
     }
@@ -619,8 +604,8 @@ class AccountRepositoryImpl implements AccountRepository {
             .into(_db.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: Value(uuid),
-                parentUuid: Value(parentUuid),
+                id: Value(uuid),
+                parentAccountId: Value(parentUuid),
                 accountCode: seed.accountCode,
                 name: seed.name,
                 accountType: seed.accountType.storageValue,
@@ -642,7 +627,7 @@ class AccountRepositoryImpl implements AccountRepository {
     });
 
     for (final uuid in createdUuids) {
-      final account = await getByUuid(uuid);
+      final account = await getById(uuid);
       if (account != null) {
         await _enqueue(account, SyncOperationType.create);
       }
@@ -720,7 +705,7 @@ class AccountRepositoryImpl implements AccountRepository {
     }
 
     final now = DateTime.now().toUtc();
-    final changedIds = <int>[];
+    final changedIds = <String>[];
     for (final seed in seeds) {
       final row = byKey[seed.accountCode];
       if (row == null || row.isGroup == seed.isGroup) {
@@ -756,7 +741,7 @@ class AccountRepositoryImpl implements AccountRepository {
     }
 
     final now = DateTime.now().toUtc();
-    final changedIds = <int>[];
+    final changedIds = <String>[];
     for (final seed in seeds) {
       final row = byKey[seed.accountCode];
       if (row == null) {
@@ -764,28 +749,28 @@ class AccountRepositoryImpl implements AccountRepository {
       }
       final expectedParentUuid = seed.parentKey == null
           ? null
-          : byKey[seed.parentKey!]?.uuid;
+          : byKey[seed.parentKey!]?.id;
       if (seed.parentKey != null && expectedParentUuid == null) {
         continue;
       }
       final expectedLevel = seed.parentKey == null
           ? 0
           : (byKey[seed.parentKey!]?.level ?? 0) + 1;
-      final parentChanged = row.parentUuid != expectedParentUuid;
+      final parentChanged = row.parentAccountId != expectedParentUuid;
       final levelChanged = row.level != expectedLevel;
       if (!parentChanged && !levelChanged) {
         continue;
       }
       await (_db.update(_db.accounts)..where((t) => t.id.equals(row.id))).write(
         AccountsCompanion(
-          parentUuid: Value(expectedParentUuid),
+          parentAccountId: Value(expectedParentUuid),
           level: Value(expectedLevel),
           updatedAt: Value(now),
         ),
       );
       changedIds.add(row.id);
       byKey[seed.accountCode] = row.copyWith(
-        parentUuid: Value(expectedParentUuid),
+        parentAccountId: Value(expectedParentUuid),
         level: expectedLevel,
       );
     }
@@ -808,7 +793,7 @@ class AccountRepositoryImpl implements AccountRepository {
             .get();
 
     for (final row in rows) {
-      keyToUuid[row.accountCode] = row.uuid;
+      keyToUuid[row.accountCode] = row.id;
       keyToLevel[row.accountCode] = row.level;
     }
 
@@ -848,8 +833,8 @@ class AccountRepositoryImpl implements AccountRepository {
             .into(_db.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: Value(uuid),
-                parentUuid: Value(parentUuid),
+                id: Value(uuid),
+                parentAccountId: Value(parentUuid),
                 accountCode: seed.accountCode,
                 name: seed.name,
                 accountType: seed.accountType.storageValue,
@@ -870,7 +855,7 @@ class AccountRepositoryImpl implements AccountRepository {
     });
 
     for (final uuid in createdUuids) {
-      final account = await getByUuid(uuid);
+      final account = await getById(uuid);
       if (account != null) {
         await _enqueue(account, SyncOperationType.create);
       }
@@ -894,7 +879,7 @@ class AccountRepositoryImpl implements AccountRepository {
     DateTime? syncedAt,
   }) async {
     final now = syncedAt ?? DateTime.now().toUtc();
-    await (_db.update(_db.accounts)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.accounts)..where((t) => t.id.equals(uuid))).write(
       AccountsCompanion(
         updatedAt: Value(now),
       ),
@@ -904,11 +889,11 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid']?.toString();
+    final uuid = payload['id']?.toString() ?? payload['uuid']?.toString();
     if (uuid == null || uuid.isEmpty) {
       return;
     }
-    final existingByUuid = await getByUuid(uuid);
+    final existingByUuid = await getById(uuid);
     final now = DateTime.now().toUtc();
     final code = payload['accountCode']?.toString() ?? uuid;
 
@@ -930,8 +915,8 @@ class AccountRepositoryImpl implements AccountRepository {
           .into(_db.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: Value(uuid),
-              parentUuid: Value(resolvedParent.parentId),
+              id: Value(uuid),
+              parentAccountId: Value(resolvedParent.parentId),
               accountCode: code,
               name: payload['name']?.toString() ?? '',
               accountType: accountType,
@@ -950,9 +935,9 @@ class AccountRepositoryImpl implements AccountRepository {
       return;
     }
 
-    await (_db.update(_db.accounts)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.accounts)..where((t) => t.id.equals(uuid))).write(
       AccountsCompanion(
-        parentUuid: Value(resolvedParent.parentId),
+        parentAccountId: Value(resolvedParent.parentId),
         accountCode: Value(code),
         name: Value(payload['name']?.toString() ?? existingByUuid.name),
         accountType: Value(accountType),
@@ -974,26 +959,26 @@ class AccountRepositoryImpl implements AccountRepository {
     required String accountUuid,
     required String parentUuid,
   }) async {
-    final account = await getByUuid(accountUuid);
-    final parent = await getByUuid(parentUuid);
+    final account = await getById(accountUuid);
+    final parent = await getById(parentUuid);
     if (account == null || parent == null) {
       return;
     }
     final currentParentId = account.parentId;
-    if (currentParentId == parent.uuid) {
+    if (currentParentId == parent.id) {
       return;
     }
     final parentMissing =
-        currentParentId == null || await getByUuid(currentParentId) == null;
+        currentParentId == null || await getById(currentParentId) == null;
     if (!parentMissing) {
       return;
     }
     final now = DateTime.now().toUtc();
     await (_db.update(
       _db.accounts,
-    )..where((t) => t.uuid.equals(accountUuid))).write(
+    )..where((t) => t.id.equals(accountUuid))).write(
       AccountsCompanion(
-        parentUuid: Value(parent.uuid),
+        parentAccountId: Value(parent.id),
         level: Value(parent.level + 1),
         updatedAt: Value(now),
       ),

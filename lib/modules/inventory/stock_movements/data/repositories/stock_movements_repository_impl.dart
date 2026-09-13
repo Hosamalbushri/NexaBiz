@@ -70,7 +70,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     final results = <StockReceipt>[];
 
     for (final row in rows) {
-      final lines = await _getLinesForMovement(row.uuid, 'receipt');
+      final lines = await _getLinesForMovement(row.id, 'receipt');
       results.add(_mapRowToReceipt(row, lines));
     }
     return results;
@@ -84,7 +84,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     return query.watch().asyncMap((rows) async {
       final results = <StockReceipt>[];
       for (final row in rows) {
-        final lines = await _getLinesForMovement(row.uuid, 'receipt');
+        final lines = await _getLinesForMovement(row.id, 'receipt');
         results.add(_mapRowToReceipt(row, lines));
       }
       return results;
@@ -93,12 +93,14 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<StockReceipt?> getReceiptById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final query = _db.select(_db.stockReceipts)
-      ..where((tbl) => tbl.uuid.equals(id) & _scopedReceipt(tbl));
+      ..where((tbl) => tbl.id.equals(trimmed) & _scopedReceipt(tbl));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
-    final lines = await _getLinesForMovement(row.uuid, 'receipt');
+    final lines = await _getLinesForMovement(row.id, 'receipt');
     return _mapRowToReceipt(row, lines);
   }
 
@@ -124,7 +126,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       final existing =
           await (_db.select(_db.stockReceipts)..where(
                 (tbl) =>
-                    tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl),
+                    tbl.id.equals(receipt.id) & _tenantScopedReceipt(tbl),
               ))
               .getSingleOrNull();
 
@@ -141,7 +143,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       // Save header row
       if (existing != null) {
         await (_db.update(_db.stockReceipts)..where(
-              (tbl) => tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl),
+              (tbl) => tbl.id.equals(receipt.id) & _tenantScopedReceipt(tbl),
             ))
             .write(
               StockReceiptsCompanion(
@@ -167,7 +169,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             .into(_db.stockReceipts)
             .insert(
               StockReceiptsCompanion(
-                uuid: Value(receipt.id),
+                id: Value(receipt.id),
                 receiptNumber: Value(receipt.receiptNumber),
                 supplier: Value(receipt.supplier),
                 accountId: Value(receipt.accountId),
@@ -191,15 +193,15 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       // Re-insert line items
       await (_db.delete(
         _db.stockMovementLines,
-      )..where((tbl) => tbl.movementUuid.equals(receipt.id))).go();
+      )..where((tbl) => tbl.receiptId.equals(receipt.id))).go();
 
       for (final line in receipt.lines) {
         await _db
             .into(_db.stockMovementLines)
             .insert(
               StockMovementLinesCompanion(
-                uuid: Value(line.id),
-                movementUuid: Value(receipt.id),
+                id: Value(line.id),
+                receiptId: Value(receipt.id),
                 movementType: const Value('receipt'),
                 itemCode: Value(line.itemCode),
                 itemName: Value(line.itemName),
@@ -210,6 +212,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
                 totalCost: Value(line.totalCost),
                 postedCost: Value(line.postedCost),
                 postedAt: Value(line.postedAt?.millisecondsSinceEpoch),
+                companyId: Value(targetCompanyId),
               ),
             );
       }
@@ -262,7 +265,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       await (_db.update(
         _db.stockReceipts,
-      )..where((tbl) => tbl.uuid.equals(id) & _tenantScopedReceipt(tbl))).write(
+      )..where((tbl) => tbl.id.equals(id) & _tenantScopedReceipt(tbl))).write(
         StockReceiptsCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -305,7 +308,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     final results = <StockIssue>[];
 
     for (final row in rows) {
-      final lines = await _getLinesForMovement(row.uuid, 'issue');
+      final lines = await _getLinesForMovement(row.id, 'issue');
       results.add(_mapRowToIssue(row, lines));
     }
     return results;
@@ -319,7 +322,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     return query.watch().asyncMap((rows) async {
       final results = <StockIssue>[];
       for (final row in rows) {
-        final lines = await _getLinesForMovement(row.uuid, 'issue');
+        final lines = await _getLinesForMovement(row.id, 'issue');
         results.add(_mapRowToIssue(row, lines));
       }
       return results;
@@ -328,12 +331,14 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<StockIssue?> getIssueById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final query = _db.select(_db.stockIssues)
-      ..where((tbl) => tbl.uuid.equals(id) & _scopedIssue(tbl));
+      ..where((tbl) => tbl.id.equals(trimmed) & _scopedIssue(tbl));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
-    final lines = await _getLinesForMovement(row.uuid, 'issue');
+    final lines = await _getLinesForMovement(row.id, 'issue');
     return _mapRowToIssue(row, lines);
   }
 
@@ -358,7 +363,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     await _db.transaction(() async {
       final existing =
           await (_db.select(_db.stockIssues)..where(
-                (tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl),
+                (tbl) => tbl.id.equals(issue.id) & _tenantScopedIssue(tbl),
               ))
               .getSingleOrNull();
 
@@ -375,7 +380,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       // Save header row
       if (existing != null) {
         await (_db.update(_db.stockIssues)..where(
-              (tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl),
+              (tbl) => tbl.id.equals(issue.id) & _tenantScopedIssue(tbl),
             ))
             .write(
               StockIssuesCompanion(
@@ -402,7 +407,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             .into(_db.stockIssues)
             .insert(
               StockIssuesCompanion(
-                uuid: Value(issue.id),
+                id: Value(issue.id),
                 issueNumber: Value(issue.issueNumber),
                 destination: Value(issue.destination),
                 accountId: Value(issue.accountId),
@@ -427,15 +432,15 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
       // Re-insert line items
       await (_db.delete(
         _db.stockMovementLines,
-      )..where((tbl) => tbl.movementUuid.equals(issue.id))).go();
+      )..where((tbl) => tbl.issueId.equals(issue.id))).go();
 
       for (final line in issue.lines) {
         await _db
             .into(_db.stockMovementLines)
             .insert(
               StockMovementLinesCompanion(
-                uuid: Value(line.id),
-                movementUuid: Value(issue.id),
+                id: Value(line.id),
+                issueId: Value(issue.id),
                 movementType: const Value('issue'),
                 itemCode: Value(line.itemCode),
                 itemName: Value(line.itemName),
@@ -446,6 +451,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
                 totalCost: Value(line.totalCost),
                 postedCost: Value(line.postedCost),
                 postedAt: Value(line.postedAt?.millisecondsSinceEpoch),
+                companyId: Value(targetCompanyId),
               ),
             );
       }
@@ -498,7 +504,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       await (_db.update(
         _db.stockIssues,
-      )..where((tbl) => tbl.uuid.equals(id) & _tenantScopedIssue(tbl))).write(
+      )..where((tbl) => tbl.id.equals(id) & _tenantScopedIssue(tbl))).write(
         StockIssuesCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -534,22 +540,42 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   // ---------------------------------------------------------------------------
 
   Future<List<StockMovementLine>> _getLinesForMovement(
-    String movementUuid,
+    String movementId,
     String type,
   ) async {
     final query = _db.select(_db.stockMovementLines)
       ..where(
-        (tbl) =>
-            tbl.movementUuid.equals(movementUuid) &
-            tbl.movementType.equals(type),
+        (tbl) {
+          final Expression<bool> fkMatch;
+          switch (type) {
+            case 'receipt':
+              fkMatch = tbl.receiptId.equals(movementId);
+              break;
+            case 'issue':
+              fkMatch = tbl.issueId.equals(movementId);
+              break;
+            case 'return':
+              fkMatch = tbl.returnId.equals(movementId);
+              break;
+            case 'transfer':
+              fkMatch = tbl.transferId.equals(movementId);
+              break;
+            default:
+              fkMatch = tbl.receiptId.equals(movementId) |
+                  tbl.issueId.equals(movementId) |
+                  tbl.returnId.equals(movementId) |
+                  tbl.transferId.equals(movementId);
+          }
+          return fkMatch & tbl.movementType.equals(type);
+        },
       );
     final rows = await query.get();
 
     return rows
         .map(
           (row) => StockMovementLine(
-            id: row.uuid,
-            movementUuid: row.movementUuid,
+            id: row.id,
+            movementUuid: movementId,
             movementType: row.movementType,
             itemCode: row.itemCode,
             itemName: row.itemName,
@@ -575,7 +601,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     List<StockMovementLine> lines,
   ) {
     return StockReceipt(
-      id: row.uuid,
+      id: row.id,
       receiptNumber: row.receiptNumber,
       supplier: row.supplier,
       accountId: row.accountId,
@@ -618,7 +644,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   StockIssue _mapRowToIssue(StockIssueRow row, List<StockMovementLine> lines) {
     return StockIssue(
-      id: row.uuid,
+      id: row.id,
       issueNumber: row.issueNumber,
       destination: row.destination,
       accountId: row.accountId,
@@ -750,15 +776,31 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     await _db.transaction(() async {
       await (_db.delete(
         _db.stockMovementLines,
-      )..where((tbl) => tbl.movementUuid.equals(movementUuid))).go();
+      )..where((tbl) {
+          switch (movementType) {
+            case 'receipt':
+              return tbl.receiptId.equals(movementUuid);
+            case 'issue':
+              return tbl.issueId.equals(movementUuid);
+            case 'return':
+              return tbl.returnId.equals(movementUuid);
+            case 'transfer':
+              return tbl.transferId.equals(movementUuid);
+            default:
+              return tbl.receiptId.equals(movementUuid);
+          }
+      })).go();
 
       for (final line in lines) {
         await _db
             .into(_db.stockMovementLines)
             .insert(
               StockMovementLinesCompanion(
-                uuid: Value(line.id),
-                movementUuid: Value(movementUuid),
+                id: Value(line.id),
+                receiptId: movementType == 'receipt' ? Value(movementUuid) : const Value.absent(),
+                issueId: movementType == 'issue' ? Value(movementUuid) : const Value.absent(),
+                returnId: movementType == 'return' ? Value(movementUuid) : const Value.absent(),
+                transferId: movementType == 'transfer' ? Value(movementUuid) : const Value.absent(),
                 movementType: Value(movementType),
                 itemCode: Value(line.itemCode),
                 itemName: Value(line.itemName),
@@ -769,6 +811,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
                 totalCost: Value(line.totalCost),
                 postedCost: Value(line.postedCost),
                 postedAt: Value(line.postedAt?.millisecondsSinceEpoch),
+                companyId: Value(_currentCompanyId),
               ),
             );
       }

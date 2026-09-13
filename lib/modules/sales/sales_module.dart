@@ -84,7 +84,7 @@ class SalesModule extends AppModule {
       anyOf: SalesPermissions.create,
     ),
     RouteAccessRule(
-      pathRegex: RegExp(r'^/sales/\d+/edit$'),
+      pathRegex: RegExp(r'^/sales/[^/]+/edit$'),
       anyOf: SalesPermissions.update,
     ),
     RouteAccessRule(pathPrefix: SalesRoutes.root, anyOf: SalesPermissions.view),
@@ -166,11 +166,9 @@ class SalesModule extends AppModule {
           path: ':id',
           name: 'salesDetails',
           builder: (context, state) {
-            final id = AppRouteParamParser.tryParseInt(
-              state.pathParameters['id'],
-            );
-            if (id == null) {
-              return const SaleDetailsPage(saleId: -1);
+            final id = state.pathParameters['id'];
+            if (id == null || id.isEmpty) {
+              return const SaleDetailsPage(saleId: '');
             }
             return SaleDetailsPage(saleId: id);
           },
@@ -179,11 +177,9 @@ class SalesModule extends AppModule {
               path: 'edit',
               name: 'salesEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
-                  state.pathParameters['id'],
-                );
-                if (id == null) {
-                  return const SaleFormPage(saleId: -1);
+                final id = state.pathParameters['id'];
+                if (id == null || id.isEmpty) {
+                  return const SaleFormPage(saleId: '');
                 }
                 return SaleFormPage(saleId: id);
               },

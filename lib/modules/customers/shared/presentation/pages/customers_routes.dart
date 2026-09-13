@@ -14,9 +14,9 @@ class CustomersRoutes {
   static const String parentAccountSettings =
       '/customers/settings/parent-account';
 
-  static String edit(int id) => '/customers/$id/edit';
+  static String edit(String id) => '/customers/$id/edit';
 
-  static String details(int id) => '/customers/$id';
+  static String details(String id) => '/customers/$id';
 
   static void goRoot(BuildContext context) => context.go(root);
 
@@ -33,8 +33,8 @@ class CustomersRoutes {
   static void pushParentAccountSettings(BuildContext context) =>
       context.push(parentAccountSettings);
 
-  static void pushEdit(BuildContext context, int id) => context.push(edit(id));
+  static void pushEdit(BuildContext context, String id) => context.push(edit(id));
 
-  static void pushDetails(BuildContext context, int id) =>
+  static void pushDetails(BuildContext context, String id) =>
       context.push(details(id));
 }

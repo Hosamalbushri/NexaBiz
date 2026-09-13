@@ -38,10 +38,12 @@ class AppButton extends StatefulWidget {
 
 class _AppButtonState extends State<AppButton> {
   bool _isHovered = false;
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null && !widget.isLoading;
+    final theme = shadcn.Theme.of(context);
 
     final leadingWidget = widget.isLoading
         ? const SizedBox(
@@ -49,7 +51,9 @@ class _AppButtonState extends State<AppButton> {
             height: 16,
             child: shadcn.CircularProgressIndicator(strokeWidth: 2),
           )
-        : (widget.icon != null && !widget.trailingIcon ? Icon(widget.icon, size: 18) : null);
+        : (widget.icon != null && !widget.trailingIcon
+            ? Icon(widget.icon, size: 18)
+            : null);
 
     final trailingWidget =
         !widget.isLoading && widget.icon != null && widget.trailingIcon
@@ -60,11 +64,13 @@ class _AppButtonState extends State<AppButton> {
       widget.label,
       textAlign: TextAlign.center,
       overflow: TextOverflow.ellipsis,
+      style: const TextStyle(fontWeight: FontWeight.w600),
     );
 
     final VoidCallback? handler = enabled ? widget.onPressed : null;
-    final buttonDensity =
-        widget.isCompact ? shadcn.ButtonDensity.compact : shadcn.ButtonDensity.normal;
+    final buttonDensity = widget.isCompact
+        ? shadcn.ButtonDensity.compact
+        : shadcn.ButtonDensity.normal;
 
     final Widget button = switch (widget.variant) {
       AppButtonVariant.filled => shadcn.PrimaryButton(
@@ -115,17 +121,39 @@ class _AppButtonState extends State<AppButton> {
         ? AppDimensions.buttonHeightCompact
         : AppDimensions.buttonHeight;
 
+    final isPrimary = widget.variant == AppButtonVariant.filled;
+
     final Widget interactiveButton = MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedScale(
-        scale: _isHovered && enabled ? 1.02 : 1.0,
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.easeOutCubic,
-        child: SizedBox(
-          height: height,
-          width: widget.expand ? double.infinity : null,
-          child: button,
+      child: GestureDetector(
+        onTapDown: enabled ? (_) => setState(() => _isPressed = true) : null,
+        onTapUp: enabled ? (_) => setState(() => _isPressed = false) : null,
+        onTapCancel: enabled ? () => setState(() => _isPressed = false) : null,
+        child: AnimatedScale(
+          scale: _isPressed
+              ? 0.98
+              : (_isHovered && enabled ? 1.02 : 1.0),
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            height: height,
+            width: widget.expand ? double.infinity : null,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: _isHovered && enabled && isPrimary
+                  ? [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: button,
+          ),
         ),
       ),
     );

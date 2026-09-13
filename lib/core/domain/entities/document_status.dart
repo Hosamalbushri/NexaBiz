@@ -27,7 +27,7 @@ enum DocumentStatus {
   bool get canEdit => isDraft;
   bool get canDelete => isDraft;
   bool get canPost => isDraft;
-  bool get canUnpost => isPosted;
+  bool get canUnpost => false;
 
   static DocumentStatus fromStorage(String? value) {
     if (value == null || value.isEmpty) {

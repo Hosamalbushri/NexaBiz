@@ -290,7 +290,7 @@ class SetupFieldRenderer extends StatelessWidget {
                     postingOnlyDefault: !isParent,
                   );
                   if (picked != null) {
-                    onChanged(picked.uuid);
+                    onChanged(picked.id);
                   }
                 },
                 child: Container(

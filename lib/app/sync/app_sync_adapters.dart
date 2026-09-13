@@ -150,7 +150,7 @@ class AccountInitialCloudScanner implements InitialCloudEntityScanner {
     final repo = ref.read(accountRepositoryProvider);
 
     for (final row in rows) {
-      final acc = await repo.getByUuid(row.uuid);
+      final acc = await repo.getByUuid(row.id);
       if (acc != null) {
         String? parentAccountCode;
         if (acc.parentId != null) {
@@ -160,10 +160,10 @@ class AccountInitialCloudScanner implements InitialCloudEntityScanner {
         ops.add(
           SyncOperation.create(
             entityType: 'account',
-            entityId: acc.uuid,
+            entityId: acc.id,
             type: SyncOperationType.create,
             payload: {
-              'uuid': acc.uuid,
+              'uuid': acc.id,
               'parentId': acc.parentId,
               'parentAccountCode': parentAccountCode,
               'accountCode': acc.accountCode,
@@ -210,7 +210,7 @@ class CustomerInitialCloudScanner implements InitialCloudEntityScanner {
     final repo = ref.read(customerRepositoryProvider);
 
     for (final row in rows) {
-      final cust = await repo.getByUuid(row.uuid);
+      final cust = await repo.getByUuid(row.id);
       if (cust != null) {
         ops.add(
           SyncOperation.create(
@@ -264,7 +264,7 @@ class ProductInitialCloudScanner implements InitialCloudEntityScanner {
     final repo = ref.read(productRepositoryProvider);
 
     for (final row in rows) {
-      final prod = await repo.getByUuid(row.uuid);
+      final prod = await repo.getByUuid(row.id);
       if (prod != null) {
         ops.add(
           SyncOperation.create(
@@ -315,7 +315,7 @@ class SaleInitialCloudScanner implements InitialCloudEntityScanner {
     final repo = ref.read(saleRepositoryProvider);
 
     for (final row in rows) {
-      final s = await repo.getByUuid(row.uuid);
+      final s = await repo.getById(row.id);
       if (s != null) {
         ops.add(
           SyncOperation.create(
@@ -423,7 +423,7 @@ class FinancialTransactionInitialCloudScanner
     final repo = ref.read(financialTransactionRepositoryProvider);
 
     for (final row in rows) {
-      final tx = await repo.getByUuid(row.uuid);
+      final tx = await repo.getById(row.id);
       if (tx != null) {
         ops.add(
           SyncOperation.create(
@@ -499,7 +499,7 @@ class JournalEntryInitialCloudScanner implements InitialCloudEntityScanner {
     final accRepo = ref.read(accountRepositoryProvider);
 
     for (final row in rows) {
-      final entry = await repo.getByUuid(row.uuid);
+      final entry = await repo.getByUuid(row.id);
       if (entry != null) {
         final linesPayload = <Map<String, dynamic>>[];
         for (final line in entry.lines) {
@@ -571,7 +571,7 @@ class CashRegisterInitialCloudScanner implements InitialCloudEntityScanner {
 
     for (final row in rows) {
       final reg = await repo.getCashRegisterById(
-        row.uuid,
+        row.id,
         companyId: companyId,
       );
       if (reg != null) {

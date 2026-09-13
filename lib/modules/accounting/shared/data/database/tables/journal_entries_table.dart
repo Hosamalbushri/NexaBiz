@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Journal entry header (Accounting ledger).
 @DataClassName('JournalEntryRow')
 class JournalEntries extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   /// Business date (UTC epoch ms, date portion).
   IntColumn get entryDate => integer()();
@@ -41,4 +41,13 @@ class JournalEntries extends Table {
   TextColumn get companyId => text().nullable()();
 
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, voucherNumber},
+      ];
 }

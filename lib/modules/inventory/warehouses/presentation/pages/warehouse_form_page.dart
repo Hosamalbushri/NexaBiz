@@ -109,7 +109,7 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
     String resolveAccountName(String? uuid) {
       if (uuid == null || uuid.isEmpty) return '';
       for (final acc in accounts) {
-        if (acc.uuid == uuid || acc.accountCode == uuid) {
+        if (acc.id == uuid || acc.accountCode == uuid) {
           return '${acc.accountCode} - ${acc.name}';
         }
       }
@@ -378,7 +378,7 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                     if (acc != null) {
                                       setState(
                                         () =>
-                                            _inventoryAssetAccountId = acc.uuid,
+                                            _inventoryAssetAccountId = acc.id,
                                       );
                                     }
                                   },
@@ -409,7 +409,7 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                       selectedUuid: _cogsAccountId,
                                     );
                                     if (acc != null) {
-                                      setState(() => _cogsAccountId = acc.uuid);
+                                      setState(() => _cogsAccountId = acc.id);
                                     }
                                   },
                                   onClear: () =>
@@ -438,7 +438,7 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                     );
                                     if (acc != null) {
                                       setState(
-                                        () => _adjustmentAccountId = acc.uuid,
+                                        () => _adjustmentAccountId = acc.id,
                                       );
                                     }
                                   },
@@ -470,7 +470,7 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                     );
                                     if (acc != null) {
                                       setState(
-                                        () => _salesRevenueAccountId = acc.uuid,
+                                        () => _salesRevenueAccountId = acc.id,
                                       );
                                     }
                                   },
@@ -501,7 +501,7 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                     );
                                     if (acc != null) {
                                       setState(
-                                        () => _salesReturnAccountId = acc.uuid,
+                                        () => _salesReturnAccountId = acc.id,
                                       );
                                     }
                                   },
@@ -533,7 +533,7 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
                                     if (acc != null) {
                                       setState(
                                         () =>
-                                            _salesDiscountAccountId = acc.uuid,
+                                            _salesDiscountAccountId = acc.id,
                                       );
                                     }
                                   },

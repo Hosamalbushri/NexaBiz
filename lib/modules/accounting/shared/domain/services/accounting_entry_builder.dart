@@ -198,7 +198,11 @@ class AccountingEntryBuilder {
       await _validationService.assertCanPost(debitRef.accountUuid);
       await _validationService.assertCanPost(revenueRef.accountUuid);
 
-      final rate = sale.exchangeRate <= 0 ? 1.0 : sale.exchangeRate;
+      final rate = ExchangeRateValidator.validate(
+        currencyCode: sale.currencyCode,
+        baseCurrencyCode: sale.baseCurrencyCode,
+        exchangeRate: sale.exchangeRate,
+      );
       final lines = <JournalLineDraft>[];
       int sortOrder = 1;
 

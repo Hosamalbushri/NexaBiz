@@ -1,16 +1,17 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Stock Issues table (Inventory module).
 @DataClassName('StockIssueRow')
 class StockIssues extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  /// Client-generated UUID for offline-safe identity / sync.
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   TextColumn get issueNumber => text().withLength(min: 1, max: 128)();
 
   TextColumn get destination => text().nullable()();
+
+  TextColumn get customerId => text().nullable()();
 
   TextColumn get accountId => text().nullable()();
 
@@ -23,6 +24,8 @@ class StockIssues extends Table {
   TextColumn get voucherBookId => text().nullable()();
 
   TextColumn get warehouse => text().nullable()();
+
+  TextColumn get warehouseId => text().nullable()();
 
   TextColumn get notes => text().nullable()();
 
@@ -50,4 +53,13 @@ class StockIssues extends Table {
 
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, issueNumber},
+      ];
 }

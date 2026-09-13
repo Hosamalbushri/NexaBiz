@@ -22,7 +22,7 @@ import 'package:nexabiz_ui/nexabiz_ui.dart';
 class CustomerFormPage extends ConsumerStatefulWidget {
   const CustomerFormPage({super.key, this.customerId});
 
-  final int? customerId;
+  final String? customerId;
 
   bool get isEditing => customerId != null;
 

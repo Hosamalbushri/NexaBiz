@@ -58,9 +58,9 @@ class CostMethodInheritanceResolverImpl
     final product = await prodQuery.getSingleOrNull();
 
     if (product != null) {
-      if (product.categoryUuid != null && product.categoryUuid!.isNotEmpty) {
+      if (product.categoryId != null && product.categoryId!.isNotEmpty) {
         final catResult = await resolveForCategory(
-          categoryId: product.categoryUuid!,
+          categoryId: product.categoryId!,
           companyId: companyId,
         );
         if (catResult.source == CostMethodSource.category) {
@@ -101,7 +101,7 @@ class CostMethodInheritanceResolverImpl
 
       final query = _db.select(_db.productCategories)
         ..where((c) {
-          var expr = c.uuid.equals(currentCatId) & c.isActive.equals(true);
+          var expr = c.id.equals(currentCatId) & c.isActive.equals(true);
           if (companyId != null && companyId.isNotEmpty) {
             expr =
                 expr & (c.companyId.equals(companyId) | c.companyId.isNull());
@@ -112,8 +112,8 @@ class CostMethodInheritanceResolverImpl
 
       if (cat == null) break;
 
-      if (cat.parentUuid != null && cat.parentUuid!.isNotEmpty) {
-        currentCatId = cat.parentUuid!;
+      if (cat.parentCategoryId != null && cat.parentCategoryId!.isNotEmpty) {
+        currentCatId = cat.parentCategoryId!;
       } else {
         break;
       }
@@ -132,7 +132,7 @@ class CostMethodInheritanceResolverImpl
   }) async {
     final query = _db.select(_db.warehouses)
       ..where((w) {
-        var expr = w.uuid.equals(warehouseId) & w.isActive.equals(true);
+        var expr = w.id.equals(warehouseId) & w.isActive.equals(true);
         if (companyId != null && companyId.isNotEmpty) {
           expr = expr & (w.companyId.equals(companyId) | w.companyId.isNull());
         }
@@ -144,7 +144,7 @@ class CostMethodInheritanceResolverImpl
       return EffectiveCostMethodResult(
         effectiveMethod: _systemDefaultMethod,
         source: CostMethodSource.warehouse,
-        resolvedEntityId: wh.uuid,
+        resolvedEntityId: wh.id,
         resolvedEntityName: wh.name,
       );
     }

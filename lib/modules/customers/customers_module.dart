@@ -99,7 +99,7 @@ class CustomersModule extends AppModule {
       anyOf: CustomersPermissions.settingsView,
     ),
     RouteAccessRule(
-      pathRegex: RegExp(r'^/customers/\d+/edit$'),
+      pathRegex: RegExp(r'^/customers/[^/]+/edit$'),
       anyOf: CustomersPermissions.update,
     ),
     RouteAccessRule(
@@ -191,11 +191,9 @@ class CustomersModule extends AppModule {
           path: ':id',
           name: 'customersDetails',
           builder: (context, state) {
-            final id = AppRouteParamParser.tryParseInt(
-              state.pathParameters['id'],
-            );
-            if (id == null) {
-              return const CustomerDetailsPage(customerId: -1);
+            final id = state.pathParameters['id'] ?? '';
+            if (id.isEmpty) {
+              return const CustomerDetailsPage(customerId: '');
             }
             return CustomerDetailsPage(customerId: id);
           },
@@ -204,11 +202,9 @@ class CustomersModule extends AppModule {
               path: 'edit',
               name: 'customersEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
-                  state.pathParameters['id'],
-                );
-                if (id == null) {
-                  return const CustomerFormPage(customerId: -1);
+                final id = state.pathParameters['id'] ?? '';
+                if (id.isEmpty) {
+                  return const CustomerFormPage(customerId: '');
                 }
                 return CustomerFormPage(customerId: id);
               },

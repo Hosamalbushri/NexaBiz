@@ -4,8 +4,8 @@ import 'package:stock_count/core/utils/id_generator.dart';
 /// Canonical Currencies master reference table in `nexabiz.sqlite`.
 @DataClassName('CurrencyData')
 class Currencies extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get uuid => text().withLength(min: 36, max: 36).clientDefault(generateUuidV4).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
   TextColumn get code => text().named('code').withLength(min: 1, max: 8)();
   TextColumn get currencyCode => text().named('currency_code').withLength(min: 1, max: 8).nullable()();
   TextColumn get name => text().withLength(min: 1, max: 128).nullable()();
@@ -20,6 +20,9 @@ class Currencies extends Table {
   DateTimeColumn get updatedAt => dateTime().named('updated_at').withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().named('deleted_at').nullable()();
   TextColumn get companyId => text().named('company_id').nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 
   @override
   List<Set<Column>> get uniqueKeys => [

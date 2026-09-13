@@ -25,11 +25,11 @@ class AccountingRoutes {
   static String fiscalYearDetails(String uuid) =>
       '/accounting/fiscal-years/$uuid';
 
-  static String accountDetails(int id) => '/accounting/accounts/$id';
+  static String accountDetails(String id) => '/accounting/accounts/$id';
 
-  static String accountEdit(int id) => '/accounting/accounts/$id/edit';
+  static String accountEdit(String id) => '/accounting/accounts/$id/edit';
 
-  static String voucherBookEdit(int id) => '/accounting/voucher-books/$id/edit';
+  static String voucherBookEdit(String id) => '/accounting/voucher-books/$id/edit';
 
   static String voucherBookSection(VoucherBookType section) =>
       '/accounting/voucher-books/section/${section.section.storageValue}';
@@ -107,7 +107,7 @@ class AccountingRoutes {
     );
   }
 
-  static void pushVoucherBookEdit(BuildContext context, int id) =>
+  static void pushVoucherBookEdit(BuildContext context, String id) =>
       context.push(voucherBookEdit(id));
 
   static void pushAccountsCreate(BuildContext context, {String? parentId}) {
@@ -131,9 +131,9 @@ class AccountingRoutes {
 
   static void goOpeningSetup(BuildContext context) => context.go(openingSetup);
 
-  static void pushAccountDetails(BuildContext context, int id) =>
+  static void pushAccountDetails(BuildContext context, String id) =>
       context.push(accountDetails(id));
 
-  static void pushAccountEdit(BuildContext context, int id) =>
+  static void pushAccountEdit(BuildContext context, String id) =>
       context.push(accountEdit(id));
 }

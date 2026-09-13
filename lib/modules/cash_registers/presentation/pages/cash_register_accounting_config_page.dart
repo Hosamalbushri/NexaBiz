@@ -164,7 +164,7 @@ class _CashRegisterAccountingConfigPageState
       final repo = ref.read(cashRegisterRepositoryProvider);
       await repo.linkAccountingAccount(
         registerId: register.id,
-        accountId: selectedAccount.uuid,
+        accountId: selectedAccount.id,
         companyId: companyId,
       );
       _refresh();
@@ -434,7 +434,7 @@ class _CashRegisterAccountingConfigPageState
                     Account? linkedAcc;
                     if (reg.isLinked) {
                       for (final acc in accountsList) {
-                        if (acc.uuid == reg.accountingAccountId ||
+                        if (acc.id == reg.accountingAccountId ||
                             acc.accountCode == reg.accountingAccountId) {
                           linkedAcc = acc;
                           break;

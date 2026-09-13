@@ -46,11 +46,11 @@ class AccountValidator {
     }
 
     if (existing != null) {
-      if (draft.parentId == existing.uuid) {
+      if (draft.parentId == existing.id) {
         throw const AccountException(AccountException.circularParent);
       }
       if (_isDescendant(
-        ancestorUuid: existing.uuid,
+        ancestorUuid: existing.id,
         candidateUuid: draft.parentId!,
         allAccounts: allAccounts,
       )) {
@@ -84,10 +84,10 @@ class AccountValidator {
     required String candidateUuid,
     required Iterable<Account> allAccounts,
   }) {
-    final byUuid = {for (final a in allAccounts) a.uuid: a};
+    final byUuid = {for (final a in allAccounts) a.id: a};
     var current = byUuid[candidateUuid];
     while (current != null) {
-      if (current.uuid == ancestorUuid) {
+      if (current.id == ancestorUuid) {
         return true;
       }
       final parentId = current.parentId;

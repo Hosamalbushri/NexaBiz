@@ -59,6 +59,7 @@ class SaleSyncHandler implements SyncEntityHandler {
   @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {
     final payload = Map<String, dynamic>.from(change.payload);
+    payload['id'] = change.entityId;
     payload['uuid'] = change.entityId;
     payload['version'] = change.version;
     payload['updatedAt'] = change.updatedAt.millisecondsSinceEpoch;
@@ -76,7 +77,7 @@ class SaleSyncHandler implements SyncEntityHandler {
     DateTime? syncedAt,
   }) {
     return _repository.markSynced(
-      uuid: entityId,
+      id: entityId,
       remoteVersion: remoteVersion,
       syncedAt: syncedAt,
     );

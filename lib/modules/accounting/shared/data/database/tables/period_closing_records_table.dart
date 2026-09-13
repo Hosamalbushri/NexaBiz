@@ -1,15 +1,15 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Immutable closing result for one accounting period (idempotent).
 @DataClassName('PeriodClosingRecordRow')
 class PeriodClosingRecords extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  TextColumn get fiscalYearId => text().withLength(min: 36, max: 36)();
 
-  TextColumn get fiscalYearUuid => text().withLength(min: 36, max: 36)();
-
-  TextColumn get periodUuid => text().withLength(min: 36, max: 36)();
+  TextColumn get periodId => text().withLength(min: 36, max: 36)();
 
   IntColumn get closingDate => integer()();
 
@@ -30,9 +30,20 @@ class PeriodClosingRecords extends Table {
 
   RealColumn get netFxDifference => real().withDefault(const Constant(0))();
 
-  TextColumn get journalEntryUuid => text().nullable()();
+  TextColumn get journalEntryId => text().nullable()();
 
   TextColumn get createdBy => text().nullable()();
 
   IntColumn get createdAt => integer()();
+
+  /// Company / Tenant owner ID for local multi-tenant data isolation.
+  TextColumn get companyId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+      ];
 }

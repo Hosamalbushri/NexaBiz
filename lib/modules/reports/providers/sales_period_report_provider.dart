@@ -100,7 +100,7 @@ class SalesPeriodReportDataProvider
     // Apply Keyset Cursor predicate: (sale_date, id)
     if (cursor != null) {
       final cursorDate = cursor.primarySortValue as int;
-      final cursorId = int.parse(cursor.uniqueId);
+      final cursorId = cursor.uniqueId;
 
       if (isAscending) {
         query.where(
@@ -142,7 +142,7 @@ class SalesPeriodReportDataProvider
       datasetRows.add(
         ReportRowData(
           documentType: 'sales_invoice',
-          documentUuid: sale.uuid,
+          documentUuid: sale.id,
           values: {
             'invoiceDate': dateFormat.format(date),
             'invoiceNumber': sale.saleNumber,
@@ -154,7 +154,7 @@ class SalesPeriodReportDataProvider
             'subtotal': currencyFormat.format(sale.subtotal),
             'taxAmount': currencyFormat.format(sale.taxAmount),
             'grandTotal': currencyFormat.format(sale.total),
-            'id': sale.id.toString(),
+            'id': sale.id,
             'saleDateMs': (sale.saleDate > 0 ? sale.saleDate : sale.createdAt)
                 .toString(),
           },
@@ -167,7 +167,7 @@ class SalesPeriodReportDataProvider
       final last = salesList.last;
       nextCursor = ReportCursor(
         primarySortValue: last.saleDate > 0 ? last.saleDate : last.createdAt,
-        uniqueId: last.id.toString(),
+        uniqueId: last.id,
       );
     }
 

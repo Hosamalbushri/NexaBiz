@@ -37,7 +37,7 @@ class RpPostingServiceState {
   final String numberFrom;
   final String numberTo;
   final List<TransactionListItem> items;
-  final int? selectedId;
+  final String? selectedId;
   final bool hasSearched;
   final bool isLoading;
   final bool isApplying;
@@ -58,7 +58,7 @@ class RpPostingServiceState {
     String? numberFrom,
     String? numberTo,
     List<TransactionListItem>? items,
-    int? selectedId,
+    String? selectedId,
     bool clearSelectedId = false,
     bool? hasSearched,
     bool? isLoading,
@@ -161,7 +161,7 @@ class RpPostingServiceNotifier extends StateNotifier<RpPostingServiceState> {
     );
   }
 
-  void selectItem(int? id) {
+  void selectItem(String? id) {
     state = state.copyWith(
       selectedId: id,
       clearSelectedId: id == null,
@@ -245,7 +245,7 @@ class RpPostingServiceNotifier extends StateNotifier<RpPostingServiceState> {
   }
 
   Future<({int success, int failed, Object? firstError})> _applyIds(
-    List<int> ids,
+    List<String> ids,
   ) async {
     state = state.copyWith(isApplying: true, clearError: true);
     var success = 0;

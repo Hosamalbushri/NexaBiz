@@ -42,7 +42,7 @@ class CashFlowReportDataAdapter implements CashFlowReportDataPort {
     if (filter.fromDate != null) {
       for (final ca in cashAccounts) {
         openingCash += await journals.sumNetBefore(
-          accountUuid: ca.uuid,
+          accountUuid: ca.id,
           beforeDate: filter.fromDate!,
           isPosted: isPostedFilter,
         );
@@ -59,7 +59,7 @@ class CashFlowReportDataAdapter implements CashFlowReportDataPort {
 
     for (final ca in cashAccounts) {
       final movements = await journals.listMovementsForAccount(
-        accountUuid: ca.uuid,
+        accountUuid: ca.id,
         fromDate: filter.fromDate,
         toDate: filter.toDate,
         isPosted: isPostedFilter,

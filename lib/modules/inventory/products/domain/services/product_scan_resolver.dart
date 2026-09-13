@@ -76,7 +76,7 @@ class ProductScanResolver {
   }
 
   Future<Product?> _resolveFromPayload(ProductQrPayload payload) async {
-    if (payload.id > 0) {
+    if (payload.id.isNotEmpty) {
       final byId = await _repository.getById(payload.id);
       if (byId != null) {
         return byId;

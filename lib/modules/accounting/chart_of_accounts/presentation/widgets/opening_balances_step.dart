@@ -76,7 +76,7 @@ class OpeningBalancesStep extends ConsumerWidget {
             };
             final availableToAdd = [
               for (final account in posting)
-                if (!selectedIds.contains(account.uuid)) account,
+                if (!selectedIds.contains(account.id)) account,
             ];
 
             return Column(

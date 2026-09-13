@@ -66,14 +66,14 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
     String? companyUuid,
     String? membershipUuid,
   }) async {
-    final finalUserUuid = userUuid ?? generateUuidV4();
-    final finalCompanyUuid = companyUuid ?? generateUuidV4();
-    final finalMembershipUuid = membershipUuid ?? generateUuidV4();
+    final finalUserUuid = userUuid ?? generateUuidV7();
+    final finalCompanyUuid = companyUuid ?? generateUuidV7();
+    final finalMembershipUuid = membershipUuid ?? generateUuidV7();
 
     return _db.transaction(() async {
       final userEntry = await _db.into(_db.users).insertReturning(
             UsersCompanion.insert(
-              uuid: finalUserUuid,
+              id: Value(finalUserUuid),
               email: userEmail,
               name: userName,
               passwordHash: Value(passwordHash),
@@ -85,7 +85,7 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
 
       final companyEntry = await _db.into(_db.companies).insertReturning(
             CompaniesCompanion.insert(
-              uuid: finalCompanyUuid,
+              id: Value(finalCompanyUuid),
               code: companyCode,
               name: companyName,
               status: const Value('active'),
@@ -96,9 +96,9 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
       final membershipEntry =
           await _db.into(_db.companyMemberships).insertReturning(
                 CompanyMembershipsCompanion.insert(
-                  uuid: finalMembershipUuid,
-                  userUuid: userEntry.uuid,
-                  companyUuid: companyEntry.uuid,
+                  id: Value(finalMembershipUuid),
+                  userId: userEntry.id,
+                  companyId: companyEntry.id,
                   role: const Value('owner'),
                   status: const Value('active'),
                 ),
@@ -115,15 +115,15 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
 
   @override
   Future<UserData> createUser(UsersCompanion user) async {
-    final uuid = user.uuid.present ? user.uuid.value : generateUuidV4();
-    final companion = user.copyWith(uuid: Value(uuid));
+    final id = user.id.present ? user.id.value : generateUuidV7();
+    final companion = user.copyWith(id: Value(id));
     return _db.into(_db.users).insertReturning(companion);
   }
 
   @override
   Future<CompanyData> createCompany(CompaniesCompanion company) async {
-    final uuid = company.uuid.present ? company.uuid.value : generateUuidV4();
-    final companion = company.copyWith(uuid: Value(uuid));
+    final id = company.id.present ? company.id.value : generateUuidV7();
+    final companion = company.copyWith(id: Value(id));
     return _db.into(_db.companies).insertReturning(companion);
   }
 
@@ -131,23 +131,23 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
   Future<CompanyMembershipData> createMembership(
       CompanyMembershipsCompanion membership) async {
     // Verify target user & company exist before creating membership
-    final user = await getUserByUuid(membership.userUuid.value);
+    final user = await getUserByUuid(membership.userId.value);
     if (user == null) {
-      throw ArgumentError('User with UUID ${membership.userUuid.value} does not exist.');
+      throw ArgumentError('User with ID ${membership.userId.value} does not exist.');
     }
-    final company = await getCompanyByUuid(membership.companyUuid.value);
+    final company = await getCompanyByUuid(membership.companyId.value);
     if (company == null) {
-      throw ArgumentError('Company with UUID ${membership.companyUuid.value} does not exist.');
+      throw ArgumentError('Company with ID ${membership.companyId.value} does not exist.');
     }
 
-    final uuid = membership.uuid.present ? membership.uuid.value : generateUuidV4();
-    final companion = membership.copyWith(uuid: Value(uuid));
+    final id = membership.id.present ? membership.id.value : generateUuidV7();
+    final companion = membership.copyWith(id: Value(id));
     return _db.into(_db.companyMemberships).insertReturning(companion);
   }
 
   @override
   Future<UserData?> getUserByUuid(String uuid) {
-    return (_db.select(_db.users)..where((tbl) => tbl.uuid.equals(uuid)))
+    return (_db.select(_db.users)..where((tbl) => tbl.id.equals(uuid)))
         .getSingleOrNull();
   }
 
@@ -160,7 +160,7 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
 
   @override
   Future<CompanyData?> getCompanyByUuid(String uuid) {
-    return (_db.select(_db.companies)..where((tbl) => tbl.uuid.equals(uuid)))
+    return (_db.select(_db.companies)..where((tbl) => tbl.id.equals(uuid)))
         .getSingleOrNull();
   }
 
@@ -174,7 +174,7 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
   Future<List<CompanyMembershipData>> getUserMemberships(String userUuid) {
     return (_db.select(_db.companyMemberships)
           ..where((tbl) =>
-              tbl.userUuid.equals(userUuid) & tbl.status.equals('active')))
+              tbl.userId.equals(userUuid) & tbl.status.equals('active')))
         .get();
   }
 
@@ -185,8 +185,8 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
   }) async {
     return (_db.select(_db.companyMemberships)
           ..where((tbl) =>
-              tbl.userUuid.equals(userUuid) &
-              tbl.companyUuid.equals(companyUuid) &
+              tbl.userId.equals(userUuid) &
+              tbl.companyId.equals(companyUuid) &
               tbl.status.equals('active')))
         .getSingleOrNull();
   }
@@ -196,7 +196,7 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
     required String userUuid,
     required String passwordHash,
   }) async {
-    await (_db.update(_db.users)..where((tbl) => tbl.uuid.equals(userUuid)))
+    await (_db.update(_db.users)..where((tbl) => tbl.id.equals(userUuid)))
         .write(UsersCompanion(passwordHash: Value(passwordHash)));
   }
 
@@ -212,8 +212,8 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
 
   @override
   Future<UserData> upsertUser(UsersCompanion user) async {
-    final uuid = user.uuid.present ? user.uuid.value : generateUuidV4();
-    final companion = user.copyWith(uuid: Value(uuid));
+    final id = user.id.present ? user.id.value : generateUuidV7();
+    final companion = user.copyWith(id: Value(id));
     return _db
         .into(_db.users)
         .insertReturning(companion, mode: InsertMode.insertOrReplace);
@@ -221,8 +221,8 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
 
   @override
   Future<CompanyData> upsertCompany(CompaniesCompanion company) async {
-    final uuid = company.uuid.present ? company.uuid.value : generateUuidV4();
-    final companion = company.copyWith(uuid: Value(uuid));
+    final id = company.id.present ? company.id.value : generateUuidV7();
+    final companion = company.copyWith(id: Value(id));
     return _db
         .into(_db.companies)
         .insertReturning(companion, mode: InsertMode.insertOrReplace);
@@ -231,9 +231,9 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
   @override
   Future<CompanyMembershipData> upsertMembership(
       CompanyMembershipsCompanion membership) async {
-    final uuid =
-        membership.uuid.present ? membership.uuid.value : generateUuidV4();
-    final companion = membership.copyWith(uuid: Value(uuid));
+    final id =
+        membership.id.present ? membership.id.value : generateUuidV7();
+    final companion = membership.copyWith(id: Value(id));
     return _db
         .into(_db.companyMemberships)
         .insertReturning(companion, mode: InsertMode.insertOrReplace);

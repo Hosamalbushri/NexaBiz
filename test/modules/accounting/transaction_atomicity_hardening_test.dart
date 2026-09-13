@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
@@ -10,8 +11,6 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -34,8 +33,10 @@ class _FailingAccountingPoster implements InventoryAccountingPoster {
   Future<void> postAccountingEntry({
     required InventoryDocumentRef document,
     required double totalAmount,
+    double? valuationAmount,
     String? accountId,
     bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
   }) async {
     if (shouldFail) {
       throw const JournalException(
@@ -61,8 +62,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Task 7 — Audit and Harden Accounting Transaction Atomicity', () {
-    late AccountingDatabase accountingDb;
-    late InventoryDatabase inventoryDb;
+    late NexabizDatabase db;
     late AccountRepositoryImpl accountRepo;
     late JournalRepositoryImpl journalRepo;
     late JournalPostingService journalPostingService;
@@ -73,18 +73,17 @@ void main() {
     const testCompanyId = 'company-test-1';
 
     setUp(() async {
-      accountingDb = AccountingDatabase(executor: NativeDatabase.memory());
-      inventoryDb = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.connect(NativeDatabase.memory());
 
       accountRepo = AccountRepositoryImpl(
-        accountingDb,
+        db,
         readCompanyId: () => testCompanyId,
       );
 
       final periodValidator = legacyPeriodValidator();
 
       journalRepo = JournalRepositoryImpl(
-        accountingDb,
+        db,
         accounts: accountRepo,
         periodValidator: periodValidator,
         readCompanyId: () => testCompanyId,
@@ -97,33 +96,33 @@ void main() {
       );
 
       stockMovementsRepo = StockMovementsRepositoryImpl(
-        db: inventoryDb,
+        db: db,
         readCompanyId: () => testCompanyId,
       );
 
       failingAccountingPoster = _FailingAccountingPoster();
 
       final costLayerService = CostLayerServiceImpl(
-        db: inventoryDb,
+        db: db,
         readCompanyId: () => testCompanyId,
       );
       final postingEngine = PostingEngineImpl(
-        inventoryDb,
+        db,
         costLayerService,
         null,
         () => testCompanyId,
       );
       final stockValidationService = StockValidationServiceImpl(
-        inventoryDb,
+        db,
         () => testCompanyId,
       );
       final dependencyDetector = InventoryDependencyDetectorImpl(
-        inventoryDb,
+        db,
         () => testCompanyId,
       );
 
       postingCoordinator = PostingCoordinatorImpl(
-        db: inventoryDb,
+        db: db,
         stockValidationService: stockValidationService,
         dependencyDetector: dependencyDetector,
         postingEngine: postingEngine,
@@ -131,16 +130,29 @@ void main() {
         permissionGuard: const AllowAllPermissionGuard(),
         readCompanyId: () => testCompanyId,
       );
+
+      await db.into(db.warehouses).insert(
+        WarehousesCompanion(
+          uuid: const Value('00000000-0000-0000-0000-000000000001'),
+          code: const Value('WH-001'),
+          name: const Value('Main Warehouse'),
+          companyId: const Value(testCompanyId),
+          isActive: const Value(true),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
     });
 
+
     tearDown(() async {
-      await accountingDb.close();
-      await inventoryDb.close();
+      await db.close();
     });
 
     Future<double> getStockBalance(String itemCode, String warehouseId) async {
       final rows =
-          await (inventoryDb.select(inventoryDb.productWarehouseStocks)..where(
+          await (db.select(db.productWarehouseStocks)..where(
                 (t) =>
                     t.itemCode.equals(itemCode) &
                     t.warehouseId.equals(warehouseId),
@@ -160,7 +172,7 @@ void main() {
             id: receiptUuid,
             receiptNumber: 'REC-001',
             receiptDate: DateTime.now(),
-            warehouse: 'wh-main',
+            warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
                 movementUuid: receiptUuid,
@@ -180,7 +192,7 @@ void main() {
           documentNumber: 'REC-001',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: 'wh-main',
+          warehouseId: '00000000-0000-0000-0000-000000000001',
           status: InventoryDocumentStatus.draft,
         );
 
@@ -190,7 +202,7 @@ void main() {
         final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
         expect(dbReceipt?.status, InventoryDocumentStatus.posted);
 
-        final stockBalance = await getStockBalance('ITEM-A', 'wh-main');
+        final stockBalance = await getStockBalance('ITEM-A', '00000000-0000-0000-0000-000000000001');
         expect(stockBalance, 10.0);
       },
     );
@@ -205,7 +217,7 @@ void main() {
             id: receiptUuid,
             receiptNumber: 'REC-002',
             receiptDate: DateTime.now(),
-            warehouse: 'wh-main',
+            warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
                 movementUuid: receiptUuid,
@@ -225,7 +237,7 @@ void main() {
           documentNumber: 'REC-002',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: 'wh-main',
+          warehouseId: '00000000-0000-0000-0000-000000000001',
           status: InventoryDocumentStatus.draft,
         );
 
@@ -239,7 +251,7 @@ void main() {
         final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
         expect(dbReceipt?.status, InventoryDocumentStatus.draft);
 
-        final stockBalance = await getStockBalance('ITEM-B', 'wh-main');
+        final stockBalance = await getStockBalance('ITEM-B', '00000000-0000-0000-0000-000000000001');
         expect(
           stockBalance,
           0.0,
@@ -258,7 +270,7 @@ void main() {
             id: receiptUuid,
             receiptNumber: 'REC-003',
             receiptDate: DateTime.now(),
-            warehouse: 'wh-main',
+            warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
                 movementUuid: receiptUuid,
@@ -278,7 +290,7 @@ void main() {
           documentNumber: 'REC-003',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: 'wh-main',
+          warehouseId: '00000000-0000-0000-0000-000000000001',
           status: InventoryDocumentStatus.draft,
         );
 
@@ -291,7 +303,7 @@ void main() {
         expect(result2, isA<PostSuccess>());
 
         // Verify stock balance was NOT duplicated (should remain 20, not 40)
-        final stockBalance = await getStockBalance('ITEM-C', 'wh-main');
+        final stockBalance = await getStockBalance('ITEM-C', '00000000-0000-0000-0000-000000000001');
         expect(
           stockBalance,
           20.0,
@@ -387,7 +399,7 @@ void main() {
             id: receiptUuid,
             receiptNumber: 'REC-005',
             receiptDate: DateTime.now(),
-            warehouse: 'wh-main',
+            warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
                 movementUuid: receiptUuid,
@@ -407,7 +419,7 @@ void main() {
           documentNumber: 'REC-005',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: 'wh-main',
+          warehouseId: '00000000-0000-0000-0000-000000000001',
           status: InventoryDocumentStatus.draft,
         );
 
@@ -426,7 +438,7 @@ void main() {
         final dbReceipt = await stockMovementsRepo.getReceiptById(receiptUuid);
         expect(dbReceipt?.status, InventoryDocumentStatus.posted);
 
-        final stockBalance = await getStockBalance('ITEM-D', 'wh-main');
+        final stockBalance = await getStockBalance('ITEM-D', '00000000-0000-0000-0000-000000000001');
         expect(stockBalance, 15.0);
       },
     );

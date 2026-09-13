@@ -4,13 +4,14 @@ import 'package:stock_count/core/utils/id_generator.dart';
 /// Canonical Chart of Accounts master reference table in `nexabiz.sqlite`.
 @DataClassName('AccountData')
 class Accounts extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get uuid => text().withLength(min: 36, max: 36).clientDefault(generateUuidV4).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
   TextColumn get accountCode => text().withLength(min: 1, max: 64)();
   TextColumn get name => text().withLength(min: 1, max: 256)();
   TextColumn get accountType => text().withLength(min: 1, max: 64)();
   TextColumn get normalBalance => text().withLength(min: 1, max: 16)();
-  TextColumn get parentUuid => text().nullable()();
+  TextColumn get parentAccountId => text().nullable()();
+  TextColumn get currencyCode => text().nullable()();
   IntColumn get level => integer().withDefault(const Constant(0))();
   BoolColumn get isGroup => boolean().withDefault(const Constant(false))();
   BoolColumn get isSystemAccount => boolean().withDefault(const Constant(false))();
@@ -20,7 +21,11 @@ class Accounts extends Table {
   TextColumn get companyId => text()();
 
   @override
+  Set<Column> get primaryKey => {id};
+
+  @override
   List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
         {companyId, accountCode},
       ];
 }

@@ -63,7 +63,7 @@ class CashRegisterMovementService {
 
     // Dynamic ledger calculation: query movements from JournalRepository
     final movements = await journalRepository.listMovementsForAccount(
-      accountUuid: account.uuid,
+      accountUuid: account.id,
     );
 
     double totalDebit = 0.0;
@@ -181,7 +181,7 @@ class CashRegisterMovementService {
       lines: [
         // Destination Debit (Increase destination cash box)
         JournalLineDraft(
-          accountUuid: destRes.account!.uuid,
+          accountUuid: destRes.account!.id,
           debit: amount,
           credit: 0.0,
           currencyCode: currencyCode.trim().toUpperCase(),
@@ -190,7 +190,7 @@ class CashRegisterMovementService {
         ),
         // Source Credit (Decrease source cash box)
         JournalLineDraft(
-          accountUuid: sourceRes.account!.uuid,
+          accountUuid: sourceRes.account!.id,
           debit: 0.0,
           credit: amount,
           currencyCode: currencyCode.trim().toUpperCase(),

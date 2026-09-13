@@ -4,7 +4,6 @@ import 'package:stock_count/core/sync/sync_core.dart';
 class CurrencyRate {
   const CurrencyRate({
     required this.id,
-    required this.uuid,
     required this.currencyCode,
     required this.rateToBase,
     required this.updatedAt,
@@ -13,10 +12,9 @@ class CurrencyRate {
     this.version = 1,
   });
 
-  final int id;
+  final String id;
 
-  /// Client-generated UUID for offline-safe identity / sync.
-  final String uuid;
+  String get uuid => id;
 
   final String currencyCode;
 
@@ -29,8 +27,7 @@ class CurrencyRate {
   final int version;
 
   CurrencyRate copyWith({
-    int? id,
-    String? uuid,
+    String? id,
     String? currencyCode,
     double? rateToBase,
     DateTime? updatedAt,
@@ -41,7 +38,6 @@ class CurrencyRate {
   }) {
     return CurrencyRate(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
       currencyCode: currencyCode ?? this.currencyCode,
       rateToBase: rateToBase ?? this.rateToBase,
       updatedAt: updatedAt ?? this.updatedAt,

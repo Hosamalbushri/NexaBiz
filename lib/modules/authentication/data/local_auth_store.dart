@@ -855,8 +855,8 @@ class LocalAuthStore {
           m.userId == current.user.id && m.companyId == companyId && m.isActive,
       orElse: () => canonicalMembership != null
           ? UserCompanyMembership(
-              userId: canonicalMembership.userUuid,
-              companyId: canonicalMembership.companyUuid,
+              userId: canonicalMembership.userId,
+              companyId: canonicalMembership.companyId,
               role: canonicalMembership.role,
               status: canonicalMembership.status,
             )
@@ -887,7 +887,7 @@ class LocalAuthStore {
     }
     if (company == null && canonicalCompany != null) {
       company = AuthCompany(
-        id: canonicalCompany.uuid,
+        id: canonicalCompany.id,
         name: canonicalCompany.name,
         code: canonicalCompany.code,
         role: membership.role,

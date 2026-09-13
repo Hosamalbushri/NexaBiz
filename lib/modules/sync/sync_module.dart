@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/app_routes.dart';
-import '../../app/settings/data_sync_settings_page.dart';
 import '../../app/sync/app_sync_adapters.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';

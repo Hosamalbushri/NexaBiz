@@ -30,7 +30,7 @@ import 'product_barcode_scanner_page.dart';
 class ProductFormPage extends ConsumerStatefulWidget {
   const ProductFormPage({super.key, this.productId});
 
-  final int? productId;
+  final String? productId;
 
   bool get isEditing => productId != null;
 
@@ -183,7 +183,6 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     final now = DateTime.now();
     return Product(
       id: id,
-      uuid: _uuid ?? '',
       itemCode: itemCode,
       name: name,
       barcode: barcode.isEmpty ? null : barcode,

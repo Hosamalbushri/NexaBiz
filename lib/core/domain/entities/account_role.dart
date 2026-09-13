@@ -8,6 +8,7 @@ enum AccountRole {
   receivable,
   payable,
   cash,
+  bank,
   inventory,
   cogs,
   tax,
@@ -30,6 +31,7 @@ enum AccountRole {
         return SetupAccountType.revenue;
       case AccountRole.receivable:
       case AccountRole.cash:
+      case AccountRole.bank:
       case AccountRole.inventory:
       case AccountRole.inventoryFrom:
       case AccountRole.inventoryTo:

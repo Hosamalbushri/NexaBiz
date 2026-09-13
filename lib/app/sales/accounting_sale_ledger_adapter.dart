@@ -61,7 +61,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
         warehouseId: sale.warehouseId,
       );
       if (arAccount != null) {
-        debitAccountId = arAccount.uuid;
+        debitAccountId = arAccount.id;
       }
     } else if (sale.settlementType == SaleSettlementType.cash &&
         (debitAccountId == null || debitAccountId.isEmpty)) {
@@ -71,7 +71,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
         warehouseId: sale.warehouseId,
       );
       if (cashAccount != null) {
-        debitAccountId = cashAccount.uuid;
+        debitAccountId = cashAccount.id;
       }
     }
     if (netAmount > 0 && (debitAccountId == null || debitAccountId.isEmpty)) {
@@ -149,7 +149,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
         ),
       if (discountAmount > 0 && discountAccount != null)
         JournalLineDraft(
-          accountUuid: discountAccount.uuid,
+          accountUuid: discountAccount.id,
           debit: discountAmount,
           credit: 0,
           currencyCode: currency,
@@ -159,7 +159,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
         ),
       if (revenueCredit > 0)
         JournalLineDraft(
-          accountUuid: revenue.uuid,
+          accountUuid: revenue.id,
           debit: 0,
           credit: revenueCredit,
           currencyCode: currency,
@@ -169,7 +169,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
         ),
       if (taxAmount > 0 && taxAccount != null)
         JournalLineDraft(
-          accountUuid: taxAccount.uuid,
+          accountUuid: taxAccount.id,
           debit: 0,
           credit: taxAmount,
           currencyCode: currency,
@@ -248,9 +248,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
       final acc =
           await _accounts.getByUuid(configuredKey) ??
           await _accounts.getByAccountCode(configuredKey) ??
-          (int.tryParse(configuredKey) != null
-              ? await _accounts.getById(int.parse(configuredKey))
-              : null);
+          await _accounts.getById(configuredKey);
       if (acc != null && acc.isPostingAccount && !acc.isDeleted) {
         return acc;
       }

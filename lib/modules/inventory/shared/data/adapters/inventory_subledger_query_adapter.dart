@@ -44,7 +44,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
     for (final r in receipts) {
       final lines = await (_inventoryDb.select(
         _inventoryDb.stockMovementLines,
-      )..where((tbl) => tbl.movementUuid.equals(r.uuid))).get();
+      )..where((tbl) => tbl.receiptId.equals(r.id))).get();
 
       double totalCost = 0.0;
       for (final l in lines) {
@@ -53,7 +53,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
 
       result.add(
         InventorySubledgerReceiptSummary(
-          uuid: r.uuid,
+          uuid: r.id,
           receiptNumber: r.receiptNumber,
           totalCost: totalCost,
         ),
@@ -79,7 +79,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
     for (final i in issues) {
       final lines = await (_inventoryDb.select(
         _inventoryDb.stockMovementLines,
-      )..where((tbl) => tbl.movementUuid.equals(i.uuid))).get();
+      )..where((tbl) => tbl.issueId.equals(i.id))).get();
 
       double totalCost = 0.0;
       for (final l in lines) {
@@ -88,7 +88,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
 
       result.add(
         InventorySubledgerIssueSummary(
-          uuid: i.uuid,
+          uuid: i.id,
           issueNumber: i.issueNumber,
           totalCost: totalCost,
         ),
@@ -114,7 +114,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
     for (final r in returns) {
       final lines = await (_inventoryDb.select(
         _inventoryDb.stockMovementLines,
-      )..where((tbl) => tbl.movementUuid.equals(r.uuid))).get();
+      )..where((tbl) => tbl.returnId.equals(r.id))).get();
 
       double totalCost = 0.0;
       for (final l in lines) {
@@ -123,7 +123,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
 
       result.add(
         InventorySubledgerReturnSummary(
-          uuid: r.uuid,
+          uuid: r.id,
           returnNumber: r.returnNumber,
           totalCost: totalCost,
         ),
@@ -141,7 +141,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
         await (_inventoryDb.select(_inventoryDb.stockReceipts)..where(
               (tbl) =>
                   tbl.companyId.equals(companyId) &
-                  tbl.uuid.equals(uuid) &
+                  tbl.id.equals(uuid) &
                   tbl.deletedAt.isNull() &
                   tbl.status.equals('posted'),
             ))
@@ -158,7 +158,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
         await (_inventoryDb.select(_inventoryDb.stockIssues)..where(
               (tbl) =>
                   tbl.companyId.equals(companyId) &
-                  tbl.uuid.equals(uuid) &
+                  tbl.id.equals(uuid) &
                   tbl.deletedAt.isNull() &
                   tbl.status.equals('posted'),
             ))
@@ -175,7 +175,7 @@ class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
         await (_inventoryDb.select(_inventoryDb.stockReturns)..where(
               (tbl) =>
                   tbl.companyId.equals(companyId) &
-                  tbl.uuid.equals(uuid) &
+                  tbl.id.equals(uuid) &
                   tbl.deletedAt.isNull() &
                   tbl.status.equals('posted'),
             ))

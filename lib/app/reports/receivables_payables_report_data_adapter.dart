@@ -56,14 +56,14 @@ class ReceivablesPayablesReportDataAdapter
     for (final acc in targetAccounts) {
       final opening = filter.fromDate != null
           ? await journals.sumNetBefore(
-              accountUuid: acc.uuid,
+              accountUuid: acc.id,
               beforeDate: filter.fromDate!,
               isPosted: isPostedFilter,
             )
           : 0.0;
 
       final movements = await journals.listMovementsForAccount(
-        accountUuid: acc.uuid,
+        accountUuid: acc.id,
         fromDate: filter.fromDate,
         toDate: filter.toDate,
         isPosted: isPostedFilter,

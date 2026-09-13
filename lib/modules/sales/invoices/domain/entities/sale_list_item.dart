@@ -6,7 +6,6 @@ import '../entities/sale_status.dart';
 class SaleListItem {
   const SaleListItem({
     required this.id,
-    required this.uuid,
     required this.saleNumber,
     required this.saleDate,
     required this.settlementType,
@@ -17,8 +16,7 @@ class SaleListItem {
     this.customerName,
   });
 
-  final int id;
-  final String uuid;
+  final String id;
   final String saleNumber;
   final DateTime saleDate;
   final SaleSettlementType settlementType;
@@ -27,4 +25,6 @@ class SaleListItem {
   final double total;
   final SaleStatus saleStatus;
   final PaymentStatus paymentStatus;
+
+  String get uuid => id;
 }

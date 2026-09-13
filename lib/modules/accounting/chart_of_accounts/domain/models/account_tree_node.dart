@@ -39,7 +39,7 @@ class AccountTreeNode {
         for (final account in kids)
           AccountTreeNode(
             account: account,
-            children: buildChildren(account.uuid),
+            children: buildChildren(account.id),
           ),
       ];
     }
@@ -60,11 +60,11 @@ class AccountTreeNode {
         AccountTreeFlatEntry(
           node: node,
           depth: depth,
-          isExpanded: expandedIds.contains(node.account.uuid),
-          isSelected: selectedId == node.account.uuid,
+          isExpanded: expandedIds.contains(node.account.id),
+          isSelected: selectedId == node.account.id,
         ),
       );
-      if (node.hasChildren && expandedIds.contains(node.account.uuid)) {
+      if (node.hasChildren && expandedIds.contains(node.account.id)) {
         for (final child in node.children) {
           walk(child, depth + 1);
         }

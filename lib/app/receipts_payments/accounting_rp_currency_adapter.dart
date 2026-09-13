@@ -58,9 +58,16 @@ class AccountingRpCurrencyAdapter implements RpCurrencyPort {
           continue;
         }
         seen.add(code);
-        out.add(
-          RpCurrencyRef(code: code, rateToBase: 1, isBase: false),
-        );
+        final rate = await _rates.getByCode(code);
+        if (rate != null && rate.rateToBase > 0) {
+          out.add(
+            RpCurrencyRef(
+              code: code,
+              rateToBase: rate.rateToBase,
+              isBase: false,
+            ),
+          );
+        }
       }
     }
 
@@ -78,24 +85,12 @@ class AccountingRpCurrencyAdapter implements RpCurrencyPort {
       return RpCurrencyRef(code: base, rateToBase: 1, isBase: true);
     }
     final rate = await _rates.getByCode(normalized);
-    if (rate != null) {
+    if (rate != null && rate.rateToBase > 0) {
       return RpCurrencyRef(
         code: rate.currencyCode.trim().toUpperCase(),
         rateToBase: rate.rateToBase,
         isBase: false,
       );
-    }
-    final repo = currencyRepository;
-    if (repo != null) {
-      final activeMaster = await repo.getAll(includeInactive: false);
-      final master = activeMaster.where((c) => c.code.toUpperCase() == normalized).firstOrNull;
-      if (master != null) {
-        return RpCurrencyRef(
-          code: master.code.toUpperCase(),
-          rateToBase: 1,
-          isBase: false,
-        );
-      }
     }
     return null;
   }

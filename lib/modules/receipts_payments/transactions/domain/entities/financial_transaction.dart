@@ -9,7 +9,6 @@ import 'transaction_type.dart';
 class FinancialTransaction {
   const FinancialTransaction({
     required this.id,
-    required this.uuid,
     required this.transactionNumber,
     required this.transactionType,
     required this.source,
@@ -49,8 +48,7 @@ class FinancialTransaction {
     this.lines = const [],
   });
 
-  final int id;
-  final String uuid;
+  final String id;
   final String transactionNumber;
   final TransactionType transactionType;
   final TransactionSource source;
@@ -71,15 +69,15 @@ class FinancialTransaction {
   /// Counter currency → base rate snapshot (first line).
   final double counterExchangeRate;
 
-  /// VoucherBook.uuid used for numbering.
+  /// VoucherBook.id used for numbering.
   final String? voucherBookId;
 
-  /// Cash/bank CoA Account.uuid.
+  /// Cash/bank CoA Account.id.
   final String cashAccountId;
   final String? cashAccountCode;
   final String? cashAccountName;
 
-  /// Primary counter CoA Account.uuid (first allocation line).
+  /// Primary counter CoA Account.id (first allocation line).
   final String counterAccountId;
   final String? counterAccountCode;
   final String? counterAccountName;
@@ -111,6 +109,8 @@ class FinancialTransaction {
   /// Explicit party/CoA allocations (empty → synthesize from header fields).
   final List<FinancialTransactionLine> lines;
 
+  String get uuid => id;
+
   bool get isDeleted => deletedAt != null;
 
   bool get isCancelled => cancelledAt != null;
@@ -138,6 +138,49 @@ class FinancialTransaction {
           ? exchangeRate
           : counterExchangeRate,
       description: description,
+    );
+  }
+
+  FinancialTransaction copyWithDeleted(DateTime now) {
+    return FinancialTransaction(
+      id: id,
+      transactionNumber: transactionNumber,
+      transactionType: transactionType,
+      source: source,
+      transactionDate: transactionDate,
+      amount: amount,
+      currencyCode: currencyCode,
+      baseCurrencyCode: baseCurrencyCode,
+      exchangeRate: exchangeRate,
+      counterAmount: counterAmount,
+      counterCurrencyCode: counterCurrencyCode,
+      counterExchangeRate: counterExchangeRate,
+      cashAccountId: cashAccountId,
+      counterAccountId: counterAccountId,
+      paymentMethod: paymentMethod,
+      createdAt: createdAt,
+      updatedAt: now,
+      deletedAt: now,
+      documentStatus: documentStatus,
+      voucherBookId: voucherBookId,
+      cashAccountCode: cashAccountCode,
+      cashAccountName: cashAccountName,
+      counterAccountCode: counterAccountCode,
+      counterAccountName: counterAccountName,
+      customerId: customerId,
+      customerCode: customerCode,
+      customerName: customerName,
+      partyName: partyName,
+      reference: reference,
+      description: description,
+      relatedDocumentId: relatedDocumentId,
+      relatedDocumentType: relatedDocumentType,
+      cancelledAt: cancelledAt,
+      externalId: externalId,
+      syncStatus: syncStatus,
+      lastSyncedAt: lastSyncedAt,
+      version: version + 1,
+      lines: lines,
     );
   }
 }

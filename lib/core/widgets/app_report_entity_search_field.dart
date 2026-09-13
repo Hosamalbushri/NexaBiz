@@ -66,7 +66,7 @@ class AppReportEntitySearchField extends StatelessWidget {
       onTap: () async {
         final account = await showAppAccountPicker(
           context,
-          selectedUuid: selectedAccount?.uuid ?? selectedUuid,
+          selectedUuid: selectedAccount?.id ?? selectedUuid,
         );
         if (account != null) {
           onAccountSelected(account);

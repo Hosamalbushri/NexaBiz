@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Sales header documents.
 @DataClassName('SaleRow')
 class Sales extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   TextColumn get saleNumber => text().withLength(min: 1, max: 64)();
 
@@ -15,23 +15,23 @@ class Sales extends Table {
   /// [SaleSettlementType.name] — cash | credit
   TextColumn get settlementType => text().withDefault(const Constant('cash'))();
 
-  /// VoucherBook.uuid used for numbering.
+  /// VoucherBook.id used for numbering.
   TextColumn get voucherBookId => text().nullable()();
 
-  /// Warehouse.uuid source warehouse context for inventory deduction.
+  /// Warehouse.id source warehouse context for inventory deduction.
   TextColumn get warehouseId => text().nullable()();
 
-  /// Customer.uuid — opaque FK.
+  /// Customer.id — opaque FK.
   TextColumn get customerId => text().nullable()();
 
   TextColumn get customerCode => text().nullable()();
 
   TextColumn get customerName => text().nullable()();
 
-  /// Customer CoA Account.uuid for credit settlement.
+  /// Customer CoA Account.id for credit settlement.
   TextColumn get customerAccountId => text().nullable()();
 
-  /// Cash/treasury CoA Account.uuid for cash settlement.
+  /// Cash/treasury CoA Account.id for cash settlement.
   TextColumn get cashAccountId => text().nullable()();
 
   TextColumn get currencyCode => text()();
@@ -100,4 +100,13 @@ class Sales extends Table {
   TextColumn get companyId => text().nullable()();
 
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, saleNumber},
+      ];
 }

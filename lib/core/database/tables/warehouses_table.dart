@@ -4,8 +4,8 @@ import 'package:stock_count/core/utils/id_generator.dart';
 /// Canonical Warehouses master reference table in `nexabiz.sqlite`.
 @DataClassName('WarehouseData')
 class Warehouses extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get uuid => text().withLength(min: 36, max: 36).clientDefault(generateUuidV4).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
   TextColumn get code => text().withLength(min: 1, max: 64)();
   TextColumn get name => text().withLength(min: 1, max: 256)();
   TextColumn get address => text().nullable()();
@@ -18,7 +18,11 @@ class Warehouses extends Table {
   TextColumn get companyId => text()();
 
   @override
+  Set<Column> get primaryKey => {id};
+
+  @override
   List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
         {companyId, code},
       ];
 }

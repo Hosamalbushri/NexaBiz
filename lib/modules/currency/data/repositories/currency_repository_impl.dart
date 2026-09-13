@@ -83,7 +83,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
 
     final rows = await _db
         .customSelect(
-          'SELECT * FROM currencies WHERE uuid = ? AND deleted_at IS NULL AND company_id = ? LIMIT 1',
+          'SELECT * FROM currencies WHERE id = ? AND deleted_at IS NULL AND company_id = ? LIMIT 1',
           variables: [
             Variable.withString(trimmed),
             Variable.withString(_currentCompanyId),
@@ -113,13 +113,13 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     draft.validate();
     final code = draft.code.trim().toUpperCase();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final uuid = draft.uuid ?? generateUuidV4();
+    final id = draft.effectiveId ?? generateUuidV7();
 
     return await _db.transaction(() async {
       final existing = await getByCode(code);
-      final isNew = draft.uuid == null || draft.uuid!.isEmpty;
+      final isNew = draft.effectiveId == null || draft.effectiveId!.isEmpty;
       if (existing != null) {
-        if (isNew || existing.uuid != draft.uuid) {
+        if (isNew || existing.id != draft.effectiveId) {
           throw CurrencyValidationException('رمز العملة $code مستخدم بالفعل.');
         }
       }
@@ -170,12 +170,12 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
         await _db.customInsert(
           '''
           INSERT INTO currencies (
-            uuid, code, currency_code, name, name_ar, name_en, symbol, decimal_digits,
+            id, code, currency_code, name, name_ar, name_en, symbol, decimal_digits,
             is_default, is_active, created_at, updated_at, company_id
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ''',
           variables: [
-            Variable.withString(uuid),
+            Variable.withString(id),
             Variable.withString(code),
             Variable.withString(code),
             Variable.withString(draft.nameAr.trim()),
@@ -364,7 +364,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
       final journalRows = await _db.customSelect(
         '''
         SELECT COUNT(*) as cnt FROM journal_lines jl
-        INNER JOIN journal_entries je ON jl.entry_uuid = je.uuid
+        INNER JOIN journal_entries je ON jl.entry_id = je.id
         WHERE UPPER(jl.currency_code) = ? AND je.company_id = ? AND je.deleted_at IS NULL
         ''',
         variables: [
@@ -574,8 +574,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
 
   Currency _mapRow(QueryRow row) {
     return Currency(
-      id: row.read<int>('id'),
-      uuid: row.read<String>('uuid'),
+      id: row.read<String>('id'),
       code: row.read<String>('code'),
       nameAr: row.read<String>('name_ar'),
       nameEn: row.read<String>('name_en'),

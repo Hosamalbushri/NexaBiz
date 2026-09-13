@@ -21,10 +21,24 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_product_ca
 import 'package:stock_count/modules/sales/shared/domain/services/sale_treasury_account_port.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_voucher_book_port.dart';
 import '../../domain/services/device_sale_number.dart';
+import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
+import 'package:stock_count/modules/accounting/shared/presentation/providers/document_posting_providers.dart';
+import 'package:stock_count/modules/inventory/stock_movements/presentation/providers/stock_movements_providers.dart';
+import 'package:stock_count/modules/sales/domain/usecases/sales_usecases.dart';
 import '../../domain/usecases/sale_usecases.dart';
 
 final salesDatabaseProvider = Provider<NexabizDatabase>((ref) {
   return ref.watch(nexabizDatabaseProvider);
+});
+
+final postSaleInvoiceUseCaseProvider = Provider<PostSaleInvoiceUseCase>((ref) {
+  return PostSaleInvoiceUseCase(
+    saleRepository: ref.watch(saleRepositoryProvider),
+    postingCoordinator: ref.watch(postingCoordinatorProvider),
+    journalPostingService: ref.watch(journalPostingServiceProvider),
+    entryBuilder: ref.watch(accountingEntryBuilderProvider),
+    orchestrator: ref.watch(canonicalTransactionOrchestratorProvider),
+  );
 });
 
 final saleRepositoryImplProvider = Provider<SaleRepositoryImpl>((ref) {
@@ -173,7 +187,7 @@ final salesProvider = StreamProvider.autoDispose<List<Sale>>((ref) {
   return ref.watch(watchSalesUseCaseProvider).call(filter);
 });
 
-final saleByIdProvider = FutureProvider.autoDispose.family<Sale?, int>((
+final saleByIdProvider = FutureProvider.autoDispose.family<Sale?, String>((
   ref,
   id,
 ) async {

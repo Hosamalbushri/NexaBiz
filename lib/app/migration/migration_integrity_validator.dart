@@ -125,9 +125,9 @@ class MigrationIntegrityValidator {
     for (final table in uuidTables) {
       try {
         final res = await invDb.customSelect('''
-          SELECT uuid, COUNT(*) as c FROM $table 
-          WHERE uuid IS NOT NULL AND uuid != '' 
-          GROUP BY uuid HAVING c > 1
+          SELECT id, COUNT(*) as c FROM $table 
+          WHERE id IS NOT NULL AND id != '' 
+          GROUP BY id HAVING c > 1
         ''').get();
         duplicateUuidsCount += res.length;
       } catch (_) {}
@@ -137,9 +137,10 @@ class MigrationIntegrityValidator {
     try {
       final res = await invDb.customSelect('''
         SELECT COUNT(*) as c FROM stock_movement_lines l
-        WHERE l.movement_uuid NOT IN (SELECT uuid FROM stock_receipts)
-          AND l.movement_uuid NOT IN (SELECT uuid FROM stock_issues)
-          AND l.movement_uuid NOT IN (SELECT uuid FROM stock_returns)
+        WHERE l.receipt_id IS NULL 
+          AND l.issue_id IS NULL 
+          AND l.return_id IS NULL 
+          AND l.transfer_id IS NULL
       ''').getSingle();
       orphanLinesCount = res.read<int>('c');
     } catch (_) {}
@@ -148,7 +149,7 @@ class MigrationIntegrityValidator {
     try {
       final res = await invDb.customSelect('''
         SELECT COUNT(*) as c FROM inventory_cost_consumptions c
-        WHERE c.layer_uuid NOT IN (SELECT uuid FROM inventory_cost_layers)
+        WHERE c.layer_uuid NOT IN (SELECT id FROM inventory_cost_layers)
       ''').getSingle();
       orphanConsumptionsCount = res.read<int>('c');
     } catch (_) {}
@@ -190,7 +191,7 @@ class MigrationIntegrityValidator {
       final res = await accDb.customSelect('''
         SELECT SUM(l.base_debit - l.base_credit) as total
         FROM journal_lines l
-        JOIN accounts a ON a.uuid = l.account_uuid
+        JOIN accounts a ON a.id = l.account_id
         WHERE a.account_code = '1230' OR a.account_type = 'asset'
       ''').getSingle();
       totalGL = res.read<double?>('total') ?? 0.0;

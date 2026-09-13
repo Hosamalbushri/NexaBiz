@@ -105,13 +105,15 @@ class InventoryAccountingReconciliationEngine {
               (tbl) =>
                   tbl.companyId.equals(targetCompanyId) &
                   tbl.isActive.equals(true) &
-                  (tbl.accountCode.equals('1230') |
-                      tbl.name.like('%Inventory%')),
+                  tbl.accountType.equals('asset') &
+                  (tbl.name.like('%Inventory%') |
+                      tbl.name.like('%مخزون%') |
+                      tbl.accountCode.like('123%')),
             ))
             .get();
 
     if (accounts.isEmpty) return 0.0;
-    final accountUuids = accounts.map((a) => a.uuid).toList();
+    final accountUuids = accounts.map((a) => a.id).toList();
 
     final journalEntries =
         await (_accountingDb.select(_accountingDb.journalEntries)..where(
@@ -123,13 +125,13 @@ class InventoryAccountingReconciliationEngine {
             .get();
 
     if (journalEntries.isEmpty) return 0.0;
-    final entryUuids = journalEntries.map((j) => j.uuid).toList();
+    final entryUuids = journalEntries.map((j) => j.id).toList();
 
     final jLines =
         await (_accountingDb.select(_accountingDb.journalLines)..where(
               (tbl) =>
-                  tbl.entryUuid.isIn(entryUuids) &
-                  tbl.accountUuid.isIn(accountUuids),
+                  tbl.entryId.isIn(entryUuids) &
+                  tbl.accountId.isIn(accountUuids),
             ))
             .get();
 
@@ -219,10 +221,10 @@ class InventoryAccountingReconciliationEngine {
           }
         }
 
-        final jeUuids = jes.map((j) => j.uuid).toList();
+        final jeUuids = jes.map((j) => j.id).toList();
         final jLines = await (_accountingDb.select(
           _accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.isIn(jeUuids))).get();
+        )..where((tbl) => tbl.entryId.isIn(jeUuids))).get();
 
         double totalDebit = 0.0;
         for (final jl in jLines) {
@@ -280,10 +282,10 @@ class InventoryAccountingReconciliationEngine {
           ),
         );
       } else {
-        final jeUuids = jes.map((j) => j.uuid).toList();
+        final jeUuids = jes.map((j) => j.id).toList();
         final jLines = await (_accountingDb.select(
           _accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.isIn(jeUuids))).get();
+        )..where((tbl) => tbl.entryId.isIn(jeUuids))).get();
 
         double totalDebit = 0.0;
         for (final jl in jLines) {
@@ -363,7 +365,7 @@ class InventoryAccountingReconciliationEngine {
           await (_accountingDb.select(_accountingDb.journalEntries)..where(
                 (tbl) =>
                     tbl.sourceType.equals('journal_reverse') &
-                    tbl.sourceId.equals(je.uuid) &
+                    tbl.sourceId.equals(je.id) &
                     tbl.deletedAt.isNull() &
                     tbl.isPosted.equals(true),
               ))

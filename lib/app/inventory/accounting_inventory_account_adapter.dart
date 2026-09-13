@@ -18,7 +18,7 @@ class AccountingInventoryAccountAdapter implements InventoryAccountPort {
 
   InventoryAccountRef _map(Account account) {
     return InventoryAccountRef(
-      accountId: account.uuid,
+      accountId: account.id,
       code: account.accountCode,
       name: account.name,
       systemKey: AccountLabels.systemKeyOf(account),
@@ -59,7 +59,7 @@ class AccountingInventoryAccountAdapter implements InventoryAccountPort {
   Future<InventoryAccountRef?> findById(String accountId) async {
     final accounts = await _scopedInventoryAccounts();
     for (final acc in accounts) {
-      if (acc.uuid == accountId) {
+      if (acc.id == accountId) {
         return _map(acc);
       }
     }

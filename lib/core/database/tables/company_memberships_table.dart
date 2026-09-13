@@ -1,21 +1,19 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 import 'users_table.dart';
 import 'companies_table.dart';
 
 /// Canonical CompanyMemberships table in `nexabiz.sqlite`.
 @DataClassName('CompanyMembershipData')
 class CompanyMemberships extends Table {
-  /// Local SQLite autoincrement primary key.
-  IntColumn get id => integer().autoIncrement()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
-  /// Stable 36-character canonical UUID v4 identity.
-  TextColumn get uuid => text().unique()();
+  /// Foreign key referencing `Users.id`.
+  TextColumn get userId => text().references(Users, #id)();
 
-  /// Foreign key referencing `Users.uuid`.
-  TextColumn get userUuid => text().references(Users, #uuid)();
-
-  /// Foreign key referencing `Companies.uuid`.
-  TextColumn get companyUuid => text().references(Companies, #uuid)();
+  /// Foreign key referencing `Companies.id`.
+  TextColumn get companyId => text().references(Companies, #id)();
 
   /// Role within company: 'owner', 'admin', 'member', 'viewer'.
   TextColumn get role => text().withDefault(const Constant('member'))();
@@ -28,4 +26,12 @@ class CompanyMemberships extends Table {
 
   /// Epoch timestamp of last membership update.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, userId},
+      ];
 }

@@ -19,10 +19,10 @@ abstract final class ReceiptsPaymentsRoutes {
   static const createTransfer = '/receipts-payments/transfers/create';
   static const createExchange = '/receipts-payments/exchanges/create';
 
-  static String details(int id) => '/receipts-payments/$id';
-  static String edit(int id) => '/receipts-payments/$id/edit';
-  static String editTransfer(int id) => '/receipts-payments/transfers/$id/edit';
-  static String editExchange(int id) => '/receipts-payments/exchanges/$id/edit';
+  static String details(String id) => '/receipts-payments/$id';
+  static String edit(String id) => '/receipts-payments/$id/edit';
+  static String editTransfer(String id) => '/receipts-payments/transfers/$id/edit';
+  static String editExchange(String id) => '/receipts-payments/exchanges/$id/edit';
 
   static String listFor(TransactionType type) => switch (type) {
     TransactionType.receipt => receiptsList,
@@ -54,7 +54,7 @@ abstract final class ReceiptsPaymentsRoutes {
   static void pushList(BuildContext context, {required TransactionType type}) =>
       context.push(listFor(type));
 
-  static void pushDetails(BuildContext context, int id) =>
+  static void pushDetails(BuildContext context, String id) =>
       context.push(details(id));
 
   static void pushCreateReceipt(BuildContext context) =>
@@ -69,12 +69,12 @@ abstract final class ReceiptsPaymentsRoutes {
   static void pushCreateExchange(BuildContext context) =>
       context.push(createExchange);
 
-  static void pushEdit(BuildContext context, int id) => context.push(edit(id));
+  static void pushEdit(BuildContext context, String id) => context.push(edit(id));
 
-  static void pushEditTransfer(BuildContext context, int id) =>
+  static void pushEditTransfer(BuildContext context, String id) =>
       context.push(editTransfer(id));
 
-  static void pushEditExchange(BuildContext context, int id) =>
+  static void pushEditExchange(BuildContext context, String id) =>
       context.push(editExchange(id));
 
   static void backToList(

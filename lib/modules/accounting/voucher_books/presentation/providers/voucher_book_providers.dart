@@ -29,7 +29,7 @@ final voucherBookSectionsProvider =
     });
 
 final voucherBookByIdProvider = FutureProvider.autoDispose
-    .family<VoucherBook?, int>((ref, id) {
+    .family<VoucherBook?, String>((ref, id) {
       return ref.watch(voucherBookRepositoryProvider).getById(id);
     });
 

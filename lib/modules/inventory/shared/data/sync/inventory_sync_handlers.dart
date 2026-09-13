@@ -426,7 +426,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     await db.transaction(() async {
       final existing =
           await (db.select(db.stockReceipts)..where(
-                (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+                (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
               ))
               .getSingleOrNull();
 
@@ -451,7 +451,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
           : null;
 
       final companion = StockReceiptsCompanion(
-        uuid: Value(entityId),
+        id: Value(entityId),
         receiptNumber: Value(
           payload['receiptNumber']?.toString() ??
               payload['receipt_number']?.toString() ??
@@ -509,7 +509,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       if (existing != null) {
         await (db.update(db.stockReceipts)..where(
-              (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+              (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
             ))
             .write(companion);
       } else {
@@ -518,7 +518,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       await (db.delete(
         db.stockMovementLines,
-      )..where((t) => t.movementUuid.equals(entityId))).go();
+      )..where((t) => t.receiptId.equals(entityId))).go();
       final rawLines = payload['lines'];
       if (rawLines is List) {
         for (final raw in rawLines) {
@@ -532,8 +532,8 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               .into(db.stockMovementLines)
               .insert(
                 StockMovementLinesCompanion(
-                  uuid: Value(_normalizeUuid(rawLineUuid)),
-                  movementUuid: Value(entityId),
+                  id: Value(_normalizeUuid(rawLineUuid)),
+                  receiptId: Value(entityId),
                   movementType: const Value('receipt'),
                   itemCode: Value(
                     l['itemCode']?.toString() ??
@@ -633,7 +633,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     await db.transaction(() async {
       final existing =
           await (db.select(db.stockIssues)..where(
-                (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+                (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
               ))
               .getSingleOrNull();
 
@@ -666,7 +666,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               : null;
 
       final companion = StockIssuesCompanion(
-        uuid: Value(entityId),
+        id: Value(entityId),
         issueNumber: Value(
           payload['issueNumber']?.toString() ??
               payload['issue_number']?.toString() ??
@@ -721,7 +721,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       if (existing != null) {
         await (db.update(db.stockIssues)..where(
-              (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+              (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
             ))
             .write(companion);
       } else {
@@ -730,7 +730,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       await (db.delete(
         db.stockMovementLines,
-      )..where((t) => t.movementUuid.equals(entityId))).go();
+      )..where((t) => t.issueId.equals(entityId))).go();
       final rawLines = payload['lines'];
       if (rawLines is List) {
         for (final raw in rawLines) {
@@ -744,8 +744,8 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               .into(db.stockMovementLines)
               .insert(
                 StockMovementLinesCompanion(
-                  uuid: Value(_normalizeUuid(rawLineUuid)),
-                  movementUuid: Value(entityId),
+                  id: Value(_normalizeUuid(rawLineUuid)),
+                  issueId: Value(entityId),
                   movementType: const Value('issue'),
                   itemCode: Value(
                     l['itemCode']?.toString() ??
@@ -843,7 +843,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     await db.transaction(() async {
       final existing =
           await (db.select(db.stockTransfers)..where(
-                (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+                (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
               ))
               .getSingleOrNull();
 
@@ -868,7 +868,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
           : null;
 
       final companion = StockTransfersCompanion(
-        uuid: Value(entityId),
+        id: Value(entityId),
         transferNumber: Value(
           payload['transferNumber']?.toString() ??
               payload['transfer_number']?.toString() ??
@@ -909,7 +909,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       if (existing != null) {
         await (db.update(db.stockTransfers)..where(
-              (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+              (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
             ))
             .write(companion);
       } else {
@@ -918,7 +918,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       await (db.delete(
         db.stockMovementLines,
-      )..where((t) => t.movementUuid.equals(entityId))).go();
+      )..where((t) => t.transferId.equals(entityId))).go();
       final rawLines = payload['lines'];
       if (rawLines is List) {
         for (final raw in rawLines) {
@@ -932,8 +932,8 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               .into(db.stockMovementLines)
               .insert(
                 StockMovementLinesCompanion(
-                  uuid: Value(_normalizeUuid(rawLineUuid)),
-                  movementUuid: Value(entityId),
+                  id: Value(_normalizeUuid(rawLineUuid)),
+                  transferId: Value(entityId),
                   movementType: const Value('transfer'),
                   itemCode: Value(
                     l['itemCode']?.toString() ??
@@ -1026,7 +1026,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     await db.transaction(() async {
       final existing =
           await (db.select(db.stockReturns)..where(
-                (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+                (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
               ))
               .getSingleOrNull();
 
@@ -1056,16 +1056,17 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
           'sales_return';
 
       final companion = StockReturnsCompanion(
-        uuid: Value(entityId),
+        id: Value(entityId),
         returnNumber: Value(
           payload['returnNumber']?.toString() ??
               payload['return_number']?.toString() ??
               '',
         ),
         returnType: Value(returnTypeStr),
-        originalMovementUuid: Value(
+        originalDocumentId: Value(
           payload['originalMovementUuid']?.toString() ??
-              payload['original_movement_uuid']?.toString(),
+              payload['original_movement_uuid']?.toString() ??
+              payload['originalDocumentId']?.toString(),
         ),
         partyName: Value(
           payload['partyName']?.toString() ?? payload['party_name']?.toString(),
@@ -1100,7 +1101,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       if (existing != null) {
         await (db.update(db.stockReturns)..where(
-              (t) => t.uuid.equals(entityId) & t.companyId.equals(companyId),
+              (t) => t.id.equals(entityId) & t.companyId.equals(companyId),
             ))
             .write(companion);
       } else {
@@ -1109,7 +1110,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
 
       await (db.delete(
         db.stockMovementLines,
-      )..where((t) => t.movementUuid.equals(entityId))).go();
+      )..where((t) => t.returnId.equals(entityId))).go();
       final rawLines = payload['lines'];
       if (rawLines is List) {
         for (final raw in rawLines) {
@@ -1123,8 +1124,8 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               .into(db.stockMovementLines)
               .insert(
                 StockMovementLinesCompanion(
-                  uuid: Value(_normalizeUuid(rawLineUuid)),
-                  movementUuid: Value(entityId),
+                  id: Value(_normalizeUuid(rawLineUuid)),
+                  returnId: Value(entityId),
                   movementType: Value(returnTypeStr),
                   itemCode: Value(
                     l['itemCode']?.toString() ??
@@ -1258,7 +1259,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_receipt':
           await (db.update(db.stockReceipts)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(
@@ -1272,7 +1273,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_issue':
           await (db.update(db.stockIssues)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(
@@ -1286,7 +1287,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_transfer':
           await (db.update(db.stockTransfers)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(
@@ -1300,7 +1301,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_return':
           await (db.update(db.stockReturns)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(
@@ -1329,7 +1330,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_receipt':
           await (db.update(db.stockReceipts)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(
@@ -1339,7 +1340,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_issue':
           await (db.update(db.stockIssues)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(const StockIssuesCompanion(syncStatus: Value('conflict')));
@@ -1347,7 +1348,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_transfer':
           await (db.update(db.stockTransfers)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(
@@ -1357,7 +1358,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         case 'stock_return':
           await (db.update(db.stockReturns)..where(
                 (t) =>
-                    t.uuid.equals(normEntityId) &
+                    t.id.equals(normEntityId) &
                     t.companyId.equals(_currentCompanyId),
               ))
               .write(

@@ -1,13 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Canonical Users table in `nexabiz.sqlite`.
 @DataClassName('UserData')
 class Users extends Table {
-  /// Local SQLite autoincrement primary key.
-  IntColumn get id => integer().autoIncrement()();
-
-  /// Stable 36-character canonical UUID v4 identity.
-  TextColumn get uuid => text().unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   /// Unique email login identifier.
   TextColumn get email => text().unique()();
@@ -29,4 +27,7 @@ class Users extends Table {
 
   /// Epoch timestamp of last user update.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

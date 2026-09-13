@@ -4,6 +4,35 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
+/// Generates RFC 9562 version-7 UUIDs for offline-created records.
+String generateUuidV7([int? customTimestampMs, Random? random]) {
+  final rng = random ?? Random.secure();
+  final timestampMs = customTimestampMs ?? DateTime.now().millisecondsSinceEpoch;
+
+  final bytes = Uint8List(16);
+
+  // 48-bit timestamp
+  bytes[0] = (timestampMs >> 40) & 0xff;
+  bytes[1] = (timestampMs >> 32) & 0xff;
+  bytes[2] = (timestampMs >> 24) & 0xff;
+  bytes[3] = (timestampMs >> 16) & 0xff;
+  bytes[4] = (timestampMs >> 8) & 0xff;
+  bytes[5] = timestampMs & 0xff;
+
+  // 4-bit version (7) + 12-bit random (rand_a)
+  final randA = rng.nextInt(4096);
+  bytes[6] = 0x70 | ((randA >> 8) & 0x0f);
+  bytes[7] = randA & 0xff;
+
+  // 2-bit variant (10) + 62-bit random (rand_b)
+  bytes[8] = 0x80 | (rng.nextInt(64) & 0x3f);
+  for (var i = 9; i < 16; i++) {
+    bytes[i] = rng.nextInt(256);
+  }
+
+  return _formatUuid(bytes);
+}
+
 /// Generates RFC 4122 version-4 UUIDs for offline-created records.
 String generateUuidV4([Random? random]) {
   final rng = random ?? Random.secure();

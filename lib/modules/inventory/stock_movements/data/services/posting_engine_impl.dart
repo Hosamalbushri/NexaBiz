@@ -14,6 +14,8 @@ import 'package:stock_count/modules/inventory/cost_valuation/domain/services/cos
 import 'package:stock_count/core/setup/setup_core.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/stock_validation_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
+import 'package:stock_count/modules/currency/domain/services/functional_currency_service.dart';
 import '../../domain/services/posting_engine.dart';
 
 class PostingEngineImpl implements PostingEngine {
@@ -24,9 +26,11 @@ class PostingEngineImpl implements PostingEngine {
     String Function()? readCompanyId,
     InitializationGuard? initializationGuard,
     StockValidationService? stockValidationService,
+    FunctionalCurrencyService? functionalCurrencyService,
   ]) : _readCompanyId = readCompanyId,
        _initializationGuard = initializationGuard,
-       _stockValidationService = stockValidationService;
+       _stockValidationService = stockValidationService,
+       _functionalCurrencyService = functionalCurrencyService;
 
   final NexabizDatabase _db;
   final CostLayerService _costLayerService;
@@ -34,6 +38,7 @@ class PostingEngineImpl implements PostingEngine {
   final String Function()? _readCompanyId;
   final InitializationGuard? _initializationGuard;
   final StockValidationService? _stockValidationService;
+  final FunctionalCurrencyService? _functionalCurrencyService;
 
   StockValidationService get _effectiveStockValidation =>
       _stockValidationService ??
@@ -66,7 +71,12 @@ class PostingEngineImpl implements PostingEngine {
     );
 
     final nowEpoch = DateTime.now().millisecondsSinceEpoch;
-    final rate = (document.exchangeRate > 0) ? document.exchangeRate : 1.0;
+    final baseCurrency = await _resolveCompanyBaseCurrency();
+    final rate = ExchangeRateValidator.validate(
+      currencyCode: document.currencyCode,
+      baseCurrencyCode: baseCurrency,
+      exchangeRate: document.exchangeRate,
+    );
     double totalValue = 0.0;
 
     await _db.transaction(() async {
@@ -74,7 +84,7 @@ class PostingEngineImpl implements PostingEngine {
         // Defensive check: skip if line is already posted
         final dbLine = await (_db.select(
           _db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).getSingleOrNull();
+        )..where((tbl) => tbl.id.equals(line.lineUuid))).getSingleOrNull();
 
         if (dbLine != null && dbLine.postedAt != null) {
           totalValue += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
@@ -124,7 +134,7 @@ class PostingEngineImpl implements PostingEngine {
         // Update line posted details
         await (_db.update(
           _db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).write(
+        )..where((tbl) => tbl.id.equals(line.lineUuid))).write(
           StockMovementLinesCompanion(
             postedCost: Value(baseUnitCost),
             postedAt: Value(nowEpoch),
@@ -171,7 +181,7 @@ class PostingEngineImpl implements PostingEngine {
         // Defensive check: skip if line is already posted
         final dbLine = await (_db.select(
           _db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).getSingleOrNull();
+        )..where((tbl) => tbl.id.equals(line.lineUuid))).getSingleOrNull();
 
         if (dbLine != null && dbLine.postedAt != null) {
           totalCogs += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
@@ -223,7 +233,7 @@ class PostingEngineImpl implements PostingEngine {
         // Update line posted details
         await (_db.update(
           _db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).write(
+        )..where((tbl) => tbl.id.equals(line.lineUuid))).write(
           StockMovementLinesCompanion(
             postedCost: Value(consumptionResult.effectiveUnitCost),
             postedAt: Value(nowEpoch),
@@ -283,7 +293,7 @@ class PostingEngineImpl implements PostingEngine {
         // Defensive check: skip if line is already posted
         final dbLine = await (_db.select(
           _db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(line.lineUuid))).getSingleOrNull();
+        )..where((tbl) => tbl.id.equals(line.lineUuid))).getSingleOrNull();
 
         if (dbLine != null && dbLine.postedAt != null) {
           totalTransferredValue += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
@@ -391,39 +401,30 @@ class PostingEngineImpl implements PostingEngine {
   Future<void> reversePosting({required InventoryDocumentRef document}) async {
     await _initializationGuard?.assertInitialized();
     await _db.transaction(() async {
+      final lines = await (_db.select(_db.stockMovementLines)
+            ..where(
+              (tbl) =>
+                  tbl.receiptId.equals(document.documentId) |
+                  tbl.issueId.equals(document.documentId) |
+                  tbl.returnId.equals(document.documentId) |
+                  tbl.transferId.equals(document.documentId),
+            ))
+          .get();
+
+      final affectedItems = lines.map((l) => l.itemCode).toSet();
+      final targetWh = document.warehouseId;
+
+      // Delete posted ledger entries for the unposted document
+      await (_db.delete(_db.stockMovementLedgers)
+            ..where(
+              (tbl) =>
+                  tbl.sourceDocumentId.equals(document.documentId) &
+                  tbl.companyId.equals(_currentCompanyId),
+            ))
+          .go();
+
       switch (document.documentType) {
         case InventoryDocumentType.stockReceipt:
-          final lines =
-              await (_db.select(_db.stockMovementLines)..where(
-                    (tbl) => tbl.movementUuid.equals(document.documentId),
-                  ))
-                  .get();
-
-          for (final line in lines) {
-            await _adjustProductQty(
-              line.itemCode,
-              document.warehouseId,
-              -line.quantity,
-            );
-
-            // Record reversing outbound ledger entry for receipt reversal
-            await _recordLedgerEntry(
-              warehouseId: document.warehouseId ?? '',
-              itemCode: line.itemCode,
-              quantity: line.quantity,
-              direction: 'outbound',
-              movementType: 'reversal',
-              postingDate: document.documentDate,
-              sourceDocumentId: document.documentId,
-              sourceDocumentType: document.documentType.storageValue,
-              sourceLineUuid: line.uuid,
-              unitCost: line.postedCost ?? line.unitCost,
-              totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
-              costingMethodUsed: 'reversal',
-              companyId: _currentCompanyId,
-            );
-          }
-
           await _costLayerService.reverseLayer(document.documentId);
           await _setDocumentStatus(
             document,
@@ -433,38 +434,10 @@ class PostingEngineImpl implements PostingEngine {
           break;
 
         case InventoryDocumentType.stockIssue:
-          final lines =
-              await (_db.select(_db.stockMovementLines)..where(
-                    (tbl) => tbl.movementUuid.equals(document.documentId),
-                  ))
-                  .get();
-
+        case InventoryDocumentType.salesInvoice:
           for (final line in lines) {
-            await _costLayerService.reverseConsumptions(line.uuid);
-            await _adjustProductQty(
-              line.itemCode,
-              document.warehouseId,
-              line.quantity,
-            );
-
-            // Record reversing inbound ledger entry for issue reversal
-            await _recordLedgerEntry(
-              warehouseId: document.warehouseId ?? '',
-              itemCode: line.itemCode,
-              quantity: line.quantity,
-              direction: 'inbound',
-              movementType: 'reversal',
-              postingDate: document.documentDate,
-              sourceDocumentId: document.documentId,
-              sourceDocumentType: document.documentType.storageValue,
-              sourceLineUuid: line.uuid,
-              unitCost: line.postedCost ?? line.unitCost,
-              totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
-              costingMethodUsed: 'reversal',
-              companyId: _currentCompanyId,
-            );
+            await _costLayerService.reverseConsumptions(line.id);
           }
-
           await _setDocumentStatus(
             document,
             InventoryDocumentStatus.draft,
@@ -475,7 +448,7 @@ class PostingEngineImpl implements PostingEngine {
         case InventoryDocumentType.stockReturn:
           final returns = await (_db.select(
             _db.stockReturns,
-          )..where((tbl) => tbl.uuid.equals(document.documentId))).get();
+          )..where((tbl) => tbl.id.equals(document.documentId))).get();
 
           if (returns.isNotEmpty) {
             final ret = returns.first;
@@ -483,64 +456,11 @@ class PostingEngineImpl implements PostingEngine {
                 ret.returnType == 'purchase_return' ||
                 ret.returnType == 'purchaseReturn';
 
-            final lines =
-                await (_db.select(_db.stockMovementLines)..where(
-                      (tbl) => tbl.movementUuid.equals(document.documentId),
-                    ))
-                    .get();
-
-            for (final line in lines) {
-              if (isPurchaseReturn) {
-                // Outbound return: reverse consumption, increase stock
-                await _costLayerService.reverseConsumptions(line.uuid);
-                await _adjustProductQty(
-                  line.itemCode,
-                  document.warehouseId,
-                  line.quantity,
-                );
-
-                await _recordLedgerEntry(
-                  warehouseId: document.warehouseId ?? '',
-                  itemCode: line.itemCode,
-                  quantity: line.quantity,
-                  direction: 'inbound',
-                  movementType: 'reversal',
-                  postingDate: document.documentDate,
-                  sourceDocumentId: document.documentId,
-                  sourceDocumentType: document.documentType.storageValue,
-                  sourceLineUuid: line.uuid,
-                  unitCost: line.postedCost ?? line.unitCost,
-                  totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
-                  costingMethodUsed: 'reversal',
-                  companyId: _currentCompanyId,
-                );
-              } else {
-                // Inbound return: reverse layer, decrease stock
-                await _adjustProductQty(
-                  line.itemCode,
-                  document.warehouseId,
-                  -line.quantity,
-                );
-
-                await _recordLedgerEntry(
-                  warehouseId: document.warehouseId ?? '',
-                  itemCode: line.itemCode,
-                  quantity: line.quantity,
-                  direction: 'outbound',
-                  movementType: 'reversal',
-                  postingDate: document.documentDate,
-                  sourceDocumentId: document.documentId,
-                  sourceDocumentType: document.documentType.storageValue,
-                  sourceLineUuid: line.uuid,
-                  unitCost: line.postedCost ?? line.unitCost,
-                  totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
-                  costingMethodUsed: 'reversal',
-                  companyId: _currentCompanyId,
-                );
+            if (isPurchaseReturn) {
+              for (final line in lines) {
+                await _costLayerService.reverseConsumptions(line.id);
               }
-            }
-
-            if (!isPurchaseReturn) {
+            } else {
               await _costLayerService.reverseLayer(document.documentId);
             }
 
@@ -555,64 +475,19 @@ class PostingEngineImpl implements PostingEngine {
         case InventoryDocumentType.stockTransfer:
           final transfers = await (_db.select(
             _db.stockTransfers,
-          )..where((tbl) => tbl.uuid.equals(document.documentId))).get();
+          )..where((tbl) => tbl.id.equals(document.documentId))).get();
 
           if (transfers.isNotEmpty) {
             final tr = transfers.first;
-            final lines =
-                await (_db.select(_db.stockMovementLines)..where(
-                      (tbl) => tbl.movementUuid.equals(document.documentId),
-                    ))
-                    .get();
-
             for (final line in lines) {
-              // Reverse inbound in destination warehouse
-              await _adjustProductQty(
-                line.itemCode,
-                tr.toWarehouseId,
-                -line.quantity,
-              );
-              await _recordLedgerEntry(
-                warehouseId: tr.toWarehouseId,
-                itemCode: line.itemCode,
-                quantity: line.quantity,
-                direction: 'outbound',
-                movementType: 'reversal',
-                postingDate: document.documentDate,
-                sourceDocumentId: document.documentId,
-                sourceDocumentType: document.documentType.storageValue,
-                sourceLineUuid: line.uuid,
-                unitCost: line.postedCost ?? line.unitCost,
-                totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
-                costingMethodUsed: 'reversal',
-                companyId: _currentCompanyId,
-              );
-
-              // Reverse outbound consumptions in source warehouse
-              await _costLayerService.reverseConsumptions(line.uuid);
-              await _adjustProductQty(
-                line.itemCode,
-                tr.fromWarehouseId,
-                line.quantity,
-              );
-              await _recordLedgerEntry(
-                warehouseId: tr.fromWarehouseId,
-                itemCode: line.itemCode,
-                quantity: line.quantity,
-                direction: 'inbound',
-                movementType: 'reversal',
-                postingDate: document.documentDate,
-                sourceDocumentId: document.documentId,
-                sourceDocumentType: document.documentType.storageValue,
-                sourceLineUuid: line.uuid,
-                unitCost: line.postedCost ?? line.unitCost,
-                totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
-                costingMethodUsed: 'reversal',
-                companyId: _currentCompanyId,
-              );
+              await _costLayerService.reverseConsumptions(line.id);
             }
-
             await _costLayerService.reverseLayer(document.documentId);
+
+            // Add source and destination warehouses for stock recalculation
+            await _recalculateStockBalances(affectedItems, tr.fromWarehouseId);
+            await _recalculateStockBalances(affectedItems, tr.toWarehouseId);
+
             await _setDocumentStatus(
               document,
               InventoryDocumentStatus.draft,
@@ -621,49 +496,95 @@ class PostingEngineImpl implements PostingEngine {
           }
           break;
 
-        case InventoryDocumentType.salesInvoice:
-          final lines =
-              await (_db.select(_db.stockMovementLines)..where(
-                    (tbl) => tbl.movementUuid.equals(document.documentId),
-                  ))
-                  .get();
-
-          for (final line in lines) {
-            await _costLayerService.reverseConsumptions(line.uuid);
-            await _adjustProductQty(
-              line.itemCode,
-              document.warehouseId,
-              line.quantity,
-            );
-
-            await _recordLedgerEntry(
-              warehouseId: document.warehouseId ?? '',
-              itemCode: line.itemCode,
-              quantity: line.quantity,
-              direction: 'inbound',
-              movementType: 'reversal',
-              postingDate: document.documentDate,
-              sourceDocumentId: document.documentId,
-              sourceDocumentType: document.documentType.storageValue,
-              sourceLineUuid: line.uuid,
-              unitCost: line.postedCost ?? line.unitCost,
-              totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
-              costingMethodUsed: 'reversal',
-              companyId: _currentCompanyId,
-            );
-          }
-
+        default:
           await _setDocumentStatus(
             document,
             InventoryDocumentStatus.draft,
             null,
           );
           break;
+      }
 
-        default:
-          break;
+      // Recalculate stock balance for affected items from valid posted movement history
+      if (targetWh != null && targetWh.isNotEmpty) {
+        await _recalculateStockBalances(affectedItems, targetWh);
       }
     });
+  }
+
+  /// Recalculates stock balances for [items] in [warehouseId] based on valid posted movements
+  Future<void> _recalculateStockBalances(
+    Set<String> items,
+    String warehouseId,
+  ) async {
+    final effectiveCompanyId = _currentCompanyId;
+    for (final itemCode in items) {
+      // Sum all inbound posted movement quantities
+      final inboundLedgers = await (_db.select(_db.stockMovementLedgers)
+            ..where(
+              (tbl) =>
+                  tbl.itemCode.equals(itemCode) &
+                  tbl.warehouseId.equals(warehouseId) &
+                  tbl.companyId.equals(effectiveCompanyId) &
+                  tbl.direction.equals('inbound') &
+                  tbl.movementType.isNotIn(['reversal']),
+            ))
+          .get();
+
+      // Sum all outbound posted movement quantities
+      final outboundLedgers = await (_db.select(_db.stockMovementLedgers)
+            ..where(
+              (tbl) =>
+                  tbl.itemCode.equals(itemCode) &
+                  tbl.warehouseId.equals(warehouseId) &
+                  tbl.companyId.equals(effectiveCompanyId) &
+                  tbl.direction.equals('outbound') &
+                  tbl.movementType.isNotIn(['reversal']),
+            ))
+          .get();
+
+      final totalInbound = inboundLedgers.fold<double>(
+        0.0,
+        (sum, l) => sum + l.quantity,
+      );
+      final totalOutbound = outboundLedgers.fold<double>(
+        0.0,
+        (sum, l) => sum + l.quantity,
+      );
+      final netQty = totalInbound - totalOutbound;
+
+      final whQuery = _db.select(_db.productWarehouseStocks)
+        ..where(
+          (w) =>
+              w.itemCode.equals(itemCode) &
+              w.warehouseId.equals(warehouseId) &
+              w.companyId.equals(effectiveCompanyId),
+        );
+
+      final whStocks = await whQuery.get();
+      if (whStocks.isNotEmpty) {
+        await (_db.update(_db.productWarehouseStocks)..where(
+              (w) =>
+                  w.id.equals(whStocks.first.id) &
+                  w.companyId.equals(effectiveCompanyId),
+            ))
+            .write(
+              ProductWarehouseStocksCompanion(onHandQty: Value(netQty)),
+            );
+      } else {
+        await _db.into(_db.productWarehouseStocks).insert(
+              ProductWarehouseStocksCompanion(
+                id: Value(generateUuidV7()),
+                itemCode: Value(itemCode),
+                warehouseId: Value(warehouseId),
+                onHandQty: Value(netQty),
+                createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+                updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+                companyId: Value(effectiveCompanyId),
+              ),
+            );
+      }
+    }
   }
 
   Future<void> _adjustProductQty(
@@ -702,7 +623,7 @@ class PostingEngineImpl implements PostingEngine {
         final updatedWhCount =
             await (_db.update(_db.productWarehouseStocks)..where(
                   (w) =>
-                      w.uuid.equals(whStock.uuid) &
+                      w.id.equals(whStock.id) &
                       w.companyId.equals(effectiveCompanyId) &
                       w.onHandQty.isBiggerOrEqualValue(reqQty),
                 ))
@@ -730,7 +651,7 @@ class PostingEngineImpl implements PostingEngine {
       if (prods.isEmpty) {
         await _db.into(_db.products).insert(
               ProductsCompanion(
-                uuid: Value(generateUuidV4()),
+                id: Value(generateUuidV7()),
                 itemCode: Value(itemCode),
                 name: Value(itemCode),
                 packSize: const Value(1),
@@ -758,7 +679,7 @@ class PostingEngineImpl implements PostingEngine {
           final newWhQty = whStock.onHandQty + deltaQty;
           await (_db.update(_db.productWarehouseStocks)..where(
                 (w) =>
-                    w.uuid.equals(whStock.uuid) &
+                    w.id.equals(whStock.id) &
                     w.companyId.equals(effectiveCompanyId),
               ))
               .write(
@@ -769,7 +690,7 @@ class PostingEngineImpl implements PostingEngine {
               .into(_db.productWarehouseStocks)
               .insert(
                 ProductWarehouseStocksCompanion(
-                  uuid: Value(generateUuidV4()),
+                  id: Value(generateUuidV7()),
                   itemCode: Value(itemCode),
                   warehouseId: Value(warehouseId),
                   onHandQty: Value(deltaQty),
@@ -794,7 +715,7 @@ class PostingEngineImpl implements PostingEngine {
       case InventoryDocumentType.stockReceipt:
         await (_db.update(_db.stockReceipts)..where(
               (tbl) =>
-                  tbl.uuid.equals(doc.documentId) &
+                  tbl.id.equals(doc.documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -808,7 +729,7 @@ class PostingEngineImpl implements PostingEngine {
         if (postedAtEpoch == null) {
           await (_db.update(
             _db.stockMovementLines,
-          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+          )..where((tbl) => tbl.receiptId.equals(doc.documentId))).write(
             const StockMovementLinesCompanion(
               postedAt: Value(null),
               postedCost: Value(null),
@@ -819,7 +740,7 @@ class PostingEngineImpl implements PostingEngine {
       case InventoryDocumentType.stockIssue:
         await (_db.update(_db.stockIssues)..where(
               (tbl) =>
-                  tbl.uuid.equals(doc.documentId) &
+                  tbl.id.equals(doc.documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -833,7 +754,7 @@ class PostingEngineImpl implements PostingEngine {
         if (postedAtEpoch == null) {
           await (_db.update(
             _db.stockMovementLines,
-          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+          )..where((tbl) => tbl.issueId.equals(doc.documentId))).write(
             const StockMovementLinesCompanion(
               postedAt: Value(null),
               postedCost: Value(null),
@@ -844,7 +765,7 @@ class PostingEngineImpl implements PostingEngine {
       case InventoryDocumentType.stockReturn:
         await (_db.update(_db.stockReturns)..where(
               (tbl) =>
-                  tbl.uuid.equals(doc.documentId) &
+                  tbl.id.equals(doc.documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -858,7 +779,7 @@ class PostingEngineImpl implements PostingEngine {
         if (postedAtEpoch == null) {
           await (_db.update(
             _db.stockMovementLines,
-          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+          )..where((tbl) => tbl.returnId.equals(doc.documentId))).write(
             const StockMovementLinesCompanion(
               postedAt: Value(null),
               postedCost: Value(null),
@@ -869,7 +790,7 @@ class PostingEngineImpl implements PostingEngine {
       case InventoryDocumentType.stockTransfer:
         await (_db.update(_db.stockTransfers)..where(
               (tbl) =>
-                  tbl.uuid.equals(doc.documentId) &
+                  tbl.id.equals(doc.documentId) &
                   tbl.companyId.equals(_currentCompanyId),
             ))
             .write(
@@ -883,7 +804,7 @@ class PostingEngineImpl implements PostingEngine {
         if (postedAtEpoch == null) {
           await (_db.update(
             _db.stockMovementLines,
-          )..where((tbl) => tbl.movementUuid.equals(doc.documentId))).write(
+          )..where((tbl) => tbl.transferId.equals(doc.documentId))).write(
             const StockMovementLinesCompanion(
               postedAt: Value(null),
               postedCost: Value(null),
@@ -923,7 +844,7 @@ class PostingEngineImpl implements PostingEngine {
         .into(_db.stockMovementLedgers)
         .insert(
           StockMovementLedgersCompanion(
-            uuid: Value(generateUuidV4()),
+            id: Value(generateUuidV7()),
             companyId: Value(companyId),
             warehouseId: Value(warehouseId),
             itemCode: Value(itemCode),
@@ -949,5 +870,18 @@ class PostingEngineImpl implements PostingEngine {
             createdAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
           ),
         );
+  }
+
+  Future<String> _resolveCompanyBaseCurrency() async {
+    final funcService = _functionalCurrencyService;
+    if (funcService != null) {
+      try {
+        final func = await funcService.getFunctionalCurrency(_currentCompanyId);
+        if (func.code.trim().isNotEmpty) {
+          return func.code.trim().toUpperCase();
+        }
+      } catch (_) {}
+    }
+    return 'YER';
   }
 }

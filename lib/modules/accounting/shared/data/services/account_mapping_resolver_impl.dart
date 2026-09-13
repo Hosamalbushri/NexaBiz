@@ -20,7 +20,7 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
   AccountRoleRef _toRoleRef(AccountRole role, Account account) {
     return AccountRoleRef(
       role: role,
-      accountUuid: account.uuid,
+      accountUuid: account.id,
       accountCode: account.accountCode,
       accountName: account.name,
     );
@@ -48,10 +48,7 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
       if (configuredKey != null && configuredKey.isNotEmpty) {
         resolvedAcc =
             await _accountRepository.getByUuid(configuredKey) ??
-            await _accountRepository.getByAccountCode(configuredKey) ??
-            (int.tryParse(configuredKey) != null
-                ? await _accountRepository.getById(int.parse(configuredKey))
-                : null);
+            await _accountRepository.getByAccountCode(configuredKey);
       }
 
       if (resolvedAcc != null) {
@@ -71,10 +68,7 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
         await _validationService.assertCanPost(key);
         final acc =
             await _accountRepository.getByUuid(key) ??
-            await _accountRepository.getByAccountCode(key) ??
-            (int.tryParse(key) != null
-                ? await _accountRepository.getById(int.parse(key))
-                : null);
+            await _accountRepository.getByAccountCode(key);
         if (acc != null) {
           mapped[role] = _toRoleRef(role, acc);
         } else {
@@ -88,6 +82,7 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
         }
       }
     }
+
 
     return AccountMapping(mapped);
   }

@@ -4,7 +4,6 @@ import 'voucher_book_type.dart';
 class VoucherBook {
   const VoucherBook({
     required this.id,
-    required this.uuid,
     required this.name,
     required this.bookType,
     required this.isGroup,
@@ -17,10 +16,10 @@ class VoucherBook {
     this.notes,
   });
 
-  final int id;
-  final String uuid;
+  /// Primary Key (UUID v7).
+  final String id;
 
-  /// Parent section group uuid; null for roots.
+  /// Parent section group ID; null for roots.
   final String? parentId;
 
   final String name;
@@ -40,14 +39,16 @@ class VoucherBook {
   final DateTime updatedAt;
   final String? notes;
 
+  /// Compatibility getter for legacy callers.
+  String get uuid => id;
+
   bool get canAllocate =>
       !isGroup && isActive && currentNumber >= 1 && currentNumber <= endNumber;
 
   bool get isExhausted => !isGroup && currentNumber > endNumber;
 
   VoucherBook copyWith({
-    int? id,
-    String? uuid,
+    String? id,
     String? parentId,
     bool clearParentId = false,
     String? name,
@@ -63,7 +64,6 @@ class VoucherBook {
   }) {
     return VoucherBook(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
       parentId: clearParentId ? null : (parentId ?? this.parentId),
       name: name ?? this.name,
       bookType: bookType ?? this.bookType,

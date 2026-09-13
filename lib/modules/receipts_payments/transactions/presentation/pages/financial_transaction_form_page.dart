@@ -36,7 +36,7 @@ class FinancialTransactionFormPage extends ConsumerStatefulWidget {
   });
 
   final TransactionType? transactionType;
-  final int? transactionId;
+  final String? transactionId;
 
   @override
   ConsumerState<FinancialTransactionFormPage> createState() =>

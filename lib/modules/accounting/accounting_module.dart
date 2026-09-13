@@ -131,7 +131,7 @@ class AccountingModule extends AppModule {
       anyOf: const ['accounting.accounts.create', 'accounting.journals.create'],
     ),
     RouteAccessRule(
-      pathRegex: RegExp(r'^/accounting/accounts/\d+/edit$'),
+      pathRegex: RegExp(r'^/accounting/accounts/[^/]+/edit$'),
       anyOf: const ['accounting.accounts.update'],
     ),
     RouteAccessRule(
@@ -338,11 +338,9 @@ class AccountingModule extends AppModule {
               path: ':id/edit',
               name: 'accountingVoucherBooksEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
-                  state.pathParameters['id'],
-                );
-                if (id == null) {
-                  return const VoucherBookFormPage(bookId: -1);
+                final id = state.pathParameters['id'];
+                if (id == null || id.isEmpty) {
+                  return const VoucherBookFormPage(bookId: null);
                 }
                 return VoucherBookFormPage(bookId: id);
               },
@@ -373,12 +371,7 @@ class AccountingModule extends AppModule {
               path: ':id',
               name: 'accountingAccountDetails',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
-                  state.pathParameters['id'],
-                );
-                if (id == null) {
-                  return const AccountDetailsPage(accountId: -1);
-                }
+                final id = state.pathParameters['id'] ?? '';
                 return AccountDetailsPage(accountId: id);
               },
               routes: [
@@ -386,12 +379,7 @@ class AccountingModule extends AppModule {
                   path: 'edit',
                   name: 'accountingAccountEdit',
                   builder: (context, state) {
-                    final id = AppRouteParamParser.tryParseInt(
-                      state.pathParameters['id'],
-                    );
-                    if (id == null) {
-                      return const AccountFormPage(accountId: -1);
-                    }
+                    final id = state.pathParameters['id'] ?? '';
                     return AccountFormPage(accountId: id);
                   },
                 ),

@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Purchase payment allocations.
 @DataClassName('PurchasePaymentRow')
 class PurchasePayments extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
-
-  TextColumn get purchaseUuid => text().withLength(min: 36, max: 36)();
+  TextColumn get purchaseId => text().withLength(min: 36, max: 36)();
 
   IntColumn get paymentDate => integer()();
 
@@ -22,4 +22,12 @@ class PurchasePayments extends Table {
   IntColumn get createdAt => integer()();
 
   TextColumn get companyId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+      ];
 }

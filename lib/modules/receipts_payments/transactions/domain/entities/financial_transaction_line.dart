@@ -80,7 +80,7 @@ abstract final class FinancialTransactionLinesCodec {
             accountName: line.accountName,
             amount: line.amount,
             currencyCode: line.currencyCode,
-            exchangeRate: line.exchangeRate <= 0 ? 1 : line.exchangeRate,
+            exchangeRate: line.exchangeRate,
             description: line.description,
             lineOrder: line.lineOrder > 0 ? line.lineOrder : i,
           ),
@@ -91,6 +91,23 @@ abstract final class FinancialTransactionLinesCodec {
     } catch (_) {
       return const [];
     }
+  }
+
+  static String? fromPayloadList(dynamic payloadLines) {
+    if (payloadLines == null) return null;
+    if (payloadLines is String) return payloadLines;
+    if (payloadLines is List) {
+      final items = <FinancialTransactionLine>[];
+      for (final item in payloadLines) {
+        if (item is Map) {
+          items.add(
+            FinancialTransactionLine.fromJson(Map<String, dynamic>.from(item)),
+          );
+        }
+      }
+      return encode(items);
+    }
+    return null;
   }
 
   /// Legacy single-counter documents become one allocation line.
@@ -112,7 +129,7 @@ abstract final class FinancialTransactionLinesCodec {
         accountName: accountName,
         amount: amount,
         currencyCode: currencyCode,
-        exchangeRate: exchangeRate <= 0 ? 1 : exchangeRate,
+        exchangeRate: exchangeRate,
         description: description,
         lineOrder: 0,
       ),

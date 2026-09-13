@@ -27,7 +27,7 @@ class GetAccountById {
 
   final AccountRepository _repository;
 
-  Future<Account?> call(int id) => _repository.getById(id);
+  Future<Account?> call(String id) => _repository.getById(id);
 }
 
 class GetAccountByUuid {
@@ -51,7 +51,7 @@ class UpdateAccount {
 
   final AccountRepository _repository;
 
-  Future<Account> call(int id, AccountDraft draft) =>
+  Future<Account> call(String id, AccountDraft draft) =>
       _repository.update(id, draft);
 }
 
@@ -60,7 +60,7 @@ class DeactivateAccount {
 
   final AccountRepository _repository;
 
-  Future<void> call(int id) => _repository.deactivate(id);
+  Future<void> call(String id) => _repository.deactivate(id);
 }
 
 class SoftDeleteAccount {
@@ -72,7 +72,7 @@ class SoftDeleteAccount {
   final AccountRepository _repository;
   final PermissionGuard _guard;
 
-  Future<void> call(int id) {
+  Future<void> call(String id) {
     _guard.requireAny(AccountingPermissions.accountsDelete);
     return _repository.softDelete(id);
   }

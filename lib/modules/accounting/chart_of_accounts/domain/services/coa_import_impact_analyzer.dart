@@ -48,10 +48,10 @@ class CoaImportImpactAnalyzer {
     Map<String, int> postedUsageCounts = const {},
   }) {
     final Map<String, Account> existingByUuid = {
-      for (final a in existingAccounts) a.uuid: a,
+      for (final a in existingAccounts) a.id: a,
     };
     final Map<String, Account> candidateByUuid = {
-      for (final a in candidateAccounts) a.uuid: a,
+      for (final a in candidateAccounts) a.id: a,
     };
     final Map<String, Account> existingByCode = {
       for (final a in existingAccounts) a.accountCode: a,
@@ -80,24 +80,24 @@ class CoaImportImpactAnalyzer {
 
     // Identify Added Accounts
     for (final cand in candidateAccounts) {
-      if (!existingByUuid.containsKey(cand.uuid)) {
+      if (!existingByUuid.containsKey(cand.id)) {
         accountsAdded.add(cand);
       }
     }
 
     // Analyze Existing Accounts against Import Set
     for (final existing in existingAccounts) {
-      final cand = candidateByUuid[existing.uuid];
+      final cand = candidateByUuid[existing.id];
 
       if (cand == null) {
         // Account was removed in candidate import set
         accountsRemoved.add(existing);
 
         // Check if removed account has posted usage
-        final usage = postedUsageCounts[existing.uuid] ?? 0;
+        final usage = postedUsageCounts[existing.id] ?? 0;
         if (usage > 0) {
           historicalJournalImpact.add(
-            'حذف الحساب (${existing.accountCode} - ${existing.name}) يؤثر على $usage قيود مالية مرحلة.',
+            'حذف الحساب (${existing.accountCode} - ${existing.name}) تؤثر على $usage قيود مالية مرحلة.',
           );
           blockingReasons.add(
             'يمنع حذف الحساب (${existing.accountCode} - ${existing.name}) لاستخدامه في $usage قيود مالية رحلت سابقاً.',
@@ -107,7 +107,7 @@ class CoaImportImpactAnalyzer {
         // Check if removed account is bound in active configuration
         if (activeConfig != null) {
           activeConfig.accountMappings.forEach((role, boundUuid) {
-            if (boundUuid == existing.uuid) {
+            if (boundUuid == existing.id) {
               systemRolesLost.add(role);
               configurationsBroken.add(
                 'الدور المحاسبي (${role.name}) مرتبطة بالحساب المحذوف (${existing.accountCode}).',
@@ -119,10 +119,10 @@ class CoaImportImpactAnalyzer {
           });
         }
       } else {
-        // Account exists by UUID: check for modifications
+        // Account exists by ID: check for modifications
         if (cand.accountCode != existing.accountCode) {
           accountCodesChanged.add(
-            'تغيير رمز الحساب (${existing.uuid}): من ${existing.accountCode} إلى ${cand.accountCode}',
+            'تغيير رمز الحساب (${existing.id}): من ${existing.accountCode} إلى ${cand.accountCode}',
           );
         }
 
@@ -138,7 +138,7 @@ class CoaImportImpactAnalyzer {
           );
 
           // Check if changing type affects posted transactions or configuration role
-          final usage = postedUsageCounts[existing.uuid] ?? 0;
+          final usage = postedUsageCounts[existing.id] ?? 0;
           if (usage > 0) {
             historicalJournalImpact.add(
               'تغيير نوع الحساب (${existing.accountCode}) يؤثر على المعنى المحاسبي لـ $usage قيود مرحلة.',
@@ -157,18 +157,18 @@ class CoaImportImpactAnalyzer {
       }
     }
 
-    // Check for UUID Replacements for Same Code
+    // Check for ID Replacements for Same Code
     for (final cand in candidateAccounts) {
       final existingCodeMatch = existingByCode[cand.accountCode];
-      if (existingCodeMatch != null && existingCodeMatch.uuid != cand.uuid) {
+      if (existingCodeMatch != null && existingCodeMatch.id != cand.id) {
         accountUuidsChanged.add(
-          'تغيير المعرف الفريد UUID للرمز (${cand.accountCode}): من ${existingCodeMatch.uuid} إلى ${cand.uuid}',
+          'تغيير المعرف الفريد ID للرمز (${cand.accountCode}): من ${existingCodeMatch.id} إلى ${cand.id}',
         );
 
-        final usage = postedUsageCounts[existingCodeMatch.uuid] ?? 0;
+        final usage = postedUsageCounts[existingCodeMatch.id] ?? 0;
         if (usage > 0) {
           blockingReasons.add(
-            'يمنع استبدال المعرف الفريد UUID للحساب (${cand.accountCode}) الذي يمتلك قيوداً مرحلة.',
+            'يمنع استبدال المعرف الفريد ID للحساب (${cand.accountCode}) الذي يمتلك قيوداً مرحلة.',
           );
         }
       }

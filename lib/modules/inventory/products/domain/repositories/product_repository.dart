@@ -8,7 +8,7 @@ abstract class ProductRepository {
 
   Stream<List<Product>> watchAll();
 
-  Future<Product?> getById(int id);
+  Future<Product?> getById(String id);
 
   Future<Product?> getByItemCode(String itemCode);
 
@@ -35,9 +35,9 @@ abstract class ProductRepository {
 
   Future<Product> insert(ProductDraft draft);
 
-  Future<Product> update(int id, ProductDraft draft);
+  Future<Product> update(String id, ProductDraft draft);
 
-  Future<void> delete(int id);
+  Future<void> delete(String id);
 
   /// Insert or update by [ProductDraft.itemCode]. Returns counts.
   Future<ProductUpsertResult> upsertAll(
@@ -45,7 +45,7 @@ abstract class ProductRepository {
     void Function(int processed, int total)? onProgress,
   });
 
-  /// Applies a signed delta to [uuid] on-hand qty (negative = issue).
+  /// Applies a signed delta to [id] on-hand qty (negative = issue).
   Future<Product> adjustOnHandByUuid({
     required String uuid,
     required double delta,

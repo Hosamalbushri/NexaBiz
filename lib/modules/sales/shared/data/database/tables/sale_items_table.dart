@@ -1,15 +1,15 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Sale line items with product snapshots.
 @DataClassName('SaleItemRow')
 class SaleItems extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  TextColumn get saleId => text().withLength(min: 36, max: 36)();
 
-  TextColumn get saleUuid => text().withLength(min: 36, max: 36)();
-
-  /// Product.uuid — opaque FK.
+  /// Product.id — opaque FK.
   TextColumn get productId => text().withLength(min: 1, max: 64)();
 
   TextColumn get productName => text().withLength(min: 1, max: 512)();
@@ -46,4 +46,15 @@ class SaleItems extends Table {
   RealColumn get total => real()();
 
   IntColumn get lineOrder => integer().withDefault(const Constant(0))();
+
+  /// Company / Tenant owner ID for local multi-tenant data isolation.
+  TextColumn get companyId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+      ];
 }

@@ -12,9 +12,7 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
     final account =
         await _accountRepository.getByUuid(codeOrUuidOrId) ??
         await _accountRepository.getByAccountCode(codeOrUuidOrId) ??
-        (int.tryParse(codeOrUuidOrId) != null
-            ? await _accountRepository.getById(int.parse(codeOrUuidOrId))
-            : null);
+        await _accountRepository.getById(codeOrUuidOrId);
 
     if (account == null) return null;
 
@@ -38,7 +36,7 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
     }
 
     return SetupAccountData(
-      uuid: account.uuid,
+      uuid: account.id,
       accountCode: account.accountCode,
       accountType: mappedType,
       companyId: account.companyId,
@@ -94,9 +92,9 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
     void walk(String pid) {
       final children = map[pid] ?? const [];
       for (final child in children) {
-        if (visited.add(child.uuid as String)) {
+        if (visited.add(child.id as String)) {
           descendants.add(_mapToSetupAccountData(child));
-          walk(child.uuid as String);
+          walk(child.id as String);
         }
       }
     }
@@ -127,7 +125,7 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
         mappedType = SetupAccountType.other;
     }
     return SetupAccountData(
-      uuid: account.uuid as String,
+      uuid: account.id as String,
       accountCode: account.accountCode as String,
       accountType: mappedType,
       companyId: account.companyId as String?,

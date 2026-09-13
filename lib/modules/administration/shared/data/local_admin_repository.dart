@@ -753,7 +753,11 @@ class LocalAdminRepository implements AdminRepository {
     final branches = raw is List ? List<dynamic>.from(raw) : <dynamic>[];
 
     final session = await _store.loadSession();
-    final companyId = session?.currentCompanyId ?? 'default_company';
+    final companyId = session?.currentCompanyId;
+    if (companyId == null || companyId.trim().isEmpty) {
+      throw StateError(
+          'Active company scope context is required to create a branch.');
+    }
 
     final branchId = generateUuidV4();
     final newBranchMap = {

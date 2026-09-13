@@ -60,7 +60,7 @@ class AccountTree extends StatelessWidget {
                 ),
                 child: _AccountRootCard(
                   entry: entry,
-                  onToggleExpand: () => onToggleExpand(entry.account.uuid),
+                  onToggleExpand: () => onToggleExpand(entry.account.id),
                   onOpenDetails: onOpenDetails,
                 ),
               )
@@ -71,7 +71,7 @@ class AccountTree extends StatelessWidget {
                   entry.account.accountType,
                 ),
                 onToggleExpand: entry.node.hasChildren
-                    ? () => onToggleExpand(entry.account.uuid)
+                    ? () => onToggleExpand(entry.account.id)
                     : null,
                 onOpenDetails: onOpenDetails == null
                     ? null

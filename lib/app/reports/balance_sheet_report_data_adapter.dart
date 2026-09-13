@@ -39,7 +39,7 @@ class BalanceSheetReportDataAdapter implements BalanceSheetReportDataPort {
     );
 
     final allAccounts = await accounts.getAll();
-    final accountMap = {for (final a in allAccounts) a.uuid: a};
+    final accountMap = {for (final a in allAccounts) a.id: a};
 
     final assetItems = <BalanceSheetLineItem>[];
     final liabilityItems = <BalanceSheetLineItem>[];

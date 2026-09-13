@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Inventory Cost Consumptions table.
 ///
@@ -7,15 +8,13 @@ import 'package:drift/drift.dart';
 /// inventory cost layer.
 @DataClassName('InventoryCostConsumptionRow')
 class InventoryCostConsumptions extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  /// Client-generated UUID for offline-safe identity / sync.
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   /// UUID of the consumed InventoryCostLayer.
   TextColumn get layerUuid => text().withLength(min: 36, max: 36)();
 
-  /// UUID of the outgoing movement line item (StockMovementLine.uuid or SaleLine.uuid).
+  /// UUID of the outgoing movement line item (StockMovementLine.id or SaleLine.id).
   TextColumn get issueLineUuid => text().withLength(min: 36, max: 36)();
 
   /// Movement type ('issue', 'sale', 'transfer_out', 'return_issue').
@@ -35,4 +34,12 @@ class InventoryCostConsumptions extends Table {
 
   /// Company / Tenant owner ID for local multi-tenant data isolation.
   TextColumn get companyId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+      ];
 }

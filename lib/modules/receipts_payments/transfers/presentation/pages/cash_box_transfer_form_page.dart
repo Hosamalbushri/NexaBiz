@@ -34,7 +34,7 @@ import 'package:nexabiz_ui/nexabiz_ui.dart';
 class CashBoxTransferFormPage extends ConsumerStatefulWidget {
   const CashBoxTransferFormPage({super.key, this.transactionId});
 
-  final int? transactionId;
+  final String? transactionId;
 
   @override
   ConsumerState<CashBoxTransferFormPage> createState() =>

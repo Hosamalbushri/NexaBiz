@@ -100,7 +100,7 @@ class AccountingScopeResolver {
       final allAccounts = await accountRepository.getAll(
         includeInactive: false,
       );
-      final byId = <String, Account>{for (final a in allAccounts) a.uuid: a};
+      final byId = <String, Account>{for (final a in allAccounts) a.id: a};
       final descendants = <Account>[];
 
       for (final acc in allAccounts) {
@@ -109,7 +109,7 @@ class AccountingScopeResolver {
         var guard = 0;
         var isDescendant = false;
         while (pId != null && guard++ < 64) {
-          if (pId == configuredAccount.uuid) {
+          if (pId == configuredAccount.id) {
             isDescendant = true;
             break;
           }

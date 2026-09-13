@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/database/repositories/canonical_identity_repository.dart';
 import 'package:stock_count/core/database/repositories/canonical_master_data_repository.dart';
+import 'package:stock_count/core/usecases/canonical_transaction_orchestrator.dart';
 
 /// Lifecycle states for the single canonical database `nexabiz.sqlite`.
 enum CanonicalDatabaseLifecycleState {
@@ -173,5 +174,13 @@ final canonicalMasterDataRepositoryProvider =
   final db = ref.watch(nexabizDatabaseProvider);
   return CanonicalMasterDataRepositoryImpl(db);
 });
+
+/// Provider for canonical transaction orchestrator operating on [nexabizDatabaseProvider].
+final canonicalTransactionOrchestratorProvider =
+    Provider<CanonicalTransactionOrchestrator>((ref) {
+  final db = ref.watch(nexabizDatabaseProvider);
+  return CanonicalTransactionOrchestrator(db);
+});
+
 
 

@@ -1,3 +1,5 @@
+import 'package:stock_count/modules/accounting/domain/foundation/posting_intent.dart';
+import 'package:stock_count/modules/accounting/domain/integration/accounting_integration_port.dart';
 import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import '../../core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
@@ -15,13 +17,18 @@ import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_
 /// App adapter: receipt/payment/transfer/exchange → local journal.
 class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
   AccountingRpLedgerAdapter({
-    required this._posting,
-    required this._accounts,
-    this._fiscalYears,
-  });
+    required JournalPostingService posting,
+    required AccountRepository accounts,
+    AccountingIntegrationPort? integrationService,
+    FiscalYearRepository? fiscalYears,
+  })  : _posting = posting,
+        _accounts = accounts,
+        _integrationService = integrationService,
+        _fiscalYears = fiscalYears;
 
   final JournalPostingService _posting;
   final AccountRepository _accounts;
+  final AccountingIntegrationPort? _integrationService;
   final FiscalYearRepository? _fiscalYears;
 
   static String sourceTypeFor(TransactionType type) => switch (type) {
@@ -356,6 +363,39 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       );
     }
 
+    if (_integrationService != null) {
+      final intent = ExplicitAccountPostingIntent(
+        companyId: 'default',
+        sourceType: sourceTypeFor(txn.transactionType),
+        sourceId: txn.uuid,
+
+        transactionDate: txn.transactionDate,
+        currencyCode: cashCurrency,
+        baseCurrencyCode: baseCurrency,
+        exchangeRate: _headerRate(txn),
+        voucherNumber: txn.transactionNumber,
+        voucherType: voucherType,
+        description: txn.description?.trim().isNotEmpty == true
+            ? txn.description!.trim()
+            : description,
+        lines: lines.map((l) => ExplicitAccountLineDraft(
+          accountUuid: l.accountUuid,
+          debit: l.debit,
+          credit: l.credit,
+          lineDescription: l.lineDescription,
+          sortOrder: l.sortOrder,
+        )).toList(),
+      );
+
+      final postingResult = await _integrationService!.processPostingIntent(intent);
+      if (!postingResult.isSuccess) {
+        throw Exception(
+          postingResult.failureReason ?? 'فشل الترحيل المحاسبي للحركة المالية',
+        );
+      }
+      return;
+    }
+
     await _posting.post(
       JournalEntryDraft(
         entryDate: txn.transactionDate,
@@ -374,6 +414,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       ),
     );
   }
+
 
   Future<({String gainUuid, String lossUuid})> _resolveFxAccounts({
     required DateTime entryDate,
@@ -405,12 +446,12 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
     final preferred = systemAccountUuid(systemKey);
     final byUuid = await _accounts.getByUuid(preferred);
     if (byUuid != null && byUuid.canPost) {
-      return byUuid.uuid;
+      return byUuid.id;
     }
     final all = await _accounts.getAll(includeInactive: false);
     for (final account in all) {
       if (AccountLabels.systemKeyOf(account) == systemKey && account.canPost) {
-        return account.uuid;
+        return account.id;
       }
     }
     return preferred;

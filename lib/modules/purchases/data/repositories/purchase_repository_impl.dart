@@ -9,12 +9,23 @@ import '../../domain/repositories/purchase_repository.dart';
 /// Drift-backed Repository Implementation for Purchases on `nexabiz.sqlite`.
 class PurchaseRepositoryImpl implements PurchaseRepository {
   final NexabizDatabase _db;
+  final String Function()? _readCompanyId;
 
-  PurchaseRepositoryImpl(this._db);
+  PurchaseRepositoryImpl(this._db, {String Function()? readCompanyId})
+      : _readCompanyId = readCompanyId;
+
+  String get _currentCompanyId {
+    final companyId = _readCompanyId?.call();
+    if (companyId == null || companyId.trim().isEmpty) {
+      throw StateError(
+          'Active company scope context is required for PurchaseRepository operations.');
+    }
+    return companyId;
+  }
 
   Supplier _mapSupplier(SupplierData row) {
     return Supplier(
-      id: row.uuid,
+      id: row.id,
       companyId: row.companyId,
       nameAr: row.name,
       nameEn: row.name,
@@ -31,13 +42,13 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     );
   }
 
-  Future<List<PurchaseItem>> _loadItems(String purchaseUuid) async {
+  Future<List<PurchaseItem>> _loadItems(String purchaseId) async {
     final rows = await (_db.select(_db.purchaseItems)
-          ..where((t) => t.purchaseUuid.equals(purchaseUuid))
+          ..where((t) => t.purchaseId.equals(purchaseId))
           ..orderBy([(t) => OrderingTerm.asc(t.lineOrder)]))
         .get();
     return rows.map<PurchaseItem>((r) => PurchaseItem(
-      id: r.uuid,
+      id: r.id,
       productId: r.productId,
       productNameAr: r.productName,
       productNameEn: r.productName,
@@ -63,9 +74,9 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
   }
 
   Future<PurchaseInvoice> _mapInvoice(PurchaseRow row) async {
-    final items = await _loadItems(row.uuid);
+    final items = await _loadItems(row.id);
     return PurchaseInvoice(
-      id: row.uuid,
+      id: row.id,
       companyId: row.companyId ?? '',
       invoiceNumber: row.purchaseNumber,
       supplierId: row.supplierId ?? '',
@@ -94,20 +105,22 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
   @override
   Future<Supplier?> getSupplierById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final row = await (_db.select(_db.suppliers)
-          ..where((t) => t.uuid.equals(id)))
+          ..where((t) => t.id.equals(trimmed)))
         .getSingleOrNull();
     return row == null ? null : _mapSupplier(row);
   }
 
   @override
   Future<Supplier> createSupplier(Supplier supplier) async {
-    final uuid = supplier.id.isNotEmpty ? supplier.id : generateUuidV4();
+    final newId = supplier.id.isNotEmpty ? supplier.id : generateUuidV7();
     final now = DateTime.now().toUtc();
     await _db.into(_db.suppliers).insert(
           SuppliersCompanion.insert(
-            uuid: Value(uuid),
-            supplierCode: supplier.code ?? 'SUP-${uuid.substring(0, 6)}',
+            id: Value(newId),
+            supplierCode: supplier.code ?? 'SUP-${newId.substring(0, 6)}',
             name: supplier.nameAr.isNotEmpty ? supplier.nameAr : supplier.nameEn,
             phone: Value(supplier.phone),
             email: Value(supplier.email),
@@ -121,14 +134,15 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             updatedAt: Value(now),
           ),
         );
-    final created = await getSupplierById(uuid);
+    final created = await getSupplierById(newId);
     return created!;
   }
 
   @override
-  Future<List<PurchaseInvoice>> getPurchaseInvoices(String companyId) async {
+  Future<List<PurchaseInvoice>> getPurchaseInvoices([String? companyId]) async {
+    final targetCompanyId = (companyId != null && companyId.isNotEmpty) ? companyId : _currentCompanyId;
     final rows = await (_db.select(_db.purchases)
-          ..where((t) => t.companyId.equals(companyId) & t.deletedAt.isNull())
+          ..where((t) => t.companyId.equals(targetCompanyId) & t.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .get();
     final result = <PurchaseInvoice>[];
@@ -140,22 +154,24 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
   @override
   Future<PurchaseInvoice?> getPurchaseInvoiceById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final row = await (_db.select(_db.purchases)
-          ..where((t) => t.uuid.equals(id) & t.deletedAt.isNull()))
+          ..where((t) => t.id.equals(trimmed) & t.companyId.equals(_currentCompanyId) & t.deletedAt.isNull()))
         .getSingleOrNull();
     return row == null ? null : _mapInvoice(row);
   }
 
   @override
   Future<PurchaseInvoice> createPurchaseInvoice(PurchaseInvoice invoice) async {
-    final uuid = invoice.id.isNotEmpty ? invoice.id : generateUuidV4();
+    final newId = invoice.id.isNotEmpty ? invoice.id : generateUuidV7();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     final purchaseDateMs = invoice.invoiceDate.toUtc().millisecondsSinceEpoch;
 
     await _db.transaction(() async {
       await _db.into(_db.purchases).insert(
             PurchasesCompanion.insert(
-              uuid: uuid,
+              id: Value(newId),
               purchaseNumber: invoice.invoiceNumber,
               purchaseDate: Value(purchaseDateMs),
               warehouseId: Value(invoice.warehouseId),
@@ -178,12 +194,12 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
       int lineOrder = 0;
       for (final item in invoice.items) {
-        final itemUuid = item.id.isNotEmpty ? item.id : generateUuidV4();
+        final itemUuid = item.id.isNotEmpty ? item.id : generateUuidV7();
         final name = item.productNameAr.isNotEmpty ? item.productNameAr : item.productNameEn;
         await _db.into(_db.purchaseItems).insert(
               PurchaseItemsCompanion.insert(
-                uuid: itemUuid,
-                purchaseUuid: uuid,
+                id: Value(itemUuid),
+                purchaseId: newId,
                 productId: item.productId,
                 productName: name,
                 productCode: 'PROD-${item.productId.substring(0, 6)}',
@@ -197,14 +213,14 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       }
     });
 
-    final created = await getPurchaseInvoiceById(uuid);
+    final created = await getPurchaseInvoiceById(newId);
     return created!;
   }
 
   @override
   Future<void> postPurchaseInvoice(String invoiceId) async {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await (_db.update(_db.purchases)..where((t) => t.uuid.equals(invoiceId)))
+    await (_db.update(_db.purchases)..where((t) => t.id.equals(invoiceId)))
         .write(
       PurchasesCompanion(
         purchaseStatus: const Value('posted'),

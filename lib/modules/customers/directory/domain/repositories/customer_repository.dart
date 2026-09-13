@@ -7,7 +7,7 @@ abstract class CustomerRepository {
 
   Stream<List<Customer>> watchAll({bool includeInactive = false});
 
-  Future<Customer?> getById(int id);
+  Future<Customer?> getById(String id);
 
   Future<Customer?> getByUuid(String uuid);
 
@@ -25,13 +25,13 @@ abstract class CustomerRepository {
 
   Future<Customer> insert(CustomerDraft draft);
 
-  Future<Customer> update(int id, CustomerDraft draft);
+  Future<Customer> update(String id, CustomerDraft draft);
 
   /// Soft-delete tombstone (sync delete).
-  Future<void> softDelete(int id);
+  Future<void> softDelete(String id);
 
   /// Restores a previously soft-deleted customer.
-  Future<Customer> restore(int id);
+  Future<Customer> restore(String id);
 
   /// Insert or update by [CustomerDraft.externalId] (external imports).
   Future<Customer> upsertFromExternal(CustomerDraft draft);

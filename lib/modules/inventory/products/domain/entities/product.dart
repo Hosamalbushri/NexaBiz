@@ -5,7 +5,6 @@ import 'package:stock_count/core/sync/sync_core.dart';
 class Product {
   const Product({
     required this.id,
-    required this.uuid,
     required this.itemCode,
     required this.name,
     required this.packSize,
@@ -23,8 +22,12 @@ class Product {
     this.deletedAt,
   });
 
-  final int id;
-  final String uuid;
+  /// Primary Key (UUID v7).
+  final String id;
+
+  /// Compatibility getter for legacy callers.
+  String get uuid => id;
+
   final String itemCode;
   final String name;
   final String? barcode;
@@ -33,7 +36,7 @@ class Product {
   final double onHandQty;
   final double unitCost;
 
-  /// Category UUID linking product to warehouse-rooted category tree.
+  /// Category ID linking product to category tree (UUID v7).
   final String? categoryId;
 
   /// Cost Valuation Method Override: Null = inherit from Category/Warehouse/System.
@@ -49,8 +52,7 @@ class Product {
   bool get isDeleted => deletedAt != null;
 
   Product copyWith({
-    int? id,
-    String? uuid,
+    String? id,
     String? itemCode,
     String? name,
     String? barcode,
@@ -74,7 +76,6 @@ class Product {
   }) {
     return Product(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
       itemCode: itemCode ?? this.itemCode,
       name: name ?? this.name,
       barcode: clearBarcode ? null : (barcode ?? this.barcode),

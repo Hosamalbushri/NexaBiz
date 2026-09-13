@@ -244,7 +244,7 @@ class AccountOpeningSetupNotifier
         if (code.isEmpty) {
           code = await codeGen.generate(
             parentAccountCode: parent.accountCode,
-            parentAccountId: parent.uuid,
+            parentAccountId: parent.id,
           );
         }
 
@@ -257,7 +257,7 @@ class AccountOpeningSetupNotifier
         try {
           final account = await create(
             AccountDraft(
-              parentId: parent.uuid,
+              parentId: parent.id,
               accountCode: code,
               name: row.name.trim(),
               accountType: parent.accountType,
@@ -283,9 +283,9 @@ class AccountOpeningSetupNotifier
       final seeded = <OpeningBalanceLine>[
         ...state.balanceLines,
         for (final account in created)
-          if (!state.balanceLines.any((l) => l.accountId == account.uuid))
+          if (!state.balanceLines.any((l) => l.accountId == account.id))
             OpeningBalanceLine.forAccount(
-              accountId: account.uuid,
+              accountId: account.id,
               accountCode: account.accountCode,
               accountName: account.name,
               currencyCode: defaultCurrency,
@@ -343,7 +343,7 @@ class AccountOpeningSetupNotifier
     final currency = defaultCurrencyCode.trim().toUpperCase();
     final duplicate = state.balanceLines.any(
       (l) =>
-          l.accountId == account.uuid &&
+          l.accountId == account.id &&
           l.currencyCode.trim().toUpperCase() == currency,
     );
     if (duplicate) {
@@ -358,7 +358,7 @@ class AccountOpeningSetupNotifier
       balanceLines: [
         ...state.balanceLines,
         OpeningBalanceLine.forAccount(
-          accountId: account.uuid,
+          accountId: account.id,
           accountCode: account.accountCode,
           accountName: account.name,
           currencyCode: currency,
@@ -552,12 +552,12 @@ class AccountOpeningSetupNotifier
           continue;
         }
         final entry = (
-          id: account.uuid,
+          id: account.id,
           code: account.accountCode,
           name: account.name,
         );
         byCode[account.accountCode] = entry;
-        byId[account.uuid] = entry;
+        byId[account.id] = entry;
       }
 
       final resolved = _balanceExcel.resolveRows(
@@ -727,7 +727,7 @@ class AccountOpeningSetupNotifier
 
       final draft = AccountImportOpeningJournal.buildFromBalanceLines(
         balances: normalizedAmounts,
-        capitalAccountUuid: capital.uuid,
+        capitalAccountUuid: capital.id,
         defaultCurrencyCode: fallback,
         entryDate: DateTime.now(),
         voucherNumber: 'OI-${DateTime.now().millisecondsSinceEpoch}',

@@ -10,7 +10,7 @@ class AccountLedgerCursor {
 
   final int entryDateMs;
   final int sortOrder;
-  final int lineId;
+  final String lineId;
 
   factory AccountLedgerCursor.fromMovement(AccountLedgerMovement movement) {
     return AccountLedgerCursor(
@@ -65,7 +65,7 @@ abstract class JournalRepository {
     bool? isPosted,
     String? query,
     int? limit,
-    int? afterId,
+    String? afterId,
   });
 
   /// Ledger movements for one account (not deleted), ordered by date then id.

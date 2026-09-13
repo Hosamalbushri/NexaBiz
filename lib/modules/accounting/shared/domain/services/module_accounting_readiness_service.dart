@@ -100,7 +100,7 @@ class ModuleAccountingReadinessService {
           AccountingConfigurationException(
             module: module,
             accountingRole: req.role,
-            configuredAccountId: account.uuid,
+            configuredAccountId: account.id,
             errorCode: AccountingConfigurationErrorCode.crossCompanyAccount,
             userMessage: 'حساب يتبع شركة أخرى',
             userExplanation: 'الحساب المحدد ينتمي لشركة أخرى ولا يمكن استخدامه',
@@ -114,7 +114,7 @@ class ModuleAccountingReadinessService {
           AccountingConfigurationException(
             module: module,
             accountingRole: req.role,
-            configuredAccountId: account.uuid,
+            configuredAccountId: account.id,
             errorCode: AccountingConfigurationErrorCode.accountDeleted,
             userMessage: 'الحساب محذوف',
             userExplanation:
@@ -129,7 +129,7 @@ class ModuleAccountingReadinessService {
           AccountingConfigurationException(
             module: module,
             accountingRole: req.role,
-            configuredAccountId: account.uuid,
+            configuredAccountId: account.id,
             errorCode: AccountingConfigurationErrorCode.accountInactive,
             userMessage: 'الحساب غير نشط',
             userExplanation:
@@ -147,7 +147,7 @@ class ModuleAccountingReadinessService {
             accountingRole: req.role,
             expectedAccountType: expectedType,
             actualAccountType: account.accountType,
-            configuredAccountId: account.uuid,
+            configuredAccountId: account.id,
             errorCode: AccountingConfigurationErrorCode.accountTypeMismatch,
             userMessage: 'نوع الحساب غير مطابق',
             userExplanation:
@@ -165,7 +165,7 @@ class ModuleAccountingReadinessService {
             AccountingConfigurationException(
               module: module,
               accountingRole: req.role,
-              configuredAccountId: account.uuid,
+              configuredAccountId: account.id,
               errorCode: AccountingConfigurationErrorCode.parentAccountInvalid,
               userMessage: 'المظلة الحسابية غير صالحة',
               userExplanation:
@@ -179,7 +179,7 @@ class ModuleAccountingReadinessService {
         final descendants = allAccounts
             .where(
               (a) =>
-                  a.parentId == account.uuid &&
+                  a.parentId == account.id &&
                   a.isActive &&
                   !a.isDeleted &&
                   !a.isGroup,
@@ -191,7 +191,7 @@ class ModuleAccountingReadinessService {
             AccountingConfigurationException(
               module: module,
               accountingRole: req.role,
-              parentAccountId: account.uuid,
+              parentAccountId: account.id,
               errorCode:
                   AccountingConfigurationErrorCode.descendantAccountInvalid,
               userMessage: 'لا توجد حسابات فرعية صالحة',

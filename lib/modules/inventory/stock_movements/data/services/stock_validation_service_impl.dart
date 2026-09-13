@@ -104,7 +104,7 @@ class StockValidationServiceImpl implements StockValidationService {
 
     final warehouse =
         await (_db.select(_db.warehouses)..where(
-              (tbl) => tbl.uuid.equals(warehouseId) & tbl.isActive.equals(true),
+              (tbl) => tbl.id.equals(warehouseId) & tbl.isActive.equals(true),
             ))
             .getSingleOrNull();
 
@@ -113,8 +113,11 @@ class StockValidationServiceImpl implements StockValidationService {
     }
 
     if (warehouse.companyId != targetCompanyId) {
-      throw StateError(
-        'Cross-tenant warehouse access denied for warehouse ($warehouseId). Expected company: $targetCompanyId, actual: ${warehouse.companyId}',
+      throw CompanyContextMismatchException(
+        message:
+            'Cross-tenant warehouse access denied for warehouse ($warehouseId). Expected company: $targetCompanyId, actual: ${warehouse.companyId}',
+        expectedCompanyId: targetCompanyId,
+        actualCompanyId: warehouse.companyId ?? '',
       );
     }
 

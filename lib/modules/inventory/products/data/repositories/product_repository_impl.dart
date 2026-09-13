@@ -36,18 +36,9 @@ class ProductRepositoryImpl implements ProductRepository {
   Expression<bool> _scoped($ProductsTable t) =>
       t.isActive.equals(true) & _tenantScoped(t);
 
-  CostValuationMethod? _parseCostValuationMethod(String? str) {
-    if (str == null) return null;
-    for (final method in CostValuationMethod.values) {
-      if (method.name == str) return method;
-    }
-    return null;
-  }
-
   Product _map(ProductData row) {
     return Product(
       id: row.id,
-      uuid: row.uuid,
       itemCode: row.itemCode,
       name: row.name,
       barcode: row.barcode,
@@ -55,7 +46,7 @@ class ProductRepositoryImpl implements ProductRepository {
       price: row.price,
       onHandQty: 0.0,
       unitCost: 0.0,
-      categoryId: row.categoryUuid,
+      categoryId: row.categoryId,
       costValuationMethod: null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -98,7 +89,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<void> _assertUnique({
     required String itemCode,
     required String? barcode,
-    int? excludingId,
+    String? excludingId,
   }) async {
     final codeQuery = _db.select(_db.products)
       ..where((t) => t.itemCode.equals(itemCode) & _scoped(t));
@@ -132,11 +123,11 @@ class ProductRepositoryImpl implements ProductRepository {
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
-        entityId: product.uuid,
+        entityId: product.id,
         type: type,
         baseVersion: product.version,
         payload: {
-          'uuid': product.uuid,
+          'id': product.id,
           'itemCode': product.itemCode,
           'name': product.name,
           'barcode': product.barcode,
@@ -171,20 +162,17 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Product?> getById(int id) async {
+  Future<Product?> getById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final row = await (_db.select(
       _db.products,
-    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
   @override
-  Future<Product?> getByUuid(String uuid) async {
-    final row = await (_db.select(
-      _db.products,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
-    return row == null ? null : _map(row);
-  }
+  Future<Product?> getByUuid(String uuid) => getById(uuid);
 
   @override
   Future<Product?> getByItemCode(String itemCode) async {
@@ -388,24 +376,24 @@ class ProductRepositoryImpl implements ProductRepository {
     await _assertUnique(itemCode: code, barcode: barcode);
 
     final now = DateTime.now().toUtc();
-    final uuid = generateUuidV4();
-    final id = await _db
+    final newId = generateUuidV7();
+    await _db
         .into(_db.products)
         .insert(
           ProductsCompanion.insert(
-            uuid: Value(uuid),
+            id: Value(newId),
             itemCode: code,
             name: name,
             barcode: Value(barcode),
             packSize: Value(draft.packSize),
             price: Value(draft.price),
-            categoryUuid: Value(draft.categoryId),
+            categoryId: Value(draft.categoryId),
             createdAt: Value(now),
             updatedAt: Value(now),
             companyId: _currentCompanyId,
           ),
         );
-    final created = await getById(id);
+    final created = await getById(newId);
     if (created == null) {
       throw const ProductException(ProductException.notFound);
     }
@@ -414,7 +402,7 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Product> update(int id, ProductDraft draft) async {
+  Future<Product> update(String id, ProductDraft draft) async {
     _validateDraft(draft);
     final existing = await getById(id);
     if (existing == null) {
@@ -436,7 +424,7 @@ class ProductRepositoryImpl implements ProductRepository {
         barcode: Value(barcode),
         packSize: Value(draft.packSize),
         price: Value(draft.price),
-        categoryUuid: Value(draft.categoryId),
+        categoryId: Value(draft.categoryId),
         updatedAt: Value(now),
         companyId: Value(_currentCompanyId),
       ),
@@ -451,13 +439,12 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<void> delete(int id) async {
+  Future<void> delete(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const ProductException(ProductException.notFound);
     }
 
-    // Referential Integrity Guard: Cannot delete product with open cost layers or posted movement lines
     final openLayers =
         await (_db.select(_db.inventoryCostLayers)..where(
               (t) =>
@@ -503,7 +490,6 @@ class ProductRepositoryImpl implements ProductRepository {
     await _enqueue(tombstone, SyncOperationType.delete);
   }
 
-  /// Marks a product synced after server confirmation.
   Future<void> markSynced({
     required String uuid,
     required int remoteVersion,
@@ -512,7 +498,7 @@ class ProductRepositoryImpl implements ProductRepository {
     final now = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(
       _db.products,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(uuid) & _tenantScoped(t))).write(
       ProductsCompanion(
         updatedAt: Value(now),
       ),
@@ -522,12 +508,12 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid']?.toString();
-    if (uuid == null || uuid.isEmpty) {
+    final id = payload['id']?.toString() ?? payload['uuid']?.toString();
+    if (id == null || id.isEmpty) {
       return;
     }
     final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
-    final existing = await getByUuid(uuid);
+    final existing = await getById(id);
     final now = DateTime.now().toUtc();
 
     if (existing == null) {
@@ -538,8 +524,8 @@ class ProductRepositoryImpl implements ProductRepository {
           .into(_db.products)
           .insert(
             ProductsCompanion.insert(
-              uuid: Value(uuid),
-              itemCode: payload['itemCode']?.toString() ?? uuid,
+              id: Value(id),
+              itemCode: payload['itemCode']?.toString() ?? id,
               name: payload['name']?.toString() ?? '',
               barcode: Value(payload['barcode']?.toString()),
               packSize: Value((payload['packSize'] as num?)?.toInt() ?? 1),
@@ -554,7 +540,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
     await (_db.update(
       _db.products,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       ProductsCompanion(
         itemCode: Value(payload['itemCode']?.toString() ?? existing.itemCode),
         name: Value(payload['name']?.toString() ?? existing.name),
@@ -619,12 +605,12 @@ class ProductRepositoryImpl implements ProductRepository {
                 throw const ProductException(ProductException.duplicateBarcode);
               }
             }
-            final uuid = generateUuidV4();
-            final id = await _db
+            final newId = generateUuidV7();
+            await _db
                 .into(_db.products)
                 .insert(
                   ProductsCompanion.insert(
-                    uuid: Value(uuid),
+                    id: Value(newId),
                     itemCode: code,
                     name: name,
                     barcode: Value(barcode),
@@ -636,8 +622,7 @@ class ProductRepositoryImpl implements ProductRepository {
                   ),
                 );
             final created = Product(
-              id: id,
-              uuid: uuid,
+              id: newId,
               itemCode: code,
               name: name,
               barcode: barcode,
@@ -725,7 +710,7 @@ class ProductRepositoryImpl implements ProductRepository {
       throw const ProductException(ProductException.notFound);
     }
     if (delta == 0) {
-      final existing = await getByUuid(id);
+      final existing = await getById(id);
       if (existing == null) {
         throw const ProductException(ProductException.notFound);
       }
@@ -735,7 +720,7 @@ class ProductRepositoryImpl implements ProductRepository {
     return _db.transaction(() async {
       final row = await (_db.select(
         _db.products,
-      )..where((t) => t.uuid.equals(id) & _scoped(t))).getSingleOrNull();
+      )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
       if (row == null) {
         throw const ProductException(ProductException.notFound);
       }

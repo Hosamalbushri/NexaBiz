@@ -5,8 +5,7 @@ import '../services/sale_quantity_math.dart';
 class SaleItem {
   const SaleItem({
     required this.id,
-    required this.uuid,
-    required this.saleUuid,
+    required this.saleId,
     required this.productId,
     required this.productName,
     required this.productCode,
@@ -26,9 +25,8 @@ class SaleItem {
     this.barcode,
   });
 
-  final int id;
-  final String uuid;
-  final String saleUuid;
+  final String id;
+  final String saleId;
 
   /// Product.uuid (opaque FK — Sales does not import Inventory).
   final String productId;
@@ -67,10 +65,12 @@ class SaleItem {
   final double total;
   final int lineOrder;
 
+  String get uuid => id;
+  String get saleUuid => saleId;
+
   SaleItem copyWith({
-    int? id,
-    String? uuid,
-    String? saleUuid,
+    String? id,
+    String? saleId,
     String? productId,
     String? productName,
     String? productCode,
@@ -92,8 +92,7 @@ class SaleItem {
   }) {
     return SaleItem(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
-      saleUuid: saleUuid ?? this.saleUuid,
+      saleId: saleId ?? this.saleId,
       productId: productId ?? this.productId,
       productName: productName ?? this.productName,
       productCode: productCode ?? this.productCode,

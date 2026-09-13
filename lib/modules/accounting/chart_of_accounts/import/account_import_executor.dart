@@ -191,7 +191,7 @@ class AccountImportExecutor {
       name: name,
       accountType: accountType,
       isGroup: isGroup,
-      parentId: parentAccount?.uuid,
+      parentId: parentAccount?.id,
       description: description,
       isActive: isActive,
     );
@@ -235,7 +235,7 @@ class AccountImportExecutor {
     if (byUuid != null) {
       if (byUuid.companyId != null && byUuid.companyId != companyId) {
         throw TenantIsolationException(
-          'Cross-company parent account resolution violation: Parent account "${byUuid.uuid}" belongs to company "${byUuid.companyId}", attempted by company "$companyId"',
+          'Cross-company parent account resolution violation: Parent account "${byUuid.id}" belongs to company "${byUuid.companyId}", attempted by company "$companyId"',
           expectedCompanyId: companyId,
           attemptedCompanyId: byUuid.companyId,
         );

@@ -6,13 +6,12 @@ export 'customer_status.dart';
 
 /// Customer (business partner) master record.
 ///
-/// [accountId] is an opaque Chart of Accounts identity (Account.uuid).
+/// [accountId] is an opaque Chart of Accounts identity (Account.id).
 /// This module does not import Accounting — App wires resolution via
 /// [CustomerAccountLinkPort].
 class Customer {
   const Customer({
     required this.id,
-    required this.uuid,
     required this.companyId,
     required this.customerCode,
     required this.name,
@@ -35,10 +34,11 @@ class Customer {
     this.deletedAt,
   });
 
-  final int id;
+  /// Primary Key (UUID v7).
+  final String id;
 
-  /// Offline-safe identity used for sync and future FKs.
-  final String uuid;
+  /// Compatibility getter for legacy callers.
+  String get uuid => id;
 
   /// Company / Tenant owner ID.
   final String companyId;
@@ -56,10 +56,7 @@ class Customer {
   bool get isActive => status == CustomerStatus.active;
   bool get isBlocked => status == CustomerStatus.blocked;
 
-  /// Opaque Account.uuid when linked to Chart of Accounts.
-  ///
-  /// When auto-link is enabled in settings, App creates a posting account under
-  /// the customers parent group on save if this is null.
+  /// Opaque Account.id when linked to Chart of Accounts.
   final String? accountId;
 
   /// External ERP/accounting system id when [dataSource] is external.
@@ -82,8 +79,7 @@ class Customer {
   bool get isExternal => dataSource == CustomerDataSource.external;
 
   Customer copyWith({
-    int? id,
-    String? uuid,
+    String? id,
     String? companyId,
     String? customerCode,
     String? name,
@@ -118,7 +114,6 @@ class Customer {
   }) {
     return Customer(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
       companyId: companyId ?? this.companyId,
       customerCode: customerCode ?? this.customerCode,
       name: name ?? this.name,

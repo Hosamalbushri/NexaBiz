@@ -19,7 +19,7 @@ class GetFinancialTransactionById {
 
   final FinancialTransactionRepository _repository;
 
-  Future<FinancialTransaction?> call(int id) => _repository.getById(id);
+  Future<FinancialTransaction?> call(String id) => _repository.getById(id);
 }
 
 class SearchFinancialTransactions {
@@ -121,7 +121,7 @@ class UpdateFinancialTransaction {
   final RpLedgerPostingPort ledgerPosting;
 
   Future<FinancialTransaction> call(
-    int id,
+    String id,
     FinancialTransactionDraft draft,
   ) async {
     final existing = await repository.getById(id);
@@ -192,7 +192,7 @@ class PostFinancialTransaction {
   final FinancialTransactionWorkflow workflow;
   final RpLedgerPostingPort ledgerPosting;
 
-  Future<FinancialTransaction> call(int id) async {
+  Future<FinancialTransaction> call(String id) async {
     final existing = await repository.getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
@@ -269,7 +269,7 @@ class UnpostFinancialTransaction {
   final FinancialTransactionWorkflow workflow;
   final RpLedgerPostingPort ledgerPosting;
 
-  Future<FinancialTransaction> call(int id) async {
+  Future<FinancialTransaction> call(String id) async {
     final existing = await repository.getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
@@ -306,7 +306,7 @@ class CancelFinancialTransaction {
   final FinancialTransactionWorkflow workflow;
   final RpLedgerPostingPort ledgerPosting;
 
-  Future<FinancialTransaction> call(int id) async {
+  Future<FinancialTransaction> call(String id) async {
     final existing = await repository.getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(

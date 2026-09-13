@@ -80,9 +80,9 @@ class AccountHierarchyResolver {
     void collectDescendants(String currentParentId) {
       final children = parentToChildrenMap[currentParentId] ?? const [];
       for (final child in children) {
-        if (visited.add(child.uuid)) {
+        if (visited.add(child.id)) {
           descendants.add(child);
-          collectDescendants(child.uuid);
+          collectDescendants(child.id);
         }
       }
     }

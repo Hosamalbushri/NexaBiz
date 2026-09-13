@@ -7,13 +7,13 @@ abstract class VoucherBookRepository {
 
   Stream<List<VoucherBook>> watchAll();
 
-  Future<VoucherBook?> getById(int id);
+  Future<VoucherBook?> getById(String id);
 
   Future<VoucherBook?> getByUuid(String uuid);
 
   Future<List<VoucherBook>> getByType(VoucherBookType type);
 
-  Future<List<VoucherBook>> getChildren(String parentUuid);
+  Future<List<VoucherBook>> getChildren(String parentId);
 
   /// Ensures default section folders exist and orphans are attached.
   Future<void> ensureDefaultSections();
@@ -28,18 +28,18 @@ abstract class VoucherBookRepository {
 
   Future<VoucherBook> create(VoucherBookDraft draft);
 
-  Future<VoucherBook> update(int id, VoucherBookDraft draft);
+  Future<VoucherBook> update(String id, VoucherBookDraft draft);
 
-  Future<void> delete(int id);
+  Future<void> delete(String id);
 
   /// Atomically returns the current [VoucherBook.currentNumber] then increments it.
   /// Only valid for active leaf books (not section groups).
   /// Fails when the book is exhausted (`currentNumber` > `endNumber`).
-  Future<int> allocateNextNumber(int id);
+  Future<int> allocateNextNumber(String id);
 
   /// Reserves [size] consecutive numbers for offline device blocks.
   ///
   /// Returns `(start, end)` inclusive. May return a smaller range when the
   /// book is nearly exhausted. Fails when no numbers remain.
-  Future<({int start, int end})> reserveNumberBlock(int id, int size);
+  Future<({int start, int end})> reserveNumberBlock(String id, int size);
 }

@@ -1,7 +1,10 @@
+import 'package:stock_count/core/audit/domain/services/audit_trail_service.dart';
 import 'package:stock_count/core/usecases/canonical_transaction_orchestrator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/repositories/financial_transaction_repository.dart';
+import 'package:stock_count/modules/sync/engine/domain/entities/sync_operation.dart';
+import 'package:stock_count/modules/sync/engine/domain/services/sync_queue.dart';
 
 sealed class TreasuryOrchestrationResult {
   const TreasuryOrchestrationResult();
@@ -34,17 +37,23 @@ class PostFinancialTransactionUseCase {
   final FinancialTransactionRepository _repository;
   final JournalPostingService _journalPostingService;
   final CanonicalTransactionOrchestrator _orchestrator;
+  final AuditTrailService? _auditTrailService;
+  final SyncQueue? _syncQueue;
 
   PostFinancialTransactionUseCase({
     required FinancialTransactionRepository repository,
     required JournalPostingService journalPostingService,
     required CanonicalTransactionOrchestrator orchestrator,
+    AuditTrailService? auditTrailService,
+    SyncQueue? syncQueue,
   })  : _repository = repository,
         _journalPostingService = journalPostingService,
-        _orchestrator = orchestrator;
+        _orchestrator = orchestrator,
+        _auditTrailService = auditTrailService,
+        _syncQueue = syncQueue;
 
   Future<TreasuryOrchestrationResult> execute({
-    required int transactionId,
+    required String transactionId,
     required String companyId,
     String? userId,
   }) async {
@@ -52,7 +61,7 @@ class PostFinancialTransactionUseCase {
       final txn = await _repository.getById(transactionId);
       if (txn == null) {
         return TreasuryOrchestrationFailure(
-          transactionUuid: transactionId.toString(),
+          transactionUuid: transactionId,
           reason: 'المعاملة المالية غير موجودة',
         );
       }
@@ -75,6 +84,36 @@ class PostFinancialTransactionUseCase {
             sourceId: txn.uuid,
           );
 
+          // 3. Record Audit Event inside transaction
+          if (_auditTrailService != null) {
+            await _auditTrailService!.recordEvent(
+              documentId: txn.uuid,
+              documentType: 'receipt_payment',
+              eventType: 'posted',
+              userId: userId ?? context.userId,
+              companyId: companyId,
+              notes: 'Financial Transaction ${txn.uuid} posted',
+            );
+          }
+
+          // 4. Enqueue Sync Operation inside transaction
+          if (_syncQueue != null) {
+            await _syncQueue!.enqueue(
+              SyncOperation.create(
+                entityType: 'receipt_payment',
+                entityId: txn.uuid,
+                type: SyncOperationType.update,
+                companyId: companyId,
+                payload: {
+                  'id': postedTxn.id,
+                  'uuid': postedTxn.uuid,
+                  'documentStatus': TransactionStatus.posted.name,
+                  'companyId': companyId,
+                },
+              ),
+            );
+          }
+
           return TreasuryOrchestrationSuccess(
             transactionUuid: postedTxn.uuid,
             message: 'تم ترحيل المعاملة المالية وعكس السجلات المحاسبية بنجاح',
@@ -85,7 +124,7 @@ class PostFinancialTransactionUseCase {
       );
     } catch (e) {
       return TreasuryOrchestrationFailure(
-        transactionUuid: transactionId.toString(),
+        transactionUuid: transactionId,
         reason: e.toString().replaceAll('Exception: ', ''),
       );
     }
@@ -97,17 +136,23 @@ class UnpostFinancialTransactionUseCase {
   final FinancialTransactionRepository _repository;
   final JournalPostingService _journalPostingService;
   final CanonicalTransactionOrchestrator _orchestrator;
+  final AuditTrailService? _auditTrailService;
+  final SyncQueue? _syncQueue;
 
   UnpostFinancialTransactionUseCase({
     required FinancialTransactionRepository repository,
     required JournalPostingService journalPostingService,
     required CanonicalTransactionOrchestrator orchestrator,
+    AuditTrailService? auditTrailService,
+    SyncQueue? syncQueue,
   })  : _repository = repository,
         _journalPostingService = journalPostingService,
-        _orchestrator = orchestrator;
+        _orchestrator = orchestrator,
+        _auditTrailService = auditTrailService,
+        _syncQueue = syncQueue;
 
   Future<TreasuryOrchestrationResult> execute({
-    required int transactionId,
+    required String transactionId,
     required String companyId,
     String? userId,
   }) async {
@@ -115,7 +160,7 @@ class UnpostFinancialTransactionUseCase {
       final txn = await _repository.getById(transactionId);
       if (txn == null) {
         return TreasuryOrchestrationFailure(
-          transactionUuid: transactionId.toString(),
+          transactionUuid: transactionId,
           reason: 'المعاملة المالية غير موجودة',
         );
       }
@@ -129,6 +174,36 @@ class UnpostFinancialTransactionUseCase {
             sourceId: txn.uuid,
           );
 
+          // Record Audit Event inside transaction
+          if (_auditTrailService != null) {
+            await _auditTrailService!.recordEvent(
+              documentId: txn.uuid,
+              documentType: 'receipt_payment',
+              eventType: 'unposted',
+              userId: userId ?? context.userId,
+              companyId: companyId,
+              notes: 'Financial Transaction ${txn.uuid} unposted',
+            );
+          }
+
+          // Enqueue Sync Operation inside transaction
+          if (_syncQueue != null) {
+            await _syncQueue!.enqueue(
+              SyncOperation.create(
+                entityType: 'receipt_payment',
+                entityId: txn.uuid,
+                type: SyncOperationType.update,
+                companyId: companyId,
+                payload: {
+                  'id': unpostedTxn.id,
+                  'uuid': unpostedTxn.uuid,
+                  'documentStatus': TransactionStatus.unposted.name,
+                  'companyId': companyId,
+                },
+              ),
+            );
+          }
+
           return TreasuryOrchestrationSuccess(
             transactionUuid: unpostedTxn.uuid,
             message: 'تم إلغاء ترحيل المعاملة المالية بنجاح',
@@ -139,7 +214,7 @@ class UnpostFinancialTransactionUseCase {
       );
     } catch (e) {
       return TreasuryOrchestrationFailure(
-        transactionUuid: transactionId.toString(),
+        transactionUuid: transactionId,
         reason: e.toString().replaceAll('Exception: ', ''),
       );
     }

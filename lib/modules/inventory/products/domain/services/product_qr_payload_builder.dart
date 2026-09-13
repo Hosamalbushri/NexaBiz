@@ -109,10 +109,7 @@ class ProductQrPayloadBuilder {
     }
 
     final idRaw = fields['id'];
-    final id = idRaw == null ? 0 : int.tryParse(idRaw);
-    if (id == null) {
-      return null;
-    }
+    final id = idRaw ?? '';
 
     final barcode = fields['barcode'];
     return ProductQrPayload(
@@ -145,13 +142,12 @@ class ProductQrPayloadBuilder {
       return null;
     }
 
-    final id = map['id'];
+    final id = map['id']?.toString() ?? '';
     final name = map['name'];
     final itemCode = map['itemCode'];
     final price = map['price'];
     final packSize = map['packSize'];
-    if (id is! int ||
-        name is! String ||
+    if (name is! String ||
         itemCode is! String ||
         name.trim().isEmpty ||
         itemCode.trim().isEmpty) {
@@ -286,8 +282,8 @@ class ProductQrPayload {
 
   final int version;
 
-  /// May be `0` for text QR codes that omit the catalog id.
-  final int id;
+  /// May be empty for text QR codes that omit the catalog id.
+  final String id;
   final String name;
   final String itemCode;
   final double price;

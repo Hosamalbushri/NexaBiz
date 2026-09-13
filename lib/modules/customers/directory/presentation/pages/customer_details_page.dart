@@ -14,7 +14,7 @@ import 'package:stock_count/modules/customers/shared/presentation/pages/customer
 class CustomerDetailsPage extends ConsumerWidget {
   const CustomerDetailsPage({super.key, required this.customerId});
 
-  final int customerId;
+  final String customerId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

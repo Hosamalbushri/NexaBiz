@@ -11,9 +11,7 @@ abstract class SaleRepository {
 
   Stream<List<Sale>> watchAll();
 
-  Future<Sale?> getById(int id);
-
-  Future<Sale?> getByUuid(String uuid);
+  Future<Sale?> getById(String id);
 
   Future<Sale?> getBySaleNumber(String saleNumber);
 
@@ -46,11 +44,11 @@ abstract class SaleRepository {
 
   Future<Sale> insert(SaleDraft draft, {required String saleNumber});
 
-  Future<Sale> update(int id, SaleDraft draft);
+  Future<Sale> update(String id, SaleDraft draft);
 
-  Future<Sale> updateStatus(int id, SaleStatusUpdate update);
+  Future<Sale> updateStatus(String id, SaleStatusUpdate update);
 
-  Future<void> softDelete(int id);
+  Future<void> softDelete(String id);
 
   /// Aggregate helpers for future customer balance / reports.
   Future<CustomerSaleTotals> totalsForCustomer(String customerId);

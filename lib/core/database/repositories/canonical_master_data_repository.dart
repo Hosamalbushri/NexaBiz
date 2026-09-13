@@ -60,8 +60,8 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   // --- Currencies ---
   @override
   Future<CurrencyData> createCurrency(CurrenciesCompanion currency) async {
-    final uuid = currency.uuid.present ? currency.uuid.value : generateUuidV4();
-    final companion = currency.copyWith(uuid: Value(uuid));
+    final id = currency.id.present ? currency.id.value : generateUuidV7();
+    final companion = currency.copyWith(id: Value(id));
     return _db.into(_db.currencies).insertReturning(companion);
   }
 
@@ -90,12 +90,12 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
     final companyId = category.companyId.value;
     _verifyCompanyId(companyId, 'ProductCategory');
 
-    final parentUuid = category.parentUuid.present ? category.parentUuid.value : null;
-    final uuid = category.uuid.present ? category.uuid.value : generateUuidV4();
+    final parentUuid = category.parentCategoryId.present ? category.parentCategoryId.value : null;
+    final id = category.id.present ? category.id.value : generateUuidV7();
 
     if (parentUuid != null) {
-      if (parentUuid == uuid) {
-        throw ArgumentError('Self-parenting is prohibited for category $uuid.');
+      if (parentUuid == id) {
+        throw ArgumentError('Self-parenting is prohibited for category $id.');
       }
       final parent = await getCategoryByUuid(parentUuid, companyId);
       if (parent == null) {
@@ -103,7 +103,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
       }
     }
 
-    final companion = category.copyWith(uuid: Value(uuid));
+    final companion = category.copyWith(id: Value(id));
     return _db.into(_db.productCategories).insertReturning(companion);
   }
 
@@ -119,7 +119,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   Future<ProductCategoryData?> getCategoryByUuid(String uuid, String companyId) {
     _verifyCompanyId(companyId, 'ProductCategory');
     return (_db.select(_db.productCategories)
-          ..where((tbl) => tbl.uuid.equals(uuid) & tbl.companyId.equals(companyId)))
+          ..where((tbl) => tbl.id.equals(uuid) & tbl.companyId.equals(companyId)))
         .getSingleOrNull();
   }
 
@@ -129,8 +129,8 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
     final companyId = warehouse.companyId.value;
     _verifyCompanyId(companyId, 'Warehouse');
 
-    final uuid = warehouse.uuid.present ? warehouse.uuid.value : generateUuidV4();
-    final companion = warehouse.copyWith(uuid: Value(uuid));
+    final id = warehouse.id.present ? warehouse.id.value : generateUuidV7();
+    final companion = warehouse.copyWith(id: Value(id));
     return _db.into(_db.warehouses).insertReturning(companion);
   }
 
@@ -146,7 +146,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   Future<WarehouseData?> getWarehouseByUuid(String uuid, String companyId) {
     _verifyCompanyId(companyId, 'Warehouse');
     return (_db.select(_db.warehouses)
-          ..where((tbl) => tbl.uuid.equals(uuid) & tbl.companyId.equals(companyId)))
+          ..where((tbl) => tbl.id.equals(uuid) & tbl.companyId.equals(companyId)))
         .getSingleOrNull();
   }
 
@@ -156,12 +156,12 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
     final companyId = account.companyId.value;
     _verifyCompanyId(companyId, 'Account');
 
-    final parentUuid = account.parentUuid.present ? account.parentUuid.value : null;
-    final uuid = account.uuid.present ? account.uuid.value : generateUuidV4();
+    final parentUuid = account.parentAccountId.present ? account.parentAccountId.value : null;
+    final id = account.id.present ? account.id.value : generateUuidV7();
 
     if (parentUuid != null) {
-      if (parentUuid == uuid) {
-        throw ArgumentError('Self-parenting is prohibited for account $uuid.');
+      if (parentUuid == id) {
+        throw ArgumentError('Self-parenting is prohibited for account $id.');
       }
       final parent = await getAccountByUuid(parentUuid, companyId);
       if (parent == null) {
@@ -169,7 +169,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
       }
     }
 
-    final companion = account.copyWith(uuid: Value(uuid));
+    final companion = account.copyWith(id: Value(id));
     return _db.into(_db.accounts).insertReturning(companion);
   }
 
@@ -185,7 +185,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   Future<AccountData?> getAccountByUuid(String uuid, String companyId) {
     _verifyCompanyId(companyId, 'Account');
     return (_db.select(_db.accounts)
-          ..where((tbl) => tbl.uuid.equals(uuid) & tbl.companyId.equals(companyId)))
+          ..where((tbl) => tbl.id.equals(uuid) & tbl.companyId.equals(companyId)))
         .getSingleOrNull();
   }
 
@@ -195,7 +195,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
     final companyId = product.companyId.value;
     _verifyCompanyId(companyId, 'Product');
 
-    final categoryUuid = product.categoryUuid.present ? product.categoryUuid.value : null;
+    final categoryUuid = product.categoryId.present ? product.categoryId.value : null;
     if (categoryUuid != null) {
       final category = await getCategoryByUuid(categoryUuid, companyId);
       if (category == null) {
@@ -203,8 +203,8 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
       }
     }
 
-    final uuid = product.uuid.present ? product.uuid.value : generateUuidV4();
-    final companion = product.copyWith(uuid: Value(uuid));
+    final id = product.id.present ? product.id.value : generateUuidV7();
+    final companion = product.copyWith(id: Value(id));
     return _db.into(_db.products).insertReturning(companion);
   }
 
@@ -220,7 +220,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   Future<ProductData?> getProductByUuid(String uuid, String companyId) {
     _verifyCompanyId(companyId, 'Product');
     return (_db.select(_db.products)
-          ..where((tbl) => tbl.uuid.equals(uuid) & tbl.companyId.equals(companyId)))
+          ..where((tbl) => tbl.id.equals(uuid) & tbl.companyId.equals(companyId)))
         .getSingleOrNull();
   }
 
@@ -230,7 +230,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
     final companyId = customer.companyId.value;
     _verifyCompanyId(companyId, 'Customer');
 
-    final accountUuid = customer.accountUuid.present ? customer.accountUuid.value : null;
+    final accountUuid = customer.accountId.present ? customer.accountId.value : null;
     if (accountUuid != null) {
       final account = await getAccountByUuid(accountUuid, companyId);
       if (account == null) {
@@ -238,8 +238,8 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
       }
     }
 
-    final uuid = customer.uuid.present ? customer.uuid.value : generateUuidV4();
-    final companion = customer.copyWith(uuid: Value(uuid));
+    final id = customer.id.present ? customer.id.value : generateUuidV7();
+    final companion = customer.copyWith(id: Value(id));
     return _db.into(_db.customers).insertReturning(companion);
   }
 
@@ -255,7 +255,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   Future<CustomerData?> getCustomerByUuid(String uuid, String companyId) {
     _verifyCompanyId(companyId, 'Customer');
     return (_db.select(_db.customers)
-          ..where((tbl) => tbl.uuid.equals(uuid) & tbl.companyId.equals(companyId)))
+          ..where((tbl) => tbl.id.equals(uuid) & tbl.companyId.equals(companyId)))
         .getSingleOrNull();
   }
 
@@ -265,7 +265,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
     final companyId = cashRegister.companyId.value;
     _verifyCompanyId(companyId, 'CashRegister');
 
-    final accountUuid = cashRegister.accountUuid.present ? cashRegister.accountUuid.value : null;
+    final accountUuid = cashRegister.accountId.present ? cashRegister.accountId.value : null;
     if (accountUuid != null) {
       final account = await getAccountByUuid(accountUuid, companyId);
       if (account == null) {
@@ -273,8 +273,8 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
       }
     }
 
-    final uuid = cashRegister.uuid.present ? cashRegister.uuid.value : generateUuidV4();
-    final companion = cashRegister.copyWith(uuid: Value(uuid));
+    final id = cashRegister.id.present ? cashRegister.id.value : generateUuidV7();
+    final companion = cashRegister.copyWith(id: Value(id));
     return _db.into(_db.cashRegisters).insertReturning(companion);
   }
 
@@ -290,7 +290,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   Future<CashRegisterData?> getCashRegisterByUuid(String uuid, String companyId) {
     _verifyCompanyId(companyId, 'CashRegister');
     return (_db.select(_db.cashRegisters)
-          ..where((tbl) => tbl.uuid.equals(uuid) & tbl.companyId.equals(companyId)))
+          ..where((tbl) => tbl.id.equals(uuid) & tbl.companyId.equals(companyId)))
         .getSingleOrNull();
   }
 
@@ -300,12 +300,12 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
     final companyId = voucherBook.companyId.value;
     _verifyCompanyId(companyId, 'VoucherBook');
 
-    final parentUuid = voucherBook.parentUuid.present ? voucherBook.parentUuid.value : null;
-    final uuid = voucherBook.uuid.present ? voucherBook.uuid.value : generateUuidV4();
+    final parentUuid = voucherBook.parentBookId.present ? voucherBook.parentBookId.value : null;
+    final id = voucherBook.id.present ? voucherBook.id.value : generateUuidV7();
 
     if (parentUuid != null) {
-      if (parentUuid == uuid) {
-        throw ArgumentError('Self-parenting is prohibited for voucher book $uuid.');
+      if (parentUuid == id) {
+        throw ArgumentError('Self-parenting is prohibited for voucher book $id.');
       }
       final parent = await getVoucherBookByUuid(parentUuid, companyId);
       if (parent == null) {
@@ -313,7 +313,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
       }
     }
 
-    final companion = voucherBook.copyWith(uuid: Value(uuid));
+    final companion = voucherBook.copyWith(id: Value(id));
     return _db.into(_db.voucherBooks).insertReturning(companion);
   }
 
@@ -329,7 +329,7 @@ class CanonicalMasterDataRepositoryImpl implements CanonicalMasterDataRepository
   Future<VoucherBookData?> getVoucherBookByUuid(String uuid, String companyId) {
     _verifyCompanyId(companyId, 'VoucherBook');
     return (_db.select(_db.voucherBooks)
-          ..where((tbl) => tbl.uuid.equals(uuid) & tbl.companyId.equals(companyId)))
+          ..where((tbl) => tbl.id.equals(uuid) & tbl.companyId.equals(companyId)))
         .getSingleOrNull();
   }
 }

@@ -92,7 +92,7 @@ class SafeCoaImportEngine {
 
     // Persist all candidate accounts safely
     for (final account in candidateAccounts) {
-      final existing = await accountRepository.getByUuid(account.uuid);
+      final existing = await accountRepository.getByUuid(account.id);
       if (existing == null) {
         // Save new account
         await accountRepository.ensureDefaultChartSeeded();

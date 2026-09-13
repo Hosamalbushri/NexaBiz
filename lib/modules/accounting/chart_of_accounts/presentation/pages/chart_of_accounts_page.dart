@@ -284,7 +284,7 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
     final ids = <String>{};
     void walk(AccountTreeNode node) {
       if (node.hasChildren) {
-        ids.add(node.account.uuid);
+        ids.add(node.account.id);
       }
       for (final child in node.children) {
         walk(child);

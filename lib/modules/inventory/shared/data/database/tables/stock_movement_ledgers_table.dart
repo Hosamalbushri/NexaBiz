@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Stock Movement Ledgers table (Authoritative inventory movement ledger).
 ///
@@ -6,16 +7,17 @@ import 'package:drift/drift.dart';
 /// capturing both inventory valuation currency and original document currency.
 @DataClassName('StockMovementLedgerRow')
 class StockMovementLedgers extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  /// Client-generated UUID for offline-safe identity / sync.
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   /// Company / Tenant owner ID for local multi-tenant data isolation.
   TextColumn get companyId => text()();
 
   /// Warehouse identifier where this stock movement occurred.
   TextColumn get warehouseId => text()();
+
+  /// Product UUID.
+  TextColumn get productId => text().nullable()();
 
   /// Product item code associated with this movement.
   TextColumn get itemCode => text().withLength(min: 1, max: 128)();
@@ -34,7 +36,7 @@ class StockMovementLedgers extends Table {
   /// Official document posting date timestamp (UTC epoch ms).
   IntColumn get postingDate => integer()();
 
-  /// Source document header UUID (e.g. StockReceipt.uuid, SalesInvoice.uuid).
+  /// Source document header UUID (e.g. StockReceipt.id, SalesInvoice.id).
   TextColumn get sourceDocumentId => text().withLength(min: 36, max: 36)();
 
   /// Source document type ('stock_receipt', 'stock_issue', 'sales_invoice', etc.).
@@ -48,6 +50,9 @@ class StockMovementLedgers extends Table {
 
   /// Total cost (`quantity * unitCost`) in inventory valuation currency.
   RealColumn get totalCost => real().withDefault(const Constant(0))();
+
+  /// Total cost in company base currency.
+  RealColumn get baseTotalCost => real().withDefault(const Constant(0))();
 
   /// Inventory valuation currency code (e.g. 'YER').
   TextColumn get inventoryCurrencyId => text()();
@@ -83,4 +88,12 @@ class StockMovementLedgers extends Table {
 
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+      ];
 }

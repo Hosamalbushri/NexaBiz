@@ -40,7 +40,7 @@ import 'package:stock_count/modules/currency/presentation/widgets/missing_curren
 class SaleFormPage extends ConsumerStatefulWidget {
   const SaleFormPage({super.key, this.saleId});
 
-  final int? saleId;
+  final String? saleId;
 
   @override
   ConsumerState<SaleFormPage> createState() => _SaleFormPageState();

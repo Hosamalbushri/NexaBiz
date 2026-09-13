@@ -28,7 +28,7 @@ class GetProductById {
 
   final ProductRepository _repository;
 
-  Future<Product?> call(int id) => _repository.getById(id);
+  Future<Product?> call(String id) => _repository.getById(id);
 }
 
 class GetProductByBarcode {
@@ -63,7 +63,7 @@ class UpdateProduct {
   final ProductRepository _repository;
   final PermissionGuard _guard;
 
-  Future<Product> call(int id, ProductDraft draft) async {
+  Future<Product> call(String id, ProductDraft draft) async {
     _guard.requireAny(InventoryPermissions.productsUpdate);
     return _repository.update(id, draft);
   }
@@ -78,7 +78,7 @@ class DeleteProduct {
   final ProductRepository _repository;
   final PermissionGuard _guard;
 
-  Future<void> call(int id) async {
+  Future<void> call(String id) async {
     _guard.requireAny(InventoryPermissions.productsDelete);
     return _repository.delete(id);
   }

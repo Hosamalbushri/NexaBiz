@@ -1,9 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Daily history of exchange rates vs company base currency.
 @DataClassName('CurrencyRateHistoryRow')
 class CurrencyRateHistory extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   TextColumn get currencyCode => text().withLength(min: 3, max: 8)();
 
@@ -20,7 +22,11 @@ class CurrencyRateHistory extends Table {
   TextColumn get companyId => text().nullable()();
 
   @override
-  List<Set<Column<Object>>>? get uniqueKeys => [
-    {companyId, currencyCode, asOfDate},
-  ];
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, currencyCode, asOfDate},
+      ];
 }

@@ -7,7 +7,10 @@ import 'package:stock_count/modules/accounting/shared/domain/entities/currency_r
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 import 'package:stock_count/modules/sales/invoices/domain/services/sale_currency_converter.dart';
 
+import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
+
 class _FakeCurrencyRateRepository implements CurrencyRateRepository {
+
   final Map<String, double> rates = {};
 
   @override
@@ -245,8 +248,9 @@ void main() {
             baseCurrencyCode: 'SAR',
             lines: lines,
           ),
-          throwsA(isA<InvalidExchangeRateException>()),
+          throwsA(isA<ExchangeRateNotFoundException>()),
         );
+
       },
     );
 

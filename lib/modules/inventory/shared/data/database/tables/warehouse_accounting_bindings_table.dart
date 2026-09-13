@@ -1,8 +1,10 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 @DataClassName('WarehouseAccountingBindingRow')
 class WarehouseAccountingBindings extends Table {
-  TextColumn get uuid => text()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
   TextColumn get warehouseId => text()();
   TextColumn get inventoryAssetAccountId => text().nullable()();
   TextColumn get cogsAccountId => text().nullable()();
@@ -20,10 +22,11 @@ class WarehouseAccountingBindings extends Table {
   IntColumn get deletedAt => integer().nullable()();
 
   @override
-  Set<Column> get primaryKey => {uuid};
+  Set<Column> get primaryKey => {id};
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {companyId, warehouseId},
-  ];
+        {companyId, id},
+        {companyId, warehouseId},
+      ];
 }

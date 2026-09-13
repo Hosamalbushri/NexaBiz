@@ -90,11 +90,11 @@ class JournalBuilderImpl implements JournalBuilderService {
 
       final byUuid = await _accountRepository.getByUuid(target);
       if (byUuid != null && !byUuid.isGroup && byUuid.isActive) {
-        return byUuid.uuid;
+        return byUuid.id;
       }
       final byCode = await _accountRepository.getByAccountCode(target);
       if (byCode != null && !byCode.isGroup && byCode.isActive) {
-        return byCode.uuid;
+        return byCode.id;
       }
 
       throw MissingAccountException(
@@ -145,13 +145,13 @@ class JournalBuilderImpl implements JournalBuilderService {
 
           final accByUuid = await _accountRepository.getByUuid(targetCandidate);
           if (accByUuid != null && !accByUuid.isGroup && accByUuid.isActive) {
-            return accByUuid.uuid;
+            return accByUuid.id;
           }
           final accByCode = await _accountRepository.getByAccountCode(
             targetCandidate,
           );
           if (accByCode != null && !accByCode.isGroup && accByCode.isActive) {
-            return accByCode.uuid;
+            return accByCode.id;
           }
         }
       }
@@ -219,7 +219,7 @@ class JournalBuilderImpl implements JournalBuilderService {
     return ExchangeRateValidator.validate(
       currencyCode: code,
       baseCurrencyCode: base,
-      exchangeRate: fallbackRate ?? 1.0,
+      exchangeRate: fallbackRate,
     );
   }
 
@@ -496,7 +496,11 @@ class JournalBuilderImpl implements JournalBuilderService {
     // --- Multi-Currency Amount Resolution ---
     // valuationAmount from PostingCoordinator is in document currency.
     final double docTotal = JournalMoney.round(valuationAmount ?? totalAmount);
-    final double docRate = document.exchangeRate > 0 ? document.exchangeRate : 1.0;
+    final double docRate = ExchangeRateValidator.validate(
+      currencyCode: document.currencyCode,
+      baseCurrencyCode: baseCurrency,
+      exchangeRate: document.exchangeRate,
+    );
 
     final double baseTotal = JournalMoney.round(docTotal * docRate);
 
@@ -569,7 +573,7 @@ class JournalBuilderImpl implements JournalBuilderService {
         description: reverseDescription,
         isPosted: true,
         sourceType: JournalPostingService.reverseSourceType,
-        sourceId: originalEntry.uuid,
+        sourceId: originalEntry.id,
         lines: [
           for (final line in originalEntry.lines)
             JournalLineDraft(

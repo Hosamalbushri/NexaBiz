@@ -247,7 +247,7 @@ class StockMovementReportDataProvider
     final isAscending = context.sorting.ascending;
 
     if (cursor != null) {
-      final cursorId = int.parse(cursor.uniqueId);
+      final cursorId = cursor.uniqueId;
       if (isAscending) {
         query.where((tbl) => tbl.id.isBiggerThanValue(cursorId));
       } else {
@@ -265,32 +265,32 @@ class StockMovementReportDataProvider
 
     final lines = await query.get();
 
-    final receiptUuids = lines
-        .where((l) => l.movementType == 'receipt')
-        .map((l) => l.movementUuid)
+    final receiptIds = lines
+        .map((l) => l.receiptId)
+        .whereType<String>()
         .toSet();
-    final issueUuids = lines
-        .where((l) => l.movementType == 'issue')
-        .map((l) => l.movementUuid)
+    final issueIds = lines
+        .map((l) => l.issueId)
+        .whereType<String>()
         .toSet();
 
     final receiptsMap = <String, StockReceiptRow>{};
-    if (receiptUuids.isNotEmpty) {
+    if (receiptIds.isNotEmpty) {
       final recRows = await (inventoryDb.select(
         inventoryDb.stockReceipts,
-      )..where((tbl) => tbl.uuid.isIn(receiptUuids))).get();
+      )..where((tbl) => tbl.id.isIn(receiptIds))).get();
       for (final r in recRows) {
-        receiptsMap[r.uuid] = r;
+        receiptsMap[r.id] = r;
       }
     }
 
     final issuesMap = <String, StockIssueRow>{};
-    if (issueUuids.isNotEmpty) {
+    if (issueIds.isNotEmpty) {
       final issRows = await (inventoryDb.select(
         inventoryDb.stockIssues,
-      )..where((tbl) => tbl.uuid.isIn(issueUuids))).get();
+      )..where((tbl) => tbl.id.isIn(issueIds))).get();
       for (final i in issRows) {
-        issuesMap[i.uuid] = i;
+        issuesMap[i.id] = i;
       }
     }
 
@@ -298,11 +298,12 @@ class StockMovementReportDataProvider
 
     for (final line in lines) {
       final isIn = line.movementType == 'receipt';
-      final rec = receiptsMap[line.movementUuid];
-      final iss = issuesMap[line.movementUuid];
+      final movementId = line.receiptId ?? line.issueId ?? line.returnId ?? line.transferId ?? line.id;
+      final rec = line.receiptId != null ? receiptsMap[line.receiptId] : null;
+      final iss = line.issueId != null ? issuesMap[line.issueId] : null;
 
       final docNum =
-          rec?.receiptNumber ?? iss?.issueNumber ?? line.movementUuid;
+          rec?.receiptNumber ?? iss?.issueNumber ?? movementId;
       final docDateMs =
           rec?.receiptDate ?? iss?.issueDate ?? line.postedAt ?? 0;
       final docDate = DateTime.fromMillisecondsSinceEpoch(
@@ -319,7 +320,7 @@ class StockMovementReportDataProvider
       datasetRows.add(
         ReportRowData(
           documentType: isIn ? 'stock_receipt' : 'stock_issue',
-          documentUuid: line.movementUuid,
+          documentUuid: movementId,
           values: {
             'transactionDate': dateFormat.format(docDate),
             'documentTypeLabel': isIn ? 'أمر توريد' : 'أمر صرف',
@@ -338,7 +339,7 @@ class StockMovementReportDataProvider
             'balanceQuantity': qtyFormat.format(mainQty),
             'unitCost': currencyFormat.format(cost),
             'totalValue': currencyFormat.format(totalLineCost),
-            'id': line.id.toString(),
+            'id': line.id,
           },
         ),
       );
@@ -347,8 +348,8 @@ class StockMovementReportDataProvider
     ReportCursor? nextCursor;
     if (lines.length == pageSize) {
       nextCursor = ReportCursor(
-        primarySortValue: lines.last.id,
-        uniqueId: lines.last.id.toString(),
+        primarySortValue: 0,
+        uniqueId: lines.last.id,
       );
     }
 
@@ -367,17 +368,17 @@ class StockMovementReportDataProvider
     int? toMs,
   }) {
     query.where(
-      inventoryDb.stockMovementLines.movementUuid.isInQuery(
+      inventoryDb.stockMovementLines.receiptId.isInQuery(
             inventoryDb.selectOnly(inventoryDb.stockReceipts)
-              ..addColumns([inventoryDb.stockReceipts.uuid])
+              ..addColumns([inventoryDb.stockReceipts.id])
               ..where(
                 inventoryDb.stockReceipts.companyId.equals(context.companyId) &
                     inventoryDb.stockReceipts.deletedAt.isNull(),
               ),
           ) |
-          inventoryDb.stockMovementLines.movementUuid.isInQuery(
+          inventoryDb.stockMovementLines.issueId.isInQuery(
             inventoryDb.selectOnly(inventoryDb.stockIssues)
-              ..addColumns([inventoryDb.stockIssues.uuid])
+              ..addColumns([inventoryDb.stockIssues.id])
               ..where(
                 inventoryDb.stockIssues.companyId.equals(context.companyId) &
                     inventoryDb.stockIssues.deletedAt.isNull(),
@@ -388,7 +389,8 @@ class StockMovementReportDataProvider
     if (productCode != null && productCode.isNotEmpty) {
       query.where(
         inventoryDb.stockMovementLines.itemCode.equals(productCode) |
-            inventoryDb.stockMovementLines.movementUuid.equals(productCode),
+            inventoryDb.stockMovementLines.receiptId.equals(productCode) |
+            inventoryDb.stockMovementLines.issueId.equals(productCode),
       );
     }
     if (fromMs != null) {
@@ -425,14 +427,14 @@ class StockMovementReportDataProvider
     int? fromMs,
     int? toMs,
   }) {
-    final receiptUuidsQuery = inventoryDb.selectOnly(inventoryDb.stockReceipts)
-      ..addColumns([inventoryDb.stockReceipts.uuid])
+    final receiptIdsQuery = inventoryDb.selectOnly(inventoryDb.stockReceipts)
+      ..addColumns([inventoryDb.stockReceipts.id])
       ..where(
         inventoryDb.stockReceipts.companyId.equals(context.companyId) &
             inventoryDb.stockReceipts.deletedAt.isNull(),
       );
-    final issueUuidsQuery = inventoryDb.selectOnly(inventoryDb.stockIssues)
-      ..addColumns([inventoryDb.stockIssues.uuid])
+    final issueIdsQuery = inventoryDb.selectOnly(inventoryDb.stockIssues)
+      ..addColumns([inventoryDb.stockIssues.id])
       ..where(
         inventoryDb.stockIssues.companyId.equals(context.companyId) &
             inventoryDb.stockIssues.deletedAt.isNull(),
@@ -440,15 +442,16 @@ class StockMovementReportDataProvider
 
     query.where(
       (tbl) =>
-          tbl.movementUuid.isInQuery(receiptUuidsQuery) |
-          tbl.movementUuid.isInQuery(issueUuidsQuery),
+          tbl.receiptId.isInQuery(receiptIdsQuery) |
+          tbl.issueId.isInQuery(issueIdsQuery),
     );
 
     if (productCode != null && productCode.isNotEmpty) {
       query.where(
         (tbl) =>
             tbl.itemCode.equals(productCode) |
-            tbl.movementUuid.equals(productCode),
+            tbl.receiptId.equals(productCode) |
+            tbl.issueId.equals(productCode),
       );
     }
     if (fromMs != null) {

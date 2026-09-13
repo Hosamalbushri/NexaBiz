@@ -46,7 +46,14 @@ class SaleRepositoryImpl implements SaleRepository {
 
   static const entityType = 'sale';
 
-  String get _currentCompanyId => _readCompanyId?.call() ?? 'default_company';
+  String get _currentCompanyId {
+    final companyId = _readCompanyId?.call();
+    if (companyId == null || companyId.trim().isEmpty) {
+      throw StateError(
+          'Active company scope context is required for SaleRepository operations.');
+    }
+    return companyId;
+  }
 
   Expression<bool> _tenantScoped($SalesTable t) =>
       t.companyId.equals(_currentCompanyId);
@@ -59,19 +66,19 @@ class SaleRepositoryImpl implements SaleRepository {
 
   int? _toEpoch(DateTime? value) => value?.toUtc().millisecondsSinceEpoch;
 
-  Future<List<SaleItem>> _loadItems(String saleUuid) async {
+  Future<List<SaleItem>> _loadItems(String saleId) async {
     final rows =
         await (_db.select(_db.saleItems)
-              ..where((t) => t.saleUuid.equals(saleUuid))
+              ..where((t) => t.saleId.equals(saleId))
               ..orderBy([(t) => OrderingTerm.asc(t.lineOrder)]))
             .get();
     return rows.map(_mapItem).toList(growable: false);
   }
 
-  Future<List<SalePayment>> _loadPayments(String saleUuid) async {
+  Future<List<SalePayment>> _loadPayments(String saleId) async {
     final rows =
         await (_db.select(_db.salePayments)
-              ..where((t) => t.saleUuid.equals(saleUuid))
+              ..where((t) => t.saleId.equals(saleId))
               ..orderBy([(t) => OrderingTerm.asc(t.paidAt)]))
             .get();
     return rows.map(_mapPayment).toList(growable: false);
@@ -86,8 +93,7 @@ class SaleRepositoryImpl implements SaleRepository {
     final packSize = row.packSize <= 0 ? 1 : row.packSize;
     return SaleItem(
       id: row.id,
-      uuid: row.uuid,
-      saleUuid: row.saleUuid,
+      saleId: row.saleId,
       productId: row.productId,
       productName: row.productName,
       productCode: row.productCode,
@@ -111,8 +117,7 @@ class SaleRepositoryImpl implements SaleRepository {
   SalePayment _mapPayment(SalePaymentRow row) {
     return SalePayment(
       id: row.id,
-      uuid: row.uuid,
-      saleUuid: row.saleUuid,
+      saleId: row.saleId,
       amount: row.amount,
       method: PaymentMethodX.fromStorage(row.method),
       paidAt: _fromEpoch(row.paidAt),
@@ -123,14 +128,13 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   Future<Sale> _mapSale(SaleRow row) async {
-    final items = await _loadItems(row.uuid);
-    final payments = await _loadPayments(row.uuid);
+    final items = await _loadItems(row.id);
+    final payments = await _loadPayments(row.id);
     final createdAt = _fromEpoch(row.createdAt);
     final saleDateMs = row.saleDate;
     final saleDate = saleDateMs <= 0 ? createdAt : _fromEpoch(saleDateMs);
     return Sale(
       id: row.id,
-      uuid: row.uuid,
       companyId: row.companyId ?? _currentCompanyId,
       saleNumber: row.saleNumber,
       saleDate: saleDate,
@@ -277,7 +281,7 @@ class SaleRepositoryImpl implements SaleRepository {
     final itemMatch = existsQuery(
       _db.select(_db.saleItems)..where(
         (i) =>
-            i.saleUuid.equalsExp(t.uuid) &
+            i.saleId.equalsExp(t.id) &
             (i.productName.collate(Collate.noCase).like(contains) |
                 i.productCode.collate(Collate.noCase).like(contains) |
                 i.barcode.collate(Collate.noCase).like(contains)),
@@ -292,7 +296,6 @@ class SaleRepositoryImpl implements SaleRepository {
     final saleDate = saleDateMs <= 0 ? createdAt : _fromEpoch(saleDateMs);
     return SaleListItem(
       id: row.id,
-      uuid: row.uuid,
       saleNumber: row.saleNumber,
       saleDate: saleDate,
       settlementType: SaleSettlementTypeX.fromStorage(row.settlementType),
@@ -312,7 +315,7 @@ class SaleRepositoryImpl implements SaleRepository {
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
-        entityId: sale.uuid,
+        entityId: sale.id,
         type: type,
         baseVersion: sale.version,
         payload: _salePayload(sale),
@@ -322,7 +325,7 @@ class SaleRepositoryImpl implements SaleRepository {
 
   Map<String, dynamic> _salePayload(Sale sale) {
     return {
-      'uuid': sale.uuid,
+      'id': sale.id,
       'saleNumber': sale.saleNumber,
       'saleDate': sale.saleDate.toUtc().millisecondsSinceEpoch,
       'settlementType': sale.settlementType.storageValue,
@@ -365,7 +368,7 @@ class SaleRepositoryImpl implements SaleRepository {
       'items': [
         for (final item in sale.items)
           {
-            'uuid': item.uuid,
+            'id': item.id,
             'productId': item.productId,
             'productName': item.productName,
             'productCode': item.productCode,
@@ -388,7 +391,7 @@ class SaleRepositoryImpl implements SaleRepository {
       'payments': [
         for (final payment in sale.payments)
           {
-            'uuid': payment.uuid,
+            'id': payment.id,
             'amount': payment.amount,
             'method': payment.method.storageValue,
             'paidAt': payment.paidAt.toUtc().millisecondsSinceEpoch,
@@ -401,7 +404,7 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   Future<void> _replaceChildren({
-    required String saleUuid,
+    required String saleId,
     required List<SaleItemDraft> items,
     required List<SalePaymentDraft> payments,
     required double taxRate,
@@ -411,10 +414,10 @@ class SaleRepositoryImpl implements SaleRepository {
   }) async {
     await (_db.delete(
       _db.saleItems,
-    )..where((t) => t.saleUuid.equals(saleUuid))).go();
+    )..where((t) => t.saleId.equals(saleId))).go();
     await (_db.delete(
       _db.salePayments,
-    )..where((t) => t.saleUuid.equals(saleUuid))).go();
+    )..where((t) => t.saleId.equals(saleId))).go();
 
     final lines = _calculator.calculateLines(items);
     final lineNetTotal = lines.fold<double>(0, (s, l) => s + l.total);
@@ -422,12 +425,15 @@ class SaleRepositoryImpl implements SaleRepository {
     for (final line in lines) {
       final share = lineNetTotal <= 0 ? 0.0 : line.total / lineNetTotal;
       final lineTax = taxAmount * share;
+      final itemId = line.lineUuid != null && line.lineUuid!.isNotEmpty
+          ? line.lineUuid!
+          : generateUuidV7();
       await _db
           .into(_db.saleItems)
           .insert(
             SaleItemsCompanion.insert(
-              uuid: line.lineUuid ?? generateUuidV4(),
-              saleUuid: saleUuid,
+              id: Value(itemId),
+              saleId: saleId,
               productId: line.productId,
               productName: line.productName,
               productCode: line.productCode,
@@ -452,12 +458,13 @@ class SaleRepositoryImpl implements SaleRepository {
     final now = DateTime.now().toUtc();
     if (payments.isNotEmpty) {
       for (final payment in payments) {
+        final paymentId = generateUuidV7();
         await _db
             .into(_db.salePayments)
             .insert(
               SalePaymentsCompanion.insert(
-                uuid: generateUuidV4(),
-                saleUuid: saleUuid,
+                id: Value(paymentId),
+                saleId: saleId,
                 amount: payment.amount,
                 method: Value(payment.method.storageValue),
                 paidAt: (payment.paidAt ?? now).toUtc().millisecondsSinceEpoch,
@@ -468,12 +475,13 @@ class SaleRepositoryImpl implements SaleRepository {
             );
       }
     } else if (paidAmount > 0) {
+      final paymentId = generateUuidV7();
       await _db
           .into(_db.salePayments)
           .insert(
             SalePaymentsCompanion.insert(
-              uuid: generateUuidV4(),
-              saleUuid: saleUuid,
+              id: Value(paymentId),
+              saleId: saleId,
               amount: paidAmount,
               method: Value(paymentMethod.storageValue),
               paidAt: now.millisecondsSinceEpoch,
@@ -504,18 +512,12 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<Sale?> getById(int id) async {
+  Future<Sale?> getById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final row = await (_db.select(
       _db.sales,
-    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
-    return row == null ? null : _mapSale(row);
-  }
-
-  @override
-  Future<Sale?> getByUuid(String uuid) async {
-    final row = await (_db.select(
-      _db.sales,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _mapSale(row);
   }
 
@@ -694,7 +696,7 @@ class SaleRepositoryImpl implements SaleRepository {
     );
 
     final now = DateTime.now().toUtc();
-    final uuid = generateUuidV4();
+    final newId = generateUuidV7();
     final normalizedNumber = saleNumber.trim().toUpperCase();
 
     final existing = await getBySaleNumber(normalizedNumber);
@@ -707,7 +709,7 @@ class SaleRepositoryImpl implements SaleRepository {
           .into(_db.sales)
           .insert(
             SalesCompanion.insert(
-              uuid: uuid,
+              id: Value(newId),
               saleNumber: normalizedNumber,
               saleDate: Value(BusinessDate.utcDayMs(draft.saleDate)),
               settlementType: Value(draft.settlementType.storageValue),
@@ -750,7 +752,7 @@ class SaleRepositoryImpl implements SaleRepository {
             ),
           );
       await _replaceChildren(
-        saleUuid: uuid,
+        saleId: newId,
         items: draft.items,
         payments: draft.payments,
         taxRate: draft.taxRate,
@@ -760,7 +762,7 @@ class SaleRepositoryImpl implements SaleRepository {
       );
     });
 
-    final sale = await getByUuid(uuid);
+    final sale = await getById(newId);
     if (sale == null) {
       throw const SaleException(SaleException.notFound);
     }
@@ -769,7 +771,7 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<Sale> update(int id, SaleDraft draft) async {
+  Future<Sale> update(String id, SaleDraft draft) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const SaleException(SaleException.notFound);
@@ -832,7 +834,7 @@ class SaleRepositoryImpl implements SaleRepository {
         ),
       );
       await _replaceChildren(
-        saleUuid: existing.uuid,
+        saleId: existing.id,
         items: draft.items,
         payments: draft.payments,
         taxRate: draft.taxRate,
@@ -851,7 +853,7 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<Sale> updateStatus(int id, SaleStatusUpdate update) async {
+  Future<Sale> updateStatus(String id, SaleStatusUpdate update) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const SaleException(SaleException.notFound);
@@ -903,7 +905,7 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<void> softDelete(int id) async {
+  Future<void> softDelete(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       return;
@@ -922,7 +924,7 @@ class SaleRepositoryImpl implements SaleRepository {
         version: Value(existing.version + 1),
       ),
     );
-    final sale = await getByUuid(existing.uuid);
+    final sale = await getById(existing.id);
     if (sale != null) {
       await _enqueue(sale, SyncOperationType.delete);
     }
@@ -967,14 +969,14 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   Future<void> markSynced({
-    required String uuid,
+    required String id,
     required int remoteVersion,
     DateTime? syncedAt,
   }) async {
     final at = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(
       _db.sales,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
       SalesCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(at.millisecondsSinceEpoch),
@@ -983,20 +985,20 @@ class SaleRepositoryImpl implements SaleRepository {
     );
   }
 
-  Future<void> markConflict(String uuid) async {
+  Future<void> markConflict(String id) async {
     await (_db.update(_db.sales)
-          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
+          ..where((t) => t.id.equals(id) & _tenantScoped(t)))
         .write(const SalesCompanion(syncStatus: Value('conflict')));
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid'] as String?;
-    if (uuid == null || uuid.isEmpty) {
+    final id = (payload['id'] ?? payload['uuid']) as String?;
+    if (id == null || id.isEmpty) {
       return;
     }
 
     await _db.transaction(() async {
-      final existing = await getByUuid(uuid);
+      final existing = await getById(id);
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
       final deletedAt = payload['deletedAt'] as int?;
       final remoteVersion = (payload['version'] as int?) ?? 1;
@@ -1007,7 +1009,7 @@ class SaleRepositoryImpl implements SaleRepository {
               existing.syncStatus == SyncStatus.conflict ||
               existing.syncStatus == SyncStatus.syncing)) {
         if (remoteVersion > existing.version) {
-          await markConflict(uuid);
+          await markConflict(id);
         }
         return;
       }
@@ -1022,8 +1024,8 @@ class SaleRepositoryImpl implements SaleRepository {
             .into(_db.sales)
             .insert(
               SalesCompanion.insert(
-                uuid: uuid,
-                saleNumber: (payload['saleNumber'] as String?) ?? uuid,
+                id: Value(id),
+                saleNumber: (payload['saleNumber'] as String?) ?? id,
                 saleDate: Value((payload['saleDate'] as int?) ?? now),
                 settlementType: Value(
                   (payload['settlementType'] as String?) ?? 'cash',
@@ -1101,7 +1103,7 @@ class SaleRepositoryImpl implements SaleRepository {
       } else {
         await (_db.update(
           _db.sales,
-        )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+        )..where((t) => t.id.equals(id) & _scoped(t))).write(
           SalesCompanion(
             saleNumber: Value(
               (payload['saleNumber'] as String?) ?? existing.saleNumber,
@@ -1183,10 +1185,10 @@ class SaleRepositoryImpl implements SaleRepository {
         );
         await (_db.delete(
           _db.saleItems,
-        )..where((t) => t.saleUuid.equals(uuid))).go();
+        )..where((t) => t.saleId.equals(id))).go();
         await (_db.delete(
           _db.salePayments,
-        )..where((t) => t.saleUuid.equals(uuid))).go();
+        )..where((t) => t.saleId.equals(id))).go();
       }
 
       final items = payload['items'];
@@ -1198,12 +1200,13 @@ class SaleRepositoryImpl implements SaleRepository {
           }
           final map = Map<String, dynamic>.from(raw);
           final unitPrice = (map['unitPrice'] as num?)?.toDouble() ?? 0;
+          final itemId = (map['id'] ?? map['uuid']) as String? ?? generateUuidV7();
           await _db
               .into(_db.saleItems)
               .insert(
                 SaleItemsCompanion.insert(
-                  uuid: (map['uuid'] as String?) ?? generateUuidV4(),
-                  saleUuid: uuid,
+                  id: Value(itemId),
+                  saleId: id,
                   productId: (map['productId'] as String?) ?? '',
                   productName: (map['productName'] as String?) ?? '',
                   productCode: (map['productCode'] as String?) ?? '',
@@ -1248,12 +1251,13 @@ class SaleRepositoryImpl implements SaleRepository {
             continue;
           }
           final map = Map<String, dynamic>.from(raw);
+          final paymentId = (map['id'] ?? map['uuid']) as String? ?? generateUuidV7();
           await _db
               .into(_db.salePayments)
               .insert(
                 SalePaymentsCompanion.insert(
-                  uuid: (map['uuid'] as String?) ?? generateUuidV4(),
-                  saleUuid: uuid,
+                  id: Value(paymentId),
+                  saleId: id,
                   amount: (map['amount'] as num?)?.toDouble() ?? 0,
                   method: Value((map['method'] as String?) ?? 'cash'),
                   paidAt: (map['paidAt'] as int?) ?? now,

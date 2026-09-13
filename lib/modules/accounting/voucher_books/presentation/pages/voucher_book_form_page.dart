@@ -23,7 +23,7 @@ class VoucherBookFormPage extends ConsumerStatefulWidget {
     this.initialBookType,
   });
 
-  final int? bookId;
+  final String? bookId;
   final String? initialParentId;
   final VoucherBookType? initialBookType;
 

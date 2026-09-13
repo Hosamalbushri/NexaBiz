@@ -6,7 +6,6 @@ import 'transaction_type.dart';
 class TransactionListItem {
   const TransactionListItem({
     required this.id,
-    required this.uuid,
     required this.transactionNumber,
     required this.transactionType,
     required this.transactionDate,
@@ -21,8 +20,7 @@ class TransactionListItem {
     this.description,
   });
 
-  final int id;
-  final String uuid;
+  final String id;
   final String transactionNumber;
   final TransactionType transactionType;
   final DateTime transactionDate;
@@ -35,4 +33,6 @@ class TransactionListItem {
   final String? description;
   final TransactionStatus documentStatus;
   final SyncStatus syncStatus;
+
+  String get uuid => id;
 }

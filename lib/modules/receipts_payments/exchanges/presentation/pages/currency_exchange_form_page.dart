@@ -34,7 +34,7 @@ import 'package:nexabiz_ui/nexabiz_ui.dart';
 class CurrencyExchangeFormPage extends ConsumerStatefulWidget {
   const CurrencyExchangeFormPage({super.key, this.transactionId});
 
-  final int? transactionId;
+  final String? transactionId;
 
   @override
   ConsumerState<CurrencyExchangeFormPage> createState() =>

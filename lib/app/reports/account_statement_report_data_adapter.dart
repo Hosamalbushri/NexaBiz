@@ -111,7 +111,7 @@ class AccountStatementReportDataAdapter
     AccountLedgerCursor? afterCursor;
     if (cursor != null) {
       final dateMs = cursor.primarySortValue as int;
-      final lineId = int.parse(cursor.uniqueId);
+      final lineId = cursor.uniqueId;
       afterCursor = AccountLedgerCursor(
         entryDateMs: dateMs,
         sortOrder: 0,
@@ -497,7 +497,7 @@ class AccountStatementReportDataAdapter
 
   AccountStatementAccountRef _toRef(Account account) {
     return AccountStatementAccountRef(
-      accountUuid: account.uuid,
+      accountUuid: account.id,
       accountCode: account.accountCode,
       name: account.name,
       systemKey: AccountLabels.systemKeyOf(account),

@@ -62,7 +62,6 @@ class AppTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final shadcnTheme = shadcn.Theme.of(context);
 
     final hasShadcnTheme =
         context.findAncestorWidgetOfExactType<shadcn.ComponentTheme>() != null ||

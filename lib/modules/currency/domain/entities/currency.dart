@@ -5,7 +5,6 @@ import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 class Currency {
   const Currency({
     required this.id,
-    required this.uuid,
     required this.code,
     required this.nameAr,
     required this.nameEn,
@@ -19,8 +18,7 @@ class Currency {
     this.companyId,
   });
 
-  final int id;
-  final String uuid;
+  final String id;
   final String code;
   final String nameAr;
   final String nameEn;
@@ -33,6 +31,8 @@ class Currency {
   final DateTime? deletedAt;
   final String? companyId;
 
+  String get uuid => id;
+
   String localizedName(bool isArabic) {
     if (isArabic) {
       return nameAr.trim().isNotEmpty ? nameAr.trim() : nameEn.trim();
@@ -42,8 +42,7 @@ class Currency {
   }
 
   Currency copyWith({
-    int? id,
-    String? uuid,
+    String? id,
     String? code,
     String? nameAr,
     String? nameEn,
@@ -58,7 +57,6 @@ class Currency {
   }) {
     return Currency(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
       code: code ?? this.code,
       nameAr: nameAr ?? this.nameAr,
       nameEn: nameEn ?? this.nameEn,
@@ -78,11 +76,11 @@ class Currency {
       identical(this, other) ||
       other is Currency &&
           runtimeType == other.runtimeType &&
-          uuid == other.uuid &&
+          id == other.id &&
           code == other.code;
 
   @override
-  int get hashCode => Object.hash(uuid, code);
+  int get hashCode => Object.hash(id, code);
 
   @override
   String toString() =>
@@ -96,12 +94,14 @@ class CurrencyDraft {
     required this.nameAr,
     required this.nameEn,
     required this.symbol,
+    this.id,
     this.uuid,
     this.decimalDigits = 2,
     this.isDefault = false,
     this.isActive = true,
   });
 
+  final String? id;
   final String? uuid;
   final String code;
   final String nameAr;
@@ -110,6 +110,8 @@ class CurrencyDraft {
   final int decimalDigits;
   final bool isDefault;
   final bool isActive;
+
+  String? get effectiveId => id ?? uuid;
 
   void validate() {
     final normalizedCode = code.trim().toUpperCase();

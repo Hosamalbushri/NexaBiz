@@ -49,7 +49,7 @@ class WarehouseAccountingBindingRepositoryImpl
               ))
               .getSingleOrNull();
       if (defaultWh != null) {
-        targetId = defaultWh.uuid;
+        targetId = defaultWh.id;
       } else {
         final anyWh =
             await (db.select(db.warehouses)..where(
@@ -58,20 +58,20 @@ class WarehouseAccountingBindingRepositoryImpl
                 ))
                 .getSingleOrNull();
         if (anyWh != null) {
-          targetId = anyWh.uuid;
+          targetId = anyWh.id;
         }
       }
     } else {
       final whByCode =
           await (db.select(db.warehouses)..where(
                 (tbl) =>
-                    (tbl.code.equals(targetId) | tbl.uuid.equals(targetId)) &
+                    (tbl.code.equals(targetId) | tbl.id.equals(targetId)) &
                     tbl.companyId.equals(companyId) &
                     tbl.isActive.equals(true),
               ))
               .getSingleOrNull();
       if (whByCode != null) {
-        targetId = whByCode.uuid;
+        targetId = whByCode.id;
       }
     }
 
@@ -93,11 +93,11 @@ class WarehouseAccountingBindingRepositoryImpl
                     tbl.isActive.equals(true),
               ))
               .getSingleOrNull();
-      if (defaultWh != null && defaultWh.uuid != targetId) {
+      if (defaultWh != null && defaultWh.id != targetId) {
         row =
             await (db.select(db.warehouseAccountingBindings)..where(
                   (tbl) =>
-                      tbl.warehouseId.equals(defaultWh.uuid) &
+                      tbl.warehouseId.equals(defaultWh.id) &
                       tbl.companyId.equals(companyId),
                 ))
                 .getSingleOrNull();
@@ -113,7 +113,7 @@ class WarehouseAccountingBindingRepositoryImpl
     if (row == null) return null;
 
     return WarehouseAccountingBinding(
-      id: row.uuid,
+      id: row.id,
       warehouseId: row.warehouseId,
       inventoryAssetAccountId: row.inventoryAssetAccountId,
       cogsAccountId: row.cogsAccountId,
@@ -232,12 +232,12 @@ class WarehouseAccountingBindingRepositoryImpl
       ].whereType<String>().where((acc) => acc.trim().isNotEmpty).toList();
 
       if (boundAccounts.isNotEmpty && accountingDb != null) {
-        for (final accUuid in boundAccounts) {
+        for (final accId in boundAccounts) {
           // Check journal_lines table
           try {
             final jlRows = await accountingDb!.customSelect(
-              "SELECT COUNT(*) as cnt FROM journal_lines WHERE account_uuid = ?",
-              variables: [Variable.withString(accUuid)],
+              "SELECT COUNT(*) as cnt FROM journal_lines WHERE account_id = ?",
+              variables: [Variable.withString(accId)],
             ).get();
             if (jlRows.isNotEmpty && (jlRows.first.read<int>('cnt')) > 0) {
               return true;
@@ -300,7 +300,7 @@ class WarehouseAccountingBindingRepositoryImpl
 
       await (db.update(
         db.warehouseAccountingBindings,
-      )..where((tbl) => tbl.uuid.equals(existing.uuid))).write(
+      )..where((tbl) => tbl.id.equals(existing.id))).write(
         WarehouseAccountingBindingsCompanion(
           inventoryAssetAccountId: Value(binding.inventoryAssetAccountId),
           cogsAccountId: Value(binding.cogsAccountId),
@@ -321,7 +321,7 @@ class WarehouseAccountingBindingRepositoryImpl
           .into(db.warehouseAccountingBindings)
           .insert(
             WarehouseAccountingBindingsCompanion.insert(
-              uuid: binding.id.isNotEmpty ? binding.id : generateUuidV4(),
+              id: Value(binding.id.isNotEmpty ? binding.id : generateUuidV7()),
               warehouseId: binding.warehouseId,
               inventoryAssetAccountId: Value(binding.inventoryAssetAccountId),
               cogsAccountId: Value(binding.cogsAccountId),

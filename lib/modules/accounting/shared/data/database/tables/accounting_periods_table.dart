@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Accounting period within a fiscal year.
 @DataClassName('AccountingPeriodRow')
 class AccountingPeriods extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
-
-  TextColumn get fiscalYearUuid => text().withLength(min: 36, max: 36)();
+  TextColumn get fiscalYearId => text().withLength(min: 36, max: 36)();
 
   IntColumn get periodNumber => integer()();
 
@@ -36,8 +36,15 @@ class AccountingPeriods extends Table {
 
   TextColumn get reopenReason => text().nullable()();
 
+  /// Company / Tenant owner ID for local multi-tenant data isolation.
+  TextColumn get companyId => text().nullable()();
+
   @override
-  List<Set<Column<Object>>>? get uniqueKeys => [
-    {fiscalYearUuid, periodNumber},
-  ];
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, fiscalYearId, periodNumber},
+      ];
 }

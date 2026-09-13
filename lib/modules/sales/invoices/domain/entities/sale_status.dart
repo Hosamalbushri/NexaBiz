@@ -11,8 +11,7 @@ extension SaleStatusX on SaleStatus {
   /// Compatibility alias for older call sites / UI that used confirm.
   bool get canConfirm => canPost;
 
-  bool get canCancel =>
-      this == SaleStatus.unposted || this == SaleStatus.posted;
+  bool get canCancel => this == SaleStatus.unposted;
 
   bool get isPosted => this == SaleStatus.posted;
 

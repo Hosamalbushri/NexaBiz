@@ -90,7 +90,7 @@ class InventoryLedgerServiceImpl implements InventoryLedgerService {
 
   StockMovementLedgerEntry _mapRowToEntry(StockMovementLedgerRow row) {
     return StockMovementLedgerEntry(
-      uuid: row.uuid,
+      uuid: row.id,
       companyId: row.companyId,
       warehouseId: row.warehouseId,
       itemCode: row.itemCode,

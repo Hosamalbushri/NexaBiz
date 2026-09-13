@@ -163,7 +163,7 @@ final accountForestProvider = Provider<AsyncValue<List<AccountTreeNode>>>((
       .whenData(AccountTreeNode.buildForest);
 });
 
-final accountByIdProvider = FutureProvider.autoDispose.family<Account?, int>((
+final accountByIdProvider = FutureProvider.autoDispose.family<Account?, String>((
   ref,
   id,
 ) {

@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/database/nexabiz_database.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 
@@ -49,7 +48,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Category?> getCategoryById(String id) async {
     final query = _db.select(_db.productCategories)
-      ..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl));
+      ..where((tbl) => tbl.id.equals(id) & _scoped(tbl));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
     return _mapRowToEntity(row);
@@ -67,7 +66,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       }
 
       final existingRecord = await (_db.select(_db.productCategories)
-            ..where((tbl) => tbl.uuid.equals(category.id)))
+            ..where((tbl) => tbl.id.equals(category.id)))
           .getSingleOrNull();
 
       if (existingRecord != null && existingRecord.companyId != effectiveCompanyId) {
@@ -77,7 +76,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final duplicateCodeRecord = await (_db.select(_db.productCategories)
             ..where((tbl) =>
                 tbl.code.equals(category.code) &
-                tbl.uuid.equals(category.id).not() &
+                tbl.id.equals(category.id).not() &
                 tbl.companyId.equals(effectiveCompanyId)))
           .getSingleOrNull();
 
@@ -93,13 +92,13 @@ class CategoryRepositoryImpl implements CategoryRepository {
       if (existingRecord != null) {
         await (_db.update(_db.productCategories)
               ..where((tbl) =>
-                  tbl.uuid.equals(category.id) &
+                  tbl.id.equals(category.id) &
                   tbl.companyId.equals(effectiveCompanyId)))
             .write(
           ProductCategoriesCompanion(
             name: Value(category.name),
             code: Value(category.code),
-            parentUuid: Value(category.parentId),
+            parentCategoryId: Value(category.parentId),
             level: Value(category.level),
             isGroup: Value(category.isGroup),
             isActive: Value(category.isActive),
@@ -110,10 +109,10 @@ class CategoryRepositoryImpl implements CategoryRepository {
       } else {
         await _db.into(_db.productCategories).insert(
               ProductCategoriesCompanion(
-                uuid: Value(category.id),
+                id: Value(category.id),
                 name: Value(category.name),
                 code: Value(category.code),
-                parentUuid: Value(category.parentId),
+                parentCategoryId: Value(category.parentId),
                 level: Value(category.level),
                 isGroup: Value(category.isGroup),
                 isActive: Value(category.isActive),
@@ -135,10 +134,10 @@ class CategoryRepositoryImpl implements CategoryRepository {
       }
 
       final subcategoryCountQuery = _db.selectOnly(_db.productCategories)
-        ..addColumns([_db.productCategories.uuid.count()])
-        ..where(_db.productCategories.parentUuid.equals(id) & _scoped(_db.productCategories));
+        ..addColumns([_db.productCategories.id.count()])
+        ..where(_db.productCategories.parentCategoryId.equals(id) & _scoped(_db.productCategories));
       final subcatRow = await subcategoryCountQuery.getSingle();
-      final subcatCount = subcatRow.read(_db.productCategories.uuid.count()) ?? 0;
+      final subcatCount = subcatRow.read(_db.productCategories.id.count()) ?? 0;
       if (subcatCount > 0) {
         throw const JournalException(
           'category_in_use',
@@ -149,7 +148,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final productCountQuery = _db.selectOnly(_db.products)
         ..addColumns([_db.products.id.count()])
         ..where(
-          _db.products.categoryUuid.equals(id) &
+          _db.products.categoryId.equals(id) &
               _db.products.companyId.equals(_currentCompanyId) &
               _db.products.isActive.equals(true),
         );
@@ -165,7 +164,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final now = DateTime.now().toUtc();
       await (_db.update(
         _db.productCategories,
-      )..where((tbl) => tbl.uuid.equals(id) & _scoped(tbl))).write(
+      )..where((tbl) => tbl.id.equals(id) & _scoped(tbl))).write(
         ProductCategoriesCompanion(
           isActive: const Value(false),
           updatedAt: Value(now),
@@ -176,11 +175,11 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   Category _mapRowToEntity(ProductCategoryData row) {
     return Category(
-      id: row.uuid,
+      id: row.id,
       code: row.code,
       name: row.name,
       warehouseId: '',
-      parentId: row.parentUuid,
+      parentId: row.parentCategoryId,
       level: row.level,
       isGroup: row.isGroup,
       isActive: row.isActive,

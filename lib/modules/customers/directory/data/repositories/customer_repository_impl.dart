@@ -49,7 +49,6 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Customer _map(CustomerData row) {
     return Customer(
       id: row.id,
-      uuid: row.uuid,
       companyId: row.companyId,
       customerCode: row.customerCode,
       name: row.name,
@@ -58,7 +57,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
       email: row.email,
       address: row.address,
       notes: null,
-      accountId: row.accountUuid,
+      accountId: row.accountId,
       externalId: null,
       creditLimit: row.creditLimit,
       currencyCode: row.currencyCode,
@@ -77,7 +76,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   Future<void> _assertUniqueCode({
     required String customerCode,
-    int? excludingId,
+    String? excludingId,
   }) async {
     final query = _db.select(_db.customers)
       ..where((t) => t.customerCode.equals(customerCode) & _scoped(t, includeInactive: true));
@@ -97,11 +96,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
-        entityId: customer.uuid,
+        entityId: customer.id,
         type: type,
         baseVersion: customer.version,
         payload: {
-          'uuid': customer.uuid,
+          'id': customer.id,
           'companyId': customer.companyId,
           'customerCode': customer.customerCode,
           'name': customer.name,
@@ -139,20 +138,17 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<Customer?> getById(int id) async {
+  Future<Customer?> getById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final row = await (_db.select(
       _db.customers,
-    )..where((t) => t.id.equals(id) & _scoped(t, includeInactive: true))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmed) & _scoped(t, includeInactive: true))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
   @override
-  Future<Customer?> getByUuid(String uuid) async {
-    final row = await (_db.select(
-      _db.customers,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t, includeInactive: true))).getSingleOrNull();
-    return row == null ? null : _map(row);
-  }
+  Future<Customer?> getByUuid(String uuid) => getById(uuid);
 
   @override
   Future<Customer?> getByCustomerCode(String customerCode) async {
@@ -204,12 +200,12 @@ class CustomerRepositoryImpl implements CustomerRepository {
     await _assertUniqueCode(customerCode: draft.customerCode);
 
     final now = DateTime.now().toUtc();
-    final uuid = generateUuidV4();
-    final id = await _db
+    final newId = generateUuidV7();
+    await _db
         .into(_db.customers)
         .insert(
           CustomersCompanion.insert(
-            uuid: Value(uuid),
+            id: Value(newId),
             customerCode: draft.customerCode,
             name: draft.name,
             phone: Value(draft.phone),
@@ -217,7 +213,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
             address: Value(draft.address),
             creditLimit: Value(draft.creditLimit),
             currencyCode: Value(draft.currencyCode),
-            accountUuid: Value(draft.accountId),
+            accountId: Value(draft.accountId),
             status: Value(draft.status.name),
             createdAt: Value(now),
             updatedAt: Value(now),
@@ -225,7 +221,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
           ),
         );
 
-    final created = await getById(id);
+    final created = await getById(newId);
     if (created == null) {
       throw const CustomerException(CustomerException.notFound);
     }
@@ -234,7 +230,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<Customer> update(int id, CustomerDraft draft) async {
+  Future<Customer> update(String id, CustomerDraft draft) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const CustomerException(CustomerException.notFound);
@@ -257,7 +253,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
         address: Value(draft.address),
         creditLimit: Value(draft.creditLimit),
         currencyCode: Value(draft.currencyCode),
-        accountUuid: Value(draft.accountId),
+        accountId: Value(draft.accountId),
         status: Value(draft.status.name),
         updatedAt: Value(now),
       ),
@@ -272,7 +268,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<void> softDelete(int id) async {
+  Future<void> softDelete(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const CustomerException(CustomerException.notFound);
@@ -299,7 +295,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<Customer> restore(int id) async {
+  Future<Customer> restore(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const CustomerException(CustomerException.notFound);
@@ -362,19 +358,19 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   Future<void> updateAccountLink({
-    required String customerUuid,
+    required String customerId,
     required String accountId,
   }) async {
-    final uuid = customerUuid.trim();
+    final id = customerId.trim();
     final account = accountId.trim();
-    if (uuid.isEmpty || account.isEmpty) return;
+    if (id.isEmpty || account.isEmpty) return;
 
     final now = DateTime.now().toUtc();
     await (_db.update(
       _db.customers,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
       CustomersCompanion(
-        accountUuid: Value(account),
+        accountId: Value(account),
         updatedAt: Value(now),
       ),
     );
@@ -384,7 +380,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     required String customerUuid,
     required String accountId,
   }) async {
-    await updateAccountLink(customerUuid: customerUuid, accountId: accountId);
+    await updateAccountLink(customerId: customerUuid, accountId: accountId);
   }
 
   /// Marks a customer synced after server confirmation.
@@ -396,7 +392,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     final now = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(
       _db.customers,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(uuid) & _tenantScoped(t))).write(
       CustomersCompanion(
         updatedAt: Value(now),
       ),
@@ -406,11 +402,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<void> markConflict(String uuid) async {}
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid']?.toString();
-    if (uuid == null || uuid.isEmpty) return;
+    final id = payload['id']?.toString() ?? payload['uuid']?.toString();
+    if (id == null || id.isEmpty) return;
 
     final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
-    final existing = await getByUuid(uuid);
+    final existing = await getById(id);
     final now = DateTime.now().toUtc();
 
     if (existing == null) {
@@ -419,15 +415,15 @@ class CustomerRepositoryImpl implements CustomerRepository {
           .into(_db.customers)
           .insert(
             CustomersCompanion.insert(
-              uuid: Value(uuid),
-              customerCode: payload['customerCode']?.toString() ?? uuid,
+              id: Value(id),
+              customerCode: payload['customerCode']?.toString() ?? id,
               name: payload['name']?.toString() ?? '',
               phone: Value(payload['phone']?.toString()),
               email: Value(payload['email']?.toString()),
               address: Value(payload['address']?.toString()),
               creditLimit: Value((payload['creditLimit'] as num?)?.toDouble()),
               currencyCode: Value(payload['currencyCode']?.toString()),
-              accountUuid: Value(payload['accountId']?.toString()),
+              accountId: Value(payload['accountId']?.toString()),
               status: Value(payload['status']?.toString() ?? 'active'),
               createdAt: Value(now),
               updatedAt: Value(now),
@@ -439,7 +435,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
     await (_db.update(
       _db.customers,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
       CustomersCompanion(
         customerCode: Value(
           payload['customerCode']?.toString() ?? existing.customerCode,
@@ -450,7 +446,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
         address: Value(payload['address']?.toString()),
         creditLimit: Value((payload['creditLimit'] as num?)?.toDouble()),
         currencyCode: Value(payload['currencyCode']?.toString()),
-        accountUuid: Value(payload['accountId']?.toString()),
+        accountId: Value(payload['accountId']?.toString()),
         status: Value(
           deletedAtMs != null
               ? 'deleted'

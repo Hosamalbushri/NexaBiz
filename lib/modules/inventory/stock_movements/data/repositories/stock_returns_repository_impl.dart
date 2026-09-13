@@ -59,7 +59,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
     final results = <StockReturn>[];
 
     for (final row in rows) {
-      final lines = await _getLinesForMovement(row.uuid, row.returnType);
+      final lines = await _getLinesForMovement(row.id, row.returnType);
       results.add(_mapRowToReturn(row, lines));
     }
     return results;
@@ -73,7 +73,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
     return query.watch().asyncMap((rows) async {
       final results = <StockReturn>[];
       for (final row in rows) {
-        final lines = await _getLinesForMovement(row.uuid, row.returnType);
+        final lines = await _getLinesForMovement(row.id, row.returnType);
         results.add(_mapRowToReturn(row, lines));
       }
       return results;
@@ -82,14 +82,16 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
 
   @override
   Future<StockReturn?> getReturnById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final query = _db.select(_db.stockReturns)
       ..where(
-        (tbl) => _scoped(tbl) & tbl.uuid.equals(id) & tbl.deletedAt.isNull(),
+        (tbl) => _scoped(tbl) & tbl.id.equals(trimmed) & tbl.deletedAt.isNull(),
       );
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
-    final lines = await _getLinesForMovement(row.uuid, row.returnType);
+    final lines = await _getLinesForMovement(row.id, row.returnType);
     return _mapRowToReturn(row, lines);
   }
 
@@ -106,14 +108,14 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
 
       final existing =
           await (_db.select(_db.stockReturns)
-                ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(returnDoc.id)))
+                ..where((tbl) => _scoped(tbl) & tbl.id.equals(returnDoc.id)))
               .getSingleOrNull();
 
       // Prevent cross-tenant record overwrite
       if (existing == null) {
         final crossTenantCheck = await (_db.select(
           _db.stockReturns,
-        )..where((tbl) => tbl.uuid.equals(returnDoc.id))).getSingleOrNull();
+        )..where((tbl) => tbl.id.equals(returnDoc.id))).getSingleOrNull();
         if (crossTenantCheck != null) {
           throw const JournalException(JournalException.notFound);
         }
@@ -142,11 +144,11 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       if (existing != null) {
         await (_db.update(
           _db.stockReturns,
-        )..where((tbl) => _scoped(tbl) & tbl.uuid.equals(returnDoc.id))).write(
+        )..where((tbl) => _scoped(tbl) & tbl.id.equals(returnDoc.id))).write(
           StockReturnsCompanion(
             returnNumber: Value(returnDoc.returnNumber),
             returnType: Value(returnTypeStr),
-            originalMovementUuid: Value(returnDoc.originalMovementUuid),
+            originalDocumentId: Value(returnDoc.originalMovementUuid),
             partyName: Value(returnDoc.partyName),
             warehouse: Value(returnDoc.warehouse),
             notes: Value(returnDoc.notes),
@@ -185,10 +187,10 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
             .into(_db.stockReturns)
             .insert(
               StockReturnsCompanion(
-                uuid: Value(returnDoc.id),
+                id: Value(returnDoc.id),
                 returnNumber: Value(returnDoc.returnNumber),
                 returnType: Value(returnTypeStr),
-                originalMovementUuid: Value(returnDoc.originalMovementUuid),
+                originalDocumentId: Value(returnDoc.originalMovementUuid),
                 partyName: Value(returnDoc.partyName),
                 warehouse: Value(returnDoc.warehouse),
                 notes: Value(returnDoc.notes),
@@ -207,15 +209,15 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       // Re-insert lines
       await (_db.delete(
         _db.stockMovementLines,
-      )..where((tbl) => tbl.movementUuid.equals(returnDoc.id))).go();
+      )..where((tbl) => tbl.returnId.equals(returnDoc.id))).go();
 
       for (final line in returnDoc.lines) {
         await _db
             .into(_db.stockMovementLines)
             .insert(
               StockMovementLinesCompanion(
-                uuid: Value(line.id),
-                movementUuid: Value(returnDoc.id),
+                id: Value(line.id),
+                returnId: Value(returnDoc.id),
                 movementType: Value(returnTypeStr),
                 itemCode: Value(line.itemCode),
                 itemName: Value(line.itemName),
@@ -224,6 +226,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
                 quantity: Value(line.quantity),
                 unitCost: Value(line.unitCost),
                 totalCost: Value(line.totalCost),
+                companyId: Value(effectiveCompanyId),
               ),
             );
       }
@@ -231,15 +234,26 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       if (returnDoc.isPosted) {
         if (returnDoc.isSalesReturn) {
           for (final line in returnDoc.lines) {
+            // Authoritative Business Rule 12 (D-14): Sales Return Unit Cost MUST be
+            // strictly CURRENT PRODUCT COST AT POSTING TIME.
+            final currentProductCost =
+                await _costLayerService.getWeightedAverageCost(
+                  line.itemCode,
+                  companyId: effectiveCompanyId,
+                );
+            final effectiveUnitCost =
+                currentProductCost > 0 ? currentProductCost : line.unitCost;
+            final effectiveTotalCost = line.quantity * effectiveUnitCost;
+
             final layer = CostLayer(
-              id: generateUuidV4(),
+              id: generateUuidV7(),
               itemCode: line.itemCode,
               movementUuid: returnDoc.id,
               movementType: 'sales_return',
               receivedDate: returnDoc.returnDate,
               receivedQty: line.quantity,
-              unitCost: line.unitCost,
-              totalCost: line.totalCost,
+              unitCost: effectiveUnitCost,
+              totalCost: effectiveTotalCost,
               companyId: effectiveCompanyId,
             );
             await _costLayerService.createLayer(layer);
@@ -286,7 +300,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       // Soft delete header with scoped query
       await (_db.update(
         _db.stockReturns,
-      )..where((tbl) => _scoped(tbl) & tbl.uuid.equals(id))).write(
+      )..where((tbl) => _scoped(tbl) & tbl.id.equals(id))).write(
         StockReturnsCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -294,18 +308,6 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
           version: Value(returnDoc.version + 1),
         ),
       );
-
-      if (returnDoc.isSalesReturn) {
-        await _costLayerService.reverseLayer(id);
-        for (final line in returnDoc.lines) {
-          await _adjustProductQty(line.itemCode, -line.quantity);
-        }
-      } else {
-        for (final line in returnDoc.lines) {
-          await _costLayerService.reverseConsumptions(line.id);
-          await _adjustProductQty(line.itemCode, line.quantity);
-        }
-      }
 
       await _enqueueReturn(
         returnDoc.copyWith(version: returnDoc.version + 1, deletedAt: now),
@@ -315,13 +317,13 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   }
 
   Future<List<StockMovementLine>> _getLinesForMovement(
-    String movementUuid,
+    String movementId,
     String type,
   ) async {
     final query = _db.select(_db.stockMovementLines)
       ..where(
         (tbl) =>
-            tbl.movementUuid.equals(movementUuid) &
+            tbl.returnId.equals(movementId) &
             tbl.movementType.equals(type),
       );
     final rows = await query.get();
@@ -329,8 +331,8 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
     return rows
         .map(
           (row) => StockMovementLine(
-            id: row.uuid,
-            movementUuid: row.movementUuid,
+            id: row.id,
+            movementUuid: movementId,
             movementType: row.movementType,
             itemCode: row.itemCode,
             itemName: row.itemName,
@@ -357,7 +359,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
     if (prods.isEmpty) {
       await _db.into(_db.products).insert(
             ProductsCompanion(
-              uuid: Value(generateUuidV4()),
+              id: Value(generateUuidV7()),
               itemCode: Value(itemCode),
               name: Value(itemCode),
               packSize: const Value(1),
@@ -383,7 +385,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       final newWhQty = whStock.onHandQty + deltaQty;
       await (_db.update(_db.productWarehouseStocks)..where(
             (w) =>
-                w.uuid.equals(whStock.uuid) &
+                w.id.equals(whStock.id) &
                 w.companyId.equals(effectiveCompanyId),
           ))
           .write(
@@ -394,7 +396,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
           .into(_db.productWarehouseStocks)
           .insert(
             ProductWarehouseStocksCompanion(
-              uuid: Value(generateUuidV4()),
+              id: Value(generateUuidV7()),
               itemCode: Value(itemCode),
               warehouseId: const Value('MAIN'),
               onHandQty: Value(deltaQty),
@@ -412,12 +414,12 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   ) {
     final isSales = row.returnType == 'sales_return';
     return StockReturn(
-      id: row.uuid,
+      id: row.id,
       returnNumber: row.returnNumber,
       returnType: isSales
           ? StockReturnType.salesReturn
           : StockReturnType.purchaseReturn,
-      originalMovementUuid: row.originalMovementUuid,
+      originalMovementUuid: row.originalDocumentId,
       partyName: row.partyName,
       warehouse: row.warehouse,
       notes: row.notes,
@@ -453,12 +455,12 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
     if (_syncQueue == null) return;
 
     final payload = {
-      'uuid': returnDoc.id,
+      'id': returnDoc.id,
       'return_number': returnDoc.returnNumber,
       'return_type': returnDoc.isSalesReturn
           ? 'sales_return'
           : 'purchase_return',
-      'original_movement_uuid': returnDoc.originalMovementUuid,
+      'original_movement_id': returnDoc.originalMovementUuid,
       'party_name': returnDoc.partyName,
       'warehouse': returnDoc.warehouse,
       'notes': returnDoc.notes,
@@ -468,7 +470,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       'lines': returnDoc.lines
           .map(
             (line) => {
-              'uuid': line.id,
+              'id': line.id,
               'item_code': line.itemCode,
               'item_name': line.itemName,
               'main_quantity': line.mainQuantity,

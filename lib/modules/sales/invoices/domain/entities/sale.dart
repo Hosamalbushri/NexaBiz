@@ -10,12 +10,11 @@ import 'sale_status.dart';
 
 /// Sales document (invoice / POS ticket).
 ///
-/// [customerId] is Customer.uuid when linked; null for walk-in with snapshot name.
+/// [customerId] is Customer.id when linked; null for walk-in with snapshot name.
 /// Monetary totals are stored in [currencyCode] using [exchangeRate] snapshot.
 class Sale {
   const Sale({
     required this.id,
-    required this.uuid,
     required this.companyId,
     required this.saleNumber,
     required this.saleDate,
@@ -62,27 +61,26 @@ class Sale {
     this.deletedAt,
   });
 
-  final int id;
-  final String uuid;
+  final String id;
   final String companyId;
   final String saleNumber;
   final DateTime saleDate;
   final SaleSettlementType settlementType;
 
-  /// VoucherBook.uuid used for numbering.
+  /// VoucherBook.id used for numbering.
   final String? voucherBookId;
 
-  /// Warehouse.uuid source warehouse context for inventory deduction.
+  /// Warehouse.id source warehouse context for inventory deduction.
   final String? warehouseId;
 
   final String? customerId;
   final String? customerCode;
   final String? customerName;
 
-  /// Customer CoA account (Account.uuid) used for credit sales.
+  /// Customer CoA account (Account.id) used for credit sales.
   final String? customerAccountId;
 
-  /// Cash/treasury CoA account (Account.uuid) used for cash sales.
+  /// Cash/treasury CoA account (Account.id) used for cash sales.
   final String? cashAccountId;
 
   final String currencyCode;
@@ -123,13 +121,14 @@ class Sale {
   final int version;
   final DateTime? deletedAt;
 
+  String get uuid => id;
+
   bool get isDeleted => deletedAt != null;
 
   bool get isWalkIn => customerId == null;
 
   Sale copyWith({
-    int? id,
-    String? uuid,
+    String? id,
     String? companyId,
     String? saleNumber,
     DateTime? saleDate,
@@ -194,7 +193,6 @@ class Sale {
   }) {
     return Sale(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
       companyId: companyId ?? this.companyId,
       saleNumber: saleNumber ?? this.saleNumber,
       saleDate: saleDate ?? this.saleDate,

@@ -27,7 +27,7 @@ class GetCustomerById {
 
   final CustomerRepository _repository;
 
-  Future<Customer?> call(int id) => _repository.getById(id);
+  Future<Customer?> call(String id) => _repository.getById(id);
 }
 
 class CreateCustomer {
@@ -54,7 +54,7 @@ class UpdateCustomer {
   final CustomerRepository _repository;
   final PermissionGuard _guard;
 
-  Future<Customer> call(int id, CustomerDraft draft) async {
+  Future<Customer> call(String id, CustomerDraft draft) async {
     _guard.requireAny(CustomersPermissions.update);
     return _repository.update(id, draft);
   }
@@ -69,7 +69,7 @@ class DeleteCustomer {
   final CustomerRepository _repository;
   final PermissionGuard _guard;
 
-  Future<void> call(int id) async {
+  Future<void> call(String id) async {
     _guard.requireAny(CustomersPermissions.delete);
     return _repository.softDelete(id);
   }
@@ -84,7 +84,7 @@ class RestoreCustomer {
   final CustomerRepository _repository;
   final PermissionGuard _guard;
 
-  Future<Customer> call(int id) async {
+  Future<Customer> call(String id) async {
     _guard.requireAny(CustomersPermissions.update);
     return _repository.restore(id);
   }

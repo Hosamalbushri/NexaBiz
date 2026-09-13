@@ -75,7 +75,7 @@ class FinancialTransactionSyncHandler implements SyncEntityHandler {
     DateTime? syncedAt,
   }) {
     return _repository.markSynced(
-      uuid: entityId,
+      id: entityId,
       remoteVersion: remoteVersion,
       syncedAt: syncedAt,
     );

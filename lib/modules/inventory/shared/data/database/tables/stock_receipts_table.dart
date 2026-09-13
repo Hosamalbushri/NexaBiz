@@ -1,16 +1,17 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Stock Receipts table (Inventory module).
 @DataClassName('StockReceiptRow')
 class StockReceipts extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  /// Client-generated UUID for offline-safe identity / sync.
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   TextColumn get receiptNumber => text().withLength(min: 1, max: 128)();
 
   TextColumn get supplier => text().nullable()();
+
+  TextColumn get supplierId => text().nullable()();
 
   TextColumn get accountId => text().nullable()();
 
@@ -21,6 +22,8 @@ class StockReceipts extends Table {
   RealColumn get exchangeRate => real().withDefault(const Constant(1.0))();
 
   TextColumn get warehouse => text().nullable()();
+
+  TextColumn get warehouseId => text().nullable()();
 
   TextColumn get notes => text().nullable()();
 
@@ -48,4 +51,13 @@ class StockReceipts extends Table {
 
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, receiptNumber},
+      ];
 }

@@ -1,13 +1,14 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:drift/native.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl repo;
   late Directory tempDir;
 
@@ -15,12 +16,13 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('hive_test_');
     Hive.init(tempDir.path);
 
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.connect(NativeDatabase.memory());
     repo = AccountRepositoryImpl(
       db,
       readCompanyId: () => 'test_company_new_123',
     );
   });
+
 
   tearDown(() async {
     await db.close();

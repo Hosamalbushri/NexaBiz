@@ -58,7 +58,7 @@ class SaleComposerState {
   final double paidAmount;
   final PaymentMethod paymentMethod;
   final String? notes;
-  final int? editingSaleId;
+  final String? editingSaleId;
   final String? warehouseId;
 
   bool get isCredit => settlementType.isCredit;
@@ -139,7 +139,7 @@ class SaleComposerState {
     PaymentMethod? paymentMethod,
     String? notes,
     bool clearNotes = false,
-    int? editingSaleId,
+    String? editingSaleId,
     bool clearEditingSaleId = false,
     String? warehouseId,
     bool clearWarehouseId = false,

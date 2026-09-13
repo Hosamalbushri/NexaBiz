@@ -178,7 +178,7 @@ final pagedProductsProvider = FutureProvider.autoDispose<PagedResult<Product>>((
       );
 });
 
-final productByIdProvider = FutureProvider.autoDispose.family<Product?, int>((
+final productByIdProvider = FutureProvider.autoDispose.family<Product?, String>((
   ref,
   id,
 ) {

@@ -7,6 +7,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/repositorie
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
 import 'package:stock_count/modules/sales/invoices/domain/models/sale_exception.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_inventory_effect_port.dart';
 
 /// COGS side-effect for posted sales (App-layer journal adapter).
@@ -97,38 +98,11 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
 
   @override
   Future<void> onCancelled(Sale sale) async {
-    final docRef = InventoryDocumentRef(
-      documentId: sale.uuid,
-      documentNumber: sale.saleNumber,
-      documentType: InventoryDocumentType.salesInvoice,
-      documentDate: sale.saleDate,
-      status: InventoryDocumentStatus.posted,
-    );
-
-    final postingData = SaleInvoicePostingData(
-      uuid: sale.uuid,
-      saleNumber: sale.saleNumber,
-      saleDate: sale.saleDate,
-      total: sale.total,
-      itemDiscountTotal: sale.itemDiscountTotal,
-      discountAmount: sale.discountAmount,
-      settlementType: sale.settlementType == SaleSettlementType.credit
-          ? PostingSettlementType.credit
-          : PostingSettlementType.cash,
-      currencyCode: sale.currencyCode,
-      baseCurrencyCode: sale.baseCurrencyCode,
-      exchangeRate: sale.exchangeRate,
-      customerAccountId: sale.customerAccountId,
-      cashAccountId: sale.cashAccountId,
-    );
-
-    final result = await _orchestrator.unpostSaleInvoice(
-      sale: postingData,
-      docRef: docRef,
-    );
-
-    if (result is OrchestrationFailure) {
-      throw SaleException('unpost_failed', result.reason);
+    if (sale.saleStatus == SaleStatus.posted) {
+      throw SaleException(
+        'illegal_transition',
+        'Posted sales cannot be unposted or cancelled directly. Reversal required.',
+      );
     }
   }
 }

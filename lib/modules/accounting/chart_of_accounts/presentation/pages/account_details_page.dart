@@ -20,7 +20,7 @@ import 'package:nexabiz_ui/nexabiz_ui.dart';
 class AccountDetailsPage extends ConsumerWidget {
   const AccountDetailsPage({super.key, required this.accountId});
 
-  final int accountId;
+  final String accountId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,7 +74,7 @@ class AccountDetailsPage extends ConsumerWidget {
                 icon: const Icon(Icons.add_box_outlined),
                 onPressed: () => AccountingRoutes.pushAccountsCreate(
                   context,
-                  parentId: account.uuid,
+                  parentId: account.id,
                 ),
               ),
             IconButton(

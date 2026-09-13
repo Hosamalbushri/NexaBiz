@@ -267,7 +267,7 @@ class _AppDynamicFilterGeneratorState extends State<AppDynamicFilterGenerator> {
           customLabel: param.label,
           isRequired: param.isRequired,
           onAccountSelected: (acc) {
-            _updateValue(param.id, acc?.uuid);
+            _updateValue(param.id, acc?.id);
             _updateValue(
               'accountName',
               acc != null ? '${acc.accountCode} — ${acc.name}' : null,

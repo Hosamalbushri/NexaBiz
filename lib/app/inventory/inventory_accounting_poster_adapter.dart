@@ -1,3 +1,5 @@
+import 'package:stock_count/modules/accounting/domain/integration/accounting_integration_port.dart';
+import 'package:stock_count/modules/accounting/domain/rules/accounting_transaction_intent.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_builder_service.dart';
@@ -7,20 +9,20 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/in
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
 /// Adapter bridging Inventory module accounting requests to Accounting domain services.
-///
-/// Translates [InventoryDocumentRef] domain events into [JournalEntryDraft] instances via [JournalBuilderService]
-/// and posts/voids journal entries via [JournalPostingService]. Contains zero direct database access or Drift dependencies.
 class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
   InventoryAccountingPosterAdapter({
     required JournalPostingService journalPostingService,
     required JournalBuilderService journalBuilder,
+    AccountingIntegrationPort? integrationService,
     InitializationGuard? initializationGuard,
-  }) : _journalPostingService = journalPostingService,
-       _journalBuilder = journalBuilder,
-       _initializationGuard = initializationGuard;
+  })  : _journalPostingService = journalPostingService,
+        _journalBuilder = journalBuilder,
+        _integrationService = integrationService,
+        _initializationGuard = initializationGuard;
 
   final JournalPostingService _journalPostingService;
   final JournalBuilderService _journalBuilder;
+  final AccountingIntegrationPort? _integrationService;
   final InitializationGuard? _initializationGuard;
 
   @override
@@ -41,6 +43,36 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
 
     // Skip invoices handled by Sales module
     if (document.documentType == InventoryDocumentType.salesInvoice) {
+      return;
+    }
+
+    if (_integrationService != null) {
+      final txnType = switch (document.documentType) {
+        InventoryDocumentType.stockReceipt => AccountingTransactionType.stockReceipt,
+        InventoryDocumentType.stockTransfer => AccountingTransactionType.stockTransfer,
+        _ => AccountingTransactionType.stockIssue,
+      };
+
+      final result = await _integrationService!.processOperationalTransaction(
+        OperationalAccountingRequest(
+          companyId: 'default',
+          sourceType: document.documentType.storageValue,
+          sourceId: document.documentId,
+          transactionType: txnType,
+          transactionDate: document.documentDate ?? DateTime.now().toUtc(),
+          amount: totalAmount,
+          currencyCode: 'YER',
+          baseCurrencyCode: 'YER',
+          description: 'مستند مخزني ${document.documentId}',
+        ),
+      );
+
+
+      if (!result.isSuccess) {
+        throw Exception(
+          result.failureReason ?? 'فشل الترحيل المحاسبي للمستند المخزني',
+        );
+      }
       return;
     }
 
@@ -120,3 +152,4 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     );
   }
 }
+

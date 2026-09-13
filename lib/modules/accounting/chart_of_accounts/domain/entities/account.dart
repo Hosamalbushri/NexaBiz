@@ -3,12 +3,9 @@ import 'account_type.dart';
 import 'normal_balance.dart';
 
 /// Chart of Accounts node — group or posting account.
-///
-/// Future journal lines will reference [uuid] (stable offline id), not [id].
 class Account {
   const Account({
     required this.id,
-    required this.uuid,
     required this.accountCode,
     required this.name,
     required this.accountType,
@@ -28,12 +25,10 @@ class Account {
     this.deletedAt,
   });
 
-  final int id;
+  /// Canonical UUID v7 Primary Key.
+  final String id;
 
-  /// Client-generated UUID for offline-safe identity / sync / future FKs.
-  final String uuid;
-
-  /// Parent account UUID; null for root accounts.
+  /// Parent account ID (UUID v7); null for root accounts.
   final String? parentId;
 
   /// Company identity owning this account.
@@ -70,8 +65,7 @@ class Account {
   bool get canPost => isPostingAccount && isActive && !isDeleted;
 
   Account copyWith({
-    int? id,
-    String? uuid,
+    String? id,
     String? parentId,
     bool clearParentId = false,
     String? companyId,
@@ -96,7 +90,6 @@ class Account {
   }) {
     return Account(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
       parentId: clearParentId ? null : (parentId ?? this.parentId),
       companyId: companyId ?? this.companyId,
       accountCode: accountCode ?? this.accountCode,

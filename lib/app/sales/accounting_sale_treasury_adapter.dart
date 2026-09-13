@@ -23,7 +23,7 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
 
   SaleAccountRef _map(CashRegister register, Account account) {
     return SaleAccountRef(
-      accountId: account.uuid,
+      accountId: account.id,
       code: account.accountCode,
       name: '${register.name} (${account.name})',
       systemKey: AccountLabels.systemKeyOf(account),
@@ -79,14 +79,14 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
         .map(
           (a) => MapEntry(
             CashRegister(
-              id: 'cr-${a.uuid}',
+              id: 'cr-${a.id}',
               companyId: companyId.isNotEmpty
                   ? companyId
                   : (a.companyId ?? 'default'),
               name: a.name,
               code: a.accountCode,
               isActive: true,
-              accountingAccountId: a.uuid,
+              accountingAccountId: a.id,
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             ),
@@ -106,7 +106,7 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
   Future<SaleAccountRef?> findById(String accountId) async {
     final entries = await _getReadyRegistersWithAccounts();
     for (final entry in entries) {
-      if (entry.value.uuid == accountId || entry.key.id == accountId) {
+      if (entry.value.id == accountId || entry.key.id == accountId) {
         return _map(entry.key, entry.value);
       }
     }

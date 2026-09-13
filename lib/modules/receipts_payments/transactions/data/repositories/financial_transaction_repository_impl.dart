@@ -41,7 +41,14 @@ class FinancialTransactionRepositoryImpl
 
   static const entityType = 'financial_transaction';
 
-  String get _currentCompanyId => _readCompanyId?.call() ?? 'default_company';
+  String get _currentCompanyId {
+    final companyId = _readCompanyId?.call();
+    if (companyId == null || companyId.trim().isEmpty) {
+      throw StateError(
+          'Active company scope context is required for FinancialTransactionRepository operations.');
+    }
+    return companyId;
+  }
 
   Expression<bool> _tenantScoped($FinancialTransactionsTable t) =>
       t.companyId.equals(_currentCompanyId);
@@ -109,32 +116,6 @@ class FinancialTransactionRepositoryImpl
             BusinessDate.utcDayMs(filter.toDate!),
           );
     }
-    if (filter.numberFrom != null || filter.numberTo != null) {
-      final from = filter.numberFrom ?? filter.numberTo!;
-      final to = filter.numberTo ?? filter.numberFrom!;
-      final lo = from <= to ? from : to;
-      final hi = from <= to ? to : from;
-      // Match absolute stored number or the short local sequence users see.
-      const stride = 1000000;
-      final absolute = CustomExpression<int>(
-        'CAST(transaction_number AS INTEGER)',
-      );
-      final local = CustomExpression<int>(
-        'CASE '
-        'WHEN CAST(transaction_number AS INTEGER) < $stride '
-        'THEN CAST(transaction_number AS INTEGER) '
-        'WHEN CAST(transaction_number AS INTEGER) % $stride = 0 '
-        'THEN $stride '
-        'ELSE CAST(transaction_number AS INTEGER) % $stride '
-        'END',
-      );
-      expr =
-          expr &
-          ((absolute.isBiggerOrEqualValue(lo) &
-                  absolute.isSmallerOrEqualValue(hi)) |
-              (local.isBiggerOrEqualValue(lo) &
-                  local.isSmallerOrEqualValue(hi)));
-    }
     final q = filter.query.trim().toLowerCase();
     if (q.isNotEmpty) {
       final like = '%$q%';
@@ -154,7 +135,6 @@ class FinancialTransactionRepositoryImpl
   FinancialTransaction _mapRow(FinancialTransactionRow row) {
     return FinancialTransaction(
       id: row.id,
-      uuid: row.uuid,
       transactionNumber: row.transactionNumber,
       transactionType: TransactionTypeX.fromStorage(row.transactionType),
       source: TransactionSourceX.fromStorage(row.source),
@@ -211,7 +191,6 @@ class FinancialTransactionRepositoryImpl
         : (party != null && party.isNotEmpty ? party : null);
     return TransactionListItem(
       id: row.id,
-      uuid: row.uuid,
       transactionNumber: row.transactionNumber,
       transactionType: TransactionTypeX.fromStorage(row.transactionType),
       transactionDate: _fromEpoch(row.transactionDate),
@@ -229,7 +208,7 @@ class FinancialTransactionRepositoryImpl
 
   Map<String, dynamic> _toPayload(FinancialTransaction txn) {
     return {
-      'uuid': txn.uuid,
+      'id': txn.id,
       'transactionNumber': txn.transactionNumber,
       'transactionType': txn.transactionType.storageValue,
       'source': txn.source.storageValue,
@@ -276,7 +255,7 @@ class FinancialTransactionRepositoryImpl
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
-        entityId: txn.uuid,
+        entityId: txn.id,
         type: type,
         baseVersion: txn.version,
         payload: _toPayload(txn),
@@ -285,18 +264,12 @@ class FinancialTransactionRepositoryImpl
   }
 
   @override
-  Future<FinancialTransaction?> getById(int id) async {
+  Future<FinancialTransaction?> getById(String id) async {
+    final trimmed = id.trim();
+    if (trimmed.isEmpty) return null;
     final row = await (_db.select(
       _db.financialTransactions,
-    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
-    return row == null ? null : _mapRow(row);
-  }
-
-  @override
-  Future<FinancialTransaction?> getByUuid(String uuid) async {
-    final row = await (_db.select(
-      _db.financialTransactions,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _mapRow(row);
   }
 
@@ -316,13 +289,13 @@ class FinancialTransactionRepositoryImpl
     }
     await _periodValidator?.assertEntryAllowed(draft.transactionDate);
     final now = DateTime.now().toUtc();
+    final newId = generateUuidV7();
 
-    final uuid = generateUuidV4();
-    final id = await _db
+    await _db
         .into(_db.financialTransactions)
         .insert(
           FinancialTransactionsCompanion.insert(
-            uuid: uuid,
+            id: Value(newId),
             transactionNumber: transactionNumber,
             transactionType: draft.transactionType.storageValue,
             source: draft.source.storageValue,
@@ -361,7 +334,7 @@ class FinancialTransactionRepositoryImpl
             companyId: Value(_currentCompanyId),
           ),
         );
-    final created = await getById(id);
+    final created = await getById(newId);
     if (created == null) {
       throw const FinancialTransactionException(
         FinancialTransactionException.notFound,
@@ -373,7 +346,7 @@ class FinancialTransactionRepositoryImpl
 
   @override
   Future<FinancialTransaction> update(
-    int id,
+    String id,
     FinancialTransactionDraft draft,
   ) async {
     final existing = await getById(id);
@@ -438,7 +411,7 @@ class FinancialTransactionRepositoryImpl
   }
 
   @override
-  Future<FinancialTransaction> markPosted(int id) async {
+  Future<FinancialTransaction> markPosted(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
@@ -469,38 +442,21 @@ class FinancialTransactionRepositoryImpl
   }
 
   @override
-  Future<FinancialTransaction> markUnposted(int id) async {
+  Future<FinancialTransaction> markUnposted(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
         FinancialTransactionException.notFound,
       );
     }
-    await _periodValidator?.assertEntryAllowed(existing.transactionDate);
-    final now = DateTime.now().toUtc();
-    await (_db.update(
-      _db.financialTransactions,
-    )..where((t) => t.id.equals(id) & _scoped(t))).write(
-      FinancialTransactionsCompanion(
-        documentStatus: Value(TransactionStatus.unposted.storageValue),
-        updatedAt: Value(now.millisecondsSinceEpoch),
-        syncStatus: const Value('pending'),
-        version: Value(existing.version + 1),
-        companyId: Value(_currentCompanyId),
-      ),
+    throw const FinancialTransactionException(
+      'illegal_transition',
+      'Posted financial transactions cannot be unposted. Reversal required.',
     );
-    final unposted = await getById(id);
-    if (unposted == null) {
-      throw const FinancialTransactionException(
-        FinancialTransactionException.notFound,
-      );
-    }
-    await _enqueue(unposted, SyncOperationType.update);
-    return unposted;
   }
 
   @override
-  Future<FinancialTransaction> markCancelled(int id) async {
+  Future<FinancialTransaction> markCancelled(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
@@ -531,7 +487,7 @@ class FinancialTransactionRepositoryImpl
   }
 
   @override
-  Future<void> softDelete(int id) async {
+  Future<void> softDelete(String id) async {
     final existing = await getById(id);
     if (existing == null) return;
     _permissionGuard.requireAny(
@@ -554,7 +510,7 @@ class FinancialTransactionRepositoryImpl
         companyId: Value(_currentCompanyId),
       ),
     );
-    final deleted = await getByUuid(existing.uuid);
+    final deleted = await getById(existing.id);
     if (deleted != null) {
       await _enqueue(deleted, SyncOperationType.delete);
     } else {
@@ -644,11 +600,11 @@ class FinancialTransactionRepositoryImpl
         COALESCE(SUM(CASE WHEN transaction_type = 'payment'
           AND transaction_date >= ? AND transaction_date <= ?
           THEN 1 ELSE 0 END), 0) AS period_payments_count,
-        COALESCE(SUM(CASE WHEN LOWER(IFNULL(cash_account_code, '')) LIKE '1211%'
+        COALESCE(SUM(CASE WHEN LOWER(IFNULL(payment_method, '')) = 'cash'
           AND transaction_date >= ? AND transaction_date <= ?
           THEN CASE WHEN transaction_type = 'receipt' THEN amount ELSE -amount END
           ELSE 0 END), 0) AS cash_movement_net,
-        COALESCE(SUM(CASE WHEN LOWER(IFNULL(cash_account_code, '')) LIKE '1212%'
+        COALESCE(SUM(CASE WHEN LOWER(IFNULL(payment_method, '')) IN ('bank', 'check', 'card')
           AND transaction_date >= ? AND transaction_date <= ?
           THEN CASE WHEN transaction_type = 'receipt' THEN amount ELSE -amount END
           ELSE 0 END), 0) AS bank_movement_net,
@@ -744,14 +700,14 @@ class FinancialTransactionRepositoryImpl
   }
 
   Future<void> markSynced({
-    required String uuid,
+    required String id,
     required int remoteVersion,
     DateTime? syncedAt,
   }) async {
     final at = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(
       _db.financialTransactions,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
       FinancialTransactionsCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(at.millisecondsSinceEpoch),
@@ -760,20 +716,20 @@ class FinancialTransactionRepositoryImpl
     );
   }
 
-  Future<void> markConflict(String uuid) async {
+  Future<void> markConflict(String id) async {
     await (_db.update(
       _db.financialTransactions,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
       const FinancialTransactionsCompanion(syncStatus: Value('conflict')),
     );
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = (payload['uuid'] as String?)?.trim();
-    if (uuid == null || uuid.isEmpty) return;
+    final id = ((payload['id'] ?? payload['uuid']) as String?)?.trim();
+    if (id == null || id.isEmpty) return;
     final existing = await (_db.select(
       _db.financialTransactions,
-    )..where((t) => t.uuid.equals(uuid))).getSingleOrNull();
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     final remoteVersion = (payload['version'] as int?) ?? 1;
 
@@ -788,7 +744,7 @@ class FinancialTransactionRepositoryImpl
       if (remoteVersion > existing.version) {
         await (_db.update(
           _db.financialTransactions,
-        )..where((t) => t.uuid.equals(uuid))).write(
+        )..where((t) => t.id.equals(id))).write(
           const FinancialTransactionsCompanion(syncStatus: Value('conflict')),
         );
       }
@@ -800,33 +756,29 @@ class FinancialTransactionRepositoryImpl
       return;
     }
     final companion = FinancialTransactionsCompanion(
-      uuid: Value(uuid),
+      id: Value(id),
       transactionNumber: Value(
-        (payload['transactionNumber'] as String?)?.trim() ?? uuid,
+        (payload['transactionNumber'] as String?)?.trim() ?? id,
       ),
       transactionType: Value(
         (payload['transactionType'] as String?) ?? 'receipt',
       ),
       source: Value((payload['source'] as String?) ?? 'manualReceipt'),
       transactionDate: Value((payload['transactionDate'] as int?) ?? now),
-      amount: Value((payload['amount'] as num?)?.toDouble() ?? 0),
-      currencyCode: Value((payload['currencyCode'] as String?) ?? ''),
-      baseCurrencyCode: Value((payload['baseCurrencyCode'] as String?) ?? ''),
-      exchangeRate: Value((payload['exchangeRate'] as num?)?.toDouble() ?? 1),
+      amount: Value((payload['amount'] as num?)?.toDouble() ?? 0.0),
+      currencyCode: Value((payload['currencyCode'] as String?) ?? 'SAR'),
+      baseCurrencyCode: Value(
+        (payload['baseCurrencyCode'] as String?) ?? 'SAR',
+      ),
+      exchangeRate: Value((payload['exchangeRate'] as num?)?.toDouble() ?? 1.0),
       counterAmount: Value(
-        (payload['counterAmount'] as num?)?.toDouble() ??
-            (payload['amount'] as num?)?.toDouble() ??
-            0,
+        (payload['counterAmount'] as num?)?.toDouble() ?? 0.0,
       ),
       counterCurrencyCode: Value(
-        (payload['counterCurrencyCode'] as String?) ??
-            (payload['currencyCode'] as String?) ??
-            '',
+        (payload['counterCurrencyCode'] as String?) ?? '',
       ),
       counterExchangeRate: Value(
-        (payload['counterExchangeRate'] as num?)?.toDouble() ??
-            (payload['exchangeRate'] as num?)?.toDouble() ??
-            1,
+        (payload['counterExchangeRate'] as num?)?.toDouble() ?? 1.0,
       ),
       voucherBookId: Value(payload['voucherBookId'] as String?),
       cashAccountId: Value((payload['cashAccountId'] as String?) ?? ''),
@@ -847,117 +799,28 @@ class FinancialTransactionRepositoryImpl
       ),
       relatedDocumentId: Value(payload['relatedDocumentId'] as String?),
       relatedDocumentType: Value(payload['relatedDocumentType'] as String?),
+      createdAt: Value((payload['createdAt'] as int?) ?? now),
+      updatedAt: Value((payload['updatedAt'] as int?) ?? now),
       cancelledAt: Value(payload['cancelledAt'] as int?),
       externalId: Value(payload['externalId'] as String?),
       syncStatus: const Value('synced'),
       lastSyncedAt: Value(now),
-      version: Value((payload['version'] as int?) ?? 1),
+      version: Value(remoteVersion),
       deletedAt: Value(payload['deletedAt'] as int?),
-      updatedAt: Value((payload['updatedAt'] as int?) ?? now),
-      createdAt: existing == null ? Value(now) : const Value.absent(),
       linesJson: Value(
-        FinancialTransactionLinesCodec.encode(_linesFromPayload(payload)),
+        FinancialTransactionLinesCodec.fromPayloadList(payload['lines']),
       ),
-      companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
+      companyId: Value(
+        payload['companyId']?.toString() ?? _currentCompanyId,
+      ),
     );
+
     if (existing == null) {
       await _db.into(_db.financialTransactions).insert(companion);
     } else {
       await (_db.update(
         _db.financialTransactions,
-      )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(companion);
+      )..where((t) => t.id.equals(id))).write(companion);
     }
   }
-}
-
-extension on FinancialTransaction {
-  FinancialTransaction copyWithDeleted(DateTime deletedAt) {
-    return FinancialTransaction(
-      id: id,
-      uuid: uuid,
-      transactionNumber: transactionNumber,
-      transactionType: transactionType,
-      source: source,
-      transactionDate: transactionDate,
-      amount: amount,
-      currencyCode: currencyCode,
-      baseCurrencyCode: baseCurrencyCode,
-      exchangeRate: exchangeRate,
-      counterAmount: counterAmount,
-      counterCurrencyCode: counterCurrencyCode,
-      counterExchangeRate: counterExchangeRate,
-      voucherBookId: voucherBookId,
-      cashAccountId: cashAccountId,
-      cashAccountCode: cashAccountCode,
-      cashAccountName: cashAccountName,
-      counterAccountId: counterAccountId,
-      counterAccountCode: counterAccountCode,
-      counterAccountName: counterAccountName,
-      customerId: customerId,
-      customerCode: customerCode,
-      customerName: customerName,
-      partyName: partyName,
-      reference: reference,
-      description: description,
-      paymentMethod: paymentMethod,
-      documentStatus: documentStatus,
-      relatedDocumentId: relatedDocumentId,
-      relatedDocumentType: relatedDocumentType,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      cancelledAt: cancelledAt,
-      externalId: externalId,
-      syncStatus: syncStatus,
-      lastSyncedAt: lastSyncedAt,
-      version: version,
-      deletedAt: deletedAt,
-      lines: lines,
-    );
-  }
-}
-
-List<FinancialTransactionLine> _linesFromPayload(Map<String, dynamic> payload) {
-  final raw = payload['lines'];
-  if (raw is List) {
-    final lines = <FinancialTransactionLine>[];
-    for (var i = 0; i < raw.length; i++) {
-      final item = raw[i];
-      if (item is! Map) continue;
-      final line = FinancialTransactionLine.fromJson(
-        Map<String, dynamic>.from(item),
-      );
-      if (line.accountId.trim().isEmpty) continue;
-      lines.add(
-        FinancialTransactionLine(
-          accountId: line.accountId,
-          accountCode: line.accountCode,
-          accountName: line.accountName,
-          amount: line.amount,
-          currencyCode: line.currencyCode,
-          exchangeRate: line.exchangeRate,
-          description: line.description,
-          lineOrder: line.lineOrder > 0 ? line.lineOrder : i,
-        ),
-      );
-    }
-    if (lines.isNotEmpty) return lines;
-  }
-  return FinancialTransactionLinesCodec.fromHeader(
-    accountId: (payload['counterAccountId'] as String?) ?? '',
-    accountCode: payload['counterAccountCode'] as String?,
-    accountName: payload['counterAccountName'] as String?,
-    amount:
-        (payload['counterAmount'] as num?)?.toDouble() ??
-        (payload['amount'] as num?)?.toDouble() ??
-        0,
-    currencyCode:
-        (payload['counterCurrencyCode'] as String?) ??
-        (payload['currencyCode'] as String?) ??
-        '',
-    exchangeRate:
-        (payload['counterExchangeRate'] as num?)?.toDouble() ??
-        (payload['exchangeRate'] as num?)?.toDouble() ??
-        1,
-    description: payload['description'] as String?,
-  );
 }

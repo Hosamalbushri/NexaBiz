@@ -25,6 +25,16 @@ class JournalBaseAmountResolver {
   final CurrencyRateRepository? _rates;
   final ExchangeRateEngine? _exchangeRateEngine;
 
+  /// Single monetary conversion authority enforcing baseAmount = foreignAmount * rateToBase.
+  static double calculateBaseAmount({
+    required double foreignAmount,
+    required double rateToBase,
+  }) {
+    final decimalRate = DecimalRate.fromDouble(rateToBase);
+    final decimalForeign = DecimalMoney.fromDouble(foreignAmount);
+    return decimalRate.convert(decimalForeign, targetPrecision: 2).toDouble();
+  }
+
   Future<List<JournalLineDraft>> resolve({
     required DateTime entryDate,
     required String baseCurrencyCode,

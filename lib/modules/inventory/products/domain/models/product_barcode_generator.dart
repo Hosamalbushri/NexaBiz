@@ -11,7 +11,7 @@ class ProductBarcodeGenerator {
   /// (skipping [excludingProductId] when editing).
   Future<String> generate({
     required String itemCode,
-    int? excludingProductId,
+    String? excludingProductId,
     DateTime? now,
   }) async {
     final trimmedCode = itemCode.trim();

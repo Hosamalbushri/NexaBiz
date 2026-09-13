@@ -5,24 +5,22 @@ import '../models/transaction_list_filter.dart';
 import '../models/transaction_paged_result.dart';
 
 abstract class FinancialTransactionRepository {
-  Future<FinancialTransaction?> getById(int id);
-
-  Future<FinancialTransaction?> getByUuid(String uuid);
+  Future<FinancialTransaction?> getById(String id);
 
   Future<FinancialTransaction> insert(
     FinancialTransactionDraft draft, {
     required String transactionNumber,
   });
 
-  Future<FinancialTransaction> update(int id, FinancialTransactionDraft draft);
+  Future<FinancialTransaction> update(String id, FinancialTransactionDraft draft);
 
-  Future<FinancialTransaction> markPosted(int id);
+  Future<FinancialTransaction> markPosted(String id);
 
-  Future<FinancialTransaction> markUnposted(int id);
+  Future<FinancialTransaction> markUnposted(String id);
 
-  Future<FinancialTransaction> markCancelled(int id);
+  Future<FinancialTransaction> markCancelled(String id);
 
-  Future<void> softDelete(int id);
+  Future<void> softDelete(String id);
 
   /// Header-only paged list query.
   Future<TransactionPagedResult<TransactionListItem>> searchListPaged({

@@ -44,7 +44,7 @@ class CostLayerServiceImpl implements CostLayerService {
     final existing =
         await (_db.select(_db.inventoryCostLayers)..where(
               (tbl) =>
-                  tbl.uuid.equals(layer.id) &
+                  tbl.id.equals(layer.id) &
                   tbl.companyId.equals(effectiveCompanyId),
             ))
             .getSingleOrNull();
@@ -87,7 +87,7 @@ class CostLayerServiceImpl implements CostLayerService {
         .into(_db.inventoryCostLayers)
         .insert(
           InventoryCostLayersCompanion(
-            uuid: Value(layer.id),
+            id: Value(layer.id),
             itemCode: Value(layer.itemCode),
             warehouseId: Value(layer.warehouseId),
             movementUuid: Value(layer.movementUuid),
@@ -185,7 +185,7 @@ class CostLayerServiceImpl implements CostLayerService {
         consumptions: existingConsumptions
             .map(
               (row) => CostConsumption(
-                id: row.uuid,
+                id: row.id,
                 layerUuid: row.layerUuid,
                 issueLineUuid: row.issueLineUuid,
                 movementType: row.movementType,
@@ -273,7 +273,7 @@ class CostLayerServiceImpl implements CostLayerService {
         final updatedCount =
             await (_db.update(_db.inventoryCostLayers)..where(
                   (tbl) =>
-                      tbl.uuid.equals(topLayer.uuid) &
+                      tbl.id.equals(topLayer.id) &
                       tbl.companyId.equals(effectiveCompanyId) &
                       tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
                       tbl.closed.equals(0) &
@@ -308,8 +308,8 @@ class CostLayerServiceImpl implements CostLayerService {
             .into(_db.inventoryCostConsumptions)
             .insert(
               InventoryCostConsumptionsCompanion(
-                uuid: Value(consumptionUuid),
-                layerUuid: Value(topLayer.uuid),
+                id: Value(consumptionUuid),
+                layerUuid: Value(topLayer.id),
                 issueLineUuid: Value(issueLineUuid),
                 movementType: Value(movementType),
                 consumedQty: Value(takeQty),
@@ -323,7 +323,7 @@ class CostLayerServiceImpl implements CostLayerService {
         consumptions.add(
           CostConsumption(
             id: consumptionUuid,
-            layerUuid: topLayer.uuid,
+            layerUuid: topLayer.id,
             issueLineUuid: issueLineUuid,
             movementType: movementType,
             consumedQty: takeQty,
@@ -439,7 +439,7 @@ class CostLayerServiceImpl implements CostLayerService {
         final updatedCount =
             await (_db.update(_db.inventoryCostLayers)..where(
                   (tbl) =>
-                      tbl.uuid.equals(row.uuid) &
+                      tbl.id.equals(row.id) &
                       tbl.companyId.equals(effectiveCompanyId) &
                       tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
                       tbl.closed.equals(0) &
@@ -459,7 +459,7 @@ class CostLayerServiceImpl implements CostLayerService {
           // Concurrency conflict detected: abort WAC loop to prevent partial consumption
           throw JournalException(
             JournalException.concurrencyConflict,
-            'Concurrent inventory consumption modified cost layer ${row.uuid}. Retrying consumption.',
+            'Concurrent inventory consumption modified cost layer ${row.id}. Retrying consumption.',
           );
         }
 
@@ -470,8 +470,8 @@ class CostLayerServiceImpl implements CostLayerService {
             .into(_db.inventoryCostConsumptions)
             .insert(
               InventoryCostConsumptionsCompanion(
-                uuid: Value(consumptionUuid),
-                layerUuid: Value(row.uuid),
+                id: Value(consumptionUuid),
+                layerUuid: Value(row.id),
                 issueLineUuid: Value(issueLineUuid),
                 movementType: Value(movementType),
                 consumedQty: Value(takeQty),
@@ -485,7 +485,7 @@ class CostLayerServiceImpl implements CostLayerService {
         consumptions.add(
           CostConsumption(
             id: consumptionUuid,
-            layerUuid: row.uuid,
+            layerUuid: row.id,
             issueLineUuid: issueLineUuid,
             movementType: movementType,
             consumedQty: takeQty,
@@ -527,7 +527,7 @@ class CostLayerServiceImpl implements CostLayerService {
         final layerQuery = _db.select(_db.inventoryCostLayers)
           ..where(
             (tbl) =>
-                tbl.uuid.equals(c.layerUuid) &
+                tbl.id.equals(c.layerUuid) &
                 tbl.companyId.equals(effectiveCompanyId),
           );
         final layer = await layerQuery.getSingleOrNull();
@@ -545,7 +545,7 @@ class CostLayerServiceImpl implements CostLayerService {
 
           await (_db.update(_db.inventoryCostLayers)..where(
                 (tbl) =>
-                    tbl.uuid.equals(layer.uuid) &
+                    tbl.id.equals(layer.id) &
                     tbl.companyId.equals(effectiveCompanyId),
               ))
               .write(
@@ -588,7 +588,7 @@ class CostLayerServiceImpl implements CostLayerService {
         final consumptions =
             await (_db.select(_db.inventoryCostConsumptions)..where(
                   (tbl) =>
-                      tbl.layerUuid.equals(layer.uuid) &
+                      tbl.layerUuid.equals(layer.id) &
                       tbl.companyId.equals(effectiveCompanyId),
                 ))
                 .get();
@@ -604,7 +604,7 @@ class CostLayerServiceImpl implements CostLayerService {
         // Soft-delete the layer
         await (_db.update(_db.inventoryCostLayers)..where(
               (tbl) =>
-                  tbl.uuid.equals(layer.uuid) &
+                  tbl.id.equals(layer.id) &
                   tbl.companyId.equals(effectiveCompanyId),
             ))
             .write(
@@ -685,7 +685,7 @@ class CostLayerServiceImpl implements CostLayerService {
     return rows
         .map<CostLayer>(
           (row) => CostLayer(
-            id: row.uuid,
+            id: row.id,
             itemCode: row.itemCode,
             warehouseId: row.warehouseId,
             movementUuid: row.movementUuid,

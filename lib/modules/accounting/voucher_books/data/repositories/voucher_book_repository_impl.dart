@@ -54,8 +54,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   VoucherBook _map(VoucherBookData row) {
     return VoucherBook(
       id: row.id,
-      uuid: row.uuid,
-      parentId: row.parentUuid,
+      parentId: row.parentBookId,
       name: row.name,
       bookType: VoucherBookType.fromStorage(row.bookType),
       isGroup: row.isGroup,
@@ -114,7 +113,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       for (final group in groups)
         VoucherBookSectionNode(
           group: group,
-          children: List.unmodifiable(byParent[group.uuid] ?? const []),
+          children: List.unmodifiable(byParent[group.id] ?? const []),
         ),
     ];
   }
@@ -144,24 +143,19 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   }
 
   @override
-  Future<VoucherBook?> getById(int id) async {
-    final row = await (_db.select(
-      _db.voucherBooks,
-    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
-    return row == null ? null : _map(row);
-  }
-
-  @override
-  Future<VoucherBook?> getByUuid(String uuid) async {
-    final trimmed = uuid.trim();
+  Future<VoucherBook?> getById(String id) async {
+    final trimmed = id.trim();
     if (trimmed.isEmpty) {
       return null;
     }
     final row = await (_db.select(
       _db.voucherBooks,
-    )..where((t) => t.uuid.equals(trimmed) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
+
+  @override
+  Future<VoucherBook?> getByUuid(String uuid) => getById(uuid);
 
   @override
   Future<List<VoucherBook>> getByType(VoucherBookType type) async {
@@ -174,10 +168,10 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   }
 
   @override
-  Future<List<VoucherBook>> getChildren(String parentUuid) async {
+  Future<List<VoucherBook>> getChildren(String parentId) async {
     final rows =
         await (_db.select(_db.voucherBooks)
-              ..where((t) => t.parentUuid.equals(parentUuid) & _scoped(t))
+              ..where((t) => t.parentBookId.equals(parentId) & _scoped(t))
               ..orderBy([
                 (t) => OrderingTerm.asc(t.bookType),
                 (t) => OrderingTerm.asc(t.name),
@@ -199,7 +193,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       if (groupsByType.containsKey(section)) {
         continue;
       }
-      final uuid = generateUuidV4();
+      final id = generateUuidV7();
       final name =
           _defaultSectionNamesAr[section] ??
           _defaultSectionNamesEn[section] ??
@@ -208,8 +202,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
           .into(_db.voucherBooks)
           .insert(
             VoucherBooksCompanion.insert(
-              uuid: Value(uuid),
-              parentUuid: const Value(null),
+              id: Value(id),
+              parentBookId: const Value(null),
               name: name,
               bookType: section.storageValue,
               isGroup: const Value(true),
@@ -222,8 +216,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
             ),
           );
       groupsByType[section] = VoucherBook(
-        id: 0,
-        uuid: uuid,
+        id: id,
         name: name,
         bookType: section,
         isGroup: true,
@@ -235,14 +228,12 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       );
     }
 
-    // Attach legacy flat leaf books to their section group.
     var refreshed = await getAll();
     var groupUuidBySection = <VoucherBookType, String>{
       for (final g in refreshed.where((b) => b.isGroup && b.parentId == null))
-        g.bookType: g.uuid,
+        g.bookType: g.id,
     };
 
-    // Migrate legacy Receipts / Payments section groups into Receipts & payments.
     final rpHubUuid = groupUuidBySection[VoucherBookType.receiptsPayments];
     if (rpHubUuid != null) {
       for (final legacy in const [
@@ -253,13 +244,13 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         if (legacyGroup == null) {
           continue;
         }
-        final children = await getChildren(legacyGroup.uuid);
+        final children = await getChildren(legacyGroup.id);
         for (final child in children) {
           await (_db.update(
             _db.voucherBooks,
           )..where((t) => t.id.equals(child.id))).write(
             VoucherBooksCompanion(
-              parentUuid: Value(rpHubUuid),
+              parentBookId: Value(rpHubUuid),
               updatedAt: Value(now),
             ),
           );
@@ -272,7 +263,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       refreshed = await getAll();
       groupUuidBySection = {
         for (final g in refreshed.where((b) => b.isGroup && b.parentId == null))
-          g.bookType: g.uuid,
+          g.bookType: g.id,
       };
     }
 
@@ -291,7 +282,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         _db.voucherBooks,
       )..where((t) => t.id.equals(book.id))).write(
         VoucherBooksCompanion(
-          parentUuid: Value(sectionUuid),
+          parentBookId: Value(sectionUuid),
           updatedAt: Value(now),
         ),
       );
@@ -305,7 +296,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     final refreshed = await getAll();
     final groupUuidBySection = <VoucherBookType, String>{
       for (final g in refreshed.where((b) => b.isGroup && b.parentId == null))
-        g.bookType: g.uuid,
+        g.bookType: g.id,
     };
 
     final leavesBySectionAndType = <String, Set<VoucherBookType>>{};
@@ -325,8 +316,8 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
           .into(_db.voucherBooks)
           .insert(
             VoucherBooksCompanion.insert(
-              uuid: Value(generateUuidV4()),
-              parentUuid: Value(sectionUuid),
+              id: Value(generateUuidV7()),
+              parentBookId: Value(sectionUuid),
               name: seed.nameAr,
               bookType: seed.bookType.storageValue,
               isGroup: const Value(false),
@@ -359,7 +350,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     if (draft.isGroup) {
       return;
     }
-    final parent = await getByUuid(draft.parentId!.trim());
+    final parent = await getById(draft.parentId!.trim());
     if (parent == null || !parent.isGroup) {
       throw const VoucherBookException('Parent section not found');
     }
@@ -376,12 +367,13 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     await _assertParentValid(draft);
     final now = DateTime.now().toUtc();
     final notes = draft.notes?.trim();
-    final id = await _db
+    final newId = generateUuidV7();
+    await _db
         .into(_db.voucherBooks)
         .insert(
           VoucherBooksCompanion.insert(
-            uuid: Value(generateUuidV4()),
-            parentUuid: Value(draft.isGroup ? null : draft.parentId?.trim()),
+            id: Value(newId),
+            parentBookId: Value(draft.isGroup ? null : draft.parentId?.trim()),
             name: draft.name.trim(),
             bookType: draft.bookType.storageValue,
             isGroup: Value(draft.isGroup),
@@ -394,12 +386,12 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
             companyId: _currentCompanyId,
           ),
         );
-    final created = await getById(id);
+    final created = await getById(newId);
     return created!;
   }
 
   @override
-  Future<VoucherBook> update(int id, VoucherBookDraft draft) async {
+  Future<VoucherBook> update(String id, VoucherBookDraft draft) async {
     _validator.validate(draft);
     final existing = await getById(id);
     if (existing == null) {
@@ -415,7 +407,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       _db.voucherBooks,
     )..where((t) => t.id.equals(id) & _scoped(t))).write(
       VoucherBooksCompanion(
-        parentUuid: Value(draft.isGroup ? null : draft.parentId?.trim()),
+        parentBookId: Value(draft.isGroup ? null : draft.parentId?.trim()),
         name: Value(draft.name.trim()),
         bookType: Value(draft.bookType.storageValue),
         nextNumber: Value(
@@ -433,13 +425,13 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   }
 
   @override
-  Future<void> delete(int id) async {
+  Future<void> delete(String id) async {
     final existing = await getById(id);
     if (existing == null) {
       return;
     }
     if (existing.isGroup) {
-      final children = await getChildren(existing.uuid);
+      final children = await getChildren(existing.id);
       if (children.isNotEmpty) {
         throw const VoucherBookException(
           'Cannot delete a section that still has books',
@@ -452,13 +444,13 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   }
 
   @override
-  Future<int> allocateNextNumber(int id) async {
+  Future<int> allocateNextNumber(String id) async {
     final block = await reserveNumberBlock(id, 1);
     return block.start;
   }
 
   @override
-  Future<({int start, int end})> reserveNumberBlock(int id, int size) async {
+  Future<({int start, int end})> reserveNumberBlock(String id, int size) async {
     if (size < 1) {
       throw const VoucherBookException('Block size must be at least 1');
     }

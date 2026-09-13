@@ -384,7 +384,7 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
                   items: [
                     for (final account in posting)
                       AppSelectItem<String?>(
-                        value: account.uuid,
+                        value: account.id,
                         label:
                             '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
                       ),

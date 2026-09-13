@@ -32,7 +32,7 @@ import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes
 class SaleDetailsPage extends ConsumerStatefulWidget {
   const SaleDetailsPage({super.key, required this.saleId});
 
-  final int saleId;
+  final String saleId;
 
   @override
   ConsumerState<SaleDetailsPage> createState() => _SaleDetailsPageState();

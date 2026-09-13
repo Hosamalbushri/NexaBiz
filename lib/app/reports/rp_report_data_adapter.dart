@@ -1,4 +1,5 @@
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/models/transaction_list_filter.dart';
@@ -18,9 +19,9 @@ class RpReportDataAdapter implements RpReportDataPort {
       case RpReportKind.payments:
         return base.copyWith(transactionType: TransactionType.payment);
       case RpReportKind.cashMovement:
-        return base.copyWith(cashAccountCodePrefix: '1211');
+        return base.copyWith(paymentMethod: RpPaymentMethod.cash);
       case RpReportKind.bankMovement:
-        return base.copyWith(cashAccountCodePrefix: '1212');
+        return base.copyWith(paymentMethod: RpPaymentMethod.bankTransfer);
       case RpReportKind.customerReceipts:
         return base.copyWith(
           transactionType: TransactionType.receipt,

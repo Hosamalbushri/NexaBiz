@@ -350,7 +350,7 @@ class _CentralSetupCenterWidgetState
           .where((a) => a.isPostingAccount && a.isActive && !a.isDeleted)
           .map(
             (a) => SetupAccountOption(
-              uuid: a.uuid,
+              uuid: a.id,
               code: a.accountCode,
               name: a.name,
             ),

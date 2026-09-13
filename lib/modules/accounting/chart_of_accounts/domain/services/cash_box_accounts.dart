@@ -19,9 +19,9 @@ class CashBoxAccounts {
     }
 
     final byId = <String, Account>{
-      for (final account in all) account.uuid: account,
+      for (final account in all) account.id: account,
     };
-    final rootId = root.uuid;
+    final rootId = root.id;
 
     final matches = all.where((account) {
       if (!account.canPost) {
@@ -42,8 +42,8 @@ class CashBoxAccounts {
     if (root == null) {
       return false;
     }
-    final byId = <String, Account>{for (final item in all) item.uuid: item};
-    return _isDescendantOf(account, rootId: root.uuid, byId: byId);
+    final byId = <String, Account>{for (final item in all) item.id: item};
+    return _isDescendantOf(account, rootId: root.id, byId: byId);
   }
 
   static Account? _findCashBoxesRoot(List<Account> all) {

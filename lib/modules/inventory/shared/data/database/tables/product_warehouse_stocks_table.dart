@@ -1,8 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 @DataClassName('ProductWarehouseStockRow')
 class ProductWarehouseStocks extends Table {
-  TextColumn get uuid => text()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
+  TextColumn get productId => text().nullable()();
   TextColumn get itemCode => text()();
   TextColumn get warehouseId => text()();
   RealColumn get onHandQty => real().withDefault(const Constant(0.0))();
@@ -17,10 +20,11 @@ class ProductWarehouseStocks extends Table {
   IntColumn get deletedAt => integer().nullable()();
 
   @override
-  Set<Column> get primaryKey => {uuid};
+  Set<Column> get primaryKey => {id};
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {itemCode, warehouseId, companyId},
-  ];
+        {companyId, id},
+        {itemCode, warehouseId, companyId},
+      ];
 }

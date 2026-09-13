@@ -4,9 +4,8 @@ import 'package:stock_count/core/sync/sync_core.dart';
 class JournalLine {
   const JournalLine({
     required this.id,
-    required this.uuid,
-    required this.entryUuid,
-    required this.accountUuid,
+    required this.entryId,
+    required this.accountId,
     required this.debit,
     required this.credit,
     required this.currencyCode,
@@ -17,10 +16,10 @@ class JournalLine {
     this.lineDescription,
   });
 
-  final int id;
-  final String uuid;
-  final String entryUuid;
-  final String accountUuid;
+  /// Primary Key (UUID v7).
+  final String id;
+  final String entryId;
+  final String accountId;
   final double debit;
   final double credit;
   final String currencyCode;
@@ -31,12 +30,30 @@ class JournalLine {
   final double baseDebit;
   final double baseCredit;
   final String? lineDescription;
+
+  /// Compatibility getters for legacy callers.
+  String get uuid => id;
+  String get entryUuid => entryId;
+  String get accountUuid => accountId;
 }
 
 /// Draft line before persistence.
 class JournalLineDraft {
   const JournalLineDraft({
-    required this.accountUuid,
+    required String accountUuid,
+    required this.debit,
+    required this.credit,
+    required this.currencyCode,
+    this.lineDescription,
+    this.sortOrder = 0,
+    this.uuid,
+    this.exchangeRateToBase,
+    this.baseDebit,
+    this.baseCredit,
+  }) : accountId = accountUuid;
+
+  const JournalLineDraft.withId({
+    required this.accountId,
     required this.debit,
     required this.credit,
     required this.currencyCode,
@@ -48,7 +65,7 @@ class JournalLineDraft {
     this.baseCredit,
   });
 
-  final String accountUuid;
+  final String accountId;
   final double debit;
   final double credit;
   final String currencyCode;
@@ -62,13 +79,15 @@ class JournalLineDraft {
   final double? exchangeRateToBase;
   final double? baseDebit;
   final double? baseCredit;
+
+  String get accountUuid => accountId;
+  String? get id => uuid;
 }
 
 /// Posted (or draft) journal entry with lines.
 class JournalEntry {
   const JournalEntry({
     required this.id,
-    required this.uuid,
     required this.entryDate,
     required this.voucherNumber,
     required this.voucherType,
@@ -86,8 +105,8 @@ class JournalEntry {
     this.deletedAt,
   });
 
-  final int id;
-  final String uuid;
+  /// Primary Key (UUID v7).
+  final String id;
   final DateTime entryDate;
   final String voucherNumber;
   final String voucherType;
@@ -103,6 +122,9 @@ class JournalEntry {
   final DateTime? lastSyncedAt;
   final int version;
   final DateTime? deletedAt;
+
+  /// Compatibility getter for legacy callers.
+  String get uuid => id;
 }
 
 /// Draft entry for [JournalRepository.post].
@@ -118,6 +140,7 @@ class JournalEntryDraft {
     this.sourceType,
     this.sourceId,
     this.uuid,
+    this.id,
     this.allowUnbalancedMultiCurrency = false,
     this.baseCurrencyCode,
   });
@@ -134,6 +157,7 @@ class JournalEntryDraft {
 
   /// When set, replaces that existing non-deleted entry in place.
   final String? uuid;
+  final String? id;
 
   /// When true and lines use more than one currency, skip raw debit=credit
   /// checks; base-currency debit/credit must still balance.
@@ -141,13 +165,14 @@ class JournalEntryDraft {
 
   /// Company base currency used to resolve missing line base amounts.
   final String? baseCurrencyCode;
+
+  String? get entryId => id ?? uuid;
 }
 
 /// Lightweight journal list row (no lines loaded).
 class JournalEntryHeader {
   const JournalEntryHeader({
     required this.id,
-    required this.uuid,
     required this.entryDate,
     required this.voucherNumber,
     required this.voucherType,
@@ -160,8 +185,8 @@ class JournalEntryHeader {
     this.sourceId,
   });
 
-  final int id;
-  final String uuid;
+  /// Primary Key (UUID v7).
+  final String id;
   final DateTime entryDate;
   final String voucherNumber;
   final String voucherType;
@@ -172,6 +197,9 @@ class JournalEntryHeader {
   final String? description;
   final String? sourceType;
   final String? sourceId;
+
+  /// Compatibility getter for legacy callers.
+  String get uuid => id;
 }
 
 /// Movement row for account statements (one journal line + header fields).
@@ -185,15 +213,17 @@ class AccountLedgerMovement {
     required this.credit,
     required this.currencyCode,
     required this.isPosted,
-    required this.accountUuid,
-    required this.entryUuid,
-    required this.lineUuid,
+    required String accountUuid,
+    required String entryUuid,
+    required String lineUuid,
     required this.lineId,
     required this.sortOrder,
     this.baseDebit,
     this.baseCredit,
     this.exchangeRateToBase,
-  });
+  })  : accountId = accountUuid,
+        entryId = entryUuid,
+        id = lineUuid;
 
   final DateTime entryDate;
   final String voucherNumber;
@@ -203,16 +233,20 @@ class AccountLedgerMovement {
   final double credit;
   final String currencyCode;
   final bool isPosted;
-  final String accountUuid;
-  final String entryUuid;
-  final String lineUuid;
+  final String accountId;
+  final String entryId;
+  final String id;
 
   /// Stable keyset fields for paginated ledger reads.
-  final int lineId;
+  final String lineId;
   final int sortOrder;
 
   /// Base currency equivalent amounts
   final double? baseDebit;
   final double? baseCredit;
   final double? exchangeRateToBase;
+
+  String get accountUuid => accountId;
+  String get entryUuid => entryId;
+  String get lineUuid => id;
 }

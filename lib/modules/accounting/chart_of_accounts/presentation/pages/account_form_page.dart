@@ -22,7 +22,7 @@ import 'package:stock_count/modules/accounting/shared/presentation/pages/account
 class AccountFormPage extends ConsumerStatefulWidget {
   const AccountFormPage({super.key, this.accountId, this.initialParentId});
 
-  final int? accountId;
+  final String? accountId;
   final String? initialParentId;
 
   bool get isEditing => accountId != null;
@@ -157,7 +157,7 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
           .read(accountCodeGeneratorProvider)
           .generate(
             parentAccountCode: parent.accountCode,
-            parentAccountId: parent.uuid,
+            parentAccountId: parent.id,
           );
       if (!mounted) {
         return;
@@ -234,15 +234,14 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                 maxColumns: 2,
                 children: [
                   if (systemLocked)
-                    InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: l10n.accountingFieldName,
-                        helperText: l10n.accountingSystemAccountHint,
+                    AppTextField(
+                      controller: TextEditingController(
+                        text: AccountLabels.displayName(l10n, _existing!),
                       ),
-                      child: Text(
-                        AccountLabels.displayName(l10n, _existing!),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
+                      label: l10n.accountingFieldName,
+                      enabled: false,
+                      readOnly: true,
+                      helperText: l10n.accountingSystemAccountHint,
                     )
                   else
                     AppTextField(
@@ -290,7 +289,7 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                     data: (parents) {
                       final options = [
                         for (final p in parents)
-                          if (!widget.isEditing || p.uuid != _existing?.uuid) p,
+                          if (!widget.isEditing || p.id != _existing?.id) p,
                       ];
                       return AppSelectField<String?>(
                         value: _parentId,
@@ -303,7 +302,7 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                           ),
                           for (final parent in options)
                             AppSelectItem<String?>(
-                              value: parent.uuid,
+                              value: parent.id,
                               label:
                                   '${parent.accountCode} — ${AccountLabels.displayName(l10n, parent)}',
                             ),

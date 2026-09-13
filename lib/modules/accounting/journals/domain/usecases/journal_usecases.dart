@@ -38,7 +38,7 @@ class ListJournalEntryHeaders {
     bool? isPosted,
     String? query,
     int? limit,
-    int? afterId,
+    String? afterId,
   }) {
     return _repository.listHeaders(
       fromDate: fromDate,

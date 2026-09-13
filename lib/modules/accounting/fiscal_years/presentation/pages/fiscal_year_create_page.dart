@@ -141,8 +141,8 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
               periodCount: _periodCount,
               periodFrequency: PeriodFrequency.monthly,
               fxRevaluationEnabled: _fxEnabled,
-              fxGainAccountUuid: _fxEnabled ? _fxGainUuid : null,
-              fxLossAccountUuid: _fxEnabled ? _fxLossUuid : null,
+              fxGainAccountId: _fxEnabled ? _fxGainUuid : null,
+              fxLossAccountId: _fxEnabled ? _fxLossUuid : null,
               createdBy: actor,
             ),
           );
@@ -312,11 +312,11 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                       ref.read(accountsProvider).valueOrNull ?? const [];
                   _fxGainUuid ??= accounts
                       .where((a) => AccountLabels.systemKeyOf(a) == 'fx_gain')
-                      .map((a) => a.uuid)
+                      .map((a) => a.id)
                       .firstOrNull;
                   _fxLossUuid ??= accounts
                       .where((a) => AccountLabels.systemKeyOf(a) == 'fx_loss')
-                      .map((a) => a.uuid)
+                      .map((a) => a.id)
                       .firstOrNull;
                 });
               },
@@ -334,11 +334,11 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                       .toList(growable: false);
                   final defaultGain = accounts
                       .where((a) => AccountLabels.systemKeyOf(a) == 'fx_gain')
-                      .map((a) => a.uuid)
+                      .map((a) => a.id)
                       .firstOrNull;
                   final defaultLoss = accounts
                       .where((a) => AccountLabels.systemKeyOf(a) == 'fx_loss')
-                      .map((a) => a.uuid)
+                      .map((a) => a.id)
                       .firstOrNull;
                   if ((_fxGainUuid == null && defaultGain != null) ||
                       (_fxLossUuid == null && defaultLoss != null)) {
@@ -360,7 +360,7 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                         accounts: posting,
                         selectedUuid: _fxGainUuid,
                         onSelected: (account) =>
-                            setState(() => _fxGainUuid = account?.uuid),
+                            setState(() => _fxGainUuid = account?.id),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AccountSearchField(
@@ -369,7 +369,7 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                         accounts: posting,
                         selectedUuid: _fxLossUuid,
                         onSelected: (account) =>
-                            setState(() => _fxLossUuid = account?.uuid),
+                            setState(() => _fxLossUuid = account?.id),
                       ),
                     ],
                   );

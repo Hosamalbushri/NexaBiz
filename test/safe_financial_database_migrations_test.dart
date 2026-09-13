@@ -1,70 +1,53 @@
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/app/migration/migration_integrity_validator.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
-import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/services/migration_integrity_validator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase db;
   late MigrationIntegrityValidator migrationValidator;
 
   const tenantId = 'tenant-migration-01';
 
   setUp(() async {
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     migrationValidator = MigrationIntegrityValidator(
-      invDb: invDb,
-      accDb: accDb,
+      invDb: db,
+      accDb: db,
     );
   });
 
   tearDown(() async {
-    await invDb.close();
-    await accDb.close();
+    await db.close();
   });
 
   group('ROOT FIX 34 — Safe Financial Database Migrations Tests', () {
     test(
       '1. Pre-Migration Diagnostic Detection: NULL companyId, orphan lines, duplicate UUIDs, invalid statuses',
       () async {
-        // Insert dirty data: product without companyId
-        await invDb
-            .into(invDb.products)
-            .insert(
-              ProductsCompanion.insert(
-                id: const Value(1),
-                uuid: generateUuidV4(),
-                itemCode: 'ITEM-MIG-01',
-                name: 'Migrated Item 1',
-                packSize: 1,
-                price: 100.0,
-                createdAt: 1600000000,
-                updatedAt: 1600000000,
-                companyId: const Value(null),
-              ),
-            );
+        // Insert dirty data: stock_receipt without companyId
+        final rcUuid = generateUuidV7();
+        await db.customStatement('''
+          INSERT INTO stock_receipts (id, receipt_number, currency_code, receipt_date, created_at, updated_at, status, company_id)
+          VALUES ('$rcUuid', 'RC-DIRTY-01', 'SAR', 1600000000, 1600000000, 1600000000, 'invalid_unknown_status', NULL)
+        ''');
 
-        // Insert receipt with invalid status / companyId
-        final rcUuid = generateUuidV4();
-        await invDb.customStatement('''
-        INSERT INTO stock_receipts (id, uuid, receipt_number, receipt_date, created_at, updated_at, status, company_id)
-        VALUES (1, '$rcUuid', 'RC-DIRTY-01', 1600000000, 1600000000, 1600000000, 'invalid_unknown_status', NULL)
-      ''');
+        // Insert journal entry without companyId
+        final jeUuid = generateUuidV7();
+        await db.customStatement('''
+          INSERT INTO journal_entries (id, voucher_number, voucher_type, currency_code, entry_date, created_at, updated_at, company_id)
+          VALUES ('$jeUuid', 'JE-DIRTY-01', 'journal', 'SAR', 1600000000, 1600000000, 1600000000, NULL)
+        ''');
 
         // Insert orphan movement line referencing non-existent document
-        final lineUuid = generateUuidV4();
-        final nonExistentUuid = generateUuidV4();
-        await invDb.customStatement('''
-        INSERT INTO stock_movement_lines (uuid, movement_uuid, movement_type, item_code, item_name, quantity, unit_cost, total_cost)
-        VALUES ('$lineUuid', '$nonExistentUuid', 'receipt', 'ITEM-MIG-01', 'Migrated Item 1', 10.0, 50.0, 500.0)
-      ''');
+        final lineUuid = generateUuidV7();
+        await db.customStatement('''
+          INSERT INTO stock_movement_lines (id, movement_type, item_code, item_name, quantity, unit_cost, total_cost, company_id)
+          VALUES ('$lineUuid', 'receipt', 'ITEM-MIG-01', 'Migrated Item 1', 10.0, 50.0, 500.0, '$tenantId')
+        ''');
 
         // Audit pre-migration state
         final report = await migrationValidator.auditPreMigration();
@@ -79,26 +62,17 @@ void main() {
     test(
       '2. Safe Tenant Remediation: NULL companyId remediation preserves records without data loss',
       () async {
-        // Insert products and receipts with NULL companyId
-        final prodRepo = ProductRepositoryImpl(
-          invDb,
-          readCompanyId: () => tenantId,
-        );
-        await prodRepo.insert(
-          const ProductDraft(
-            itemCode: 'ITEM-TENANT-01',
-            name: 'Tenant Test Product',
-            packSize: 1,
-            price: 100.0,
-            unitCost: 60.0,
-          ),
-        );
+        final jeUuid = generateUuidV7();
+        await db.customStatement('''
+          INSERT INTO journal_entries (id, voucher_number, voucher_type, currency_code, entry_date, created_at, updated_at, company_id)
+          VALUES ('$jeUuid', 'JE-TENANT-01', 'journal', 'SAR', 1600000000, 1600000000, 1600000000, NULL)
+        ''');
 
-        final nullRcUuid = generateUuidV4();
-        await invDb.customStatement('''
-        INSERT INTO stock_receipts (uuid, receipt_number, receipt_date, created_at, updated_at, status, company_id)
-        VALUES ('$nullRcUuid', 'RC-NULL-TENANT', 1600000000, 1600000000, 1600000000, 'draft', NULL)
-      ''');
+        final nullRcUuid = generateUuidV7();
+        await db.customStatement('''
+          INSERT INTO stock_receipts (id, receipt_number, currency_code, receipt_date, created_at, updated_at, status, company_id)
+          VALUES ('$nullRcUuid', 'RC-NULL-TENANT', 'SAR', 1600000000, 1600000000, 1600000000, 'draft', NULL)
+        ''');
 
         // Remediate NULL companyId safely
         await migrationValidator.remediateSafeDefaults(
@@ -109,9 +83,9 @@ void main() {
         final report = await migrationValidator.auditPreMigration();
         expect(report.nullCompanyIdCount, equals(0));
 
-        final receiptRow = await invDb
+        final receiptRow = await db
             .customSelect(
-              "SELECT company_id, status FROM stock_receipts WHERE uuid = '$nullRcUuid'",
+              "SELECT company_id, status FROM stock_receipts WHERE id = '$nullRcUuid'",
             )
             .getSingle();
         expect(receiptRow.read<String>('company_id'), equals(tenantId));
@@ -124,13 +98,13 @@ void main() {
       () async {
         // Create cost layer with valuation = 10 * 50 = $500
         final now = DateTime.now().millisecondsSinceEpoch;
-        final layerUuid = generateUuidV4();
-        final movUuid = generateUuidV4();
-        await invDb
-            .into(invDb.inventoryCostLayers)
+        final layerUuid = generateUuidV7();
+        final movUuid = generateUuidV7();
+        await db
+            .into(db.inventoryCostLayers)
             .insert(
               InventoryCostLayersCompanion.insert(
-                uuid: layerUuid,
+                id: Value(layerUuid),
                 itemCode: 'ITEM-VAL-01',
                 movementUuid: movUuid,
                 movementType: 'receipt',
@@ -139,35 +113,36 @@ void main() {
                 remainingQty: const Value(10.0),
                 unitCost: const Value(50.0),
                 totalCost: const Value(500.0),
+                inventoryCurrencyId: 'YER',
+                documentCurrencyId: 'SAR',
+                exchangeRate: const Value(1.0),
                 createdAt: now,
                 updatedAt: now,
                 companyId: Value(tenantId),
               ),
             );
 
-        // Seed Account 1230 in AccountingDatabase and add journal lines balancing to $500
-        final accUuid = generateUuidV4();
-        await accDb
-            .into(accDb.accounts)
+        // Seed Account 1230 in Database and add journal lines balancing to $500
+        final accUuid = generateUuidV7();
+        await db
+            .into(db.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: accUuid,
+                id: Value(accUuid),
                 accountCode: '1230',
                 name: 'حساب المخزون',
                 accountType: 'asset',
                 normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: Value(tenantId),
+                companyId: tenantId,
               ),
             );
 
-        final journalUuid = generateUuidV4();
-        await accDb
-            .into(accDb.journalEntries)
+        final journalUuid = generateUuidV7();
+        await db
+            .into(db.journalEntries)
             .insert(
               JournalEntriesCompanion.insert(
-                uuid: journalUuid,
+                id: Value(journalUuid),
                 voucherNumber: 'JE-VAL-01',
                 voucherType: 'journal',
                 currencyCode: 'SAR',
@@ -178,18 +153,19 @@ void main() {
               ),
             );
 
-        await accDb
-            .into(accDb.journalLines)
+        await db
+            .into(db.journalLines)
             .insert(
               JournalLinesCompanion.insert(
-                uuid: generateUuidV4(),
-                entryUuid: journalUuid,
-                accountUuid: accUuid,
+                id: Value(generateUuidV7()),
+                entryId: journalUuid,
+                accountId: accUuid,
                 currencyCode: 'SAR',
                 debit: const Value(500.0),
                 credit: const Value(0.0),
                 baseDebit: const Value(500.0),
                 baseCredit: const Value(0.0),
+                companyId: Value(tenantId),
               ),
             );
 
@@ -209,20 +185,20 @@ void main() {
       '4. Safe Status Backfill: Un-posted draft receipts remain draft without premature posting',
       () async {
         // Insert un-posted draft receipt with no cost layers
-        final draftRcUuid = generateUuidV4();
-        await invDb.customStatement('''
-        INSERT INTO stock_receipts (uuid, receipt_number, receipt_date, created_at, updated_at, status, company_id)
-        VALUES ('$draftRcUuid', 'RC-DRAFT-MIG', 1600000000, 1600000000, 1600000000, 'draft', '$tenantId')
-      ''');
+        final draftRcUuid = generateUuidV7();
+        await db.customStatement('''
+          INSERT INTO stock_receipts (id, receipt_number, currency_code, receipt_date, created_at, updated_at, status, company_id)
+          VALUES ('$draftRcUuid', 'RC-DRAFT-MIG', 'SAR', 1600000000, 1600000000, 1600000000, 'draft', '$tenantId')
+        ''');
 
         // Remediate & run migration validator checks
         await migrationValidator.remediateSafeDefaults(
           targetCompanyId: tenantId,
         );
 
-        final row = await invDb
+        final row = await db
             .customSelect(
-              "SELECT status FROM stock_receipts WHERE uuid = '$draftRcUuid'",
+              "SELECT status FROM stock_receipts WHERE id = '$draftRcUuid'",
             )
             .getSingle();
 

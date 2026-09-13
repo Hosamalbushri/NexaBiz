@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Fiscal year header (owns accounting periods).
 @DataClassName('FiscalYearRow')
 class FiscalYears extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   TextColumn get code => text().withLength(min: 1, max: 32)();
 
@@ -31,9 +31,9 @@ class FiscalYears extends Table {
   BoolColumn get fxRevaluationEnabled =>
       boolean().withDefault(const Constant(false))();
 
-  TextColumn get fxGainAccountUuid => text().nullable()();
+  TextColumn get fxGainAccountId => text().nullable()();
 
-  TextColumn get fxLossAccountUuid => text().nullable()();
+  TextColumn get fxLossAccountId => text().nullable()();
 
   IntColumn get createdAt => integer()();
 
@@ -54,4 +54,13 @@ class FiscalYears extends Table {
   IntColumn get version => integer().withDefault(const Constant(1))();
 
   TextColumn get companyId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, code},
+      ];
 }

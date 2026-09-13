@@ -10,15 +10,15 @@ class SalesRoutes {
   static const String create = '/sales/create';
   static const String invoicePreview = '/sales/invoice-preview';
 
-  static String details(int id) => '/sales/$id';
+  static String details(String id) => '/sales/$id';
 
-  static String edit(int id) => '/sales/$id/edit';
+  static String edit(String id) => '/sales/$id/edit';
 
   static void goRoot(BuildContext context) => context.go(root);
 
   static void goList(BuildContext context) => context.go(list);
 
-  static void goDetails(BuildContext context, int id) =>
+  static void goDetails(BuildContext context, String id) =>
       context.go(details(id));
 
   /// Leaves invoice screens (create / edit) for the sales hub.
@@ -41,10 +41,10 @@ class SalesRoutes {
 
   static void pushCreate(BuildContext context) => context.push(create);
 
-  static void pushDetails(BuildContext context, int id) =>
+  static void pushDetails(BuildContext context, String id) =>
       context.push(details(id));
 
-  static void pushEdit(BuildContext context, int id) => context.push(edit(id));
+  static void pushEdit(BuildContext context, String id) => context.push(edit(id));
 
   static Future<void> pushInvoicePreview(BuildContext context) async {
     await context.push(invoicePreview);

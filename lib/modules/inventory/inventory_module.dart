@@ -121,7 +121,7 @@ class InventoryModule extends AppModule {
       anyOf: InventoryPermissions.productsBarcode,
     ),
     RouteAccessRule(
-      pathRegex: RegExp(r'^/inventory/products/\d+/edit$'),
+      pathRegex: RegExp(r'^/inventory/products/[^/]+/edit$'),
       anyOf: InventoryPermissions.productsUpdate,
     ),
     RouteAccessRule(
@@ -417,11 +417,11 @@ class InventoryModule extends AppModule {
 
               name: 'inventoryProductsEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
+                final id = AppRouteParamParser.tryParseString(
                   state.pathParameters['id'],
                 );
-                if (id == null) {
-                  return const ProductFormPage(productId: -1);
+                if (id == null || id.isEmpty) {
+                  return const ProductFormPage(productId: '');
                 }
                 return ProductFormPage(productId: id);
               },

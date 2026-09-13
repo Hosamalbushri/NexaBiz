@@ -31,7 +31,7 @@ class GetSaleById {
 
   final SaleRepository _repository;
 
-  Future<Sale?> call(int id) => _repository.getById(id);
+  Future<Sale?> call(String id) => _repository.getById(id);
 }
 
 class CreateSale {
@@ -152,7 +152,7 @@ class UpdateSale {
 
   bool _isExecuting = false;
 
-  Future<Sale> call(int id, SaleDraft draft) async {
+  Future<Sale> call(String id, SaleDraft draft) async {
     if (_isExecuting) {
       throw const SaleException(SaleException.concurrentOperationBlocked);
     }
@@ -238,7 +238,7 @@ class ConfirmSale {
 
   bool _isExecuting = false;
 
-  Future<Sale> call(int id) async {
+  Future<Sale> call(String id) async {
     if (_isExecuting) {
       throw const SaleException(SaleException.concurrentOperationBlocked);
     }
@@ -349,7 +349,7 @@ class CancelSale {
   final SaleLedgerPostingPort _ledgerPosting;
   final SaleWorkflowService _workflow;
 
-  Future<void> call(int id) async {
+  Future<void> call(String id) async {
     _guard.requireAny(SalesPermissions.cancel);
     final sale = await _repository.getById(id);
     if (sale == null) {
@@ -384,7 +384,7 @@ class CompleteSale {
   // ignore: unused_field
   final SaleRepository _repository;
 
-  Future<Sale> call(int id) async {
+  Future<Sale> call(String id) async {
     throw const SaleException(SaleException.invalidStatusTransition);
   }
 }
@@ -395,7 +395,7 @@ class DuplicateSale {
   final SaleRepository _repository;
   final CreateSale _createSale;
 
-  Future<Sale> call(int id) async {
+  Future<Sale> call(String id) async {
     final sale = await _repository.getById(id);
     if (sale == null) {
       throw const SaleException(SaleException.notFound);
@@ -445,5 +445,5 @@ class DeleteSale {
 
   final SaleRepository _repository;
 
-  Future<void> call(int id) => _repository.softDelete(id);
+  Future<void> call(String id) => _repository.softDelete(id);
 }

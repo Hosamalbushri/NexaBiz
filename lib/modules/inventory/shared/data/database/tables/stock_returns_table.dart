@@ -1,14 +1,17 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 @DataClassName('StockReturnRow')
 class StockReturns extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get uuid => text().unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
   TextColumn get returnNumber => text()();
   TextColumn get returnType => text()(); // 'purchase_return' or 'sales_return'
-  TextColumn get originalMovementUuid => text().nullable()();
+  TextColumn get originalDocumentType => text().nullable()(); // 'SALE' or 'PURCHASE'
+  TextColumn get originalDocumentId => text().nullable()(); // UUID v7 of original invoice
   TextColumn get partyName => text().nullable()();
   TextColumn get warehouse => text().nullable()();
+  TextColumn get warehouseId => text().nullable()();
   TextColumn get notes => text().nullable()();
   IntColumn get returnDate => integer()();
   IntColumn get createdAt => integer()();
@@ -25,4 +28,13 @@ class StockReturns extends Table {
   IntColumn get postedAt => integer().nullable()();
 
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, returnNumber},
+      ];
 }

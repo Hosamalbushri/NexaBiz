@@ -446,7 +446,7 @@ class _AppAccountSearchPickerState
                     const SizedBox(height: AppSpacing.xs + 2),
                 itemBuilder: (context, index) {
                   final account = filteredAccounts[index];
-                  final isSelected = account.uuid == selectedUuid;
+                  final isSelected = account.id == selectedUuid;
 
                   return _AccountResultCard(
                         account: account,

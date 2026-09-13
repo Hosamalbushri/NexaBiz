@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Purchases header documents.
 @DataClassName('PurchaseRow')
 class Purchases extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   TextColumn get purchaseNumber => text().withLength(min: 1, max: 64)();
 
@@ -15,23 +15,23 @@ class Purchases extends Table {
   /// [PurchaseSettlementType.name] — cash | credit
   TextColumn get settlementType => text().withDefault(const Constant('cash'))();
 
-  /// VoucherBook.uuid used for numbering.
+  /// VoucherBook.id used for numbering.
   TextColumn get voucherBookId => text().nullable()();
 
-  /// Warehouse.uuid target warehouse context for inventory receipt.
+  /// Warehouse.id target warehouse context for inventory receipt.
   TextColumn get warehouseId => text().nullable()();
 
-  /// Supplier.uuid — opaque FK.
+  /// Supplier.id — opaque FK.
   TextColumn get supplierId => text().nullable()();
 
   TextColumn get supplierCode => text().nullable()();
 
   TextColumn get supplierName => text().nullable()();
 
-  /// Supplier CoA Account.uuid for credit settlement.
+  /// Supplier CoA Account.id for credit settlement.
   TextColumn get supplierAccountId => text().nullable()();
 
-  /// Cash/treasury CoA Account.uuid for cash settlement.
+  /// Cash/treasury CoA Account.id for cash settlement.
   TextColumn get cashAccountId => text().nullable()();
 
   TextColumn get currencyCode => text()();
@@ -92,4 +92,13 @@ class Purchases extends Table {
   TextColumn get companyId => text().nullable()();
 
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, purchaseNumber},
+      ];
 }

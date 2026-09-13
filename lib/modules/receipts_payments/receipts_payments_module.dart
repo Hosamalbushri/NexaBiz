@@ -88,15 +88,15 @@ class ReceiptsPaymentsModule extends AppModule {
       anyOf: ReceiptsPaymentsPermissions.exchangesCreate,
     ),
     RouteAccessRule(
-      pathRegex: RegExp(r'^/receipts-payments/transfers/\d+/edit$'),
+      pathRegex: RegExp(r'^/receipts-payments/transfers/[^/]+/edit$'),
       anyOf: ReceiptsPaymentsPermissions.transfersUpdate,
     ),
     RouteAccessRule(
-      pathRegex: RegExp(r'^/receipts-payments/exchanges/\d+/edit$'),
+      pathRegex: RegExp(r'^/receipts-payments/exchanges/[^/]+/edit$'),
       anyOf: ReceiptsPaymentsPermissions.exchangesUpdate,
     ),
     RouteAccessRule(
-      pathRegex: RegExp(r'^/receipts-payments/\d+/edit$'),
+      pathRegex: RegExp(r'^/receipts-payments/[^/]+/edit$'),
       anyOf: [
         ...ReceiptsPaymentsPermissions.receiptsUpdate,
         ...ReceiptsPaymentsPermissions.paymentsUpdate,
@@ -236,10 +236,8 @@ class ReceiptsPaymentsModule extends AppModule {
               path: ':id/edit',
               name: 'transfersEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
-                  state.pathParameters['id'],
-                );
-                return CashBoxTransferFormPage(transactionId: id ?? -1);
+                final id = state.pathParameters['id'];
+                return CashBoxTransferFormPage(transactionId: id);
               },
             ),
           ],
@@ -266,10 +264,8 @@ class ReceiptsPaymentsModule extends AppModule {
               path: ':id/edit',
               name: 'exchangesEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
-                  state.pathParameters['id'],
-                );
-                return CurrencyExchangeFormPage(transactionId: id ?? -1);
+                final id = state.pathParameters['id'];
+                return CurrencyExchangeFormPage(transactionId: id);
               },
             ),
           ],
@@ -283,20 +279,16 @@ class ReceiptsPaymentsModule extends AppModule {
           path: ':id',
           name: 'receiptsPaymentsDetails',
           builder: (context, state) {
-            final id = AppRouteParamParser.tryParseInt(
-              state.pathParameters['id'],
-            );
-            return FinancialTransactionDetailsPage(transactionId: id ?? -1);
+            final id = state.pathParameters['id'];
+            return FinancialTransactionDetailsPage(transactionId: id ?? '');
           },
           routes: [
             GoRoute(
               path: 'edit',
               name: 'receiptsPaymentsEdit',
               builder: (context, state) {
-                final id = AppRouteParamParser.tryParseInt(
-                  state.pathParameters['id'],
-                );
-                return FinancialTransactionFormPage(transactionId: id ?? -1);
+                final id = state.pathParameters['id'];
+                return FinancialTransactionFormPage(transactionId: id);
               },
             ),
           ],

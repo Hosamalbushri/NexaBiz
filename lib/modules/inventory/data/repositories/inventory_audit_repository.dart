@@ -24,7 +24,7 @@ class InventoryAuditRepository implements AuditRepositoryPort {
         .into(_db.inventoryAuditTrail)
         .insert(
           InventoryAuditTrailCompanion(
-            uuid: Value(entry.id),
+            id: Value(entry.id),
             documentId: Value(entry.entityId),
             documentType: Value(entry.entityType),
             eventType: Value(entry.action),
@@ -104,7 +104,7 @@ class InventoryAuditRepository implements AuditRepositoryPort {
     }
 
     return AuditEntry(
-      id: row.uuid,
+      id: row.id,
       companyId: row.companyId,
       userId: row.userId ?? '',
       action: row.eventType,

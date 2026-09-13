@@ -33,7 +33,7 @@ class InventoryRoutes {
   static const String productsBarcode = '/inventory/products/barcode';
   static const String productsSettings = '/inventory/products/settings';
 
-  static String productsEdit(int id) => '/inventory/products/$id/edit';
+  static String productsEdit(String id) => '/inventory/products/$id/edit';
 
   /// Stock Movements service (receipts & issues)
   static const String stockMovements = '/inventory/stock-movements';
@@ -68,7 +68,7 @@ class InventoryRoutes {
   static void pushProductsNew(BuildContext context) =>
       context.push(productsNew);
 
-  static void pushProductsEdit(BuildContext context, int id) =>
+  static void pushProductsEdit(BuildContext context, String id) =>
       context.push(productsEdit(id));
 
   static void pushProductsImport(BuildContext context) =>

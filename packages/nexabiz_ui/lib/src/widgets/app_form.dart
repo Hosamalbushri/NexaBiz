@@ -61,9 +61,16 @@ class AppFormSection extends StatelessWidget {
         color: colorScheme.card,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: colorScheme.border.withValues(alpha: 0.5),
+          color: colorScheme.border.withValues(alpha: 0.6),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.foreground.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: padding,
       child: Column(
@@ -74,22 +81,30 @@ class AppFormSection extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 4,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
                 if (icon != null) ...[
-                  Icon(
-                    icon,
-                    size: 18,
-                    color: colorScheme.primary,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 18,
+                      color: colorScheme.primary,
+                    ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
+                  const SizedBox(width: AppSpacing.sm),
+                ] else ...[
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                 ],
                 Expanded(
                   child: Column(

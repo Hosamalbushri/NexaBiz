@@ -78,7 +78,7 @@ class FinancialReferentialIntegrityValidator {
     final layer =
         await (_invDb.select(_invDb.inventoryCostLayers)..where(
               (t) =>
-                  t.uuid.equals(layerUuid) &
+                  t.id.equals(layerUuid) &
                   (compId != null
                       ? t.companyId.equals(compId)
                       : const Constant(true)),
@@ -102,7 +102,7 @@ class FinancialReferentialIntegrityValidator {
     final entry =
         await (accDb.select(accDb.journalEntries)..where(
               (t) =>
-                  t.uuid.equals(entryUuid) &
+                  t.id.equals(entryUuid) &
                   (compId != null
                       ? t.companyId.equals(compId)
                       : const Constant(true)),
@@ -148,7 +148,7 @@ class FinancialReferentialIntegrityValidator {
     final entry =
         await (accDb.select(accDb.journalEntries)..where(
               (t) =>
-                  t.uuid.equals(entryUuid) &
+                  t.id.equals(entryUuid) &
                   (compId != null
                       ? t.companyId.equals(compId)
                       : const Constant(true)),

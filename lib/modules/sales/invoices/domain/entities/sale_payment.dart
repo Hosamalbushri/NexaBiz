@@ -4,8 +4,7 @@ import 'payment_method.dart';
 class SalePayment {
   const SalePayment({
     required this.id,
-    required this.uuid,
-    required this.saleUuid,
+    required this.saleId,
     required this.amount,
     required this.method,
     required this.paidAt,
@@ -14,9 +13,8 @@ class SalePayment {
     this.externalId,
   });
 
-  final int id;
-  final String uuid;
-  final String saleUuid;
+  final String id;
+  final String saleId;
   final double amount;
   final PaymentMethod method;
   final DateTime paidAt;
@@ -24,10 +22,12 @@ class SalePayment {
   final String? notes;
   final String? externalId;
 
+  String get uuid => id;
+  String get saleUuid => saleId;
+
   SalePayment copyWith({
-    int? id,
-    String? uuid,
-    String? saleUuid,
+    String? id,
+    String? saleId,
     double? amount,
     PaymentMethod? method,
     DateTime? paidAt,
@@ -39,8 +39,7 @@ class SalePayment {
   }) {
     return SalePayment(
       id: id ?? this.id,
-      uuid: uuid ?? this.uuid,
-      saleUuid: saleUuid ?? this.saleUuid,
+      saleId: saleId ?? this.saleId,
       amount: amount ?? this.amount,
       method: method ?? this.method,
       paidAt: paidAt ?? this.paidAt,

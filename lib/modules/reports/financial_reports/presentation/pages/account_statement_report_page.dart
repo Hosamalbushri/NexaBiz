@@ -345,7 +345,7 @@ class _AccountStatementReportPageState
                 if (account != null) {
                   setState(() {
                     _account = AccountStatementAccountRef(
-                      accountUuid: account.uuid,
+                      accountUuid: account.id,
                       accountCode: account.accountCode,
                       name: account.name,
                     );

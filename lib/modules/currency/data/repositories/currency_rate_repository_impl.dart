@@ -44,7 +44,6 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
   CurrencyRate _map(CurrencyRateRow row) {
     return CurrencyRate(
       id: row.id,
-      uuid: row.uuid,
       currencyCode: row.currencyCode,
       rateToBase: row.rateToBase,
       updatedAt: DateTime.fromMillisecondsSinceEpoch(
@@ -99,7 +98,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     }
     final row = await (_db.select(
       _db.currencyRates,
-    )..where((t) => t.uuid.equals(trimmed) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -228,11 +227,11 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
-        entityId: rate.uuid,
+        entityId: rate.id,
         type: type,
         baseVersion: rate.version,
         payload: {
-          'uuid': rate.uuid,
+          'id': rate.id,
           'currencyCode': rate.currencyCode,
           'rateToBase': rate.rateToBase,
           'notes': rate.notes,
@@ -263,12 +262,12 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     final existing = await getByCode(code);
 
     if (existing == null) {
-      final uuid = generateUuidV4();
-      final id = await _db
+      final id = generateUuidV7();
+      await _db
           .into(_db.currencyRates)
           .insert(
             CurrencyRatesCompanion.insert(
-              uuid: uuid,
+              id: Value(id),
               currencyCode: code,
               rateToBase: draft.rateToBase,
               updatedAt: nowMs,
@@ -332,14 +331,14 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
   }
 
   Future<void> markSynced({
-    required String uuid,
+    required String id,
     required int remoteVersion,
     DateTime? syncedAt,
   }) async {
     final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
     await (_db.update(
       _db.currencyRates,
-    )..where((t) => t.uuid.equals(uuid))).write(
+    )..where((t) => t.id.equals(id))).write(
       CurrencyRatesCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(stamp),
@@ -348,19 +347,19 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     );
   }
 
-  Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.currencyRates)..where((t) => t.uuid.equals(uuid)))
+  Future<void> markConflict(String id) async {
+    await (_db.update(_db.currencyRates)..where((t) => t.id.equals(id)))
         .write(const CurrencyRatesCompanion(syncStatus: Value('conflict')));
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid']?.toString();
-    if (uuid == null || uuid.isEmpty) {
+    final id = ((payload['id'] ?? payload['uuid']) as String?)?.trim();
+    if (id == null || id.isEmpty) {
       return;
     }
 
     final deleted = payload['deletedAt'] != null || payload['deleted'] == true;
-    final existingByUuid = await getByUuid(uuid);
+    final existingById = await getByUuid(id);
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
     final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
     final version = (payload['version'] as num?)?.toInt() ?? 1;
@@ -371,45 +370,45 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
 
     final targetCompanyId = payload['companyId']?.toString() ?? _currentCompanyId;
 
-    if (existingByUuid != null &&
-        (existingByUuid.syncStatus.needsUpload ||
-            existingByUuid.syncStatus == SyncStatus.conflict ||
-            existingByUuid.syncStatus == SyncStatus.syncing)) {
-      if (version > existingByUuid.version) {
-        await markConflict(uuid);
+    if (existingById != null &&
+        (existingById.syncStatus.needsUpload ||
+            existingById.syncStatus == SyncStatus.conflict ||
+            existingById.syncStatus == SyncStatus.syncing)) {
+      if (version > existingById.version) {
+        await markConflict(id);
       }
       return;
     }
 
     // Stale remote: incoming version <= local version → skip (idempotent pull).
-    if (existingByUuid != null && version <= existingByUuid.version) {
+    if (existingById != null && version <= existingById.version) {
       return;
     }
 
     if (deleted) {
       await (_db.delete(
         _db.currencyRates,
-      )..where((t) => t.uuid.equals(uuid))).go();
+      )..where((t) => t.id.equals(id))).go();
       await (_db.delete(
         _db.currencyRateHistory,
       )..where((t) => t.currencyCode.equals(code) & t.companyId.equals(targetCompanyId))).go();
-      await _syncQueue?.removeForEntity(entityType: entityType, entityId: uuid);
+      await _syncQueue?.removeForEntity(entityType: entityType, entityId: id);
       return;
     }
 
     final rateToBase = (payload['rateToBase'] as num?)?.toDouble() ?? 0;
     final notes = payload['notes']?.toString();
 
-    // Same currencyCode, different UUID → adopt remote identity.
-    if (existingByUuid == null) {
+    // Same currencyCode, different ID → adopt remote identity.
+    if (existingById == null) {
       final byCode = await getByCode(code);
-      if (byCode != null && byCode.uuid != uuid) {
-        final oldUuid = byCode.uuid;
+      if (byCode != null && byCode.id != id) {
+        final oldId = byCode.id;
         await (_db.update(
           _db.currencyRates,
         )..where((t) => t.id.equals(byCode.id))).write(
           CurrencyRatesCompanion(
-            uuid: Value(uuid),
+            id: Value(id),
             rateToBase: Value(rateToBase > 0 ? rateToBase : byCode.rateToBase),
             updatedAt: Value(updatedAt),
             notes: Value(notes == null || notes.isEmpty ? byCode.notes : notes),
@@ -422,22 +421,22 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
         await _applyHistoryPayload(code, payload['history'], targetCompanyId);
         await _syncQueue?.removeForEntity(
           entityType: entityType,
-          entityId: oldUuid,
+          entityId: oldId,
         );
         await _syncQueue?.removeForEntity(
           entityType: entityType,
-          entityId: uuid,
+          entityId: id,
         );
         return;
       }
     }
 
-    if (existingByUuid == null) {
+    if (existingById == null) {
       await _db
           .into(_db.currencyRates)
           .insert(
             CurrencyRatesCompanion.insert(
-              uuid: uuid,
+              id: Value(id),
               currencyCode: code,
               rateToBase: rateToBase > 0 ? rateToBase : 1,
               updatedAt: updatedAt,
@@ -454,11 +453,11 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
 
     await (_db.update(
       _db.currencyRates,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       CurrencyRatesCompanion(
         currencyCode: Value(code),
         rateToBase: Value(
-          rateToBase > 0 ? rateToBase : existingByUuid.rateToBase,
+          rateToBase > 0 ? rateToBase : existingById.rateToBase,
         ),
         updatedAt: Value(updatedAt),
         notes: Value(notes == null || notes.isEmpty ? null : notes),

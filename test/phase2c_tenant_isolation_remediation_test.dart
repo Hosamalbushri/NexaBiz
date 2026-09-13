@@ -7,14 +7,14 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/stoc
 import 'package:stock_count/modules/inventory/shared/data/sync/inventory_sync_handlers.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:drift/native.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 void main() {
   group('Phase 2C — Tenant Isolation & Scope Enforcement Behavioral Tests', () {
-    late InventoryDatabase db;
+    late NexabizDatabase db;
 
     setUp(() {
-      db = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.memory();
     });
 
     tearDown(() async {

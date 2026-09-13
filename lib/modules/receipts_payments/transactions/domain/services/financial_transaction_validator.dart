@@ -222,13 +222,11 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
 ) {
   final cashCurrency = draft.currencyCode.trim().toUpperCase();
   final baseCurrency = draft.baseCurrencyCode.trim().toUpperCase();
-  final cashRate = cashCurrency == baseCurrency || baseCurrency.isEmpty
-      ? 1.0
-      : (draft.exchangeRate > 0 &&
-                !draft.exchangeRate.isNaN &&
-                !draft.exchangeRate.isInfinite
-            ? draft.exchangeRate
-            : 1.0);
+  final cashRate = ExchangeRateValidator.validate(
+    currencyCode: cashCurrency,
+    baseCurrencyCode: baseCurrency,
+    exchangeRate: draft.exchangeRate,
+  );
   final rawLines = draft.resolvedLines;
   final lines = <FinancialTransactionLine>[];
   for (var i = 0; i < rawLines.length; i++) {
@@ -238,13 +236,11 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
     final lineCurrency = line.currencyCode.trim().isEmpty
         ? cashCurrency
         : line.currencyCode.trim().toUpperCase();
-    final lineRate = lineCurrency == baseCurrency || baseCurrency.isEmpty
-        ? 1.0
-        : (line.exchangeRate > 0 &&
-                  !line.exchangeRate.isNaN &&
-                  !line.exchangeRate.isInfinite
-              ? line.exchangeRate
-              : cashRate);
+    final lineRate = ExchangeRateValidator.validate(
+      currencyCode: lineCurrency,
+      baseCurrencyCode: baseCurrency,
+      exchangeRate: line.exchangeRate > 0 ? line.exchangeRate : cashRate,
+    );
     lines.add(
       FinancialTransactionLine(
         accountId: accountId,

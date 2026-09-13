@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import '../../domain/entities/financial_transaction.dart';
 import '../../domain/entities/financial_transaction_line.dart';
 import '../../domain/entities/rp_payment_method.dart';
@@ -114,7 +114,7 @@ class TransactionComposerState {
 
   final List<ComposerEntryLine> lines;
 
-  final int? editingTransactionId;
+  final String? editingTransactionId;
   final String? previewTransactionNumber;
 
   double get baseEquivalent => RpMoney.round(amount * exchangeRate);
@@ -127,7 +127,11 @@ class TransactionComposerState {
     var sum = 0.0;
     for (final line in lines) {
       if (line.account == null) continue;
-      final rate = line.exchangeRate <= 0 ? 1.0 : line.exchangeRate;
+      final rate = ExchangeRateValidator.validate(
+        currencyCode: line.currencyCode,
+        baseCurrencyCode: baseCurrencyCode,
+        exchangeRate: line.exchangeRate,
+      );
       sum += line.amount * rate;
     }
     return RpMoney.round(sum);
@@ -186,7 +190,7 @@ class TransactionComposerState {
     String? baseCurrencyCode,
     double? exchangeRate,
     List<ComposerEntryLine>? lines,
-    int? editingTransactionId,
+    String? editingTransactionId,
     bool clearEditingTransactionId = false,
     String? previewTransactionNumber,
     bool clearPreviewTransactionNumber = false,
@@ -234,7 +238,7 @@ class TransactionComposerState {
           accountName: account.name,
           amount: line.amount,
           currencyCode: line.currencyCode,
-          exchangeRate: line.exchangeRate <= 0 ? 1 : line.exchangeRate,
+          exchangeRate: line.exchangeRate,
           description: narrative.isEmpty ? null : narrative,
           lineOrder: i,
         ),

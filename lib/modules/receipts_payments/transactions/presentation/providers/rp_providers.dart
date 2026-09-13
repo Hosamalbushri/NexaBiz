@@ -15,6 +15,8 @@ import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_ledger_posting_port.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_treasury_account_port.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_voucher_book_port.dart';
+import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
+import 'package:stock_count/modules/receipts_payments/domain/usecases/treasury_usecases.dart';
 import '../../domain/usecases/financial_transaction_usecases.dart';
 
 import 'package:stock_count/core/database/canonical_database_provider.dart';
@@ -22,6 +24,15 @@ import 'package:stock_count/core/database/nexabiz_database.dart';
 
 final receiptsPaymentsDatabaseProvider = Provider<NexabizDatabase>((ref) {
   return ref.watch(nexabizDatabaseProvider);
+});
+
+final postFinancialTransactionUseCaseProvider =
+    Provider<PostFinancialTransactionUseCase>((ref) {
+  return PostFinancialTransactionUseCase(
+    repository: ref.watch(financialTransactionRepositoryProvider),
+    journalPostingService: ref.watch(journalPostingServiceProvider),
+    orchestrator: ref.watch(canonicalTransactionOrchestratorProvider),
+  );
 });
 
 final financialTransactionRepositoryImplProvider =
@@ -129,7 +140,7 @@ final cancelFinancialTransactionProvider = Provider<CancelFinancialTransaction>(
 );
 
 final financialTransactionByIdProvider = FutureProvider.autoDispose
-    .family<FinancialTransaction?, int>((ref, id) {
+    .family<FinancialTransaction?, String>((ref, id) {
       return ref.watch(getFinancialTransactionByIdProvider)(id);
     });
 

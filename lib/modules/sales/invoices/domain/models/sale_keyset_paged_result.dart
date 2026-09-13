@@ -6,7 +6,7 @@ class SaleCursor {
   const SaleCursor({required this.saleDateMs, required this.id});
 
   final int saleDateMs;
-  final int id;
+  final String id;
 
   @override
   bool operator ==(Object other) =>

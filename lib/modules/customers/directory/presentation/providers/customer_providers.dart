@@ -215,7 +215,7 @@ final filteredCustomersProvider = Provider<AsyncValue<List<Customer>>>((ref) {
   });
 });
 
-final customerByIdProvider = FutureProvider.autoDispose.family<Customer?, int>((
+final customerByIdProvider = FutureProvider.autoDispose.family<Customer?, String>((
   ref,
   id,
 ) async {

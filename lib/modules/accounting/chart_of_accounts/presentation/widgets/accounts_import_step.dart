@@ -49,8 +49,8 @@ class AccountsImportStep extends ConsumerWidget {
               // ignore: deprecated_member_use
               value:
                   state.parent != null &&
-                      parents.any((p) => p.uuid == state.parent!.uuid)
-                  ? parents.firstWhere((p) => p.uuid == state.parent!.uuid)
+                      parents.any((p) => p.id == state.parent!.id)
+                  ? parents.firstWhere((p) => p.id == state.parent!.id)
                   : null,
               isExpanded: true,
               decoration: InputDecoration(

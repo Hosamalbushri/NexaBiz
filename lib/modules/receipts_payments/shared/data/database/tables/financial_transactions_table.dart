@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 
 /// Standalone receipt/payment documents.
 @DataClassName('FinancialTransactionRow')
 class FinancialTransactions extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
+  /// Canonical UUID v7 primary key identity.
+  TextColumn get id => text().withLength(min: 36, max: 36).clientDefault(generateUuidV7)();
 
   TextColumn get transactionNumber => text().withLength(min: 1, max: 64)();
 
@@ -91,4 +91,13 @@ class FinancialTransactions extends Table {
   TextColumn get companyId => text().nullable()();
 
   IntColumn get deletedAt => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, id},
+        {companyId, transactionNumber},
+      ];
 }

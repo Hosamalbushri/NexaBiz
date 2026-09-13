@@ -9,7 +9,6 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/reposito
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 import '../../domain/repositories/journal_repository.dart';
 import 'package:stock_count/core/domain/ports/period_validator_port.dart';
-import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
 
 import '../../domain/services/journal_balance_validator.dart';
 import '../../domain/services/journal_base_amount_resolver.dart';
@@ -18,7 +17,7 @@ import 'package:stock_count/core/database/nexabiz_database.dart';
 
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
-/// Source type used by reversing journals (`sourceId` = original entry UUID).
+/// Source type used by reversing journals (`sourceId` = original entry ID).
 const kJournalReverseSourceType = 'journal_reverse';
 
 class JournalRepositoryImpl implements JournalRepository {
@@ -62,22 +61,24 @@ class JournalRepositoryImpl implements JournalRepository {
   Future<JournalEntry> post(JournalEntryDraft draft) async {
     final sourceType = draft.sourceType?.trim();
     final sourceId = draft.sourceId?.trim();
-    final replaceUuid = draft.uuid?.trim();
+    final replaceId = draft.entryId?.trim();
     JournalEntry? existing;
-    if (replaceUuid != null && replaceUuid.isNotEmpty) {
+    if (replaceId != null && replaceId.isNotEmpty) {
       final unscopedRow = await (_db.select(
         _db.journalEntries,
-      )..where((t) => t.uuid.equals(replaceUuid))).getSingleOrNull();
+      )..where((t) => t.id.equals(replaceId))).getSingleOrNull();
       if (unscopedRow != null) {
         if (unscopedRow.companyId != _currentCompanyId) {
           throw const JournalException(JournalException.notFound);
         }
-        existing = _mapEntry(unscopedRow, await _linesFor(unscopedRow.uuid));
+        existing = _mapEntry(unscopedRow, await _linesFor(unscopedRow.id));
         if (existing.isPosted) {
           throw const JournalException(JournalException.postedImmutable);
         }
       }
-    } else if (sourceType != null &&
+    }
+    if (existing == null &&
+        sourceType != null &&
         sourceType.isNotEmpty &&
         sourceId != null &&
         sourceId.isNotEmpty) {
@@ -110,20 +111,19 @@ class JournalRepositoryImpl implements JournalRepository {
               _resolveLineWithoutRates(line, baseCode),
           ];
 
-    // Authoritative Single Validation Mechanism for Journal Balancing
     JournalBalanceValidator.validateAndAssert(
       lines: lines,
       allowUnbalancedMultiCurrency: draft.allowUnbalancedMultiCurrency,
     );
 
-    final byUuid = {
+    final byId = {
       for (final account in await _accounts.getByUuids(
-        lines.map((line) => line.accountUuid),
+        lines.map((line) => line.accountId),
       ))
-        account.uuid: account,
+        account.id: account,
     };
     for (final line in lines) {
-      final account = byUuid[line.accountUuid];
+      final account = byId[line.accountId];
       if (account == null || account.isDeleted) {
         throw const JournalException(JournalException.accountNotFound);
       }
@@ -136,7 +136,7 @@ class JournalRepositoryImpl implements JournalRepository {
     }
 
     final now = DateTime.now().toUtc();
-    final entryUuid = existing?.uuid ?? replaceUuid ?? generateUuidV4();
+    final entryId = existing?.id ?? replaceId ?? generateUuidV7();
     final entryDateMs = BusinessDate.utcDayMs(draft.entryDate);
     final createdAtMs =
         existing?.createdAt.toUtc().millisecondsSinceEpoch ??
@@ -151,7 +151,7 @@ class JournalRepositoryImpl implements JournalRepository {
       await _db.transaction(() async {
         final currentDbRow =
             await (_db.select(_db.journalEntries)
-                  ..where((t) => t.uuid.equals(entryUuid) & _tenantScoped(t)))
+                  ..where((t) => t.id.equals(entryId) & _tenantScoped(t)))
                 .getSingleOrNull();
 
         if (currentDbRow != null &&
@@ -163,7 +163,7 @@ class JournalRepositoryImpl implements JournalRepository {
         if (existing != null || currentDbRow != null) {
           await (_db.update(
             _db.journalEntries,
-          )..where((t) => t.uuid.equals(entryUuid) & _tenantScoped(t))).write(
+          )..where((t) => t.id.equals(entryId) & _tenantScoped(t))).write(
             JournalEntriesCompanion(
               entryDate: Value(entryDateMs),
               voucherNumber: Value(draft.voucherNumber.trim()),
@@ -181,13 +181,13 @@ class JournalRepositoryImpl implements JournalRepository {
           );
           await (_db.delete(
             _db.journalLines,
-          )..where((t) => t.entryUuid.equals(entryUuid))).go();
+          )..where((t) => t.entryId.equals(entryId))).go();
         } else {
           await _db
               .into(_db.journalEntries)
               .insert(
                 JournalEntriesCompanion.insert(
-                  uuid: entryUuid,
+                  id: Value(entryId),
                   entryDate: entryDateMs,
                   voucherNumber: draft.voucherNumber.trim(),
                   voucherType: draft.voucherType.trim(),
@@ -207,16 +207,18 @@ class JournalRepositoryImpl implements JournalRepository {
 
         var order = 0;
         for (final line in lines) {
-          final lineUuid = line.uuid?.trim();
+          final lineId = line.uuid?.trim();
           await _db
               .into(_db.journalLines)
               .insert(
                 JournalLinesCompanion.insert(
-                  uuid: (lineUuid != null && lineUuid.isNotEmpty)
-                      ? lineUuid
-                      : generateUuidV4(),
-                  entryUuid: entryUuid,
-                  accountUuid: line.accountUuid,
+                  id: Value(
+                    (lineId != null && lineId.isNotEmpty)
+                        ? lineId
+                        : generateUuidV7(),
+                  ),
+                  entryId: entryId,
+                  accountId: line.accountId,
                   debit: Value(line.debit),
                   credit: Value(line.credit),
                   exchangeRateToBase: Value(line.exchangeRateToBase ?? 1),
@@ -249,16 +251,15 @@ class JournalRepositoryImpl implements JournalRepository {
       rethrow;
     }
 
-    final posted = await getByUuid(entryUuid);
+    final posted = await getByUuid(entryId);
     if (posted == null) {
-      // Fallback when soft-deleted mid-flight (shouldn't happen).
       final rows = await (_db.select(
         _db.journalEntries,
-      )..where((t) => t.uuid.equals(entryUuid) & _tenantScoped(t))).get();
+      )..where((t) => t.id.equals(entryId) & _tenantScoped(t))).get();
       if (rows.isEmpty) {
         throw const JournalException(JournalException.notFound);
       }
-      final fallback = _mapEntry(rows.single, await _linesFor(entryUuid));
+      final fallback = _mapEntry(rows.single, await _linesFor(entryId));
       await _enqueue(fallback, opType);
       return fallback;
     }
@@ -267,18 +268,18 @@ class JournalRepositoryImpl implements JournalRepository {
   }
 
   @override
-  Future<JournalEntry?> getByUuid(String uuid) async {
-    final trimmed = uuid.trim();
+  Future<JournalEntry?> getByUuid(String id) async {
+    final trimmed = id.trim();
     if (trimmed.isEmpty) {
       return null;
     }
     final row = await (_db.select(
       _db.journalEntries,
-    )..where((t) => t.uuid.equals(trimmed) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(trimmed) & _scoped(t))).getSingleOrNull();
     if (row == null) {
       return null;
     }
-    return _mapEntry(row, await _linesFor(row.uuid));
+    return _mapEntry(row, await _linesFor(row.id));
   }
 
   @override
@@ -298,23 +299,21 @@ class JournalRepositoryImpl implements JournalRepository {
             ))
             .get();
     for (final row in rows) {
-      // Posted originals that already have an active reverse are not "active"
-      // for source replacement (sale re-post after void).
       if (sourceType.trim() != reverseSourceType &&
-          await _hasActiveReverse(row.uuid)) {
+          await _hasActiveReverse(row.id)) {
         continue;
       }
-      return _mapEntry(row, await _linesFor(row.uuid));
+      return _mapEntry(row, await _linesFor(row.id));
     }
     return null;
   }
 
-  Future<bool> _hasActiveReverse(String entryUuid) async {
+  Future<bool> _hasActiveReverse(String entryId) async {
     final rows =
         await (_db.select(_db.journalEntries)..where(
               (t) =>
                   t.sourceType.equals(reverseSourceType) &
-                  t.sourceId.equals(entryUuid) &
+                  t.sourceId.equals(entryId) &
                   _scoped(t),
             ))
             .get();
@@ -337,12 +336,12 @@ class JournalRepositoryImpl implements JournalRepository {
       throw const JournalException(JournalException.postedImmutable);
     }
     await _periodValidator.assertEntryAllowed(existing.entryDate);
-    await _tombstoneUuid(existing.uuid, existing.version);
+    await _tombstoneUuid(existing.id, existing.version);
   }
 
   @override
-  Future<void> softDeleteByUuid(String uuid) async {
-    final trimmed = uuid.trim();
+  Future<void> softDeleteByUuid(String id) async {
+    final trimmed = id.trim();
     if (trimmed.isEmpty) {
       return;
     }
@@ -358,8 +357,8 @@ class JournalRepositoryImpl implements JournalRepository {
   }
 
   @override
-  Future<void> softDeletePostedAfterReverse(String uuid) async {
-    final trimmed = uuid.trim();
+  Future<void> softDeletePostedAfterReverse(String id) async {
+    final trimmed = id.trim();
     if (trimmed.isEmpty) {
       return;
     }
@@ -368,18 +367,17 @@ class JournalRepositoryImpl implements JournalRepository {
       return;
     }
     if (existing.isPosted) {
-      // Posted journal entries are immutable audit history and MUST NOT be soft-deleted.
       return;
     }
     await _tombstoneUuid(trimmed, existing.version);
   }
 
-  Future<void> _tombstoneUuid(String uuid, int version) async {
+  Future<void> _tombstoneUuid(String id, int version) async {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     final nextVersion = version + 1;
     await (_db.update(
       _db.journalEntries,
-    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+    )..where((t) => t.id.equals(id) & _scoped(t))).write(
       JournalEntriesCompanion(
         deletedAt: Value(now),
         updatedAt: Value(now),
@@ -388,7 +386,7 @@ class JournalRepositoryImpl implements JournalRepository {
         companyId: Value(_currentCompanyId),
       ),
     );
-    final tombstone = await _getByUuidIncludingDeleted(uuid);
+    final tombstone = await _getByUuidIncludingDeleted(id);
     if (tombstone != null) {
       await _enqueue(tombstone, SyncOperationType.delete);
     }
@@ -401,7 +399,7 @@ class JournalRepositoryImpl implements JournalRepository {
     bool? isPosted,
     String? query,
     int? limit,
-    int? afterId,
+    String? afterId,
   }) async {
     final fromMs = fromDate == null ? null : BusinessDate.utcDayMs(fromDate);
     final toMs = toDate == null ? null : BusinessDate.utcDayMs(toDate);
@@ -412,7 +410,6 @@ class JournalRepositoryImpl implements JournalRepository {
     ];
     final sql = StringBuffer(
       'SELECT je.id AS id, '
-      'je.uuid AS uuid, '
       'je.entry_date AS entry_date, '
       'je.voucher_number AS voucher_number, '
       'je.voucher_type AS voucher_type, '
@@ -424,7 +421,7 @@ class JournalRepositoryImpl implements JournalRepository {
       'COALESCE(SUM(CASE WHEN jl.base_debit > 0 THEN jl.base_debit ELSE jl.debit END), 0.0) AS total_debit, '
       'COALESCE(SUM(CASE WHEN jl.base_credit > 0 THEN jl.base_credit ELSE jl.credit END), 0.0) AS total_credit '
       'FROM journal_entries je '
-      'LEFT JOIN journal_lines jl ON jl.entry_uuid = je.uuid '
+      'LEFT JOIN journal_lines jl ON jl.entry_id = je.id '
       'WHERE je.deleted_at IS NULL AND je.company_id = ? ',
     );
 
@@ -439,10 +436,6 @@ class JournalRepositoryImpl implements JournalRepository {
     if (isPosted != null) {
       sql.write('AND je.is_posted = ? ');
       variables.add(Variable.withBool(isPosted));
-    }
-    if (afterId != null) {
-      sql.write('AND je.id < ? ');
-      variables.add(Variable.withInt(afterId));
     }
     if (normalizedQuery.isNotEmpty) {
       sql.write(
@@ -477,8 +470,7 @@ class JournalRepositoryImpl implements JournalRepository {
     return [
       for (final row in rows)
         JournalEntryHeader(
-          id: row.read<int>('id'),
-          uuid: row.read<String>('uuid'),
+          id: row.read<String>('id'),
           entryDate: DateTime.fromMillisecondsSinceEpoch(
             row.read<int>('entry_date'),
             isUtc: true,
@@ -507,18 +499,16 @@ class JournalRepositoryImpl implements JournalRepository {
     AccountLedgerCursor? after,
   }) async {
     final fromMs = fromDate == null ? null : BusinessDate.utcDayMs(fromDate);
-    // Entry dates are stored as UTC midnight of the local calendar day, so
-    // inclusive toDate is the same day epoch (no 23:59 pad on a shifted day).
     final toMs = toDate == null ? null : BusinessDate.utcDayMs(toDate);
 
     final query =
         _db.select(_db.journalLines).join([
           innerJoin(
             _db.journalEntries,
-            _db.journalEntries.uuid.equalsExp(_db.journalLines.entryUuid),
+            _db.journalEntries.id.equalsExp(_db.journalLines.entryId),
           ),
         ])..where(
-          _db.journalLines.accountUuid.equals(accountUuid) &
+          _db.journalLines.accountId.equals(accountUuid) &
               _db.journalEntries.deletedAt.isNull() &
               _tenantScoped(_db.journalEntries),
         );
@@ -536,16 +526,6 @@ class JournalRepositoryImpl implements JournalRepository {
     }
     if (isPosted != null) {
       query.where(_db.journalEntries.isPosted.equals(isPosted));
-    }
-    if (after != null) {
-      // Keyset: (entry_date, sort_order, line.id) > cursor
-      query.where(
-        _db.journalEntries.entryDate.isBiggerThanValue(after.entryDateMs) |
-            (_db.journalEntries.entryDate.equals(after.entryDateMs) &
-                (_db.journalLines.sortOrder.isBiggerThanValue(after.sortOrder) |
-                    (_db.journalLines.sortOrder.equals(after.sortOrder) &
-                        _db.journalLines.id.isBiggerThanValue(after.lineId)))),
-      );
     }
 
     query.orderBy([
@@ -581,9 +561,9 @@ class JournalRepositoryImpl implements JournalRepository {
           credit: row.readTable(_db.journalLines).credit,
           currencyCode: row.readTable(_db.journalLines).currencyCode,
           isPosted: row.readTable(_db.journalEntries).isPosted,
-          accountUuid: row.readTable(_db.journalLines).accountUuid,
-          entryUuid: row.readTable(_db.journalEntries).uuid,
-          lineUuid: row.readTable(_db.journalLines).uuid,
+          accountUuid: row.readTable(_db.journalLines).accountId,
+          entryUuid: row.readTable(_db.journalEntries).id,
+          lineUuid: row.readTable(_db.journalLines).id,
           lineId: row.readTable(_db.journalLines).id,
           sortOrder: row.readTable(_db.journalLines).sortOrder,
           baseDebit: row.readTable(_db.journalLines).baseDebit,
@@ -612,8 +592,8 @@ class JournalRepositoryImpl implements JournalRepository {
     final sql = StringBuffer(
       'SELECT DISTINCT jl.currency_code AS currency_code '
       'FROM journal_lines jl '
-      'INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid '
-      'WHERE jl.account_uuid = ? '
+      'INNER JOIN journal_entries je ON je.id = jl.entry_id '
+      'WHERE jl.account_id = ? '
       'AND je.company_id = ? '
       'AND je.deleted_at IS NULL ',
     );
@@ -660,8 +640,8 @@ class JournalRepositoryImpl implements JournalRepository {
     final sql = StringBuffer(
       'SELECT COALESCE(SUM(jl.debit - jl.credit), 0.0) AS net '
       'FROM journal_lines jl '
-      'INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid '
-      'WHERE jl.account_uuid = ? '
+      'INNER JOIN journal_entries je ON je.id = jl.entry_id '
+      'WHERE jl.account_id = ? '
       'AND je.company_id = ? '
       'AND je.deleted_at IS NULL '
       'AND je.entry_date < ? ',
@@ -686,26 +666,25 @@ class JournalRepositoryImpl implements JournalRepository {
     return row.read<double>('net');
   }
 
-  Future<List<JournalLine>> _linesFor(String entryUuid) async {
+  Future<List<JournalLine>> _linesFor(String entryId) async {
     final owner =
         await (_db.select(_db.journalEntries)
-              ..where((t) => t.uuid.equals(entryUuid) & _tenantScoped(t)))
+              ..where((t) => t.id.equals(entryId) & _tenantScoped(t)))
             .getSingleOrNull();
     if (owner == null) {
       return const [];
     }
     final rows =
         await (_db.select(_db.journalLines)
-              ..where((t) => t.entryUuid.equals(entryUuid))
+              ..where((t) => t.entryId.equals(entryId))
               ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
             .get();
     return [
       for (final row in rows)
         JournalLine(
           id: row.id,
-          uuid: row.uuid,
-          entryUuid: row.entryUuid,
-          accountUuid: row.accountUuid,
+          entryId: row.entryId,
+          accountId: row.accountId,
           debit: row.debit,
           credit: row.credit,
           currencyCode: row.currencyCode,
@@ -729,8 +708,8 @@ class JournalRepositoryImpl implements JournalRepository {
         (line.exchangeRateToBase != null && line.exchangeRateToBase! > 0)
         ? line.exchangeRateToBase!
         : (code == baseCode || code.isEmpty ? 1.0 : 1.0);
-    return JournalLineDraft(
-      accountUuid: line.accountUuid,
+    return JournalLineDraft.withId(
+      accountId: line.accountId,
       debit: debit,
       credit: credit,
       currencyCode: code,
@@ -750,7 +729,6 @@ class JournalRepositoryImpl implements JournalRepository {
   JournalEntry _mapEntry(JournalEntryRow row, List<JournalLine> lines) {
     return JournalEntry(
       id: row.id,
-      uuid: row.uuid,
       entryDate: DateTime.fromMillisecondsSinceEpoch(
         row.entryDate,
         isUtc: true,
@@ -782,19 +760,19 @@ class JournalRepositoryImpl implements JournalRepository {
     );
   }
 
-  Future<JournalEntry?> _getByUuidIncludingDeleted(String uuid) async {
-    final trimmed = uuid.trim();
+  Future<JournalEntry?> _getByUuidIncludingDeleted(String id) async {
+    final trimmed = id.trim();
     if (trimmed.isEmpty) {
       return null;
     }
     final row =
         await (_db.select(_db.journalEntries)
-              ..where((t) => t.uuid.equals(trimmed) & _tenantScoped(t)))
+              ..where((t) => t.id.equals(trimmed) & _tenantScoped(t)))
             .getSingleOrNull();
     if (row == null) {
       return null;
     }
-    return _mapEntry(row, await _linesFor(row.uuid));
+    return _mapEntry(row, await _linesFor(row.id));
   }
 
   Future<void> _enqueue(JournalEntry entry, SyncOperationType type) async {
@@ -804,10 +782,10 @@ class JournalRepositoryImpl implements JournalRepository {
     }
     final linesPayload = <Map<String, dynamic>>[];
     for (final line in entry.lines) {
-      final account = await _accounts.getByUuid(line.accountUuid);
+      final account = await _accounts.getByUuid(line.accountId);
       linesPayload.add({
-        'uuid': line.uuid,
-        'accountUuid': line.accountUuid,
+        'id': line.id,
+        'accountId': line.accountId,
         'accountCode': account?.accountCode,
         'debit': line.debit,
         'credit': line.credit,
@@ -822,11 +800,11 @@ class JournalRepositoryImpl implements JournalRepository {
     await queue.enqueue(
       SyncOperation.create(
         entityType: entityType,
-        entityId: entry.uuid,
+        entityId: entry.id,
         type: type,
         baseVersion: entry.version,
         payload: {
-          'uuid': entry.uuid,
+          'id': entry.id,
           'entryDate': entry.entryDate.toUtc().millisecondsSinceEpoch,
           'voucherNumber': entry.voucherNumber,
           'voucherType': entry.voucherType,
@@ -853,7 +831,7 @@ class JournalRepositoryImpl implements JournalRepository {
     final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
     await (_db.update(
       _db.journalEntries,
-    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    )..where((t) => t.id.equals(uuid) & _tenantScoped(t))).write(
       JournalEntriesCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(stamp),
@@ -864,11 +842,10 @@ class JournalRepositoryImpl implements JournalRepository {
 
   Future<void> markConflict(String uuid) async {
     await (_db.update(_db.journalEntries)
-          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
+          ..where((t) => t.id.equals(uuid) & _tenantScoped(t)))
         .write(const JournalEntriesCompanion(syncStatus: Value('conflict')));
   }
 
-  /// Remap journal line FKs when a CoA UUID is adopted from another device.
   Future<void> remapAccountUuid({
     required String fromUuid,
     required String toUuid,
@@ -876,51 +853,49 @@ class JournalRepositoryImpl implements JournalRepository {
     if (fromUuid == toUuid || fromUuid.isEmpty || toUuid.isEmpty) {
       return;
     }
-    // Only remap lines belonging to DRAFT (unposted) entries of the current tenant
     final tenantEntries = await (_db.select(
       _db.journalEntries,
     )..where((t) => _tenantScoped(t) & t.isPosted.equals(false))).get();
-    final entryUuids = tenantEntries.map((e) => e.uuid).toSet();
-    if (entryUuids.isEmpty) {
+    final entryIds = tenantEntries.map((e) => e.id).toSet();
+    if (entryIds.isEmpty) {
       return;
     }
     await (_db.update(_db.journalLines)..where(
-          (t) => t.accountUuid.equals(fromUuid) & t.entryUuid.isIn(entryUuids),
+          (t) => t.accountId.equals(fromUuid) & t.entryId.isIn(entryIds),
         ))
-        .write(JournalLinesCompanion(accountUuid: Value(toUuid)));
+        .write(JournalLinesCompanion(accountId: Value(toUuid)));
   }
 
   Future<String> _resolveRemoteAccountUuid({
     required String? accountUuid,
     required String? accountCode,
   }) async {
-    // Prefer business key: CoA UUIDs often differ per install until accounts sync.
     final code = accountCode?.trim();
     if (code != null && code.isNotEmpty) {
       final byCode = await _accounts.getByAccountCode(code);
       if (byCode != null && !byCode.isDeleted) {
-        return byCode.uuid;
+        return byCode.id;
       }
     }
-    final uuid = accountUuid?.trim();
-    if (uuid != null && uuid.isNotEmpty) {
-      final byUuid = await _accounts.getByUuid(uuid);
-      if (byUuid != null && !byUuid.isDeleted) {
-        return byUuid.uuid;
+    final id = accountUuid?.trim();
+    if (id != null && id.isNotEmpty) {
+      final byId = await _accounts.getById(id);
+      if (byId != null && !byId.isDeleted) {
+        return byId.id;
       }
-      return uuid;
+      return id;
     }
     throw const JournalException(JournalException.accountNotFound);
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid']?.toString();
-    if (uuid == null || uuid.isEmpty) {
+    final id = payload['id']?.toString() ?? payload['uuid']?.toString();
+    if (id == null || id.isEmpty) {
       return;
     }
 
     final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
-    final existingByUuid = await _getByUuidIncludingDeleted(uuid);
+    final existingByUuid = await _getByUuidIncludingDeleted(id);
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
     final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
     final version = (payload['version'] as num?)?.toInt() ?? 1;
@@ -932,17 +907,15 @@ class JournalRepositoryImpl implements JournalRepository {
             existingByUuid.syncStatus == SyncStatus.conflict ||
             existingByUuid.syncStatus == SyncStatus.syncing)) {
       if (version > existingByUuid.version) {
-        await markConflict(uuid);
+        await markConflict(id);
       }
       return;
     }
 
-    // Stale remote: incoming version <= local version → skip (idempotent pull).
     if (existingByUuid != null && version <= existingByUuid.version) {
       return;
     }
 
-    // Same source document, different journal UUID → adopt remote identity.
     if (deletedAtMs == null &&
         sourceType != null &&
         sourceType.isNotEmpty &&
@@ -952,16 +925,16 @@ class JournalRepositoryImpl implements JournalRepository {
         sourceType: sourceType,
         sourceId: sourceId,
       );
-      if (bySource != null && bySource.uuid != uuid) {
+      if (bySource != null && bySource.id != id) {
         await (_db.update(_db.journalEntries)
-              ..where((t) => t.uuid.equals(bySource.uuid)))
-            .write(JournalEntriesCompanion(uuid: Value(uuid)));
+              ..where((t) => t.id.equals(bySource.id)))
+            .write(JournalEntriesCompanion(id: Value(id)));
         await (_db.update(_db.journalLines)
-              ..where((t) => t.entryUuid.equals(bySource.uuid)))
-            .write(JournalLinesCompanion(entryUuid: Value(uuid)));
+              ..where((t) => t.entryId.equals(bySource.id)))
+            .write(JournalLinesCompanion(entryId: Value(id)));
         await _syncQueue?.removeForEntity(
           entityType: entityType,
-          entityId: bySource.uuid,
+          entityId: bySource.id,
         );
       }
     }
@@ -979,8 +952,8 @@ class JournalRepositoryImpl implements JournalRepository {
     final resolvedLines =
         <
           ({
-            String uuid,
-            String accountUuid,
+            String id,
+            String accountId,
             double debit,
             double credit,
             double exchangeRateToBase,
@@ -993,11 +966,11 @@ class JournalRepositoryImpl implements JournalRepository {
         >[];
     for (var i = 0; i < lineMaps.length; i++) {
       final line = lineMaps[i];
-      final accountUuid = await _resolveRemoteAccountUuid(
-        accountUuid: line['accountUuid']?.toString(),
+      final accountId = await _resolveRemoteAccountUuid(
+        accountUuid: line['accountId']?.toString() ?? line['accountUuid']?.toString(),
         accountCode: line['accountCode']?.toString(),
       );
-      final lineUuidRaw = line['uuid']?.toString().trim();
+      final lineIdRaw = line['id']?.toString().trim() ?? line['uuid']?.toString().trim();
       final debit = (line['debit'] as num?)?.toDouble() ?? 0;
       final credit = (line['credit'] as num?)?.toDouble() ?? 0;
       final rate = (line['exchangeRateToBase'] as num?)?.toDouble() ?? 1;
@@ -1008,10 +981,10 @@ class JournalRepositoryImpl implements JournalRepository {
           (line['baseCredit'] as num?)?.toDouble() ??
           JournalMoney.round(credit * rate);
       resolvedLines.add((
-        uuid: (lineUuidRaw != null && lineUuidRaw.isNotEmpty)
-            ? lineUuidRaw
-            : generateUuidV4(),
-        accountUuid: accountUuid,
+        id: (lineIdRaw != null && lineIdRaw.isNotEmpty)
+            ? lineIdRaw
+            : generateUuidV7(),
+        accountId: accountId,
         debit: debit,
         credit: credit,
         exchangeRateToBase: rate,
@@ -1035,15 +1008,15 @@ class JournalRepositoryImpl implements JournalRepository {
         updatedAt;
 
     await _db.transaction(() async {
-      final current = await _getByUuidIncludingDeleted(uuid);
+      final current = await _getByUuidIncludingDeleted(id);
       if (current == null) {
         await _db
             .into(_db.journalEntries)
             .insert(
               JournalEntriesCompanion.insert(
-                uuid: uuid,
+                id: Value(id),
                 entryDate: entryDate,
-                voucherNumber: payload['voucherNumber']?.toString() ?? uuid,
+                voucherNumber: payload['voucherNumber']?.toString() ?? id,
                 voucherType: payload['voucherType']?.toString() ?? 'journal',
                 description: Value(payload['description']?.toString()),
                 currencyCode: (payload['currencyCode']?.toString() ?? 'SAR')
@@ -1066,7 +1039,7 @@ class JournalRepositoryImpl implements JournalRepository {
       } else {
         await (_db.update(
           _db.journalEntries,
-        )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+        )..where((t) => t.id.equals(id) & _scoped(t))).write(
           JournalEntriesCompanion(
             entryDate: Value(entryDate),
             voucherNumber: Value(
@@ -1096,7 +1069,7 @@ class JournalRepositoryImpl implements JournalRepository {
         );
         await (_db.delete(
           _db.journalLines,
-        )..where((t) => t.entryUuid.equals(uuid))).go();
+        )..where((t) => t.entryId.equals(id))).go();
       }
 
       if (deletedAtMs == null) {
@@ -1105,9 +1078,9 @@ class JournalRepositoryImpl implements JournalRepository {
               .into(_db.journalLines)
               .insert(
                 JournalLinesCompanion.insert(
-                  uuid: line.uuid,
-                  entryUuid: uuid,
-                  accountUuid: line.accountUuid,
+                  id: Value(line.id),
+                  entryId: id,
+                  accountId: line.accountId,
                   debit: Value(line.debit),
                   credit: Value(line.credit),
                   exchangeRateToBase: Value(line.exchangeRateToBase),
@@ -1122,7 +1095,7 @@ class JournalRepositoryImpl implements JournalRepository {
       }
     });
 
-    await _syncQueue?.removeForEntity(entityType: entityType, entityId: uuid);
+    await _syncQueue?.removeForEntity(entityType: entityType, entityId: id);
   }
 
   @override
@@ -1135,13 +1108,13 @@ class JournalRepositoryImpl implements JournalRepository {
     final rows = await _db
         .customSelect(
           '''
-          SELECT jl.account_uuid AS account_uuid,
+          SELECT jl.account_id AS account_uuid,
                  UPPER(jl.currency_code) AS currency_code,
                  SUM(jl.debit - jl.credit) AS foreign_balance,
                  SUM(jl.base_debit - jl.base_credit) AS booked_base
           FROM journal_lines jl
-          INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
-          INNER JOIN accounts a ON a.uuid = jl.account_uuid
+          INNER JOIN journal_entries je ON je.id = jl.entry_id
+          INNER JOIN accounts a ON a.id = jl.account_id
           WHERE je.deleted_at IS NULL
             AND je.company_id = ?
             AND je.is_posted = 1
@@ -1150,7 +1123,7 @@ class JournalRepositoryImpl implements JournalRepository {
             AND a.account_type IN ('asset', 'liability')
             AND a.is_group = 0
             AND a.deleted_at IS NULL
-          GROUP BY jl.account_uuid, UPPER(jl.currency_code)
+          GROUP BY jl.account_id, UPPER(jl.currency_code)
           HAVING ABS(SUM(jl.debit - jl.credit)) > 0.0001
           ''',
           variables: [
@@ -1184,14 +1157,14 @@ class JournalRepositoryImpl implements JournalRepository {
         : _currentCompanyId;
     final variables = <Variable<Object>>[Variable.withString(targetCompanyId)];
     final sql = StringBuffer('''
-      SELECT a.uuid AS account_uuid,
+      SELECT a.id AS account_uuid,
              a.account_code AS account_code,
              a.name AS account_name,
              COALESCE(SUM(jl.base_debit), 0.0) AS debit,
              COALESCE(SUM(jl.base_credit), 0.0) AS credit
       FROM journal_lines jl
-      INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
-      INNER JOIN accounts a ON a.uuid = jl.account_uuid
+      INNER JOIN journal_entries je ON je.id = jl.entry_id
+      INNER JOIN accounts a ON a.id = jl.account_id
       WHERE je.deleted_at IS NULL
         AND je.company_id = ?
         AND a.is_group = 0
@@ -1210,7 +1183,7 @@ class JournalRepositoryImpl implements JournalRepository {
       variables.add(Variable.withBool(isPosted));
     }
     sql.write('''
-      GROUP BY a.uuid, a.account_code, a.name
+      GROUP BY a.id, a.account_code, a.name
       HAVING ABS(SUM(jl.base_debit)) + ABS(SUM(jl.base_credit)) > 0.0001
       ORDER BY a.account_code
       ''');
@@ -1256,8 +1229,8 @@ class JournalRepositoryImpl implements JournalRepository {
              jl.base_debit AS debit,
              jl.base_credit AS credit
       FROM journal_lines jl
-      INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
-      INNER JOIN accounts a ON a.uuid = jl.account_uuid
+      INNER JOIN journal_entries je ON je.id = jl.entry_id
+      INNER JOIN accounts a ON a.id = jl.account_id
       WHERE je.deleted_at IS NULL
         AND je.company_id = ?
         AND a.deleted_at IS NULL

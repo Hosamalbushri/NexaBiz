@@ -566,13 +566,10 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                       },
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      initialValue: decimalDigits.toString(),
-                      decoration: InputDecoration(
-                        labelText: isArabic ? 'الخانات العشرية' : 'Decimals',
-                        border: const OutlineInputBorder(),
-                      ),
+                    AppTextField(
+                      label: isArabic ? 'الخانات العشرية' : 'Decimals',
                       keyboardType: TextInputType.number,
+                      controller: TextEditingController(text: decimalDigits.toString()),
                       onChanged: (val) {
                         final parsed = int.tryParse(val);
                         if (parsed != null && parsed >= 0 && parsed <= 6) {
@@ -773,38 +770,25 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextFormField(
+                    AppTextField(
                       controller: nameArCtrl,
-                      decoration: InputDecoration(
-                        labelText: isArabic ? 'الاسم بالعربي' : 'Arabic Name',
-                        border: const OutlineInputBorder(),
-                      ),
+                      label: isArabic ? 'الاسم بالعربي' : 'Arabic Name',
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    TextFormField(
+                    AppTextField(
                       controller: nameEnCtrl,
-                      decoration: InputDecoration(
-                        labelText:
-                            isArabic ? 'الاسم بالإنجليزي' : 'English Name',
-                        border: const OutlineInputBorder(),
-                      ),
+                      label: isArabic ? 'الاسم بالإنجليزي' : 'English Name',
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    TextFormField(
+                    AppTextField(
                       controller: symbolCtrl,
-                      decoration: InputDecoration(
-                        labelText: isArabic ? 'الرمز' : 'Symbol',
-                        border: const OutlineInputBorder(),
-                      ),
+                      label: isArabic ? 'الرمز' : 'Symbol',
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    TextFormField(
-                      initialValue: decimalDigits.toString(),
-                      decoration: InputDecoration(
-                        labelText: isArabic ? 'الخانات العشرية' : 'Decimals',
-                        border: const OutlineInputBorder(),
-                      ),
+                    AppTextField(
+                      label: isArabic ? 'الخانات العشرية' : 'Decimals',
                       keyboardType: TextInputType.number,
+                      controller: TextEditingController(text: decimalDigits.toString()),
                       onChanged: (val) {
                         final parsed = int.tryParse(val);
                         if (parsed != null && parsed >= 0 && parsed <= 6) {

@@ -5,7 +5,6 @@ import 'accounting_period_status.dart';
 class FiscalYear {
   const FiscalYear({
     required this.id,
-    required this.uuid,
     required this.code,
     required this.name,
     required this.startDate,
@@ -17,15 +16,15 @@ class FiscalYear {
     required this.fxRevaluationEnabled,
     required this.createdAt,
     required this.updatedAt,
-    this.fxGainAccountUuid,
-    this.fxLossAccountUuid,
+    this.fxGainAccountId,
+    this.fxLossAccountId,
     this.closedAt,
     this.createdBy,
     this.closedBy,
   });
 
-  final int id;
-  final String uuid;
+  /// Primary Key (UUID v7).
+  final String id;
   final String code;
   final String name;
 
@@ -39,13 +38,18 @@ class FiscalYear {
   final int periodCount;
   final PeriodFrequency periodFrequency;
   final bool fxRevaluationEnabled;
-  final String? fxGainAccountUuid;
-  final String? fxLossAccountUuid;
+  final String? fxGainAccountId;
+  final String? fxLossAccountId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? closedAt;
   final String? createdBy;
   final String? closedBy;
+
+  /// Compatibility getter for legacy callers.
+  String get uuid => id;
+  String? get fxGainAccountUuid => fxGainAccountId;
+  String? get fxLossAccountUuid => fxLossAccountId;
 
   bool contains(DateTime date) {
     final day = BusinessDate.utcDay(date);
@@ -64,8 +68,8 @@ class FiscalYearDraft {
     required this.periodCount,
     required this.periodFrequency,
     required this.fxRevaluationEnabled,
-    this.fxGainAccountUuid,
-    this.fxLossAccountUuid,
+    this.fxGainAccountId,
+    this.fxLossAccountId,
     this.createdBy,
   });
 
@@ -77,17 +81,19 @@ class FiscalYearDraft {
   final int periodCount;
   final PeriodFrequency periodFrequency;
   final bool fxRevaluationEnabled;
-  final String? fxGainAccountUuid;
-  final String? fxLossAccountUuid;
+  final String? fxGainAccountId;
+  final String? fxLossAccountId;
   final String? createdBy;
+
+  String? get fxGainAccountUuid => fxGainAccountId;
+  String? get fxLossAccountUuid => fxLossAccountId;
 }
 
 /// One accounting period inside a fiscal year.
 class AccountingPeriod {
   const AccountingPeriod({
     required this.id,
-    required this.uuid,
-    required this.fiscalYearUuid,
+    required this.fiscalYearId,
     required this.periodNumber,
     required this.name,
     required this.startDate,
@@ -102,9 +108,9 @@ class AccountingPeriod {
     this.reopenReason,
   });
 
-  final int id;
-  final String uuid;
-  final String fiscalYearUuid;
+  /// Primary Key (UUID v7).
+  final String id;
+  final String fiscalYearId;
   final int periodNumber;
   final String name;
   final DateTime startDate;
@@ -117,6 +123,10 @@ class AccountingPeriod {
   final DateTime? reopenedAt;
   final String? reopenedBy;
   final String? reopenReason;
+
+  /// Compatibility getters for legacy callers.
+  String get uuid => id;
+  String get fiscalYearUuid => fiscalYearId;
 
   bool contains(DateTime date) {
     final day = BusinessDate.utcDay(date);
@@ -145,9 +155,8 @@ class GeneratedPeriodSpec {
 class PeriodClosingRecord {
   const PeriodClosingRecord({
     required this.id,
-    required this.uuid,
-    required this.fiscalYearUuid,
-    required this.periodUuid,
+    required this.fiscalYearId,
+    required this.periodId,
     required this.closingDate,
     required this.status,
     required this.fxRevaluationEnabled,
@@ -157,14 +166,14 @@ class PeriodClosingRecord {
     required this.netFxDifference,
     required this.createdAt,
     this.fxSkipReason,
-    this.journalEntryUuid,
+    this.journalEntryId,
     this.createdBy,
   });
 
-  final int id;
-  final String uuid;
-  final String fiscalYearUuid;
-  final String periodUuid;
+  /// Primary Key (UUID v7).
+  final String id;
+  final String fiscalYearId;
+  final String periodId;
   final DateTime closingDate;
   final PeriodClosingStatus status;
   final bool fxRevaluationEnabled;
@@ -173,9 +182,15 @@ class PeriodClosingRecord {
   final double fxGain;
   final double fxLoss;
   final double netFxDifference;
-  final String? journalEntryUuid;
+  final String? journalEntryId;
   final String? createdBy;
   final DateTime createdAt;
+
+  /// Compatibility getters for legacy callers.
+  String get uuid => id;
+  String get fiscalYearUuid => fiscalYearId;
+  String get periodUuid => periodId;
+  String? get journalEntryUuid => journalEntryId;
 }
 
 /// Lightweight FY list card DTO.

@@ -29,7 +29,7 @@ class FinancialTransactionDetailsPage extends ConsumerWidget {
     required this.transactionId,
   });
 
-  final int transactionId;
+  final String transactionId;
 
   void _back(BuildContext context, {TransactionType? type}) {
     if (type != null) {
