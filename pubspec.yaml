@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  meta: ^1.11.0
+  uuid: ^4.6.0
   nexabiz_ui:
     path: packages/nexabiz_ui
   shadcn_flutter: ^0.0.53

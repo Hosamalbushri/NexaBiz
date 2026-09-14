@@ -36,12 +36,12 @@ class AppFormActions extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     final content = Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         if (extraActions != null) ...[
           ...extraActions!,
           const Spacer(),
-        ] else
-          const Spacer(),
+        ],
         if (onCancel != null) ...[
           AppButton(
             label: cancelLabel,

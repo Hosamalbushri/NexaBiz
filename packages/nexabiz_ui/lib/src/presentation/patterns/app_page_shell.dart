@@ -34,21 +34,29 @@ class AppPageShell extends StatelessWidget {
 
     Widget content = Padding(
       padding: padding ?? const EdgeInsets.all(AppSpacing.md),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: maxWidth,
-            maxHeight: scrollable ? double.infinity : double.infinity,
-          ),
-          child: scrollable
-              ? child
-              : SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: child,
-                ),
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (scrollable) {
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: child,
+              ),
+            );
+          }
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxWidth,
+                minHeight: constraints.maxHeight,
+                maxHeight: constraints.maxHeight,
+              ),
+              child: child,
+            ),
+          );
+        },
       ),
     );
 
