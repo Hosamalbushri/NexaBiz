@@ -19,13 +19,13 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency_rate.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/exchange_rate_engine.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/fx_settlement_engine.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/fx_settlement_service.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -59,8 +59,7 @@ class MockCurrencyRateRepository implements CurrencyRateRepository {
     return [
       for (final entry in _rates.entries)
         CurrencyRate(
-          id: 1,
-          uuid: generateUuidV4(),
+          id: generateUuidV4(),
           currencyCode: entry.key,
           rateToBase: entry.value,
           updatedAt: DateTime.utc(2026, 1, 1),
@@ -78,8 +77,7 @@ class MockCurrencyRateRepository implements CurrencyRateRepository {
     final r = _rates[currencyCode];
     if (r == null) return null;
     return CurrencyRate(
-      id: 1,
-      uuid: generateUuidV4(),
+      id: generateUuidV4(),
       currencyCode: currencyCode,
       rateToBase: r,
       updatedAt: DateTime.utc(2026, 1, 1),
@@ -120,7 +118,7 @@ class MockCurrencyRateRepository implements CurrencyRateRepository {
 }
 
 Future<void> _insertAccount(
-  AccountingDatabase db, {
+  NexabizDatabase db, {
   required String uuid,
   required String code,
   required String name,
@@ -128,25 +126,25 @@ Future<void> _insertAccount(
   required String normalBalance,
   required String companyId,
 }) async {
-  final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+  final nowDate = DateTime.now().toUtc();
   await db.into(db.accounts).insert(
         AccountsCompanion.insert(
-          uuid: uuid,
+          id: Value(uuid),
           accountCode: code,
           name: name,
           accountType: accountType,
           normalBalance: normalBalance,
-          createdAt: nowMs,
-          updatedAt: nowMs,
-          companyId: Value(companyId),
+          createdAt: Value(nowDate),
+          updatedAt: Value(nowDate),
+          companyId: companyId,
         ),
       );
 }
 
 void main() {
   group('CURRENCY-11 — Forensic End-to-End & Negative Verification', () {
-    late AccountingDatabase db;
-    late InventoryDatabase invDb;
+    late NexabizDatabase db;
+    late NexabizDatabase invDb;
     late CostLayerServiceImpl costLayerService;
     late AccountRepositoryImpl accountRepo;
     late AccountCurrencyBalanceRepositoryImpl balanceRepo;
@@ -170,8 +168,8 @@ void main() {
 
 
     setUp(() async {
-      db = AccountingDatabase(executor: NativeDatabase.memory());
-      invDb = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.memory();
+      invDb = NexabizDatabase.memory();
 
       costLayerService = CostLayerServiceImpl(
         db: invDb,
@@ -657,7 +655,7 @@ void main() {
 
       // Step 20: Verify historical amounts and exchange rates remain unchanged
       final originalPurJournal = await journalRepo.getByUuid(purEntryUuid);
-      final originalPurLine = originalPurJournal?.lines.firstWhere((l) => l.accountUuid == supplierAccountUuid);
+      final originalPurLine = originalPurJournal?.lines.firstWhere((l) => l.accountId == supplierAccountUuid);
       expect(originalPurLine?.debit, equals(0.0));
       expect(originalPurLine?.credit, equals(1000.0)); // 1,000 SAR preserved
       expect(originalPurLine?.exchangeRateToBase, equals(140.0)); // 140 rate preserved

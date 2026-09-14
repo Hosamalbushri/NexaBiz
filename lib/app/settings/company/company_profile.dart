@@ -1,5 +1,3 @@
-import 'app_currency.dart';
-
 /// Company / organization profile used across the platform.
 class CompanyProfile {
   const CompanyProfile({

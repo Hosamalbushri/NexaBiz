@@ -95,8 +95,7 @@ void main() {
   final accWrongCompanyUuid = 'acc-wrong-company';
 
   final accCash = Account(
-    id: 1,
-    uuid: accCashUuid,
+    id: accCashUuid,
     accountCode: '1101',
     name: 'Cash Account',
     accountType: AccountType.asset,
@@ -111,8 +110,7 @@ void main() {
   );
 
   final accRev = Account(
-    id: 2,
-    uuid: accRevUuid,
+    id: accRevUuid,
     accountCode: '4101',
     name: 'Revenue Account',
     accountType: AccountType.revenue,
@@ -127,8 +125,7 @@ void main() {
   );
 
   final accWrongCompany = Account(
-    id: 3,
-    uuid: accWrongCompanyUuid,
+    id: accWrongCompanyUuid,
     accountCode: '1102',
     name: 'Other Company Cash',
     accountType: AccountType.asset,
@@ -156,7 +153,7 @@ void main() {
   });
 
   AccountingJournal createValidJournal({
-    String? entryUuid,
+    String? entryId,
     String? compId,
     DateTime? txDate,
     String? sourceType,
@@ -164,12 +161,12 @@ void main() {
     List<AccountingJournalLine>? lines,
   }) {
     final effectiveCompId = compId ?? companyId;
-    final effectiveEntryUuid = entryUuid ?? 'jnl-uuid-001';
+    final effectiveEntryUuid = entryId ?? 'jnl-uuid-001';
     final defaultLines = [
       AccountingJournalLine(
         uuid: 'line-001',
-        entryUuid: effectiveEntryUuid,
-        accountUuid: accCashUuid,
+        entryId: effectiveEntryUuid,
+        accountId: accCashUuid,
         debit: 100.0,
         credit: 0.0,
         currencyCode: 'USD',
@@ -179,8 +176,8 @@ void main() {
       ),
       AccountingJournalLine(
         uuid: 'line-002',
-        entryUuid: effectiveEntryUuid,
-        accountUuid: accRevUuid,
+        entryId: effectiveEntryUuid,
+        accountId: accRevUuid,
         debit: 0.0,
         credit: 100.0,
         currencyCode: 'USD',
@@ -246,8 +243,8 @@ void main() {
       final journal = createValidJournal(lines: [
         AccountingJournalLine(
           uuid: 'line-001',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accCashUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accCashUuid,
           debit: 100.0,
           credit: 0.0,
           currencyCode: 'USD',
@@ -265,8 +262,8 @@ void main() {
       final journal = createValidJournal(lines: [
         AccountingJournalLine(
           uuid: 'line-001',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: 'non-existent-uuid',
+          entryId: 'jnl-uuid-001',
+          accountId: 'non-existent-uuid',
           debit: 100.0,
           credit: 0.0,
           currencyCode: 'USD',
@@ -276,8 +273,8 @@ void main() {
         ),
         AccountingJournalLine(
           uuid: 'line-002',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accRevUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accRevUuid,
           debit: 0.0,
           credit: 100.0,
           currencyCode: 'USD',
@@ -295,8 +292,8 @@ void main() {
       final journal = createValidJournal(lines: [
         AccountingJournalLine(
           uuid: 'line-001',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accWrongCompanyUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accWrongCompanyUuid,
           debit: 100.0,
           credit: 0.0,
           currencyCode: 'USD',
@@ -306,8 +303,8 @@ void main() {
         ),
         AccountingJournalLine(
           uuid: 'line-002',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accRevUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accRevUuid,
           debit: 0.0,
           credit: 100.0,
           currencyCode: 'USD',
@@ -325,8 +322,8 @@ void main() {
       final journal = createValidJournal(lines: [
         AccountingJournalLine(
           uuid: 'line-001',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accCashUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accCashUuid,
           debit: 100.0,
           credit: 50.0,
           currencyCode: 'USD',
@@ -336,8 +333,8 @@ void main() {
         ),
         AccountingJournalLine(
           uuid: 'line-002',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accRevUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accRevUuid,
           debit: 0.0,
           credit: 50.0,
           currencyCode: 'USD',
@@ -355,8 +352,8 @@ void main() {
       final journal = createValidJournal(lines: [
         AccountingJournalLine(
           uuid: 'line-001',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accCashUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accCashUuid,
           debit: 100.0,
           credit: 0.0,
           currencyCode: 'USD',
@@ -366,8 +363,8 @@ void main() {
         ),
         AccountingJournalLine(
           uuid: 'line-002',
-          entryUuid: 'jnl-uuid-001',
-          accountUuid: accRevUuid,
+          entryId: 'jnl-uuid-001',
+          accountId: accRevUuid,
           debit: 0.0,
           credit: 80.0,
           currencyCode: 'USD',

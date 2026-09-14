@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/inventory/data/repositories/inventory_movement_ledger.dart';
+import 'package:stock_count/modules/inventory/stock_count/data/repositories/inventory_movement_ledger.dart';
 
 void main() {
   group('InventoryMovementLedger Tests', () {

@@ -55,7 +55,7 @@ void main() {
 
     test('2. Product Categories — Tree hierarchy & Tenant Isolation', () async {
       final rootA = await repo.createCategory(
-        ProductCategoriesCompanion.insert(
+        ProductProductCategoriesCompanion.insert(
           code: 'CAT_ROOT_A',
           name: 'Electronics A',
           companyId: companyA,
@@ -63,7 +63,7 @@ void main() {
       );
 
       final childA = await repo.createCategory(
-        ProductCategoriesCompanion.insert(
+        ProductProductCategoriesCompanion.insert(
           code: 'CAT_SUB_A',
           name: 'Smartphones A',
           parentUuid: Value(rootA.uuid),
@@ -80,7 +80,7 @@ void main() {
       // Company B referencing Company A category as parent fails
       expect(
         () async => repo.createCategory(
-          ProductCategoriesCompanion.insert(
+          ProductProductCategoriesCompanion.insert(
             code: 'CAT_B_INVALID',
             name: 'Invalid Subcategory',
             parentUuid: Value(rootA.uuid), // Parent from Company A
@@ -151,7 +151,7 @@ void main() {
 
     test('5. Products — Category FK relationship & Tenant Isolation', () async {
       final categoryA = await repo.createCategory(
-        ProductCategoriesCompanion.insert(
+        ProductProductCategoriesCompanion.insert(
           code: 'CAT_PROD',
           name: 'Hardware',
           companyId: companyA,
@@ -200,12 +200,12 @@ void main() {
         CustomersCompanion.insert(
           customerCode: 'CUST_001',
           name: 'Global Trading Co.',
-          accountUuid: Value(arAccountA.uuid),
+          accountId: Value(arAccountA.uuid),
           companyId: companyA,
         ),
       );
 
-      expect(customerA.accountUuid, equals(arAccountA.uuid));
+      expect(customerA.accountId, equals(arAccountA.uuid));
 
       // Customer referencing another company's account fails FK validation
       expect(
@@ -213,7 +213,7 @@ void main() {
           CustomersCompanion.insert(
             customerCode: 'CUST_B01',
             name: 'Stranger Client',
-            accountUuid: Value(arAccountA.uuid), // Account belongs to Company A
+            accountId: Value(arAccountA.uuid), // Account belongs to Company A
             companyId: companyB,
           ),
         ),
@@ -236,7 +236,7 @@ void main() {
         CashRegistersCompanion.insert(
           code: 'REG_01',
           name: 'Front Counter Cashier',
-          accountUuid: Value(cashAccount.uuid),
+          accountId: Value(cashAccount.uuid),
           companyId: companyA,
         ),
       );

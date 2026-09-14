@@ -5,9 +5,8 @@ import '../ports/module_initializer.dart';
 class ModuleInitializationOrchestrator {
   ModuleInitializationOrchestrator({
     required List<NexaBizModuleInitializer> initializers,
-    required SettingsRepository settingsRepository,
-  }) : _initializers = {for (final m in initializers) m.id: m},
-       _settingsRepository = settingsRepository;
+    required this._settingsRepository,
+  }) : _initializers = {for (final m in initializers) m.id: m};
 
   final Map<ModuleId, NexaBizModuleInitializer> _initializers;
   final SettingsRepository _settingsRepository;

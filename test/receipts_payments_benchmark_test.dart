@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/receipts_payments/data/database/receipts_payments_database.dart';
-import 'package:stock_count/modules/receipts_payments/data/repositories/financial_transaction_repository_impl.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
-import 'package:stock_count/modules/receipts_payments/domain/models/transaction_list_filter.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/models/transaction_list_filter.dart';
 
 void _setupSqlite() {}
 
@@ -56,7 +56,7 @@ void main() {
   }
 
   Future<void> measureSize(int size) async {
-    final db = ReceiptsPaymentsDatabase.memory();
+    final db = NexabizDatabase.memory();
     final repo = FinancialTransactionRepositoryImpl(db);
     final seedSw = Stopwatch()..start();
     await seed(repo, count: size);

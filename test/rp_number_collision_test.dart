@@ -3,18 +3,18 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_voucher_book_adapter.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/voucher_book_repository_impl.dart';
-import 'package:stock_count/modules/receipts_payments/data/database/receipts_payments_database.dart';
-import 'package:stock_count/modules/receipts_payments/data/repositories/financial_transaction_repository_impl.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction_line.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
-import 'package:stock_count/modules/receipts_payments/domain/services/rp_ledger_posting_port.dart';
-import 'package:stock_count/modules/receipts_payments/domain/usecases/financial_transaction_usecases.dart';
-import 'package:stock_count/modules/sales/data/sale_number_block_store.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/voucher_books/data/repositories/voucher_book_repository_impl.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction_line.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_ledger_posting_port.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/usecases/financial_transaction_usecases.dart';
+import 'package:stock_count/modules/sales/invoices/data/repositories/sale_number_block_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +27,7 @@ void main() {
       final box = await Hive.openBox<dynamic>('settings_rp_number_collision');
       await box.clear();
 
-      final accountingDb = AccountingDatabase.memory();
+      final accountingDb = NexabizDatabase.memory();
       final voucherBooks = VoucherBookRepositoryImpl(accountingDb);
       await voucherBooks.ensureDefaultSections();
       final books = AccountingRpVoucherBookAdapter(
@@ -36,7 +36,7 @@ void main() {
         blockStore: SaleNumberBlockStore(box: box),
       );
 
-      final rpDb = ReceiptsPaymentsDatabase.memory();
+      final rpDb = NexabizDatabase.memory();
       final repo = FinancialTransactionRepositoryImpl(rpDb);
       final create = CreateFinancialTransaction(
         repository: repo,

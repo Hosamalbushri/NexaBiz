@@ -37,7 +37,7 @@ class MockPhase3PagedProvider
         .where(
           (l) =>
               l['company_id'] == context.companyId &&
-              l['account_uuid'] == context.filters['accountUuid'],
+              l['account_uuid'] == context.filters['accountId'],
         )
         .toList();
 
@@ -70,7 +70,7 @@ class MockPhase3PagedProvider
         .where(
           (l) =>
               l['company_id'] == context.companyId &&
-              l['account_uuid'] == context.filters['accountUuid'],
+              l['account_uuid'] == context.filters['accountId'],
         )
         .toList();
 
@@ -131,7 +131,7 @@ void main() {
       provider = MockPhase3PagedProvider();
       context = const ReportExecutionContext(
         companyId: 'COMPANY_A',
-        filters: {'accountUuid': 'ACC_1001'},
+        filters: {'accountId': 'ACC_1001'},
       );
     });
 
@@ -189,7 +189,7 @@ void main() {
 
         const contextB = ReportExecutionContext(
           companyId: 'COMPANY_A',
-          filters: {'accountUuid': 'ACC_1001', 'postingScope': 'posted'},
+          filters: {'accountId': 'ACC_1001', 'postingScope': 'posted'},
         );
 
         final futureA = controller.executeNewContext(context);

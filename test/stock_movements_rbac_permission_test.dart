@@ -102,7 +102,7 @@ class _FakeStockMovementsRepository implements StockMovementsRepository {
 
   @override
   Future<void> saveMovementLines({
-    required String movementUuid,
+    required String movementId,
     required String movementType,
     required List<StockMovementLine> lines,
   }) async {}
@@ -122,7 +122,7 @@ void main() {
       receiptDate: DateTime.now(),
       lines: [
         StockMovementLine(
-          movementUuid: 'm1',
+          movementId: 'm1',
           movementType: 'receipt',
           itemCode: 'ITEM-1',
           itemName: 'Item 1',
@@ -143,7 +143,7 @@ void main() {
       issueDate: DateTime.now(),
       lines: [
         StockMovementLine(
-          movementUuid: 'm2',
+          movementId: 'm2',
           movementType: 'issue',
           itemCode: 'ITEM-1',
           itemName: 'Item 1',

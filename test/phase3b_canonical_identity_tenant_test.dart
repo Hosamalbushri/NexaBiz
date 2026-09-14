@@ -23,14 +23,14 @@ void main() {
     test('1. Create user with stable 36-character UUID and verify persistence', () async {
       final user = await repository.createUser(
         UsersCompanion.insert(
-          uuid: '11111111-1111-4111-8111-111111111111',
+          id: const Value('11111111-1111-4111-8111-111111111111'),
           email: 'admin@nexabiz.com',
           name: 'System Admin',
           passwordHash: const Value('hashed_password_secret_hash'),
         ),
       );
 
-      expect(user.uuid, equals('11111111-1111-4111-8111-111111111111'));
+      expect(user.id, equals('11111111-1111-4111-8111-111111111111'));
       expect(user.email, equals('admin@nexabiz.com'));
       expect(user.passwordHash, equals('hashed_password_secret_hash'));
 
@@ -42,7 +42,7 @@ void main() {
     test('2. Duplicate user email or UUID is rejected', () async {
       await repository.createUser(
         UsersCompanion.insert(
-          uuid: '11111111-1111-4111-8111-111111111111',
+          id: const Value('11111111-1111-4111-8111-111111111111'),
           email: 'user@nexabiz.com',
           name: 'User One',
         ),
@@ -52,7 +52,7 @@ void main() {
       expect(
         () async => repository.createUser(
           UsersCompanion.insert(
-            uuid: '11111111-1111-4111-8111-111111111111',
+            id: const Value('11111111-1111-4111-8111-111111111111'),
             email: 'other@nexabiz.com',
             name: 'User Two',
           ),
@@ -64,7 +64,7 @@ void main() {
       expect(
         () async => repository.createUser(
           UsersCompanion.insert(
-            uuid: '22222222-2222-4222-8222-222222222222',
+            id: const Value('22222222-2222-4222-8222-222222222222'),
             email: 'user@nexabiz.com',
             name: 'User Three',
           ),
@@ -76,18 +76,18 @@ void main() {
     test('3. Create company with stable 36-character UUID', () async {
       final company = await repository.createCompany(
         CompaniesCompanion.insert(
-          uuid: 'c1111111-1111-4111-8111-111111111111',
+          id: const Value('c1111111-1111-4111-8111-111111111111'),
           code: 'ACME_HQ',
           name: 'ACME Corporation',
         ),
       );
 
-      expect(company.uuid, equals('c1111111-1111-4111-8111-111111111111'));
+      expect(company.id, equals('c1111111-1111-4111-8111-111111111111'));
       expect(company.code, equals('ACME_HQ'));
 
       final fetched = await repository.getCompanyByCode('ACME_HQ');
       expect(fetched, isNotNull);
-      expect(fetched!.uuid, equals('c1111111-1111-4111-8111-111111111111'));
+      expect(fetched!.id, equals('c1111111-1111-4111-8111-111111111111'));
     });
 
     test('4. Atomic tenant + admin creation via createTenantWithAdmin', () async {
@@ -102,25 +102,25 @@ void main() {
         membershipUuid: 'm3333333-3333-4333-8333-333333333333',
       );
 
-      expect(result.user.uuid, equals('u3333333-3333-4333-8333-333333333333'));
-      expect(result.company.uuid, equals('c3333333-3333-4333-8333-333333333333'));
-      expect(result.membership.uuid, equals('m3333333-3333-4333-8333-333333333333'));
+      expect(result.user.id, equals('u3333333-3333-4333-8333-333333333333'));
+      expect(result.company.id, equals('c3333333-3333-4333-8333-333333333333'));
+      expect(result.membership.id, equals('m3333333-3333-4333-8333-333333333333'));
       expect(result.membership.role, equals('owner'));
 
       // Validate membership authorization
       final validMembership = await repository.validateMembership(
-        userUuid: result.user.uuid,
-        companyUuid: result.company.uuid,
+        userUuid: result.user.id,
+        companyUuid: result.company.id,
       );
       expect(validMembership, isNotNull);
-      expect(validMembership!.uuid, equals(result.membership.uuid));
+      expect(validMembership!.id, equals(result.membership.id));
     });
 
     test('5. Transaction Rollback — Failure in atomic creation rolls back User and Company', () async {
       // First create a conflicting company code to force error in transaction
       await repository.createCompany(
         CompaniesCompanion.insert(
-          uuid: 'c_existing_000',
+          id: const Value('c5555555-5555-4555-8555-555555555555'),
           code: 'CONFLICT_CODE',
           name: 'Existing Company',
         ),
@@ -133,13 +133,13 @@ void main() {
           passwordHash: 'hash',
           companyName: 'Duplicate Company',
           companyCode: 'CONFLICT_CODE', // Will cause duplicate company code failure
-          userUuid: 'u_should_rollback',
+          userUuid: 'u5555555-5555-4555-8555-555555555555',
         ),
         throwsA(isA<Object>()),
       );
 
       // Verify user was NOT persisted due to transaction rollback
-      final rolledBackUser = await repository.getUserByUuid('u_should_rollback');
+      final rolledBackUser = await repository.getUserByUuid('u5555555-5555-4555-8555-555555555555');
       expect(rolledBackUser, isNull);
     });
 
@@ -154,7 +154,7 @@ void main() {
 
       final otherUser = await repository.createUser(
         UsersCompanion.insert(
-          uuid: 'u_unauthorized_999',
+          id: const Value('u6666666-6666-4666-8666-666666666666'),
           email: 'stranger@other.com',
           name: 'Stranger',
         ),
@@ -162,8 +162,8 @@ void main() {
 
       // Other user attempt to access Corp A must be rejected
       final membership = await repository.validateMembership(
-        userUuid: otherUser.uuid,
-        companyUuid: tenant.company.uuid,
+        userUuid: otherUser.id,
+        companyUuid: tenant.company.id,
       );
 
       expect(membership, isNull);
@@ -173,9 +173,9 @@ void main() {
       expect(
         () async => repository.createMembership(
           CompanyMembershipsCompanion.insert(
-            uuid: 'm_invalid_1',
-            userUuid: 'nonexistent_user',
-            companyUuid: 'nonexistent_company',
+            id: const Value('m7777777-7777-4777-8777-777777777777'),
+            userId: '77777777-7777-4777-8777-777777777777',
+            companyId: '77777777-7777-4777-8777-777777777778',
           ),
         ),
         throwsA(isA<ArgumentError>()),

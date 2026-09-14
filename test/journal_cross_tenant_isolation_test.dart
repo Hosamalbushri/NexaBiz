@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
@@ -11,7 +11,7 @@ import 'package:stock_count/modules/accounting/journals/domain/models/journal_ex
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService postingService;
@@ -26,7 +26,7 @@ void main() {
   late String compBAcc2;
 
   setUp(() async {
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     companyA = 'company_alpha';
     companyB = 'company_beta';
     activeCompanyId = companyA;
@@ -60,7 +60,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compAAcc1,
+            id: compAAcc1,
             companyId: Value(companyA),
             accountCode: '1010-A',
             name: 'Cash Alpha',
@@ -78,7 +78,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compAAcc2,
+            id: compAAcc2,
             companyId: Value(companyA),
             accountCode: '4010-A',
             name: 'Sales Alpha',
@@ -97,7 +97,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compBAcc1,
+            id: compBAcc1,
             companyId: Value(companyB),
             accountCode: '1010-B',
             name: 'Cash Beta',
@@ -115,7 +115,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compBAcc2,
+            id: compBAcc2,
             companyId: Value(companyB),
             accountCode: '4010-B',
             name: 'Sales Beta',
@@ -140,9 +140,9 @@ void main() {
       () async {
         // Switch context to Company A and create entry X
         activeCompanyId = companyA;
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-A-001',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -166,18 +166,18 @@ void main() {
         );
 
         final posted = await postingService.post(draft);
-        expect(posted.uuid, equals(entryUuid));
+        expect(posted.uuid, equals(entryId));
 
         // Switch context to Company B
         activeCompanyId = companyB;
 
         // 1a. getByUuid must return null
-        final crossRead = await journalRepo.getByUuid(entryUuid);
+        final crossRead = await journalRepo.getByUuid(entryId);
         expect(crossRead, isNull);
 
         // 1b. listHeaders must not include entry X
         final headers = await journalRepo.listHeaders();
-        expect(headers.any((h) => h.uuid == entryUuid), isFalse);
+        expect(headers.any((h) => h.uuid == entryId), isFalse);
 
         // 1c. listJournalBookLines must not include entry X
         final bookLines = await journalRepo.listJournalBookLines();
@@ -185,7 +185,7 @@ void main() {
 
         // 1d. listTrialBalance for Company B must not include Company A's accounts or figures
         final tb = await journalRepo.listTrialBalance();
-        expect(tb.any((row) => row.accountUuid == compAAcc1), isFalse);
+        expect(tb.any((row) => row.accountId == compAAcc1), isFalse);
       },
     );
 
@@ -194,9 +194,9 @@ void main() {
       () async {
         // Switch to Company A and create entry X
         activeCompanyId = companyA;
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-A-002',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -226,7 +226,7 @@ void main() {
 
         // Company B attempts to overwrite entry X by providing same UUID
         final hackDraft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'HACKED-BY-B',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -262,7 +262,7 @@ void main() {
 
         // Switch back to Company A context and verify entry X is unchanged
         activeCompanyId = companyA;
-        final original = await journalRepo.getByUuid(entryUuid);
+        final original = await journalRepo.getByUuid(entryId);
         expect(original, isNotNull);
         expect(original!.voucherNumber, equals('JE-A-002'));
         expect(original.description, equals('Company A entry for update test'));
@@ -275,9 +275,9 @@ void main() {
       () async {
         // Switch to Company A and create draft entry X
         activeCompanyId = companyA;
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'DRAFT-A-003',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -306,11 +306,11 @@ void main() {
         activeCompanyId = companyB;
 
         // Company B attempts softDeleteByUuid
-        await journalRepo.softDeleteByUuid(entryUuid);
+        await journalRepo.softDeleteByUuid(entryId);
 
         // Switch back to Company A context and verify draft entry is intact
         activeCompanyId = companyA;
-        final original = await journalRepo.getByUuid(entryUuid);
+        final original = await journalRepo.getByUuid(entryId);
         expect(original, isNotNull);
         expect(original!.deletedAt, isNull);
       },
@@ -321,9 +321,9 @@ void main() {
       () async {
         // Switch to Company A and post entry X
         activeCompanyId = companyA;
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-A-004',
           voucherType: 'sale',
           currencyCode: 'SAR',
@@ -353,7 +353,7 @@ void main() {
 
         // Company B attempts to reverse entry X
         await expectLater(
-          () async => postingService.reverseByUuid(entryUuid),
+          () async => postingService.reverseByUuid(entryId),
           throwsA(
             isA<JournalException>().having(
               (e) => e.code,
@@ -365,13 +365,13 @@ void main() {
 
         // Switch back to Company A context - original entry remains intact & no reversal created
         activeCompanyId = companyA;
-        final original = await journalRepo.getByUuid(entryUuid);
+        final original = await journalRepo.getByUuid(entryId);
         expect(original, isNotNull);
         expect(original!.isPosted, isTrue);
 
         final reversal = await journalRepo.findBySource(
           sourceType: JournalPostingService.reverseSourceType,
-          sourceId: entryUuid,
+          sourceId: entryId,
         );
         expect(reversal, isNull);
       },
@@ -468,9 +468,9 @@ void main() {
       () async {
         // Company A posts entry with compAAcc1
         activeCompanyId = companyA;
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-A-006',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -504,9 +504,9 @@ void main() {
 
         // Switch back to Company A context - lines MUST still reference compAAcc1
         activeCompanyId = companyA;
-        final entryA = await journalRepo.getByUuid(entryUuid);
+        final entryA = await journalRepo.getByUuid(entryId);
         expect(entryA, isNotNull);
-        expect(entryA!.lines.first.accountUuid, equals(compAAcc1));
+        expect(entryA!.lines.first.accountId, equals(compAAcc1));
       },
     );
   });

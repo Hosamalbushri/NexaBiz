@@ -2,16 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:stock_count/app/reports/product_stock_movement_report_data_adapter.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase db;
+  late NexabizDatabase db;
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
   });
 
   tearDown(() async {
@@ -67,7 +67,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '10000000-0000-0000-0000-000000000002',
-                movementUuid: '10000000-0000-0000-0000-000000000001',
+                receiptId: '10000000-0000-0000-0000-000000000001',
                 movementType: 'receipt',
                 itemCode: 'ITEM-SHARED',
                 itemName: 'Shared Product Item',
@@ -90,7 +90,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '10000000-0000-0000-0000-000000000004',
-                movementUuid: '10000000-0000-0000-0000-000000000003',
+                issueId: '10000000-0000-0000-0000-000000000003',
                 movementType: 'issue',
                 itemCode: 'ITEM-SHARED',
                 itemName: 'Shared Product Item',
@@ -114,7 +114,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '20000000-0000-0000-0000-000000000002',
-                movementUuid: '20000000-0000-0000-0000-000000000001',
+                receiptId: '20000000-0000-0000-0000-000000000001',
                 movementType: 'receipt',
                 itemCode: 'ITEM-SHARED',
                 itemName: 'Shared Product Item',
@@ -137,7 +137,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '20000000-0000-0000-0000-000000000004',
-                movementUuid: '20000000-0000-0000-0000-000000000003',
+                issueId: '20000000-0000-0000-0000-000000000003',
                 movementType: 'issue',
                 itemCode: 'ITEM-SHARED',
                 itemName: 'Shared Product Item',
@@ -154,7 +154,7 @@ void main() {
         // Fetch report for Company A
         final filterA = const ReportQueryFilter(
           companyId: 'company-a',
-          productUuid: 'ITEM-SHARED',
+          productId: 'ITEM-SHARED',
         );
         final payloadA = await adapter.loadFromFilter(
           filter: filterA,
@@ -174,7 +174,7 @@ void main() {
         // Fetch report for Company B
         final filterB = const ReportQueryFilter(
           companyId: 'company-b',
-          productUuid: 'ITEM-SHARED',
+          productId: 'ITEM-SHARED',
         );
         final payloadB = await adapter.loadFromFilter(
           filter: filterB,

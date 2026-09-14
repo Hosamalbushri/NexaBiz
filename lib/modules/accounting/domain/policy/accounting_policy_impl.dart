@@ -8,12 +8,10 @@ import 'accounting_policy_port.dart';
 /// Concrete implementation of [AccountingPolicyPort] providing authoritative configuration & policy decision logic.
 class AccountingPolicy implements AccountingPolicyPort {
   AccountingPolicy({
-    required CompanyInitializationRepository initRepository,
-    PeriodValidatorPort? periodValidator,
+    required this._initRepository,
+    this._periodValidator,
     Map<String, AccountingLifecycleState>? explicitStateOverrides,
-  })  : _initRepository = initRepository,
-        _periodValidator = periodValidator,
-        _explicitStateOverrides = explicitStateOverrides ?? {};
+  })  : _explicitStateOverrides = explicitStateOverrides ?? {};
 
   final CompanyInitializationRepository _initRepository;
   final PeriodValidatorPort? _periodValidator;
@@ -93,11 +91,12 @@ class AccountingPolicy implements AccountingPolicyPort {
     if (!isValidTransactionDate(transactionDate)) {
       return false;
     }
-    if (_periodValidator == null) {
+    final periodValidator = _periodValidator;
+    if (periodValidator == null) {
       return true;
     }
     try {
-      await _periodValidator!.assertEntryAllowed(transactionDate);
+      await periodValidator.assertEntryAllowed(transactionDate);
       return true;
     } catch (_) {
       return false;

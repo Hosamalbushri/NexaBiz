@@ -3,9 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_shadows.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
@@ -16,7 +13,6 @@ import '../../domain/models/category_tree_node.dart';
 import '../providers/category_providers.dart';
 import '../widgets/category_form_dialog.dart';
 import '../widgets/category_tree.dart';
-import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Professional, design-system aligned Inventory Categories Management page.
 class CategoriesSettingsPage extends ConsumerStatefulWidget {

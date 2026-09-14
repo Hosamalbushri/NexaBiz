@@ -96,4 +96,10 @@ class StockMovementLedgers extends Table {
   List<Set<Column>> get uniqueKeys => [
         {companyId, id},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, warehouse_id) REFERENCES warehouses(company_id, id) ON DELETE SET NULL',
+        'FOREIGN KEY (company_id, product_id) REFERENCES products(company_id, id) ON DELETE SET NULL',
+      ];
 }

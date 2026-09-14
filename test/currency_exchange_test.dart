@@ -21,8 +21,7 @@ class _RecordingJournals implements JournalRepository {
   Future<JournalEntry> post(JournalEntryDraft draft) async {
     lastDraft = draft;
     return JournalEntry(
-      id: 1,
-      uuid: 'entry-1',
+      id: 'entry-1',
       entryDate: draft.entryDate,
       voucherNumber: draft.voucherNumber,
       voucherType: draft.voucherType,
@@ -36,10 +35,9 @@ class _RecordingJournals implements JournalRepository {
       lines: [
         for (var i = 0; i < draft.lines.length; i++)
           JournalLine(
-            id: i + 1,
-            uuid: 'line-$i',
-            entryUuid: 'entry-1',
-            accountUuid: draft.lines[i].accountUuid,
+            id: 'line-$i',
+            entryId: 'entry-1',
+            accountId: draft.lines[i].accountId,
             debit: draft.lines[i].debit,
             credit: draft.lines[i].credit,
             currencyCode: draft.lines[i].currencyCode,
@@ -78,7 +76,7 @@ class _RecordingJournals implements JournalRepository {
     bool? isPosted,
     String? query,
     int? limit,
-    int? afterId,
+    String? afterId,
   }) async => const [];
 
   @override
@@ -211,8 +209,7 @@ void main() {
 
       final now = DateTime.utc(2026, 3, 1);
       final txn = FinancialTransaction(
-        id: 1,
-        uuid: 'fx-1',
+        id: 'fx-1',
         transactionType: TransactionType.currencyExchange,
         source: TransactionSource.currencyExchange,
         transactionNumber: '1',
@@ -250,10 +247,10 @@ void main() {
       expect(draft.sourceType, 'currency_exchange');
       expect(draft.allowUnbalancedMultiCurrency, isTrue);
       expect(draft.lines, hasLength(2));
-      expect(draft.lines[0].accountUuid, 'cash-1');
+      expect(draft.lines[0].accountId, 'cash-1');
       expect(draft.lines[0].debit, 100);
       expect(draft.lines[0].currencyCode, 'USD');
-      expect(draft.lines[1].accountUuid, 'cash-1');
+      expect(draft.lines[1].accountId, 'cash-1');
       expect(draft.lines[1].credit, 375);
       expect(draft.lines[1].currencyCode, 'SAR');
     },
@@ -269,8 +266,7 @@ void main() {
 
     final now = DateTime.utc(2026, 3, 1);
     final txn = FinancialTransaction(
-      id: 2,
-      uuid: 'fx-2',
+      id: 'fx-2',
       transactionType: TransactionType.currencyExchange,
       source: TransactionSource.currencyExchange,
       transactionNumber: '2',
@@ -307,8 +303,9 @@ void main() {
     final draft = journals.lastDraft!;
     expect(draft.lines, hasLength(3));
     final fxLine = draft.lines[2];
-    expect(fxLine.accountUuid, systemAccountUuid('fx_gain'));
+    expect(fxLine.accountId, systemAccountUuid('fx_gain'));
     expect(fxLine.credit, 12.5);
     expect(fxLine.currencyCode, 'SAR');
   });
 }
+

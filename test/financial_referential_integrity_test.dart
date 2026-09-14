@@ -7,10 +7,10 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fisc
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/data/services/financial_referential_integrity_validator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -26,8 +26,8 @@ import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehou
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   late FinancialReferentialIntegrityValidator validator;
 
   late CostLayerServiceImpl costLayerService;
@@ -39,8 +39,8 @@ void main() {
   const tenantId = 'tenant-referential-01';
 
   setUp(() async {
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
 
     validator = FinancialReferentialIntegrityValidator(
       invDb: invDb,
@@ -95,7 +95,7 @@ void main() {
         final layerId = generateUuidV4();
         final issueLineId = generateUuidV4();
 
-        final movementUuid = generateUuidV4();
+        final movementId = generateUuidV4();
 
         // Create a cost layer
         await costLayerService.createLayer(
@@ -103,7 +103,7 @@ void main() {
             id: layerId,
             itemCode: 'ITEM-REF-01',
             warehouseId: 'WH-01',
-            movementUuid: movementUuid,
+            movementId: movementId,
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 100.0,
@@ -129,7 +129,7 @@ void main() {
 
         // Attempt to reverse/delete the cost layer while downstream consumptions exist
         expect(
-          () async => await costLayerService.reverseLayer(movementUuid),
+          () async => await costLayerService.reverseLayer(movementId),
           throwsA(isA<JournalException>()),
         );
 
@@ -144,13 +144,13 @@ void main() {
     test(
       '2. JournalEntry Deletion Safeguard: Posted JournalEntry deletion & orphan JournalLine insertion are BLOCKED',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
 
         // Attempt validator check for orphan line without entry
         expect(
           () async => await validator.validateJournalLineCreation(
-            entryUuid: entryUuid,
-            accountUuid: 'ACC-101',
+            entryId: entryId,
+            accountId: 'ACC-101',
           ),
           throwsA(isA<StateError>()),
         );
@@ -158,7 +158,7 @@ void main() {
         // Attempt validator check for empty movement or entry UUID
         expect(
           () => validator.validateCostLayerCreation(
-            movementUuid: '',
+            movementId: '',
             itemCode: 'ITEM-01',
             receivedQty: 10,
           ),
@@ -180,7 +180,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-REF-02',
               itemName: 'Item Ref 2',
@@ -239,7 +239,7 @@ void main() {
             id: generateUuidV4(),
             itemCode: 'ITEM-REF-03',
             warehouseId: whId,
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 50.0,
@@ -278,7 +278,7 @@ void main() {
             id: generateUuidV4(),
             itemCode: 'ITEM-REF-SAFE',
             warehouseId: 'WH-01',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 20.0,
@@ -316,7 +316,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: issueId,
+              movementId: issueId,
               movementType: 'issue',
               itemCode: 'ITEM-DRAFT',
               itemName: 'Draft Item',
@@ -339,10 +339,10 @@ void main() {
         // Verify movement lines remain linked in DB (not physically orphaned or corrupted)
         final lines = await (invDb.select(
           invDb.stockMovementLines,
-        )..where((t) => t.movementUuid.equals(issueId))).get();
+        )..where((t) => t.movementId.equals(issueId))).get();
 
         expect(lines.length, equals(1));
-        expect(lines.first.movementUuid, equals(issueId));
+        expect(lines.first.movementId, equals(issueId));
       },
     );
   });

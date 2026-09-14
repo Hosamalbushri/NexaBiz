@@ -1,4 +1,3 @@
-import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';

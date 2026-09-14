@@ -35,7 +35,7 @@ void main() {
       // Insert Receipt for Company A
       await db.into(db.financialTransactions).insert(
             FinancialTransactionsCompanion.insert(
-              uuid: uuidA,
+              id: uuidA,
               transactionNumber: 'REC-A-0001',
               transactionType: 'receipt',
               source: 'manual',
@@ -55,7 +55,7 @@ void main() {
       // Insert Payment for Company B
       await db.into(db.financialTransactions).insert(
             FinancialTransactionsCompanion.insert(
-              uuid: uuidB,
+              id: uuidB,
               transactionNumber: 'PAY-B-0001',
               transactionType: 'payment',
               source: 'manual',
@@ -98,7 +98,7 @@ void main() {
     test('Financial transaction creation with party and account references', () async {
       final companyId = 'comp-treasury-ref-3f';
       final txnUuid = generateUuidV4();
-      final customerUuid = generateUuidV4();
+      final customerId = generateUuidV4();
       final cashAccountUuid = generateUuidV4();
       final counterAccountUuid = generateUuidV4();
       final voucherBookUuid = generateUuidV4();
@@ -106,7 +106,7 @@ void main() {
 
       await db.into(db.financialTransactions).insert(
             FinancialTransactionsCompanion.insert(
-              uuid: txnUuid,
+              id: txnUuid,
               transactionNumber: 'REC-2026-009',
               transactionType: 'receipt',
               source: 'customer_payment',
@@ -124,7 +124,7 @@ void main() {
               counterAccountId: counterAccountUuid,
               counterAccountCode: const Value('1200'),
               counterAccountName: const Value('Accounts Receivable'),
-              customerId: Value(customerUuid),
+              customerId: Value(customerId),
               customerCode: const Value('CUST-007'),
               customerName: const Value('Acme Corp'),
               paymentMethod: const Value('cash'),
@@ -136,13 +136,13 @@ void main() {
           );
 
       final row = await (db.select(db.financialTransactions)
-            ..where((tbl) => tbl.uuid.equals(txnUuid)))
+            ..where((tbl) => tbl.id.equals(txnUuid)))
           .getSingle();
 
       expect(row.uuid, equals(txnUuid));
       expect(row.amount, equals(2500.0));
       expect(row.companyId, equals(companyId));
-      expect(row.customerId, equals(customerUuid));
+      expect(row.customerId, equals(customerId));
       expect(row.cashAccountId, equals(cashAccountUuid));
       expect(row.counterAccountId, equals(counterAccountUuid));
       expect(row.voucherBookId, equals(voucherBookUuid));
@@ -156,7 +156,7 @@ void main() {
       // 1. Insert unposted financial transaction
       await db.into(db.financialTransactions).insert(
             FinancialTransactionsCompanion.insert(
-              uuid: txnUuid,
+              id: txnUuid,
               transactionNumber: 'PAY-STATE-01',
               transactionType: 'payment',
               source: 'manual',
@@ -176,7 +176,7 @@ void main() {
 
       // 2. Mark posted
       await (db.update(db.financialTransactions)
-            ..where((tbl) => tbl.uuid.equals(txnUuid)))
+            ..where((tbl) => tbl.id.equals(txnUuid)))
           .write(
         FinancialTransactionsCompanion(
           documentStatus: const Value('posted'),
@@ -185,13 +185,13 @@ void main() {
       );
 
       var updated = await (db.select(db.financialTransactions)
-            ..where((tbl) => tbl.uuid.equals(txnUuid)))
+            ..where((tbl) => tbl.id.equals(txnUuid)))
           .getSingle();
       expect(updated.documentStatus, equals('posted'));
 
       // 3. Mark cancelled/reversed
       await (db.update(db.financialTransactions)
-            ..where((tbl) => tbl.uuid.equals(txnUuid)))
+            ..where((tbl) => tbl.id.equals(txnUuid)))
           .write(
         FinancialTransactionsCompanion(
           cancelledAt: Value(now),
@@ -200,7 +200,7 @@ void main() {
       );
 
       updated = await (db.select(db.financialTransactions)
-            ..where((tbl) => tbl.uuid.equals(txnUuid)))
+            ..where((tbl) => tbl.id.equals(txnUuid)))
           .getSingle();
       expect(updated.cancelledAt, isNotNull);
     });
@@ -214,7 +214,7 @@ void main() {
         await db.transaction(() async {
           await db.into(db.financialTransactions).insert(
                 FinancialTransactionsCompanion.insert(
-                  uuid: txnUuid,
+                  id: txnUuid,
                   transactionNumber: 'PAY-FAIL-01',
                   transactionType: 'payment',
                   source: 'manual',
@@ -236,7 +236,7 @@ void main() {
       } catch (_) {}
 
       final rows = await (db.select(db.financialTransactions)
-            ..where((tbl) => tbl.uuid.equals(txnUuid)))
+            ..where((tbl) => tbl.id.equals(txnUuid)))
           .get();
 
       expect(rows, isEmpty);

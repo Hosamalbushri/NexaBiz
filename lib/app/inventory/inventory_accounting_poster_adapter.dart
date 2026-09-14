@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_initializing_formals, type_init_formals
+
 import 'package:stock_count/modules/accounting/domain/integration/accounting_integration_port.dart';
 import 'package:stock_count/modules/accounting/domain/rules/accounting_transaction_intent.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
@@ -8,22 +10,26 @@ import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_d
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
+
 /// Adapter bridging Inventory module accounting requests to Accounting domain services.
 class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
-  InventoryAccountingPosterAdapter({
-    required JournalPostingService journalPostingService,
-    required JournalBuilderService journalBuilder,
+  InventoryAccountingPosterAdapter(
+    this._journalPostingService, {
+    JournalBuilderService? journalBuilder,
     AccountingIntegrationPort? integrationService,
     InitializationGuard? initializationGuard,
-  })  : _journalPostingService = journalPostingService,
-        _journalBuilder = journalBuilder,
+    String Function()? readCompanyId,
+  })  : _journalBuilder = journalBuilder,
         _integrationService = integrationService,
-        _initializationGuard = initializationGuard;
+        _initializationGuard = initializationGuard,
+        _readCompanyId = readCompanyId;
 
-  final JournalPostingService _journalPostingService;
-  final JournalBuilderService _journalBuilder;
+  final JournalPostingService? _journalPostingService;
+  final JournalBuilderService? _journalBuilder;
   final AccountingIntegrationPort? _integrationService;
   final InitializationGuard? _initializationGuard;
+  final String Function()? _readCompanyId;
 
   @override
   Future<void> postAccountingEntry({
@@ -35,6 +41,12 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     bool useBaseCurrencyForPosting = false,
   }) async {
     await _initializationGuard?.assertInitialized();
+    final companyId = _readCompanyId?.call();
+    if (_readCompanyId != null && (companyId == null || companyId.trim().isEmpty)) {
+      throw MissingCompanyContextException(
+        'Accounting entry blocked: missing active company context.',
+      );
+    }
     if (totalAmount <= 0) return;
     if (!isPosted) {
       await reverseAccountingEntry(document: document);
@@ -53,13 +65,20 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
         _ => AccountingTransactionType.stockIssue,
       };
 
-      final result = await _integrationService!.processOperationalTransaction(
+      final resolvedCompanyId = companyId?.trim() ?? '';
+      if (resolvedCompanyId.isEmpty) {
+        throw MissingCompanyContextException(
+          'Accounting entry blocked: missing active company context.',
+        );
+      }
+
+      final result = await _integrationService.processOperationalTransaction(
         OperationalAccountingRequest(
-          companyId: 'default',
+          companyId: resolvedCompanyId,
           sourceType: document.documentType.storageValue,
           sourceId: document.documentId,
           transactionType: txnType,
-          transactionDate: document.documentDate ?? DateTime.now().toUtc(),
+          transactionDate: document.documentDate,
           amount: totalAmount,
           currencyCode: 'YER',
           baseCurrencyCode: 'YER',
@@ -76,16 +95,20 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       return;
     }
 
+    final builder = _journalBuilder;
+    final posting = _journalPostingService;
+    if (builder == null || posting == null) return;
+
     final JournalEntryDraft draft;
     if (document.documentType == InventoryDocumentType.stockTransfer) {
-      draft = await _journalBuilder.buildTransferJournal(
+      draft = await builder.buildTransferJournal(
         document: document,
         totalAmount: totalAmount,
         valuationAmount: valuationAmount,
         isPosted: isPosted,
       );
     } else if (document.documentType == InventoryDocumentType.stockReceipt) {
-      draft = await _journalBuilder.buildReceiptJournal(
+      draft = await builder.buildReceiptJournal(
         document: document,
         totalAmount: totalAmount,
         valuationAmount: valuationAmount,
@@ -94,7 +117,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
         useBaseCurrencyForPosting: useBaseCurrencyForPosting,
       );
     } else {
-      draft = await _journalBuilder.buildIssueJournal(
+      draft = await builder.buildIssueJournal(
         document: document,
         totalAmount: totalAmount,
         valuationAmount: valuationAmount,
@@ -104,7 +127,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       );
     }
 
-    await _journalPostingService.post(draft);
+    await posting.post(draft);
   }
 
   @override
@@ -112,9 +135,11 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     required InventoryDocumentRef document,
     required bool isPosted,
   }) async {
+    final posting = _journalPostingService;
+    if (posting == null) return;
     final sourceType = document.documentType.storageValue;
     final sourceId = document.documentId;
-    final existing = await _journalPostingService.findBySource(
+    final existing = await posting.findBySource(
       sourceType: sourceType,
       sourceId: sourceId,
     );
@@ -129,24 +154,27 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     required InventoryDocumentRef document,
   }) async {
     await _initializationGuard?.assertInitialized();
+    final posting = _journalPostingService;
+    final builder = _journalBuilder;
+    if (posting == null) return;
     final sourceType = document.documentType.storageValue;
     final sourceId = document.documentId;
 
-    final existing = await _journalPostingService.findBySource(
+    final existing = await posting.findBySource(
       sourceType: sourceType,
       sourceId: sourceId,
     );
 
-    if (existing != null && existing.isPosted) {
-      final reverseDraft = await _journalBuilder.buildReverseJournal(
+    if (existing != null && existing.isPosted && builder != null) {
+      final reverseDraft = await builder.buildReverseJournal(
         document: document,
         originalEntry: existing,
       );
-      await _journalPostingService.post(reverseDraft);
+      await posting.post(reverseDraft);
       return;
     }
 
-    await _journalPostingService.voidBySource(
+    await posting.voidBySource(
       sourceType: sourceType,
       sourceId: sourceId,
     );

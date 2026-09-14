@@ -4,7 +4,7 @@ import 'package:drift/native.dart';
 
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/modules/sync/engine/domain/services/sync_error_classifier.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
@@ -15,7 +15,7 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/inve
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
 
 void main() {
-  late InventoryDatabase inventoryDb;
+  late NexabizDatabase inventoryDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -24,7 +24,7 @@ void main() {
   const tenantCompanyId = 'tenant_company_retry_38';
 
   setUp(() async {
-    inventoryDb = InventoryDatabase(executor: NativeDatabase.memory());
+    inventoryDb = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(
       db: inventoryDb,
       readCompanyId: () => tenantCompanyId,
@@ -130,7 +130,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: const Value('00000000-0000-4000-8000-000000000089'),
-                movementUuid: const Value(receiptUuid),
+                movementId: const Value(receiptUuid),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-001'),
                 itemName: const Value('Test Item'),

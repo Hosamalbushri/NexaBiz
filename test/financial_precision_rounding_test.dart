@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:drift/native.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
@@ -79,10 +79,10 @@ void main() {
     test(
       '5. Multi-line FX conversion penny-balancing guarantees SUM(debit) == SUM(credit)',
       () async {
-        late AccountingDatabase db;
+        late NexabizDatabase db;
         late CurrencyRateRepositoryImpl rateRepo;
 
-        db = AccountingDatabase(executor: NativeDatabase.memory());
+        db = NexabizDatabase.memory();
         rateRepo = CurrencyRateRepositoryImpl(
           db,
           readCompanyId: () => 'test_company',

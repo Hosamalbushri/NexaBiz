@@ -12,7 +12,7 @@ import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/core/widgets/app_currency_selector.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_repository.dart';
@@ -59,14 +59,14 @@ class FakeSettingsRepository extends SettingsRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late CurrencyRepository currencyRepo;
   late FakeSettingsRepository fakeSettingsRepo;
   late List<Currency> allCurrencies;
   late List<Currency> activeCurrencies;
 
   setUp(() async {
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     currencyRepo = CurrencyRepositoryImpl(
       db,
       readCompanyId: () => 'comp_1',

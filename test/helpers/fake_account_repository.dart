@@ -14,8 +14,7 @@ class FakeAccountRepository implements AccountRepository {
     final now = DateTime.utc(2026, 1, 1);
     Account mk(String key, String code, AccountType type) {
       return Account(
-        id: key.hashCode.abs(),
-        uuid: systemAccountUuid(key),
+        id: systemAccountUuid(key),
         accountCode: code,
         name: key,
         accountType: type,
@@ -47,9 +46,10 @@ class FakeAccountRepository implements AccountRepository {
       Stream.value(_accounts);
 
   @override
-  Future<Account?> getById(int id) async {
+  Future<Account?> getById(String id, {bool includeInactive = false}) async {
     for (final a in _accounts) {
       if (a.id == id) {
+        if (!includeInactive && !a.isActive) continue;
         return a;
       }
     }
@@ -57,28 +57,29 @@ class FakeAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<Account?> getByUuid(String uuid) async {
-    for (final a in _accounts) {
-      if (a.uuid == uuid) {
-        return a;
-      }
-    }
-    return null;
-  }
+  Future<Account?> getByUuid(String id, {bool includeInactive = false}) async =>
+      getById(id, includeInactive: includeInactive);
 
   @override
-  Future<List<Account>> getByUuids(Iterable<String> uuids) async {
-    final set = uuids.toSet();
+  Future<List<Account>> getByUuids(
+    Iterable<String> ids, {
+    bool includeInactive = false,
+  }) async {
+    final set = ids.toSet();
     return [
       for (final a in _accounts)
-        if (set.contains(a.uuid)) a,
+        if (set.contains(a.id) && (includeInactive || a.isActive)) a,
     ];
   }
 
   @override
-  Future<Account?> getByAccountCode(String accountCode) async {
+  Future<Account?> getByAccountCode(
+    String accountCode, {
+    bool includeInactive = false,
+  }) async {
     for (final a in _accounts) {
       if (a.accountCode == accountCode) {
+        if (!includeInactive && !a.isActive) continue;
         return a;
       }
     }
@@ -92,26 +93,26 @@ class FakeAccountRepository implements AccountRepository {
   }) async => const [];
 
   @override
-  Future<List<Account>> getChildren(String parentUuid) async => const [];
+  Future<List<Account>> getChildren(String parentId) async => const [];
 
   @override
-  Future<bool> hasChildren(String uuid) async => false;
+  Future<bool> hasChildren(String id) async => false;
 
   @override
-  Future<bool> isUsedInTransactions(String uuid) async => false;
+  Future<bool> isUsedInTransactions(String id) async => false;
 
   @override
   Future<Account> insert(AccountDraft draft) => throw UnimplementedError();
 
   @override
-  Future<Account> update(int id, AccountDraft draft) =>
+  Future<Account> update(String id, AccountDraft draft) =>
       throw UnimplementedError();
 
   @override
-  Future<void> deactivate(int id) async {}
+  Future<void> deactivate(String id) async {}
 
   @override
-  Future<void> softDelete(int id) async {}
+  Future<void> softDelete(String id) async {}
 
   @override
   Future<void> ensureDefaultChartSeeded() async {}
@@ -128,3 +129,4 @@ class FakeAccountRepository implements AccountRepository {
       if (a.accountType == type) a,
   ];
 }
+

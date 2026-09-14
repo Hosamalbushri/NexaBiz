@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
@@ -107,7 +107,7 @@ class RefundEngine {
 }
 
 void main() {
-  late ReceiptsPaymentsDatabase db;
+  late NexabizDatabase db;
   late FinancialTransactionRepositoryImpl repo;
   late TestVoucherBookPort voucherBookPort;
   late CreateFinancialTransaction createTxn;
@@ -121,7 +121,7 @@ void main() {
   const customerId = 'cust_acme';
 
   setUp(() {
-    db = ReceiptsPaymentsDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     voucherBookPort = TestVoucherBookPort();
     refundEngine = RefundEngine();
 

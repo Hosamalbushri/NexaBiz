@@ -2,14 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -22,8 +22,8 @@ import 'package:stock_count/modules/accounting/shared/domain/services/inventory_
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   const companyA = 'company-uuid-1111-aaaa';
   const companyB = 'company-uuid-2222-bbbb';
 
@@ -34,7 +34,7 @@ void main() {
     final now = DateTime.now().millisecondsSinceEpoch;
     await invDb.into(invDb.warehouses).insert(
       WarehousesCompanion.insert(
-        uuid: uuid,
+        id: uuid,
         name: 'Warehouse $code',
         code: code,
         companyId: Value(companyId),
@@ -47,8 +47,8 @@ void main() {
   }
 
   setUp(() async {
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
 
     await seedWarehouse(whUuidA, 'WH-A', companyA);
     await seedWarehouse(whUuidB, 'WH-B', companyB);
@@ -210,7 +210,7 @@ void main() {
       // Seed posting accounts for Company A with valid 36-character UUIDs
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       await accDb.into(accDb.accounts).insert(AccountsCompanion.insert(
-        uuid: '10000000-0000-0000-0000-000000001000',
+        id: '10000000-0000-0000-0000-000000001000',
         accountCode: '1000',
         name: 'Cash',
         accountType: 'asset',
@@ -222,7 +222,7 @@ void main() {
         companyId: const Value(companyA),
       ));
       await accDb.into(accDb.accounts).insert(AccountsCompanion.insert(
-        uuid: '20000000-0000-0000-0000-000000002000',
+        id: '20000000-0000-0000-0000-000000002000',
         accountCode: '2000',
         name: 'Sales Revenue',
         accountType: 'revenue',
@@ -320,10 +320,10 @@ void main() {
       // Seed 1 cost layer in Inventory (100 units @ $10 = $1000 valuation)
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       await invDb.into(invDb.inventoryCostLayers).insert(InventoryCostLayersCompanion.insert(
-        uuid: '33333333-3333-3333-3333-333333333333',
+        id: '33333333-3333-3333-3333-333333333333',
         itemCode: 'ITEM-RECON',
         warehouseId: Value(whUuidA),
-        movementUuid: '44444444-4444-4444-4444-444444444444',
+        movementId: '44444444-4444-4444-4444-444444444444',
         movementType: 'receipt',
         receivedDate: nowMs,
         receivedQty: const Value(100.0),

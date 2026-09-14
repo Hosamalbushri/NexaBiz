@@ -9,10 +9,9 @@ import 'accounting_transaction_intent.dart';
 /// Concrete implementation of [AccountingRulesEnginePort].
 class AccountingRulesEngine implements AccountingRulesEnginePort {
   AccountingRulesEngine({
-    required AuthoritativeAccountResolverPort accountResolver,
-    required AccountingPolicyPort policyPort,
-  })  : _accountResolver = accountResolver,
-        _policyPort = policyPort;
+    required this._accountResolver,
+    required this._policyPort,
+  });
 
   final AuthoritativeAccountResolverPort _accountResolver;
   final AccountingPolicyPort _policyPort;

@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
-import 'package:stock_count/modules/currency/domain/services/exchange_rate_engine.dart';
 import 'package:stock_count/modules/sales/invoices/domain/services/sale_currency_converter.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/services/financial_transaction_validator.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';

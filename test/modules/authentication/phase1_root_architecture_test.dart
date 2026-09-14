@@ -8,6 +8,7 @@ import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/authentication/domain/entities/user_company_membership.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/system_setup/domain/services/first_run_setup_coordinator.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 
 class FakeSettingsRepository implements SettingsRepository {
   bool _onboardingCompleted = false;
@@ -46,6 +47,7 @@ class FakeSettingsRepository implements SettingsRepository {
     required String status,
     required Map<String, Map<String, Object?>> steps,
     required DateTime lastUpdated,
+    String? companyId,
   }) async {}
 
   @override

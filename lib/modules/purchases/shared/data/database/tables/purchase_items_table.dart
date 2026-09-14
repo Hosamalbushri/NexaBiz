@@ -57,4 +57,10 @@ class PurchaseItems extends Table {
   List<Set<Column>> get uniqueKeys => [
         {companyId, id},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, purchase_id) REFERENCES purchases(company_id, id) ON DELETE CASCADE',
+        'FOREIGN KEY (company_id, product_id) REFERENCES products(company_id, id) ON DELETE RESTRICT',
+      ];
 }

@@ -9,19 +9,17 @@ import '../../domain/entities/customer_data_source.dart';
 import '../../domain/models/customer_exception.dart';
 import '../../domain/models/import_session.dart';
 import '../../domain/repositories/customer_repository.dart';
-import '../../domain/services/customer_validator.dart';
 
 class CustomerRepositoryImpl implements CustomerRepository {
   CustomerRepositoryImpl(
     this._db, {
     this._syncQueue,
-    this._validator = const CustomerValidator(),
     this._readCompanyId,
   });
 
   final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
-  final CustomerValidator _validator;
+  // final CustomerValidator _validator;
   final String Function()? _readCompanyId;
 
   static const entityType = 'customer';

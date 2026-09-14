@@ -4,7 +4,7 @@ import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_validation_service.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/accounting_entry_builder.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -17,13 +17,13 @@ class FakeAccountValidationService implements AccountValidationService {
 
   @override
   Future<AccountValidationResult> validateAccountUuid(
-    String accountUuid,
+    String accountId,
   ) async {
     return AccountValidationResult.valid;
   }
 
   @override
-  Future<void> assertCanPost(String accountUuid) async {}
+  Future<void> assertCanPost(String accountId) async {}
 }
 
 class FakeAccountMappingResolver implements AccountMappingResolver {
@@ -35,31 +35,31 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
     return AccountMapping({
       AccountRole.cash: const AccountRoleRef(
         role: AccountRole.cash,
-        accountUuid: 'acc_cash_01',
+        accountId: 'acc_cash_01',
         accountCode: '1010',
         accountName: 'Cash',
       ),
       AccountRole.receivable: const AccountRoleRef(
         role: AccountRole.receivable,
-        accountUuid: 'acc_rec_01',
+        accountId: 'acc_rec_01',
         accountCode: '1100',
         accountName: 'Receivable',
       ),
       AccountRole.revenue: const AccountRoleRef(
         role: AccountRole.revenue,
-        accountUuid: 'acc_rev_01',
+        accountId: 'acc_rev_01',
         accountCode: '4010',
         accountName: 'Revenue',
       ),
       AccountRole.cogs: const AccountRoleRef(
         role: AccountRole.cogs,
-        accountUuid: 'acc_cogs_01',
+        accountId: 'acc_cogs_01',
         accountCode: '5010',
         accountName: 'COGS',
       ),
       AccountRole.inventory: const AccountRoleRef(
         role: AccountRole.inventory,
-        accountUuid: 'acc_inv_01',
+        accountId: 'acc_inv_01',
         accountCode: '1200',
         accountName: 'Inventory',
       ),
@@ -69,13 +69,13 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
 
 void main() {
   group('SA-06 — Sales Multi-Currency & FX Integrity Tests', () {
-    late InventoryDatabase db;
+    late NexabizDatabase db;
     late CostLayerServiceImpl costLayerService;
     late AccountingEntryBuilder entryBuilder;
     const companyId = 'comp_fx_01';
 
     setUp(() {
-      db = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.memory();
       costLayerService = CostLayerServiceImpl(
         db: db,
         readCompanyId: () => companyId,
@@ -99,7 +99,7 @@ void main() {
             id: makeUuid(1),
             itemCode: 'ITEM_FX_01',
             warehouseId: 'WH_MAIN',
-            movementUuid: makeUuid(101),
+            movementId: makeUuid(101),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 10)),
             receivedQty: 1.0,
@@ -181,7 +181,7 @@ void main() {
             id: makeUuid(2),
             itemCode: 'ITEM_FX_02',
             warehouseId: 'WH_MAIN',
-            movementUuid: makeUuid(102),
+            movementId: makeUuid(102),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 30)),
             receivedQty: 1.0,
@@ -254,7 +254,7 @@ void main() {
             id: makeUuid(4),
             itemCode: 'ITEM_FX_04',
             warehouseId: 'WH_MAIN',
-            movementUuid: makeUuid(104),
+            movementId: makeUuid(104),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 5)),
             receivedQty: 5.0,

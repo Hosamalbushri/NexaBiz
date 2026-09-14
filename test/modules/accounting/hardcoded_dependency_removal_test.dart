@@ -17,7 +17,7 @@ class FakeAccountRepository implements AccountRepository {
   final Map<String, Account> _accountsByUuid = {};
 
   void add(Account account) {
-    _accountsByUuid[account.uuid] = account;
+    _accountsByUuid[account.id] = account;
   }
 
   @override
@@ -120,8 +120,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 1,
-            uuid: 'custom_uuid_cash_box',
+            id: 'custom_uuid_cash_box',
             code: '9901',
             name: 'صندوق الرئيسي المخصص',
             accountType: AccountType.asset,
@@ -131,8 +130,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 2,
-            uuid: 'custom_uuid_sales_rev',
+            id: 'custom_uuid_sales_rev',
             code: '9902',
             name: 'إيراد المبيعات المخصص',
             accountType: AccountType.revenue,
@@ -173,9 +171,9 @@ void main() {
         final revDraft = drafts.first;
 
         expect(revDraft.lines, hasLength(2));
-        expect(revDraft.lines[0].accountUuid, equals('custom_uuid_cash_box'));
+        expect(revDraft.lines[0].accountId, equals('custom_uuid_cash_box'));
         expect(revDraft.lines[0].debit, equals(500.0));
-        expect(revDraft.lines[1].accountUuid, equals('custom_uuid_sales_rev'));
+        expect(revDraft.lines[1].accountId, equals('custom_uuid_sales_rev'));
         expect(revDraft.lines[1].credit, equals(500.0));
       },
     );
@@ -185,8 +183,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 3,
-            uuid: 'custom_uuid_customer_rec',
+            id: 'custom_uuid_customer_rec',
             code: '9903',
             name: 'حساب الذمم المدينة المخصص',
             accountType: AccountType.asset,
@@ -196,8 +193,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 2,
-            uuid: 'custom_uuid_sales_rev',
+            id: 'custom_uuid_sales_rev',
             code: '9902',
             name: 'إيراد المبيعات المخصص',
             accountType: AccountType.revenue,
@@ -238,11 +234,11 @@ void main() {
         final revDraft = drafts.first;
 
         expect(
-          revDraft.lines[0].accountUuid,
+          revDraft.lines[0].accountId,
           equals('custom_uuid_customer_rec'),
         );
         expect(revDraft.lines[0].debit, equals(1200.0));
-        expect(revDraft.lines[1].accountUuid, equals('custom_uuid_sales_rev'));
+        expect(revDraft.lines[1].accountId, equals('custom_uuid_sales_rev'));
         expect(revDraft.lines[1].credit, equals(1200.0));
       },
     );
@@ -252,8 +248,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 1,
-            uuid: 'custom_uuid_cash_box',
+            id: 'custom_uuid_cash_box',
             code: '9901',
             name: 'صندوق الرئيسي المخصص',
             accountType: AccountType.asset,
@@ -263,8 +258,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 2,
-            uuid: 'custom_uuid_sales_rev',
+            id: 'custom_uuid_sales_rev',
             code: '9902',
             name: 'إيراد المبيعات المخصص',
             accountType: AccountType.revenue,
@@ -274,8 +268,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 4,
-            uuid: 'custom_uuid_sales_discount',
+            id: 'custom_uuid_sales_discount',
             code: '9904',
             name: 'حساب خصم المبيعات المخصص',
             accountType: AccountType.revenue,
@@ -317,14 +310,14 @@ void main() {
         final revDraft = drafts.first;
 
         expect(revDraft.lines, hasLength(3));
-        expect(revDraft.lines[0].accountUuid, equals('custom_uuid_cash_box'));
+        expect(revDraft.lines[0].accountId, equals('custom_uuid_cash_box'));
         expect(revDraft.lines[0].debit, equals(900.0));
         expect(
-          revDraft.lines[1].accountUuid,
+          revDraft.lines[1].accountId,
           equals('custom_uuid_sales_discount'),
         );
         expect(revDraft.lines[1].debit, equals(100.0));
-        expect(revDraft.lines[2].accountUuid, equals('custom_uuid_sales_rev'));
+        expect(revDraft.lines[2].accountId, equals('custom_uuid_sales_rev'));
         expect(revDraft.lines[2].credit, equals(1000.0));
       },
     );
@@ -334,8 +327,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 5,
-            uuid: 'custom_uuid_inventory_asset',
+            id: 'custom_uuid_inventory_asset',
             code: '9905',
             name: 'مخزون الأصول المخصص',
             accountType: AccountType.asset,
@@ -345,8 +337,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 6,
-            uuid: 'custom_uuid_supplier_payable',
+            id: 'custom_uuid_supplier_payable',
             code: '9906',
             name: 'حساب الموردين المخصص',
             accountType: AccountType.liability,
@@ -380,12 +371,12 @@ void main() {
 
         expect(draft.lines, hasLength(2));
         expect(
-          draft.lines[0].accountUuid,
+          draft.lines[0].accountId,
           equals('custom_uuid_inventory_asset'),
         );
         expect(draft.lines[0].debit, equals(3500.0));
         expect(
-          draft.lines[1].accountUuid,
+          draft.lines[1].accountId,
           equals('custom_uuid_supplier_payable'),
         );
         expect(draft.lines[1].credit, equals(3500.0));
@@ -397,8 +388,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 1,
-            uuid: 'custom_uuid_cash_box',
+            id: 'custom_uuid_cash_box',
             code: '9901',
             name: 'صندوق الرئيسي المخصص',
             accountType: AccountType.asset,

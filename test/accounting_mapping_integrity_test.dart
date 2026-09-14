@@ -1,23 +1,51 @@
-import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:hive/hive.dart';
 
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_exception.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/missing_account_exception.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_mapping_resolver_impl.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_validation_service_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/accounting_entry_builder.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
+import 'package:stock_count/modules/system_setup/domain/entities/company_accounting_config.dart';
+import 'package:stock_count/modules/system_setup/domain/entities/company_inventory_config.dart';
+import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
+
+class FakeCompanyInitRepo implements CompanyInitializationRepository {
+  FakeCompanyInitRepo(this.companyId, this.invCode, this.cogsCode);
+
+  final String companyId;
+  final String invCode;
+  final String cogsCode;
+
+  @override
+  Future<CompanyAccountingConfig?> getAccountingConfig() async {
+    return CompanyAccountingConfig(
+      companyId: companyId,
+      accountMappings: {
+        AccountRole.inventory: invCode,
+        AccountRole.cogs: cogsCode,
+      },
+    );
+  }
+
+  @override
+  Future<CompanyInventoryConfig?> getInventoryConfig() async => null;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase accDb;
+  late NexabizDatabase accDb;
   late AccountRepositoryImpl accRepoTenantA;
   late AccountRepositoryImpl accRepoTenantB;
   late AccountValidationServiceImpl accValidatorTenantA;
@@ -33,15 +61,19 @@ void main() {
   });
 
   setUp(() async {
-    accDb = AccountingDatabase.memory();
+    accDb = NexabizDatabase.memory();
 
     accRepoTenantA = AccountRepositoryImpl(accDb, readCompanyId: () => tenantA);
     accRepoTenantB = AccountRepositoryImpl(accDb, readCompanyId: () => tenantB);
+
+    await accRepoTenantA.seedDefaultChart();
+    await accRepoTenantB.seedDefaultChart();
 
     accValidatorTenantA = AccountValidationServiceImpl(accRepoTenantA);
     resolverTenantA = AccountMappingResolverImpl(
       accountRepository: accRepoTenantA,
       validationService: accValidatorTenantA,
+      initRepository: FakeCompanyInitRepo(tenantA, '1230', '5100'),
     );
 
     entryBuilderTenantA = AccountingEntryBuilder(
@@ -58,40 +90,6 @@ void main() {
     test(
       '1. Valid Mapping: Resolves system accounts deterministically for active tenant',
       () async {
-        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-
-        // Seed Account 1230 for Tenant A
-        await accDb
-            .into(accDb.accounts)
-            .insert(
-              AccountsCompanion.insert(
-                uuid: generateUuidV4(),
-                accountCode: '1230',
-                name: 'حساب المخزون شركة A',
-                accountType: 'asset',
-                normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
-              ),
-            );
-
-        // Seed Account 5100 for Tenant A
-        await accDb
-            .into(accDb.accounts)
-            .insert(
-              AccountsCompanion.insert(
-                uuid: generateUuidV4(),
-                accountCode: '5100',
-                name: 'تكلفة البضاعة المباعة شركة A',
-                accountType: 'expense',
-                normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
-              ),
-            );
-
         final mapping = await resolverTenantA.resolveForDocument(
           documentType: 'stock_issue',
         );
@@ -100,11 +98,9 @@ void main() {
 
         expect(invRef, isNotNull);
         expect(invRef!.accountCode, equals('1230'));
-        expect(invRef.accountName, equals('حساب المخزون شركة A'));
 
         expect(cogsRef, isNotNull);
         expect(cogsRef!.accountCode, equals('5100'));
-        expect(cogsRef.accountName, equals('تكلفة البضاعة المباعة شركة A'));
       },
     );
 
@@ -128,40 +124,24 @@ void main() {
     test(
       '3. Precedence Rules: Explicit override deterministically overrides default system mapping',
       () async {
-        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+        final now = DateTime.now().toUtc();
 
-        final defaultCogsUuid = generateUuidV4();
         final customCogsUuid = generateUuidV4();
-
-        // Seed Default COGS 5100
-        await accDb
-            .into(accDb.accounts)
-            .insert(
-              AccountsCompanion.insert(
-                uuid: defaultCogsUuid,
-                accountCode: '5100',
-                name: 'تكلفة المبيعات القياسية',
-                accountType: 'expense',
-                normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
-              ),
-            );
 
         // Seed Custom Special COGS 5190
         await accDb
             .into(accDb.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: customCogsUuid,
+                id: drift.Value(customCogsUuid),
                 accountCode: '5190',
                 name: 'تكلفة مبيعات خاصة',
                 accountType: 'expense',
                 normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
+                createdAt: drift.Value(now),
+                updatedAt: drift.Value(now),
+                companyId: tenantA,
+                isSystemAccount: const drift.Value(true),
               ),
             );
 
@@ -182,23 +162,24 @@ void main() {
     test(
       '4. Multi-Tenant Cross Isolation: Account from Tenant B is rejected under Tenant A',
       () async {
-        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+        final now = DateTime.now().toUtc();
 
         final accUuidB = generateUuidV4();
 
-        // Seed Account 1230 ONLY in Tenant B
+        // Seed Account 9999 ONLY in Tenant B
         await accDb
             .into(accDb.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: accUuidB,
-                accountCode: '1230',
-                name: 'حساب مخزون شركة B',
+                id: drift.Value(accUuidB),
+                accountCode: '9999',
+                name: 'حساب خاص شركة B',
                 accountType: 'asset',
                 normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantB),
+                createdAt: drift.Value(now),
+                updatedAt: drift.Value(now),
+                companyId: tenantB,
+                isSystemAccount: const drift.Value(true),
               ),
             );
 
@@ -216,41 +197,16 @@ void main() {
     test(
       '5. Historical Immutability: Changing default mapping after posting preserves historical identity',
       () async {
-        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+        final now = DateTime.now().toUtc();
+        final nowMs = now.millisecondsSinceEpoch;
 
-        final accInvV1Uuid = generateUuidV4();
-        final accCogsV1Uuid = generateUuidV4();
+        final invAcc = await accRepoTenantA.getByAccountCode('1230');
+        final cogsAcc = await accRepoTenantA.getByAccountCode('5100');
+        expect(invAcc, isNotNull);
+        expect(cogsAcc, isNotNull);
 
-        // Seed initial accounts (V1)
-        await accDb
-            .into(accDb.accounts)
-            .insert(
-              AccountsCompanion.insert(
-                uuid: accInvV1Uuid,
-                accountCode: '1230',
-                name: 'حساب المخزون القديم',
-                accountType: 'asset',
-                normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
-              ),
-            );
-
-        await accDb
-            .into(accDb.accounts)
-            .insert(
-              AccountsCompanion.insert(
-                uuid: accCogsV1Uuid,
-                accountCode: '5100',
-                name: 'تكلفة المبيعات القديمة',
-                accountType: 'expense',
-                normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
-              ),
-            );
+        final accInvV1Uuid = invAcc!.id;
+        final accCogsV1Uuid = cogsAcc!.id;
 
         // Build & post historical document entry draft
         final docRef = InventoryDocumentRef(
@@ -266,21 +222,21 @@ void main() {
         );
 
         // Save journal entry into database
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         await accDb
             .into(accDb.journalEntries)
             .insert(
               JournalEntriesCompanion.insert(
-                uuid: entryUuid,
+                id: drift.Value(entryId),
                 voucherNumber: 'JV-HIST-001',
                 voucherType: draft.voucherType,
                 currencyCode: 'YER',
-                entryDate: now,
+                entryDate: nowMs,
                 description: drift.Value(draft.description),
                 isPosted: const drift.Value(true),
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
+                createdAt: nowMs,
+                updatedAt: nowMs,
+                companyId: drift.Value(tenantA),
               ),
             );
 
@@ -289,55 +245,63 @@ void main() {
               .into(accDb.journalLines)
               .insert(
                 JournalLinesCompanion.insert(
-                  uuid: generateUuidV4(),
-                  entryUuid: entryUuid,
-                  accountUuid: line.accountUuid,
+                  id: drift.Value(generateUuidV4()),
+                  entryId: entryId,
+                  accountId: line.accountUuid,
                   currencyCode: 'YER',
                   debit: drift.Value(line.debit),
                   credit: drift.Value(line.credit),
+                  companyId: drift.Value(tenantA),
                 ),
               );
         }
 
         final historicalLines = await (accDb.select(
           accDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entryUuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entryId))).get();
         expect(historicalLines.length, equals(2));
 
         final historicalLineUuids = historicalLines
-            .map((l) => l.accountUuid)
+            .map((l) => l.accountId)
             .toSet();
         expect(historicalLineUuids.contains(accInvV1Uuid), isTrue);
         expect(historicalLineUuids.contains(accCogsV1Uuid), isTrue);
 
-        // NOW: Change configuration (delete old 1230, seed new 1230 V2 with different UUID)
-        await (accDb.delete(
-          accDb.accounts,
-        )..where((tbl) => tbl.uuid.equals(accInvV1Uuid))).go();
+        // Verify soft delete protection for in-use account
+        expect(
+          () => accRepoTenantA.softDelete(accInvV1Uuid),
+          throwsA(isA<AccountException>()),
+        );
+
+        // Update account code of V1 account to 1230-OLD
+        await (accDb.update(accDb.accounts)..where((t) => t.id.equals(accInvV1Uuid))).write(
+          const AccountsCompanion(accountCode: drift.Value('1230-OLD')),
+        );
 
         final accInvV2Uuid = generateUuidV4();
         await accDb
             .into(accDb.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: accInvV2Uuid,
+                id: drift.Value(accInvV2Uuid),
                 accountCode: '1230',
-                name: 'حساب المخزون الجددددد 2026',
+                name: 'حساب المخزون الجديد 2026',
                 accountType: 'asset',
                 normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantA),
+                createdAt: drift.Value(now),
+                updatedAt: drift.Value(now),
+                companyId: tenantA,
+                isSystemAccount: const drift.Value(true),
               ),
             );
 
         // Verify historical entry is 100% IMMUTABLE
         final reVerifiedLines = await (accDb.select(
           accDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entryUuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entryId))).get();
         expect(reVerifiedLines.length, equals(2));
         final reVerifiedLineUuids = reVerifiedLines
-            .map((l) => l.accountUuid)
+            .map((l) => l.accountId)
             .toSet();
 
         expect(

@@ -49,6 +49,20 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
         resolvedAcc =
             await _accountRepository.getByUuid(configuredKey) ??
             await _accountRepository.getByAccountCode(configuredKey);
+      } else {
+        final defaultCode = switch (role) {
+          AccountRole.revenue => '4100',
+          AccountRole.cogs => '5100',
+          AccountRole.inventory => '1230',
+          AccountRole.cash => '1211',
+          AccountRole.receivable => '1220',
+          AccountRole.payable => '2110',
+          AccountRole.adjustment => '5150',
+          _ => null,
+        };
+        if (defaultCode != null) {
+          resolvedAcc = await _accountRepository.getByAccountCode(defaultCode);
+        }
       }
 
       if (resolvedAcc != null) {

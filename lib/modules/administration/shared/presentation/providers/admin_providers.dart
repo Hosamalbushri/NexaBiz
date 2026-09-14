@@ -21,7 +21,6 @@ final adminApiRepositoryProvider = Provider<AdminRepository>((ref) {
 final manageAdminUsersUseCaseProvider = Provider<ManageAdminUsersUseCase>((
   ref,
 ) {
-  final authState = ref.watch(authStateProvider);
   return ManageAdminUsersUseCase(
     ref.watch(adminRepositoryProvider),
     permissionGuard: ref.watch(permissionGuardProvider),

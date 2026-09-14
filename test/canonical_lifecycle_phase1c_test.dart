@@ -52,8 +52,7 @@ class _FakeJournalPostingService implements JournalPostingService {
     }
     final now = DateTime.now();
     return JournalEntry(
-      id: 1,
-      uuid: 'je-1',
+      id: 'je-1',
       entryDate: draft.entryDate,
       voucherNumber: draft.voucherNumber,
       voucherType: draft.voucherType,
@@ -76,8 +75,7 @@ class _FakeJournalPostingService implements JournalPostingService {
   }) async {
     final now = DateTime.now();
     return JournalEntry(
-      id: 2,
-      uuid: 'je-reversal-1',
+      id: 'je-reversal-1',
       entryDate: reversalDate ?? now,
       voucherNumber: 'REV-001',
       voucherType: 'JV',
@@ -178,8 +176,7 @@ void main() {
       );
 
       final postedSale = Sale(
-        id: 1,
-        uuid: 'sale-1',
+        id: 'sale-1',
         companyId: companyId,
         saleNumber: 'INV-001',
         saleDate: now,

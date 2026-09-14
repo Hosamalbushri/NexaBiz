@@ -199,10 +199,9 @@ final productsViewModeProvider =
 class ProductsViewModeController
     extends StateNotifier<AsyncValue<ProductsViewMode>> {
   ProductsViewModeController({
-    required SettingsRepository repository,
+    required this._repository,
     this.companyId,
-  }) : _repository = repository,
-       super(const AsyncValue.loading()) {
+  }) : super(const AsyncValue.loading()) {
     _load();
   }
 

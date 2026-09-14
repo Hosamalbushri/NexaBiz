@@ -19,12 +19,12 @@ class MockLookupPort implements SetupAccountLookupPort {
   final Map<String, SetupAccountData> _accounts = {};
 
   void addAccount(SetupAccountData account) {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
   }
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return _accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return _accounts[accountId];
   }
 
   @override
@@ -101,7 +101,7 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 class MockAccountRepositoryForSafetyGate implements AccountRepository {
   final Map<String, Account> _store = {};
 
-  void add(Account account) => _store[account.uuid] = account;
+  void add(Account account) => _store[account.id] = account;
 
   @override
   Future<Account?> getByUuid(String uuid) async => _store[uuid];
@@ -132,10 +132,10 @@ class DummyUsageAnalyzer implements AccountUsageAnalyzer {
   @override
   Future<AccountUsageRecord> analyzeAccountUsage({
     required String companyId,
-    required String accountUuid,
+    required String accountId,
   }) async {
     return AccountUsageRecord(
-      accountUuid: accountUuid,
+      accountId: accountId,
       status: AccountUsageStatus.neverUsed,
       postedTransactionCount: 0,
       draftTransactionCount: 0,
@@ -196,7 +196,7 @@ void main() {
         await resolver.bindAccount(
           companyId: 'compA',
           requirement: req,
-          accountUuid: 'acc-cash-reg-01',
+          accountId: 'acc-cash-reg-01',
         );
 
         final resolved = await resolver.resolveAccountForTransaction(
@@ -261,7 +261,7 @@ void main() {
           () => resolver.bindAccount(
             companyId: 'compA',
             requirement: reqLiability,
-            accountUuid: 'acc-asset-99',
+            accountId: 'acc-asset-99',
           ),
           throwsA(isA<AccountBindingException>()),
         );
@@ -295,7 +295,7 @@ void main() {
         () => resolver.bindAccount(
           companyId: 'compA',
           requirement: req,
-          accountUuid: 'acc-compB-cash',
+          accountId: 'acc-compB-cash',
         ),
         throwsA(isA<CrossCompanyAccountBindingException>()),
       );
@@ -328,7 +328,7 @@ void main() {
         () => resolver.bindAccount(
           companyId: 'compA',
           requirement: req,
-          accountUuid: 'acc-inactive-01',
+          accountId: 'acc-inactive-01',
         ),
         throwsA(isA<AccountBindingException>()),
       );
@@ -361,7 +361,7 @@ void main() {
         () => resolver.bindAccount(
           companyId: 'compA',
           requirement: req,
-          accountUuid: 'acc-deleted-01',
+          accountId: 'acc-deleted-01',
         ),
         throwsA(isA<AccountBindingException>()),
       );
@@ -371,8 +371,7 @@ void main() {
       '7. SafetyGate rejects non-postable group account for single binding mode',
       () async {
         final groupAccount = Account(
-          id: 201,
-          uuid: 'acc-group-root',
+          id: 'acc-group-root',
           accountCode: '101000',
           name: 'مجموعة الصناديق',
           accountType: AccountType.asset,
@@ -430,7 +429,7 @@ void main() {
         await resolver.bindAccount(
           companyId: 'compA',
           requirement: reqParent,
-          accountUuid: 'acc-cash-box-reg-1',
+          accountId: 'acc-cash-box-reg-1',
         );
 
         final resolved = await resolver.resolveAccountForTransaction(
@@ -479,7 +478,7 @@ void main() {
       await resolver.bindAccount(
         companyId: 'compA',
         requirement: req,
-        accountUuid: 'acc-sales-old',
+        accountId: 'acc-sales-old',
       );
       var resolved = await resolver.resolveAccountForTransaction(
         companyId: 'compA',
@@ -491,7 +490,7 @@ void main() {
       await resolver.bindAccount(
         companyId: 'compA',
         requirement: req,
-        accountUuid: 'acc-sales-new',
+        accountId: 'acc-sales-new',
       );
       resolved = await resolver.resolveAccountForTransaction(
         companyId: 'compA',
@@ -528,7 +527,7 @@ void main() {
         await resolver.bindAccount(
           companyId: 'compA',
           requirement: reqCogs,
-          accountUuid: 'acc-cogs-01',
+          accountId: 'acc-cogs-01',
         );
 
         final resolved = await resolver.resolveAccountForTransaction(

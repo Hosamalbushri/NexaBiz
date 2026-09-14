@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/data/sync/inventory_sync_handlers.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
@@ -66,8 +66,8 @@ class MockAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl stockValidationService;
@@ -80,8 +80,8 @@ void main() {
   late String whId;
 
   setUp(() async {
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
     whId = generateUuidV4();
 
     costLayerService = CostLayerServiceImpl(
@@ -115,7 +115,7 @@ void main() {
         .into(invDb.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: drift.Value(whId),
+            id: drift.Value(whId),
             code: const drift.Value('WH-MAIN'),
             name: const drift.Value('Main Warehouse'),
             companyId: const drift.Value(tenantId),
@@ -202,14 +202,14 @@ void main() {
         // Verify Movement Lines has exactly 1 movement line set
         final lines = await (invDb.select(
           invDb.stockMovementLines,
-        )..where((t) => t.movementUuid.equals(receiptUuid))).get();
+        )..where((t) => t.movementId.equals(receiptUuid))).get();
         expect(lines.length, equals(1));
         expect(lines.first.quantity, equals(100.0));
 
         // Verify Cost Layers has exactly 1 layer
         final layers = await (invDb.select(
           invDb.inventoryCostLayers,
-        )..where((t) => t.movementUuid.equals(receiptUuid))).get();
+        )..where((t) => t.movementId.equals(receiptUuid))).get();
         expect(layers.length, equals(1));
         expect(layers.first.remainingQty, equals(100.0));
         expect(layers.first.unitCost, equals(15.0));
@@ -263,7 +263,7 @@ void main() {
         // Verify movement lines count
         final lines = await (invDb.select(
           invDb.stockMovementLines,
-        )..where((t) => t.movementUuid.equals(receiptUuid))).get();
+        )..where((t) => t.movementId.equals(receiptUuid))).get();
         expect(lines.length, equals(1));
       },
     );

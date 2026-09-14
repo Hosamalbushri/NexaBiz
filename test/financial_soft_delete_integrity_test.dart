@@ -3,7 +3,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_exception.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
@@ -11,7 +11,7 @@ import 'package:stock_count/modules/accounting/journals/domain/services/journal_
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_returns_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
@@ -22,7 +22,7 @@ import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
@@ -30,7 +30,7 @@ import 'package:stock_count/modules/receipts_payments/transactions/domain/entiti
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
 
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dart';
@@ -42,20 +42,20 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase accDb;
+  late NexabizDatabase accDb;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService journalPostingService;
 
-  late InventoryDatabase invDb;
+  late NexabizDatabase invDb;
   late StockMovementsRepositoryImpl stockMovementRepo;
   late StockTransferRepositoryImpl stockTransferRepo;
   late StockReturnsRepositoryImpl stockReturnRepo;
 
-  late ReceiptsPaymentsDatabase rpDb;
+  late NexabizDatabase rpDb;
   late FinancialTransactionRepositoryImpl rpRepo;
 
-  late SalesDatabase saleDb;
+  late NexabizDatabase saleDb;
   late SaleRepositoryImpl saleRepo;
 
   late String companyA;
@@ -71,10 +71,10 @@ void main() {
     activeCompanyId = companyA;
 
     // Databases
-    accDb = AccountingDatabase(executor: NativeDatabase.memory());
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
-    rpDb = ReceiptsPaymentsDatabase(executor: NativeDatabase.memory());
-    saleDb = SalesDatabase(executor: NativeDatabase.memory());
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    rpDb = NexabizDatabase.memory();
+    saleDb = NexabizDatabase.memory();
 
     // Accounting Repos
     accountRepo = AccountRepositoryImpl(
@@ -124,7 +124,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc1Uuid,
+            id: acc1Uuid,
             companyId: Value(companyA),
             accountCode: '1010',
             name: 'Cash Box',
@@ -142,7 +142,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc2Uuid,
+            id: acc2Uuid,
             companyId: Value(companyA),
             accountCode: '4010',
             name: 'Sales Revenue',
@@ -223,7 +223,7 @@ void main() {
         receiptDate: DateTime.now().toUtc(),
         lines: [
           StockMovementLine(
-            movementUuid: 'rec-1',
+            movementId: 'rec-1',
             movementType: 'receipt',
             itemCode: 'ITEM-01',
             itemName: 'Item 1',
@@ -262,7 +262,7 @@ void main() {
         issueDate: DateTime.now().toUtc(),
         lines: [
           StockMovementLine(
-            movementUuid: 'iss-1',
+            movementId: 'iss-1',
             movementType: 'issue',
             itemCode: 'ITEM-01',
             itemName: 'Item 1',
@@ -511,7 +511,7 @@ void main() {
             .into(accDb.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: sysAccUuid,
+                id: sysAccUuid,
                 companyId: Value(companyA),
                 accountCode: '9999',
                 name: 'System Account',
@@ -682,7 +682,7 @@ void main() {
         expect(headers.length, equals(2));
 
         final netDebit = await journalRepo.sumNetBefore(
-          accountUuid: acc1Uuid,
+          accountId: acc1Uuid,
           beforeDate: DateTime.now().add(const Duration(days: 1)),
         );
         expect(netDebit, equals(4000));

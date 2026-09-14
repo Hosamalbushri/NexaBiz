@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
-import 'package:stock_count/modules/accounting/domain/usecases/account_usecases.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/usecases/account_usecases.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 import 'package:stock_count/modules/accounting/permissions/accounting_permissions.dart';
-import 'package:stock_count/modules/sales/domain/usecases/sale_usecases.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
-import 'package:stock_count/modules/sales/domain/repositories/sale_repository.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_number_allocator_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/usecases/sale_usecases.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/repositories/sale_repository.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_number_allocator_port.dart';
 import 'package:stock_count/modules/sales/permissions/sales_permission_package.dart';
 
 class _DenyGuard implements PermissionGuard {

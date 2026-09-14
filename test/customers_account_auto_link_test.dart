@@ -4,20 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/app/customers/accounting_customer_account_link_adapter.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/customers/data/database/customers_database.dart';
-import 'package:stock_count/modules/customers/data/repositories/customer_repository_impl.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer.dart';
-import 'package:stock_count/modules/customers/domain/services/customer_code_generator.dart';
-import 'package:stock_count/modules/customers/domain/usecases/ensure_customer_account_links.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
+import 'package:stock_count/modules/customers/directory/domain/services/customer_code_generator.dart';
+import 'package:stock_count/modules/customers/accounts/domain/usecases/ensure_customer_account_links.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory tempDir;
-  late AccountingDatabase accountingDb;
-  late CustomersDatabase customersDb;
+  late NexabizDatabase accountingDb;
+  late NexabizDatabase customersDb;
   late AccountRepositoryImpl accounts;
   late CustomerRepositoryImpl customers;
   late AccountingCustomerAccountLinkAdapter linkPort;
@@ -31,8 +31,8 @@ void main() {
     }
     final syncBox = await Hive.openBox<SyncOperation>('sync_queue');
     syncQueue = SyncQueue(box: syncBox);
-    accountingDb = AccountingDatabase.memory();
-    customersDb = CustomersDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
+    customersDb = NexabizDatabase.memory();
     accounts = AccountRepositoryImpl(accountingDb, syncQueue: syncQueue);
     customers = CustomerRepositoryImpl(customersDb, syncQueue: syncQueue);
     linkPort = AccountingCustomerAccountLinkAdapter(accounts);

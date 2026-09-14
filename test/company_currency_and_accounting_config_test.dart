@@ -263,8 +263,7 @@ void main() {
 
       test('7. Cross-Company Account Rejection', () async {
         final validAccountOtherTenant = createAccount(
-          id: 1,
-          uuid: 'acc-other-001',
+          id: 'acc-other-001',
           tenantCompanyId: 'company-other-tenant',
           accountCode: '1230',
           name: 'Inventory Stock Other',
@@ -311,8 +310,7 @@ void main() {
 
       test('9. Disabled / Inactive Account Rejection', () async {
         final inactiveAccount = createAccount(
-          id: 2,
-          uuid: 'acc-inactive-001',
+          id: 'acc-inactive-001',
           accountCode: '1230',
           name: 'Inactive Inventory',
           accountType: AccountType.asset,
@@ -342,8 +340,7 @@ void main() {
 
       test('10. Valid Company Accounting Configuration', () async {
         final validInventoryAcc = createAccount(
-          id: 3,
-          uuid: 'acc-inv-001',
+          id: 'acc-inv-001',
           accountCode: '1230',
           name: 'Inventory Stock Main',
           accountType: AccountType.asset,
@@ -351,8 +348,7 @@ void main() {
         );
 
         final validCogsAcc = createAccount(
-          id: 4,
-          uuid: 'acc-cogs-001',
+          id: 'acc-cogs-001',
           accountCode: '5100',
           name: 'Cost of Goods Sold',
           accountType: AccountType.expense,

@@ -1,15 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 void main() {
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
 
   setUp(() {
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
   });
 
   tearDown(() async {
@@ -214,7 +214,7 @@ void main() {
             .into(accDb.journalEntries)
             .insert(
               JournalEntriesCompanion.insert(
-                uuid: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+                id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
                 voucherType: 'general',
                 currencyCode: 'YER',
                 voucherNumber: 'VOUCH-001',
@@ -229,7 +229,7 @@ void main() {
             .into(accDb.journalEntries)
             .insert(
               JournalEntriesCompanion.insert(
-                uuid: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+                id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
                 voucherType: 'general',
                 currencyCode: 'YER',
                 voucherNumber: 'VOUCH-001',
@@ -249,7 +249,7 @@ void main() {
               .into(accDb.journalEntries)
               .insert(
                 JournalEntriesCompanion.insert(
-                  uuid: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+                  id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
                   voucherType: 'general',
                   currencyCode: 'YER',
                   voucherNumber: 'VOUCH-001',

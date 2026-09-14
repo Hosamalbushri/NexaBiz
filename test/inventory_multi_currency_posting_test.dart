@@ -16,19 +16,19 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
     return const AccountMapping({
       AccountRole.inventory: AccountRoleRef(
         role: AccountRole.inventory,
-        accountUuid: 'acc-inventory-uuid',
+        accountId: 'acc-inventory-uuid',
         accountCode: '1200',
         accountName: 'المخزون',
       ),
       AccountRole.payable: AccountRoleRef(
         role: AccountRole.payable,
-        accountUuid: 'acc-payable-uuid',
+        accountId: 'acc-payable-uuid',
         accountCode: '2100',
         accountName: 'الموردين',
       ),
       AccountRole.cogs: AccountRoleRef(
         role: AccountRole.cogs,
-        accountUuid: 'acc-cogs-uuid',
+        accountId: 'acc-cogs-uuid',
         accountCode: '5100',
         accountName: 'تكلفة المبيعات',
       ),
@@ -38,14 +38,14 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
 
 class FakeAccountValidationService implements AccountValidationService {
   @override
-  Future<void> assertCanPost(String accountUuid) async {}
+  Future<void> assertCanPost(String accountId) async {}
 
   @override
-  Future<bool> canPost(String accountUuid) async => true;
+  Future<bool> canPost(String accountId) async => true;
 
   @override
   Future<AccountValidationResult> validateAccountUuid(
-    String accountUuid,
+    String accountId,
   ) async {
     return AccountValidationResult.valid;
   }
@@ -99,7 +99,7 @@ void main() {
 
         // 1. Inventory Line (Debit): YER 14,500 with rate 1.0
         final inventoryLine = draft.lines.firstWhere(
-          (l) => l.accountUuid == 'acc-inventory-uuid',
+          (l) => l.accountId == 'acc-inventory-uuid',
         );
         expect(inventoryLine.currencyCode, equals('YER'));
         expect(inventoryLine.debit, equals(14500.0)); // 100 * 145
@@ -108,7 +108,7 @@ void main() {
 
         // 2. Payable / Vendor Line (Credit): USD 100 with rate 145.0
         final payableLine = draft.lines.firstWhere(
-          (l) => l.accountUuid == 'acc-payable-uuid',
+          (l) => l.accountId == 'acc-payable-uuid',
         );
         expect(payableLine.currencyCode, equals('USD'));
         expect(payableLine.debit, equals(0.0));

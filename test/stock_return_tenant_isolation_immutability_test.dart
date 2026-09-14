@@ -2,14 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_returns_repository_impl.dart';
@@ -48,12 +48,12 @@ class MockAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService postingService;
 
-  late InventoryDatabase invDb;
+  late NexabizDatabase invDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late PostingCoordinatorImpl postingCoordinator;
@@ -68,7 +68,7 @@ void main() {
     companyB = 'company_B';
     activeCompanyId = companyA;
 
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     accountRepo = AccountRepositoryImpl(
       db,
       readCompanyId: () => activeCompanyId,
@@ -84,7 +84,7 @@ void main() {
       periodValidator: legacyPeriodValidator(),
     );
 
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    invDb = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(
       db: invDb,
       readCompanyId: () => activeCompanyId,
@@ -144,7 +144,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: returnAId,
+              movementId: returnAId,
               movementType: 'sales_return',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -191,7 +191,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: returnAId,
+              movementId: returnAId,
               movementType: 'sales_return',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -288,7 +288,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: returnAId,
+              movementId: returnAId,
               movementType: 'sales_return',
               itemCode: 'ITEM-X',
               itemName: 'Item X',
@@ -337,7 +337,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: returnId,
+              movementId: returnId,
               movementType: 'sales_return',
               itemCode: 'ITEM-5',
               itemName: 'Item 5',
@@ -422,7 +422,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: returnId,
+              movementId: returnId,
               movementType: 'sales_return',
               itemCode: 'ITEM-IDEM',
               itemName: 'Idempotent Item',
@@ -478,7 +478,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: returnId,
+              movementId: returnId,
               movementType: 'sales_return',
               itemCode: 'ITEM-CONS',
               itemName: 'Consistent Item',

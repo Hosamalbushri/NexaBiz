@@ -7,14 +7,21 @@ abstract class AccountRepository {
 
   Stream<List<Account>> watchAll({bool includeInactive = false});
 
-  Future<Account?> getById(String id);
+  Future<Account?> getById(String id, {bool includeInactive = false});
 
-  Future<Account?> getByUuid(String id) => getById(id);
+  Future<Account?> getByUuid(String id, {bool includeInactive = false}) =>
+      getById(id, includeInactive: includeInactive);
 
   /// Batch lookup by ID (missing ids are omitted from the result).
-  Future<List<Account>> getByUuids(Iterable<String> ids);
+  Future<List<Account>> getByUuids(
+    Iterable<String> ids, {
+    bool includeInactive = false,
+  });
 
-  Future<Account?> getByAccountCode(String accountCode);
+  Future<Account?> getByAccountCode(
+    String accountCode, {
+    bool includeInactive = false,
+  });
 
   Future<List<Account>> search(String query, {bool includeInactive = false});
 

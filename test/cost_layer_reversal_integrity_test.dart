@@ -2,8 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/data/services/journal_builder_impl.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -18,10 +24,13 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
+
+import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late InventoryDatabase db;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase db;
+  late NexabizDatabase accountingDb;
   late String currentTenant;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
@@ -29,9 +38,12 @@ void main() {
   late StockMovementsRepositoryImpl movementsRepo;
   late InventoryAccountingPosterImpl accountingPoster;
 
+  const invAssetAccUuid = '11111111-1111-1111-1111-111111111111';
+  const cogsAccUuid = '22222222-2222-2222-2222-222222222222';
+
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
-    accountingDb = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
     currentTenant = 'tenant_reversal_test';
 
     costLayerService = CostLayerServiceImpl(
@@ -46,29 +58,55 @@ void main() {
       () => currentTenant,
     );
 
-    accountingPoster = InventoryAccountingPosterImpl(
+    final accountRepo = AccountRepositoryImpl(
       accountingDb,
       readCompanyId: () => currentTenant,
     );
+    final periodValidator = legacyPeriodValidator();
+    final journalRepo = JournalRepositoryImpl(
+      accountingDb,
+      accounts: accountRepo,
+      periodValidator: periodValidator,
+      readCompanyId: () => currentTenant,
+    );
+    final journalPostingService = JournalPostingService(
+      journals: journalRepo,
+      periodValidator: periodValidator,
+    );
+    final bindingRepo = WarehouseAccountingBindingRepositoryImpl(
+      db,
+      () => currentTenant,
+    );
+    final journalBuilder = JournalBuilderImpl(
+      accountRepository: accountRepo,
+      currencyRateRepository: CurrencyRateRepositoryImpl(accountingDb),
+      bindingRepo: bindingRepo,
+      readCompanyId: () => currentTenant,
+    );
 
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    accountingPoster = InventoryAccountingPosterImpl(
+      journalPostingService,
+      journalBuilder: journalBuilder,
+      readCompanyId: () => currentTenant,
+    );
+
+    final now = DateTime.now().toUtc();
 
     // Seed default chart of accounts for accounting poster integration with valid 36-character UUIDs
     await accountingDb
         .into(accountingDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '11111111-1111-1111-1111-111111111111',
+            id: const Value(invAssetAccUuid),
             accountCode: '1230',
             name: 'Inventory Asset',
             accountType: 'asset',
             normalBalance: 'debit',
             isGroup: const Value(false),
             isActive: const Value(true),
-            createdAt: now,
-            updatedAt: now,
-            companyId: Value(currentTenant),
-            description: const Value('system:inventory'),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: currentTenant,
           ),
         );
 
@@ -76,17 +114,50 @@ void main() {
         .into(accountingDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '22222222-2222-2222-2222-222222222222',
+            id: const Value(cogsAccUuid),
             accountCode: '5100',
             name: 'Cost of Goods Sold',
             accountType: 'expense',
             normalBalance: 'debit',
             isGroup: const Value(false),
             isActive: const Value(true),
-            createdAt: now,
-            updatedAt: now,
-            companyId: Value(currentTenant),
-            description: const Value('system:cost_of_goods'),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: currentTenant,
+          ),
+        );
+
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
+          AccountsCompanion.insert(
+            id: const Value('33333333-3333-3333-3333-333333333333'),
+            accountCode: '2110',
+            name: 'Accounts Payable',
+            accountType: 'liability',
+            normalBalance: 'credit',
+            isGroup: const Value(false),
+            isActive: const Value(true),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: currentTenant,
+          ),
+        );
+
+    await accountingDb
+        .into(accountingDb.accounts)
+        .insert(
+          AccountsCompanion.insert(
+            id: const Value('44444444-4444-4444-4444-444444444444'),
+            accountCode: '5150',
+            name: 'Inventory Adjustment',
+            accountType: 'expense',
+            normalBalance: 'debit',
+            isGroup: const Value(false),
+            isActive: const Value(true),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+            companyId: currentTenant,
           ),
         );
 
@@ -102,6 +173,7 @@ void main() {
       ),
       postingEngine: postingEngine,
       accountingPoster: accountingPoster,
+      permissionGuard: const AllowAllPermissionGuard(),
       readCompanyId: () => currentTenant,
     );
 
@@ -119,23 +191,49 @@ void main() {
   group('ROOT FIX 26 — Cost Layer Reversal Integrity', () {
     test('1. FIFO Cost Layer Reversal Integrity Flow', () async {
       const itemCode = 'ITEM-FIFO-01';
-      const warehouseId = 'WH-FIFO';
+      final warehouseId = generateUuidV4();
 
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final nowDt = DateTime.now().toUtc();
+      final nowMs = nowDt.millisecondsSinceEpoch;
+      await db
+          .into(db.warehouses)
+          .insert(
+            WarehousesCompanion.insert(
+              id: Value(warehouseId),
+              code: 'WH-FIFO',
+              name: 'FIFO Warehouse',
+              companyId: currentTenant,
+              createdAt: Value(nowDt),
+              updatedAt: Value(nowDt),
+            ),
+          );
+
+      await db.into(db.warehouseAccountingBindings).insert(
+        WarehouseAccountingBindingsCompanion.insert(
+          id: Value(generateUuidV4()),
+          warehouseId: warehouseId,
+          companyId: currentTenant,
+          inventoryAssetAccountId: const Value(invAssetAccUuid),
+          cogsAccountId: const Value(cogsAccUuid),
+          inventoryAdjustmentAccountId: const Value(cogsAccUuid),
+          createdAt: nowMs,
+          updatedAt: nowMs,
+        ),
+      );
+
       await db
           .into(db.products)
           .insert(
             ProductsCompanion.insert(
-              uuid: generateUuidV4(),
+              id: Value(generateUuidV4()),
               itemCode: itemCode,
               name: 'FIFO Product',
-              companyId: Value(currentTenant),
-              onHandQty: const Value(0.0),
+              companyId: currentTenant,
               unitCost: const Value(0.0),
-              price: 0.0,
-              packSize: 1,
-              createdAt: now,
-              updatedAt: now,
+              price: const Value(0.0),
+              packSize: const Value(1),
+              createdAt: Value(nowDt),
+              updatedAt: Value(nowDt),
             ),
           );
 
@@ -150,6 +248,7 @@ void main() {
         receiptNumber: 'REC-FIFO-01',
         receiptDate: DateTime.now().subtract(const Duration(days: 2)),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -171,8 +270,10 @@ void main() {
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: rec1.receiptDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
-      await coordinator.post(document: refRec1);
+      final res1 = await coordinator.post(document: refRec1);
+      expect(res1, isA<PostSuccess>());
 
       final rec2Id = generateUuidV4();
       final rec2 = StockReceipt(
@@ -180,6 +281,7 @@ void main() {
         receiptNumber: 'REC-FIFO-02',
         receiptDate: DateTime.now().subtract(const Duration(days: 1)),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -201,18 +303,21 @@ void main() {
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: rec2.receiptDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
-      await coordinator.post(document: refRec2);
+      final res2 = await coordinator.post(document: refRec2);
+      expect(res2, isA<PostSuccess>());
 
       // Verify Initial Inventory: Stock = 150, Total Cost = $2,000
-      final productAfterReceipt =
-          await (db.select(db.products)..where(
+      final stockAfterReceipt =
+          await (db.select(db.productWarehouseStocks)..where(
                 (tbl) =>
                     tbl.itemCode.equals(itemCode) &
+                    tbl.warehouseId.equals(warehouseId) &
                     tbl.companyId.equals(currentTenant),
               ))
               .getSingle();
-      expect(productAfterReceipt.onHandQty, equals(150.0));
+      expect(stockAfterReceipt.onHandQty, equals(150.0));
 
       final layersAfterReceipt = await costLayerService.getOpenLayers(
         itemCode,
@@ -231,6 +336,7 @@ void main() {
         issueNumber: 'ISS-FIFO-01',
         issueDate: DateTime.now(),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -252,10 +358,11 @@ void main() {
         documentType: InventoryDocumentType.stockIssue,
         documentDate: issue1.issueDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
 
       // Consume specifically using FIFO method
-      final outboundLines = [
+      final outboundLines = <OutboundLineData>[
         OutboundLineData(
           lineUuid: issueLineId,
           itemCode: itemCode,
@@ -279,14 +386,15 @@ void main() {
       );
 
       // Verify Consumption: Stock = 30.0, Layer 1 exhausted (0 left), Layer 2 has 30 left
-      final productAfterIssue =
-          await (db.select(db.products)..where(
+      final stockAfterIssue =
+          await (db.select(db.productWarehouseStocks)..where(
                 (tbl) =>
                     tbl.itemCode.equals(itemCode) &
+                    tbl.warehouseId.equals(warehouseId) &
                     tbl.companyId.equals(currentTenant),
               ))
               .getSingle();
-      expect(productAfterIssue.onHandQty, equals(30.0));
+      expect(stockAfterIssue.onHandQty, equals(30.0));
 
       final consumptionsInDb = await (db.select(
         db.inventoryCostConsumptions,
@@ -304,15 +412,6 @@ void main() {
       // ----------------------------------------------------
       // Step 4: Verify Quantity Restored
       // ----------------------------------------------------
-      final productAfterReversal =
-          await (db.select(db.products)..where(
-                (tbl) =>
-                    tbl.itemCode.equals(itemCode) &
-                    tbl.companyId.equals(currentTenant),
-              ))
-              .getSingle();
-      expect(productAfterReversal.onHandQty, equals(150.0));
-
       final whStockAfterReversal =
           await (db.select(db.productWarehouseStocks)..where(
                 (tbl) =>
@@ -373,23 +472,49 @@ void main() {
 
     test('2. LIFO Cost Layer Reversal Integrity Flow', () async {
       const itemCode = 'ITEM-LIFO-01';
-      const warehouseId = 'WH-LIFO';
+      final warehouseId = generateUuidV4();
 
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final nowDt = DateTime.now().toUtc();
+      final nowMs = nowDt.millisecondsSinceEpoch;
+      await db
+          .into(db.warehouses)
+          .insert(
+            WarehousesCompanion.insert(
+              id: Value(warehouseId),
+              code: 'WH-LIFO',
+              name: 'LIFO Warehouse',
+              companyId: currentTenant,
+              createdAt: Value(nowDt),
+              updatedAt: Value(nowDt),
+            ),
+          );
+
+      await db.into(db.warehouseAccountingBindings).insert(
+        WarehouseAccountingBindingsCompanion.insert(
+          id: Value(generateUuidV4()),
+          warehouseId: warehouseId,
+          companyId: currentTenant,
+          inventoryAssetAccountId: const Value(invAssetAccUuid),
+          cogsAccountId: const Value(cogsAccUuid),
+          inventoryAdjustmentAccountId: const Value(cogsAccUuid),
+          createdAt: nowMs,
+          updatedAt: nowMs,
+        ),
+      );
+
       await db
           .into(db.products)
           .insert(
             ProductsCompanion.insert(
-              uuid: generateUuidV4(),
+              id: Value(generateUuidV4()),
               itemCode: itemCode,
               name: 'LIFO Product',
-              companyId: Value(currentTenant),
-              onHandQty: const Value(0.0),
+              companyId: currentTenant,
               unitCost: const Value(0.0),
-              price: 0.0,
-              packSize: 1,
-              createdAt: now,
-              updatedAt: now,
+              price: const Value(0.0),
+              packSize: const Value(1),
+              createdAt: Value(nowDt),
+              updatedAt: Value(nowDt),
             ),
           );
 
@@ -404,6 +529,7 @@ void main() {
         receiptNumber: 'REC-LIFO-01',
         receiptDate: DateTime.now().subtract(const Duration(days: 2)),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -425,8 +551,10 @@ void main() {
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: rec1.receiptDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
-      await coordinator.post(document: refRec1);
+      final res1 = await coordinator.post(document: refRec1);
+      expect(res1, isA<PostSuccess>());
 
       final rec2Id = generateUuidV4();
       final rec2 = StockReceipt(
@@ -434,6 +562,7 @@ void main() {
         receiptNumber: 'REC-LIFO-02',
         receiptDate: DateTime.now().subtract(const Duration(days: 1)),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -455,8 +584,10 @@ void main() {
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: rec2.receiptDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
-      await coordinator.post(document: refRec2);
+      final res2 = await coordinator.post(document: refRec2);
+      expect(res2, isA<PostSuccess>());
 
       // ----------------------------------------------------
       // Step 2: Consume Inventory (Issue 120 units under LIFO)
@@ -469,6 +600,7 @@ void main() {
         issueNumber: 'ISS-LIFO-01',
         issueDate: DateTime.now(),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -490,9 +622,10 @@ void main() {
         documentType: InventoryDocumentType.stockIssue,
         documentDate: issue1.issueDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
 
-      final outboundLines = [
+      final outboundLines = <OutboundLineData>[
         OutboundLineData(
           lineUuid: issueLineId,
           itemCode: itemCode,
@@ -531,14 +664,15 @@ void main() {
       // ----------------------------------------------------
       // Step 4 & 5: Verify Quantity & Valuation Restored
       // ----------------------------------------------------
-      final productAfterReversal =
-          await (db.select(db.products)..where(
+      final whStockAfterReversal =
+          await (db.select(db.productWarehouseStocks)..where(
                 (tbl) =>
                     tbl.itemCode.equals(itemCode) &
+                    tbl.warehouseId.equals(warehouseId) &
                     tbl.companyId.equals(currentTenant),
               ))
               .getSingle();
-      expect(productAfterReversal.onHandQty, equals(150.0));
+      expect(whStockAfterReversal.onHandQty, equals(150.0));
 
       final layersAfterReversal = await costLayerService.getOpenLayers(
         itemCode,
@@ -572,23 +706,49 @@ void main() {
 
     test('3. Weighted Average Cost (WAC) Reversal Integrity Flow', () async {
       const itemCode = 'ITEM-WAC-01';
-      const warehouseId = 'WH-WAC';
+      final warehouseId = generateUuidV4();
 
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final nowDt = DateTime.now().toUtc();
+      final nowMs = nowDt.millisecondsSinceEpoch;
+      await db
+          .into(db.warehouses)
+          .insert(
+            WarehousesCompanion.insert(
+              id: Value(warehouseId),
+              code: 'WH-WAC',
+              name: 'WAC Warehouse',
+              companyId: currentTenant,
+              createdAt: Value(nowDt),
+              updatedAt: Value(nowDt),
+            ),
+          );
+
+      await db.into(db.warehouseAccountingBindings).insert(
+        WarehouseAccountingBindingsCompanion.insert(
+          id: Value(generateUuidV4()),
+          warehouseId: warehouseId,
+          companyId: currentTenant,
+          inventoryAssetAccountId: const Value(invAssetAccUuid),
+          cogsAccountId: const Value(cogsAccUuid),
+          inventoryAdjustmentAccountId: const Value(cogsAccUuid),
+          createdAt: nowMs,
+          updatedAt: nowMs,
+        ),
+      );
+
       await db
           .into(db.products)
           .insert(
             ProductsCompanion.insert(
-              uuid: generateUuidV4(),
+              id: Value(generateUuidV4()),
               itemCode: itemCode,
               name: 'WAC Product',
-              companyId: Value(currentTenant),
-              onHandQty: const Value(0.0),
+              companyId: currentTenant,
               unitCost: const Value(0.0),
-              price: 0.0,
-              packSize: 1,
-              createdAt: now,
-              updatedAt: now,
+              price: const Value(0.0),
+              packSize: const Value(1),
+              createdAt: Value(nowDt),
+              updatedAt: Value(nowDt),
             ),
           );
 
@@ -604,6 +764,7 @@ void main() {
         receiptNumber: 'REC-WAC-01',
         receiptDate: DateTime.now().subtract(const Duration(days: 2)),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -625,8 +786,10 @@ void main() {
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: rec1.receiptDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
-      await coordinator.post(document: refRec1);
+      final res1 = await coordinator.post(document: refRec1);
+      expect(res1, isA<PostSuccess>());
 
       final rec2Id = generateUuidV4();
       final rec2 = StockReceipt(
@@ -634,6 +797,7 @@ void main() {
         receiptNumber: 'REC-WAC-02',
         receiptDate: DateTime.now().subtract(const Duration(days: 1)),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -655,8 +819,10 @@ void main() {
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: rec2.receiptDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
-      await coordinator.post(document: refRec2);
+      final res2 = await coordinator.post(document: refRec2);
+      expect(res2, isA<PostSuccess>());
 
       // ----------------------------------------------------
       // Step 2: Consume Inventory (Issue 120 units under WAC)
@@ -669,6 +835,7 @@ void main() {
         issueNumber: 'ISS-WAC-01',
         issueDate: DateTime.now(),
         companyId: currentTenant,
+        currencyCode: 'YER',
         status: InventoryDocumentStatus.draft,
         lines: [
           StockMovementLine(
@@ -690,9 +857,10 @@ void main() {
         documentType: InventoryDocumentType.stockIssue,
         documentDate: issue1.issueDate,
         warehouseId: warehouseId,
+        currencyCode: 'YER',
       );
 
-      final outboundLines = [
+      final outboundLines = <OutboundLineData>[
         OutboundLineData(
           lineUuid: issueLineId,
           itemCode: itemCode,
@@ -722,14 +890,15 @@ void main() {
       // ----------------------------------------------------
       // Step 4, 5, 6, 7: Verify Stock Quantity, Valuation, Consumptions & Journal Entry
       // ----------------------------------------------------
-      final productAfterReversal =
-          await (db.select(db.products)..where(
+      final whStockAfterReversal =
+          await (db.select(db.productWarehouseStocks)..where(
                 (tbl) =>
                     tbl.itemCode.equals(itemCode) &
+                    tbl.warehouseId.equals(warehouseId) &
                     tbl.companyId.equals(currentTenant),
               ))
               .getSingle();
-      expect(productAfterReversal.onHandQty, equals(150.0));
+      expect(whStockAfterReversal.onHandQty, equals(150.0));
 
       final layersAfterReversal = await costLayerService.getOpenLayers(
         itemCode,

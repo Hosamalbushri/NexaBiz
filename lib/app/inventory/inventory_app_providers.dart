@@ -35,7 +35,7 @@ final appInventoryAccountingPosterProvider =
       final postingService = ref.watch(journalPostingServiceProvider);
       final builderService = ref.watch(journalBuilderServiceProvider);
       return InventoryAccountingPosterAdapter(
-        journalPostingService: postingService,
+        postingService,
         journalBuilder: builderService,
       );
     });

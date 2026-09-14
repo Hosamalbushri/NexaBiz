@@ -1,19 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
 import 'package:stock_count/modules/currency/domain/entities/currency_rate.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   const companyA = 'company-uuid-1111-aaaa';
   const companyB = 'company-uuid-2222-bbbb';
 
   setUp(() {
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
   });
 
   tearDown(() async {

@@ -9,8 +9,7 @@ import 'package:stock_count/modules/accounting/shared/domain/entities/currency.d
 void main() {
   final now = DateTime(2026, 1, 1);
   final yer = Currency(
-    id: 1,
-    uuid: 'c-yer',
+    id: 'c-yer',
     code: 'YER',
     nameAr: 'ريال يمني',
     nameEn: 'Yemeni Rial',
@@ -22,8 +21,7 @@ void main() {
     updatedAt: now,
   );
   final sar = Currency(
-    id: 2,
-    uuid: 'c-sar',
+    id: 'c-sar',
     code: 'SAR',
     nameAr: 'ريال سعودي',
     nameEn: 'Saudi Riyal',
@@ -35,8 +33,7 @@ void main() {
     updatedAt: now,
   );
   final usdInactive = Currency(
-    id: 3,
-    uuid: 'c-usd',
+    id: 'c-usd',
     code: 'USD',
     nameAr: 'دولار أمريكي',
     nameEn: 'US Dollar',

@@ -139,8 +139,9 @@ class SyncErrorDetail {
     if (statusCode == 403) return SyncErrorCode.authorizationFailed;
     if (statusCode == 404) return SyncErrorCode.serverError;
     if (statusCode == 409) return SyncErrorCode.conflictDetected;
-    if (statusCode == 422 || statusCode == 400)
+    if (statusCode == 422 || statusCode == 400) {
       return SyncErrorCode.validationFailed;
+    }
     if (statusCode >= 500) return SyncErrorCode.serverUnreachable;
     return SyncErrorCode.unknown;
   }

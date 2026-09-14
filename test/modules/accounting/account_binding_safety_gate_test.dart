@@ -11,7 +11,7 @@ class FakeSafetyAccountRepository implements AccountRepository {
   final Map<String, Account> _accountsByUuid = {};
 
   void add(Account account) {
-    _accountsByUuid[account.uuid] = account;
+    _accountsByUuid[account.id] = account;
   }
 
   @override
@@ -89,8 +89,7 @@ void main() {
         // Register standard test accounts
         accountRepo.add(
           createSafetyAccount(
-            id: 1,
-            uuid: 'never_used_rev_uuid',
+            id: 'never_used_rev_uuid',
             code: '4100',
             name: 'حساب مبيعات غير مستخدم',
             accountType: AccountType.revenue,
@@ -100,8 +99,7 @@ void main() {
 
         accountRepo.add(
           createSafetyAccount(
-            id: 2,
-            uuid: 'new_candidate_rev_uuid',
+            id: 'new_candidate_rev_uuid',
             code: '4110',
             name: 'حساب مبيعات جديد بديل',
             accountType: AccountType.revenue,
@@ -111,8 +109,7 @@ void main() {
 
         accountRepo.add(
           createSafetyAccount(
-            id: 3,
-            uuid: 'posted_used_uuid',
+            id: 'posted_used_uuid',
             code: '1210',
             name: 'حساب مخزون مرحل سابقاً',
             accountType: AccountType.asset,
@@ -122,8 +119,7 @@ void main() {
 
         accountRepo.add(
           createSafetyAccount(
-            id: 4,
-            uuid: 'zero_bal_posted_uuid',
+            id: 'zero_bal_posted_uuid',
             code: '5100',
             name: 'حساب تكلفة مبيعات مرحل برصيد صفري',
             accountType: AccountType.expense,
@@ -133,8 +129,7 @@ void main() {
 
         accountRepo.add(
           createSafetyAccount(
-            id: 5,
-            uuid: 'draft_only_uuid',
+            id: 'draft_only_uuid',
             code: '4200',
             name: 'حساب مبيعات في مسودات فقط',
             accountType: AccountType.revenue,
@@ -144,8 +139,7 @@ void main() {
 
         accountRepo.add(
           createSafetyAccount(
-            id: 6,
-            uuid: 'inactive_candidate_uuid',
+            id: 'inactive_candidate_uuid',
             code: '9900',
             name: 'حساب غير نشط',
             accountType: AccountType.revenue,
@@ -156,8 +150,7 @@ void main() {
 
         accountRepo.add(
           createSafetyAccount(
-            id: 7,
-            uuid: 'group_candidate_uuid',
+            id: 'group_candidate_uuid',
             code: '4000',
             name: 'مجموعة الإيرادات الرئيسية',
             accountType: AccountType.revenue,
@@ -168,8 +161,7 @@ void main() {
 
         accountRepo.add(
           createSafetyAccount(
-            id: 8,
-            uuid: 'cross_company_uuid',
+            id: 'cross_company_uuid',
             code: '4100',
             name: 'حساب شركة أخرى',
             accountType: AccountType.revenue,
@@ -197,7 +189,7 @@ void main() {
         'Test 2: Used account in posted transactions CANNOT be changed (BLOCKED)',
         () async {
           usageAnalyzer.recordTransaction(
-            accountUuid: 'posted_used_uuid',
+            accountId: 'posted_used_uuid',
             isPosted: true,
             documentType: 'stock_receipt',
             amount: 5000.0,
@@ -220,13 +212,13 @@ void main() {
         () async {
           // Record +5000 and -5000 posted transactions -> Net balance = 0.0
           usageAnalyzer.recordTransaction(
-            accountUuid: 'zero_bal_posted_uuid',
+            accountId: 'zero_bal_posted_uuid',
             isPosted: true,
             documentType: 'journal_entry',
             amount: 5000.0,
           );
           usageAnalyzer.recordTransaction(
-            accountUuid: 'zero_bal_posted_uuid',
+            accountId: 'zero_bal_posted_uuid',
             isPosted: true,
             documentType: 'journal_entry',
             amount: -5000.0,
@@ -234,7 +226,7 @@ void main() {
 
           final usage = await usageAnalyzer.analyzeAccountUsage(
             companyId: currentCompanyId,
-            accountUuid: 'zero_bal_posted_uuid',
+            accountId: 'zero_bal_posted_uuid',
           );
 
           expect(usage.currentBalance, equals(0.0));
@@ -260,7 +252,7 @@ void main() {
         'Test 4: Draft-only usage follows draft policy and allows change with warning',
         () async {
           usageAnalyzer.recordTransaction(
-            accountUuid: 'draft_only_uuid',
+            accountId: 'draft_only_uuid',
             isPosted: false,
             documentType: 'draft_sale_quote',
             amount: 1200.0,
@@ -268,7 +260,7 @@ void main() {
 
           final usage = await usageAnalyzer.analyzeAccountUsage(
             companyId: currentCompanyId,
-            accountUuid: 'draft_only_uuid',
+            accountId: 'draft_only_uuid',
           );
 
           expect(usage.status, equals(AccountUsageStatus.usedInDraftsOnly));
@@ -361,7 +353,7 @@ void main() {
         'Test 10: App restart does NOT bypass safety gate restrictions (Persistence Integrity)',
         () async {
           usageAnalyzer.recordTransaction(
-            accountUuid: 'posted_used_uuid',
+            accountId: 'posted_used_uuid',
             isPosted: true,
             documentType: 'payment_voucher',
             amount: 2500.0,
@@ -389,7 +381,7 @@ void main() {
         'Test 11: Offline sync engine does NOT bypass safety gate restrictions',
         () async {
           usageAnalyzer.recordTransaction(
-            accountUuid: 'posted_used_uuid',
+            accountId: 'posted_used_uuid',
             isPosted: true,
             documentType: 'inventory_transfer',
             amount: 3200.0,

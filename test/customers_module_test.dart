@@ -5,14 +5,14 @@ import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/customers/data/database/customers_database.dart';
-import 'package:stock_count/modules/customers/data/datasources/customer_excel_import_datasource.dart';
-import 'package:stock_count/modules/customers/data/repositories/customer_repository_impl.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer_data_source.dart';
-import 'package:stock_count/modules/customers/domain/models/customer_exception.dart';
-import 'package:stock_count/modules/customers/domain/services/customer_code_generator.dart';
-import 'package:stock_count/modules/customers/domain/services/customer_validator.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/customers/directory/data/datasources/customer_excel_import_datasource.dart';
+import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer_data_source.dart';
+import 'package:stock_count/modules/customers/directory/domain/models/customer_exception.dart';
+import 'package:stock_count/modules/customers/directory/domain/services/customer_code_generator.dart';
+import 'package:stock_count/modules/customers/directory/domain/services/customer_validator.dart';
 
 Uint8List _encodeSheet(List<List<String>> rows) {
   final excel = Excel.createExcel();
@@ -26,7 +26,7 @@ Uint8List _encodeSheet(List<List<String>> rows) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late CustomersDatabase db;
+  late NexabizDatabase db;
   late CustomerRepositoryImpl repository;
   late Directory tempDir;
   late Box<SyncOperation> syncBox;
@@ -40,7 +40,7 @@ void main() {
     }
     syncBox = await Hive.openBox<SyncOperation>('sync_queue');
     syncQueue = SyncQueue(box: syncBox);
-    db = CustomersDatabase.memory();
+    db = NexabizDatabase.memory();
     repository = CustomerRepositoryImpl(db, syncQueue: syncQueue);
   });
 

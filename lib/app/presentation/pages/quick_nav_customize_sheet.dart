@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/modules/quick_nav_definition.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_spacing.dart';
-import '../providers/quick_nav_items_provider.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Structured result returned from customization sheet.
@@ -102,23 +101,15 @@ class _QuickNavCustomizeSheetState extends State<QuickNavCustomizeSheet> {
 
   void _onReorderItems(int oldIndex, int newIndex) {
     setState(() {
-      var targetIndex = newIndex;
-      if (oldIndex < targetIndex) {
-        targetIndex -= 1;
-      }
       final id = _selectedIds.removeAt(oldIndex);
-      _selectedIds.insert(targetIndex, id);
+      _selectedIds.insert(newIndex, id);
     });
   }
 
   void _onReorderSections(int oldIndex, int newIndex) {
     setState(() {
-      var targetIndex = newIndex;
-      if (oldIndex < targetIndex) {
-        targetIndex -= 1;
-      }
       final modId = _sectionOrder.removeAt(oldIndex);
-      _sectionOrder.insert(targetIndex, modId);
+      _sectionOrder.insert(newIndex, modId);
     });
   }
 
@@ -288,7 +279,7 @@ class _QuickNavCustomizeSheetState extends State<QuickNavCustomizeSheet> {
           child: ReorderableListView.builder(
             buildDefaultDragHandles: false,
             itemCount: _sectionOrder.length,
-            onReorder: _onReorderSections,
+            onReorderItem: _onReorderSections,
             itemBuilder: (context, index) {
               final modId = _sectionOrder[index];
               return Material(
@@ -374,7 +365,7 @@ class _QuickNavCustomizeSheetState extends State<QuickNavCustomizeSheet> {
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
             itemCount: selected.length,
-            onReorder: _onReorderItems,
+            onReorderItem: _onReorderItems,
             itemBuilder: (context, index) {
               final item = selected[index];
               return Material(

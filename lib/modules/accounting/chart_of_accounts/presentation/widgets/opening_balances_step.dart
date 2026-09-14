@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';
-import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/voucher_books/data/repositories/voucher_book_repository_impl.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
@@ -10,11 +10,11 @@ import 'package:stock_count/modules/accounting/voucher_books/domain/services/def
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late VoucherBookRepositoryImpl repo;
 
   setUp(() async {
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     repo = VoucherBookRepositoryImpl(db);
     await repo.ensureDefaultSections();
   });

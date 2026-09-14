@@ -10,10 +10,10 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/fx_settlement_engine.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/fx_settlement_service.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 
@@ -39,7 +39,7 @@ class MockPeriodValidator implements PeriodValidatorPort, AccountingPeriodValida
 }
 
 Future<void> _insertAccount(
-  AccountingDatabase db, {
+  NexabizDatabase db, {
   required String uuid,
   required String code,
   required String name,
@@ -50,7 +50,7 @@ Future<void> _insertAccount(
   final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
   await db.into(db.accounts).insert(
         AccountsCompanion.insert(
-          uuid: uuid,
+          id: uuid,
           accountCode: code,
           name: name,
           accountType: accountType,
@@ -64,8 +64,8 @@ Future<void> _insertAccount(
 
 void main() {
   group('CURRENCY-09 — Foreign Exchange Gain/Loss Tests', () {
-    late AccountingDatabase db;
-    late InventoryDatabase invDb;
+    late NexabizDatabase db;
+    late NexabizDatabase invDb;
     late CostLayerServiceImpl costLayerService;
     late AccountRepositoryImpl accountRepo;
     late AccountCurrencyBalanceRepositoryImpl balanceRepo;
@@ -82,8 +82,8 @@ void main() {
     const cashAccountUuid = '11111111-1111-1111-1111-111111111105';
 
     setUp(() async {
-      db = AccountingDatabase(executor: NativeDatabase.memory());
-      invDb = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.memory();
+      invDb = NexabizDatabase.memory();
       costLayerService = CostLayerServiceImpl(
         db: invDb,
         readCompanyId: () => companyId,
@@ -178,7 +178,7 @@ void main() {
       final postedEntry = await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,
@@ -211,7 +211,7 @@ void main() {
       final postedEntry = await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,
@@ -235,7 +235,7 @@ void main() {
       final calc = const FxSettlementEngine().calculate(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,
@@ -249,7 +249,7 @@ void main() {
       final postedEntry = await settlementService.settleAndPost(
         settlementUuid: calc.settlementUuid,
         partyType: calc.partyType,
-        accountUuid: calc.accountUuid,
+        accountId: calc.accountId,
         cashAccountUuid: calc.cashAccountUuid,
         currencyCode: calc.currencyCode,
         settledAmountFc: calc.settledAmountFc,
@@ -269,7 +269,7 @@ void main() {
       await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 50.0,
@@ -290,7 +290,7 @@ void main() {
       await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.receivable,
-        accountUuid: arAccountUuid,
+        accountId: arAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,
@@ -311,7 +311,7 @@ void main() {
       await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.receivable,
-        accountUuid: arAccountUuid,
+        accountId: arAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,
@@ -330,7 +330,7 @@ void main() {
       await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 50.0,
@@ -343,7 +343,7 @@ void main() {
       await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 50.0,
@@ -368,7 +368,7 @@ void main() {
         () => settlementService.settleAndPost(
           settlementUuid: generateUuidV4(),
           partyType: SettlementPartyType.payable,
-          accountUuid: apAccountUuid,
+          accountId: apAccountUuid,
           cashAccountUuid: cashAccountUuid,
           currencyCode: 'SAR',
           settledAmountFc: 100.0,
@@ -386,7 +386,7 @@ void main() {
       final res1 = await settlementService.settleAndPost(
         settlementUuid: settlementUuid,
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,
@@ -398,7 +398,7 @@ void main() {
       final res2 = await settlementService.settleAndPost(
         settlementUuid: settlementUuid,
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,
@@ -416,7 +416,7 @@ void main() {
         CostLayer(
           itemCode: 'ITEM-INV-001',
           warehouseId: 'WH-01',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 1, 10),
           receivedQty: 10.0,
@@ -434,7 +434,7 @@ void main() {
       await settlementService.settleAndPost(
         settlementUuid: generateUuidV4(),
         partyType: SettlementPartyType.payable,
-        accountUuid: apAccountUuid,
+        accountId: apAccountUuid,
         cashAccountUuid: cashAccountUuid,
         currencyCode: 'SAR',
         settledAmountFc: 100.0,

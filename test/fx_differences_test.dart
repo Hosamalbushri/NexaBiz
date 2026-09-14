@@ -4,26 +4,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/currency_rate_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/fiscal_year_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/journal_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/accounting_period_status.dart';
-import 'package:stock_count/modules/accounting/domain/entities/currency_rate.dart';
-import 'package:stock_count/modules/accounting/domain/entities/fiscal_year.dart';
-import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/domain/services/accounting_period_validator.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/domain/services/period_closing_service.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/accounting_period_status.dart';
+import 'package:stock_count/modules/currency/domain/entities/currency_rate.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/fiscal_year.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/period_closing_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory tempDir;
   late Box<SyncOperation> syncBox;
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accounts;
   late CurrencyRateRepositoryImpl rates;
   late FiscalYearRepositoryImpl fyRepo;
@@ -39,7 +39,7 @@ void main() {
     syncBox = await Hive.openBox<SyncOperation>('sync_queue_fx');
     final queue = SyncQueue(box: syncBox);
 
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     accounts = AccountRepositoryImpl(db, syncQueue: queue);
     await accounts.ensureDefaultChartSeeded();
     rates = CurrencyRateRepositoryImpl(db);

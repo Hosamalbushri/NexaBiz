@@ -5,7 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:stock_count/app/reports/journal_book_report_data_adapter.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
@@ -16,7 +16,7 @@ import 'helpers/journal_posting_test_helper.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accounts;
   late JournalRepositoryImpl journals;
   late Directory tempDir;
@@ -31,7 +31,7 @@ void main() {
     }
     syncBox = await Hive.openBox<SyncOperation>('sync_queue');
     queue = SyncQueue(box: syncBox);
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     accounts = AccountRepositoryImpl(
       db,
       syncQueue: queue,

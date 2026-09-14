@@ -31,4 +31,9 @@ class SalePayments extends Table {
   List<Set<Column>> get uniqueKeys => [
         {companyId, id},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, sale_id) REFERENCES sales(company_id, id) ON DELETE CASCADE',
+      ];
 }

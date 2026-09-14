@@ -5,7 +5,6 @@ import '../presentation/providers/auth_providers.dart';
 import 'local_auth_store.dart';
 
 import 'package:stock_count/core/tenancy/scope_context.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
 
 /// Adapter implementation of [SessionContextPort] for the authentication module.
 ///
@@ -54,12 +53,9 @@ class SessionContextAdapter implements SessionContextPort {
 
   @override
   ScopeContext get scope {
-    final String activeId = activeCompanyId?.trim() ?? currentCompanyId?.trim() ?? '';
+    final String activeId = activeCompanyId?.trim() ?? '';
     if (activeId.isNotEmpty) {
       return CompanyScope(activeId);
-    }
-    if (companies.length == 1) {
-      return CompanyScope(companies.first.id.trim());
     }
     return const SystemScope();
   }

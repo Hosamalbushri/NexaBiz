@@ -20,7 +20,7 @@ import 'package:stock_count/app/shell/app_shell.dart'
 import 'package:stock_count/app/theme/app_theme.dart';
 import 'package:stock_count/core/widgets/custom_bottom_nav.dart';
 import 'package:stock_count/modules/inventory/inventory_module.dart';
-import 'package:stock_count/modules/inventory/presentation/pages/inventory_home_page.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_home_page.dart';
 
 void main() {
   GoRouter buildTestRouter({String initialLocation = AppRoutes.dashboard}) {

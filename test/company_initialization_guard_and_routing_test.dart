@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
@@ -106,13 +106,13 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Box<dynamic> settingsBox;
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CompanyInitializationRepositoryImpl initRepository;
   late InitializationGuard initializationGuard;
   const currentCompanyId = 'company-test-alpha';
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     Hive.init('./test_hive_temp_p5');
     if (!Hive.isBoxOpen(HiveBoxes.settings)) {
       settingsBox = await Hive.openBox<dynamic>(HiveBoxes.settings);

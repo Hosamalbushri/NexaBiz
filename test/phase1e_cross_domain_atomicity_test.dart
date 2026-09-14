@@ -641,8 +641,7 @@ void main() {
     test('20. testSyncJournalEntryPostedImmutability', () async {
       // Check that posted journal entries reject modification
       final entry = JournalEntry(
-        id: 1,
-        uuid: 'je-posted-1',
+        id: 'je-posted-1',
         voucherNumber: 'JE-001',
         voucherType: 'JV',
         currencyCode: 'YER',
@@ -699,8 +698,7 @@ void main() {
 
 Sale _createSampleSale(String uuid) {
   return Sale(
-    id: 1,
-    uuid: uuid,
+    id: uuid,
     companyId: 'comp-1001',
     saleNumber: 'SL-$uuid',
     saleDate: DateTime.now().toUtc(),
@@ -710,8 +708,7 @@ Sale _createSampleSale(String uuid) {
     exchangeRate: 1.0,
     items: [
       SaleItem(
-        id: 1,
-        uuid: 'item-1',
+        id: 'item-1',
         saleUuid: uuid,
         productId: 'prod-1',
         productName: 'Product 1',
@@ -948,8 +945,7 @@ class _FakeJournalPostingService implements JournalPostingService {
   Future<JournalEntry> post(JournalEntryDraft draft, {String? userId}) async {
     if (failPosting) throw Exception('Simulated accounting journal posting error');
     return JournalEntry(
-      id: 10,
-      uuid: 'je-${draft.sourceId}',
+      id: 'je-${draft.sourceId}',
       voucherNumber: draft.voucherNumber,
       voucherType: draft.voucherType,
       currencyCode: draft.currencyCode,

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' hide isNotNull;
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
@@ -39,7 +39,7 @@ class MockAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -48,7 +48,7 @@ void main() {
   const companyId = 'SECURITY_TEST_COMPANY';
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     mockAccountingPoster = MockAccountingPoster();
     costLayerService = CostLayerServiceImpl(
       db: db,
@@ -68,13 +68,13 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            id: const Value(1),
+            id: const Value('00000000-0000-4000-8000-000000000001'),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
             itemCode: const Value('SEC-ITEM-1'),
             name: const Value('Security Test Item'),
             packSize: const Value(1),
             price: const Value(100.0),
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(50.0),
             companyId: const Value(companyId),
             createdAt: Value(now),
@@ -108,7 +108,7 @@ void main() {
         .insert(
           StockMovementLinesCompanion.insert(
             uuid: generateUuidV4(),
-            movementUuid: receiptUuid,
+            movementId: receiptUuid,
             movementType: 'receipt',
             itemCode: 'SEC-ITEM-1',
             itemName: 'Security Test Item',

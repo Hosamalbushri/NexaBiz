@@ -4,16 +4,16 @@ import 'package:stock_count/app/reports/product_stock_movement_report_data_adapt
 import 'package:stock_count/core/report_engine/data/providers/stock_movement_report_provider.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
 import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase db;
+  late NexabizDatabase db;
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
   });
 
   tearDown(() async {
@@ -45,7 +45,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion.insert(
                 uuid: '22222222-2222-2222-2222-222222222222',
-                movementUuid: '11111111-1111-1111-1111-111111111111',
+                receiptId: '11111111-1111-1111-1111-111111111111',
                 movementType: 'receipt',
                 itemCode: 'ITEM-001',
                 itemName: 'Item 1',
@@ -75,7 +75,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion.insert(
                 uuid: '44444444-4444-4444-4444-444444444444',
-                movementUuid: '33333333-3333-3333-3333-333333333333',
+                receiptId: '33333333-3333-3333-3333-333333333333',
                 movementType: 'receipt',
                 itemCode: 'ITEM-001',
                 itemName: 'Item 1',
@@ -155,7 +155,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '10000000-0000-0000-0000-000000000002',
-                movementUuid: '10000000-0000-0000-0000-000000000001',
+                receiptId: '10000000-0000-0000-0000-000000000001',
                 movementType: 'receipt',
                 itemCode: 'PROD-SHARED',
                 itemName: 'Shared Product',
@@ -179,7 +179,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '10000000-0000-0000-0000-000000000004',
-                movementUuid: '10000000-0000-0000-0000-000000000003',
+                issueId: '10000000-0000-0000-0000-000000000003',
                 movementType: 'issue',
                 itemCode: 'PROD-SHARED',
                 itemName: 'Shared Product',
@@ -204,7 +204,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '10000000-0000-0000-0000-000000000006',
-                movementUuid: '10000000-0000-0000-0000-000000000005',
+                transferId: '10000000-0000-0000-0000-000000000005',
                 movementType: 'transfer',
                 itemCode: 'PROD-SHARED',
                 itemName: 'Shared Product',
@@ -228,7 +228,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '10000000-0000-0000-0000-000000000008',
-                movementUuid: '10000000-0000-0000-0000-000000000007',
+                returnId: '10000000-0000-0000-0000-000000000007',
                 movementType: 'return',
                 itemCode: 'PROD-SHARED',
                 itemName: 'Shared Product',
@@ -253,7 +253,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '20000000-0000-0000-0000-000000000002',
-                movementUuid: '20000000-0000-0000-0000-000000000001',
+                receiptId: '20000000-0000-0000-0000-000000000001',
                 movementType: 'receipt',
                 itemCode: 'PROD-SHARED',
                 itemName: 'Shared Product',
@@ -277,7 +277,7 @@ void main() {
         await db.into(db.stockMovementLines).insert(
               StockMovementLinesCompanion.insert(
                 uuid: '20000000-0000-0000-0000-000000000004',
-                movementUuid: '20000000-0000-0000-0000-000000000003',
+                issueId: '20000000-0000-0000-0000-000000000003',
                 movementType: 'issue',
                 itemCode: 'PROD-SHARED',
                 itemName: 'Shared Product',
@@ -295,7 +295,7 @@ void main() {
         // --- QUERY AS COMPANY A ---
         final filterA = const ReportQueryFilter(
           companyId: 'company-a',
-          productUuid: 'PROD-SHARED',
+          productId: 'PROD-SHARED',
         );
         final payloadA = await adapter.loadFromFilter(
           filter: filterA,
@@ -316,7 +316,7 @@ void main() {
         // --- QUERY AS COMPANY B ---
         final filterB = const ReportQueryFilter(
           companyId: 'company-b',
-          productUuid: 'PROD-SHARED',
+          productId: 'PROD-SHARED',
         );
         final payloadB = await adapter.loadFromFilter(
           filter: filterB,

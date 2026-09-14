@@ -9,7 +9,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/reposito
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/cash_registers/data/repositories/cash_register_repository_impl.dart';
 import 'package:stock_count/modules/cash_registers/domain/entities/cash_register.dart';
 import 'package:stock_count/modules/cash_registers/domain/services/cash_register_movement_service.dart';
@@ -122,7 +122,7 @@ class FakeJournalRepository implements JournalRepository {
       if (existing != null) return existing;
     }
 
-    final entryUuid = draft.uuid ?? 'je-${_idSeq++}';
+    final entryId = draft.uuid ?? 'je-${_idSeq++}';
     final lines = <JournalLine>[];
 
     for (var i = 0; i < draft.lines.length; i++) {
@@ -130,8 +130,8 @@ class FakeJournalRepository implements JournalRepository {
       final line = JournalLine(
         id: _idSeq++,
         uuid: lDraft.uuid ?? 'jl-${_idSeq++}',
-        entryUuid: entryUuid,
-        accountUuid: lDraft.accountUuid,
+        entryId: entryId,
+        accountId: lDraft.accountId,
         debit: lDraft.debit,
         credit: lDraft.credit,
         currencyCode: lDraft.currencyCode,
@@ -150,8 +150,8 @@ class FakeJournalRepository implements JournalRepository {
           credit: lDraft.credit,
           currencyCode: lDraft.currencyCode,
           isPosted: draft.isPosted,
-          accountUuid: lDraft.accountUuid,
-          entryUuid: entryUuid,
+          accountUuid: lDraft.accountId,
+          entryUuid: entryId,
           lineUuid: line.uuid,
           lineId: line.id,
           sortOrder: lDraft.sortOrder,
@@ -161,7 +161,7 @@ class FakeJournalRepository implements JournalRepository {
 
     final entry = JournalEntry(
       id: _idSeq++,
-      uuid: entryUuid,
+      uuid: entryId,
       voucherNumber: draft.voucherNumber,
       voucherType: draft.voucherType,
       currencyCode: draft.currencyCode,
@@ -175,13 +175,13 @@ class FakeJournalRepository implements JournalRepository {
       updatedAt: DateTime.now(),
     );
 
-    _journals[entryUuid] = entry;
+    _journals[entryId] = entry;
     return entry;
   }
 
   @override
   Future<List<AccountLedgerMovement>> listMovementsForAccount({
-    required String accountUuid,
+    required String accountId,
     DateTime? fromDate,
     DateTime? toDate,
     String? currencyCode,
@@ -189,7 +189,7 @@ class FakeJournalRepository implements JournalRepository {
     int? limit,
     AccountLedgerCursor? after,
   }) async {
-    return _movements.where((m) => m.accountUuid == accountUuid).toList();
+    return _movements.where((m) => m.accountId == accountId).toList();
   }
 
   @override
@@ -215,7 +215,7 @@ class FakeJournalRepository implements JournalRepository {
         .toList();
     for (final j in toRemove) {
       _journals.remove(j.uuid);
-      _movements.removeWhere((m) => m.entryUuid == j.uuid);
+      _movements.removeWhere((m) => m.entryId == j.uuid);
     }
   }
 
@@ -223,7 +223,7 @@ class FakeJournalRepository implements JournalRepository {
   Future<void> softDeleteByUuid(String uuid) async {
     final j = _journals.remove(uuid);
     if (j != null) {
-      _movements.removeWhere((m) => m.entryUuid == uuid);
+      _movements.removeWhere((m) => m.entryId == uuid);
     }
   }
 
@@ -242,7 +242,7 @@ class FakeJournalRepository implements JournalRepository {
 
   @override
   Future<List<String>> listCurrencyCodesForAccount({
-    required String accountUuid,
+    required String accountId,
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
@@ -250,7 +250,7 @@ class FakeJournalRepository implements JournalRepository {
 
   @override
   Future<double> sumNetBefore({
-    required String accountUuid,
+    required String accountId,
     required DateTime beforeDate,
     String? currencyCode,
     bool? isPosted,
@@ -335,7 +335,7 @@ void main() {
   group('CR-05 Cash Movements & Transaction Integrity Test Matrix', () {
     late FakeAccountRepository accountRepo;
     late FakeJournalRepository journalRepo;
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late CashRegisterRepositoryImpl cashRepo;
     late DefaultCashRegisterResolver defaultResolver;
     late CashRegisterPostingResolverService postingResolver;
@@ -361,12 +361,11 @@ void main() {
 
       accountRepo = FakeAccountRepository();
       journalRepo = FakeJournalRepository();
-      db = AccountingDatabase.memory();
+      db = NexabizDatabase.memory();
       journalPosting = FakeJournalPostingService(journalRepo);
 
       cashAccountA1 = Account(
-        id: 101,
-        uuid: 'acc-cash-a1-uuid',
+        id: 'acc-cash-a1-uuid',
         accountCode: '1101',
         name: 'الصندوق الرئيسي A1',
         accountType: AccountType.asset,
@@ -381,8 +380,7 @@ void main() {
       );
 
       cashAccountA2 = Account(
-        id: 102,
-        uuid: 'acc-cash-a2-uuid',
+        id: 'acc-cash-a2-uuid',
         accountCode: '1102',
         name: 'صندوق الفرع A2',
         accountType: AccountType.asset,
@@ -397,8 +395,7 @@ void main() {
       );
 
       revenueAccount = Account(
-        id: 103,
-        uuid: 'acc-rev-uuid',
+        id: 'acc-rev-uuid',
         accountCode: '4101',
         name: 'المبيعات',
         accountType: AccountType.revenue,
@@ -413,8 +410,7 @@ void main() {
       );
 
       expenseAccount = Account(
-        id: 104,
-        uuid: 'acc-exp-uuid',
+        id: 'acc-exp-uuid',
         accountCode: '5101',
         name: 'المصروفات',
         accountType: AccountType.expense,

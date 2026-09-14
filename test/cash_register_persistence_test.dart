@@ -7,7 +7,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/normal_balance.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/cash_registers/data/repositories/cash_register_repository_impl.dart';
 import 'package:stock_count/modules/cash_registers/domain/entities/cash_register.dart';
 import 'package:stock_count/modules/cash_registers/domain/services/default_cash_register_resolver.dart';
@@ -110,7 +110,7 @@ class FakeAccountRepository implements AccountRepository {
 void main() {
   group('CASH-ACCOUNT-03: Persistent Cash Register Tests', () {
     late FakeAccountRepository accountRepo;
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late CashRegisterRepositoryImpl cashRepo;
     late Directory tempDir;
 
@@ -126,11 +126,10 @@ void main() {
       await Hive.openBox<dynamic>(HiveBoxes.settings);
 
       accountRepo = FakeAccountRepository();
-      db = AccountingDatabase.memory();
+      db = NexabizDatabase.memory();
 
       cashAccountA = Account(
-        id: 1,
-        uuid: 'acc-cash-a-uuid-1111-2222-333344445555',
+        id: 'acc-cash-a-uuid-1111-2222-333344445555',
         accountCode: '1101',
         name: 'الصندوق الرئيسي A',
         accountType: AccountType.asset,
@@ -145,8 +144,7 @@ void main() {
       );
 
       cashAccountB = Account(
-        id: 2,
-        uuid: 'acc-cash-b-uuid-1111-2222-333344445555',
+        id: 'acc-cash-b-uuid-1111-2222-333344445555',
         accountCode: '1102',
         name: 'صندوق الفرع B',
         accountType: AccountType.asset,

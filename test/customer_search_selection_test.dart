@@ -7,7 +7,7 @@ import 'package:hive/hive.dart';
 import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
 import 'package:stock_count/modules/customers/directory/domain/usecases/customer_usecases.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
@@ -16,7 +16,7 @@ void main() {
 
   group('CU-05 — Customer Search & Selection Consolidation', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late CustomerRepositoryImpl repo;
 
@@ -28,7 +28,7 @@ void main() {
       }
       final box = await Hive.openBox<SyncOperation>('sync_queue_cu05');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
       repo = CustomerRepositoryImpl(
         db,
         syncQueue: queue,

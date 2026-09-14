@@ -22,7 +22,7 @@ class FakeAccountRepository implements AccountRepository {
   final Map<String, Account> _accountsByUuid = {};
 
   void add(Account account) {
-    _accountsByUuid[account.uuid] = account;
+    _accountsByUuid[account.id] = account;
   }
 
   @override
@@ -155,8 +155,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 10,
-            uuid: 'inv_asset_uuid_901',
+            id: 'inv_asset_uuid_901',
             code: '1210',
             name: 'حساب المخزون الرئيسي المخصص',
             accountType: AccountType.asset,
@@ -166,8 +165,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 11,
-            uuid: 'cogs_uuid_902',
+            id: 'cogs_uuid_902',
             code: '5100',
             name: 'حساب تكلفة البضاعة المباعة المخصص',
             accountType: AccountType.expense,
@@ -177,8 +175,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 12,
-            uuid: 'supplier_payable_uuid_903',
+            id: 'supplier_payable_uuid_903',
             code: '2110',
             name: 'حساب الموردين المخصص',
             accountType: AccountType.liability,
@@ -211,9 +208,9 @@ void main() {
           totalAmount: 4500.0,
         );
 
-        expect(draft.lines[0].accountUuid, equals('inv_asset_uuid_901'));
+        expect(draft.lines[0].accountId, equals('inv_asset_uuid_901'));
         expect(draft.lines[0].debit, equals(4500.0));
-        expect(draft.lines[1].accountUuid, equals('supplier_payable_uuid_903'));
+        expect(draft.lines[1].accountId, equals('supplier_payable_uuid_903'));
         expect(draft.lines[1].credit, equals(4500.0));
       },
     );
@@ -223,8 +220,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 20,
-            uuid: 'cash_box_uuid_801',
+            id: 'cash_box_uuid_801',
             code: '1110',
             name: 'الصندوق المركزي للمبيعات',
             accountType: AccountType.asset,
@@ -234,8 +230,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 21,
-            uuid: 'sales_rev_uuid_802',
+            id: 'sales_rev_uuid_802',
             code: '4100',
             name: 'إيراد مبيعات المنتجات',
             accountType: AccountType.revenue,
@@ -245,8 +240,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 22,
-            uuid: 'sales_disc_uuid_803',
+            id: 'sales_disc_uuid_803',
             code: '4150',
             name: 'خصم المبيعات المسموح به',
             accountType: AccountType.revenue,
@@ -285,11 +279,11 @@ void main() {
         );
 
         final revDraft = drafts.first;
-        expect(revDraft.lines[0].accountUuid, equals('cash_box_uuid_801'));
+        expect(revDraft.lines[0].accountId, equals('cash_box_uuid_801'));
         expect(revDraft.lines[0].debit, equals(1800.0));
-        expect(revDraft.lines[1].accountUuid, equals('sales_disc_uuid_803'));
+        expect(revDraft.lines[1].accountId, equals('sales_disc_uuid_803'));
         expect(revDraft.lines[1].debit, equals(200.0));
-        expect(revDraft.lines[2].accountUuid, equals('sales_rev_uuid_802'));
+        expect(revDraft.lines[2].accountId, equals('sales_rev_uuid_802'));
         expect(revDraft.lines[2].credit, equals(2000.0));
       },
     );
@@ -299,8 +293,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 30,
-            uuid: 'pur_inv_asset_uuid_701',
+            id: 'pur_inv_asset_uuid_701',
             code: '1210',
             name: 'مخزون بضائع الشراء',
             accountType: AccountType.asset,
@@ -310,8 +303,7 @@ void main() {
 
         accountRepo.add(
           createTestAccount(
-            id: 31,
-            uuid: 'pur_supplier_uuid_702',
+            id: 'pur_supplier_uuid_702',
             code: '2110',
             name: 'ذمم الموردين التجارية',
             accountType: AccountType.liability,
@@ -334,11 +326,11 @@ void main() {
         );
 
         expect(
-          mapping.getRole(AccountRole.inventory)?.accountUuid,
+          mapping.getRole(AccountRole.inventory)?.accountId,
           equals('pur_inv_asset_uuid_701'),
         );
         expect(
-          mapping.getRole(AccountRole.payable)?.accountUuid,
+          mapping.getRole(AccountRole.payable)?.accountId,
           equals('pur_supplier_uuid_702'),
         );
       },
@@ -349,8 +341,7 @@ void main() {
       () async {
         accountRepo.add(
           createTestAccount(
-            id: 40,
-            uuid: 'inactive_acc_uuid_601',
+            id: 'inactive_acc_uuid_601',
             code: '9999',
             name: 'حساب غير نشط غير صالح',
             accountType: AccountType.expense,

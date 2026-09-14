@@ -12,7 +12,7 @@ import 'package:stock_count/modules/cash_registers/data/repositories/cash_regist
 import 'package:stock_count/modules/cash_registers/domain/entities/cash_register.dart';
 import 'package:stock_count/modules/cash_registers/shared/data/sync/cash_registers_sync_handlers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 class FakeAccountRepository implements AccountRepository {
   final Map<String, Account> _accounts = {};
@@ -92,7 +92,7 @@ class FakeAccountRepository implements AccountRepository {
 void main() {
   late CashRegisterRepositoryImpl cashRepo;
   late FakeAccountRepository accountRepo;
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late Directory tempDir;
   late SyncQueue syncQueue;
   late InMemoryRemoteSyncApi remoteApi;
@@ -101,8 +101,7 @@ void main() {
   final now = DateTime.now().toUtc();
 
   final validAccount = Account(
-    id: 1,
-    uuid: 'acc_asset_01',
+    id: 'acc_asset_01',
     companyId: 'company_a',
     accountCode: '110101',
     name: 'Cash Asset Account',
@@ -125,7 +124,7 @@ void main() {
     accountRepo = FakeAccountRepository();
     accountRepo.addAccount(validAccount);
 
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     cashRepo = CashRegisterRepositoryImpl(
       accountRepository: accountRepo,
       db: db,

@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
@@ -16,7 +13,6 @@ import '../../domain/models/customer_exception.dart';
 import 'package:stock_count/modules/customers/permissions/customers_permission_package.dart';
 import '../providers/customer_providers.dart';
 import 'package:stock_count/modules/customers/shared/presentation/pages/customers_routes.dart';
-import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 class CustomersListPage extends ConsumerStatefulWidget {
   const CustomersListPage({super.key});

@@ -5,7 +5,6 @@ import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/stock_count/domain/models/paged_result.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/models/catalog_search_field.dart';
 import '../../domain/models/product_exception.dart';
@@ -45,7 +44,7 @@ class ProductRepositoryImpl implements ProductRepository {
       packSize: row.packSize,
       price: row.price,
       onHandQty: 0.0,
-      unitCost: 0.0,
+      unitCost: row.unitCost,
       categoryId: row.categoryId,
       costValuationMethod: null,
       createdAt: row.createdAt,
@@ -387,6 +386,7 @@ class ProductRepositoryImpl implements ProductRepository {
             barcode: Value(barcode),
             packSize: Value(draft.packSize),
             price: Value(draft.price),
+            unitCost: Value(draft.unitCost),
             categoryId: Value(draft.categoryId),
             createdAt: Value(now),
             updatedAt: Value(now),
@@ -424,6 +424,7 @@ class ProductRepositoryImpl implements ProductRepository {
         barcode: Value(barcode),
         packSize: Value(draft.packSize),
         price: Value(draft.price),
+        unitCost: Value(draft.unitCost),
         categoryId: Value(draft.categoryId),
         updatedAt: Value(now),
         companyId: Value(_currentCompanyId),

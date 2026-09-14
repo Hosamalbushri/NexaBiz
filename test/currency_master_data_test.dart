@@ -1,17 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late CurrencyRepositoryImpl repository;
   const companyId = 'test-company-101';
 
   setUp(() async {
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     repository = CurrencyRepositoryImpl(
       db,
       readCompanyId: () => companyId,

@@ -7,11 +7,11 @@ import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/currency/domain/entities/currency.dart';
 import 'package:stock_count/modules/currency/domain/services/functional_currency_service.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
@@ -55,8 +55,7 @@ class FakeFunctionalCurrencyServiceForForensic implements FunctionalCurrencyServ
   @override
   Future<Currency> getFunctionalCurrency([String? companyId]) async {
     return Currency(
-      id: 1,
-      uuid: 'yer-uuid',
+      id: 'yer-uuid',
       code: 'YER',
       nameAr: 'ريال يمني',
       nameEn: 'Yemeni Rial',
@@ -76,8 +75,8 @@ class FakeFunctionalCurrencyServiceForForensic implements FunctionalCurrencyServ
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase inventoryDb;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase inventoryDb;
+  late NexabizDatabase accountingDb;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService journalPostingService;
@@ -89,8 +88,8 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('forensic_purchase_');
     Hive.init(tempDir.path);
 
-    inventoryDb = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    inventoryDb = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(accountingDb, readCompanyId: () => LocalAuthDefaults.companyId);
     await accountRepo.seedDefaultChart();
@@ -159,7 +158,7 @@ void main() {
       // 0. Seed Warehouse
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -183,7 +182,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: lineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-SAR-01',
           itemName: 'Forensic Test Item SAR',
@@ -232,7 +231,7 @@ void main() {
       print('Journal Entry Header Currency: ${journalEntry!.currencyCode}');
 
       for (final line in journalEntry.lines) {
-        print('Line Account: ${line.accountUuid}');
+        print('Line Account: ${line.accountId}');
         print('  - Line Currency: ${line.currencyCode}');
         print('  - Debit: ${line.debit}');
         print('  - Credit: ${line.credit}');

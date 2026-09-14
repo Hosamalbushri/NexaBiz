@@ -6,15 +6,15 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dar
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 import 'package:stock_count/modules/sales/invoices/domain/models/sale_list_filter.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 void main() {
-  late SalesDatabase db;
+  late NexabizDatabase db;
   late SaleRepositoryImpl repoCompanyA;
   late SaleRepositoryImpl repoCompanyB;
 
   setUp(() {
-    db = SalesDatabase.memory();
+    db = NexabizDatabase.memory();
     repoCompanyA = SaleRepositoryImpl(db, readCompanyId: () => 'company_a');
     repoCompanyB = SaleRepositoryImpl(db, readCompanyId: () => 'company_b');
   });

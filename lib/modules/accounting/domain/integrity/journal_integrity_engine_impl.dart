@@ -7,12 +7,10 @@ import 'journal_integrity_report.dart';
 /// Concrete implementation of [JournalIntegrityEnginePort].
 class JournalIntegrityEngine implements JournalIntegrityEnginePort {
   JournalIntegrityEngine({
-    required AccountRepository accountRepository,
-    required AccountingPolicyPort policyPort,
+    required this._accountRepository,
+    required this._policyPort,
     Set<String>? postedTracker,
-  })  : _accountRepository = accountRepository,
-        _policyPort = policyPort,
-        _postedTracker = postedTracker ?? {};
+  })  : _postedTracker = postedTracker ?? {};
 
   final AccountRepository _accountRepository;
   final AccountingPolicyPort _policyPort;

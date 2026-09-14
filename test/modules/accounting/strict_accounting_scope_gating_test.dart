@@ -35,7 +35,7 @@ class MockInitRepo implements CompanyInitializationRepository {
 class MockAccountRepo implements AccountRepository {
   final Map<String, Account> _store = {};
 
-  void add(Account account) => _store[account.uuid] = account;
+  void add(Account account) => _store[account.id] = account;
   void clear() => _store.clear();
 
   @override
@@ -122,8 +122,7 @@ void main() {
       // Cash Parent Group & Descendants
       accountRepo.add(
         createCoaAcc(
-          id: 1,
-          uuid: 'grp-cash-01',
+          id: 'grp-cash-01',
           code: '101000',
           name: 'مظلة الصناديق',
           accountType: AccountType.asset,
@@ -133,8 +132,7 @@ void main() {
       );
       accountRepo.add(
         createCoaAcc(
-          id: 2,
-          uuid: 'acc-cash-main',
+          id: 'acc-cash-main',
           code: '101001',
           name: 'الصندوق الرئيسي',
           accountType: AccountType.asset,
@@ -144,8 +142,7 @@ void main() {
       );
       accountRepo.add(
         createCoaAcc(
-          id: 3,
-          uuid: 'acc-cash-petty',
+          id: 'acc-cash-petty',
           code: '101002',
           name: 'صندوق المصروفات',
           accountType: AccountType.asset,
@@ -157,8 +154,7 @@ void main() {
       // Customer/Receivable Parent Group & Descendants
       accountRepo.add(
         createCoaAcc(
-          id: 4,
-          uuid: 'grp-rec-01',
+          id: 'grp-rec-01',
           code: '102000',
           name: 'مظلة العملاء A',
           accountType: AccountType.asset,
@@ -168,8 +164,7 @@ void main() {
       );
       accountRepo.add(
         createCoaAcc(
-          id: 5,
-          uuid: 'acc-rec-cust1',
+          id: 'acc-rec-cust1',
           code: '102001',
           name: 'العميل الأول',
           accountType: AccountType.asset,
@@ -181,8 +176,7 @@ void main() {
       // Scope B for Group B
       accountRepo.add(
         createCoaAcc(
-          id: 6,
-          uuid: 'grp-cash-02',
+          id: 'grp-cash-02',
           code: '101900',
           name: 'مظلة الصناديق B',
           accountType: AccountType.asset,
@@ -192,8 +186,7 @@ void main() {
       );
       accountRepo.add(
         createCoaAcc(
-          id: 7,
-          uuid: 'acc-cash-scopeB',
+          id: 'acc-cash-scopeB',
           code: '101901',
           name: 'صندوق نطاق B',
           accountType: AccountType.asset,
@@ -316,8 +309,7 @@ void main() {
       () async {
         accountRepo.add(
           createCoaAcc(
-            id: 8,
-            uuid: 'grp-pay-01',
+            id: 'grp-pay-01',
             code: '201000',
             name: 'مظلة الموردين',
             accountType: AccountType.liability,
@@ -327,8 +319,7 @@ void main() {
         );
         accountRepo.add(
           createCoaAcc(
-            id: 9,
-            uuid: 'acc-pay-supp1',
+            id: 'acc-pay-supp1',
             code: '201001',
             name: 'المورد الأول',
             accountType: AccountType.liability,
@@ -438,8 +429,7 @@ void main() {
       () async {
         accountRepo.add(
           createCoaAcc(
-            id: 10,
-            uuid: 'grp-compB-cash',
+            id: 'grp-compB-cash',
             code: '101000',
             name: 'صناديق شركة B',
             accountType: AccountType.asset,

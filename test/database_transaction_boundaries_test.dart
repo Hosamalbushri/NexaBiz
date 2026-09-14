@@ -8,8 +8,8 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fisc
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -29,8 +29,8 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/inve
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
 
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
@@ -41,8 +41,8 @@ void main() {
   const tenantId = 'tenant-tx-boundary-01';
 
   setUp(() async {
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
 
     costLayerService = CostLayerServiceImpl(
       db: invDb,
@@ -65,7 +65,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: generateUuidV4(),
+            id: generateUuidV4(),
             accountCode: '1230',
             name: 'حساب المخزون',
             accountType: 'asset',
@@ -80,7 +80,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: generateUuidV4(),
+            id: generateUuidV4(),
             accountCode: '5100',
             name: 'تكلفة البضاعة المباعة',
             accountType: 'expense',
@@ -159,7 +159,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-FAULT-1',
               itemName: 'Fault Item 1',
@@ -183,7 +183,7 @@ void main() {
         // Verify receipt header was NOT inserted into database
         final savedHeader = await (invDb.select(
           invDb.stockReceipts,
-        )..where((tbl) => tbl.uuid.equals(receiptId))).getSingleOrNull();
+        )..where((tbl) => tbl.id.equals(receiptId))).getSingleOrNull();
 
         expect(savedHeader, isNull);
       },
@@ -202,7 +202,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-STOCK-OK',
               itemName: 'Stock Item OK',
@@ -235,7 +235,7 @@ void main() {
         // Verify cost layers created
         final layers = await (invDb.select(
           invDb.inventoryCostLayers,
-        )..where((tbl) => tbl.movementUuid.equals(receiptId))).get();
+        )..where((tbl) => tbl.movementId.equals(receiptId))).get();
         expect(layers.length, equals(1));
       },
     );
@@ -253,7 +253,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-UNPOST-FAULT',
               itemName: 'Unpost Fault Item',
@@ -299,7 +299,7 @@ void main() {
         // Verify status in DB remains 'posted' (not updated to draft partially)
         final dbStatus = await (invDb.select(
           invDb.stockReceipts,
-        )..where((tbl) => tbl.uuid.equals(receiptId))).getSingle();
+        )..where((tbl) => tbl.id.equals(receiptId))).getSingle();
 
         expect(dbStatus.status, equals('posted'));
       },
@@ -318,7 +318,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-DUAL-DB',
               itemName: 'Dual DB Item',
@@ -350,13 +350,13 @@ void main() {
         // Verify inventory database status
         final invRow = await (invDb.select(
           invDb.stockReceipts,
-        )..where((tbl) => tbl.uuid.equals(receiptId))).getSingle();
+        )..where((tbl) => tbl.id.equals(receiptId))).getSingle();
         expect(invRow.status, equals('posted'));
 
         // Verify cost layer created in inventory database
         final costLayers = await (invDb.select(
           invDb.inventoryCostLayers,
-        )..where((tbl) => tbl.movementUuid.equals(receiptId))).get();
+        )..where((tbl) => tbl.movementId.equals(receiptId))).get();
         expect(costLayers.length, equals(1));
         expect(costLayers.first.receivedQty, equals(15.0));
       },

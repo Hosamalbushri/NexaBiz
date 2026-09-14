@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -80,7 +80,7 @@ class MockSyncBox<T> implements Box<T> {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -94,7 +94,7 @@ void main() {
   late InMemoryRemoteSyncApi remoteSyncApi;
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(
       db: db,
       readCompanyId: () => 'COMP-A',
@@ -140,13 +140,13 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            id: const Value(1),
+            id: const Value('00000000-0000-4000-8000-000000000001'),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
             itemCode: const Value('ITEM-SYNC-01'),
             name: const Value('Sync Test Item'),
             packSize: const Value(1),
             price: const Value(100.0),
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(50.0),
             companyId: const Value('COMP-A'),
             createdAt: Value(now),
@@ -172,7 +172,7 @@ void main() {
         lines: [
           StockMovementLine(
             id: generateUuidV4(),
-            movementUuid: rId,
+            movementId: rId,
             movementType: 'receipt',
             itemCode: 'ITEM-SYNC-01',
             itemName: 'Sync Test Item',
@@ -214,7 +214,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: rId,
+              movementId: rId,
               movementType: 'receipt',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -244,7 +244,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: issId,
+              movementId: issId,
               movementType: 'issue',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -287,7 +287,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: rId,
+              movementId: rId,
               movementType: 'receipt',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -365,7 +365,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: recForRetId,
+              movementId: recForRetId,
               movementType: 'receipt',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -396,7 +396,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: pretId,
+              movementId: pretId,
               movementType: 'return',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -441,7 +441,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: sretId,
+              movementId: sretId,
               movementType: 'return',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -484,7 +484,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: rId,
+              movementId: rId,
               movementType: 'receipt',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -993,7 +993,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-SYNC-01',
                 itemName: 'Sync Test Item',
@@ -1023,7 +1023,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: issId,
+                movementId: issId,
                 movementType: 'issue',
                 itemCode: 'ITEM-SYNC-01',
                 itemName: 'Sync Test Item',
@@ -1062,7 +1062,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: r1Id,
+              movementId: r1Id,
               movementType: 'receipt',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -1101,7 +1101,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: r1Id,
+              movementId: r1Id,
               movementType: 'receipt',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',
@@ -1142,7 +1142,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: rId,
+              movementId: rId,
               movementType: 'receipt',
               itemCode: 'ITEM-SYNC-01',
               itemName: 'Sync Test Item',

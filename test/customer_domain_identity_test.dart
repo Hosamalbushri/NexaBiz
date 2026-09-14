@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
 import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer_status.dart';
@@ -17,7 +17,7 @@ void main() {
 
   group('CU-02 — Customer Domain Model & Identity Integrity', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late CustomerRepositoryImpl repoCompanyA;
     late CustomerRepositoryImpl repoCompanyB;
@@ -31,7 +31,7 @@ void main() {
       }
       final box = await Hive.openBox<SyncOperation>('sync_queue_cu02');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
       repoCompanyA = CustomerRepositoryImpl(
         db,
         syncQueue: queue,
@@ -57,8 +57,8 @@ void main() {
         const CustomerDraft(customerCode: '12210001', name: 'عميل اختبار'),
       );
 
-      expect(customer.uuid, isNotEmpty);
-      expect(customer.uuid.length, equals(36));
+      expect(customer.id, isNotEmpty);
+      expect(customer.id.length, equals(36));
       expect(customer.companyId, equals('comp_A'));
 
       final updated = await repoCompanyA.update(
@@ -66,7 +66,7 @@ void main() {
         customer.toDraft().copyWith(name: 'عميل معدل'),
       );
 
-      expect(updated.uuid, equals(customer.uuid));
+      expect(updated.uuid, equals(customer.id));
       expect(updated.name, equals('عميل معدل'));
     });
 

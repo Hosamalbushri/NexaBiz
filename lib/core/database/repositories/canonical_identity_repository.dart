@@ -80,7 +80,6 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
               status: const Value('active'),
               isSuperAdmin: const Value(false),
             ),
-            mode: InsertMode.insertOrReplace,
           );
 
       final companyEntry = await _db.into(_db.companies).insertReturning(
@@ -90,7 +89,6 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
               name: companyName,
               status: const Value('active'),
             ),
-            mode: InsertMode.insertOrReplace,
           );
 
       final membershipEntry =
@@ -102,7 +100,6 @@ class CanonicalIdentityRepositoryImpl implements CanonicalIdentityRepository {
                   role: const Value('owner'),
                   status: const Value('active'),
                 ),
-                mode: InsertMode.insertOrReplace,
               );
 
       return (

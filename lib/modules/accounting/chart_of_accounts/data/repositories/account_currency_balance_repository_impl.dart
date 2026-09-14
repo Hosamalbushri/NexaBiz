@@ -8,8 +8,8 @@ class AccountCurrencyBalanceRepositoryImpl
     implements AccountCurrencyBalanceRepository {
   AccountCurrencyBalanceRepositoryImpl(
     this._db, {
-    String Function()? readCompanyId,
-  }) : _readCompanyId = readCompanyId;
+    this._readCompanyId,
+  });
 
   final NexabizDatabase _db;
   final String Function()? _readCompanyId;
@@ -50,8 +50,8 @@ class AccountCurrencyBalanceRepositoryImpl
         COALESCE(SUM(jl.credit), 0.0) AS total_credit,
         COALESCE(SUM(jl.debit - jl.credit), 0.0) AS net_balance
       FROM journal_lines jl
-      INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
-      WHERE jl.account_uuid = ?
+      INNER JOIN journal_entries je ON je.id = jl.entry_id
+      WHERE jl.account_id = ?
         AND je.company_id = ?
         AND je.deleted_at IS NULL
         AND je.is_posted = 1
@@ -117,18 +117,18 @@ class AccountCurrencyBalanceRepositoryImpl
     final cid = _currentCompanyId(companyId);
     final sql = '''
       SELECT 
-        jl.account_uuid AS account_uuid,
+        jl.account_id AS account_uuid,
         jl.currency_code AS currency_code,
         COALESCE(SUM(jl.debit), 0.0) AS total_debit,
         COALESCE(SUM(jl.credit), 0.0) AS total_credit,
         COALESCE(SUM(jl.debit - jl.credit), 0.0) AS net_balance
       FROM journal_lines jl
-      INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
+      INNER JOIN journal_entries je ON je.id = jl.entry_id
       WHERE je.company_id = ?
         AND je.deleted_at IS NULL
         AND je.is_posted = 1
-      GROUP BY jl.account_uuid, jl.currency_code
-      ORDER BY jl.account_uuid, jl.currency_code COLLATE NOCASE
+      GROUP BY jl.account_id, jl.currency_code
+      ORDER BY jl.account_id, jl.currency_code COLLATE NOCASE
     ''';
 
     final rows = await _db

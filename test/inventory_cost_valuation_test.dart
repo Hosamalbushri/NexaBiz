@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
@@ -14,13 +14,13 @@ import 'package:stock_count/modules/inventory/stock_movements/data/repositories/
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_return.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl service;
   late StockMovementsRepositoryImpl repo;
   late StockReturnsRepositoryImpl returnsRepo;
 
   setUp(() {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     service = CostLayerServiceImpl(
       db: db,
       readCompanyId: () => 'company_alpha',
@@ -56,7 +56,7 @@ void main() {
         CostLayer(
           id: layer1Id,
           itemCode: 'ITEM-1',
-          movementUuid: rcpt1Id,
+          movementId: rcpt1Id,
           movementType: 'receipt',
           receivedDate: t1,
           receivedQty: 10,
@@ -68,7 +68,7 @@ void main() {
         CostLayer(
           id: layer2Id,
           itemCode: 'ITEM-1',
-          movementUuid: rcpt2Id,
+          movementId: rcpt2Id,
           movementType: 'receipt',
           receivedDate: t2,
           receivedQty: 10,
@@ -111,7 +111,7 @@ void main() {
         CostLayer(
           id: layer1Id,
           itemCode: 'ITEM-LIFO',
-          movementUuid: rcpt1Id,
+          movementId: rcpt1Id,
           movementType: 'receipt',
           receivedDate: t1,
           receivedQty: 10,
@@ -123,7 +123,7 @@ void main() {
         CostLayer(
           id: layer2Id,
           itemCode: 'ITEM-LIFO',
-          movementUuid: rcpt2Id,
+          movementId: rcpt2Id,
           movementType: 'receipt',
           receivedDate: t2,
           receivedQty: 10,
@@ -164,7 +164,7 @@ void main() {
           CostLayer(
             id: layer1Id,
             itemCode: 'ITEM-WA',
-            movementUuid: rcpt1Id,
+            movementId: rcpt1Id,
             movementType: 'receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 10,
@@ -176,7 +176,7 @@ void main() {
           CostLayer(
             id: layer2Id,
             itemCode: 'ITEM-WA',
-            movementUuid: rcpt2Id,
+            movementId: rcpt2Id,
             movementType: 'receipt',
             receivedDate: DateTime.utc(2026, 1, 2),
             receivedQty: 10,
@@ -213,7 +213,7 @@ void main() {
           CostLayer(
             id: layerId,
             itemCode: 'ITEM-REV',
-            movementUuid: rcptId,
+            movementId: rcptId,
             movementType: 'receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 10,
@@ -259,7 +259,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: rcptLineId,
-              movementUuid: rcptId,
+              movementId: rcptId,
               movementType: 'receipt',
               itemCode: 'ITEM-REPO',
               itemName: 'Repo Item',
@@ -275,7 +275,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-REPO',
-            movementUuid: rcptId,
+            movementId: rcptId,
             movementType: 'receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 20,
@@ -295,7 +295,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: issueLineId,
-              movementUuid: issueId,
+              movementId: issueId,
               movementType: 'issue',
               itemCode: 'ITEM-REPO',
               itemName: 'Repo Item',
@@ -342,7 +342,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: salesReturnLineId,
-              movementUuid: salesReturnId,
+              movementId: salesReturnId,
               movementType: 'sales_return',
               itemCode: 'ITEM-RETURN',
               itemName: 'Returned Product',
@@ -373,7 +373,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: purchaseReturnLineId,
-              movementUuid: purchaseReturnId,
+              movementId: purchaseReturnId,
               movementType: 'purchase_return',
               itemCode: 'ITEM-RETURN',
               itemName: 'Returned Product',

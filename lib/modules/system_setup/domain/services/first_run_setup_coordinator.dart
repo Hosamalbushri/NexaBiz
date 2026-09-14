@@ -238,16 +238,16 @@ class FirstRunSetupCoordinator {
       await settingsRepository.saveOnboardingCompleted(true);
     } catch (e, stackTrace) {
       if (kDebugMode) {
-        debugPrint('FirstRunSetupCoordinator commit failed: $e\n$stackTrace');
+        debugPrint('FirstRunSetupCoordinator commit warning/failure: $e\n$stackTrace');
       }
-      // Transactional compensation rollback: restore non-partially completed state
+      // Per Invariant I-23: Failure of Hive/cache/settings synchronization MUST NOT
+      // invalidate or delete successfully committed SQLite identity or company data.
       try {
         await settingsRepository.saveOnboardingCompleted(false);
-        await authStore.clearAuthData();
       } catch (rollbackErr) {
         if (kDebugMode) {
           debugPrint(
-            'FirstRunSetupCoordinator rollback execution error: $rollbackErr',
+            'FirstRunSetupCoordinator settings rollback warning: $rollbackErr',
           );
         }
       }

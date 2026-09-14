@@ -58,7 +58,6 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   CostValuationMethod? _costValuationMethod;
   DateTime? _createdAt;
   DateTime? _updatedAt;
-  String? _uuid;
 
   String _initialCode = '';
   String _initialName = '';
@@ -151,7 +150,6 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _costValuationMethod = product.costValuationMethod;
     _createdAt = product.createdAt;
     _updatedAt = product.updatedAt;
-    _uuid = product.uuid;
 
     _initialCode = _codeController.text;
     _initialName = _nameController.text;

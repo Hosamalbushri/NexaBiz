@@ -1,17 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
 import 'package:stock_count/modules/inventory/products/domain/models/product_exception.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late ProductRepositoryImpl repoCompanyA;
   late ProductRepositoryImpl repoCompanyB;
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     repoCompanyA = ProductRepositoryImpl(db, readCompanyId: () => 'COMP-A');
     repoCompanyB = ProductRepositoryImpl(
       db,
@@ -34,13 +34,13 @@ void main() {
             .into(db.products)
             .insert(
               ProductsCompanion(
-                id: const Value(1),
+                id: const Value('00000000-0000-4000-8000-000000000001'),
                 uuid: Value(uuidA),
                 itemCode: const Value('PROD-A-01'),
                 name: const Value('Company A Product'),
                 packSize: const Value(1),
                 price: const Value(100.0),
-                onHandQty: const Value(50.0),
+                
                 unitCost: const Value(10.0),
                 companyId: const Value('COMP-A'),
                 createdAt: Value(now),
@@ -72,13 +72,13 @@ void main() {
             .into(db.products)
             .insert(
               ProductsCompanion(
-                id: const Value(2),
+                id: const Value('00000000-0000-4000-8000-000000000002'),
                 uuid: Value(uuidB),
                 itemCode: const Value('PROD-B-01'),
                 name: const Value('Company B Product'),
                 packSize: const Value(1),
                 price: const Value(200.0),
-                onHandQty: const Value(100.0),
+                
                 unitCost: const Value(20.0),
                 companyId: const Value('COMP-A-OTHER-B'),
                 createdAt: Value(now),
@@ -116,13 +116,13 @@ void main() {
             .into(db.products)
             .insert(
               ProductsCompanion(
-                id: const Value(3),
+                id: const Value('00000000-0000-4000-8000-000000000003'),
                 uuid: Value(uuidA),
                 itemCode: const Value('PROD-A-02'),
                 name: const Value('Company A Product 2'),
                 packSize: const Value(1),
                 price: const Value(50.0),
-                onHandQty: const Value(40.0),
+                
                 unitCost: const Value(5.0),
                 companyId: const Value('COMP-A'),
                 createdAt: Value(now),
@@ -175,13 +175,13 @@ void main() {
             .into(db.products)
             .insert(
               ProductsCompanion(
-                id: const Value(5),
+                id: const Value('00000000-0000-4000-8000-000000000005'),
                 uuid: Value(nullCompanyUuid),
                 itemCode: const Value('PROD-NULL-01'),
                 name: const Value('Unassigned Company Product'),
                 packSize: const Value(1),
                 price: const Value(10.0),
-                onHandQty: const Value(20.0),
+                
                 unitCost: const Value(2.0),
                 companyId: const Value(null),
                 createdAt: Value(now),
@@ -222,13 +222,13 @@ void main() {
             .into(db.products)
             .insert(
               ProductsCompanion(
-                id: const Value(6),
+                id: const Value('00000000-0000-4000-8000-000000000006'),
                 uuid: Value(uuid),
                 itemCode: const Value('PROD-A-03'),
                 name: const Value('Company A Product 3'),
                 packSize: const Value(1),
                 price: const Value(15.0),
-                onHandQty: const Value(10.0),
+                
                 unitCost: const Value(3.0),
                 companyId: const Value('COMP-A'),
                 createdAt: Value(now),

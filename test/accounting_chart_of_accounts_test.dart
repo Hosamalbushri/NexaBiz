@@ -4,20 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/domain/entities/normal_balance.dart';
-import 'package:stock_count/modules/accounting/domain/models/account_exception.dart';
-import 'package:stock_count/modules/accounting/domain/models/account_tree_node.dart';
-import 'package:stock_count/modules/accounting/domain/services/account_code_generator.dart';
-import 'package:stock_count/modules/accounting/domain/services/account_validator.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/normal_balance.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_exception.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_tree_node.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_code_generator.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_validator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl repo;
   late Directory tempDir;
   late Box<SyncOperation> syncBox;
@@ -31,8 +31,8 @@ void main() {
     }
     syncBox = await Hive.openBox<SyncOperation>('sync_queue');
     queue = SyncQueue(box: syncBox);
-    db = AccountingDatabase.memory();
-    repo = AccountRepositoryImpl(db, syncQueue: queue);
+    db = NexabizDatabase.memory();
+    repo = AccountRepositoryImpl(db, syncQueue: queue, readCompanyId: () => 'COMP-TEST');
   });
 
   tearDown(() async {
@@ -289,7 +289,7 @@ void main() {
     test('system account UUIDs are stable across installs', () async {
       await repo.ensureDefaultChartSeeded();
       final cash = await repo.getByAccountCode('1211');
-      expect(cash!.uuid, systemAccountUuid('cash'));
+      expect(cash!.uuid, systemAccountUuid('COMP-TEST_cash'));
     });
 
     test('creates posting account under group with pending sync', () async {
@@ -476,7 +476,7 @@ void main() {
       );
       await repo.softDelete(created.id);
       expect(await repo.getById(created.id), isNull);
-      final tombstone = await repo.getByUuid(created.uuid);
+      final tombstone = await repo.getByUuid(created.uuid, includeInactive: true);
       expect(tombstone!.isDeleted, isTrue);
     });
 
@@ -542,8 +542,7 @@ Account _fakeAccount({
 }) {
   final now = DateTime.utc(2026, 8, 12);
   return Account(
-    id: 1,
-    uuid: uuid,
+    id: uuid,
     parentId: parentId,
     accountCode: code,
     name: code,

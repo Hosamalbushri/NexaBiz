@@ -6,7 +6,7 @@ import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/system_setup/data/repositories/company_initialization_repository_impl.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_initialization_state.dart';
@@ -17,7 +17,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Box<dynamic> box;
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   String activeCompanyId = 'company-A';
 
   setUpAll(() async {
@@ -27,7 +27,7 @@ void main() {
 
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({});
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
 
     if (Hive.isBoxOpen(HiveBoxes.settings)) {
       box = Hive.box<dynamic>(HiveBoxes.settings);

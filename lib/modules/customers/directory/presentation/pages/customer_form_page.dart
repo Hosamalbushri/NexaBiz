@@ -1,5 +1,6 @@
 import 'dart:async';
 
+// ignore_for_file: deprecated_member_use // Preserving standard Flutter RadioListTile parameters (groupValue/onChanged) to avoid UI tree refactoring risks.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

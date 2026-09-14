@@ -6,7 +6,6 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../domain/entities/account_role.dart';
 import '../../setup.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/accounting/shared/domain/services/account_binding_safety_gate.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/providers/account_mapping_providers.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_accounting_config.dart';
@@ -67,8 +66,6 @@ class _CentralSetupCenterWidgetState
     'default_receivable_account': AccountRole.receivable,
     'default_payable_account': AccountRole.payable,
   };
-
-  bool _dataLoaded = false;
 
   @override
   void initState() {
@@ -169,11 +166,6 @@ class _CentralSetupCenterWidgetState
           }
         }
 
-        if (mounted) {
-          setState(() {
-            _dataLoaded = true;
-          });
-        }
       },
       (error, stack) {
         // Gracefully swallow unhandled repository errors (e.g. uninitialized Hive in widget tests)
@@ -656,7 +648,7 @@ class _CentralSetupCenterWidgetState
     );
   }
 
-  Widget _buildMobileLayout(
+  /* Widget _buildMobileLayout(
     BuildContext context,
     ThemeData theme,
     bool isArabic,
@@ -723,7 +715,7 @@ class _CentralSetupCenterWidgetState
         ),
       ],
     );
-  }
+  } */
 
   IconData _getPackageIcon(String packageId) {
     switch (packageId) {

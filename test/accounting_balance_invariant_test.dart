@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:drift/native.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
@@ -18,7 +17,7 @@ import 'helpers/journal_posting_test_helper.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late CurrencyRateRepositoryImpl rateRepo;
   late JournalRepositoryImpl journalRepo;
@@ -30,7 +29,7 @@ void main() {
   late String expAccountUuid;
 
   setUp(() async {
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     accountRepo = AccountRepositoryImpl(db, readCompanyId: () => testCompanyId);
     rateRepo = CurrencyRateRepositoryImpl(
       db,
@@ -60,7 +59,7 @@ void main() {
         isGroup: false,
       ),
     );
-    cashAccountUuid = cashAccount.uuid;
+    cashAccountUuid = cashAccount.id;
 
     final revAccount = await accountRepo.insert(
       const AccountDraft(
@@ -70,7 +69,7 @@ void main() {
         isGroup: false,
       ),
     );
-    revAccountUuid = revAccount.uuid;
+    revAccountUuid = revAccount.id;
 
     final expAccount = await accountRepo.insert(
       const AccountDraft(
@@ -80,7 +79,7 @@ void main() {
         isGroup: false,
       ),
     );
-    expAccountUuid = expAccount.uuid;
+    expAccountUuid = expAccount.id;
   });
 
   tearDown(() async {
@@ -282,10 +281,10 @@ void main() {
         expect(posted.isPosted, isTrue);
 
         final baseDebitCents = JournalMoney.toCents(
-          posted.lines.first.baseDebit ?? 0,
+          posted.lines.first.baseDebit,
         );
         final baseCreditCents = JournalMoney.toCents(
-          posted.lines.last.baseCredit ?? 0,
+          posted.lines.last.baseCredit,
         );
         expect(baseDebitCents, 37500);
         expect(baseDebitCents, baseCreditCents);
@@ -320,7 +319,7 @@ void main() {
 
         final originalPosted = await postingService.post(originalDraft);
         final reversedEntry = await postingService.reverseByUuid(
-          originalPosted.uuid,
+          originalPosted.id,
         );
 
         expect(reversedEntry.isPosted, isTrue);

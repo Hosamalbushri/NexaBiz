@@ -2,14 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_engine_impl.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
@@ -20,12 +20,12 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/inve
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService postingService;
 
-  late InventoryDatabase invDb;
+  late NexabizDatabase invDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
 
@@ -42,7 +42,7 @@ void main() {
     companyB = 'company_B';
     activeCompanyId = companyA;
 
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     accountRepo = AccountRepositoryImpl(
       db,
       readCompanyId: () => activeCompanyId,
@@ -58,7 +58,7 @@ void main() {
       periodValidator: legacyPeriodValidator(),
     );
 
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    invDb = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(
       db: invDb,
       readCompanyId: () => activeCompanyId,
@@ -74,15 +74,15 @@ void main() {
     compA_acc2 = generateUuidV4();
     compB_acc1 = generateUuidV4();
 
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final nowMs = DateTime.now();
 
     // Seed Accounts for Company A
     await db
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_acc1,
-            companyId: Value(companyA),
+            id: Value(compA_acc1),
+            companyId: companyA,
             accountCode: '1010',
             name: 'Cash A',
             accountType: 'asset',
@@ -90,16 +90,16 @@ void main() {
             level: const Value(1),
             isGroup: const Value(false),
             isActive: const Value(true),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(nowMs),
+            updatedAt: Value(nowMs),
           ),
         );
     await db
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_acc2,
-            companyId: Value(companyA),
+            id: Value(compA_acc2),
+            companyId: companyA,
             accountCode: '4010',
             name: 'Sales A',
             accountType: 'revenue',
@@ -107,8 +107,8 @@ void main() {
             level: const Value(1),
             isGroup: const Value(false),
             isActive: const Value(true),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(nowMs),
+            updatedAt: Value(nowMs),
           ),
         );
 
@@ -117,8 +117,8 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compB_acc1,
-            companyId: Value(companyB),
+            id: Value(compB_acc1),
+            companyId: companyB,
             accountCode: '1020',
             name: 'Cash B',
             accountType: 'asset',
@@ -126,8 +126,8 @@ void main() {
             level: const Value(1),
             isGroup: const Value(false),
             isActive: const Value(true),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(nowMs),
+            updatedAt: Value(nowMs),
           ),
         );
 
@@ -184,10 +184,10 @@ void main() {
 
         // Verify line debit/credit swap
         final line1 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc1,
+          (l) => l.accountId == compA_acc1,
         );
         final line2 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc2,
+          (l) => l.accountId == compA_acc2,
         );
         expect(line1.debit, equals(0));
         expect(line1.credit, equals(1000));
@@ -315,7 +315,7 @@ void main() {
         final reversal = await postingService.reverseByUuid(original.uuid);
 
         final revLine1 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc1,
+          (l) => l.accountId == compA_acc1,
         );
         expect(revLine1.credit, equals(historicalAmount));
         expect(revLine1.debit, equals(0));
@@ -361,7 +361,7 @@ void main() {
         final reversal = await postingService.reverseByUuid(original.uuid);
 
         final line1 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc1,
+          (l) => l.accountId == compA_acc1,
         );
         expect(line1.exchangeRateToBase, equals(historicalRate));
         expect(line1.credit, equals(100));
@@ -375,7 +375,17 @@ void main() {
         activeCompanyId = companyA;
         final now = DateTime.now();
         const itemCode = 'ITEM-ABC';
-        const warehouseId = 'WH-01';
+        const warehouseCode = 'WH-01';
+        final warehouseId = generateUuidV4();
+
+        await invDb.into(invDb.warehouses).insert(
+              WarehousesCompanion.insert(
+                id: Value(warehouseId),
+                code: warehouseCode,
+                name: 'Main Warehouse',
+                companyId: companyA,
+              ),
+            );
 
         final recUuid = generateUuidV4();
         final recLineUuid = generateUuidV4();
@@ -428,8 +438,9 @@ void main() {
             .into(invDb.stockMovementLines)
             .insert(
               StockMovementLinesCompanion.insert(
-                uuid: issLineUuid,
-                movementUuid: issUuid,
+                id: Value(issLineUuid),
+                companyId: companyA,
+                issueId: Value(issUuid),
                 movementType: 'issue',
                 itemCode: itemCode,
                 itemName: 'Item ABC',
@@ -500,24 +511,16 @@ void main() {
 
         final cogsEntry = await postingService.post(draft);
 
-        await postingService.voidBySource(
-          sourceType: 'sale',
-          sourceId: 'SALE-303',
-        );
-
-        final reversal = await postingService.findBySource(
-          sourceType: JournalPostingService.reverseSourceType,
-          sourceId: cogsEntry.uuid,
-        );
+        final reversal = await postingService.reverseByUuid(cogsEntry.uuid);
 
         expect(reversal, isNotNull);
         expect(reversal!.isPosted, isTrue);
         expect(
-          reversal.lines.firstWhere((l) => l.accountUuid == compA_acc1).credit,
+          reversal.lines.firstWhere((l) => l.accountId == compA_acc1).credit,
           equals(320),
         );
         expect(
-          reversal.lines.firstWhere((l) => l.accountUuid == compA_acc2).debit,
+          reversal.lines.firstWhere((l) => l.accountId == compA_acc2).debit,
           equals(320),
         );
       },

@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/core/domain/services/inventory_subledger_port.dart';
 import 'package:stock_count/modules/inventory/shared/data/adapters/inventory_subledger_query_adapter.dart';
-import '../../../products/presentation/providers/product_providers.dart';
 import '../../data/repositories/stock_movements_repository_impl.dart';
 import '../../domain/entities/stock_issue.dart';
 import '../../domain/entities/stock_receipt.dart';
@@ -9,7 +8,6 @@ import '../../domain/repositories/stock_movements_repository.dart';
 import '../../domain/usecases/stock_movement_usecases.dart';
 
 import 'package:stock_count/app/inventory/inventory_app_providers.dart';
-import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -29,6 +27,7 @@ import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dar
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 import 'package:stock_count/core/database/canonical_database_provider.dart';
 import 'package:stock_count/modules/currency/presentation/providers/currency_providers.dart';
+import 'package:stock_count/core/tenancy/tenant_providers.dart';
 
 final stockMovementsRepositoryProvider = Provider<StockMovementsRepository>((
   ref,

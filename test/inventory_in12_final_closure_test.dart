@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/data/services/cost_method_inheritance_resolver_impl.dart';
-import 'package:stock_count/modules/inventory/cost_valuation/data/services/inventory_cost_calculator_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_engine_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
@@ -55,7 +55,7 @@ class TrackingAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostMethodInheritanceResolverImpl resolver;
   late InventoryCostCalculatorImpl costCalculator;
   late CostLayerServiceImpl costLayerService;
@@ -69,7 +69,7 @@ void main() {
   const warehouseB = 'WH_B_UUID';
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
 
     validationService = StockValidationServiceImpl(db, () => companyId);
     costLayerService = CostLayerServiceImpl(
@@ -111,7 +111,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouseA),
+            id: const Value(warehouseA),
             code: const Value('WHA'),
             name: const Value('Warehouse A'),
             costValuationMethod: const Value('weightedAverage'),
@@ -126,7 +126,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouseB),
+            id: const Value(warehouseB),
             code: const Value('WHB'),
             name: const Value('Warehouse B'),
             costValuationMethod: const Value('weightedAverage'),
@@ -166,7 +166,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recA1),
+                movementId: Value(recA1),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-WAC'),
                 itemName: const Value('Item WAC'),
@@ -204,7 +204,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recA2),
+                movementId: Value(recA2),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-WAC'),
                 itemName: const Value('Item WAC'),
@@ -242,7 +242,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineAId),
-                movementUuid: Value(issueAId),
+                movementId: Value(issueAId),
                 movementType: const Value('issue'),
                 itemCode: const Value('ITEM-WAC'),
                 itemName: const Value('Item WAC'),
@@ -308,7 +308,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recB1),
+                movementId: Value(recB1),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-WAC'),
                 itemName: const Value('Item WAC'),
@@ -335,7 +335,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineBId),
-                movementUuid: Value(issueBId),
+                movementId: Value(issueBId),
                 movementType: const Value('issue'),
                 itemCode: const Value('ITEM-WAC'),
                 itemName: const Value('Item WAC'),
@@ -406,7 +406,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(r1),
+                movementId: Value(r1),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-FIFO'),
                 itemName: const Value('Item FIFO'),
@@ -446,7 +446,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(r2),
+                movementId: Value(r2),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-FIFO'),
                 itemName: const Value('Item FIFO'),
@@ -473,7 +473,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineId),
-                movementUuid: Value(issueId),
+                movementId: Value(issueId),
                 movementType: const Value('issue'),
                 itemCode: const Value('ITEM-FIFO'),
                 itemName: const Value('Item FIFO'),
@@ -529,7 +529,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(r1),
+                movementId: Value(r1),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-LIFO'),
                 itemName: const Value('Item LIFO'),
@@ -569,7 +569,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(r2),
+                movementId: Value(r2),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-LIFO'),
                 itemName: const Value('Item LIFO'),
@@ -596,7 +596,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineId),
-                movementUuid: Value(issueId),
+                movementId: Value(issueId),
                 movementType: const Value('issue'),
                 itemCode: const Value('ITEM-LIFO'),
                 itemName: const Value('Item LIFO'),
@@ -653,7 +653,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(r1),
+                movementId: Value(r1),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-TR'),
                 itemName: const Value('Item Transfer'),
@@ -681,7 +681,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineOutId),
-                movementUuid: Value(transferOutId),
+                movementId: Value(transferOutId),
                 movementType: const Value('issue'),
                 itemCode: const Value('ITEM-TR'),
                 itemName: const Value('Item Transfer'),
@@ -733,7 +733,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(transferInId),
+                movementId: Value(transferInId),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-TR'),
                 itemName: const Value('Item Transfer'),
@@ -813,7 +813,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(r1),
+              movementId: Value(r1),
               movementType: const Value('receipt'),
               itemCode: const Value('ITEM-NEG'),
               itemName: const Value('Item Negative'),
@@ -852,7 +852,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(issueId),
+              movementId: Value(issueId),
               movementType: const Value('issue'),
               itemCode: const Value('ITEM-NEG'),
               itemName: const Value('Item Negative'),
@@ -898,7 +898,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(r1),
+              movementId: Value(r1),
               movementType: const Value('receipt'),
               itemCode: const Value('ITEM-IDEM'),
               itemName: const Value('Item Idem'),
@@ -926,7 +926,7 @@ void main() {
       // Verify layers count is STILL 1 (no duplicate cost layer created)
       final layers = await (db.select(
         db.inventoryCostLayers,
-      )..where((t) => t.movementUuid.equals(r1))).get();
+      )..where((t) => t.movementId.equals(r1))).get();
       expect(layers.length, equals(1));
 
       // Verify accounting entries list has only 1 entry recorded
@@ -967,7 +967,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(r1),
+              movementId: Value(r1),
               movementType: const Value('receipt'),
               itemCode: const Value('ITEM-IMM'),
               itemName: const Value('Item Immutable'),
@@ -993,7 +993,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(lineId),
-              movementUuid: Value(issueId),
+              movementId: Value(issueId),
               movementType: const Value('issue'),
               itemCode: const Value('ITEM-IMM'),
               itemName: const Value('Item Immutable'),

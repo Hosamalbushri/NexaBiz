@@ -9,8 +9,7 @@ void main() {
       String voucherType = '',
     }) {
       return JournalEntryHeader(
-        id: 1,
-        uuid: 'test-uuid',
+        id: 'test-uuid',
         entryDate: DateTime(2026, 1, 1),
         voucherNumber: 'JV-001',
         voucherType: voucherType,

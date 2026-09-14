@@ -12,12 +12,10 @@ class AccountingLifecycleException implements Exception {
 /// Concrete implementation of [AccountingLifecycleControllerPort].
 class AccountingLifecycleController implements AccountingLifecycleControllerPort {
   AccountingLifecycleController({
-    required AccountingPostingAuthorityPort postingAuthority,
-    required JournalRepository journalRepository,
+    required this._postingAuthority,
+    required this._journalRepository,
     Map<String, bool>? periodStateMap,
-  })  : _postingAuthority = postingAuthority,
-        _journalRepository = journalRepository,
-        _periodStateMap = periodStateMap ?? {};
+  })  : _periodStateMap = periodStateMap ?? {};
 
   final AccountingPostingAuthorityPort _postingAuthority;
   final JournalRepository _journalRepository;

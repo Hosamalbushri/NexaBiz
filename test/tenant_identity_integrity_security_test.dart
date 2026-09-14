@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
@@ -40,14 +40,14 @@ class AlwaysPermissivePeriodValidator implements PeriodValidatorPort {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase accountingDb;
-  late InventoryDatabase inventoryDb;
+  late NexabizDatabase accountingDb;
+  late NexabizDatabase inventoryDb;
   const companyA = 'tenant-identity-company-A';
   const companyB = 'tenant-identity-company-B';
 
   setUp(() {
-    accountingDb = AccountingDatabase.memory();
-    inventoryDb = InventoryDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
+    inventoryDb = NexabizDatabase.memory();
   });
 
   tearDown(() async {
@@ -307,7 +307,7 @@ void main() {
         CostLayer(
           id: layerAId,
           itemCode: 'ITEM-X',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 100.0,

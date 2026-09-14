@@ -1,18 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_accounting_poster_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/journals/data/services/journal_builder_impl.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
 import 'package:stock_count/shared/contracts/errors/account_exception.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService postingService;
@@ -22,14 +24,14 @@ void main() {
   late String companyB;
   late String activeCompanyId;
 
-  late String compA_inventoryUuid;
-  late String compA_cogsUuid;
-  late String compB_inventoryUuid;
-  late String compA_groupUuid;
-  late String compA_inactiveUuid;
+  late String compAInventoryUuid;
+  late String compACogsUuid;
+  late String compBInventoryUuid;
+  late String compAGroupUuid;
+  late String compAInactiveUuid;
 
   setUp(() async {
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     companyA = 'company_A';
     companyB = 'company_B';
     activeCompanyId = companyA;
@@ -51,27 +53,40 @@ void main() {
       periodValidator: legacyPeriodValidator(),
     );
 
-    poster = InventoryAccountingPosterImpl(
+    final bindingRepo = WarehouseAccountingBindingRepositoryImpl(
       db,
-      journalPostingService: postingService,
+      () => activeCompanyId,
+    );
+
+    final journalBuilder = JournalBuilderImpl(
+      accountRepository: accountRepo,
+      currencyRateRepository: CurrencyRateRepositoryImpl(db),
+      bindingRepo: bindingRepo,
+      readCompanyId: () => activeCompanyId,
+    );
+
+    poster = InventoryAccountingPosterImpl(
+      postingService,
+      journalBuilder: journalBuilder,
       readCompanyId: () => activeCompanyId,
     );
 
     // Seed test accounts for Company A
-    compA_inventoryUuid = generateUuidV4();
-    compA_cogsUuid = generateUuidV4();
-    compA_groupUuid = generateUuidV4();
-    compA_inactiveUuid = generateUuidV4();
+    compAInventoryUuid = generateUuidV4();
+    compACogsUuid = generateUuidV4();
+    compAGroupUuid = generateUuidV4();
+    compAInactiveUuid = generateUuidV4();
 
-    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
+    final nowMs = now.millisecondsSinceEpoch;
 
     // Company A: Active leaf accounts
     await db
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_inventoryUuid,
-            companyId: Value(companyA),
+            id: Value(compAInventoryUuid),
+            companyId: companyA,
             accountCode: '1230',
             name: 'مخزون بضائع أ',
             accountType: 'asset',
@@ -79,9 +94,8 @@ void main() {
             level: const Value(1),
             isGroup: const Value(false),
             isActive: const Value(true),
-            description: const Value('system:inventory'),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
 
@@ -89,8 +103,8 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_cogsUuid,
-            companyId: Value(companyA),
+            id: Value(compACogsUuid),
+            companyId: companyA,
             accountCode: '5100',
             name: 'تكلفة المبيعات أ',
             accountType: 'expense',
@@ -98,9 +112,8 @@ void main() {
             level: const Value(1),
             isGroup: const Value(false),
             isActive: const Value(true),
-            description: const Value('system:cost_of_goods'),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
 
@@ -109,8 +122,8 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_groupUuid,
-            companyId: Value(companyA),
+            id: Value(compAGroupUuid),
+            companyId: companyA,
             accountCode: '1000',
             name: 'الأصول أ',
             accountType: 'asset',
@@ -118,8 +131,8 @@ void main() {
             level: const Value(0),
             isGroup: const Value(true),
             isActive: const Value(true),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
 
@@ -128,8 +141,8 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_inactiveUuid,
-            companyId: Value(companyA),
+            id: Value(compAInactiveUuid),
+            companyId: companyA,
             accountCode: '1239',
             name: 'مخزون تالف أ (غير نشط)',
             accountType: 'asset',
@@ -137,19 +150,19 @@ void main() {
             level: const Value(1),
             isGroup: const Value(false),
             isActive: const Value(false),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
 
     // Seed test accounts for Company B
-    compB_inventoryUuid = generateUuidV4();
+    compBInventoryUuid = generateUuidV4();
     await db
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compB_inventoryUuid,
-            companyId: Value(companyB),
+            id: Value(compBInventoryUuid),
+            companyId: companyB,
             accountCode: '1230-B',
             name: 'مخزون بضائع ب',
             accountType: 'asset',
@@ -157,11 +170,24 @@ void main() {
             level: const Value(1),
             isGroup: const Value(false),
             isActive: const Value(true),
-            description: const Value('system:inventory'),
-            createdAt: nowMs,
-            updatedAt: nowMs,
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
+
+    // Seed Warehouse Accounting Binding for default warehouse under Company A
+    await db.into(db.warehouseAccountingBindings).insert(
+      WarehouseAccountingBindingsCompanion.insert(
+        id: Value(generateUuidV4()),
+        warehouseId: '',
+        companyId: companyA,
+        inventoryAssetAccountId: Value(compAInventoryUuid),
+        cogsAccountId: Value(compACogsUuid),
+        inventoryAdjustmentAccountId: Value(compACogsUuid),
+        createdAt: nowMs,
+        updatedAt: nowMs,
+      ),
+    );
   });
 
   tearDown(() async {
@@ -208,7 +234,7 @@ void main() {
           () async => poster.postAccountingEntry(
             document: doc,
             totalAmount: 500.0,
-            accountId: compB_inventoryUuid,
+            accountId: compBInventoryUuid,
           ),
           throwsA(isA<MissingAccountException>()),
         );
@@ -258,7 +284,7 @@ void main() {
           () async => poster.postAccountingEntry(
             document: doc,
             totalAmount: 500.0,
-            accountId: compA_groupUuid,
+            accountId: compAGroupUuid,
           ),
           throwsA(isA<MissingAccountException>()),
         );
@@ -282,7 +308,7 @@ void main() {
           () async => poster.postAccountingEntry(
             document: doc,
             totalAmount: 500.0,
-            accountId: compA_inactiveUuid,
+            accountId: compAInactiveUuid,
           ),
           throwsA(isA<MissingAccountException>()),
         );
@@ -315,13 +341,13 @@ void main() {
 
         final lines = await (db.select(
           db.journalLines,
-        )..where((l) => l.entryUuid.equals(entries.first.uuid))).get();
+        )..where((l) => l.entryId.equals(entries.first.id))).get();
         expect(lines.length, equals(2));
 
-        final accountUuids = lines.map((l) => l.accountUuid).toList();
+        final accountUuids = lines.map((l) => l.accountId).toList();
         // Must contain Company A's inventory account, NOT Company B's
-        expect(accountUuids, contains(compA_inventoryUuid));
-        expect(accountUuids, isNot(contains(compB_inventoryUuid)));
+        expect(accountUuids, contains(compAInventoryUuid));
+        expect(accountUuids, isNot(contains(compBInventoryUuid)));
       },
     );
 
@@ -331,7 +357,14 @@ void main() {
         // Delete Company A's COGS account ('5100')
         await (db.delete(
           db.accounts,
-        )..where((t) => t.uuid.equals(compA_cogsUuid))).go();
+        )..where((t) => t.id.equals(compACogsUuid))).go();
+
+        // Clear warehouse binding for COGS account to simulate missing configuration
+        await (db.update(db.warehouseAccountingBindings)
+              ..where((t) => t.companyId.equals(companyA)))
+            .write(const WarehouseAccountingBindingsCompanion(
+          cogsAccountId: Value(null),
+        ));
 
         final doc = InventoryDocumentRef(
           documentId: generateUuidV4(),
@@ -341,7 +374,7 @@ void main() {
         );
 
         // Stock issue requires cost_of_goods account ('5100'). Since it was deleted and no accountId is specified,
-        // the system MUST NOT arbitrarily pick compA_inventoryUuid via limit(1). It MUST fail!
+        // the system MUST NOT arbitrarily pick compAInventoryUuid via limit(1). It MUST fail!
         expect(
           () async => poster.postAccountingEntry(
             document: doc,
@@ -369,7 +402,7 @@ void main() {
         await poster.postAccountingEntry(
           document: doc,
           totalAmount: 1200.0,
-          accountId: compA_inventoryUuid,
+          accountId: compAInventoryUuid,
         );
 
         final entries = await db.select(db.journalEntries).get();

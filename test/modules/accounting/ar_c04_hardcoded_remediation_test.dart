@@ -19,12 +19,12 @@ class MockLookupPort implements SetupAccountLookupPort {
   final Map<String, SetupAccountData> _accounts = {};
 
   void addAccount(SetupAccountData account) {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
   }
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return _accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return _accounts[accountId];
   }
 
   @override
@@ -97,7 +97,7 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 class MockAccountRepositoryForSafetyGate implements AccountRepository {
   final Map<String, Account> _store = {};
 
-  void add(Account account) => _store[account.uuid] = account;
+  void add(Account account) => _store[account.id] = account;
 
   @override
   Future<Account?> getByUuid(String uuid) async => _store[uuid];
@@ -128,10 +128,10 @@ class DummyUsageAnalyzer implements AccountUsageAnalyzer {
   @override
   Future<AccountUsageRecord> analyzeAccountUsage({
     required String companyId,
-    required String accountUuid,
+    required String accountId,
   }) async {
     return AccountUsageRecord(
-      accountUuid: accountUuid,
+      accountId: accountId,
       status: AccountUsageStatus.neverUsed,
       postedTransactionCount: 0,
       draftTransactionCount: 0,
@@ -192,7 +192,7 @@ void main() {
         await resolver.bindAccount(
           companyId: 'companyA',
           requirement: req,
-          accountUuid: 'acc-cash-01',
+          accountId: 'acc-cash-01',
         );
 
         final resolved = await resolver.resolveAccountForTransaction(
@@ -234,7 +234,7 @@ void main() {
           () => resolver.bindAccount(
             companyId: 'companyA',
             requirement: reqLiability,
-            accountUuid: 'acc-asset-01',
+            accountId: 'acc-asset-01',
           ),
           throwsA(isA<AccountBindingException>()),
         );
@@ -270,7 +270,7 @@ void main() {
           () => resolver.bindAccount(
             companyId: 'companyA',
             requirement: req,
-            accountUuid: 'acc-compB-01',
+            accountId: 'acc-compB-01',
           ),
           throwsA(isA<CrossCompanyAccountBindingException>()),
         );
@@ -281,8 +281,7 @@ void main() {
       '4. SafetyGate rejects incorrect classification for AccountRole at posting/config time',
       () async {
         final accLiability = Account(
-          id: 101,
-          uuid: 'acc-liab-01',
+          id: 'acc-liab-01',
           accountCode: '211001',
           name: 'حساب التزام',
           accountType: AccountType.liability,

@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use // Preserving standard Flutter RadioListTile parameters (groupValue/onChanged) to avoid UI tree refactoring risks.
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';

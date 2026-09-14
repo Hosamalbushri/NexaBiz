@@ -48,9 +48,7 @@ class AuthorizationContext {
   final bool requiresReverification;
   final bool isTimeTrusted;
 
-  static TrustedClock? _globalClock;
-  static set globalClock(TrustedClock? clock) => _globalClock = clock;
-  static TrustedClock? get globalClock => _globalClock;
+  static TrustedClock? globalClock;
 
   /// Returns true if the user is authenticated in online sync mode.
   bool get isOnline => authenticationMode == AuthenticationMode.sync;
@@ -61,7 +59,7 @@ class AuthorizationContext {
   /// Returns true if the authorization context has expired.
   bool get isExpired {
     if (authorizationExpiresAt == null) return false;
-    final now = _globalClock?.utcNow() ?? DateTime.now().toUtc();
+    final now = globalClock?.utcNow() ?? DateTime.now().toUtc();
     return now.isAfter(authorizationExpiresAt!);
   }
 
@@ -73,8 +71,9 @@ class AuthorizationContext {
     required EntitlementCapability capability,
   }) {
     if (isExpired) return false;
-    if (userStatus != 'active' || companyMembershipStatus != 'active')
+    if (userStatus != 'active' || companyMembershipStatus != 'active') {
       return false;
+    }
 
     if (capability == EntitlementCapability.sync) {
       if (!isTimeTrusted ||

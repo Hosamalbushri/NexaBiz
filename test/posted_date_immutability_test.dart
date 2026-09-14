@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:drift/drift.dart' hide isNotNull;
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
@@ -42,10 +42,10 @@ import 'package:stock_count/modules/sales/invoices/domain/repositories/sale_repo
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase accDb;
-  late InventoryDatabase invDb;
-  late ReceiptsPaymentsDatabase rpDb;
-  late SalesDatabase salesDb;
+  late NexabizDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase rpDb;
+  late NexabizDatabase salesDb;
 
   late AccountRepositoryImpl accountRepo;
   late FiscalYearRepositoryImpl fiscalYearRepo;
@@ -96,10 +96,10 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('posted_date_test_');
     Hive.init(tempDir.path);
 
-    accDb = AccountingDatabase.memory();
-    invDb = InventoryDatabase.memory();
-    rpDb = ReceiptsPaymentsDatabase.memory();
-    salesDb = SalesDatabase.memory();
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    rpDb = NexabizDatabase.memory();
+    salesDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => companyId);
     await accountRepo.seedDefaultChart();
@@ -253,7 +253,7 @@ void main() {
         lines: [
           StockMovementLine(
             id: '22222222-2222-4222-8222-222222222222',
-            movementUuid: '11111111-1111-4111-8111-111111111111',
+            movementId: '11111111-1111-4111-8111-111111111111',
             movementType: 'receipt',
             itemCode: 'ITEM-1',
             itemName: 'Item 1',
@@ -300,7 +300,7 @@ void main() {
         lines: [
           StockMovementLine(
             id: '44444444-4444-4444-8444-444444444444',
-            movementUuid: '33333333-3333-4333-8333-333333333333',
+            movementId: '33333333-3333-4333-8333-333333333333',
             movementType: 'issue',
             itemCode: 'ITEM-1',
             itemName: 'Item 1',

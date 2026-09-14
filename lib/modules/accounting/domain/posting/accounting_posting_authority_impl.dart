@@ -12,14 +12,11 @@ import 'accounting_posting_authority_port.dart';
 /// Concrete implementation of [AccountingPostingAuthorityPort].
 class AccountingPostingAuthority implements AccountingPostingAuthorityPort {
   AccountingPostingAuthority({
-    required AccountingValidationEnginePort validationEngine,
-    required AuthoritativeJournalBuilderPort journalBuilder,
-    required JournalIntegrityEnginePort integrityEngine,
-    required JournalRepository journalRepository,
-  })  : _validationEngine = validationEngine,
-        _journalBuilder = journalBuilder,
-        _integrityEngine = integrityEngine,
-        _journalRepository = journalRepository;
+    required this._validationEngine,
+    required this._journalBuilder,
+    required this._integrityEngine,
+    required this._journalRepository,
+  });
 
   final AccountingValidationEnginePort _validationEngine;
   final AuthoritativeJournalBuilderPort _journalBuilder;
@@ -171,7 +168,7 @@ class AccountingPostingAuthority implements AccountingPostingAuthorityPort {
       lines: reverseLines,
     );
 
-    final postedReverse = await _journalRepository.post(reverseDraft);
+    await _journalRepository.post(reverseDraft);
     await _journalRepository.softDeletePostedAfterReverse(existing.uuid);
 
     return const AccountingPostingResult(

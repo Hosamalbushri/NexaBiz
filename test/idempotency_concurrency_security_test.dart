@@ -8,12 +8,12 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_mapping_resolver_impl.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_validation_service_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/accounting_entry_builder.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
@@ -28,8 +28,8 @@ import 'helpers/journal_posting_test_helper.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   late AccountRepositoryImpl accountRepo;
   late PostingCoordinatorImpl coordinator;
   late AccountingPeriodValidator validator;
@@ -64,7 +64,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion.insert(
               uuid: line.id,
-              movementUuid: line.movementUuid,
+              receiptId: line.movementId,
               movementType: line.movementType,
               itemCode: line.itemCode,
               itemName: line.itemName,
@@ -98,7 +98,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion.insert(
               uuid: line.id,
-              movementUuid: line.movementUuid,
+              receiptId: line.movementId,
               movementType: line.movementType,
               itemCode: line.itemCode,
               itemName: line.itemName,
@@ -114,8 +114,8 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('idempotency_test_');
     Hive.init(tempDir.path);
 
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
 
     final validationService = StockValidationServiceImpl(invDb, () => tenantId);
     final depDetector = InventoryDependencyDetectorImpl(invDb);
@@ -177,12 +177,12 @@ void main() {
         .into(invDb.products)
         .insert(
           ProductsCompanion.insert(
-            uuid: '10000000-0000-0000-0000-000000000100',
+            id: '10000000-0000-0000-0000-000000000100',
             itemCode: 'ITEM-100',
             name: 'Idempotent Test Item',
             price: 25.0,
             packSize: 1,
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(15.0),
             companyId: const Value(tenantId),
             createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -214,7 +214,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -255,7 +255,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -305,7 +305,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -344,7 +344,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineInUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -371,7 +371,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineOutUuid,
-              movementUuid: issueUuid,
+              movementId: issueUuid,
               movementType: 'stock_issue',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -408,7 +408,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineInUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -429,7 +429,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineOutUuid,
-              movementUuid: issueUuid,
+              movementId: issueUuid,
               movementType: 'stock_issue',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -457,7 +457,7 @@ void main() {
 
         // Verify COGS line debit total equals 150.0 (NOT 300.0)
         final lines = accDb.select(accDb.journalLines)
-          ..where((tbl) => tbl.entryUuid.equals(rows.first.uuid));
+          ..where((tbl) => tbl.entryId.equals(rows.first.uuid));
         final lineRows = await lines.get();
         final totalDebit = lineRows.fold<double>(
           0.0,
@@ -479,7 +479,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineInUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -499,7 +499,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineOutUuid,
-              movementUuid: issueUuid,
+              movementId: issueUuid,
               movementType: 'stock_issue',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -536,7 +536,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',
@@ -585,8 +585,8 @@ void main() {
           const companyA = 'tenant-company-A';
           const companyB = 'tenant-company-B';
 
-          final dbA = AccountingDatabase.memory();
-          final dbB = AccountingDatabase.memory();
+          final dbA = NexabizDatabase.memory();
+          final dbB = NexabizDatabase.memory();
 
           final accountRepoA = AccountRepositoryImpl(
             dbA,
@@ -738,7 +738,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-100',
               itemName: 'Idempotent Test Item',

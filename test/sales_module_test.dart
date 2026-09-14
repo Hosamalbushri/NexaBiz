@@ -3,28 +3,28 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/sales/data/database/sales_database.dart';
-import 'package:stock_count/modules/sales/data/repositories/sale_repository_impl.dart';
-import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_item.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
-import 'package:stock_count/modules/sales/domain/models/sale_exception.dart';
-import 'package:stock_count/modules/sales/domain/models/sale_list_filter.dart';
-import 'package:stock_count/modules/sales/domain/repositories/sale_repository.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_accounting_bridge_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_calculation_service.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_currency_converter.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_inventory_effect_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_money.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_number_allocator_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_validator.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_voucher_book_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_workflow_service.dart';
-import 'package:stock_count/modules/sales/domain/usecases/sale_usecases.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_method.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/models/sale_exception.dart';
+import 'package:stock_count/modules/sales/invoices/domain/models/sale_list_filter.dart';
+import 'package:stock_count/modules/sales/invoices/domain/repositories/sale_repository.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_accounting_bridge_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_calculation_service.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_currency_converter.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_inventory_effect_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_money.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_number_allocator_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_validator.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_voucher_book_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_workflow_service.dart';
+import 'package:stock_count/modules/sales/invoices/domain/usecases/sale_usecases.dart';
 
 SaleDraft _cashDraft({
   required List<SaleItemDraft> items,
@@ -253,7 +253,7 @@ void main() {
   });
 
   group('SaleRepository offline create', () {
-    late SalesDatabase db;
+    late NexabizDatabase db;
     late SaleRepositoryImpl repository;
     late Directory tempDir;
     late Box<SyncOperation> syncBox;
@@ -267,7 +267,7 @@ void main() {
       }
       syncBox = await Hive.openBox<SyncOperation>('sync_queue');
       syncQueue = SyncQueue(box: syncBox);
-      db = SalesDatabase.memory();
+      db = NexabizDatabase.memory();
       repository = SaleRepositoryImpl(db, syncQueue: syncQueue);
     });
 

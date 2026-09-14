@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
@@ -13,7 +13,7 @@ import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_d
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService postingService;
@@ -27,7 +27,7 @@ void main() {
   late String compB_acc1;
 
   setUp(() async {
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     companyA = 'company_A';
     companyB = 'company_B';
     activeCompanyId = companyA;
@@ -60,7 +60,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_acc1,
+            id: compA_acc1,
             companyId: Value(companyA),
             accountCode: '1010',
             name: 'الصندوق أ',
@@ -78,7 +78,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compA_acc2,
+            id: compA_acc2,
             companyId: Value(companyA),
             accountCode: '4010',
             name: 'المبيعات أ',
@@ -97,7 +97,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: compB_acc1,
+            id: compB_acc1,
             companyId: Value(companyB),
             accountCode: '1010-B',
             name: 'الصندوق ب',
@@ -120,9 +120,9 @@ void main() {
     test(
       'Test A: Posted entry is strictly immutable - edit attempt throws postedImmutable',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-101',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -150,7 +150,7 @@ void main() {
 
         // Attempt to edit posted entry by passing new amounts under same UUID
         final editDraft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-101-MODIFIED',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -185,16 +185,16 @@ void main() {
         );
 
         // Verify original DB record is untouched
-        final inDb = await journalRepo.getByUuid(entryUuid);
+        final inDb = await journalRepo.getByUuid(entryId);
         expect(inDb!.description, equals('Original posting'));
         expect(inDb.lines.first.debit, equals(1000.0));
       },
     );
 
     test('Test B: Posted lines cannot be replaced or deleted', () async {
-      final entryUuid = generateUuidV4();
+      final entryId = generateUuidV4();
       final draft = JournalEntryDraft(
-        uuid: entryUuid,
+        uuid: entryId,
         voucherNumber: 'JE-102',
         voucherType: 'journal',
         currencyCode: 'SAR',
@@ -221,7 +221,7 @@ void main() {
 
       // Attempt to overwrite lines with empty list
       final emptyLinesDraft = JournalEntryDraft(
-        uuid: entryUuid,
+        uuid: entryId,
         voucherNumber: 'JE-102',
         voucherType: 'journal',
         currencyCode: 'SAR',
@@ -242,16 +242,16 @@ void main() {
         ),
       );
 
-      final inDb = await journalRepo.getByUuid(entryUuid);
+      final inDb = await journalRepo.getByUuid(entryId);
       expect(inDb!.lines.length, equals(2));
     });
 
     test(
       'Test C: Attempting to replace posted entry with an unposted draft is rejected',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-103',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -278,7 +278,7 @@ void main() {
 
         // Attempt to post an unposted draft with the same UUID
         final unpostedDraft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-103',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -299,7 +299,7 @@ void main() {
           ),
         );
 
-        final inDb = await journalRepo.getByUuid(entryUuid);
+        final inDb = await journalRepo.getByUuid(entryId);
         expect(inDb!.isPosted, isTrue);
         expect(inDb.deletedAt, isNull);
       },
@@ -308,9 +308,9 @@ void main() {
     test(
       'Test D: Correct Reversal - void creates reversing entry while preserving original',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-104',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -336,10 +336,10 @@ void main() {
         await postingService.post(draft);
 
         // Void the posted entry
-        await postingService.voidByUuid(entryUuid);
+        await postingService.voidByUuid(entryId);
 
         // Original entry MUST remain intact with deletedAt == null and isPosted == true
-        final original = await journalRepo.getByUuid(entryUuid);
+        final original = await journalRepo.getByUuid(entryId);
         expect(original, isNotNull);
         expect(original!.isPosted, isTrue);
         expect(original.deletedAt, isNull);
@@ -347,7 +347,7 @@ void main() {
         // A reversing entry MUST exist referencing original entry
         final reversal = await journalRepo.findBySource(
           sourceType: JournalPostingService.reverseSourceType,
-          sourceId: entryUuid,
+          sourceId: entryId,
         );
         expect(reversal, isNotNull);
         expect(reversal!.isPosted, isTrue);
@@ -357,10 +357,10 @@ void main() {
         // Reversal lines must swap debit and credit
         expect(reversal.lines.length, equals(2));
         final line1 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc1,
+          (l) => l.accountId == compA_acc1,
         );
         final line2 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc2,
+          (l) => l.accountId == compA_acc2,
         );
         expect(line1.debit, equals(0.0));
         expect(line1.credit, equals(1500.0));
@@ -378,9 +378,9 @@ void main() {
     test(
       'Test E: Historical cost preservation - reversal preserves original posted amounts',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-105',
           voucherType: 'inventory_cogs',
           currencyCode: 'SAR',
@@ -408,10 +408,10 @@ void main() {
         );
 
         await postingService.post(draft);
-        final reversal = await postingService.reverseByUuid(entryUuid);
+        final reversal = await postingService.reverseByUuid(entryId);
 
         final line1 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc1,
+          (l) => l.accountId == compA_acc1,
         );
         expect(line1.credit, equals(450.50));
         expect(line1.baseCredit, equals(450.50));
@@ -421,9 +421,9 @@ void main() {
     test(
       'Test F: Historical FX rate preservation - reversal preserves exchange rates',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-106',
           voucherType: 'fx_transaction',
           currencyCode: 'USD',
@@ -453,10 +453,10 @@ void main() {
         );
 
         await postingService.post(draft);
-        final reversal = await postingService.reverseByUuid(entryUuid);
+        final reversal = await postingService.reverseByUuid(entryId);
 
         final line1 = reversal.lines.firstWhere(
-          (l) => l.accountUuid == compA_acc1,
+          (l) => l.accountId == compA_acc1,
         );
         expect(line1.currencyCode, equals('USD'));
         expect(line1.exchangeRateToBase, equals(3.75));
@@ -468,9 +468,9 @@ void main() {
     test(
       'Test G: Reversal Idempotency - double reversal returns existing reversal entry without duplicate',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-107',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -495,8 +495,8 @@ void main() {
 
         await postingService.post(draft);
 
-        final rev1 = await postingService.reverseByUuid(entryUuid);
-        final rev2 = await postingService.reverseByUuid(entryUuid);
+        final rev1 = await postingService.reverseByUuid(entryId);
+        final rev2 = await postingService.reverseByUuid(entryId);
 
         // Both calls return the exact same reversal UUID
         expect(rev1.uuid, equals(rev2.uuid));
@@ -507,7 +507,7 @@ void main() {
               "SELECT COUNT(*) AS c FROM journal_entries WHERE source_type = ? AND source_id = ?",
               variables: [
                 Variable.withString(JournalPostingService.reverseSourceType),
-                Variable.withString(entryUuid),
+                Variable.withString(entryId),
               ],
             )
             .getSingle();
@@ -520,9 +520,9 @@ void main() {
       () async {
         // Switch to Company A and post
         activeCompanyId = companyA;
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-108',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -552,7 +552,7 @@ void main() {
 
         // Attempt to reverse Company A's entry from Company B context
         expect(
-          () async => postingService.reverseByUuid(entryUuid),
+          () async => postingService.reverseByUuid(entryId),
           throwsA(
             isA<JournalException>().having(
               (e) => e.code,
@@ -564,11 +564,11 @@ void main() {
 
         // Switch back to Company A context and verify entry remains untouched and unreversed
         activeCompanyId = companyA;
-        final inDb = await journalRepo.getByUuid(entryUuid);
+        final inDb = await journalRepo.getByUuid(entryId);
         expect(inDb, isNotNull);
         final reversal = await journalRepo.findBySource(
           sourceType: JournalPostingService.reverseSourceType,
-          sourceId: entryUuid,
+          sourceId: entryId,
         );
         expect(reversal, isNull);
       },
@@ -578,9 +578,9 @@ void main() {
       'Test I: Direct Line Remapping Protection - Account remapping is company-scoped',
       () async {
         activeCompanyId = companyA;
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-109',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -614,17 +614,17 @@ void main() {
 
         // Switch back to Company A context - lines must still reference compA_acc1
         activeCompanyId = companyA;
-        final inDb = await journalRepo.getByUuid(entryUuid);
-        expect(inDb!.lines.first.accountUuid, equals(compA_acc1));
+        final inDb = await journalRepo.getByUuid(entryId);
+        expect(inDb!.lines.first.accountId, equals(compA_acc1));
       },
     );
 
     test(
       'Test J: Transaction Safety - Failed reversal leaves 0 partial changes',
       () async {
-        final entryUuid = generateUuidV4();
+        final entryId = generateUuidV4();
         final draft = JournalEntryDraft(
-          uuid: entryUuid,
+          uuid: entryId,
           voucherNumber: 'JE-110',
           voucherType: 'journal',
           currencyCode: 'SAR',
@@ -653,7 +653,7 @@ void main() {
 
         // Attempt reversal but pass invalid date in a closed/invalid context if enforced
         // We verify atomic behavior: original entry is intact and total count is unchanged if anything fails
-        final original = await journalRepo.getByUuid(entryUuid);
+        final original = await journalRepo.getByUuid(entryId);
         expect(original!.isPosted, isTrue);
         expect(
           (await db.select(db.journalEntries).get()).length,
@@ -785,7 +785,7 @@ void main() {
         expect(reversalInDb!.isPosted, isTrue);
         expect(
           reversalInDb.lines
-              .firstWhere((l) => l.accountUuid == compA_acc1)
+              .firstWhere((l) => l.accountId == compA_acc1)
               .credit,
           equals(250.0),
         );

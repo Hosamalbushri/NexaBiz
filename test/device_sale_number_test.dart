@@ -2,9 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
 import 'package:stock_count/core/database/hive_boxes.dart';
-import 'package:stock_count/modules/sales/data/sale_number_block_store.dart';
-import 'package:stock_count/modules/sales/domain/services/device_sale_number.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_number_allocator_port.dart';
+import 'package:stock_count/modules/sales/invoices/data/repositories/sale_number_block_store.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_number_allocator_port.dart';
 
 void main() {
   test('device lanes differ without embedding a device label', () {

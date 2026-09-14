@@ -2,11 +2,11 @@ import 'dart:typed_data';
 
 import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/accounting/data/datasources/account_excel_import_datasource.dart';
-import 'package:stock_count/modules/accounting/data/datasources/opening_balance_excel_datasource.dart';
-import 'package:stock_count/modules/accounting/domain/models/account_import_row.dart';
-import 'package:stock_count/modules/accounting/domain/models/opening_balance_line.dart';
-import 'package:stock_count/modules/accounting/domain/services/account_import_opening_journal.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/datasources/account_excel_import_datasource.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/datasources/opening_balance_excel_datasource.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_import_row.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/opening_balance_line.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_import_opening_journal.dart';
 
 Uint8List _workbookBytes({required List<List<String>> rows}) {
   final excel = Excel.createExcel();
@@ -122,9 +122,9 @@ void main() {
 
       expect(draft, isNotNull);
       expect(draft!.lines, hasLength(2));
-      expect(draft.lines[0].accountUuid, 'cash');
+      expect(draft.lines[0].accountId, 'cash');
       expect(draft.lines[0].debit, 1000);
-      expect(draft.lines[1].accountUuid, 'capital');
+      expect(draft.lines[1].accountId, 'capital');
       expect(draft.lines[1].credit, 1000);
     });
 
@@ -148,7 +148,7 @@ void main() {
 
       expect(draft, isNotNull);
       expect(draft!.lines[0].credit, 500);
-      expect(draft.lines[1].accountUuid, 'capital');
+      expect(draft.lines[1].accountId, 'capital');
       expect(draft.lines[1].debit, 500);
     });
 
@@ -182,7 +182,7 @@ void main() {
       expect(draft, isNotNull);
       expect(draft!.allowUnbalancedMultiCurrency, isTrue);
       expect(
-        draft.lines.where((l) => l.accountUuid == 'capital'),
+        draft.lines.where((l) => l.accountId == 'capital'),
         hasLength(2),
       );
       expect(

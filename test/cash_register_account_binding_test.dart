@@ -8,7 +8,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/normal_balance.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/cash_registers/data/repositories/cash_register_repository_impl.dart';
 import 'package:stock_count/modules/cash_registers/domain/entities/cash_register.dart';
 import 'package:stock_count/modules/cash_registers/domain/repositories/cash_register_repository.dart';
@@ -112,7 +112,7 @@ class FakeAccountRepository implements AccountRepository {
 void main() {
   group('CR-02 Account Binding Architecture Test Matrix', () {
     late FakeAccountRepository accountRepo;
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late CashRegisterRepositoryImpl cashRepo;
     late DefaultCashRegisterResolver resolver;
     late Directory tempDir;
@@ -133,11 +133,10 @@ void main() {
       await Hive.openBox<dynamic>(HiveBoxes.settings);
 
       accountRepo = FakeAccountRepository();
-      db = AccountingDatabase.memory();
+      db = NexabizDatabase.memory();
 
       validAssetAccountA = Account(
-        id: 101,
-        uuid: 'acc-cash-a1-uuid',
+        id: 'acc-cash-a1-uuid',
         accountCode: '1101',
         name: 'الصندوق الرئيسي A1',
         accountType: AccountType.asset,
@@ -152,8 +151,7 @@ void main() {
       );
 
       validAssetAccountA2 = Account(
-        id: 102,
-        uuid: 'acc-cash-a2-uuid',
+        id: 'acc-cash-a2-uuid',
         accountCode: '1102',
         name: 'صندوق الفرع A2',
         accountType: AccountType.asset,
@@ -168,8 +166,7 @@ void main() {
       );
 
       companyBAccount = Account(
-        id: 201,
-        uuid: 'acc-cash-b1-uuid',
+        id: 'acc-cash-b1-uuid',
         accountCode: '1101-B',
         name: 'صندوق شركة B',
         accountType: AccountType.asset,
@@ -184,8 +181,7 @@ void main() {
       );
 
       inactiveAccount = Account(
-        id: 103,
-        uuid: 'acc-inactive-uuid',
+        id: 'acc-inactive-uuid',
         accountCode: '1109',
         name: 'صندوق معطل',
         accountType: AccountType.asset,
@@ -200,8 +196,7 @@ void main() {
       );
 
       expenseAccount = Account(
-        id: 104,
-        uuid: 'acc-expense-uuid',
+        id: 'acc-expense-uuid',
         accountCode: '5101',
         name: 'حساب مصروفات',
         accountType: AccountType.expense,
@@ -216,8 +211,7 @@ void main() {
       );
 
       groupAccount = Account(
-        id: 105,
-        uuid: 'acc-group-uuid',
+        id: 'acc-group-uuid',
         accountCode: '1100',
         name: 'مجموعة الأصول المتداولة',
         accountType: AccountType.asset,
@@ -727,8 +721,7 @@ void main() {
         const movementAccountUuid = '00000000-0000-0000-0000-000000000155';
         accountRepo.addAccount(
           Account(
-            id: 155,
-            uuid: movementAccountUuid,
+            id: movementAccountUuid,
             accountCode: '1155',
             name: 'Movement Account',
             accountType: AccountType.asset,
@@ -761,9 +754,9 @@ void main() {
             .into(db.journalLines)
             .insert(
               JournalLinesCompanion.insert(
-                uuid: '00000000-0000-0000-0000-000000000099',
-                entryUuid: '00000000-0000-0000-0000-000000000088',
-                accountUuid: movementAccountUuid,
+                id: '00000000-0000-0000-0000-000000000099',
+                entryId: '00000000-0000-0000-0000-000000000088',
+                accountId: movementAccountUuid,
                 currencyCode: 'SAR',
                 debit: const Value(150.0),
               ),

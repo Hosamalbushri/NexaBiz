@@ -23,8 +23,7 @@ void main() {
       SyncStatus syncStatus = SyncStatus.pending,
     }) {
       return Sale(
-        id: 1,
-        uuid: uuid,
+        id: uuid,
         companyId: companyId,
         saleNumber: 'INV-OFF-001',
         saleDate: now,
@@ -35,8 +34,7 @@ void main() {
         warehouseId: 'wh_main_01',
         items: [
           SaleItem(
-            id: 1,
-            uuid: makeUuid(201),
+            id: makeUuid(201),
             saleUuid: uuid,
             productId: 'p1',
             productName: 'Item 1',

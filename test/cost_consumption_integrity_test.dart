@@ -2,13 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late String currentTenant;
 
   CostLayerServiceImpl createService([String Function()? readTenant]) {
@@ -19,7 +19,7 @@ void main() {
   }
 
   setUp(() {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     currentTenant = 'tenant_alpha';
   });
 
@@ -33,13 +33,13 @@ void main() {
       () async {
         final service = createService();
         final layerId = generateUuidV4();
-        final movementUuid = generateUuidV4();
+        final movementId = generateUuidV4();
 
         final layer = CostLayer(
           id: layerId,
           itemCode: 'ITEM-NORM-01',
           warehouseId: 'WH-MAIN',
-          movementUuid: movementUuid,
+          movementId: movementId,
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 100.0,
@@ -89,7 +89,7 @@ void main() {
           id: layerId,
           itemCode: 'ITEM-OVER-01',
           warehouseId: 'WH-MAIN',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 60.0,
@@ -136,7 +136,7 @@ void main() {
           id: layerId,
           itemCode: 'ITEM-CONC-25',
           warehouseId: 'WH-MAIN',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 100.0,
@@ -186,7 +186,7 @@ void main() {
 
         final row = await (db.select(
           db.inventoryCostLayers,
-        )..where((tbl) => tbl.uuid.equals(layerId))).getSingle();
+        )..where((tbl) => tbl.id.equals(layerId))).getSingle();
 
         expect(row.remainingQty, equals(0.0));
         expect(row.remainingQty, greaterThanOrEqualTo(0.0));
@@ -204,7 +204,7 @@ void main() {
           id: layerId,
           itemCode: 'ITEM-DUP-01',
           warehouseId: 'WH-MAIN',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 100.0,
@@ -269,7 +269,7 @@ void main() {
           id: layerId,
           itemCode: 'ITEM-TENANT-25',
           warehouseId: 'WH-MAIN',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 100.0,
@@ -314,14 +314,14 @@ void main() {
       '6. Orphan Consumption Prevention: Cannot reverse/delete a layer with downstream consumptions',
       () async {
         final service = createService();
-        final movementUuid = generateUuidV4();
+        final movementId = generateUuidV4();
         final layerId = generateUuidV4();
 
         final layer = CostLayer(
           id: layerId,
           itemCode: 'ITEM-ORPH-01',
           warehouseId: 'WH-MAIN',
-          movementUuid: movementUuid,
+          movementId: movementId,
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 50.0,
@@ -347,7 +347,7 @@ void main() {
 
         // Attempt to reverse/delete cost layer
         expect(
-          () async => await service.reverseLayer(movementUuid),
+          () async => await service.reverseLayer(movementId),
           throwsA(
             isA<JournalException>().having(
               (e) => e.code,
@@ -369,7 +369,7 @@ void main() {
           id: layerId,
           itemCode: 'ITEM-REST-01',
           warehouseId: 'WH-MAIN',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 50.0,
@@ -423,7 +423,7 @@ void main() {
           id: layerId,
           itemCode: 'ITEM-EXH-01',
           warehouseId: 'WH-MAIN',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 10.0,

@@ -42,7 +42,7 @@ void main() {
       // Insert Journal Entry for Company A
       await db.into(db.journalEntries).insert(
             JournalEntriesCompanion.insert(
-              uuid: uuidA,
+              id: Value(uuidA),
               entryDate: now,
               voucherNumber: 'JV-A-001',
               voucherType: 'manual',
@@ -56,7 +56,7 @@ void main() {
       // Insert Journal Entry for Company B
       await db.into(db.journalEntries).insert(
             JournalEntriesCompanion.insert(
-              uuid: uuidB,
+              id: Value(uuidB),
               entryDate: now,
               voucherNumber: 'JV-B-001',
               voucherType: 'manual',
@@ -73,7 +73,7 @@ void main() {
           .get();
 
       expect(queryA.length, equals(1));
-      expect(queryA.first.uuid, equals(uuidA));
+      expect(queryA.first.id, equals(uuidA));
       expect(queryA.first.voucherNumber, equals('JV-A-001'));
       expect(queryA.first.companyId, equals(companyA));
 
@@ -83,14 +83,14 @@ void main() {
           .get();
 
       expect(queryB.length, equals(1));
-      expect(queryB.first.uuid, equals(uuidB));
+      expect(queryB.first.id, equals(uuidB));
       expect(queryB.first.voucherNumber, equals('JV-B-001'));
       expect(queryB.first.companyId, equals(companyB));
     });
 
     test('Journal entry debit/credit balancing verification', () async {
       final companyId = 'comp-gl-bal-3g';
-      final entryUuid = generateUuidV4();
+      final entryId = generateUuidV4();
       final cashAccountUuid = generateUuidV4();
       final revenueAccountUuid = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -98,7 +98,7 @@ void main() {
       // Create Header
       await db.into(db.journalEntries).insert(
             JournalEntriesCompanion.insert(
-              uuid: entryUuid,
+              id: Value(entryId),
               entryDate: now,
               voucherNumber: 'JV-2026-100',
               voucherType: 'sales_posting',
@@ -113,9 +113,9 @@ void main() {
       final debitLineUuid = generateUuidV4();
       await db.into(db.journalLines).insert(
             JournalLinesCompanion.insert(
-              uuid: debitLineUuid,
-              entryUuid: entryUuid,
-              accountUuid: cashAccountUuid,
+              id: Value(debitLineUuid),
+              entryId: entryId,
+              accountId: cashAccountUuid,
               debit: const Value(150.0),
               credit: const Value(0.0),
               baseDebit: const Value(150.0),
@@ -128,9 +128,9 @@ void main() {
       final creditLineUuid = generateUuidV4();
       await db.into(db.journalLines).insert(
             JournalLinesCompanion.insert(
-              uuid: creditLineUuid,
-              entryUuid: entryUuid,
-              accountUuid: revenueAccountUuid,
+              id: Value(creditLineUuid),
+              entryId: entryId,
+              accountId: revenueAccountUuid,
               debit: const Value(0.0),
               credit: const Value(150.0),
               baseDebit: const Value(0.0),
@@ -141,7 +141,7 @@ void main() {
 
       // Fetch Lines
       final lines = await (db.select(db.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entryUuid)))
+            ..where((tbl) => tbl.entryId.equals(entryId)))
           .get();
 
       final totalDebit = lines.fold<double>(0.0, (sum, line) => sum + line.debit);
@@ -157,13 +157,13 @@ void main() {
       final companyId = 'comp-gl-period-3g';
       final fyUuid = generateUuidV4();
       final periodUuid = generateUuidV4();
-      final entryUuid = generateUuidV4();
+      final entryId = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
 
       // 1. Insert Fiscal Year
       await db.into(db.fiscalYears).insert(
             FiscalYearsCompanion.insert(
-              uuid: fyUuid,
+              id: Value(fyUuid),
               code: 'FY2026',
               name: 'Fiscal Year 2026',
               startDate: 1767225600000, // Jan 1 2026
@@ -180,8 +180,8 @@ void main() {
       // 2. Insert Accounting Period
       await db.into(db.accountingPeriods).insert(
             AccountingPeriodsCompanion.insert(
-              uuid: periodUuid,
-              fiscalYearUuid: fyUuid,
+              id: Value(periodUuid),
+              fiscalYearId: fyUuid,
               periodNumber: 1,
               name: 'Period 01 - Jan 2026',
               startDate: 1767225600000,
@@ -193,7 +193,7 @@ void main() {
       // 3. Insert Journal Entry
       await db.into(db.journalEntries).insert(
             JournalEntriesCompanion.insert(
-              uuid: entryUuid,
+              id: Value(entryId),
               entryDate: now,
               voucherNumber: 'JV-FY2026-P01',
               voucherType: 'manual',
@@ -205,28 +205,28 @@ void main() {
           );
 
       final fetchedFY = await (db.select(db.fiscalYears)
-            ..where((tbl) => tbl.uuid.equals(fyUuid)))
+            ..where((tbl) => tbl.id.equals(fyUuid)))
           .getSingle();
 
       final fetchedPeriod = await (db.select(db.accountingPeriods)
-            ..where((tbl) => tbl.uuid.equals(periodUuid)))
+            ..where((tbl) => tbl.id.equals(periodUuid)))
           .getSingle();
 
-      expect(fetchedFY.uuid, equals(fyUuid));
+      expect(fetchedFY.id, equals(fyUuid));
       expect(fetchedFY.companyId, equals(companyId));
-      expect(fetchedPeriod.fiscalYearUuid, equals(fyUuid));
+      expect(fetchedPeriod.fiscalYearId, equals(fyUuid));
     });
 
     test('Transactional rollback on failed GL posting', () async {
       final companyId = 'comp-rollback-gl-3g';
-      final entryUuid = generateUuidV4();
+      final entryId = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
 
       try {
         await db.transaction(() async {
           await db.into(db.journalEntries).insert(
                 JournalEntriesCompanion.insert(
-                  uuid: entryUuid,
+                  id: Value(entryId),
                   entryDate: now,
                   voucherNumber: 'JV-FAIL-01',
                   voucherType: 'manual',
@@ -239,9 +239,9 @@ void main() {
 
           await db.into(db.journalLines).insert(
                 JournalLinesCompanion.insert(
-                  uuid: generateUuidV4(),
-                  entryUuid: entryUuid,
-                  accountUuid: generateUuidV4(),
+                  id: Value(generateUuidV4()),
+                  entryId: entryId,
+                  accountId: generateUuidV4(),
                   debit: const Value(500.0),
                   credit: const Value(0.0),
                   currencyCode: 'USD',
@@ -253,11 +253,11 @@ void main() {
       } catch (_) {}
 
       final entries = await (db.select(db.journalEntries)
-            ..where((tbl) => tbl.uuid.equals(entryUuid)))
+            ..where((tbl) => tbl.id.equals(entryId)))
           .get();
 
       final lines = await (db.select(db.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entryUuid)))
+            ..where((tbl) => tbl.entryId.equals(entryId)))
           .get();
 
       expect(entries, isEmpty);

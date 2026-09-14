@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -11,13 +11,13 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late String currentTenant;
 
   setUp(() {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     currentTenant = 'company_alpha';
     costLayerService = CostLayerServiceImpl(
       db: db,
@@ -49,12 +49,12 @@ void main() {
             .into(db.products)
             .insert(
               ProductsCompanion(
-                uuid: Value(generateUuidV4()),
+                id: Value(generateUuidV4()),
                 itemCode: const Value(itemCode),
                 name: const Value('Test Item Hist Rec'),
                 packSize: const Value(1),
                 price: const Value(50.0),
-                onHandQty: const Value(0.0),
+                
                 unitCost: const Value(50.0),
                 createdAt: Value(nowMs),
                 updatedAt: Value(nowMs),
@@ -84,7 +84,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineId),
-                movementUuid: Value(recId),
+                movementId: Value(recId),
                 movementType: const Value('stock_receipt'),
                 itemCode: const Value(itemCode),
                 itemName: const Value('Test Item Hist Rec'),
@@ -120,7 +120,7 @@ void main() {
         // Verify line has postedCost and postedAt
         var lineAfterPost = await (db.select(
           db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(lineId))).getSingle();
+        )..where((tbl) => tbl.id.equals(lineId))).getSingle();
         expect(lineAfterPost.postedCost, equals(50.0));
         expect(lineAfterPost.postedAt, isNotNull);
         final originalPostedAt = lineAfterPost.postedAt;
@@ -131,7 +131,7 @@ void main() {
         // Verify original line postedCost and postedAt remain PRESERVED (NOT set to null / absent!)
         var lineAfterReversal = await (db.select(
           db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(lineId))).getSingle();
+        )..where((tbl) => tbl.id.equals(lineId))).getSingle();
         expect(lineAfterReversal.postedCost, equals(50.0));
         expect(lineAfterReversal.postedAt, equals(originalPostedAt));
       },
@@ -151,12 +151,12 @@ void main() {
             .into(db.products)
             .insert(
               ProductsCompanion(
-                uuid: Value(generateUuidV4()),
+                id: Value(generateUuidV4()),
                 itemCode: const Value(itemCode),
                 name: const Value('Test Item Hist Iss'),
                 packSize: const Value(1),
                 price: const Value(100.0),
-                onHandQty: const Value(0.0),
+                
                 unitCost: const Value(100.0),
                 createdAt: Value(nowMs),
                 updatedAt: Value(nowMs),
@@ -179,7 +179,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(recLineId),
-                movementUuid: Value(recId),
+                movementId: Value(recId),
                 movementType: const Value('stock_receipt'),
                 itemCode: const Value(itemCode),
                 itemName: const Value('Test Item Hist Iss'),
@@ -219,7 +219,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(issLineId),
-                movementUuid: Value(issId),
+                movementId: Value(issId),
                 movementType: const Value('stock_issue'),
                 itemCode: const Value(itemCode),
                 itemName: const Value('Test Item Hist Iss'),
@@ -244,7 +244,7 @@ void main() {
 
         var issLineAfterPost = await (db.select(
           db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(issLineId))).getSingle();
+        )..where((tbl) => tbl.id.equals(issLineId))).getSingle();
         expect(issLineAfterPost.postedCost, equals(100.0));
         expect(issLineAfterPost.postedAt, isNotNull);
         final originalIssPostedAt = issLineAfterPost.postedAt;
@@ -254,7 +254,7 @@ void main() {
 
         var issLineAfterReversal = await (db.select(
           db.stockMovementLines,
-        )..where((tbl) => tbl.uuid.equals(issLineId))).getSingle();
+        )..where((tbl) => tbl.id.equals(issLineId))).getSingle();
 
         expect(issLineAfterReversal.postedCost, equals(100.0));
         expect(issLineAfterReversal.postedAt, equals(originalIssPostedAt));

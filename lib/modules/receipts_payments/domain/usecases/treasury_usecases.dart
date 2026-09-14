@@ -41,16 +41,12 @@ class PostFinancialTransactionUseCase {
   final SyncQueue? _syncQueue;
 
   PostFinancialTransactionUseCase({
-    required FinancialTransactionRepository repository,
-    required JournalPostingService journalPostingService,
-    required CanonicalTransactionOrchestrator orchestrator,
-    AuditTrailService? auditTrailService,
-    SyncQueue? syncQueue,
-  })  : _repository = repository,
-        _journalPostingService = journalPostingService,
-        _orchestrator = orchestrator,
-        _auditTrailService = auditTrailService,
-        _syncQueue = syncQueue;
+    required this._repository,
+    required this._journalPostingService,
+    required this._orchestrator,
+    this._auditTrailService,
+    this._syncQueue,
+  });
 
   Future<TreasuryOrchestrationResult> execute({
     required String transactionId,
@@ -85,8 +81,9 @@ class PostFinancialTransactionUseCase {
           );
 
           // 3. Record Audit Event inside transaction
-          if (_auditTrailService != null) {
-            await _auditTrailService!.recordEvent(
+          final auditTrail = _auditTrailService;
+          if (auditTrail != null) {
+            await auditTrail.recordEvent(
               documentId: txn.uuid,
               documentType: 'receipt_payment',
               eventType: 'posted',
@@ -97,8 +94,9 @@ class PostFinancialTransactionUseCase {
           }
 
           // 4. Enqueue Sync Operation inside transaction
-          if (_syncQueue != null) {
-            await _syncQueue!.enqueue(
+          final syncQ = _syncQueue;
+          if (syncQ != null) {
+            await syncQ.enqueue(
               SyncOperation.create(
                 entityType: 'receipt_payment',
                 entityId: txn.uuid,
@@ -140,16 +138,12 @@ class UnpostFinancialTransactionUseCase {
   final SyncQueue? _syncQueue;
 
   UnpostFinancialTransactionUseCase({
-    required FinancialTransactionRepository repository,
-    required JournalPostingService journalPostingService,
-    required CanonicalTransactionOrchestrator orchestrator,
-    AuditTrailService? auditTrailService,
-    SyncQueue? syncQueue,
-  })  : _repository = repository,
-        _journalPostingService = journalPostingService,
-        _orchestrator = orchestrator,
-        _auditTrailService = auditTrailService,
-        _syncQueue = syncQueue;
+    required this._repository,
+    required this._journalPostingService,
+    required this._orchestrator,
+    this._auditTrailService,
+    this._syncQueue,
+  });
 
   Future<TreasuryOrchestrationResult> execute({
     required String transactionId,
@@ -175,8 +169,9 @@ class UnpostFinancialTransactionUseCase {
           );
 
           // Record Audit Event inside transaction
-          if (_auditTrailService != null) {
-            await _auditTrailService!.recordEvent(
+          final auditTrail = _auditTrailService;
+          if (auditTrail != null) {
+            await auditTrail.recordEvent(
               documentId: txn.uuid,
               documentType: 'receipt_payment',
               eventType: 'unposted',
@@ -187,8 +182,9 @@ class UnpostFinancialTransactionUseCase {
           }
 
           // Enqueue Sync Operation inside transaction
-          if (_syncQueue != null) {
-            await _syncQueue!.enqueue(
+          final syncQ = _syncQueue;
+          if (syncQ != null) {
+            await syncQ.enqueue(
               SyncOperation.create(
                 entityType: 'receipt_payment',
                 entityId: txn.uuid,

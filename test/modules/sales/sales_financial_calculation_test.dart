@@ -17,13 +17,13 @@ class FakeAccountValidationService implements AccountValidationService {
 
   @override
   Future<AccountValidationResult> validateAccountUuid(
-    String accountUuid,
+    String accountId,
   ) async {
     return AccountValidationResult.valid;
   }
 
   @override
-  Future<void> assertCanPost(String accountUuid) async {}
+  Future<void> assertCanPost(String accountId) async {}
 }
 
 class FakeAccountMappingResolver implements AccountMappingResolver {
@@ -35,25 +35,25 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
     return AccountMapping({
       AccountRole.cash: const AccountRoleRef(
         role: AccountRole.cash,
-        accountUuid: 'acc_cash_101',
+        accountId: 'acc_cash_101',
         accountCode: '1010',
         accountName: 'Cash',
       ),
       AccountRole.revenue: const AccountRoleRef(
         role: AccountRole.revenue,
-        accountUuid: 'acc_rev_401',
+        accountId: 'acc_rev_401',
         accountCode: '4010',
         accountName: 'Sales Revenue',
       ),
       AccountRole.discount: const AccountRoleRef(
         role: AccountRole.discount,
-        accountUuid: 'acc_disc_502',
+        accountId: 'acc_disc_502',
         accountCode: '5020',
         accountName: 'Sales Discount',
       ),
       AccountRole.tax: const AccountRoleRef(
         role: AccountRole.tax,
-        accountUuid: 'acc_tax_202',
+        accountId: 'acc_tax_202',
         accountCode: '2020',
         accountName: 'Tax Payable',
       ),

@@ -17,10 +17,10 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency_rate.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/account_statement_report_data_port.dart';
@@ -53,8 +53,7 @@ class MockCurrencyRateRepository implements CurrencyRateRepository {
     return [
       for (final entry in _rates.entries)
         CurrencyRate(
-          id: 1,
-          uuid: generateUuidV4(),
+          id: generateUuidV4(),
           currencyCode: entry.key,
           rateToBase: entry.value,
           updatedAt: DateTime.utc(2026, 1, 1),
@@ -72,8 +71,7 @@ class MockCurrencyRateRepository implements CurrencyRateRepository {
     final r = _rates[currencyCode];
     if (r == null) return null;
     return CurrencyRate(
-      id: 1,
-      uuid: generateUuidV4(),
+      id: generateUuidV4(),
       currencyCode: currencyCode,
       rateToBase: r,
       updatedAt: DateTime.utc(2026, 1, 1),
@@ -114,7 +112,7 @@ class MockCurrencyRateRepository implements CurrencyRateRepository {
 }
 
 Future<void> _insertAccount(
-  AccountingDatabase db, {
+  NexabizDatabase db, {
   required String uuid,
   required String code,
   required String name,
@@ -125,7 +123,7 @@ Future<void> _insertAccount(
   final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
   await db.into(db.accounts).insert(
         AccountsCompanion.insert(
-          uuid: uuid,
+          id: uuid,
           accountCode: code,
           name: name,
           accountType: accountType,
@@ -139,8 +137,8 @@ Future<void> _insertAccount(
 
 void main() {
   group('CURRENCY-10 — Multi-Currency Reports and Statements Tests', () {
-    late AccountingDatabase db;
-    late InventoryDatabase invDb;
+    late NexabizDatabase db;
+    late NexabizDatabase invDb;
     late CostLayerServiceImpl costLayerService;
     late AccountRepositoryImpl accountRepo;
     late AccountCurrencyBalanceRepositoryImpl balanceRepo;
@@ -163,8 +161,8 @@ void main() {
     }
 
     setUp(() async {
-      db = AccountingDatabase(executor: NativeDatabase.memory());
-      invDb = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.memory();
+      invDb = NexabizDatabase.memory();
 
       costLayerService = CostLayerServiceImpl(
         db: invDb,
@@ -386,7 +384,7 @@ void main() {
 
       // Load payload for Customer Account with ALL currencies
       final payload = await adapter.load(
-        accountUuid: customerAccountUuid,
+        accountId: customerAccountUuid,
         currencyCode: null, // ALL currencies
         statementType: AccountStatementType.detailed,
         postingFilter: AccountStatementPostingFilter.all,
@@ -657,7 +655,7 @@ void main() {
         CostLayer(
           itemCode: 'ITEM-INV-002',
           warehouseId: 'WH-01',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 1, 10),
           receivedQty: 20.0,

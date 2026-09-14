@@ -140,8 +140,9 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
             composer.reset(baseCurrency);
             if (books.isNotEmpty) composer.setVoucherBook(books.first);
             if (defaultAccount != null) composer.setAccount(defaultAccount);
-            if (warehouses.isNotEmpty)
+            if (warehouses.isNotEmpty) {
               composer.setWarehouse(warehouses.first.id);
+            }
           }
         },
       );
@@ -533,8 +534,9 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                                   ),
                               ],
                             );
-                            if (chosenBook != null)
+                            if (chosenBook != null) {
                               onVoucherBookSelected(chosenBook!);
+                            }
                           }
                         : null,
                   ),

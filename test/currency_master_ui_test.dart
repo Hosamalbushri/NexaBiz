@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_repository.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
@@ -14,11 +14,11 @@ import 'package:stock_count/app/settings/company/functional_currency_providers.d
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/providers/inventory_valuation_currency_providers.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late CurrencyRepository repository;
 
   setUp(() async {
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     repository = refToRepository(db);
     await repository.ensureDefaultCurrenciesSeeded();
   });
@@ -27,7 +27,7 @@ void main() {
     await db.close();
   });
 
-  Widget buildTestApp(AccountingDatabase db, CurrencyRepository repo) {
+  Widget buildTestApp(NexabizDatabase db, CurrencyRepository repo) {
     return ProviderScope(
       overrides: [
         accountingDatabaseProvider.overrideWithValue(db),
@@ -246,6 +246,6 @@ void main() {
   });
 }
 
-CurrencyRepository refToRepository(AccountingDatabase db) {
+CurrencyRepository refToRepository(NexabizDatabase db) {
   return CurrencyRepositoryImpl(db, readCompanyId: () => 'default-company');
 }

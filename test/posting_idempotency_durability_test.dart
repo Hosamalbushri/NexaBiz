@@ -4,13 +4,13 @@ import 'package:drift/native.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -60,8 +60,8 @@ class MockSyncBox<T> implements Box<T> {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase accDb;
-  late InventoryDatabase invDb;
+  late NexabizDatabase accDb;
+  late NexabizDatabase invDb;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService journalPostingService;
@@ -79,8 +79,8 @@ void main() {
   late String invAccountUuid;
 
   setUp(() async {
-    accDb = AccountingDatabase(executor: NativeDatabase.memory());
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(
       accDb,
@@ -177,13 +177,13 @@ void main() {
         .into(invDb.products)
         .insert(
           ProductsCompanion(
-            id: const Value(1),
+            id: const Value('00000000-0000-4000-8000-000000000001'),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
             itemCode: const Value('ITEM-IDEM-01'),
             name: const Value('Idempotency Test Item'),
             packSize: const Value(1),
             price: const Value(100.0),
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(50.0),
             companyId: const Value(testCompanyId),
             createdAt: Value(now),
@@ -218,7 +218,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-IDEM-01',
               itemName: 'Idempotency Test Item',
@@ -298,7 +298,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-IDEM-01',
               itemName: 'Idempotency Test Item',
@@ -368,7 +368,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-IDEM-01',
               itemName: 'Idempotency Test Item',
@@ -446,7 +446,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineUuid,
-              movementUuid: receiptUuid,
+              movementId: receiptUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-IDEM-01',
               itemName: 'Idempotency Test Item',

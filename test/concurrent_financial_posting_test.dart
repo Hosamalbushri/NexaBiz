@@ -4,8 +4,8 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositori
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -21,8 +21,8 @@ import 'package:drift/drift.dart' as drift;
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl stockValidationService;
@@ -39,8 +39,8 @@ void main() {
   const cashAccUuid = '22222222-2222-2222-2222-222222222222';
 
   setUp(() async {
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
     whId = generateUuidV4();
 
     costLayerService = CostLayerServiceImpl(
@@ -91,11 +91,11 @@ void main() {
         .into(invDb.products)
         .insert(
           ProductsCompanion.insert(
-            uuid: generateUuidV4(),
+            id: generateUuidV4(),
             itemCode: 'ITEM-CONCURRENCY-1',
             name: 'Concurrency Test Item',
             companyId: const drift.Value(tenantId),
-            onHandQty: const drift.Value(0.0),
+            ),
             unitCost: const drift.Value(0.0),
             price: 0.0,
             packSize: 1,
@@ -118,7 +118,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: invAccUuid,
+            id: invAccUuid,
             accountCode: '1230',
             name: 'Inventory Asset',
             accountType: 'asset',
@@ -135,7 +135,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: cashAccUuid,
+            id: cashAccUuid,
             accountCode: '1010',
             name: 'Cash Account',
             accountType: 'asset',
@@ -180,7 +180,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion.insert(
                 uuid: generateUuidV4(),
-                movementUuid: recId,
+                movementId: recId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-CONCURRENCY-1',
                 itemName: 'Concurrency Test Item',
@@ -218,7 +218,7 @@ void main() {
         // Verify cost layers count is 1 (NOT 2)
         final layers = await (invDb.select(
           invDb.inventoryCostLayers,
-        )..where((tbl) => tbl.movementUuid.equals(recId))).get();
+        )..where((tbl) => tbl.movementId.equals(recId))).get();
         expect(layers.length, equals(1));
       },
     );
@@ -248,7 +248,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion.insert(
                 uuid: generateUuidV4(),
-                movementUuid: recId,
+                movementId: recId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-CONCURRENCY-1',
                 itemName: 'Concurrency Test Item',
@@ -313,7 +313,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion.insert(
                 uuid: generateUuidV4(),
-                movementUuid: recId,
+                movementId: recId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-CONCURRENCY-1',
                 itemName: 'Concurrency Test Item',
@@ -356,7 +356,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion.insert(
                 uuid: issueLineId,
-                movementUuid: issueId,
+                issueId: issueId,
                 movementType: 'issue',
                 itemCode: 'ITEM-CONCURRENCY-1',
                 itemName: 'Concurrency Test Item',

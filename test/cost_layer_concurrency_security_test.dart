@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late String currentTenant;
 
   CostLayerServiceImpl createService([String Function()? readTenant]) {
@@ -18,7 +18,7 @@ void main() {
   }
 
   setUp(() {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     currentTenant = 'company_alpha';
   });
 
@@ -40,7 +40,7 @@ void main() {
             id: layerId,
             itemCode: 'ITEM-CONC-01',
             warehouseId: 'WH-MAIN',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 100.0,
@@ -97,7 +97,7 @@ void main() {
           // Check row directly in database
           final row = await (db.select(
             db.inventoryCostLayers,
-          )..where((tbl) => tbl.uuid.equals(layerId))).getSingle();
+          )..where((tbl) => tbl.id.equals(layerId))).getSingle();
           expect(row.remainingQty, equals(0.0));
           expect(row.closed, equals(1));
         },
@@ -114,7 +114,7 @@ void main() {
             id: layerId,
             itemCode: 'ITEM-TENANT-01',
             warehouseId: 'WH-MAIN',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 100.0,
@@ -168,7 +168,7 @@ void main() {
             id: layerId,
             itemCode: 'ITEM-BOUNDARY-01',
             warehouseId: 'WH-MAIN',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 30.0,
@@ -199,7 +199,7 @@ void main() {
 
           final row = await (db.select(
             db.inventoryCostLayers,
-          )..where((tbl) => tbl.uuid.equals(layerId))).getSingle();
+          )..where((tbl) => tbl.id.equals(layerId))).getSingle();
           expect(row.remainingQty, equals(0.0));
           expect(row.closed, equals(1));
         },
@@ -216,7 +216,7 @@ void main() {
             id: layerId,
             itemCode: 'ITEM-REVERSAL-01',
             warehouseId: 'WH-MAIN',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 100.0,
@@ -269,7 +269,7 @@ void main() {
             id: layerId,
             itemCode: 'ITEM-HIST-01',
             warehouseId: 'WH-MAIN',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 50.0,

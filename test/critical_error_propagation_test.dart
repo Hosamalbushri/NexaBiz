@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
@@ -94,7 +94,7 @@ class DummyAccountValidationService implements AccountValidationService {
 }
 
 void main() {
-  late InventoryDatabase inventoryDb;
+  late NexabizDatabase inventoryDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -103,7 +103,7 @@ void main() {
   const tenantCompanyId = 'tenant_company_err_prop_37';
 
   setUp(() async {
-    inventoryDb = InventoryDatabase(executor: NativeDatabase.memory());
+    inventoryDb = NexabizDatabase.memory();
 
     costLayerService = CostLayerServiceImpl(
       db: inventoryDb,
@@ -180,7 +180,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: const Value('00000000-0000-4000-8000-000000000039'),
-                movementUuid: const Value(receiptUuid),
+                movementId: const Value(receiptUuid),
                 movementType: const Value('receipt'),
                 itemCode: const Value('ITEM-001'),
                 itemName: const Value('Test Item'),

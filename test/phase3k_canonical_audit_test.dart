@@ -98,7 +98,7 @@ void main() {
         notes: 'Posted sale transaction',
       );
 
-      expect(entry.uuid.length, equals(36));
+      expect(entry.id.length, equals(36));
       expect(entry.documentId, equals(docId));
       expect(entry.eventType, equals('post'));
     });

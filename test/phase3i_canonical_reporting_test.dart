@@ -24,7 +24,7 @@ void main() {
       final saleUuid = generateUuidV4();
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: saleUuid,
+              id: saleUuid,
               saleNumber: 'INV-2026-001',
               subtotal: 500.0,
               itemDiscountTotal: 0.0,
@@ -62,7 +62,7 @@ void main() {
       // Seed Sales for Company A
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: uuidA,
+              id: uuidA,
               saleNumber: 'INV-A-100',
               subtotal: 1000.0,
               itemDiscountTotal: 0.0,
@@ -78,7 +78,7 @@ void main() {
       // Seed Sales for Company B
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: uuidB,
+              id: uuidB,
               saleNumber: 'INV-B-200',
               subtotal: 2500.0,
               itemDiscountTotal: 0.0,
@@ -112,13 +112,13 @@ void main() {
 
     test('GL Trial Balance aggregation report correctness (Total Debit == Total Credit)', () async {
       final companyId = 'comp-gl-tb-3i';
-      final entryUuid = generateUuidV4();
+      final entryId = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
 
       // Seed Journal Entry
       await db.into(db.journalEntries).insert(
             JournalEntriesCompanion.insert(
-              uuid: entryUuid,
+              id: entryId,
               entryDate: now,
               voucherNumber: 'JV-TB-01',
               voucherType: 'sales_posting',
@@ -132,9 +132,9 @@ void main() {
       // Seed Debit Line
       await db.into(db.journalLines).insert(
             JournalLinesCompanion.insert(
-              uuid: generateUuidV4(),
-              entryUuid: entryUuid,
-              accountUuid: generateUuidV4(),
+              id: generateUuidV4(),
+              entryId: entryId,
+              accountId: generateUuidV4(),
               debit: const Value(750.0),
               credit: const Value(0.0),
               baseDebit: const Value(750.0),
@@ -146,9 +146,9 @@ void main() {
       // Seed Credit Line
       await db.into(db.journalLines).insert(
             JournalLinesCompanion.insert(
-              uuid: generateUuidV4(),
-              entryUuid: entryUuid,
-              accountUuid: generateUuidV4(),
+              id: generateUuidV4(),
+              entryId: entryId,
+              accountId: generateUuidV4(),
               debit: const Value(0.0),
               credit: const Value(750.0),
               baseDebit: const Value(0.0),
@@ -165,7 +165,7 @@ void main() {
       expect(entries.length, equals(1));
 
       final lines = await (db.select(db.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entries.first.uuid)))
+            ..where((tbl) => tbl.entryId.equals(entries.first.uuid)))
           .get();
 
       final totalDebit = lines.fold<double>(0.0, (sum, line) => sum + line.debit);
@@ -179,7 +179,7 @@ void main() {
     test('Cross-domain stock valuation and movement reporting consistency', () async {
       final companyId = 'comp-stock-val-3i';
       final itemCode = 'ITEM-PROD-3I';
-      final warehouseUuid = generateUuidV4();
+      final warehouseId = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
 
       // Seed Stock Movement Ledger
@@ -187,7 +187,7 @@ void main() {
             StockMovementLedgersCompanion.insert(
               uuid: generateUuidV4(),
               itemCode: itemCode,
-              warehouseId: warehouseUuid,
+              warehouseId: warehouseId,
               quantity: const Value(100.0),
               direction: 'inbound',
               movementType: 'receipt',
@@ -210,8 +210,8 @@ void main() {
             ProductWarehouseStocksCompanion.insert(
               uuid: generateUuidV4(),
               itemCode: itemCode,
-              warehouseId: warehouseUuid,
-              onHandQty: const Value(100.0),
+              warehouseId: warehouseId,
+              
               createdAt: now,
               updatedAt: now,
               companyId: Value(companyId),

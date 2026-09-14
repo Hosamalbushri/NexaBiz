@@ -136,8 +136,9 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
             final baseCurrency = ref.read(accountingBaseCurrencyProvider)?.code ?? '';
             composer.reset(baseCurrency);
             if (books.isNotEmpty) composer.setVoucherBook(books.first);
-            if (warehouses.isNotEmpty)
+            if (warehouses.isNotEmpty) {
               composer.setWarehouse(warehouses.first.id);
+            }
           }
         },
       );
@@ -554,8 +555,9 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                                     );
                                   },
                                 );
-                            if (selected != null)
+                            if (selected != null) {
                               onVoucherBookSelected(selected);
+                            }
                           }
                         : null,
                   ),

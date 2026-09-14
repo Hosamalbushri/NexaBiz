@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -75,7 +75,7 @@ class AlwaysAllowPermissionGuard implements PermissionGuard {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late StockValidationServiceImpl validationService;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
@@ -89,7 +89,7 @@ void main() {
   const productX = 'PROD_X_WIDGET';
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
 
     validationService = StockValidationServiceImpl(db, () => companyA);
     costLayerService = CostLayerServiceImpl(
@@ -123,7 +123,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouseA),
+            id: const Value(warehouseA),
             code: const Value('WHA'),
             name: const Value('Warehouse Alpha'),
             companyId: const Value(companyA),
@@ -138,7 +138,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouseB),
+            id: const Value(warehouseB),
             code: const Value('WHB'),
             name: const Value('Warehouse Beta'),
             companyId: const Value(companyA),
@@ -153,13 +153,13 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            uuid: Value(generateUuidV4()),
+            id: Value(generateUuidV4()),
             itemCode: const Value(productX),
             name: const Value('Product X Widget'),
             packSize: const Value(1),
             price: const Value(250.0), // Retail Price 250
             companyId: const Value(companyA),
-            onHandQty: const Value(0.0),
+            
             createdAt: Value(DateTime.now().millisecondsSinceEpoch),
             updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
           ),
@@ -194,7 +194,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recId),
+                movementId: Value(recId),
                 movementType: const Value('receipt'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -223,7 +223,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(saleLineId),
-                movementUuid: Value(saleId),
+                movementId: Value(saleId),
                 movementType: const Value('issue'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -283,7 +283,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recId),
+                movementId: Value(recId),
                 movementType: const Value('receipt'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -310,7 +310,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(saleId),
+                movementId: Value(saleId),
                 movementType: const Value('issue'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -360,7 +360,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recAId),
+                movementId: Value(recAId),
                 movementType: const Value('receipt'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -399,7 +399,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recBId),
+                movementId: Value(recBId),
                 movementType: const Value('receipt'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -425,7 +425,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(saleAId),
+                movementId: Value(saleAId),
                 movementType: const Value('issue'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -451,7 +451,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(saleBId),
+                movementId: Value(saleBId),
                 movementType: const Value('issue'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -520,7 +520,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(rec1Id),
+              movementId: Value(rec1Id),
               movementType: const Value('receipt'),
               itemCode: const Value(productX),
               itemName: const Value('Product X Widget'),
@@ -571,7 +571,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(rec2Id),
+              movementId: Value(rec2Id),
               movementType: const Value('receipt'),
               itemCode: const Value(productX),
               itemName: const Value('Product X Widget'),
@@ -598,7 +598,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(lineId),
-              movementUuid: Value(saleId),
+              movementId: Value(saleId),
               movementType: const Value('issue'),
               itemCode: const Value(productX),
               itemName: const Value('Product X Widget'),
@@ -665,7 +665,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(rec1Id),
+              movementId: Value(rec1Id),
               movementType: const Value('receipt'),
               itemCode: const Value(productX),
               itemName: const Value('Product X Widget'),
@@ -716,7 +716,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(rec2Id),
+              movementId: Value(rec2Id),
               movementType: const Value('receipt'),
               itemCode: const Value(productX),
               itemName: const Value('Product X Widget'),
@@ -743,7 +743,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(lineId),
-              movementUuid: Value(saleId),
+              movementId: Value(saleId),
               movementType: const Value('issue'),
               itemCode: const Value(productX),
               itemName: const Value('Product X Widget'),
@@ -812,7 +812,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(rec1Id),
+                movementId: Value(rec1Id),
                 movementType: const Value('receipt'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -863,7 +863,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(rec2Id),
+                movementId: Value(rec2Id),
                 movementType: const Value('receipt'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -890,7 +890,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineId),
-                movementUuid: Value(saleId),
+                movementId: Value(saleId),
                 movementType: const Value('issue'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -948,7 +948,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recId),
+                movementId: Value(recId),
                 movementType: const Value('receipt'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),
@@ -974,7 +974,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(saleId),
+                movementId: Value(saleId),
                 movementType: const Value('issue'),
                 itemCode: const Value(productX),
                 itemName: const Value('Product X Widget'),

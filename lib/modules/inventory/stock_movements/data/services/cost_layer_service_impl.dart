@@ -14,14 +14,11 @@ import 'package:stock_count/modules/currency/domain/services/functional_currency
 
 class CostLayerServiceImpl implements CostLayerService {
   CostLayerServiceImpl({
-    required NexabizDatabase db,
-    String Function()? readCompanyId,
-    CompanyInitializationRepository? initRepository,
-    FunctionalCurrencyService? functionalCurrencyService,
-  })  : _db = db,
-        _readCompanyId = readCompanyId,
-        _initRepository = initRepository,
-        _functionalCurrencyService = functionalCurrencyService;
+    required this._db,
+    this._readCompanyId,
+    this._initRepository,
+    this._functionalCurrencyService,
+  });
 
   final NexabizDatabase _db;
   final String Function()? _readCompanyId;
@@ -846,6 +843,6 @@ class CostLayerServiceImpl implements CostLayerService {
       );
     final product = await query.getSingleOrNull();
     if (product == null) return 0.0;
-    return product.price > 0 ? product.price : 0.0;
+    return product.unitCost > 0 ? product.unitCost : 0.0;
   }
 }

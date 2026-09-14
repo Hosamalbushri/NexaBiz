@@ -22,8 +22,7 @@ class _FakeProductRepository implements ProductRepository {
   @override
   Future<Product> insert(ProductDraft draft) async {
     return Product(
-      id: 1,
-      uuid: '00000000-0000-4000-8000-000000000001',
+      id: '00000000-0000-4000-8000-000000000001',
       itemCode: draft.itemCode,
       name: draft.name,
       packSize: draft.packSize,
@@ -141,8 +140,7 @@ class _FakeCustomerRepository implements CustomerRepository {
   @override
   Future<Customer> insert(CustomerDraft draft) async {
     return Customer(
-      id: 1,
-      uuid: '00000000-0000-4000-8000-000000000002',
+      id: '00000000-0000-4000-8000-000000000002',
       customerCode: draft.customerCode,
       name: draft.name,
       isActive: true,

@@ -287,59 +287,58 @@ class ProductStockMovementReportDataAdapter
     }
 
     // 3b. Fetch Sales Invoices from SalesDatabase (tenant scoped)
-    if (salesDb != null) {
-      final salesMap = <String, SaleRow>{};
-      final salesList =
-          await (salesDb!.select(salesDb!.sales)..where(
-                (tbl) =>
-                    tbl.companyId.equals(activeCompanyId) &
-                    tbl.deletedAt.isNull(),
-              ))
-              .get();
-      for (final s in salesList) {
-        // Exclude cancelled sales
-        if (s.saleStatus != 'cancelled') {
-          salesMap[s.id] = s;
-        }
+    final sDb = salesDb;
+    final salesMap = <String, SaleRow>{};
+    final salesList =
+        await (sDb.select(sDb.sales)..where(
+              (tbl) =>
+                  tbl.companyId.equals(activeCompanyId) &
+                  tbl.deletedAt.isNull(),
+            ))
+            .get();
+    for (final s in salesList) {
+      // Exclude cancelled sales
+      if (s.saleStatus != 'cancelled') {
+        salesMap[s.id] = s;
       }
+    }
 
-      final saleItems =
-          await (salesDb!.select(salesDb!.saleItems)..where(
-                (tbl) =>
-                    tbl.productId.equals(productId) |
-                    tbl.productCode.equals(productCode),
-              ))
-              .get();
+    final saleItems =
+        await (sDb.select(sDb.saleItems)..where(
+              (tbl) =>
+                  tbl.productId.equals(productId) |
+                  tbl.productCode.equals(productCode),
+            ))
+            .get();
 
-      for (final item in saleItems) {
-        if (salesMap.containsKey(item.saleId)) {
-          final sale = salesMap[item.saleId]!;
-          final date = DateTime.fromMillisecondsSinceEpoch(
-            sale.saleDate > 0 ? sale.saleDate : sale.createdAt,
-          );
-          final saleItemCost = item.quantity * productUnitCost;
-          rawMovements.add(
-            _RawMovementItem(
-              date: date,
-              docType: 'فاتورة مبيعات',
-              voucherBook:
-                  (sale.customerName != null && sale.customerName!.isNotEmpty)
-                  ? sale.customerName!
-                  : (sale.settlementType == 'cash'
-                        ? 'مبيعات نقدية'
-                        : 'مبيعات آجلة'),
-              docNum: sale.saleNumber,
-              docUuid: sale.id,
-              isIncoming: false,
-              quantity: item.quantity,
-              mainQuantity: item.mainQuantity,
-              subQuantity: item.subQuantity,
-              unitCost: productUnitCost,
-              cost: saleItemCost,
-              warehouseId: null,
-            ),
-          );
-        }
+    for (final item in saleItems) {
+      if (salesMap.containsKey(item.saleId)) {
+        final sale = salesMap[item.saleId]!;
+        final date = DateTime.fromMillisecondsSinceEpoch(
+          sale.saleDate > 0 ? sale.saleDate : sale.createdAt,
+        );
+        final saleItemCost = item.quantity * productUnitCost;
+        rawMovements.add(
+          _RawMovementItem(
+            date: date,
+            docType: 'فاتورة مبيعات',
+            voucherBook:
+                (sale.customerName != null && sale.customerName!.isNotEmpty)
+                ? sale.customerName!
+                : (sale.settlementType == 'cash'
+                      ? 'مبيعات نقدية'
+                      : 'مبيعات آجلة'),
+            docNum: sale.saleNumber,
+            docUuid: sale.id,
+            isIncoming: false,
+            quantity: item.quantity,
+            mainQuantity: item.mainQuantity,
+            subQuantity: item.subQuantity,
+            unitCost: productUnitCost,
+            cost: saleItemCost,
+            warehouseId: null,
+          ),
+        );
       }
     }
 

@@ -186,56 +186,56 @@ void main() {
 
     // 1. Seed Accounts Table in real SQLite database
     await addAccount(Account(
-      id: 1, uuid: accCashUuid, accountCode: '1101', name: 'Cash', accountType: AccountType.asset,
+      id: accCashUuid, accountCode: '1101', name: 'Cash', accountType: AccountType.asset,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
     await addAccount(Account(
-      id: 2, uuid: accArUuid, accountCode: '1201', name: 'Accounts Receivable', accountType: AccountType.asset,
+      id: accArUuid, accountCode: '1201', name: 'Accounts Receivable', accountType: AccountType.asset,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
     await addAccount(Account(
-      id: 3, uuid: accApUuid, accountCode: '2101', name: 'Accounts Payable', accountType: AccountType.liability,
+      id: accApUuid, accountCode: '2101', name: 'Accounts Payable', accountType: AccountType.liability,
       normalBalance: NormalBalance.credit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
     await addAccount(Account(
-      id: 4, uuid: accRevUuid, accountCode: '4101', name: 'Sales Revenue', accountType: AccountType.revenue,
+      id: accRevUuid, accountCode: '4101', name: 'Sales Revenue', accountType: AccountType.revenue,
       normalBalance: NormalBalance.credit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
     await addAccount(Account(
-      id: 5, uuid: accCogsUuid, accountCode: '5101', name: 'Cost of Goods Sold', accountType: AccountType.expense,
+      id: accCogsUuid, accountCode: '5101', name: 'Cost of Goods Sold', accountType: AccountType.expense,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
     await addAccount(Account(
-      id: 6, uuid: accInvUuid, accountCode: '1301', name: 'Inventory Asset', accountType: AccountType.asset,
+      id: accInvUuid, accountCode: '1301', name: 'Inventory Asset', accountType: AccountType.asset,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
     await addAccount(Account(
-      id: 7, uuid: accDiscUuid, accountCode: '5201', name: 'Sales Discount', accountType: AccountType.expense,
+      id: accDiscUuid, accountCode: '5201', name: 'Sales Discount', accountType: AccountType.expense,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
     await addAccount(Account(
-      id: 8, uuid: accBankUuid, accountCode: '1102', name: 'Bank Account', accountType: AccountType.asset,
+      id: accBankUuid, accountCode: '1102', name: 'Bank Account', accountType: AccountType.asset,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
 
     // Seed Inactive Account
     await addAccount(Account(
-      id: 9, uuid: accInactiveUuid, accountCode: '9901', name: 'Inactive Account', accountType: AccountType.expense,
+      id: accInactiveUuid, accountCode: '9901', name: 'Inactive Account', accountType: AccountType.expense,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: false, isSystemAccount: false,
       companyId: companyId, createdAt: validDate, updatedAt: validDate,
     ));
 
     // Seed Wrong Company Account
     await addAccount(Account(
-      id: 10, uuid: accWrongCompanyUuid, accountCode: '9902', name: 'Other Co Account', accountType: AccountType.asset,
+      id: accWrongCompanyUuid, accountCode: '9902', name: 'Other Co Account', accountType: AccountType.asset,
       normalBalance: NormalBalance.debit, level: 1, isGroup: false, isActive: true, isSystemAccount: false,
       companyId: 'comp-OTHER-company', createdAt: validDate, updatedAt: validDate,
     ));
@@ -291,12 +291,12 @@ void main() {
       final entries = await db.select(db.journalEntries).get();
       expect(entries.length, equals(1));
       final entry = entries.first;
-      expect(entry.uuid, equals(result.journal!.uuid));
+      expect(entry.id, equals(result.journal!.uuid));
       expect(entry.companyId, equals(companyId));
       expect(entry.currencyCode, equals('USD'));
       expect(entry.isPosted, isTrue);
 
-      final lines = await (db.select(db.journalLines)..where((t) => t.entryUuid.equals(entry.uuid))).get();
+      final lines = await (db.select(db.journalLines)..where((t) => t.entryId.equals(entry.id))).get();
       expect(lines.length, equals(2));
 
       final totalDebit = lines.fold<double>(0, (s, l) => s + l.debit);

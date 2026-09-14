@@ -4,8 +4,8 @@ import 'package:hive/hive.dart';
 import 'package:drift/drift.dart' hide isNotNull;
 import 'package:stock_count/core/audit/domain/services/audit_trail_service.dart';
 import 'package:stock_count/core/audit/domain/entities/audit_trail_entry.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
@@ -135,8 +135,8 @@ class _FakeDependencyDetector implements InventoryDependencyDetector {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase accDb;
-  late InventoryDatabase invDb;
+  late NexabizDatabase accDb;
+  late NexabizDatabase invDb;
   late AccountRepositoryImpl accountRepo;
   late FiscalYearRepositoryImpl fiscalYearRepo;
   late AccountingPeriodValidator periodValidator;
@@ -192,8 +192,8 @@ void main() {
     );
     syncQueue = SyncQueue(box: syncBox, companyId: companyId);
 
-    accDb = AccountingDatabase.memory();
-    invDb = InventoryDatabase.memory();
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => companyId);
     await accountRepo.seedDefaultChart();
@@ -440,7 +440,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion.insert(
               uuid: lineUuid,
-              movementUuid: docUuid,
+              receiptId: docUuid,
               movementType: 'receipt',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',

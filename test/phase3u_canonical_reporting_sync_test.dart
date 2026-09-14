@@ -13,8 +13,8 @@ import 'package:stock_count/modules/sync/engine/domain/services/sync_entity_hand
 void main() {
   late NexabizDatabase db;
   const companyId = '00000000-0000-0000-0000-000000000001';
-  const warehouseUuid = '11111111-1111-1111-1111-111111111111';
-  const productUuid = '22222222-2222-2222-2222-222222222222';
+  const warehouseId = '11111111-1111-1111-1111-111111111111';
+  const productId = '22222222-2222-2222-2222-222222222222';
   const itemCode = 'PRD-001';
 
   const labels = ProductStockMovementReportLabels(
@@ -51,7 +51,7 @@ void main() {
     // Seed canonical company
     await db.into(db.companies).insert(
           CompaniesCompanion.insert(
-            uuid: companyId,
+            id: companyId,
             code: 'COMP-001',
             name: 'Test NexaBiz ERP Company',
           ),
@@ -60,7 +60,7 @@ void main() {
     // Seed warehouse
     await db.into(db.warehouses).insert(
           WarehousesCompanion.insert(
-            uuid: Value(warehouseUuid),
+            id: Value(warehouseId),
             code: 'WH-MAIN',
             name: 'Main Warehouse',
             companyId: companyId,
@@ -70,7 +70,7 @@ void main() {
     // Seed product
     await db.into(db.products).insert(
           ProductsCompanion.insert(
-            uuid: Value(productUuid),
+            id: Value(productId),
             itemCode: itemCode,
             name: 'Test Canonical Product',
             price: const Value(100.0),
@@ -97,7 +97,7 @@ void main() {
               receiptDate: now.millisecondsSinceEpoch,
               createdAt: now.millisecondsSinceEpoch,
               updatedAt: now.millisecondsSinceEpoch,
-              warehouse: const Value(warehouseUuid),
+              warehouse: const Value(warehouseId),
               status: const Value('posted'),
               companyId: Value(companyId),
             ),
@@ -106,7 +106,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: '44444444-4444-4444-4444-444444444444',
-              movementUuid: receiptUuid,
+              receiptId: receiptUuid,
               movementType: 'stock_receipt',
               itemCode: itemCode,
               itemName: 'Test Canonical Product',
@@ -125,7 +125,7 @@ void main() {
       final payload = await adapter.loadFromFilter(
         filter: ReportQueryFilter(
           companyId: companyId,
-          productUuid: productUuid,
+          productId: productId,
         ),
         labels: labels,
       );
@@ -143,7 +143,7 @@ void main() {
       // Seed canonical sale invoice
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: '55555555-5555-5555-5555-555555555555',
+              id: '55555555-5555-5555-5555-555555555555',
               saleNumber: 'INV-2026-001',
               currencyCode: 'SAR',
               baseCurrencyCode: 'SAR',
@@ -200,7 +200,7 @@ void main() {
         updatedAt: now,
         payload: {
           'receiptNumber': 'REC-SYNC-001',
-          'warehouseId': warehouseUuid,
+          'warehouseId': warehouseId,
           'status': 'draft',
           'companyId': companyId,
           'receivedAt': now.toIso8601String(),
@@ -211,7 +211,7 @@ void main() {
       await handler.applyRemoteChange(remoteChange);
 
       final receiptInDb = await (db.select(db.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals('66666666-6666-6666-6666-666666666666')))
+            ..where((tbl) => tbl.id.equals('66666666-6666-6666-6666-666666666666')))
           .getSingleOrNull();
 
       expect(receiptInDb, isNotNull);

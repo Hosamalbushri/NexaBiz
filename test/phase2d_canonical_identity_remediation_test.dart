@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/voucher_books/data/repositories/voucher_book_repository_impl.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/data/sync/inventory_sync_handlers.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
@@ -14,16 +14,16 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase accDb;
-  late InventoryDatabase invDb;
+  late NexabizDatabase accDb;
+  late NexabizDatabase invDb;
   late VoucherBookRepositoryImpl voucherBookRepo;
   late StockMovementsRepositoryImpl stockMovementsRepo;
 
   const testCompanyId = 'comp-phase2d-canonical-identity';
 
   setUp(() async {
-    accDb = AccountingDatabase(executor: NativeDatabase.memory());
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
 
     voucherBookRepo = VoucherBookRepositoryImpl(
       accDb,
@@ -203,7 +203,7 @@ void main() {
       await handler.applyRemoteChange(remoteChange);
 
       final query = invDb.select(invDb.stockIssues)
-        ..where((tbl) => tbl.uuid.equals(remoteIssueUuid));
+        ..where((tbl) => tbl.id.equals(remoteIssueUuid));
       final row = await query.getSingleOrNull();
 
       expect(row, isNotNull);

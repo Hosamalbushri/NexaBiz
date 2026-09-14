@@ -8,7 +8,7 @@ import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_repository.dart';
@@ -19,7 +19,7 @@ import 'package:stock_count/modules/authentication/presentation/providers/auth_p
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/pages/cost_valuation_settings_page.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/presentation/widgets/inventory_valuation_currency_card.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/presentation/widgets/cost_layer_card.dart';
 
@@ -67,16 +67,16 @@ class FakeAuthController extends StateNotifier<AuthState> implements AuthControl
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase inventoryDb;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase inventoryDb;
+  late NexabizDatabase accountingDb;
   late CurrencyRepository currencyRepo;
   late FakeSettingsRepo fakeSettingsRepo;
   late List<Currency> allCurrencies;
   late List<Currency> activeCurrencies;
 
   setUp(() async {
-    inventoryDb = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    inventoryDb = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
     currencyRepo = CurrencyRepositoryImpl(
       accountingDb,
       readCompanyId: () => 'comp_1',
@@ -227,7 +227,7 @@ void main() {
         companyId: 'comp_1',
         itemCode: 'LAPTOP-PRO',
         movementType: 'receipt',
-        movementUuid: 'rcpt_1001',
+        movementId: 'rcpt_1001',
         receivedDate: now,
         receivedQty: 10.0,
         remainingQty: 10.0,

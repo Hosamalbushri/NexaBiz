@@ -133,7 +133,7 @@ void main() {
 
       await db.into(db.warehouses).insert(
         WarehousesCompanion(
-          uuid: const Value('00000000-0000-0000-0000-000000000001'),
+          id: const Value('00000000-0000-0000-0000-000000000001'),
           code: const Value('WH-001'),
           name: const Value('Main Warehouse'),
           companyId: const Value(testCompanyId),
@@ -175,7 +175,7 @@ void main() {
             warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
-                movementUuid: receiptUuid,
+                movementId: receiptUuid,
                 movementType: 'receipt',
                 itemCode: 'ITEM-A',
                 itemName: 'Item A',
@@ -220,7 +220,7 @@ void main() {
             warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
-                movementUuid: receiptUuid,
+                movementId: receiptUuid,
                 movementType: 'receipt',
                 itemCode: 'ITEM-B',
                 itemName: 'Item B',
@@ -273,7 +273,7 @@ void main() {
             warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
-                movementUuid: receiptUuid,
+                movementId: receiptUuid,
                 movementType: 'receipt',
                 itemCode: 'ITEM-C',
                 itemName: 'Item C',
@@ -382,7 +382,7 @@ void main() {
         expect(reversal.voucherNumber, 'V-1001-R');
 
         final revCashLine = reversal.lines.firstWhere(
-          (l) => l.accountUuid == cashAcc.uuid,
+          (l) => l.accountId == cashAcc.uuid,
         );
         expect(revCashLine.credit, 1000.0); // Debit was swapped to Credit
         expect(revCashLine.debit, 0.0);
@@ -402,7 +402,7 @@ void main() {
             warehouse: '00000000-0000-0000-0000-000000000001',
             lines: [
               StockMovementLine(
-                movementUuid: receiptUuid,
+                movementId: receiptUuid,
                 movementType: 'receipt',
                 itemCode: 'ITEM-D',
                 itemName: 'Item D',

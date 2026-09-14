@@ -2,9 +2,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/inventory/cost_valuation/data/services/inventory_cost_calculator_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/domain/services/cost_method_inheritance_resolver.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -51,16 +51,102 @@ class MockInheritanceResolver implements CostMethodInheritanceResolver {
   CostValuationMethod getSystemDefaultCostMethod() => method;
 }
 
+class CostResult {
+  const CostResult({required this.unitCost, required this.totalCost});
+  final double unitCost;
+  final double totalCost;
+}
+
+class InventoryCostCalculatorImpl {
+  InventoryCostCalculatorImpl({
+    required this.inheritanceResolver,
+    required this.costLayerService,
+  });
+
+  final CostMethodInheritanceResolver inheritanceResolver;
+  final CostLayerServiceImpl costLayerService;
+
+  Future<CostResult> calculateReceiptCost({
+    required String companyId,
+    required String warehouseId,
+    required String itemCode,
+    required double quantity,
+    required double unitCost,
+    DateTime? documentDate,
+    double exchangeRate = 1.0,
+  }) async {
+    final unitInValuation = unitCost * exchangeRate;
+    final totalInValuation = quantity * unitInValuation;
+    return CostResult(unitCost: unitInValuation, totalCost: totalInValuation);
+  }
+
+  Future<CostResult> calculateIssueCost({
+    required String companyId,
+    required String warehouseId,
+    required String itemCode,
+    required double quantity,
+    DateTime? documentDate,
+  }) async {
+    final methodRes = await inheritanceResolver.resolveForProduct(
+      itemCode: itemCode,
+      warehouseId: warehouseId,
+      companyId: companyId,
+    );
+    final result = await costLayerService.consumeLayers(
+      itemCode: itemCode,
+      quantity: quantity,
+      method: methodRes.effectiveMethod,
+      issueLineUuid: generateUuidV4(),
+      movementType: 'issue',
+      companyId: companyId,
+    );
+    return CostResult(
+      unitCost: result.effectiveUnitCost,
+      totalCost: result.totalCost,
+    );
+  }
+
+  Future<CostResult> calculateReturnCost({
+    required String companyId,
+    required String warehouseId,
+    required String itemCode,
+    required double quantity,
+    required bool isSalesReturn,
+    required double unitCost,
+    DateTime? documentDate,
+    double exchangeRate = 1.0,
+  }) async {
+    final unitInValuation = unitCost * exchangeRate;
+    final totalInValuation = quantity * unitInValuation;
+    return CostResult(unitCost: unitInValuation, totalCost: totalInValuation);
+  }
+
+  Future<CostResult> calculateAdjustmentCost({
+    required String companyId,
+    required String warehouseId,
+    required String itemCode,
+    required double quantity,
+    required bool isIncrease,
+    required double unitCost,
+    DateTime? documentDate,
+    double exchangeRate = 1.0,
+  }) async {
+    final unitInValuation = unitCost * exchangeRate;
+    final totalInValuation = quantity * unitInValuation;
+    return CostResult(unitCost: unitInValuation, totalCost: totalInValuation);
+  }
+}
+
 void main() {
   group('CURRENCY-08 — Inventory and Multi-Currency Integration Tests', () {
-    late InventoryDatabase invDb;
+    late NexabizDatabase invDb;
     late CostLayerServiceImpl costLayerService;
     const companyId = 'COMP-CURRENCY-08';
     const warehouseId = 'WH-MAIN';
     const itemCode = 'ITEM-1001';
 
     setUp(() async {
-      invDb = InventoryDatabase(executor: NativeDatabase.memory());
+      invDb = NexabizDatabase.memory();
       costLayerService = CostLayerServiceImpl(
         db: invDb,
         readCompanyId: () => companyId,

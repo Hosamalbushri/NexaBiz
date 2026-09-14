@@ -7,12 +7,12 @@ import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -67,8 +67,8 @@ void main() {
 
   late Box<dynamic> settingsBoxCompanyA;
   late Box<dynamic> settingsBoxCompanyB;
-  late InventoryDatabase db;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase db;
+  late NexabizDatabase accountingDb;
 
   const companyAId = 'COMPANY-A';
   const companyBId = 'COMPANY-B';
@@ -102,8 +102,8 @@ void main() {
 
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({});
-    db = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
 
     settingsBoxCompanyA = await Hive.openBox<dynamic>('settings_$companyAId');
     settingsBoxCompanyB = await Hive.openBox<dynamic>('settings_$companyBId');
@@ -177,7 +177,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: uuid,
+              id: uuid,
               accountCode: '${role.name}_$companyId',
               name: '${role.name} for $companyId',
               accountType:
@@ -212,7 +212,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: Value(whId),
+            id: Value(whId),
             code: Value('WH-$companyId'),
             name: Value('Warehouse $companyId'),
             companyId: Value(companyId),
@@ -344,15 +344,15 @@ void main() {
 
         final linesA = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entryA.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entryA.uuid))).get();
 
         expect(linesA.length, equals(2));
         final debitLineA = linesA.firstWhere((l) => l.debit > 0);
         final creditLineA = linesA.firstWhere((l) => l.credit > 0);
 
-        expect(debitLineA.accountUuid, equals(accAInventory));
+        expect(debitLineA.accountId, equals(accAInventory));
         expect(debitLineA.debit, equals(5000));
-        expect(creditLineA.accountUuid, equals(accAPayable));
+        expect(creditLineA.accountId, equals(accAPayable));
         expect(creditLineA.credit, equals(5000));
 
         // Accounting Invariant: Debit == Credit
@@ -372,23 +372,23 @@ void main() {
 
         final linesB = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entryB.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entryB.uuid))).get();
 
         expect(linesB.length, equals(2));
         final debitLineB = linesB.firstWhere((l) => l.debit > 0);
         final creditLineB = linesB.firstWhere((l) => l.credit > 0);
 
-        expect(debitLineB.accountUuid, equals(accBInventory));
+        expect(debitLineB.accountId, equals(accBInventory));
         expect(debitLineB.debit, equals(1200));
-        expect(creditLineB.accountUuid, equals(accBPayable));
+        expect(creditLineB.accountId, equals(accBPayable));
         expect(creditLineB.credit, equals(1200));
 
         // Accounting Invariant: Debit == Credit
         expect(debitLineB.debit, equals(creditLineB.credit));
 
         // Verify zero cross-tenant contamination
-        expect(debitLineA.accountUuid, isNot(equals(accBInventory)));
-        expect(debitLineB.accountUuid, isNot(equals(accAInventory)));
+        expect(debitLineA.accountId, isNot(equals(accBInventory)));
+        expect(debitLineB.accountId, isNot(equals(accAInventory)));
       },
     );
 
@@ -470,13 +470,13 @@ void main() {
 
         final linesIssueA = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entryIssueA.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entryIssueA.uuid))).get();
 
         final debitA = linesIssueA.firstWhere((l) => l.debit > 0);
         final creditA = linesIssueA.firstWhere((l) => l.credit > 0);
 
-        expect(debitA.accountUuid, equals(accACogs));
-        expect(creditA.accountUuid, equals(accAInventory));
+        expect(debitA.accountId, equals(accACogs));
+        expect(creditA.accountId, equals(accAInventory));
         expect(debitA.debit, equals(3000));
         expect(creditA.credit, equals(3000));
 
@@ -519,13 +519,13 @@ void main() {
 
         final linesIssueB = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entryIssueB.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entryIssueB.uuid))).get();
 
         final debitB = linesIssueB.firstWhere((l) => l.debit > 0);
         final creditB = linesIssueB.firstWhere((l) => l.credit > 0);
 
-        expect(debitB.accountUuid, equals(accBCogs));
-        expect(creditB.accountUuid, equals(accBInventory));
+        expect(debitB.accountId, equals(accBCogs));
+        expect(creditB.accountId, equals(accBInventory));
         expect(debitB.debit, equals(800));
         expect(creditB.credit, equals(800));
       },

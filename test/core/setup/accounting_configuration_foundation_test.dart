@@ -11,7 +11,7 @@ class MockAccountRepository implements AccountRepository {
   final Map<String, Account> _accounts = {};
 
   void seedAccount(Account account) {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
   }
 
   @override
@@ -104,10 +104,10 @@ class DummyUsageAnalyzer implements AccountUsageAnalyzer {
   @override
   Future<AccountUsageRecord> analyzeAccountUsage({
     required String companyId,
-    required String accountUuid,
+    required String accountId,
   }) async {
     return AccountUsageRecord(
-      accountUuid: accountUuid,
+      accountId: accountId,
       status: AccountUsageStatus.neverUsed,
       postedTransactionCount: 0,
       draftTransactionCount: 0,
@@ -133,8 +133,7 @@ void main() {
     // Seed test accounts
     accountRepo.seedAccount(
       Account(
-        id: 1,
-        uuid: 'acc_rev_01',
+        id: 'acc_rev_01',
         companyId: companyId,
         accountCode: '4100',
         name: 'Sales Revenue',
@@ -151,8 +150,7 @@ void main() {
 
     accountRepo.seedAccount(
       Account(
-        id: 2,
-        uuid: 'acc_cust_group',
+        id: 'acc_cust_group',
         companyId: companyId,
         accountCode: '1221',
         name: 'Customers Group',
@@ -169,8 +167,7 @@ void main() {
 
     accountRepo.seedAccount(
       Account(
-        id: 3,
-        uuid: 'acc_cust_child_1',
+        id: 'acc_cust_child_1',
         companyId: companyId,
         parentId: 'acc_cust_group',
         accountCode: '1221-0001',
@@ -188,8 +185,7 @@ void main() {
 
     accountRepo.seedAccount(
       Account(
-        id: 4,
-        uuid: 'acc_cash_1',
+        id: 'acc_cash_1',
         companyId: companyId,
         accountCode: '1211',
         name: 'Main Cash Box',
@@ -206,8 +202,7 @@ void main() {
 
     accountRepo.seedAccount(
       Account(
-        id: 5,
-        uuid: 'acc_cash_2',
+        id: 'acc_cash_2',
         companyId: companyId,
         accountCode: '1212',
         name: 'Secondary Cash Box',
@@ -224,8 +219,7 @@ void main() {
 
     accountRepo.seedAccount(
       Account(
-        id: 6,
-        uuid: 'acc_inactive',
+        id: 'acc_inactive',
         companyId: companyId,
         accountCode: '4999',
         name: 'Inactive Account',
@@ -242,8 +236,7 @@ void main() {
 
     accountRepo.seedAccount(
       Account(
-        id: 7,
-        uuid: 'acc_deleted',
+        id: 'acc_deleted',
         companyId: companyId,
         accountCode: '4998',
         name: 'Deleted Account',
@@ -261,8 +254,7 @@ void main() {
 
     accountRepo.seedAccount(
       Account(
-        id: 8,
-        uuid: 'acc_other_company',
+        id: 'acc_other_company',
         companyId: 'comp_other',
         accountCode: '4100',
         name: 'Other Company Revenue',

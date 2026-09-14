@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_returns_repository_impl.dart';
@@ -20,7 +20,7 @@ import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -31,7 +31,7 @@ void main() {
   late StockReturnsRepositoryImpl returnsRepo;
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(
       db: db,
       readCompanyId: () => 'COMP-A',
@@ -70,13 +70,13 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            id: const Value(1),
+            id: const Value('00000000-0000-4000-8000-000000000001'),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
             itemCode: const Value('ITEM-REV-01'),
             name: const Value('Reversal Test Item'),
             packSize: const Value(1),
             price: const Value(100.0),
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(50.0),
             companyId: const Value('COMP-A'),
             createdAt: Value(now),
@@ -107,7 +107,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: rcptId,
+              movementId: rcptId,
               movementType: 'receipt',
               itemCode: 'ITEM-REV-01',
               itemName: 'Reversal Test Item',
@@ -178,7 +178,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rcptId,
+                movementId: rcptId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -209,7 +209,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: issueLineId,
-                movementUuid: issueId,
+                movementId: issueId,
                 movementType: 'issue',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -274,7 +274,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -305,7 +305,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: retId,
+                movementId: retId,
                 movementType: 'return',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -362,7 +362,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: retId,
+                movementId: retId,
                 movementType: 'return',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -420,7 +420,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -536,7 +536,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: r1Id,
+                movementId: r1Id,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -566,7 +566,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: r2Id,
+                movementId: r2Id,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -596,7 +596,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: issueId,
+                movementId: issueId,
                 movementType: 'issue',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -646,7 +646,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: r1Id,
+                movementId: r1Id,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -676,7 +676,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: r2Id,
+                movementId: r2Id,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -732,7 +732,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: r1Id,
+                movementId: r1Id,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -762,7 +762,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: r2Id,
+                movementId: r2Id,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -822,7 +822,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -880,7 +880,7 @@ void main() {
               lines: [
                 StockMovementLine(
                   id: generateUuidV4(),
-                  movementUuid: rId,
+                  movementId: rId,
                   movementType: 'receipt',
                   itemCode: 'ITEM-REV-01',
                   itemName: 'Reversal Test Item',
@@ -938,7 +938,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rcptId,
+                movementId: rcptId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -967,7 +967,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: issueId,
+                movementId: issueId,
                 movementType: 'issue',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1015,7 +1015,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1070,7 +1070,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1121,7 +1121,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1167,7 +1167,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1227,7 +1227,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1272,7 +1272,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1325,7 +1325,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1376,7 +1376,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1438,7 +1438,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: rId,
+                movementId: rId,
                 movementType: 'receipt',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',
@@ -1468,7 +1468,7 @@ void main() {
             lines: [
               StockMovementLine(
                 id: generateUuidV4(),
-                movementUuid: issueId,
+                movementId: issueId,
                 movementType: 'issue',
                 itemCode: 'ITEM-REV-01',
                 itemName: 'Reversal Test Item',

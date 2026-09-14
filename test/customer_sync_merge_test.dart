@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer_data_source.dart';
@@ -13,7 +13,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory tempDir;
-  late CustomersDatabase db;
+  late NexabizDatabase db;
   late SyncQueue queue;
   late CustomerRepositoryImpl repo;
 
@@ -25,7 +25,7 @@ void main() {
     }
     final box = await Hive.openBox<SyncOperation>('sync_queue');
     queue = SyncQueue(box: box);
-    db = CustomersDatabase.memory();
+    db = NexabizDatabase.memory();
     repo = CustomerRepositoryImpl(
       db,
       syncQueue: queue,

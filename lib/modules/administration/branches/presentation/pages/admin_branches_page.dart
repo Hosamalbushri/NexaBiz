@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/modules/administration/shared/presentation/admin_localizations_extension.dart';
-import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
@@ -87,7 +86,7 @@ class _AdminBranchesPageState extends ConsumerState<AdminBranchesPage> {
           leading: CircleAvatar(
             backgroundColor: branch.isActive
                 ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.surfaceVariant,
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.account_tree_rounded,
               color: branch.isActive
@@ -150,7 +149,7 @@ class _AdminBranchesPageState extends ConsumerState<AdminBranchesPage> {
                   if (val == 'edit') {
                     _openEditSheet(context, branch);
                   } else if (val == 'toggle_status') {
-                    await _toggleBranchStatus(context, branch);
+                    await _toggleBranchStatus(branch);
                   }
                 },
                 itemBuilder: (context) => [
@@ -193,7 +192,6 @@ class _AdminBranchesPageState extends ConsumerState<AdminBranchesPage> {
   }
 
   Future<void> _toggleBranchStatus(
-    BuildContext context,
     AdminBranchSummary branch,
   ) async {
     final newStatus = branch.isActive ? 'inactive' : 'active';

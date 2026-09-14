@@ -4,7 +4,7 @@ import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -43,7 +43,7 @@ class MockAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late StockMovementsRepositoryImpl stockRepo;
   late ProductRepositoryImpl productRepo;
   late CostLayerServiceImpl costLayerService;
@@ -55,7 +55,7 @@ void main() {
   const testCompanyId = LocalAuthDefaults.companyId;
 
   setUp(() async {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
 
     stockRepo = StockMovementsRepositoryImpl(
       db: db,
@@ -109,7 +109,7 @@ void main() {
         warehouse: 'WH-MAIN',
         lines: [
           StockMovementLine(
-            movementUuid: issueUuid,
+            movementId: issueUuid,
             movementType: 'issue',
             itemCode: 'ITEM-001',
             itemName: 'Item 001',
@@ -157,7 +157,7 @@ void main() {
         receiptDate: DateTime.now().toUtc(),
         lines: [
           StockMovementLine(
-            movementUuid: receiptUuid,
+            movementId: receiptUuid,
             movementType: 'receipt',
             itemCode: 'ITEM-VAL-001',
             itemName: 'Valuation Item',
@@ -195,7 +195,7 @@ void main() {
         issueDate: DateTime.now().toUtc(),
         lines: [
           StockMovementLine(
-            movementUuid: issueUuid,
+            movementId: issueUuid,
             movementType: 'issue',
             itemCode: 'ITEM-VAL-001',
             itemName: 'Valuation Item',
@@ -231,7 +231,7 @@ void main() {
         receiptDate: DateTime.now().toUtc(),
         lines: [
           StockMovementLine(
-            movementUuid: receiptUuid,
+            movementId: receiptUuid,
             movementType: 'receipt',
             itemCode: 'ITEM-POST-001',
             itemName: 'Post Test Item',
@@ -262,7 +262,7 @@ void main() {
         issueDate: DateTime.now().toUtc(),
         lines: [
           StockMovementLine(
-            movementUuid: issueUuid,
+            movementId: issueUuid,
             movementType: 'issue',
             itemCode: 'ITEM-POST-001',
             itemName: 'Post Test Item',
@@ -315,7 +315,7 @@ void main() {
         issueDate: DateTime.now().toUtc(),
         lines: [
           StockMovementLine(
-            movementUuid: issueUuid,
+            movementId: issueUuid,
             movementType: 'issue',
             itemCode: 'ITEM-SHORTAGE-001',
             itemName: 'Shortage Item',

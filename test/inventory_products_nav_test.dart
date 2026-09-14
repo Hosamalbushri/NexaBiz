@@ -9,22 +9,22 @@ import 'package:stock_count/app/presentation/providers/dashboard_services_provid
 import 'package:stock_count/app/router/app_navigator_keys.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/app/theme/app_theme.dart';
-import 'package:stock_count/modules/inventory/domain/entities/inventory_item.dart';
-import 'package:stock_count/modules/inventory/domain/entities/item_status.dart';
-import 'package:stock_count/modules/inventory/domain/entities/product.dart';
-import 'package:stock_count/modules/inventory/domain/entities/report_summary.dart';
-import 'package:stock_count/modules/inventory/domain/models/paged_result.dart';
-import 'package:stock_count/modules/inventory/domain/models/catalog_search_field.dart';
-import 'package:stock_count/modules/inventory/domain/repositories/inventory_repository.dart';
-import 'package:stock_count/modules/inventory/domain/repositories/product_repository.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/inventory_item.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/item_status.dart';
+import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/report_summary.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/models/paged_result.dart';
+import 'package:stock_count/modules/inventory/products/domain/models/catalog_search_field.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/repositories/inventory_repository.dart';
+import 'package:stock_count/modules/inventory/products/domain/repositories/product_repository.dart';
 import 'package:stock_count/modules/inventory/inventory_module.dart';
-import 'package:stock_count/modules/inventory/presentation/pages/inventory_home_page.dart';
-import 'package:stock_count/modules/inventory/presentation/pages/inventory_routes.dart';
-import 'package:stock_count/modules/inventory/presentation/pages/products_barcode_page.dart';
-import 'package:stock_count/modules/inventory/presentation/pages/products_home_page.dart';
-import 'package:stock_count/modules/inventory/presentation/pages/products_list_page.dart';
-import 'package:stock_count/modules/inventory/presentation/providers/inventory_providers.dart';
-import 'package:stock_count/modules/inventory/presentation/providers/product_providers.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_home_page.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
+import 'package:stock_count/modules/inventory/products/presentation/pages/products_barcode_page.dart';
+import 'package:stock_count/modules/inventory/products/presentation/pages/products_home_page.dart';
+import 'package:stock_count/modules/inventory/products/presentation/pages/products_list_page.dart';
+import 'package:stock_count/modules/inventory/stock_count/presentation/providers/inventory_providers.dart';
+import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 
 class _FakeInventoryRepository implements InventoryRepository {
   @override

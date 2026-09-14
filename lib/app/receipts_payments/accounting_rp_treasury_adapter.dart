@@ -97,7 +97,7 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
               id: 'cr-${a.id}',
               companyId: companyId.isNotEmpty
                   ? companyId
-                  : (a.companyId ?? 'default'),
+                  : (a.companyId ?? ''),
               name: a.name,
               code: a.accountCode,
               isActive: true,
@@ -175,7 +175,7 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
   Future<RpAccountRef?> findDefaultCashBox({String? languageCode}) async {
     final l10n = _l10n(languageCode);
     final state = await initRepository?.getState();
-    final companyId = state?.companyId ?? 'default';
+    final companyId = state?.companyId ?? '';
 
     if (cashRegisterRepository != null) {
       final resolver = DefaultCashRegisterResolver(

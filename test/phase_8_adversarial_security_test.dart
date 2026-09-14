@@ -8,13 +8,13 @@ import 'package:stock_count/core/network/server_validator.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -50,8 +50,8 @@ void main() {
 
   late Box<dynamic> settingsBoxA;
   late Box<dynamic> settingsBoxB;
-  late InventoryDatabase db;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase db;
+  late NexabizDatabase accountingDb;
 
   const companyAId = 'COMP-ADV-A';
   const companyBId = 'COMP-ADV-B';
@@ -63,8 +63,8 @@ void main() {
 
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({});
-    db = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
 
     settingsBoxA = await Hive.openBox<dynamic>('settings_$companyAId');
     settingsBoxB = await Hive.openBox<dynamic>('settings_$companyBId');

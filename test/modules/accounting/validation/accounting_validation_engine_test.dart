@@ -102,8 +102,7 @@ void main() {
   final accInactiveUuid = 'acc-inactive-001';
 
   final accCash = Account(
-    id: 1,
-    uuid: accCashUuid,
+    id: accCashUuid,
     accountCode: '1101',
     name: 'Cash Account',
     accountType: AccountType.asset,
@@ -118,8 +117,7 @@ void main() {
   );
 
   final accAr = Account(
-    id: 2,
-    uuid: accArUuid,
+    id: accArUuid,
     accountCode: '1102',
     name: 'AR Account',
     accountType: AccountType.asset,
@@ -134,8 +132,7 @@ void main() {
   );
 
   final accGroup = Account(
-    id: 3,
-    uuid: accGroupUuid,
+    id: accGroupUuid,
     accountCode: '1100',
     name: 'Assets Group',
     accountType: AccountType.asset,
@@ -150,8 +147,7 @@ void main() {
   );
 
   final accInactive = Account(
-    id: 4,
-    uuid: accInactiveUuid,
+    id: accInactiveUuid,
     accountCode: '1103',
     name: 'Inactive Cash',
     accountType: AccountType.asset,
@@ -198,13 +194,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: accCashUuid,
+            accountId: accCashUuid,
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: accArUuid,
+            accountId: accArUuid,
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',
@@ -235,13 +231,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: accCashUuid,
+            accountId: accCashUuid,
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: accArUuid,
+            accountId: accArUuid,
             debit: 0.0,
             credit: 80.0,
             currencyCode: 'USD',
@@ -272,13 +268,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: accCashUuid,
+            accountId: accCashUuid,
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: 'non-existent-acc-uuid',
+            accountId: 'non-existent-acc-uuid',
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',
@@ -309,13 +305,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: accGroupUuid,
+            accountId: accGroupUuid,
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: accArUuid,
+            accountId: accArUuid,
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',
@@ -346,13 +342,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: accInactiveUuid,
+            accountId: accInactiveUuid,
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: accArUuid,
+            accountId: accArUuid,
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',
@@ -385,13 +381,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: accCashUuid,
+            accountId: accCashUuid,
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: accArUuid,
+            accountId: accArUuid,
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',
@@ -430,13 +426,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: accCashUuid,
+            accountId: accCashUuid,
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: accArUuid,
+            accountId: accArUuid,
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',

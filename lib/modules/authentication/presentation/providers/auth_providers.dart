@@ -678,6 +678,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    ++_companySwitchSequence;
     if (state.isRemoteSession) {
       await logoutRemote();
     } else {
@@ -764,10 +765,7 @@ final authStateProvider = StateNotifierProvider<AuthController, AuthState>((
 final currentPermissionsProvider = Provider<Set<String>>((ref) {
   final session = ref.watch(authStateProvider).session;
   if (session == null) return {};
-  if (session.user.isSuperAdmin ||
-      session.roles.contains('Owner') ||
-      session.roles.contains(LocalAuthDefaults.adminRole) ||
-      session.roles.contains('Admin')) {
+  if (session.user.isSuperAdmin) {
     return {...session.permissions, ...kAllLocalPermissions};
   }
   return session.permissions;

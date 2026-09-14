@@ -204,7 +204,7 @@ class InMemorySaleRepository implements SaleRepository {
   }
 
   @override
-  Future<List<Sale>> listByAccountLink(String accountUuid) async => [];
+  Future<List<Sale>> listByAccountLink(String accountId) async => [];
 
   @override
   Future<SaleKeysetPagedResult<SaleListItem>> searchKeysetPaged(

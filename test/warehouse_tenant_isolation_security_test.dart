@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_repository_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 import 'package:stock_count/modules/inventory/categories/data/repositories/category_repository_impl.dart';
 import 'package:stock_count/modules/inventory/categories/domain/entities/category.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late String currentTenant;
 
   WarehouseRepositoryImpl createRepo() {
@@ -20,7 +20,7 @@ void main() {
   }
 
   setUp(() {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     currentTenant = 'company_alpha';
   });
 

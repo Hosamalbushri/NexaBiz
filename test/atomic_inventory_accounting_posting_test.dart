@@ -1,16 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -64,8 +62,8 @@ class MockSyncBox<T> implements Box<T> {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase accDb;
-  late InventoryDatabase invDb;
+  late NexabizDatabase accDb;
+  late NexabizDatabase invDb;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService journalPostingService;
@@ -79,13 +77,14 @@ void main() {
   late SyncQueue syncQueue;
 
   const testCompanyId = 'comp_atomic_test';
+  late String defaultWarehouseUuid;
   late String cashAccountUuid;
   late String invAccountUuid;
   late String cogsAccountUuid;
 
   setUp(() async {
-    accDb = AccountingDatabase(executor: NativeDatabase.memory());
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(
       accDb,
@@ -118,7 +117,7 @@ void main() {
     );
 
     accountingPoster = InventoryAccountingPosterImpl(
-      journalPostingService: journalPostingService,
+      journalPostingService,
       journalBuilder: journalBuilder,
     );
 
@@ -174,7 +173,7 @@ void main() {
         isGroup: false,
       ),
     );
-    invAccountUuid = invAcc.uuid;
+    invAccountUuid = invAcc.id;
 
     final cashAcc = await accountRepo.insert(
       const AccountDraft(
@@ -184,7 +183,7 @@ void main() {
         isGroup: false,
       ),
     );
-    cashAccountUuid = cashAcc.uuid;
+    cashAccountUuid = cashAcc.id;
 
     final cogsAcc = await accountRepo.insert(
       const AccountDraft(
@@ -195,33 +194,35 @@ void main() {
         isGroup: false,
       ),
     );
-    cogsAccountUuid = cogsAcc.uuid;
+    cogsAccountUuid = cogsAcc.id;
 
     // Seed default warehouse and binding
-    final now = DateTime.now().millisecondsSinceEpoch;
+    defaultWarehouseUuid = generateUuidV4();
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now();
     await invDb.into(invDb.warehouses).insert(
       WarehousesCompanion.insert(
-        uuid: 'WH-01',
+        id: Value(defaultWarehouseUuid),
         name: 'Default Warehouse',
         code: 'WH-01',
-        companyId: Value(testCompanyId),
-        isDefault: Value(true),
+        companyId: testCompanyId,
+        isDefault: const Value(true),
         isActive: const Value(true),
-        createdAt: now,
-        updatedAt: now,
+        createdAt: Value(now),
+        updatedAt: Value(now),
       ),
     );
 
     await invDb.into(invDb.warehouseAccountingBindings).insert(
       WarehouseAccountingBindingsCompanion.insert(
-        uuid: generateUuidV4(),
-        warehouseId: 'WH-01',
+        id: Value(generateUuidV4()),
+        warehouseId: defaultWarehouseUuid,
         companyId: testCompanyId,
         inventoryAssetAccountId: Value(invAccountUuid),
         cogsAccountId: Value(cogsAccountUuid),
         inventoryAdjustmentAccountId: Value(cogsAccountUuid),
-        createdAt: now,
-        updatedAt: now,
+        createdAt: nowMs,
+        updatedAt: nowMs,
       ),
     );
   });
@@ -274,7 +275,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
-          warehouseId: 'WH-01',
+          warehouseId: defaultWarehouseUuid,
           status: InventoryDocumentStatus.draft,
         );
 
@@ -344,7 +345,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
-          warehouseId: 'WH-01',
+          warehouseId: defaultWarehouseUuid,
           status: InventoryDocumentStatus.draft,
         );
 
@@ -394,7 +395,7 @@ void main() {
           accountId: cashAccountUuid,
           currencyCode: 'SAR',
           exchangeRate: 1.0,
-          warehouse: 'WH-01',
+          warehouse: defaultWarehouseUuid,
           issueDate: DateTime.now(),
           status: InventoryDocumentStatus.draft,
           lines: [
@@ -422,7 +423,7 @@ void main() {
           documentNumber: issue.issueNumber,
           documentType: InventoryDocumentType.stockIssue,
           documentDate: issue.issueDate,
-          warehouseId: 'WH-01',
+          warehouseId: defaultWarehouseUuid,
           status: InventoryDocumentStatus.draft,
         );
 
@@ -479,7 +480,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
-          warehouseId: 'WH-01',
+          warehouseId: defaultWarehouseUuid,
           status: InventoryDocumentStatus.draft,
         );
 
@@ -494,7 +495,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
-          warehouseId: 'WH-01',
+          warehouseId: defaultWarehouseUuid,
           status: InventoryDocumentStatus.posted,
         );
 

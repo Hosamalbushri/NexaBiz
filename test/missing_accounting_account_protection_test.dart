@@ -1,19 +1,25 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart' as drift;
+import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/shared/contracts/errors/account_exception.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/missing_account_exception.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/journals/data/services/journal_builder_impl.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
+import 'package:stock_count/modules/accounting/shared/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_mapping_resolver_impl.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_validation_service_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_accounting_poster_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
@@ -22,12 +28,13 @@ import 'package:stock_count/modules/inventory/stock_movements/data/services/post
 import 'package:stock_count/modules/inventory/stock_movements/data/services/stock_validation_service_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_repository_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   late InventoryAccountingPosterImpl poster;
   late PostingCoordinatorImpl coordinator;
   late AccountMappingResolverImpl resolver;
@@ -41,12 +48,42 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('missing_acc_test_');
     Hive.init(tempDir.path);
 
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
     whId = generateUuidV4();
 
-    poster = InventoryAccountingPosterImpl(
+    final accountRepoImpl = AccountRepositoryImpl(accDb, readCompanyId: () => tenantId);
+    accountRepo = accountRepoImpl;
+
+    final fiscalYearRepo = FiscalYearRepositoryImpl(accDb, readCompanyId: () => tenantId);
+    final periodValidator = AccountingPeriodValidator(
+      repository: fiscalYearRepo,
+      legacyPolicyReader: () => const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
+    );
+    final journalRepo = JournalRepositoryImpl(
       accDb,
+      accounts: accountRepoImpl,
+      periodValidator: periodValidator,
+      readCompanyId: () => tenantId,
+    );
+    final postingService = JournalPostingService(
+      journals: journalRepo,
+      periodValidator: periodValidator,
+    );
+    final bindingRepo = WarehouseAccountingBindingRepositoryImpl(
+      invDb,
+      () => tenantId,
+    );
+    final journalBuilder = JournalBuilderImpl(
+      accountRepository: accountRepoImpl,
+      currencyRateRepository: CurrencyRateRepositoryImpl(accDb),
+      bindingRepo: bindingRepo,
+      readCompanyId: () => tenantId,
+    );
+
+    poster = InventoryAccountingPosterImpl(
+      postingService,
+      journalBuilder: journalBuilder,
       readCompanyId: () => tenantId,
     );
 
@@ -77,15 +114,14 @@ void main() {
       postingEngine: postingEngine,
       stockValidationService: stockValidationService,
       dependencyDetector: dependencyDetector,
+      permissionGuard: CallbackPermissionGuard((codes) => true),
       accountingPoster: poster,
       readCompanyId: () => tenantId,
     );
 
-    accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => tenantId);
-
     resolver = AccountMappingResolverImpl(
-      accountRepository: accountRepo,
-      validationService: AccountValidationServiceImpl(accountRepo),
+      accountRepository: accountRepoImpl,
+      validationService: AccountValidationServiceImpl(accountRepoImpl),
     );
 
     final warehouseRepo = WarehouseRepositoryImpl(invDb, null, () => tenantId);
@@ -112,21 +148,22 @@ void main() {
     test(
       '1. Missing inventoryAccount (1230) causes Stock Receipt posting failure without stock mutations',
       () async {
-        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+        final nowDate = DateTime.now().toUtc();
+        final now = nowDate.millisecondsSinceEpoch;
         final rcId = generateUuidV4();
 
         await invDb
             .into(invDb.products)
             .insert(
               ProductsCompanion.insert(
-                uuid: generateUuidV4(),
+                id: Value(generateUuidV4()),
                 itemCode: 'ITEM-NO-ACC-01',
                 name: 'No Account Item 1',
-                price: 100.0,
-                packSize: 1,
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantId),
+                price: const Value(100.0),
+                packSize: const Value(1),
+                createdAt: Value(nowDate),
+                updatedAt: Value(nowDate),
+                companyId: tenantId,
               ),
             );
 
@@ -134,13 +171,14 @@ void main() {
             .into(invDb.stockReceipts)
             .insert(
               StockReceiptsCompanion.insert(
-                uuid: rcId,
+                id: Value(rcId),
                 receiptNumber: 'RC-MISSING-1230',
                 receiptDate: now,
+                currencyCode: 'SAR',
                 createdAt: now,
                 updatedAt: now,
-                status: const drift.Value('draft'),
-                companyId: const drift.Value(tenantId),
+                status: const Value('draft'),
+                companyId: Value(tenantId),
               ),
             );
 
@@ -148,14 +186,15 @@ void main() {
             .into(invDb.stockMovementLines)
             .insert(
               StockMovementLinesCompanion.insert(
-                uuid: generateUuidV4(),
-                movementUuid: rcId,
+                id: Value(generateUuidV4()),
+                receiptId: Value(rcId),
                 movementType: 'receipt',
                 itemCode: 'ITEM-NO-ACC-01',
                 itemName: 'No Account Item 1',
-                quantity: const drift.Value(10.0),
-                unitCost: const drift.Value(50.0),
-                totalCost: const drift.Value(500.0),
+                quantity: const Value(10.0),
+                unitCost: const Value(50.0),
+                totalCost: const Value(500.0),
+                companyId: tenantId,
               ),
             );
 
@@ -167,16 +206,15 @@ void main() {
           warehouseId: whId,
         );
 
-        // Attempt posting -> Must throw MissingAccountException because 1230 (inventoryAccount) is missing
-        expect(
-          () => coordinator.post(document: docRef),
-          throwsA(isA<MissingAccountException>()),
-        );
+        // Attempt posting -> Must return PostInvalidStatus because 1230 (inventoryAccount) is missing
+        final postRes = await coordinator.post(document: docRef);
+        expect(postRes, isA<PostInvalidStatus>());
+        expect((postRes as PostInvalidStatus).reason, contains('فشل الترحيل المحاسبي'));
 
         // Verify ZERO stock & cost layer side effects
         final receiptRow = await (invDb.select(
           invDb.stockReceipts,
-        )..where((tbl) => tbl.uuid.equals(rcId))).getSingle();
+        )..where((tbl) => tbl.id.equals(rcId))).getSingle();
         expect(receiptRow.status, equals('draft'));
 
         final costLayers = await invDb.select(invDb.inventoryCostLayers).get();
@@ -190,21 +228,36 @@ void main() {
     test(
       '2. Missing cogsAccount (5100) causes Stock Issue posting failure without stock side effects',
       () async {
-        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+        final nowDate = DateTime.now().toUtc();
+        final now = nowDate.millisecondsSinceEpoch;
 
-        // Seed Account 1230 ONLY (no 5100!)
+        // Seed Account 1230 (Inventory Asset) AND 2110 (Payable / Offset for receipt)
         await accDb
             .into(accDb.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: generateUuidV4(),
+                id: Value(generateUuidV4()),
                 accountCode: '1230',
                 name: 'حساب المخزون',
                 accountType: 'asset',
                 normalBalance: 'debit',
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantId),
+                createdAt: Value(nowDate),
+                updatedAt: Value(nowDate),
+                companyId: tenantId,
+              ),
+            );
+        await accDb
+            .into(accDb.accounts)
+            .insert(
+              AccountsCompanion.insert(
+                id: Value(generateUuidV4()),
+                accountCode: '2110',
+                name: 'حساب الموردين',
+                accountType: 'liability',
+                normalBalance: 'credit',
+                createdAt: Value(nowDate),
+                updatedAt: Value(nowDate),
+                companyId: tenantId,
               ),
             );
 
@@ -212,31 +265,31 @@ void main() {
             .into(invDb.products)
             .insert(
               ProductsCompanion.insert(
-                uuid: generateUuidV4(),
+                id: Value(generateUuidV4()),
                 itemCode: 'ITEM-NO-COGS-01',
                 name: 'No COGS Item',
-                price: 200.0,
-                packSize: 1,
-                onHandQty: const drift.Value(0.0),
-                createdAt: now,
-                updatedAt: now,
-                companyId: const drift.Value(tenantId),
+                price: const Value(200.0),
+                packSize: const Value(1),
+                createdAt: Value(nowDate),
+                updatedAt: Value(nowDate),
+                companyId: tenantId,
               ),
             );
 
-        // 1. Post a Stock Receipt first (succeeds because 1230 exists)
+        // 1. Post a Stock Receipt first (succeeds because 1230 & 2110 exist)
         final rcId = generateUuidV4();
         await invDb
             .into(invDb.stockReceipts)
             .insert(
               StockReceiptsCompanion.insert(
-                uuid: rcId,
+                id: Value(rcId),
                 receiptNumber: 'RC-COGS-SEED',
                 receiptDate: now,
+                currencyCode: 'SAR',
                 createdAt: now,
                 updatedAt: now,
-                status: const drift.Value('draft'),
-                companyId: const drift.Value(tenantId),
+                status: const Value('draft'),
+                companyId: Value(tenantId),
               ),
             );
 
@@ -244,14 +297,15 @@ void main() {
             .into(invDb.stockMovementLines)
             .insert(
               StockMovementLinesCompanion.insert(
-                uuid: generateUuidV4(),
-                movementUuid: rcId,
+                id: Value(generateUuidV4()),
+                receiptId: Value(rcId),
                 movementType: 'receipt',
                 itemCode: 'ITEM-NO-COGS-01',
                 itemName: 'No COGS Item',
-                quantity: const drift.Value(10.0),
-                unitCost: const drift.Value(100.0),
-                totalCost: const drift.Value(1000.0),
+                quantity: const Value(10.0),
+                unitCost: const Value(100.0),
+                totalCost: const Value(1000.0),
+                companyId: tenantId,
               ),
             );
 
@@ -266,20 +320,21 @@ void main() {
         final rcResult = await coordinator.post(document: rcDocRef);
         expect(rcResult, isA<PostSuccess>());
 
-        // 2. Prepare Stock Issue for ITEM-NO-COGS-01
+        // 2. Prepare Stock Issue for ITEM-NO-COGS-01 (requires 5100 / COGS account which is missing)
         final issueId = generateUuidV4();
         await invDb
             .into(invDb.stockIssues)
             .insert(
               StockIssuesCompanion.insert(
-                uuid: issueId,
+                id: Value(issueId),
                 issueNumber: 'ISS-MISSING-5100',
                 issueDate: now,
-                warehouse: drift.Value(whId),
+                currencyCode: 'SAR',
+                warehouseId: Value(whId),
                 createdAt: now,
                 updatedAt: now,
-                status: const drift.Value('draft'),
-                companyId: const drift.Value(tenantId),
+                status: const Value('draft'),
+                companyId: Value(tenantId),
               ),
             );
 
@@ -287,14 +342,15 @@ void main() {
             .into(invDb.stockMovementLines)
             .insert(
               StockMovementLinesCompanion.insert(
-                uuid: generateUuidV4(),
-                movementUuid: issueId,
+                id: Value(generateUuidV4()),
+                issueId: Value(issueId),
                 movementType: 'issue',
                 itemCode: 'ITEM-NO-COGS-01',
                 itemName: 'No COGS Item',
-                quantity: const drift.Value(5.0),
-                unitCost: const drift.Value(100.0),
-                totalCost: const drift.Value(500.0),
+                quantity: const Value(5.0),
+                unitCost: const Value(100.0),
+                totalCost: const Value(500.0),
+                companyId: tenantId,
               ),
             );
 
@@ -306,16 +362,15 @@ void main() {
           warehouseId: whId,
         );
 
-        // Attempt posting -> Must throw MissingAccountException because 5100 (cogsAccount) is missing
-        expect(
-          () => coordinator.post(document: issueDocRef),
-          throwsA(isA<MissingAccountException>()),
-        );
+        // Attempt posting -> Must return PostInvalidStatus because 5100 (cogsAccount) is missing
+        final issuePostRes = await coordinator.post(document: issueDocRef);
+        expect(issuePostRes, isA<PostInvalidStatus>());
+        expect((issuePostRes as PostInvalidStatus).reason, contains('فشل الترحيل المحاسبي'));
 
         // Verify ZERO stock consumption side effects on failure
         final issueRow = await (invDb.select(
           invDb.stockIssues,
-        )..where((tbl) => tbl.uuid.equals(issueId))).getSingle();
+        )..where((tbl) => tbl.id.equals(issueId))).getSingle();
         expect(issueRow.status, equals('draft'));
 
         final layer = await invDb.select(invDb.inventoryCostLayers).getSingle();
@@ -380,13 +435,14 @@ void main() {
             .into(invDb.stockReceipts)
             .insert(
               StockReceiptsCompanion.insert(
-                uuid: rcId,
+                id: Value(rcId),
                 receiptNumber: 'RC-ATOMIC-01',
                 receiptDate: now,
+                currencyCode: 'SAR',
                 createdAt: now,
                 updatedAt: now,
-                status: const drift.Value('draft'),
-                companyId: const drift.Value(tenantId),
+                status: const Value('draft'),
+                companyId: Value(tenantId),
               ),
             );
 
@@ -394,14 +450,15 @@ void main() {
             .into(invDb.stockMovementLines)
             .insert(
               StockMovementLinesCompanion.insert(
-                uuid: generateUuidV4(),
-                movementUuid: rcId,
+                id: Value(generateUuidV4()),
+                receiptId: Value(rcId),
                 movementType: 'receipt',
                 itemCode: 'ITEM-ATOMIC-01',
                 itemName: 'Atomic Test Item',
-                quantity: const drift.Value(20.0),
-                unitCost: const drift.Value(15.0),
-                totalCost: const drift.Value(300.0),
+                quantity: const Value(20.0),
+                unitCost: const Value(15.0),
+                totalCost: const Value(300.0),
+                companyId: tenantId,
               ),
             );
 
@@ -413,17 +470,14 @@ void main() {
           warehouseId: whId,
         );
 
-        try {
-          await coordinator.post(document: docRef);
-          fail('Expected MissingAccountException was not thrown');
-        } catch (e) {
-          expect(e, isA<MissingAccountException>());
-        }
+        final postRes = await coordinator.post(document: docRef);
+        expect(postRes, isA<PostInvalidStatus>());
+        expect((postRes as PostInvalidStatus).reason, contains('فشل الترحيل المحاسبي'));
 
         // Assert complete atomicity
         final receiptRow = await (invDb.select(
           invDb.stockReceipts,
-        )..where((tbl) => tbl.uuid.equals(rcId))).getSingle();
+        )..where((tbl) => tbl.id.equals(rcId))).getSingle();
         expect(receiptRow.status, equals('draft'));
 
         final costLayers = await invDb.select(invDb.inventoryCostLayers).get();

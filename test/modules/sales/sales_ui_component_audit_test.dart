@@ -75,8 +75,7 @@ void main() {
       '4. SaleListItem entity correctly encapsulates list row details for AppListPagePattern',
       () {
         final item = SaleListItem(
-          id: 101,
-          uuid: '00000000-0000-0000-0000-000000000101',
+          id: '00000000-0000-0000-0000-000000000101',
           saleNumber: 'INV-101',
           saleDate: DateTime.now(),
           customerName: 'Customer A',

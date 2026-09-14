@@ -1,4 +1,3 @@
-import 'accounting_effect.dart';
 import 'accounting_transaction_context.dart';
 
 /// Canonical Accounting Journal Line Domain Contract.

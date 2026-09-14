@@ -7,8 +7,8 @@ class MockAccountLookupPort implements SetupAccountLookupPort {
   final Map<String, SetupAccountData> accounts = {};
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return accounts[accountId];
   }
 
   @override
@@ -366,7 +366,7 @@ void main() {
         await resolver.bindAccount(
           companyId: companyId,
           requirement: salesAccountReq,
-          accountUuid: 'acc_uuid_100',
+          accountId: 'acc_uuid_100',
         );
 
         final status = await validationEngine.evaluatePackageStatus(
@@ -412,7 +412,7 @@ void main() {
             companyId: companyId,
             packageId: 'sales',
             requirementKey: 'sales_account',
-            accountUuid: 'acc_uuid_stale',
+            accountId: 'acc_uuid_stale',
             status: AccountBindingStatus.bound,
           ),
         );
@@ -471,7 +471,7 @@ void main() {
           () => resolver.bindAccount(
             companyId: companyId,
             requirement: salesAccountReq,
-            accountUuid: 'acc_uuid_other_company',
+            accountId: 'acc_uuid_other_company',
           ),
           throwsA(isA<CrossCompanyAccountBindingException>()),
         );

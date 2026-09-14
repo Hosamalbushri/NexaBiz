@@ -52,7 +52,7 @@ void main() {
         expect(draft!.lines, hasLength(3));
 
         final capitalLine = draft.lines.firstWhere(
-          (l) => l.accountUuid == capitalUuid,
+          (l) => l.accountId == capitalUuid,
         );
         // Total debit = 5000, Total credit = 2000. Net debit = 3000 -> Capital credit = 3000
         expect(capitalLine.credit, equals(3000));
@@ -99,7 +99,7 @@ void main() {
         expect(draft!.lines, hasLength(2));
 
         final capitalLine = draft.lines.firstWhere(
-          (l) => l.accountUuid == capitalUuid,
+          (l) => l.accountId == capitalUuid,
         );
         expect(capitalLine.currencyCode, equals('USD'));
         expect(capitalLine.credit, equals(1000));

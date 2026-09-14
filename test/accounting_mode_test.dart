@@ -5,14 +5,14 @@ import 'package:hive/hive.dart';
 
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
-import 'package:stock_count/modules/accounting/domain/entities/accounting_mode.dart';
-import 'package:stock_count/modules/accounting/domain/entities/operational_accounting_status.dart';
-import 'package:stock_count/modules/accounting/domain/services/accounting_integration_port.dart';
-import 'package:stock_count/modules/accounting/domain/services/accounting_mode_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_money.dart';
-import 'package:stock_count/modules/accounting/domain/entities/fiscal_period.dart';
-import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/accounting/shared/domain/entities/accounting_mode.dart';
+import 'package:stock_count/modules/accounting/shared/domain/entities/operational_accounting_status.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/accounting_integration_port.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/accounting_mode_policy.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_money.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/fiscal_period.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 
 void main() {
   group('AccountingMode', () {

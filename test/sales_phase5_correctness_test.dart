@@ -6,7 +6,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/app/sales/accounting_sale_ledger_adapter.dart';
 import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
@@ -17,7 +17,7 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settleme
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 import 'package:stock_count/modules/sales/invoices/domain/models/sale_exception.dart';
 import 'package:stock_count/modules/sales/invoices/domain/usecases/sale_usecases.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_accounting_bridge_port.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_inventory_effect_port.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_ledger_posting_port.dart';
@@ -109,14 +109,14 @@ class ThrowingRepositorySaleRepository extends SaleRepositoryImpl {
 }
 
 void main() {
-  late SalesDatabase db;
+  late NexabizDatabase db;
   late SaleRepositoryImpl repoCompanyA;
   late SaleRepositoryImpl repoCompanyB;
   late TestSaleNumberAllocator allocator;
   late PermissionGuard guard;
 
   setUp(() {
-    db = SalesDatabase.memory();
+    db = NexabizDatabase.memory();
     repoCompanyA = SaleRepositoryImpl(db, readCompanyId: () => 'company_a');
     repoCompanyB = SaleRepositoryImpl(db, readCompanyId: () => 'company_b');
     allocator = TestSaleNumberAllocator();
@@ -234,7 +234,7 @@ void main() {
   });
 
   group('Phase 5 — Gap 1: Accounting Idempotency', () {
-    late AccountingDatabase acctDb;
+    late NexabizDatabase acctDb;
     late AccountRepositoryImpl accountRepo;
     late JournalRepositoryImpl journalRepo;
     late AccountingSaleLedgerAdapter ledgerAdapter;
@@ -242,7 +242,7 @@ void main() {
 
     setUp(() async {
       Hive.init('/tmp/hive_test_gap1_${DateTime.now().microsecondsSinceEpoch}');
-      acctDb = AccountingDatabase.memory();
+      acctDb = NexabizDatabase.memory();
       accountRepo = AccountRepositoryImpl(
         acctDb,
         readCompanyId: () => 'company_a',

@@ -27,4 +27,10 @@ class ProductWarehouseStocks extends Table {
         {companyId, id},
         {itemCode, warehouseId, companyId},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, product_id) REFERENCES products(company_id, id) ON DELETE CASCADE',
+        'FOREIGN KEY (company_id, warehouse_id) REFERENCES warehouses(company_id, id) ON DELETE CASCADE',
+      ];
 }

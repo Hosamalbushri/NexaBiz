@@ -7,7 +7,7 @@ import 'package:stock_count/app/settings/company/functional_currency_service.dar
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 
@@ -16,7 +16,7 @@ void main() {
 
   late Box<dynamic> settingsBox;
   late SettingsRepository settingsRepository;
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late CurrencyRepositoryImpl currencyRepository;
   late FunctionalCurrencyService functionalCurrencyService;
 
@@ -31,7 +31,7 @@ void main() {
     settingsBox = await Hive.openBox<dynamic>(HiveBoxes.settings);
     settingsRepository = SettingsRepository(box: settingsBox);
 
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     currencyRepository = CurrencyRepositoryImpl(
       db,
       readCompanyId: () => companyA,
@@ -132,7 +132,7 @@ void main() {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       await db.into(db.journalEntries).insert(
             JournalEntriesCompanion.insert(
-              uuid: '11111111-2222-3333-4444-555555555555',
+              id: const Value('11111111-2222-3333-4444-555555555555'),
               entryDate: nowMs,
               voucherNumber: 'V-001',
               voucherType: 'JV',

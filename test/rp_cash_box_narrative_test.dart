@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_ledger_adapter.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction_line.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction_line.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 
 void main() {
   FinancialTransaction txn({
@@ -14,8 +14,7 @@ void main() {
     List<FinancialTransactionLine> lines = const [],
   }) {
     return FinancialTransaction(
-      id: 1,
-      uuid: 'txn-1',
+      id: 'txn-1',
       transactionNumber: 'R-1',
       transactionType: TransactionType.receipt,
       source: TransactionSource.manualReceipt,

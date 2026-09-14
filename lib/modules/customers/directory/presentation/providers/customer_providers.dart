@@ -7,7 +7,6 @@ import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
 import '../../data/repositories/customer_repository_impl.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/repositories/customer_repository.dart';
@@ -255,10 +254,9 @@ final customersAutoLinkAccountProvider =
 class CustomersAutoLinkAccountController
     extends StateNotifier<AsyncValue<bool>> {
   CustomersAutoLinkAccountController({
-    required SettingsRepository repository,
+    required this._repository,
     this.companyId,
-  }) : _repository = repository,
-       super(const AsyncValue.loading()) {
+  }) : super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -296,12 +294,10 @@ final customersParentAccountProvider =
 class CustomersParentAccountController
     extends StateNotifier<AsyncValue<LinkedAccountRef?>> {
   CustomersParentAccountController({
-    required SettingsRepository repository,
-    required CustomerAccountLinkPort linkPort,
+    required this._repository,
+    required this._linkPort,
     this.companyId,
-  }) : _repository = repository,
-       _linkPort = linkPort,
-       super(const AsyncValue.loading()) {
+  }) : super(const AsyncValue.loading()) {
     _load();
   }
 

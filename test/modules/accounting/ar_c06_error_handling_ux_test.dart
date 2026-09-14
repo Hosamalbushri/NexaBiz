@@ -69,7 +69,7 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 class MockAccountRepo implements AccountRepository {
   final Map<String, Account> _store = {};
 
-  void add(Account account) => _store[account.uuid] = account;
+  void add(Account account) => _store[account.id] = account;
 
   @override
   Future<Account?> getByUuid(String uuid) async => _store[uuid];
@@ -201,8 +201,7 @@ void main() {
         '2. Partially Configured Module State (PARTIALLY_CONFIGURED)',
         () async {
           final revAcc = createTestCoaAccount(
-            id: 1,
-            uuid: 'acc-rev-01',
+            id: 'acc-rev-01',
             code: '401001',
             name: 'إيرادات مبيعات',
             accountType: AccountType.revenue,
@@ -215,7 +214,7 @@ void main() {
               companyId: companyA,
               packageId: 'sales',
               requirementKey: 'revenue_account',
-              accountUuid: 'acc-rev-01',
+              accountId: 'acc-rev-01',
               status: AccountBindingStatus.bound,
               bindingMode: AccountBindingMode.singleAccount,
               boundAt: DateTime.now(),
@@ -238,8 +237,7 @@ void main() {
 
       test('3. Invalid Account Type Detection (INVALID)', () async {
         final wrongTypeAcc = createTestCoaAccount(
-          id: 2,
-          uuid: 'acc-liab-01',
+          id: 'acc-liab-01',
           code: '201001',
           name: 'دائنون',
           accountType: AccountType.liability, // Expected revenue
@@ -252,7 +250,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'revenue_account',
-            accountUuid: 'acc-liab-01',
+            accountId: 'acc-liab-01',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.singleAccount,
             boundAt: DateTime.now(),
@@ -274,8 +272,7 @@ void main() {
 
       test('4. Invalid Parent Scope Detection (INVALID)', () async {
         final nonGroupAcc = createTestCoaAccount(
-          id: 3,
-          uuid: 'acc-single-03',
+          id: 'acc-single-03',
           code: '101003',
           name: 'صندوق فرعي غير مجموعة',
           accountType: AccountType.asset,
@@ -289,7 +286,7 @@ void main() {
             companyId: companyA,
             packageId: 'treasury',
             requirementKey: 'cash_parent_account',
-            accountUuid: 'acc-single-03',
+            accountId: 'acc-single-03',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.parentAccountWithDescendants,
             boundAt: DateTime.now(),
@@ -311,8 +308,7 @@ void main() {
 
       test('5. No Eligible Descendants Available (INVALID)', () async {
         final emptyGroupAcc = createTestCoaAccount(
-          id: 4,
-          uuid: 'grp-empty-04',
+          id: 'grp-empty-04',
           code: '101000',
           name: 'مجموعة صناديق فارغة',
           accountType: AccountType.asset,
@@ -326,7 +322,7 @@ void main() {
             companyId: companyA,
             packageId: 'treasury',
             requirementKey: 'cash_parent_account',
-            accountUuid: 'grp-empty-04',
+            accountId: 'grp-empty-04',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.parentAccountWithDescendants,
             boundAt: DateTime.now(),
@@ -348,8 +344,7 @@ void main() {
 
       test('6. Selected Descendant Outside Scope Detection', () async {
         final grpA = createTestCoaAccount(
-          id: 5,
-          uuid: 'grp-A',
+          id: 'grp-A',
           code: '101000',
           name: 'مجموعة A',
           accountType: AccountType.asset,
@@ -357,8 +352,7 @@ void main() {
           isGroup: true,
         );
         final childInB = createTestCoaAccount(
-          id: 6,
-          uuid: 'child-B',
+          id: 'child-B',
           code: '102001',
           name: 'فرعي في مجموعة B',
           accountType: AccountType.asset,
@@ -374,8 +368,7 @@ void main() {
 
       test('7. Inactive Account Detection (DEGRADED)', () async {
         final inactiveAcc = createTestCoaAccount(
-          id: 7,
-          uuid: 'acc-inactive-07',
+          id: 'acc-inactive-07',
           code: '401007',
           name: 'إيراد معطل',
           accountType: AccountType.revenue,
@@ -389,7 +382,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'revenue_account',
-            accountUuid: 'acc-inactive-07',
+            accountId: 'acc-inactive-07',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.singleAccount,
             boundAt: DateTime.now(),
@@ -411,8 +404,7 @@ void main() {
 
       test('8. Deleted Account Detection (DEGRADED)', () async {
         final deletedAcc = createTestCoaAccount(
-          id: 8,
-          uuid: 'acc-deleted-08',
+          id: 'acc-deleted-08',
           code: '401008',
           name: 'إيراد محذوف',
           accountType: AccountType.revenue,
@@ -427,7 +419,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'revenue_account',
-            accountUuid: 'acc-deleted-08',
+            accountId: 'acc-deleted-08',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.singleAccount,
             boundAt: DateTime.now(),
@@ -485,8 +477,7 @@ void main() {
 
       test('11. Cross-Company Account Detection (INVALID)', () async {
         final compBAcc = createTestCoaAccount(
-          id: 11,
-          uuid: 'acc-compB-11',
+          id: 'acc-compB-11',
           code: '401011',
           name: 'إيراد شركة B',
           accountType: AccountType.revenue,
@@ -499,7 +490,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'revenue_account',
-            accountUuid: 'acc-compB-11',
+            accountId: 'acc-compB-11',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.singleAccount,
             boundAt: DateTime.now(),
@@ -521,8 +512,7 @@ void main() {
 
       test('12. Configuration Repaired Flow', () async {
         final validRev = createTestCoaAccount(
-          id: 12,
-          uuid: 'acc-rev-valid-12',
+          id: 'acc-rev-valid-12',
           code: '401012',
           name: 'إيراد مبيعات ممتاز',
           accountType: AccountType.revenue,
@@ -535,7 +525,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'revenue_account',
-            accountUuid: 'acc-rev-valid-12',
+            accountId: 'acc-rev-valid-12',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.singleAccount,
             boundAt: DateTime.now(),
@@ -554,8 +544,7 @@ void main() {
 
       test('13. Module Transitions to READY', () async {
         final validRec = createTestCoaAccount(
-          id: 13,
-          uuid: 'acc-rec-13',
+          id: 'acc-rec-13',
           code: '102001',
           name: 'العملاء الرئيسي',
           accountType: AccountType.asset,
@@ -568,7 +557,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'receivable_account',
-            accountUuid: 'acc-rec-13',
+            accountId: 'acc-rec-13',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.singleAccount,
             boundAt: DateTime.now(),
@@ -639,8 +628,7 @@ void main() {
 
       test('16. Transaction Succeeds After Repair', () async {
         final validRev = createTestCoaAccount(
-          id: 16,
-          uuid: 'acc-rev-16',
+          id: 'acc-rev-16',
           code: '401016',
           name: 'إيراد سليم',
           accountType: AccountType.revenue,
@@ -653,7 +641,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'revenue_account',
-            accountUuid: 'acc-rev-16',
+            accountId: 'acc-rev-16',
             status: AccountBindingStatus.bound,
             bindingMode: AccountBindingMode.singleAccount,
             boundAt: DateTime.now(),

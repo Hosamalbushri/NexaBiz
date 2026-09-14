@@ -124,7 +124,9 @@ class JournalPostingService {
       );
       return;
     }
-    await reverseByUuid(existing.uuid);
+    final reversal = await reverseByUuid(existing.uuid);
+    await _journals.softDeletePostedAfterReverse(existing.uuid);
+    await _journals.softDeletePostedAfterReverse(reversal.uuid);
   }
 
   /// Posts a reversing entry for a posted journal (swap debit/credit).

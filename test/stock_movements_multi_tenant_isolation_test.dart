@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
@@ -10,10 +10,10 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
   });
 
   tearDown(() async {
@@ -39,7 +39,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm1',
+              movementId: 'm1',
               movementType: 'receipt',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -58,7 +58,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm2',
+              movementId: 'm2',
               movementType: 'receipt',
               itemCode: 'ITEM-2',
               itemName: 'Item 2',
@@ -96,7 +96,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm3',
+              movementId: 'm3',
               movementType: 'issue',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -115,7 +115,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm4',
+              movementId: 'm4',
               movementType: 'issue',
               itemCode: 'ITEM-2',
               itemName: 'Item 2',
@@ -153,7 +153,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm5',
+              movementId: 'm5',
               movementType: 'receipt',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -173,7 +173,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm6',
+              movementId: 'm6',
               movementType: 'issue',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -209,7 +209,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm7',
+              movementId: 'm7',
               movementType: 'receipt',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -253,7 +253,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm8',
+              movementId: 'm8',
               movementType: 'receipt',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -273,7 +273,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm9',
+              movementId: 'm9',
               movementType: 'issue',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -313,7 +313,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm10',
+              movementId: 'm10',
               movementType: 'receipt',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',
@@ -332,7 +332,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'm11',
+              movementId: 'm11',
               movementType: 'issue',
               itemCode: 'ITEM-1',
               itemName: 'Item 1',

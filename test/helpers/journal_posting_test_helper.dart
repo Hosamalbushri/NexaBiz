@@ -4,6 +4,8 @@ import 'package:stock_count/modules/accounting/journals/domain/repositories/jour
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
+import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 
 /// Empty fiscal-year store so validators fall back to [FiscalPeriodPolicy].
 class EmptyFiscalYearRepository implements FiscalYearRepository {
@@ -133,4 +135,29 @@ AccountingPeriodValidator legacyPeriodValidator({
       closedThrough: closedThrough,
     ),
   );
+}
+
+class NoOpInventoryAccountingPoster implements InventoryAccountingPoster {
+  const NoOpInventoryAccountingPoster();
+
+  @override
+  Future<void> postAccountingEntry({
+    required InventoryDocumentRef document,
+    required double totalAmount,
+    double? valuationAmount,
+    String? accountId,
+    bool isPosted = true,
+    bool useBaseCurrencyForPosting = false,
+  }) async {}
+
+  @override
+  Future<void> reverseAccountingEntry({
+    required InventoryDocumentRef document,
+  }) async {}
+
+  @override
+  Future<void> setAccountingEntryPostingStatus({
+    required InventoryDocumentRef document,
+    required bool isPosted,
+  }) async {}
 }

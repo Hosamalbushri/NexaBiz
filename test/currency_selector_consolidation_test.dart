@@ -11,8 +11,7 @@ import 'package:stock_count/modules/currency/presentation/providers/currency_pro
 void main() {
   final now = DateTime(2026, 1, 1);
   final sar = Currency(
-    id: 1,
-    uuid: 'c-sar',
+    id: 'c-sar',
     code: 'SAR',
     nameAr: 'ريال سعودي',
     nameEn: 'Saudi Riyal',
@@ -24,8 +23,7 @@ void main() {
     updatedAt: now,
   );
   final usd = Currency(
-    id: 2,
-    uuid: 'c-usd',
+    id: 'c-usd',
     code: 'USD',
     nameAr: 'دولار أمريكي',
     nameEn: 'US Dollar',
@@ -37,8 +35,7 @@ void main() {
     updatedAt: now,
   );
   final yerInactive = Currency(
-    id: 3,
-    uuid: 'c-yer',
+    id: 'c-yer',
     code: 'YER',
     nameAr: 'ريال يمني',
     nameEn: 'Yemeni Rial',

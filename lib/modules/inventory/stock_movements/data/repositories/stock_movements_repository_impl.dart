@@ -16,16 +16,12 @@ import 'package:stock_count/core/setup/setup_core.dart';
 
 class StockMovementsRepositoryImpl implements StockMovementsRepository {
   StockMovementsRepositoryImpl({
-    required NexabizDatabase db,
-    SyncQueue? syncQueue,
-    InventoryAccountingPoster? accountingPoster,
-    String Function()? readCompanyId,
-    InitializationGuard? initializationGuard,
-  })  : _db = db,
-        _syncQueue = syncQueue,
-        _accountingPoster = accountingPoster,
-        _readCompanyId = readCompanyId,
-        _initializationGuard = initializationGuard;
+    required this._db,
+    this._syncQueue,
+    this._accountingPoster,
+    this._readCompanyId,
+    this._initializationGuard,
+  });
 
   final NexabizDatabase _db;
   final SyncQueue? _syncQueue;

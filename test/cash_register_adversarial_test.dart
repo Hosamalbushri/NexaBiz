@@ -20,7 +20,7 @@ import 'package:stock_count/modules/cash_registers/domain/services/cash_register
 import 'package:stock_count/modules/cash_registers/domain/services/default_cash_register_resolver.dart';
 import 'package:stock_count/modules/cash_registers/shared/data/sync/cash_registers_sync_handlers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 class FakeAccountRepository implements AccountRepository {
   final Map<String, Account> _accounts = {};
@@ -74,15 +74,15 @@ class FakeJournalRepository implements JournalRepository {
 
   @override
   Future<JournalEntry> post(JournalEntryDraft draft) async {
-    final entryUuid = draft.uuid ?? 'je-${_idSeq++}';
+    final entryId = draft.uuid ?? 'je-${_idSeq++}';
     final lines = <JournalLine>[];
     for (var i = 0; i < draft.lines.length; i++) {
       final lDraft = draft.lines[i];
       final line = JournalLine(
         id: _idSeq++,
         uuid: lDraft.uuid ?? 'jl-${_idSeq++}',
-        entryUuid: entryUuid,
-        accountUuid: lDraft.accountUuid,
+        entryId: entryId,
+        accountId: lDraft.accountId,
         debit: lDraft.debit,
         credit: lDraft.credit,
         currencyCode: lDraft.currencyCode,
@@ -100,8 +100,8 @@ class FakeJournalRepository implements JournalRepository {
           credit: lDraft.credit,
           currencyCode: lDraft.currencyCode,
           isPosted: draft.isPosted,
-          accountUuid: lDraft.accountUuid,
-          entryUuid: entryUuid,
+          accountUuid: lDraft.accountId,
+          entryUuid: entryId,
           lineUuid: line.uuid,
           lineId: line.id,
           sortOrder: lDraft.sortOrder,
@@ -110,7 +110,7 @@ class FakeJournalRepository implements JournalRepository {
     }
     final entry = JournalEntry(
       id: _idSeq++,
-      uuid: entryUuid,
+      uuid: entryId,
       voucherNumber: draft.voucherNumber,
       voucherType: draft.voucherType,
       currencyCode: draft.currencyCode,
@@ -123,13 +123,13 @@ class FakeJournalRepository implements JournalRepository {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    _journals[entryUuid] = entry;
+    _journals[entryId] = entry;
     return entry;
   }
 
   @override
   Future<List<AccountLedgerMovement>> listMovementsForAccount({
-    required String accountUuid,
+    required String accountId,
     DateTime? fromDate,
     DateTime? toDate,
     String? currencyCode,
@@ -137,7 +137,7 @@ class FakeJournalRepository implements JournalRepository {
     int? limit,
     AccountLedgerCursor? after,
   }) async {
-    return _movements.where((m) => m.accountUuid == accountUuid).toList();
+    return _movements.where((m) => m.accountId == accountId).toList();
   }
 
   @override
@@ -163,7 +163,7 @@ class FakeJournalRepository implements JournalRepository {
         .toList();
     for (final j in toRemove) {
       _journals.remove(j.uuid);
-      _movements.removeWhere((m) => m.entryUuid == j.uuid);
+      _movements.removeWhere((m) => m.entryId == j.uuid);
     }
   }
 
@@ -171,7 +171,7 @@ class FakeJournalRepository implements JournalRepository {
   Future<void> softDeleteByUuid(String uuid) async {
     final j = _journals.remove(uuid);
     if (j != null) {
-      _movements.removeWhere((m) => m.entryUuid == uuid);
+      _movements.removeWhere((m) => m.entryId == uuid);
     }
   }
 
@@ -224,15 +224,14 @@ void main() {
   late CashRegisterRepositoryImpl cashRepo;
   late FakeAccountRepository accountRepo;
   late FakeJournalRepository journalRepo;
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late Directory tempDir;
   late CashRegisterMovementService movementService;
 
   final now = DateTime.now().toUtc();
 
   final companyAAccount = Account(
-    id: 1,
-    uuid: 'acc_company_a_01',
+    id: 'acc_company_a_01',
     companyId: 'company_a',
     accountCode: '110101',
     name: 'Company A Cash Asset',
@@ -247,8 +246,7 @@ void main() {
   );
 
   final companyAAccount2 = Account(
-    id: 5,
-    uuid: 'acc_company_a_02',
+    id: 'acc_company_a_02',
     companyId: 'company_a',
     accountCode: '110104',
     name: 'Company A Cash Asset 2',
@@ -263,8 +261,7 @@ void main() {
   );
 
   final companyAInactiveAccount = Account(
-    id: 2,
-    uuid: 'acc_company_a_inactive',
+    id: 'acc_company_a_inactive',
     companyId: 'company_a',
     accountCode: '110102',
     name: 'Company A Inactive Cash',
@@ -279,8 +276,7 @@ void main() {
   );
 
   final companyBAccount = Account(
-    id: 3,
-    uuid: 'acc_company_b_01',
+    id: 'acc_company_b_01',
     companyId: 'company_b',
     accountCode: '110101',
     name: 'Company B Cash Asset',
@@ -295,8 +291,7 @@ void main() {
   );
 
   final companyADeletedAccount = Account(
-    id: 4,
-    uuid: 'acc_company_a_deleted',
+    id: 'acc_company_a_deleted',
     companyId: 'company_a',
     accountCode: '110103',
     name: 'Company A Deleted Cash',
@@ -325,7 +320,7 @@ void main() {
     accountRepo.addAccount(companyADeletedAccount);
 
     journalRepo = FakeJournalRepository();
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     cashRepo = CashRegisterRepositoryImpl(
       accountRepository: accountRepo,
       db: db,

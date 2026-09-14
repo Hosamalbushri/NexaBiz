@@ -177,10 +177,12 @@ class _UniversalReportViewerPageState extends State<UniversalReportViewerPage> {
             onViewAsTable: _handleTableView,
             onApply: (queryData) {
               setState(() {
-                if (queryData.fromDate != null)
+                if (queryData.fromDate != null) {
                   _filterValues['fromDate'] = queryData.fromDate;
-                if (queryData.toDate != null)
+                }
+                if (queryData.toDate != null) {
                   _filterValues['toDate'] = queryData.toDate;
+                }
                 _filterValues['postingStatus'] = queryData.postingStatus.name;
               });
               _handleTableView();

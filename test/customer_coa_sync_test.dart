@@ -9,18 +9,18 @@ import 'package:stock_count/app/customers/customer_remote_account_ensure.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/models/account_tree_node.dart';
-import 'package:stock_count/modules/customers/data/database/customers_database.dart';
-import 'package:stock_count/modules/customers/data/repositories/customer_repository_impl.dart';
-import 'package:stock_count/modules/customers/data/sync/customers_sync_handlers.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_tree_node.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
+import 'package:stock_count/modules/customers/shared/data/sync/customers_sync_handlers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory tempDir;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase accountingDb;
   late AccountRepositoryImpl accounts;
   late AccountingCustomerAccountLinkAdapter linkPort;
   late SyncQueue syncQueue;
@@ -40,7 +40,7 @@ void main() {
     );
     syncQueue = SyncQueue(box: syncBox);
     settings = SettingsRepository(box: settingsBox);
-    accountingDb = AccountingDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
     accounts = AccountRepositoryImpl(accountingDb, syncQueue: syncQueue);
     linkPort = AccountingCustomerAccountLinkAdapter(accounts);
     await accounts.ensureDefaultChartSeeded();
@@ -113,9 +113,9 @@ void main() {
       final forest = AccountTreeNode.buildForest(await accounts.getAll());
       var foundUnderParent = false;
       void walk(AccountTreeNode node) {
-        if (node.account.uuid == localParent.accountId) {
+        if (node.account.id == localParent.accountId) {
           foundUnderParent = node.children.any(
-            (c) => c.account.uuid == remoteAccountUuid,
+            (c) => c.account.id == remoteAccountUuid,
           );
         }
         for (final child in node.children) {
@@ -138,7 +138,7 @@ void main() {
         accountLink: linkPort,
         settings: settings,
       );
-      final customersDb = CustomersDatabase.memory();
+      final customersDb = NexabizDatabase.memory();
       final customers = CustomerRepositoryImpl(
         customersDb,
         syncQueue: syncQueue,
@@ -149,12 +149,12 @@ void main() {
         ensureLinkedAccount: ensure.ensureFromCustomerPayload,
       );
 
-      const accountUuid = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
-      const customerUuid = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+      const accountId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+      const customerId = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 
       await handler.applyRemoteChange(
         SyncRemoteChange(
-          entityId: customerUuid,
+          entityId: customerId,
           version: 1,
           updatedAt: DateTime.utc(2026, 8, 15),
           deleted: false,
@@ -162,17 +162,17 @@ void main() {
             'customerCode': '12218801',
             'name': 'عميل مزامن',
             'isActive': true,
-            'accountId': accountUuid,
+            'accountId': accountId,
             'dataSource': 'local',
           },
         ),
       );
 
-      final customer = await customers.getByUuid(customerUuid);
+      final customer = await customers.getByUuid(customerId);
       expect(customer, isNotNull);
-      expect(customer!.accountId, accountUuid);
+      expect(customer!.accountId, accountId);
 
-      final account = await accounts.getByUuid(accountUuid);
+      final account = await accounts.getByUuid(accountId);
       expect(account, isNotNull);
       final parent = await linkPort.findSystemCustomersParent();
       expect(account!.parentId, parent!.accountId);
@@ -191,12 +191,12 @@ void main() {
     final parent = await linkPort.findSystemCustomersParent();
 
     // Code without a local group prefix → stays orphan until customer ensure.
-    const accountUuid = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+    const accountId = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
     await accountingDb
         .into(accountingDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: accountUuid,
+            id: accountId,
             parentId: const Value('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
             accountCode: 'ORPHAN01',
             name: 'يتيم',
@@ -213,17 +213,17 @@ void main() {
           ),
         );
 
-    var orphan = await accounts.getByUuid(accountUuid);
+    var orphan = await accounts.getByUuid(accountId);
     expect(orphan!.parentId, isNot(parent!.accountId));
     expect(await accounts.getByUuid(orphan.parentId!), isNull);
 
     await ensure.ensureFromCustomerPayload({
       'customerCode': 'ORPHAN01',
       'name': 'يتيم',
-      'accountId': accountUuid,
+      'accountId': accountId,
     });
 
-    orphan = await accounts.getByUuid(accountUuid);
+    orphan = await accounts.getByUuid(accountId);
     expect(orphan!.parentId, parent.accountId);
   });
 }

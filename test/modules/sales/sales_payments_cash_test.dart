@@ -17,23 +17,23 @@ class FakeAccountValidationService implements AccountValidationService {
 
   @override
   Future<AccountValidationResult> validateAccountUuid(
-    String accountUuid,
+    String accountId,
   ) async {
-    if (accountUuid.startsWith('invalid_') ||
-        accountUuid.startsWith('inactive_')) {
+    if (accountId.startsWith('invalid_') ||
+        accountId.startsWith('inactive_')) {
       return AccountValidationResult(
         isValid: false,
-        errorMessage: 'الحساب غير صالح: $accountUuid',
+        errorMessage: 'الحساب غير صالح: $accountId',
       );
     }
     return AccountValidationResult.valid;
   }
 
   @override
-  Future<void> assertCanPost(String accountUuid) async {
-    if (accountUuid.startsWith('invalid_') ||
-        accountUuid.startsWith('inactive_')) {
-      throw StateError('الحساب غير صالح للترحيل: $accountUuid');
+  Future<void> assertCanPost(String accountId) async {
+    if (accountId.startsWith('invalid_') ||
+        accountId.startsWith('inactive_')) {
+      throw StateError('الحساب غير صالح للترحيل: $accountId');
     }
   }
 }
@@ -47,31 +47,31 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
     return AccountMapping({
       AccountRole.cash: const AccountRoleRef(
         role: AccountRole.cash,
-        accountUuid: 'acc_cash_reg_101',
+        accountId: 'acc_cash_reg_101',
         accountCode: '1010',
         accountName: 'Main Cash Register Account',
       ),
       AccountRole.receivable: const AccountRoleRef(
         role: AccountRole.receivable,
-        accountUuid: 'acc_rec_cust_201',
+        accountId: 'acc_rec_cust_201',
         accountCode: '1100',
         accountName: 'Customer Receivables',
       ),
       AccountRole.revenue: const AccountRoleRef(
         role: AccountRole.revenue,
-        accountUuid: 'acc_rev_401',
+        accountId: 'acc_rev_401',
         accountCode: '4010',
         accountName: 'Sales Revenue',
       ),
       AccountRole.cogs: const AccountRoleRef(
         role: AccountRole.cogs,
-        accountUuid: 'acc_cogs_501',
+        accountId: 'acc_cogs_501',
         accountCode: '5010',
         accountName: 'COGS',
       ),
       AccountRole.inventory: const AccountRoleRef(
         role: AccountRole.inventory,
-        accountUuid: 'acc_inv_120',
+        accountId: 'acc_inv_120',
         accountCode: '1200',
         accountName: 'Inventory Asset',
       ),
@@ -88,13 +88,13 @@ class FakeInvalidCashAccountMappingResolver implements AccountMappingResolver {
     return AccountMapping({
       AccountRole.cash: const AccountRoleRef(
         role: AccountRole.cash,
-        accountUuid: 'invalid_cash_account',
+        accountId: 'invalid_cash_account',
         accountCode: '9999',
         accountName: 'Invalid Cash Account',
       ),
       AccountRole.revenue: const AccountRoleRef(
         role: AccountRole.revenue,
-        accountUuid: 'acc_rev_401',
+        accountId: 'acc_rev_401',
         accountCode: '4010',
         accountName: 'Sales Revenue',
       ),
@@ -143,13 +143,13 @@ void main() {
         expect(revenueEntry.voucherType, equals('بيع نقدي'));
 
         final cashDebitLine = revenueEntry.lines.firstWhere((l) => l.debit > 0);
-        expect(cashDebitLine.accountUuid, equals('acc_cash_reg_101'));
+        expect(cashDebitLine.accountId, equals('acc_cash_reg_101'));
         expect(cashDebitLine.debit, equals(150.0));
 
         final revenueCreditLine = revenueEntry.lines.firstWhere(
           (l) => l.credit > 0,
         );
-        expect(revenueCreditLine.accountUuid, equals('acc_rev_401'));
+        expect(revenueCreditLine.accountId, equals('acc_rev_401'));
         expect(revenueCreditLine.credit, equals(150.0));
 
         final cogsEntry = drafts.firstWhere((d) => d.sourceType == 'sale_cogs');
@@ -187,12 +187,12 @@ void main() {
         expect(revenueEntry.voucherType, equals('بيع آجل'));
 
         final recDebitLine = revenueEntry.lines.firstWhere((l) => l.debit > 0);
-        expect(recDebitLine.accountUuid, equals('acc_rec_cust_201'));
+        expect(recDebitLine.accountId, equals('acc_rec_cust_201'));
         expect(recDebitLine.debit, equals(300.0));
 
         // Cash account is NOT present in credit sale lines
         expect(
-          revenueEntry.lines.any((l) => l.accountUuid == 'acc_cash_reg_101'),
+          revenueEntry.lines.any((l) => l.accountId == 'acc_cash_reg_101'),
           isFalse,
         );
       },

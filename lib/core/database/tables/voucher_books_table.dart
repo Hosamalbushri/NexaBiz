@@ -27,4 +27,9 @@ class VoucherBooks extends Table {
         {companyId, id},
         {companyId, name, bookType},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, parent_book_id) REFERENCES voucher_books(company_id, id) ON DELETE SET NULL',
+      ];
 }

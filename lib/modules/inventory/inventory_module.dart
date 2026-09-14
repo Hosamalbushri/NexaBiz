@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/core/navigation/app_route_param_parser.dart';
-
 import '../../app/localization/app_localizations.dart';
 import '../../app/sales/inventory_sale_product_catalog_adapter.dart';
 import '../../core/modules/app_module.dart';
@@ -24,21 +22,17 @@ import 'inventory_module_settings.dart';
 import 'inventory_module_setup.dart';
 import '../../core/import_engine/presentation/pages/universal_import_page.dart';
 
-import '../../core/tenancy/tenant_context.dart';
-import '../authentication/presentation/providers/auth_providers.dart';
 import 'permissions/inventory_permission_package.dart';
+import '../../core/navigation/app_route_param_parser.dart';
 import '../../core/presentation/providers/core_providers.dart';
 import 'stock_movements/presentation/providers/stock_movements_providers.dart';
-import 'products/import/product_import_profile.dart';
 import 'products/presentation/pages/product_barcode_scanner_page.dart';
 import 'products/presentation/pages/product_form_page.dart';
 import 'products/presentation/pages/products_barcode_page.dart';
 import 'products/presentation/pages/products_home_page.dart';
-import 'master_data/presentation/pages/inventory_master_data_page.dart';
 import 'shared/presentation/pages/inventory_master_settings_page.dart';
 import 'products/presentation/pages/products_list_page.dart';
 
-import 'products/presentation/pages/products_settings_page.dart';
 import 'products/presentation/providers/product_providers.dart';
 import 'shared/presentation/pages/inventory_home_page.dart';
 import 'shared/presentation/pages/inventory_routes.dart';
@@ -47,7 +41,6 @@ import 'stock_count/presentation/pages/inventory_import_page.dart';
 import 'stock_count/presentation/pages/inventory_reports_page.dart';
 import 'stock_count/presentation/pages/inventory_search_page.dart';
 import 'stock_count/presentation/pages/stock_count_home_page.dart';
-import 'stock_count/presentation/pages/stock_count_settings_page.dart';
 
 import 'stock_movements/presentation/pages/stock_movements_page.dart';
 import 'stock_movements/presentation/pages/stock_issue_details_page.dart';

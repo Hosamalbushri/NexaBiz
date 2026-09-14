@@ -19,12 +19,12 @@ class MockLookupPort implements SetupAccountLookupPort {
   final Map<String, SetupAccountData> _accounts = {};
 
   void addAccount(SetupAccountData account) {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
   }
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return _accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return _accounts[accountId];
   }
 
   @override
@@ -112,7 +112,7 @@ class MockCompanyInitRepo implements CompanyInitializationRepository {
 class MockAccountRepositoryForSafetyGate implements AccountRepository {
   final Map<String, Account> _store = {};
 
-  void add(Account account) => _store[account.uuid] = account;
+  void add(Account account) => _store[account.id] = account;
 
   @override
   Future<Account?> getByUuid(String uuid) async => _store[uuid];
@@ -143,10 +143,10 @@ class DummyUsageAnalyzer implements AccountUsageAnalyzer {
   @override
   Future<AccountUsageRecord> analyzeAccountUsage({
     required String companyId,
-    required String accountUuid,
+    required String accountId,
   }) async {
     return AccountUsageRecord(
-      accountUuid: accountUuid,
+      accountId: accountId,
       status: AccountUsageStatus.neverUsed,
       postedTransactionCount: 0,
       draftTransactionCount: 0,
@@ -187,8 +187,7 @@ void main() {
       () async {
         // 1. Seed COA with valid Cash Register account
         final cashRegisterAccount = Account(
-          id: 101,
-          uuid: 'acc-cash-reg-01',
+          id: 'acc-cash-reg-01',
           accountCode: '101001',
           name: 'صندوق الفرع الرئيسي',
           accountType: AccountType.asset,
@@ -253,8 +252,7 @@ void main() {
         await resolver.bindAccount(
           companyId: 'companyA',
           requirement: req,
-          accountUuid:
-              persistedConfig.bindingTargets[AccountRole.cash]!.primaryUuid!,
+          accountId: persistedConfig.bindingTargets[AccountRole.cash]!.primaryUuid!,
         );
 
         // 5. Create test transaction and resolve account role
@@ -273,8 +271,7 @@ void main() {
       'Type Compatibility Protection: Prevents saving incompatible account type (e.g. Liability bound to Cash role)',
       () async {
         final liabilityAccount = Account(
-          id: 201,
-          uuid: 'acc-payable-01',
+          id: 'acc-payable-01',
           accountCode: '211001',
           name: 'حساب الموردين',
           accountType: AccountType.liability,

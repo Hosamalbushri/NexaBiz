@@ -11,7 +11,7 @@ import 'package:stock_count/modules/customers/directory/domain/entities/customer
 import 'package:stock_count/modules/customers/directory/domain/entities/customer_status.dart';
 import 'package:stock_count/modules/customers/directory/domain/models/customer_exception.dart';
 import 'package:stock_count/modules/customers/directory/domain/usecases/customer_usecases.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 class _AllowAllPermissionGuard implements PermissionGuard {
@@ -33,7 +33,7 @@ void main() {
 
   group('CU-03 — Customer CRUD & Persistence Architecture', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late CustomerRepositoryImpl repoCompanyA;
     late CustomerRepositoryImpl repoCompanyB;
@@ -47,7 +47,7 @@ void main() {
       }
       final box = await Hive.openBox<SyncOperation>('sync_queue_cu03');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
       repoCompanyA = CustomerRepositoryImpl(
         db,
         syncQueue: queue,
@@ -85,7 +85,7 @@ void main() {
         );
 
         expect(customer.id, greaterThan(0));
-        expect(customer.uuid, isNotEmpty);
+        expect(customer.id, isNotEmpty);
         expect(customer.companyId, equals('comp_A'));
         expect(customer.customerCode, equals('12210010'));
         expect(customer.name, equals('عميل إنشاء جديد'));
@@ -95,7 +95,7 @@ void main() {
         expect(customer.isActive, isTrue);
 
         final ops = await queue.all();
-        expect(ops.where((op) => op.entityId == customer.uuid), isNotEmpty);
+        expect(ops.where((op) => op.entityId == customer.id), isNotEmpty);
       },
     );
 
@@ -230,7 +230,7 @@ void main() {
 
         // Re-open memory database / simulate restart (db connection reset)
         // Note: for memory db, we re-instantiate repo with fresh memory DB
-        final freshDb = CustomersDatabase.memory();
+        final freshDb = NexabizDatabase.memory();
         final freshRepo = CustomerRepositoryImpl(
           freshDb,
           syncQueue: queue,

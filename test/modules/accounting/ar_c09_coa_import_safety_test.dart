@@ -115,8 +115,7 @@ void main() {
         );
 
         accCash = createTestCoaAccount(
-          id: 1,
-          uuid: 'acc-cash-01',
+          id: 'acc-cash-01',
           code: '101001',
           name: 'الصندوق الرئيسي',
           accountType: AccountType.asset,
@@ -124,8 +123,7 @@ void main() {
         );
 
         accInventory = createTestCoaAccount(
-          id: 2,
-          uuid: 'acc-inv-01',
+          id: 'acc-inv-01',
           code: '102001',
           name: 'تقييم المخزون',
           accountType: AccountType.asset,
@@ -133,8 +131,7 @@ void main() {
         );
 
         accSales = createTestCoaAccount(
-          id: 3,
-          uuid: 'acc-sales-01',
+          id: 'acc-sales-01',
           code: '401001',
           name: 'إيرادات المبيعات',
           accountType: AccountType.revenue,
@@ -142,8 +139,7 @@ void main() {
         );
 
         accCogs = createTestCoaAccount(
-          id: 4,
-          uuid: 'acc-cogs-01',
+          id: 'acc-cogs-01',
           code: '501001',
           name: 'تكلفة المبيعات',
           accountType: AccountType.expense,
@@ -168,8 +164,7 @@ void main() {
 
       test('1. Valid Additive COA Import', () async {
         final accNewBank = createTestCoaAccount(
-          id: 5,
-          uuid: 'acc-bank-01',
+          id: 'acc-bank-01',
           code: '101002',
           name: 'حساب البنك الرئيسي',
           accountType: AccountType.asset,
@@ -197,8 +192,7 @@ void main() {
         '2. Wrong Account Type Mutation Rejection (Asset -> Liability)',
         () async {
           final mutatedInv = createTestCoaAccount(
-            id: 2,
-            uuid: 'acc-inv-01',
+            id: 'acc-inv-01',
             code: '102001',
             name: 'تقييم المخزون',
             accountType: AccountType.liability, // Type mutation
@@ -257,8 +251,7 @@ void main() {
 
       test('5. Parent Group Changed / Scope Invalidation Rejection', () async {
         final parentGroup = createTestCoaAccount(
-          id: 10,
-          uuid: 'parent-group-01',
+          id: 'parent-group-01',
           code: '100000',
           name: 'مجموعة الأصول',
           accountType: AccountType.asset,
@@ -267,8 +260,7 @@ void main() {
         );
 
         final childAcc = createTestCoaAccount(
-          id: 1,
-          uuid: 'acc-cash-01',
+          id: 'acc-cash-01',
           code: '101001',
           name: 'الصندوق الرئيسي',
           accountType: AccountType.asset,
@@ -306,8 +298,7 @@ void main() {
 
       test('7. UUID Replacement for Historical Account Rejection', () async {
         final replacedInv = createTestCoaAccount(
-          id: 99,
-          uuid: 'new-uuid-replacement-999',
+          id: 'new-uuid-replacement-999',
           code: '102001', // Same code but new UUID
           name: 'تقييم المخزون بديل',
           accountType: AccountType.asset,
@@ -333,8 +324,7 @@ void main() {
 
       test('8. Configured Account Deactivation Rejection', () async {
         final inactiveCash = Account(
-          id: 1,
-          uuid: 'acc-cash-01',
+          id: 'acc-cash-01',
           accountCode: '101001',
           name: 'الصندوق الرئيسي المعطل',
           accountType: AccountType.asset,
@@ -360,8 +350,7 @@ void main() {
 
       test('9. Cross-Company Account Import Contamination Rejection', () async {
         final compBAcc = createTestCoaAccount(
-          id: 99,
-          uuid: 'acc-compB-cash',
+          id: 'acc-compB-cash',
           code: '101099',
           name: 'صندوق شركة B',
           accountType: AccountType.asset,

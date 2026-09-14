@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -20,7 +20,7 @@ import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_t
 import 'package:stock_count/core/permissions/permission_guard.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -30,7 +30,7 @@ void main() {
   late StockTransferRepositoryImpl transferRepo;
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(db: db);
     postingEngine = PostingEngineImpl(db, costLayerService);
     validationService = StockValidationServiceImpl(db);
@@ -52,13 +52,13 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            id: const Value(1),
+            id: const Value('00000000-0000-4000-8000-000000000001'),
             uuid: const Value('00000000-0000-4000-8000-000000000001'),
             itemCode: const Value('ITEM-001'),
             name: const Value('Test Item 1'),
             packSize: const Value(1),
             price: const Value(100.0),
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(50.0),
             companyId: const Value('00000000-0000-4000-8000-000000000001'),
             createdAt: Value(now),
@@ -87,7 +87,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineId,
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-001',
               itemName: 'Test Item 1',
@@ -164,7 +164,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: rcptLineId,
-              movementUuid: rcptId,
+              movementId: rcptId,
               movementType: 'receipt',
               itemCode: 'ITEM-001',
               itemName: 'Test Item 1',
@@ -194,7 +194,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: issueLineId,
-              movementUuid: issueId,
+              movementId: issueId,
               movementType: 'issue',
               itemCode: 'ITEM-001',
               itemName: 'Test Item 1',
@@ -258,7 +258,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: rcptId,
+              movementId: rcptId,
               movementType: 'receipt',
               itemCode: 'ITEM-001',
               itemName: 'Test Item 1',
@@ -371,7 +371,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineId,
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-001',
               itemName: 'Test Item 1',
@@ -441,7 +441,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineId,
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-001',
               itemName: 'Test Item 1',

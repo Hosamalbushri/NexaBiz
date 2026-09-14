@@ -28,12 +28,11 @@ class FakeJournalRepository implements JournalRepository {
       throw Exception('Database write failed (Transaction Rollback simulated)');
     }
 
-    final entryUuid = draft.uuid ?? 'jnl-fake-uuid';
+    final entryId = draft.uuid ?? 'jnl-fake-uuid';
     final lines = draft.lines.map((l) => JournalLine(
-      id: 1,
-      uuid: l.uuid ?? 'line-uuid',
-      entryUuid: entryUuid,
-      accountUuid: l.accountUuid,
+      id: l.uuid ?? 'line-uuid',
+      entryId: entryId,
+      accountId: l.accountId,
       debit: l.debit,
       credit: l.credit,
       currencyCode: l.currencyCode,
@@ -46,7 +45,7 @@ class FakeJournalRepository implements JournalRepository {
 
     final entry = JournalEntry(
       id: _entries.length + 1,
-      uuid: entryUuid,
+      uuid: entryId,
       entryDate: draft.entryDate,
       voucherNumber: draft.voucherNumber,
       voucherType: draft.voucherType,
@@ -60,7 +59,7 @@ class FakeJournalRepository implements JournalRepository {
       sourceId: draft.sourceId,
     );
 
-    _entries[entryUuid] = entry;
+    _entries[entryId] = entry;
     return entry;
   }
 
@@ -183,8 +182,7 @@ void main() {
   final accRevUuid = 'acc-rev-001';
 
   final accCash = Account(
-    id: 1,
-    uuid: accCashUuid,
+    id: accCashUuid,
     accountCode: '1101',
     name: 'Cash Account',
     accountType: AccountType.asset,
@@ -199,8 +197,7 @@ void main() {
   );
 
   final accRev = Account(
-    id: 2,
-    uuid: accRevUuid,
+    id: accRevUuid,
     accountCode: '4101',
     name: 'Revenue Account',
     accountType: AccountType.revenue,
@@ -253,13 +250,13 @@ void main() {
       voucherType: 'Sale',
       lines: [
         AccountingEffectLine(
-          accountUuid: accCashUuid,
+          accountId: accCashUuid,
           debit: 100.0,
           credit: 0.0,
           currencyCode: 'USD',
         ),
         AccountingEffectLine(
-          accountUuid: accRevUuid,
+          accountId: accRevUuid,
           debit: 0.0,
           credit: 100.0,
           currencyCode: 'USD',

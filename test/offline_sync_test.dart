@@ -8,11 +8,11 @@ import 'package:hive/hive.dart';
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/inventory/data/adapters/inventory_item_adapter.dart';
-import 'package:stock_count/modules/inventory/data/inventory_hive.dart';
-import 'package:stock_count/modules/inventory/data/repositories/inventory_repository_impl.dart';
-import 'package:stock_count/modules/inventory/data/sync/inventory_sync_handlers.dart';
-import 'package:stock_count/modules/inventory/domain/entities/inventory_item.dart';
+import 'package:stock_count/modules/inventory/shared/data/adapters/inventory_item_adapter.dart';
+import 'package:stock_count/modules/inventory/shared/data/inventory_hive.dart';
+import 'package:stock_count/modules/inventory/stock_count/data/repositories/inventory_repository_impl.dart';
+import 'package:stock_count/modules/inventory/shared/data/sync/inventory_sync_handlers.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/inventory_item.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

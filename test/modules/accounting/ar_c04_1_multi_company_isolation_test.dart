@@ -13,7 +13,7 @@ class MemoryAccountRepository implements AccountRepository {
   final Map<String, Account> _accounts = {};
 
   void addAccount(Account account) {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
   }
 
   @override
@@ -49,7 +49,7 @@ class MemoryAccountRepository implements AccountRepository {
 
   @override
   Future<Account> save(Account account) async {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
     return account;
   }
 
@@ -89,7 +89,7 @@ class FakeAccountValidationService implements AccountValidationService {
 
   @override
   Future<AccountValidationResult> validateAccountUuid(
-    String accountUuid,
+    String accountId,
   ) async {
     return const AccountValidationResult(isValid: true);
   }
@@ -103,7 +103,7 @@ class FakeAccountValidationService implements AccountValidationService {
   }
 
   @override
-  Future<void> assertCanPost(String accountUuid) async {}
+  Future<void> assertCanPost(String accountId) async {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -117,8 +117,7 @@ void main() {
     final now = DateTime.now();
 
     final compAAccount = Account(
-      id: 101,
-      uuid: 'comp_a_rev_uuid',
+      id: 'comp_a_rev_uuid',
       accountCode: '4101',
       name: 'إيرادات مبيعات شركة أ',
       companyId: 'company_A',
@@ -133,8 +132,7 @@ void main() {
     );
 
     final compBAccount = Account(
-      id: 201,
-      uuid: 'comp_b_rev_uuid',
+      id: 'comp_b_rev_uuid',
       accountCode: '4101',
       name: 'إيرادات مبيعات شركة ب',
       companyId: 'company_B',
@@ -171,7 +169,7 @@ void main() {
           documentType: 'sale',
         );
         expect(
-          mapping.getRole(AccountRole.revenue)?.accountUuid,
+          mapping.getRole(AccountRole.revenue)?.accountId,
           equals('comp_a_rev_uuid'),
         );
         expect(
@@ -195,7 +193,7 @@ void main() {
 
       final mapping = await resolverB.resolveForDocument(documentType: 'sale');
       expect(
-        mapping.getRole(AccountRole.revenue)?.accountUuid,
+        mapping.getRole(AccountRole.revenue)?.accountId,
         equals('comp_b_rev_uuid'),
       );
       expect(

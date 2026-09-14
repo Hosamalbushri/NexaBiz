@@ -135,13 +135,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: 'acc-ar-001',
+            accountId: 'acc-ar-001',
             debit: 150.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-rev-001',
+            accountId: 'acc-rev-001',
             debit: 0.0,
             credit: 150.0,
             currencyCode: 'USD',
@@ -161,13 +161,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: 'acc-ar-001',
+            accountId: 'acc-ar-001',
             debit: 200.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-rev-001',
+            accountId: 'acc-rev-001',
             debit: 0.0,
             credit: 150.0,
             currencyCode: 'USD',
@@ -181,7 +181,7 @@ void main() {
     test('rejects negative debit or credit in effect line', () {
       expect(
         () => AccountingEffectLine(
-          accountUuid: 'acc-001',
+          accountId: 'acc-001',
           debit: -50.0,
           credit: 0.0,
           currencyCode: 'USD',
@@ -211,13 +211,13 @@ void main() {
         voucherType: 'Receipt',
         lines: [
           AccountingEffectLine(
-            accountUuid: 'acc-cash-001',
+            accountId: 'acc-cash-001',
             debit: 500.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-ar-001',
+            accountId: 'acc-ar-001',
             debit: 0.0,
             credit: 500.0,
             currencyCode: 'USD',
@@ -246,13 +246,13 @@ void main() {
         voucherType: 'Receipt',
         lines: [
           AccountingEffectLine(
-            accountUuid: 'acc-cash-001',
+            accountId: 'acc-cash-001',
             debit: 500.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-ar-001',
+            accountId: 'acc-ar-001',
             debit: 0.0,
             credit: 400.0,
             currencyCode: 'USD',

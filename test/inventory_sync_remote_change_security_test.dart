@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/data/sync/inventory_sync_handlers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
@@ -8,13 +8,13 @@ import 'package:stock_count/core/network/remote_sync_api.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late InMemoryRemoteSyncApi remoteApi;
   const currentCompany = 'tenant-sync-company-01';
   const otherCompany = 'tenant-sync-company-02';
 
   setUp(() {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     remoteApi = InMemoryRemoteSyncApi();
   });
 
@@ -92,7 +92,7 @@ void main() {
         // Verify lines persisted
         final lines = await (db.select(
           db.stockMovementLines,
-        )..where((t) => t.movementUuid.equals(receiptUuid))).get();
+        )..where((t) => t.movementId.equals(receiptUuid))).get();
 
         expect(lines.length, equals(1));
         expect(lines.first.itemCode, equals('ITEM-R1'));
@@ -170,7 +170,7 @@ void main() {
 
       var lines = await (db.select(
         db.stockMovementLines,
-      )..where((t) => t.movementUuid.equals(issueUuid))).get();
+      )..where((t) => t.movementId.equals(issueUuid))).get();
       expect(lines.length, equals(1));
       expect(lines.first.quantity, equals(50.0));
 
@@ -214,7 +214,7 @@ void main() {
 
       lines = await (db.select(
         db.stockMovementLines,
-      )..where((t) => t.movementUuid.equals(issueUuid))).get();
+      )..where((t) => t.movementId.equals(issueUuid))).get();
       expect(lines.length, equals(1));
       expect(lines.first.quantity, equals(50.0));
     });

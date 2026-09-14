@@ -221,7 +221,7 @@ void main() {
             throw const CrossCompanyAccountBindingException(
               activeCompanyId: activeCompanyId,
               accountCompanyId: staleAccountCompanyId,
-              accountUuid: staleAccountUuid,
+              accountId: staleAccountUuid,
             );
           }
         }, throwsA(isA<CrossCompanyAccountBindingException>()));

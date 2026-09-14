@@ -39,7 +39,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouse1),
+            id: const Value(warehouse1),
             warehouseCode: const Value('WH01'),
             name: const Value('Main Warehouse'),
             companyId: const Value(companyA),
@@ -54,7 +54,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouse2),
+            id: const Value(warehouse2),
             warehouseCode: const Value('WH02'),
             name: const Value('Secondary Warehouse'),
             companyId: const Value(companyA),
@@ -69,13 +69,13 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            uuid: Value(generateUuidV4()),
+            id: Value(generateUuidV4()),
             itemCode: const Value(itemA),
             name: const Value('Widget A (Product Override LIFO)'),
             unit: const Value('PCS'),
             costValuationMethod: const Value('lifo'),
             companyId: const Value(companyA),
-            onHandQty: const Value(0.0),
+            
             createdAt: Value(now),
             updatedAt: Value(now),
           ),
@@ -85,12 +85,12 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            uuid: Value(generateUuidV4()),
+            id: Value(generateUuidV4()),
             itemCode: const Value(itemB),
             name: const Value('Widget B (Standard)'),
             unit: const Value('PCS'),
             companyId: const Value(companyA),
-            onHandQty: const Value(0.0),
+            
             createdAt: Value(now),
             updatedAt: Value(now),
           ),
@@ -156,7 +156,7 @@ void main() {
         CostLayer(
           id: generateUuidV4(),
           itemCode: itemA,
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: docDate.subtract(const Duration(days: 2)),
           receivedQty: 10.0,
@@ -171,7 +171,7 @@ void main() {
         CostLayer(
           id: generateUuidV4(),
           itemCode: itemA,
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: docDate.subtract(const Duration(days: 1)),
           receivedQty: 10.0,
@@ -205,7 +205,7 @@ void main() {
         CostLayer(
           id: layerId,
           itemCode: itemA,
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: docDate,
           receivedQty: 10.0,

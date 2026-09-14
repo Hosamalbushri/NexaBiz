@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart' hide isNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_returns_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/stock_validation_service_impl.dart';
@@ -14,7 +13,7 @@ import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_t
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerServiceCompA;
   late StockReturnsRepositoryImpl stockReturnsRepoCompA;
   late StockTransferRepositoryImpl stockTransferRepoCompA;
@@ -25,7 +24,7 @@ void main() {
   const companyB = 'COMPANY_BETA';
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
 
     costLayerServiceCompA = CostLayerServiceImpl(
       db: db,
@@ -39,7 +38,6 @@ void main() {
 
     stockTransferRepoCompA = StockTransferRepositoryImpl(
       db: db,
-      costLayerService: costLayerServiceCompA,
       readCompanyId: () => companyA,
     );
 
@@ -83,7 +81,7 @@ void main() {
             .into(db.inventoryCostLayers)
             .insert(
               InventoryCostLayersCompanion(
-                uuid: const Value('22222222-2222-2222-2222-222222222222'),
+                id: const Value('22222222-2222-2222-2222-222222222222'),
                 itemCode: const Value('ITEM-100'),
                 warehouseId: const Value('wh-main'),
                 movementUuid: const Value(
@@ -95,6 +93,8 @@ void main() {
                 remainingQty: const Value(200),
                 unitCost: const Value(20),
                 totalCost: const Value(4000),
+                inventoryCurrencyId: const Value('YER'),
+                documentCurrencyId: const Value('YER'),
                 closed: const Value(0),
                 createdAt: Value(now.millisecondsSinceEpoch),
                 updatedAt: Value(now.millisecondsSinceEpoch),
@@ -106,7 +106,7 @@ void main() {
             .into(db.inventoryCostLayers)
             .insert(
               InventoryCostLayersCompanion(
-                uuid: const Value('33333333-3333-3333-3333-333333333333'),
+                id: const Value('33333333-3333-3333-3333-333333333333'),
                 itemCode: const Value('ITEM-100'),
                 warehouseId: const Value('wh-main'),
                 movementUuid: const Value(
@@ -118,6 +118,8 @@ void main() {
                 remainingQty: const Value(300),
                 unitCost: const Value(30),
                 totalCost: const Value(9000),
+                inventoryCurrencyId: const Value('YER'),
+                documentCurrencyId: const Value('YER'),
                 closed: const Value(0),
                 createdAt: Value(now.millisecondsSinceEpoch),
                 updatedAt: Value(now.millisecondsSinceEpoch),
@@ -183,7 +185,7 @@ void main() {
             .into(db.stockReturns)
             .insert(
               StockReturnsCompanion(
-                uuid: const Value('22222222-2222-2222-2222-222222222222'),
+                id: const Value('22222222-2222-2222-2222-222222222222'),
                 returnNumber: const Value('RET-002'),
                 warehouse: const Value('wh-1'),
                 returnType: const Value('sales_return'),
@@ -199,7 +201,7 @@ void main() {
             .into(db.stockReturns)
             .insert(
               StockReturnsCompanion(
-                uuid: const Value('33333333-3333-3333-3333-333333333333'),
+                id: const Value('33333333-3333-3333-3333-333333333333'),
                 returnNumber: const Value('RET-003'),
                 warehouse: const Value('wh-1'),
                 returnType: const Value('sales_return'),
@@ -251,7 +253,7 @@ void main() {
             .into(db.stockTransfers)
             .insert(
               StockTransfersCompanion(
-                uuid: const Value('22222222-2222-2222-2222-222222222222'),
+                id: const Value('22222222-2222-2222-2222-222222222222'),
                 transferNumber: const Value('TR-002'),
                 fromWarehouseId: const Value('wh-1'),
                 toWarehouseId: const Value('wh-2'),
@@ -267,7 +269,7 @@ void main() {
             .into(db.stockTransfers)
             .insert(
               StockTransfersCompanion(
-                uuid: const Value('33333333-3333-3333-3333-333333333333'),
+                id: const Value('33333333-3333-3333-3333-333333333333'),
                 transferNumber: const Value('TR-003'),
                 fromWarehouseId: const Value('wh-1'),
                 toWarehouseId: const Value('wh-2'),
@@ -320,7 +322,7 @@ void main() {
             .into(db.warehouses)
             .insert(
               WarehousesCompanion(
-                uuid: const Value('22222222-2222-2222-2222-222222222222'),
+                id: const Value('22222222-2222-2222-2222-222222222222'),
                 code: const Value('WH-B'),
                 name: const Value('Warehouse B'),
                 isDefault: const Value(false),
@@ -328,8 +330,8 @@ void main() {
                 address: const Value('Loc B'),
                 phone: const Value('456'),
                 managerName: const Value('Manager B'),
-                createdAt: Value(now.millisecondsSinceEpoch),
-                updatedAt: Value(now.millisecondsSinceEpoch),
+                createdAt: Value(now),
+                updatedAt: Value(now),
                 companyId: const Value(companyB),
               ),
             );
@@ -338,7 +340,7 @@ void main() {
             .into(db.warehouses)
             .insert(
               WarehousesCompanion(
-                uuid: const Value('33333333-3333-3333-3333-333333333333'),
+                id: const Value('33333333-3333-3333-3333-333333333333'),
                 code: const Value('WH-NULL'),
                 name: const Value('Warehouse NULL'),
                 isDefault: const Value(false),
@@ -346,9 +348,9 @@ void main() {
                 address: const Value('Loc NULL'),
                 phone: const Value('789'),
                 managerName: const Value('Manager NULL'),
-                createdAt: Value(now.millisecondsSinceEpoch),
-                updatedAt: Value(now.millisecondsSinceEpoch),
-                companyId: const Value(null),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+                companyId: const Value('COMPANY_OTHER'),
               ),
             );
 
@@ -368,7 +370,7 @@ void main() {
             .into(db.inventoryCostLayers)
             .insert(
               InventoryCostLayersCompanion(
-                uuid: const Value('11111111-1111-1111-1111-111111111111'),
+                id: const Value('11111111-1111-1111-1111-111111111111'),
                 itemCode: const Value('ITEM-VAL'),
                 warehouseId: const Value('wh-1'),
                 movementUuid: const Value(
@@ -380,6 +382,8 @@ void main() {
                 remainingQty: const Value(50),
                 unitCost: const Value(10),
                 totalCost: const Value(500),
+                inventoryCurrencyId: const Value('YER'),
+                documentCurrencyId: const Value('YER'),
                 closed: const Value(0),
                 createdAt: Value(now.millisecondsSinceEpoch),
                 updatedAt: Value(now.millisecondsSinceEpoch),
@@ -392,7 +396,7 @@ void main() {
             .into(db.inventoryCostLayers)
             .insert(
               InventoryCostLayersCompanion(
-                uuid: const Value('22222222-2222-2222-2222-222222222222'),
+                id: const Value('22222222-2222-2222-2222-222222222222'),
                 itemCode: const Value('ITEM-VAL'),
                 warehouseId: const Value('wh-1'),
                 movementUuid: const Value(
@@ -404,6 +408,8 @@ void main() {
                 remainingQty: const Value(100),
                 unitCost: const Value(10),
                 totalCost: const Value(1000),
+                inventoryCurrencyId: const Value('YER'),
+                documentCurrencyId: const Value('YER'),
                 closed: const Value(0),
                 createdAt: Value(now.millisecondsSinceEpoch),
                 updatedAt: Value(now.millisecondsSinceEpoch),
@@ -416,7 +422,7 @@ void main() {
             .into(db.inventoryCostLayers)
             .insert(
               InventoryCostLayersCompanion(
-                uuid: const Value('33333333-3333-3333-3333-333333333333'),
+                id: const Value('33333333-3333-3333-3333-333333333333'),
                 itemCode: const Value('ITEM-VAL'),
                 warehouseId: const Value('wh-1'),
                 movementUuid: const Value(
@@ -428,6 +434,8 @@ void main() {
                 remainingQty: const Value(200),
                 unitCost: const Value(10),
                 totalCost: const Value(2000),
+                inventoryCurrencyId: const Value('YER'),
+                documentCurrencyId: const Value('YER'),
                 closed: const Value(0),
                 createdAt: Value(now.millisecondsSinceEpoch),
                 updatedAt: Value(now.millisecondsSinceEpoch),

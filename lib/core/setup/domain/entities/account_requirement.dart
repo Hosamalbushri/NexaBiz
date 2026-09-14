@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../domain/entities/account_role.dart';
 import '../../../domain/ports/setup_account_lookup_port.dart';
-import 'account_binding_mode.dart';
 
 /// Declarative requirement issued by a business package requesting an account binding.
 ///

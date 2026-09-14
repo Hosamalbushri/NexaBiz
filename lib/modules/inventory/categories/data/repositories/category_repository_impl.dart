@@ -6,8 +6,7 @@ import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 
 class CategoryRepositoryImpl implements CategoryRepository {
-  CategoryRepositoryImpl(this._db, {String Function()? readCompanyId})
-      : _readCompanyId = readCompanyId;
+  CategoryRepositoryImpl(this._db, {this._readCompanyId});
 
   final NexabizDatabase _db;
   final String Function()? _readCompanyId;

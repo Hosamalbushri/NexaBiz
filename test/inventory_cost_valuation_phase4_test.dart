@@ -1,7 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -13,14 +13,14 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/po
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl service;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
   late String activeCompanyId;
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     activeCompanyId = 'company_A';
     service = CostLayerServiceImpl(
       db: db,
@@ -51,7 +51,7 @@ void main() {
           CostLayer(
             id: l1,
             itemCode: 'ITEM-FIFO',
-            movementUuid: r1,
+            movementId: r1,
             movementType: 'stock_receipt',
             receivedDate: t1,
             receivedQty: 10,
@@ -66,7 +66,7 @@ void main() {
           CostLayer(
             id: l2,
             itemCode: 'ITEM-FIFO',
-            movementUuid: r2,
+            movementId: r2,
             movementType: 'stock_receipt',
             receivedDate: t2,
             receivedQty: 10,
@@ -113,7 +113,7 @@ void main() {
           CostLayer(
             id: l1,
             itemCode: 'ITEM-LIFO',
-            movementUuid: r1,
+            movementId: r1,
             movementType: 'stock_receipt',
             receivedDate: t1,
             receivedQty: 10,
@@ -128,7 +128,7 @@ void main() {
           CostLayer(
             id: l2,
             itemCode: 'ITEM-LIFO',
-            movementUuid: r2,
+            movementId: r2,
             movementType: 'stock_receipt',
             receivedDate: t2,
             receivedQty: 10,
@@ -166,7 +166,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-WA-3',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 10,
@@ -181,7 +181,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-WA-3',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 2),
             receivedQty: 10,
@@ -219,7 +219,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-PARTIAL',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 10,
@@ -253,7 +253,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-CLOSE',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 10,
@@ -286,7 +286,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-MULTI',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 10,
@@ -301,7 +301,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-MULTI',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 2),
             receivedQty: 5,
@@ -335,7 +335,7 @@ void main() {
           CostLayer(
             id: generateUuidV4(),
             itemCode: 'ITEM-NEG',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 5,
@@ -369,7 +369,7 @@ void main() {
             id: generateUuidV4(),
             itemCode: 'ITEM-TR',
             warehouseId: 'WH-SOURCE',
-            movementUuid: generateUuidV4(),
+            movementId: generateUuidV4(),
             movementType: 'stock_receipt',
             receivedDate: DateTime.utc(2026, 1, 1),
             receivedQty: 10,
@@ -468,7 +468,7 @@ void main() {
           id: generateUuidV4(),
           itemCode: 'ITEM-MWH',
           warehouseId: 'WH-A',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: DateTime.utc(2026, 1, 1),
           receivedQty: 10,
@@ -484,7 +484,7 @@ void main() {
           id: generateUuidV4(),
           itemCode: 'ITEM-MWH',
           warehouseId: 'WH-B',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: DateTime.utc(2026, 1, 1),
           receivedQty: 10,
@@ -514,7 +514,7 @@ void main() {
         CostLayer(
           id: generateUuidV4(),
           itemCode: 'ITEM-COMP',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: DateTime.utc(2026, 1, 1),
           receivedQty: 10,
@@ -534,7 +534,7 @@ void main() {
         CostLayer(
           id: generateUuidV4(),
           itemCode: 'ITEM-COMP',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: DateTime.utc(2026, 1, 1),
           receivedQty: 10,
@@ -559,7 +559,7 @@ void main() {
         CostLayer(
           id: generateUuidV4(),
           itemCode: 'ITEM-REV-ALL',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'stock_receipt',
           receivedDate: DateTime.utc(2026, 1, 1),
           receivedQty: 10,

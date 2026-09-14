@@ -295,6 +295,7 @@ class JournalRepositoryImpl implements JournalRepository {
               (t) =>
                   t.sourceType.equals(sourceType.trim()) &
                   t.sourceId.equals(sourceId.trim()) &
+                  t.isPosted.equals(true) &
                   _scoped(t),
             ))
             .get();
@@ -362,24 +363,34 @@ class JournalRepositoryImpl implements JournalRepository {
     if (trimmed.isEmpty) {
       return;
     }
-    final existing = await getByUuid(trimmed);
-    if (existing == null) {
+    final row = await (_db.select(
+      _db.journalEntries,
+    )..where((t) => t.id.equals(trimmed) & _tenantScoped(t))).getSingleOrNull();
+    if (row == null) {
       return;
     }
-    if (existing.isPosted) {
-      return;
-    }
+    final existing = _mapEntry(row, await _linesFor(row.id));
     await _tombstoneUuid(trimmed, existing.version);
   }
 
   Future<void> _tombstoneUuid(String id, int version) async {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     final nextVersion = version + 1;
+    final row = await (_db.select(_db.journalEntries)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    final tombstoneVoucher =
+        row != null ? '${row.voucherNumber}_DEL_$now' : null;
     await (_db.update(
       _db.journalEntries,
-    )..where((t) => t.id.equals(id) & _scoped(t))).write(
+    )..where((t) => t.id.equals(id) & _tenantScoped(t))).write(
       JournalEntriesCompanion(
         deletedAt: Value(now),
+        voucherNumber: tombstoneVoucher != null
+            ? Value(tombstoneVoucher)
+            : const Value.absent(),
+        sourceType: const Value(null),
+        sourceId: const Value(null),
         updatedAt: Value(now),
         syncStatus: const Value('pending'),
         version: Value(nextVersion),
@@ -526,6 +537,15 @@ class JournalRepositoryImpl implements JournalRepository {
     }
     if (isPosted != null) {
       query.where(_db.journalEntries.isPosted.equals(isPosted));
+    }
+    if (after != null) {
+      query.where(
+        _db.journalEntries.entryDate.isBiggerThanValue(after.entryDateMs) |
+            (_db.journalEntries.entryDate.equals(after.entryDateMs) &
+                (_db.journalLines.sortOrder.isBiggerThanValue(after.sortOrder) |
+                    (_db.journalLines.sortOrder.equals(after.sortOrder) &
+                        _db.journalLines.id.isBiggerThanValue(after.lineId)))),
+      );
     }
 
     query.orderBy([
@@ -1122,7 +1142,6 @@ class JournalRepositoryImpl implements JournalRepository {
             AND UPPER(jl.currency_code) != ?
             AND a.account_type IN ('asset', 'liability')
             AND a.is_group = 0
-            AND a.deleted_at IS NULL
           GROUP BY jl.account_id, UPPER(jl.currency_code)
           HAVING ABS(SUM(jl.debit - jl.credit)) > 0.0001
           ''',
@@ -1168,7 +1187,6 @@ class JournalRepositoryImpl implements JournalRepository {
       WHERE je.deleted_at IS NULL
         AND je.company_id = ?
         AND a.is_group = 0
-        AND a.deleted_at IS NULL
       ''');
     if (fromDate != null) {
       sql.write('AND je.entry_date >= ? ');
@@ -1233,7 +1251,6 @@ class JournalRepositoryImpl implements JournalRepository {
       INNER JOIN accounts a ON a.id = jl.account_id
       WHERE je.deleted_at IS NULL
         AND je.company_id = ?
-        AND a.deleted_at IS NULL
       ''');
     if (fromDate != null) {
       sql.write('AND je.entry_date >= ? ');

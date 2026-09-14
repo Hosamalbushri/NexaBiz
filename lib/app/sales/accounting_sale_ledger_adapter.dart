@@ -4,7 +4,6 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
 import 'package:stock_count/core/utils/journal_money.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
@@ -18,14 +17,11 @@ import 'package:stock_count/modules/system_setup/domain/repositories/company_ini
 /// App adapter: sale save/post → local journal.
 class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
   AccountingSaleLedgerAdapter({
-    required JournalPostingService posting,
-    required AccountRepository accounts,
-    CompanyInitializationRepository? initRepository,
-    WarehouseAccountingBindingRepository? bindingRepo,
-  }) : _posting = posting,
-       _accounts = accounts,
-       _initRepository = initRepository,
-       _bindingRepo = bindingRepo;
+    required this._posting,
+    required this._accounts,
+    this._initRepository,
+    this._bindingRepo,
+  });
 
   final JournalPostingService _posting;
   final AccountRepository _accounts;
@@ -213,10 +209,11 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     required AccountRole role,
     String? warehouseId,
   }) async {
+    final repo = _bindingRepo;
     if (warehouseId != null &&
         warehouseId.trim().isNotEmpty &&
-        _bindingRepo != null) {
-      final binding = await _bindingRepo!.getBindingForWarehouse(
+        repo != null) {
+      final binding = await repo.getBindingForWarehouse(
         warehouseId.trim(),
       );
       if (binding != null) {
@@ -249,6 +246,22 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
           await _accounts.getByUuid(configuredKey) ??
           await _accounts.getByAccountCode(configuredKey) ??
           await _accounts.getById(configuredKey);
+      if (acc != null && acc.isPostingAccount && !acc.isDeleted) {
+        return acc;
+      }
+    }
+
+    final defaultCode = switch (role) {
+      AccountRole.revenue => '4100',
+      AccountRole.receivable => '1210',
+      AccountRole.cash => '1211',
+      AccountRole.cogs => '5100',
+      AccountRole.discount => '4101',
+      AccountRole.payable || AccountRole.tax => '2200',
+      _ => null,
+    };
+    if (defaultCode != null) {
+      final acc = await _accounts.getByAccountCode(defaultCode);
       if (acc != null && acc.isPostingAccount && !acc.isDeleted) {
         return acc;
       }

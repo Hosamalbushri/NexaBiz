@@ -114,8 +114,7 @@ void main() {
         );
 
         accCash = createTestCoaAccount(
-          id: 1,
-          uuid: 'cash_uuid_101',
+          id: 'cash_uuid_101',
           code: '1110',
           name: 'الصندوق الرئيسي',
           accountType: AccountType.asset,
@@ -123,8 +122,7 @@ void main() {
         );
 
         accInventory = createTestCoaAccount(
-          id: 2,
-          uuid: 'inv_uuid_102',
+          id: 'inv_uuid_102',
           code: '1210',
           name: 'حساب تقييم المخزون',
           accountType: AccountType.asset,
@@ -132,8 +130,7 @@ void main() {
         );
 
         accSales = createTestCoaAccount(
-          id: 3,
-          uuid: 'sales_uuid_103',
+          id: 'sales_uuid_103',
           code: '4100',
           name: 'إيرادات المبيعات',
           accountType: AccountType.revenue,
@@ -141,8 +138,7 @@ void main() {
         );
 
         accCogs = createTestCoaAccount(
-          id: 4,
-          uuid: 'cogs_uuid_104',
+          id: 'cogs_uuid_104',
           code: '5100',
           name: 'تكلفة البضاعة المباعة',
           accountType: AccountType.expense,
@@ -167,8 +163,7 @@ void main() {
 
       test('Test 1: Additive import succeeds safely', () async {
         final accNewBank = createTestCoaAccount(
-          id: 5,
-          uuid: 'bank_uuid_105',
+          id: 'bank_uuid_105',
           code: '1120',
           name: 'حساب البنك الجديد',
           accountType: AccountType.asset,
@@ -195,8 +190,7 @@ void main() {
 
       test('Test 2: Safe rename succeeds', () async {
         final renamedCash = createTestCoaAccount(
-          id: 1,
-          uuid: 'cash_uuid_101',
+          id: 'cash_uuid_101',
           code: '1110',
           name: 'الصندوق المركزي المعدل',
           accountType: AccountType.asset,
@@ -216,8 +210,7 @@ void main() {
 
       test('Test 3: Safe code change (same UUID) succeeds', () async {
         final reCodedCash = createTestCoaAccount(
-          id: 1,
-          uuid: 'cash_uuid_101',
+          id: 'cash_uuid_101',
           code: '1111',
           name: 'الصندوق الرئيسي',
           accountType: AccountType.asset,
@@ -262,8 +255,7 @@ void main() {
         () async {
           // Replacement has code 1210 but new UUID 'new_inv_uuid_999'
           final replacedInv = createTestCoaAccount(
-            id: 99,
-            uuid: 'new_inv_uuid_999',
+            id: 'new_inv_uuid_999',
             code: '1210',
             name: 'حساب تقييم المخزون المستبدل',
             accountType: AccountType.asset,
@@ -294,8 +286,7 @@ void main() {
         () async {
           // Change accInventory type from Asset to Expense
           final modifiedInv = createTestCoaAccount(
-            id: 2,
-            uuid: 'inv_uuid_102',
+            id: 'inv_uuid_102',
             code: '1210',
             name: 'حساب تقييم المخزون',
             accountType: AccountType.expense,
@@ -321,8 +312,7 @@ void main() {
         'Test 7: Parent change validation prevents circular hierarchy issues',
         () async {
           final parentAcc = createTestCoaAccount(
-            id: 10,
-            uuid: 'parent_uuid_100',
+            id: 'parent_uuid_100',
             code: '1000',
             name: 'الأصول المتداولة',
             accountType: AccountType.asset,
@@ -331,8 +321,7 @@ void main() {
           );
 
           final childAcc = createTestCoaAccount(
-            id: 1,
-            uuid: 'cash_uuid_101',
+            id: 'cash_uuid_101',
             code: '1110',
             name: 'الصندوق الرئيسي',
             accountType: AccountType.asset,
@@ -413,8 +402,7 @@ void main() {
         'Test 11: Offline import preview and impact execution runs locally',
         () async {
           final accNewCash = createTestCoaAccount(
-            id: 11,
-            uuid: 'sub_cash_uuid_111',
+            id: 'sub_cash_uuid_111',
             code: '1112',
             name: 'صندوق الفعالية الفرعي',
             accountType: AccountType.asset,

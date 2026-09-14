@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/data/services/cost_method_inheritance_resolver_impl.dart';
-import 'package:stock_count/modules/inventory/cost_valuation/data/services/inventory_cost_calculator_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_engine_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
@@ -56,7 +56,7 @@ class TrackingAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostMethodInheritanceResolverImpl resolver;
   late InventoryCostCalculatorImpl costCalculator;
   late CostLayerServiceImpl costLayerService;
@@ -71,7 +71,7 @@ void main() {
   const warehouseB = 'WH_B_UUID';
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
 
     validationService = StockValidationServiceImpl(db, () => companyId);
     costLayerService = CostLayerServiceImpl(
@@ -113,7 +113,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouseMain),
+            id: const Value(warehouseMain),
             code: const Value('MAIN'),
             name: const Value('Main Warehouse'),
             costValuationMethod: const Value('weightedAverage'),
@@ -128,7 +128,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouseA),
+            id: const Value(warehouseA),
             code: const Value('WHA'),
             name: const Value('Warehouse A'),
             costValuationMethod: const Value('weightedAverage'),
@@ -143,7 +143,7 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion(
-            uuid: const Value(warehouseB),
+            id: const Value(warehouseB),
             code: const Value('WHB'),
             name: const Value('Warehouse B'),
             costValuationMethod: const Value('weightedAverage'),
@@ -181,7 +181,7 @@ void main() {
           .insert(
             StockMovementLinesCompanion(
               uuid: Value(generateUuidV4()),
-              movementUuid: Value(receiptId),
+              movementId: Value(receiptId),
               movementType: const Value('receipt'),
               itemCode: const Value('PROD-A'),
               itemName: const Value('Product A'),
@@ -238,7 +238,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(receiptId),
+                movementId: Value(receiptId),
                 movementType: const Value('receipt'),
                 itemCode: const Value('PROD-B'),
                 itemName: const Value('Product B'),
@@ -278,7 +278,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineId),
-                movementUuid: Value(issueId),
+                movementId: Value(issueId),
                 movementType: const Value('issue'),
                 itemCode: const Value('PROD-B'),
                 itemName: const Value('Product B'),
@@ -335,7 +335,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(receiptId),
+                movementId: Value(receiptId),
                 movementType: const Value('receipt'),
                 itemCode: const Value('PROD-C'),
                 itemName: const Value('Product C'),
@@ -363,7 +363,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineId),
-                movementUuid: Value(issueId),
+                movementId: Value(issueId),
                 movementType: const Value('issue'),
                 itemCode: const Value('PROD-C'),
                 itemName: const Value('Product C'),
@@ -397,7 +397,7 @@ void main() {
         expect(layers.length, equals(1));
         final layer = layers.first;
 
-        expect(layer.movementUuid, equals(receiptId));
+        expect(layer.movementId, equals(receiptId));
         expect(layer.unitCost, equals(40.0));
         expect(layer.receivedQty, equals(100.0));
         expect(layer.remainingQty, equals(70.0));
@@ -448,7 +448,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recAId),
+                movementId: Value(recAId),
                 movementType: const Value('receipt'),
                 itemCode: const Value('PROD-D'),
                 itemName: const Value('Product D'),
@@ -489,7 +489,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(generateUuidV4()),
-                movementUuid: Value(recBId),
+                movementId: Value(recBId),
                 movementType: const Value('receipt'),
                 itemCode: const Value('PROD-D'),
                 itemName: const Value('Product D'),

@@ -10,7 +10,7 @@ import 'package:stock_count/modules/authentication/data/local_auth_repository.da
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/authentication/data/secure_token_storage.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
@@ -273,7 +273,7 @@ void main() {
 }
 
 // Dummy Test Stubs implementing domain interfaces safely for assertion tests
-class FakeInventoryDb implements InventoryDatabase {
+class FakeInventoryDb implements NexabizDatabase {
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

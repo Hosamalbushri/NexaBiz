@@ -9,13 +9,13 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fisc
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 
 void main() {
   group('CURRENCY-07 — Per-Currency Account Balances Behavioral Tests', () {
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late CurrencyRepositoryImpl currencyRepo;
     late AccountRepositoryImpl accountRepo;
     late FiscalYearRepositoryImpl fiscalRepo;
@@ -29,7 +29,7 @@ void main() {
     late String revenueAccountUuid;
 
     setUp(() async {
-      db = AccountingDatabase.memory();
+      db = NexabizDatabase.memory();
       companyA = 'company_a';
       companyB = 'company_b';
 
@@ -73,7 +73,7 @@ void main() {
           isActive: true,
         ),
       );
-      customerAccountUuid = customer.uuid;
+      customerAccountUuid = customer.id;
 
       final revenue = await accountRepo.insert(
         const AccountDraft(
@@ -430,10 +430,10 @@ void main() {
     });
 
     test('8. Retry posting existing entry by uuid returns original entry without mutating balance', () async {
-      const entryUuid = '11111111-2222-3333-4444-555555555555';
+      const entryId = '11111111-2222-3333-4444-555555555555';
 
       final draft = JournalEntryDraft(
-        uuid: entryUuid,
+        uuid: entryId,
         entryDate: DateTime.utc(2026, 1, 10),
         voucherNumber: 'INV-1002',
         voucherType: 'INV',
@@ -455,7 +455,7 @@ void main() {
       );
 
       final posted = await journalRepo.post(draft);
-      expect(posted.uuid, equals(entryUuid));
+      expect(posted.uuid, equals(entryId));
 
       final bal = await currencyBalanceRepo.getBalancesForAccount(customerAccountUuid);
       expect(bal.getBalance('YER')!.netBalance, equals(50000.0));

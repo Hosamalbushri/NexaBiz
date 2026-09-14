@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
-import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
 import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -27,26 +25,17 @@ import 'package:stock_count/core/setup/setup_core.dart';
 
 class PostingCoordinatorImpl implements PostingCoordinator {
   PostingCoordinatorImpl({
-    required NexabizDatabase db,
-    required StockValidationService stockValidationService,
-    required InventoryDependencyDetector dependencyDetector,
-    required PostingEngine postingEngine,
-    PeriodValidatorPort? periodValidator,
-    required InventoryAccountingPoster accountingPoster,
-    required PermissionGuard permissionGuard,
-    String Function()? readCompanyId,
-    SyncQueue? syncQueue,
-    InitializationGuard? initializationGuard,
-  })  : _db = db,
-        _stockValidationService = stockValidationService,
-        _dependencyDetector = dependencyDetector,
-        _postingEngine = postingEngine,
-        _periodValidator = periodValidator,
-        _accountingPoster = accountingPoster,
-        _permissionGuard = permissionGuard,
-        _readCompanyId = readCompanyId,
-        _syncQueue = syncQueue,
-        _initializationGuard = initializationGuard;
+    required this._db,
+    required this._stockValidationService,
+    required this._dependencyDetector,
+    required this._postingEngine,
+    this._periodValidator,
+    required this._accountingPoster,
+    required this._permissionGuard,
+    this._readCompanyId,
+    this._syncQueue,
+    this._initializationGuard,
+  });
 
   final NexabizDatabase _db;
   final StockValidationService _stockValidationService;
@@ -97,12 +86,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     required InventoryDocumentRef document,
     String? userId,
   }) async {
-    // TEMPORARY BYPASS: Initialization guard requirement bypassed upon user request during posting.
-    // try {
-    //   await _initializationGuard?.assertInitialized();
-    // } on UninitializedCompanyException catch (e) {
-    //   ...
-    // }
+    await _initializationGuard?.assertInitialized();
 
     final requiredPostPermissions = switch (document.documentType) {
       InventoryDocumentType.stockReceipt => InventoryPermissions.receiptsPost,
@@ -853,7 +837,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
 
     if (recent.isNotEmpty) return;
 
-    final eventUuid = generateUuidV4();
+    final eventUuid = generateUuidV7();
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
     await _db

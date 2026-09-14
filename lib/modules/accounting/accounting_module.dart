@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/core/navigation/app_route_param_parser.dart';
 
 import '../../app/customers/accounting_customer_account_link_adapter.dart';
 import '../../app/localization/app_localizations.dart';
@@ -409,14 +408,6 @@ class AccountingModule extends AppModule {
         ref.watch(accountingDatabaseProvider),
         syncQueue: ref.watch(syncQueueProvider),
         readCompanyId: () => ref.read(currentCompanyIdProvider),
-        onUuidRemapped: (oldUuid, newUuid) async {
-          await ref
-              .read(customerRepositoryImplProvider)
-              .remapAccountId(customerUuid: oldUuid, accountId: newUuid);
-          await ref
-              .read(journalRepositoryImplProvider)
-              .remapAccountUuid(fromUuid: oldUuid, toUuid: newUuid);
-        },
       );
     }),
     customerAccountLinkPortProvider.overrideWith((ref) {

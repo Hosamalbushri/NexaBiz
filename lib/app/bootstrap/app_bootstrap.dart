@@ -32,7 +32,6 @@ import '../sync/sync_enabled_provider.dart';
 
 import '../../core/audit/presentation/providers/audit_providers.dart';
 import '../../modules/inventory/data/repositories/inventory_audit_repository.dart';
-import '../../modules/inventory/products/presentation/providers/product_providers.dart';
 
 /// Application-level bootstrap divided into independent, resilient stages.
 class AppBootstrap {

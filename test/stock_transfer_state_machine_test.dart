@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -45,7 +45,7 @@ class MockAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late InventoryDatabase invDb;
+  late NexabizDatabase invDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl stockValidationService;
@@ -62,7 +62,7 @@ void main() {
   late String whDestBId;
 
   setUp(() async {
-    invDb = InventoryDatabase.memory();
+    invDb = NexabizDatabase.memory();
     activeTenant = tenantA;
     whSourceAId = generateUuidV4();
     whDestBId = generateUuidV4();
@@ -101,28 +101,26 @@ void main() {
 
     transferRepo = StockTransferRepositoryImpl(
       db: invDb,
-      costLayerService: costLayerService,
       readCompanyId: () => activeTenant,
     );
 
     warehouseRepo = WarehouseRepositoryImpl(invDb, null, () => activeTenant);
 
     // Setup base product and warehouses
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = DateTime.now();
     await invDb
         .into(invDb.products)
         .insert(
           ProductsCompanion.insert(
-            uuid: generateUuidV4(),
+            id: drift.Value(generateUuidV4()),
             itemCode: 'ITEM-TR-1',
             name: 'Transfer Test Item',
-            companyId: const drift.Value(tenantA),
-            onHandQty: const drift.Value(0.0),
+            companyId: tenantA,
             unitCost: const drift.Value(0.0),
-            price: 0.0,
-            packSize: 1,
-            createdAt: now,
-            updatedAt: now,
+            price: const drift.Value(0.0),
+            packSize: const drift.Value(1),
+            createdAt: drift.Value(now),
+            updatedAt: drift.Value(now),
           ),
         );
 
@@ -159,27 +157,28 @@ void main() {
     await invDb
         .into(invDb.stockReceipts)
         .insert(
-          StockReceiptsCompanion(
-            uuid: drift.Value(receiptId),
-            receiptNumber: drift.Value('REC-$receiptId'),
-            receiptDate: drift.Value(receiptDate.millisecondsSinceEpoch),
-            createdAt: drift.Value(receiptDate.millisecondsSinceEpoch),
-            updatedAt: drift.Value(receiptDate.millisecondsSinceEpoch),
+          StockReceiptsCompanion.insert(
+            id: drift.Value(receiptId),
+            receiptNumber: 'REC-$receiptId',
+            receiptDate: receiptDate.millisecondsSinceEpoch,
+            createdAt: receiptDate.millisecondsSinceEpoch,
+            updatedAt: receiptDate.millisecondsSinceEpoch,
             status: const drift.Value('draft'),
-            currencyCode: const drift.Value('YER'),
-            companyId: const drift.Value(tenantA),
+            currencyCode: 'YER',
+            companyId: drift.Value(tenantA),
           ),
         );
 
     await invDb
         .into(invDb.stockMovementLines)
         .insert(
-          StockMovementLinesCompanion(
-            uuid: drift.Value(generateUuidV4()),
-            movementUuid: drift.Value(receiptId),
-            movementType: const drift.Value('receipt'),
-            itemCode: const drift.Value('ITEM-TR-1'),
-            itemName: const drift.Value('Transfer Test Item'),
+          StockMovementLinesCompanion.insert(
+            id: drift.Value(generateUuidV4()),
+            companyId: tenantA,
+            receiptId: drift.Value(receiptId),
+            movementType: 'receipt',
+            itemCode: 'ITEM-TR-1',
+            itemName: 'Transfer Test Item',
             quantity: drift.Value(qty),
             unitCost: drift.Value(unitCost),
             totalCost: drift.Value(qty * unitCost),
@@ -471,19 +470,19 @@ void main() {
       '7. Tenant Isolation: Transfer to unauthorized company warehouse is blocked',
       () async {
         final tenantBWhId = generateUuidV4();
-        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+        final now = DateTime.now();
 
         // Seed warehouse directly into database owned by tenantB
         await invDb
             .into(invDb.warehouses)
             .insert(
               WarehousesCompanion.insert(
-                uuid: tenantBWhId,
+                id: drift.Value(tenantBWhId),
                 code: 'WH-TB',
                 name: 'Warehouse Tenant B',
-                companyId: const drift.Value(tenantB),
-                createdAt: now,
-                updatedAt: now,
+                companyId: tenantB,
+                createdAt: drift.Value(now),
+                updatedAt: drift.Value(now),
               ),
             );
 

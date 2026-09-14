@@ -28,4 +28,9 @@ class Products extends Table {
         {companyId, id},
         {companyId, itemCode},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, category_id) REFERENCES product_categories(company_id, id) ON DELETE SET NULL',
+      ];
 }

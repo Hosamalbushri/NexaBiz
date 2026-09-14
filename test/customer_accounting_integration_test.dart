@@ -10,7 +10,7 @@ import 'package:stock_count/modules/customers/directory/domain/entities/customer
 import 'package:stock_count/modules/customers/directory/domain/models/customer_exception.dart';
 import 'package:stock_count/modules/customers/directory/domain/services/customer_credit_limit_checker.dart';
 import 'package:stock_count/modules/customers/directory/domain/services/customer_validator.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 class _FakeLedgerEngine {
@@ -41,7 +41,7 @@ void main() {
 
   group('CU-04 — Customer Balances / Receivables / Accounting Integration', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late CustomerRepositoryImpl repoCompanyA;
     late CustomerRepositoryImpl repoCompanyB;
@@ -57,7 +57,7 @@ void main() {
       }
       final box = await Hive.openBox<SyncOperation>('sync_queue_cu04');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
       repoCompanyA = CustomerRepositoryImpl(
         db,
         syncQueue: queue,

@@ -4,7 +4,7 @@ import 'package:stock_count/core/audit/domain/services/audit_trail_service.dart'
 import 'package:stock_count/core/auth/ports/session_context_port.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/data/repositories/inventory_audit_repository.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 
 class _FakeSessionContext implements SessionContextPort {
   _FakeSessionContext({
@@ -31,14 +31,14 @@ class _FakeSessionContext implements SessionContextPort {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late InventoryAuditRepository repository;
   late AuditTrailService service;
   const companyAlpha = 'company_alpha';
   const companyBeta = 'company_beta';
 
   setUp(() {
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
     repository = InventoryAuditRepository(db);
     service = AuditTrailService(
       repository: repository,

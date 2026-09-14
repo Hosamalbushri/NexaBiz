@@ -14,7 +14,7 @@ import 'package:stock_count/modules/customers/directory/presentation/pages/custo
 import 'package:stock_count/modules/customers/directory/presentation/pages/customer_form_page.dart';
 import 'package:stock_count/modules/customers/directory/presentation/pages/customers_list_page.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
@@ -22,7 +22,7 @@ void main() {
 
   group('CU-06 — Customer UI / UX / Localization / RTL Audit', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late CustomerRepositoryImpl repo;
 
@@ -34,7 +34,7 @@ void main() {
       }
       final box = await Hive.openBox<SyncOperation>('sync_queue_cu06');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
       repo = CustomerRepositoryImpl(
         db,
         syncQueue: queue,

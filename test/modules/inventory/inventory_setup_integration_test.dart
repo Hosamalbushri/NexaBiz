@@ -145,11 +145,11 @@ void main() {
         final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: inventoryAccountRequirement,
-          accountUuid: validInventoryAccount.uuid,
+          accountId: validInventoryAccount.uuid,
         );
 
         expect(binding.status, equals(AccountBindingStatus.bound));
-        expect(binding.accountUuid, equals('uuid_inv_asset_100'));
+        expect(binding.accountId, equals('uuid_inv_asset_100'));
 
         final result = await resolver.resolveRequirement(
           companyId: companyA,
@@ -189,7 +189,7 @@ void main() {
           () async => resolver.bindAccount(
             companyId: companyA,
             requirement: cogsAccountRequirement,
-            accountUuid: crossCompanyAccount.uuid, // belongs to companyB
+            accountId: crossCompanyAccount.uuid, // belongs to companyB
           ),
           throwsA(isA<CrossCompanyAccountBindingException>()),
         );

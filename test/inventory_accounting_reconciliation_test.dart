@@ -8,13 +8,13 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_mapping_resolver_impl.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_validation_service_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/accounting_entry_builder.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/inventory_accounting_reconciliation_engine.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -49,8 +49,8 @@ class FailingJournalPostingService extends JournalPostingService {
 }
 
 void main() {
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   late StockMovementsRepositoryImpl stockRepo;
   late PostingCoordinatorImpl coordinator;
   late AccountingPeriodValidator validator;
@@ -67,8 +67,8 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('recon_test_');
     Hive.init(tempDir.path);
 
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
 
     stockRepo = StockMovementsRepositoryImpl(
       db: invDb,
@@ -140,7 +140,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '11111111-1111-1111-1111-111111111111',
+            id: '11111111-1111-1111-1111-111111111111',
             accountCode: '1230',
             name: 'Inventory Account',
             accountType: 'asset',
@@ -158,7 +158,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '22222222-2222-2222-2222-222222222222',
+            id: '22222222-2222-2222-2222-222222222222',
             accountCode: '5100',
             name: 'COGS Account',
             accountType: 'expense',
@@ -176,7 +176,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '33333333-3333-3333-3333-333333333333',
+            id: '33333333-3333-3333-3333-333333333333',
             accountCode: '2100',
             name: 'Payable Account',
             accountType: 'liability',
@@ -194,11 +194,11 @@ void main() {
         .into(invDb.products)
         .insert(
           ProductsCompanion.insert(
-            uuid: '44444444-4444-4444-4444-444444444444',
+            id: '44444444-4444-4444-4444-444444444444',
             itemCode: 'ITEM01',
             name: 'Widget A',
             companyId: const Value(tenantId),
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(0.0),
             price: 0.0,
             packSize: 1,
@@ -239,7 +239,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: '55555555-5555-5555-5555-55555555555a',
-              movementUuid: '55555555-5555-5555-5555-555555555555',
+              movementId: '55555555-5555-5555-5555-555555555555',
               movementType: 'receipt',
               itemCode: 'ITEM01',
               itemName: 'Widget A',
@@ -286,7 +286,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: '66666666-6666-6666-6666-66666666666a',
-              movementUuid: '66666666-6666-6666-6666-666666666666',
+              movementId: '66666666-6666-6666-6666-666666666666',
               movementType: 'issue',
               itemCode: 'ITEM01',
               itemName: 'Widget A',
@@ -323,7 +323,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: '77777777-7777-7777-7777-77777777777a',
-              movementUuid: '77777777-7777-7777-7777-777777777777',
+              movementId: '77777777-7777-7777-7777-777777777777',
               movementType: 'receipt',
               itemCode: 'ITEM01',
               itemName: 'Widget A',
@@ -389,7 +389,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion.insert(
                 uuid: '88888888-8888-8888-8888-88888888888a',
-                movementUuid: '88888888-8888-8888-8888-888888888888',
+                receiptId: '88888888-8888-8888-8888-888888888888',
                 movementType: 'receipt',
                 itemCode: 'ITEM01',
                 itemName: 'Widget A',
@@ -425,7 +425,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: '99999999-9999-9999-9999-99999999999a',
-              movementUuid: '99999999-9999-9999-9999-999999999999',
+              movementId: '99999999-9999-9999-9999-999999999999',
               movementType: 'receipt',
               itemCode: 'ITEM01',
               itemName: 'Widget A',
@@ -452,7 +452,7 @@ void main() {
 
         await (accDb.update(
           accDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(je.uuid))).write(
+        )..where((tbl) => tbl.entryId.equals(je.uuid))).write(
           const JournalLinesCompanion(
             debit: Value(800.0),
             baseDebit: Value(800.0),

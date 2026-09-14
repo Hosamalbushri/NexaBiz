@@ -3,26 +3,26 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/sales/data/database/sales_database.dart';
-import 'package:stock_count/modules/sales/data/repositories/sale_repository_impl.dart';
-import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_data_source.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_item.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
-import 'package:stock_count/modules/sales/domain/models/sale_list_filter.dart';
-import 'package:stock_count/modules/sales/domain/repositories/sale_repository.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_accounting_bridge_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_calculation_service.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_inventory_effect_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_number_allocator_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_product_catalog_port.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_voucher_book_port.dart';
-import 'package:stock_count/modules/sales/domain/usecases/sale_usecases.dart';
-import 'package:stock_count/modules/sales/presentation/providers/sale_composer_provider.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_method.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_data_source.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/models/sale_list_filter.dart';
+import 'package:stock_count/modules/sales/invoices/domain/repositories/sale_repository.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_accounting_bridge_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_calculation_service.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_inventory_effect_port.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_number_allocator_port.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_product_catalog_port.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_voucher_book_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/usecases/sale_usecases.dart';
+import 'package:stock_count/modules/sales/invoices/presentation/providers/sale_composer_provider.dart';
 
 SaleDraft _draft({
   required List<SaleItemDraft> items,
@@ -53,8 +53,7 @@ SaleDraft _draft({
 Sale _percentDiscountSale() {
   final now = DateTime.utc(2026, 8, 13, 12);
   return Sale(
-    id: 1,
-    uuid: 'sale-uuid-1',
+    id: 'sale-uuid-1',
     saleNumber: 'INV-100',
     saleDate: DateTime.utc(2026, 8, 10),
     settlementType: SaleSettlementType.credit,
@@ -67,8 +66,7 @@ Sale _percentDiscountSale() {
     exchangeRate: 1,
     items: const [
       SaleItem(
-        id: 1,
-        uuid: 'item-1',
+        id: 'item-1',
         saleUuid: 'sale-uuid-1',
         productId: 'p1',
         productName: 'Widget',
@@ -234,7 +232,7 @@ void main() {
 
   group('ConfirmSale success path + repository SQL helpers', () {
     late Directory tempDir;
-    late SalesDatabase db;
+    late NexabizDatabase db;
     late SaleRepositoryImpl repository;
     late SyncQueue syncQueue;
     late _FakeVoucherBookPort voucherBooks;
@@ -247,7 +245,7 @@ void main() {
       }
       final syncBox = await Hive.openBox<SyncOperation>('sync_queue');
       syncQueue = SyncQueue(box: syncBox);
-      db = SalesDatabase.memory();
+      db = NexabizDatabase.memory();
       repository = SaleRepositoryImpl(db, syncQueue: syncQueue);
       voucherBooks = _FakeVoucherBookPort();
     });

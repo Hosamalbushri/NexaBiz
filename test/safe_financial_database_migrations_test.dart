@@ -106,7 +106,7 @@ void main() {
               InventoryCostLayersCompanion.insert(
                 id: Value(layerUuid),
                 itemCode: 'ITEM-VAL-01',
-                movementUuid: movUuid,
+                movementId: movUuid,
                 movementType: 'receipt',
                 receivedDate: now,
                 receivedQty: const Value(10.0),

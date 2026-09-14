@@ -315,18 +315,18 @@ class _FakeAccountMappingResolver implements AccountMappingResolver {
 
 class _FakeAccountValidationService implements AccountValidationService {
   @override
-  Future<void> assertCanPost(String accountUuid) async {}
+  Future<void> assertCanPost(String accountId) async {}
 
   @override
-  Future<AccountValidationResult> validateAccountUuid(String accountUuid) async {
+  Future<AccountValidationResult> validateAccountUuid(String accountId) async {
     return const AccountValidationResult(isValid: true);
   }
 }
 
 class _FakeCostLayerService implements CostLayerService {
   @override
-  Future<void> reverseLayer(String movementUuid) async {
-    if (movementUuid == 'movement-with-consumptions') {
+  Future<void> reverseLayer(String movementId) async {
+    if (movementId == 'movement-with-consumptions') {
       throw JournalException(
         JournalException.dependencyViolation,
         'Cannot reverse cost layer because downstream cost consumptions exist.',

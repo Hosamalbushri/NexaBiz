@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
@@ -36,12 +36,12 @@ class TestVoucherBookPort implements RpVoucherBookPort {
 
 class TestLedgerEntry {
   const TestLedgerEntry({
-    required this.accountUuid,
+    required this.accountId,
     required this.debit,
     required this.credit,
   });
 
-  final String accountUuid;
+  final String accountId;
   final double debit;
   final double credit;
 }
@@ -49,10 +49,10 @@ class TestLedgerEntry {
 class TrackingLedgerPostingPort implements RpLedgerPostingPort {
   final List<TestLedgerEntry> entries = [];
 
-  double getAccountBalance(String accountUuid) {
+  double getAccountBalance(String accountId) {
     double total = 0.0;
     for (final e in entries) {
-      if (e.accountUuid == accountUuid) {
+      if (e.accountId == accountId) {
         total += (e.debit - e.credit);
       }
     }
@@ -67,14 +67,14 @@ class TrackingLedgerPostingPort implements RpLedgerPostingPort {
       // DEBIT Cash/Bank, CREDIT Counterparty
       entries.add(
         TestLedgerEntry(
-          accountUuid: txn.cashAccountId,
+          accountId: txn.cashAccountId,
           debit: txn.amount,
           credit: 0.0,
         ),
       );
       entries.add(
         TestLedgerEntry(
-          accountUuid: txn.counterAccountId,
+          accountId: txn.counterAccountId,
           debit: 0.0,
           credit: txn.amount,
         ),
@@ -83,14 +83,14 @@ class TrackingLedgerPostingPort implements RpLedgerPostingPort {
       // DEBIT Counterparty, CREDIT Cash/Bank
       entries.add(
         TestLedgerEntry(
-          accountUuid: txn.counterAccountId,
+          accountId: txn.counterAccountId,
           debit: txn.amount,
           credit: 0.0,
         ),
       );
       entries.add(
         TestLedgerEntry(
-          accountUuid: txn.cashAccountId,
+          accountId: txn.cashAccountId,
           debit: 0.0,
           credit: txn.amount,
         ),
@@ -117,7 +117,7 @@ class FakeCashRegister {
 }
 
 void main() {
-  late ReceiptsPaymentsDatabase db;
+  late NexabizDatabase db;
   late FinancialTransactionRepositoryImpl repoCompanyA;
   late FinancialTransactionRepositoryImpl repoCompanyB;
   late TestVoucherBookPort voucherBookPort;
@@ -161,7 +161,7 @@ void main() {
   const supplierAccount = 'account_supplier_1';
 
   setUp(() {
-    db = ReceiptsPaymentsDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     voucherBookPort = TestVoucherBookPort();
     trackingLedger = TrackingLedgerPostingPort();
 

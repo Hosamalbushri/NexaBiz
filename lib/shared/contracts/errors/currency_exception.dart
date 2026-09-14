@@ -4,8 +4,8 @@ import 'domain_exception.dart';
 /// enforcing explicit currency selection with zero fallbacks.
 class CurrencyRequiredException extends DomainException {
   const CurrencyRequiredException([
-    String message = 'Currency is required and cannot be empty or omitted.',
-  ]) : super(message, code: 'currency_required');
+    super.message = 'Currency is required and cannot be empty or omitted.',
+  ]) : super(code: 'currency_required');
 
   @override
   String toString() => 'CurrencyRequiredException: $message';
@@ -19,10 +19,10 @@ class CurrencyRateRequiredException extends DomainException {
   final String baseCurrencyCode;
 
   const CurrencyRateRequiredException(
-    String message, {
+    super.message, {
     required this.currencyCode,
     required this.baseCurrencyCode,
-  }) : super(message, code: 'currency_rate_required');
+  }) : super(code: 'currency_rate_required');
 
   @override
   String toString() => 'CurrencyRateRequiredException: $message';
@@ -30,8 +30,8 @@ class CurrencyRateRequiredException extends DomainException {
 
 /// Exception thrown when currency validation rules fail (e.g. duplicate code, invalid precision).
 class CurrencyValidationException extends DomainException {
-  const CurrencyValidationException(String message)
-    : super(message, code: 'currency_validation_failed');
+  const CurrencyValidationException(super.message)
+    : super(code: 'currency_validation_failed');
 
   @override
   String toString() => 'CurrencyValidationException: $message';
@@ -40,8 +40,8 @@ class CurrencyValidationException extends DomainException {
 /// Exception thrown when the company functional currency configuration is invalid
 /// (e.g. missing, referenced currency does not exist in master, or is inactive).
 class InvalidFunctionalCurrencyException extends DomainException {
-  const InvalidFunctionalCurrencyException(String message)
-    : super(message, code: 'invalid_functional_currency');
+  const InvalidFunctionalCurrencyException(super.message)
+    : super(code: 'invalid_functional_currency');
 
   @override
   String toString() => 'InvalidFunctionalCurrencyException: $message';
@@ -51,9 +51,9 @@ class InvalidFunctionalCurrencyException extends DomainException {
 /// after accounting activity (e.g. posted journal entries) already exists.
 class FunctionalCurrencyLockedException extends DomainException {
   const FunctionalCurrencyLockedException([
-    String message =
+    super.message =
         'Cannot change functional currency after accounting transactions have been posted. Controlled migration required.',
-  ]) : super(message, code: 'functional_currency_locked');
+  ]) : super(code: 'functional_currency_locked');
 
   @override
   String toString() => 'FunctionalCurrencyLockedException: $message';
@@ -63,9 +63,9 @@ class FunctionalCurrencyLockedException extends DomainException {
 /// without explicit rate conversion across different currency codes.
 class CurrencyMismatchException extends DomainException {
   const CurrencyMismatchException([
-    String message =
+    super.message =
         'Cannot sum or perform direct operations across different currencies without exchange rate conversion.',
-  ]) : super(message, code: 'currency_mismatch');
+  ]) : super(code: 'currency_mismatch');
 
   @override
   String toString() => 'CurrencyMismatchException: $message';
@@ -116,8 +116,8 @@ class ExchangeRateExpiredException extends DomainException {
 
 /// Exception thrown when exchange rate value is invalid (<= 0, NaN, Infinite).
 class ExchangeRateInvalidException extends DomainException {
-  const ExchangeRateInvalidException(String message)
-    : super(message, code: 'exchange_rate_invalid');
+  const ExchangeRateInvalidException(super.message)
+    : super(code: 'exchange_rate_invalid');
 
   @override
   String toString() => 'ExchangeRateInvalidException: $message';

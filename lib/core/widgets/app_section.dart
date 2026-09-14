@@ -64,7 +64,7 @@ class AppSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (action != null) action!,
+                ?action,
               ],
             ),
             const SizedBox(height: AppSpacing.md),

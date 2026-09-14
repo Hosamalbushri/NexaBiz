@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';

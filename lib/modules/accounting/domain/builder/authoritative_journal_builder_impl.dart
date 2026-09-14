@@ -17,10 +17,9 @@ class AccountingJournalBuilderException implements Exception {
 
 class AuthoritativeJournalBuilder implements AuthoritativeJournalBuilderPort {
   AuthoritativeJournalBuilder({
-    required AccountingValidationEnginePort validationEngine,
+    required this._validationEngine,
     Uuid? uuidGenerator,
-  })  : _validationEngine = validationEngine,
-        _uuid = uuidGenerator ?? const Uuid();
+  })  : _uuid = uuidGenerator ?? const Uuid();
 
   final AccountingValidationEnginePort _validationEngine;
   final Uuid _uuid;

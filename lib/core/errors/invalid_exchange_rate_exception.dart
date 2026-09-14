@@ -20,11 +20,11 @@ class ExchangeRateValidator {
   /// For company base currency, returns 1.0 (normalized).
   /// For foreign currency, throws [InvalidExchangeRateException] if rate is null, <= 0, NaN, or Infinite.
   static double validate({
-    required String currencyCode,
+    required String? currencyCode,
     required String baseCurrencyCode,
     required double? exchangeRate,
   }) {
-    final cur = currencyCode.trim().toUpperCase();
+    final cur = (currencyCode ?? '').trim().toUpperCase();
     final base = baseCurrencyCode.trim().toUpperCase();
 
     if (cur.isEmpty || base.isEmpty || cur == base) {

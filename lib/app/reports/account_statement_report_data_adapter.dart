@@ -16,7 +16,6 @@ import 'package:stock_count/modules/reports/shared/domain/services/account_state
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_ledger_posting_port.dart';
 import '../settings/company/app_currency.dart';
-import '../settings/company/company_profile.dart';
 
 /// App adapter: account statement ← Accounting COA + journal lines.
 ///
@@ -280,9 +279,6 @@ class AccountStatementReportDataAdapter
 
     final allLines = <AccountStatementLine>[];
     final balances = <AccountStatementCurrencyBalance>[];
-    var aggregateDebit = 0.0;
-    var aggregateCredit = 0.0;
-    var aggregateOpening = 0.0;
 
     for (final code in currencyCodes) {
       final opening = fromDate == null
@@ -352,9 +348,6 @@ class AccountStatementReportDataAdapter
           ),
         ),
       );
-      aggregateDebit += totalDebit;
-      aggregateCredit += totalCredit;
-      aggregateOpening += opening;
     }
 
     final hasSingleCurrencyBalance = balances.length == 1;

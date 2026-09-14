@@ -6,7 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer_status.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
@@ -14,7 +14,7 @@ void main() {
 
   group('CU-08 — Offline / Sync / Conflict Integrity Test Matrix', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late Box<SyncOperation> box;
     late CustomerRepositoryImpl repo;
@@ -27,7 +27,7 @@ void main() {
       }
       box = await Hive.openBox<SyncOperation>('sync_queue_cu08');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
 
       repo = CustomerRepositoryImpl(
         db,

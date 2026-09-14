@@ -7,7 +7,7 @@ import 'package:stock_count/modules/accounting/accounting_module.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
@@ -19,7 +19,7 @@ import 'package:stock_count/modules/system_setup/domain/entities/company_invento
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late CurrencyRepositoryImpl currencyRepo;
   late AccountRepositoryImpl accountRepo;
   late Directory tempDir;
@@ -27,7 +27,7 @@ void main() {
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('modular_setup_test_');
     Hive.init(tempDir.path);
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     currencyRepo = CurrencyRepositoryImpl(
       db,
       readCompanyId: () => 'test-tenant-1',

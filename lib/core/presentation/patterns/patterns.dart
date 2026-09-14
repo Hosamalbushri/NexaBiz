@@ -1,4 +1,4 @@
-library shared_ui_patterns;
+library;
 
 export 'app_detail_page_pattern.dart';
 export 'app_form_page_pattern.dart';

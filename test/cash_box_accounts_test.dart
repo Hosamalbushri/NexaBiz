@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/domain/entities/normal_balance.dart';
-import 'package:stock_count/modules/accounting/domain/services/cash_box_accounts.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/normal_balance.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/cash_box_accounts.dart';
 
 Account _account({
   required String uuid,
@@ -13,8 +13,7 @@ Account _account({
   bool isGroup = false,
 }) {
   return Account(
-    id: 1,
-    uuid: uuid,
+    id: uuid,
     parentId: parentId,
     accountCode: code,
     name: name,

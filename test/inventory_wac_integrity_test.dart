@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -55,7 +55,7 @@ class MockSyncBox<T> implements Box<T> {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -68,7 +68,7 @@ void main() {
   late String activeCompanyId;
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     activeCompanyId = 'company_A';
     mockBox = MockSyncBox<SyncOperation>([]);
     syncQueue = SyncQueue(
@@ -140,7 +140,7 @@ void main() {
       lines: [
         StockMovementLine(
           id: generateUuidV4(),
-          movementUuid: id,
+          movementId: id,
           movementType: 'receipt',
           itemCode: itemCode,
           itemName: 'Item $itemCode',
@@ -174,7 +174,7 @@ void main() {
       lines: [
         StockMovementLine(
           id: generateUuidV4(),
-          movementUuid: id,
+          movementId: id,
           movementType: 'issue',
           itemCode: itemCode,
           itemName: 'Item $itemCode',
@@ -379,7 +379,7 @@ void main() {
 
         final postedIssueLine = await (db.select(
           db.stockMovementLines,
-        )..where((tbl) => tbl.movementUuid.equals(issue.id))).getSingle();
+        )..where((tbl) => tbl.movementId.equals(issue.id))).getSingle();
         expect(postedIssueLine.unitCost, 100.0);
         expect(postedIssueLine.totalCost, 500.0);
 
@@ -409,7 +409,7 @@ void main() {
         // Historical posted issue line cost remains untouched!
         final reloadedIssueLine = await (db.select(
           db.stockMovementLines,
-        )..where((tbl) => tbl.movementUuid.equals(issue.id))).getSingle();
+        )..where((tbl) => tbl.movementId.equals(issue.id))).getSingle();
         expect(reloadedIssueLine.unitCost, 100.0);
         expect(reloadedIssueLine.totalCost, 500.0);
       },
@@ -525,7 +525,7 @@ void main() {
         CostLayer(
           id: generateUuidV4(),
           itemCode: 'ITEM-WAC',
-          movementUuid: generateUuidV4(),
+          movementId: generateUuidV4(),
           movementType: 'sales_return',
           receivedDate: DateTime.now(),
           receivedQty: 2,

@@ -10,12 +10,12 @@ class MockLookupPort implements SetupAccountLookupPort {
   final Map<String, SetupAccountData> _accounts = {};
 
   void addAccount(SetupAccountData account) {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
   }
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return _accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return _accounts[accountId];
   }
 
   @override
@@ -152,7 +152,7 @@ void main() {
           await resolver.bindAccount(
             companyId: 'companyA',
             requirement: req,
-            accountUuid: 'acc-sales-rev-01',
+            accountId: 'acc-sales-rev-01',
           );
 
           final resolved = await resolver.resolveAccountForTransaction(

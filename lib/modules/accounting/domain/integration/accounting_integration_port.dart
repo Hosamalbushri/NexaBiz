@@ -1,4 +1,3 @@
-import '../foundation/accounting_effect.dart';
 import '../foundation/posting_intent.dart';
 import '../posting/accounting_posting_authority_port.dart';
 import '../rules/accounting_transaction_intent.dart';

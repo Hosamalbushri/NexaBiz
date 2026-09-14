@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/utils/digit_normalization.dart';
 import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_currency_port.dart';

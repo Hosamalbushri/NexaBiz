@@ -22,11 +22,9 @@ final inventoryServicesProvider =
 class InventoryServicesController
     extends StateNotifier<AsyncValue<List<String>>> {
   InventoryServicesController({
-    required SettingsRepository repository,
-    String companyId = '',
-  }) : _repository = repository,
-       _companyId = companyId,
-       super(AsyncValue.data(_defaultCatalogIds())) {
+    required this._repository,
+    this._companyId = '',
+  }) : super(AsyncValue.data(_defaultCatalogIds())) {
     _load();
   }
 

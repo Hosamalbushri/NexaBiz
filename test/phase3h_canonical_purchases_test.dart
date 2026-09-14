@@ -45,7 +45,7 @@ void main() {
       // Insert Supplier & Purchase for Company A
       await db.into(db.suppliers).insert(
             SuppliersCompanion.insert(
-              uuid: Value(supplierUuidA),
+              id: Value(supplierUuidA),
               supplierCode: 'SUPP-A-01',
               name: 'Supplier Alpha',
               companyId: companyA,
@@ -56,7 +56,7 @@ void main() {
 
       await db.into(db.purchases).insert(
             PurchasesCompanion.insert(
-              uuid: purchaseUuidA,
+              id: purchaseUuidA,
               purchaseNumber: 'PO-A-001',
               supplierId: Value(supplierUuidA),
               supplierName: const Value('Supplier Alpha'),
@@ -74,7 +74,7 @@ void main() {
       // Insert Supplier & Purchase for Company B
       await db.into(db.suppliers).insert(
             SuppliersCompanion.insert(
-              uuid: Value(supplierUuidB),
+              id: Value(supplierUuidB),
               supplierCode: 'SUPP-B-01',
               name: 'Supplier Beta',
               companyId: companyB,
@@ -85,7 +85,7 @@ void main() {
 
       await db.into(db.purchases).insert(
             PurchasesCompanion.insert(
-              uuid: purchaseUuidB,
+              id: purchaseUuidB,
               purchaseNumber: 'PO-B-001',
               supplierId: Value(supplierUuidB),
               supplierName: const Value('Supplier Beta'),
@@ -132,16 +132,16 @@ void main() {
     test('Purchase document line calculation and payment status tracking', () async {
       final companyId = 'comp-purch-calc-3h';
       final purchaseUuid = generateUuidV4();
-      final productUuid = generateUuidV4();
-      final supplierUuid = generateUuidV4();
+      final productId = generateUuidV4();
+      final supplierId = generateUuidV4();
       final nowMs = DateTime.now().millisecondsSinceEpoch;
 
       // Create Purchase Header
       await db.into(db.purchases).insert(
             PurchasesCompanion.insert(
-              uuid: purchaseUuid,
+              id: purchaseUuid,
               purchaseNumber: 'PO-2026-001',
-              supplierId: Value(supplierUuid),
+              supplierId: Value(supplierId),
               subtotal: 250.0,
               itemDiscountTotal: 0.0,
               discountAmount: const Value(10.0),
@@ -164,7 +164,7 @@ void main() {
             PurchaseItemsCompanion.insert(
               uuid: lineUuid,
               purchaseUuid: purchaseUuid,
-              productId: productUuid,
+              productId: productId,
               productName: 'Raw Materials Widget',
               productCode: 'RAW-001',
               quantity: 10.0,
@@ -175,7 +175,7 @@ void main() {
           );
 
       final row = await (db.select(db.purchases)
-            ..where((tbl) => tbl.uuid.equals(purchaseUuid)))
+            ..where((tbl) => tbl.id.equals(purchaseUuid)))
           .getSingle();
 
       final lines = await (db.select(db.purchaseItems)
@@ -186,7 +186,7 @@ void main() {
       expect(row.total, equals(255.0));
       expect(row.paymentStatus, equals('paid'));
       expect(lines.length, equals(1));
-      expect(lines.first.productId, equals(productUuid));
+      expect(lines.first.productId, equals(productId));
       expect(lines.first.quantity, equals(10.0));
     });
 
@@ -199,7 +199,7 @@ void main() {
         await db.transaction(() async {
           await db.into(db.purchases).insert(
                 PurchasesCompanion.insert(
-                  uuid: purchaseUuid,
+                  id: purchaseUuid,
                   purchaseNumber: 'PO-FAIL-01',
                   subtotal: 100.0,
                   itemDiscountTotal: 0.0,
@@ -231,7 +231,7 @@ void main() {
       } catch (_) {}
 
       final rows = await (db.select(db.purchases)
-            ..where((tbl) => tbl.uuid.equals(purchaseUuid)))
+            ..where((tbl) => tbl.id.equals(purchaseUuid)))
           .get();
 
       final lines = await (db.select(db.purchaseItems)

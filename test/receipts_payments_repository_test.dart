@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/receipts_payments/data/database/receipts_payments_database.dart';
-import 'package:stock_count/modules/receipts_payments/data/repositories/financial_transaction_repository_impl.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_status.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
-import 'package:stock_count/modules/receipts_payments/domain/models/transaction_list_filter.dart';
-import 'package:stock_count/modules/receipts_payments/domain/services/rp_ledger_posting_port.dart';
-import 'package:stock_count/modules/receipts_payments/domain/services/rp_voucher_book_port.dart';
-import 'package:stock_count/modules/receipts_payments/domain/usecases/financial_transaction_usecases.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/models/transaction_list_filter.dart';
+import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_ledger_posting_port.dart';
+import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_voucher_book_port.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/usecases/financial_transaction_usecases.dart';
 
 void _setupSqlite() {}
 
@@ -51,7 +51,7 @@ class _RecordingLedger implements RpLedgerPostingPort {
 void main() {
   _setupSqlite();
 
-  late ReceiptsPaymentsDatabase db;
+  late NexabizDatabase db;
   late FinancialTransactionRepositoryImpl repo;
   late _FakeVoucherBooks books;
   late _RecordingLedger ledger;
@@ -87,7 +87,7 @@ void main() {
   }
 
   setUp(() {
-    db = ReceiptsPaymentsDatabase.memory();
+    db = NexabizDatabase.memory();
     repo = FinancialTransactionRepositoryImpl(db);
     books = _FakeVoucherBooks();
     ledger = _RecordingLedger();

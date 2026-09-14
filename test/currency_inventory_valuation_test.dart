@@ -6,13 +6,13 @@ import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/app/settings/company/functional_currency_service.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
-import 'package:stock_count/modules/inventory/cost_valuation/data/services/inventory_cost_calculator_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/domain/services/cost_method_inheritance_resolver.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/domain/services/inventory_valuation_currency_service.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -29,8 +29,8 @@ void main() {
 
   late Box<dynamic> testBox;
   late SettingsRepository settingsRepo;
-  late AccountingDatabase accDb;
-  late InventoryDatabase invDb;
+  late NexabizDatabase accDb;
+  late NexabizDatabase invDb;
   late CurrencyRepositoryImpl currencyRepo;
   late CurrencyRateRepositoryImpl rateRepo;
   late CompanyInitializationRepositoryImpl initRepo;
@@ -46,8 +46,8 @@ void main() {
     await testBox.clear();
 
     settingsRepo = SettingsRepository(box: testBox);
-    accDb = AccountingDatabase(executor: NativeDatabase.memory());
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
     currencyRepo = CurrencyRepositoryImpl(accDb, readCompanyId: () => companyId);
     rateRepo = CurrencyRateRepositoryImpl(accDb, readCompanyId: () => companyId);
     initRepo = CompanyInitializationRepositoryImpl(box: testBox);
@@ -118,7 +118,7 @@ void main() {
       final layer = CostLayer(
         itemCode: 'ITEM-001',
         warehouseId: 'WH-01',
-        movementUuid: '00000000-0000-4000-8000-000000000001',
+        movementId: '00000000-0000-4000-8000-000000000001',
         movementType: 'receipt',
         receivedDate: DateTime.now().toUtc(),
         receivedQty: 20,
@@ -153,7 +153,7 @@ void main() {
       final layer = CostLayer(
         itemCode: 'ITEM-SAR-01',
         warehouseId: 'WH-01',
-        movementUuid: '00000000-0000-4000-8000-000000000002',
+        movementId: '00000000-0000-4000-8000-000000000002',
         movementType: 'receipt',
         receivedDate: DateTime.now().toUtc(),
         receivedQty: docQty,
@@ -189,7 +189,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'FIFO-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000010',
+          movementId: '00000000-0000-4000-8000-000000000010',
           movementType: 'receipt',
           receivedDate: t1,
           receivedQty: 10,
@@ -203,7 +203,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'FIFO-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000011',
+          movementId: '00000000-0000-4000-8000-000000000011',
           movementType: 'receipt',
           receivedDate: t2,
           receivedQty: 10,
@@ -238,7 +238,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'LIFO-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000020',
+          movementId: '00000000-0000-4000-8000-000000000020',
           movementType: 'receipt',
           receivedDate: t1,
           receivedQty: 10,
@@ -252,7 +252,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'LIFO-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000021',
+          movementId: '00000000-0000-4000-8000-000000000021',
           movementType: 'receipt',
           receivedDate: t2,
           receivedQty: 10,
@@ -283,7 +283,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'WAC-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000030',
+          movementId: '00000000-0000-4000-8000-000000000030',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc().subtract(const Duration(hours: 2)),
           receivedQty: 20,
@@ -297,7 +297,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'WAC-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000031',
+          movementId: '00000000-0000-4000-8000-000000000031',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc().subtract(const Duration(hours: 1)),
           receivedQty: 23,
@@ -318,7 +318,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'PARTIAL-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000040',
+          movementId: '00000000-0000-4000-8000-000000000040',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc(),
           receivedQty: 100,
@@ -349,7 +349,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'MULTI-FX-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000050',
+          movementId: '00000000-0000-4000-8000-000000000050',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc().subtract(const Duration(hours: 2)),
           receivedQty: 10,
@@ -366,7 +366,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'MULTI-FX-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000051',
+          movementId: '00000000-0000-4000-8000-000000000051',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc().subtract(const Duration(hours: 1)),
           receivedQty: 10,
@@ -394,7 +394,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'FX-CHANGE-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000060',
+          movementId: '00000000-0000-4000-8000-000000000060',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc().subtract(const Duration(hours: 2)),
           receivedQty: 10,
@@ -410,7 +410,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'FX-CHANGE-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000061',
+          movementId: '00000000-0000-4000-8000-000000000061',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc().subtract(const Duration(hours: 1)),
           receivedQty: 10,
@@ -478,7 +478,7 @@ void main() {
       await costLayerService.createLayer(
         CostLayer(
           itemCode: 'PERSIST-ITEM',
-          movementUuid: '00000000-0000-4000-8000-000000000070',
+          movementId: '00000000-0000-4000-8000-000000000070',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc(),
           receivedQty: 50,
@@ -569,7 +569,7 @@ void main() {
         CostLayer(
           itemCode: 'ITEM-WH-01',
           warehouseId: whId,
-          movementUuid: '00000000-0000-4000-8000-000000000099',
+          movementId: '00000000-0000-4000-8000-000000000099',
           movementType: 'receipt',
           receivedDate: DateTime.now().toUtc(),
           receivedQty: 10,
@@ -601,9 +601,9 @@ void main() {
       // Insert a journal line for accUuid2 into accDb
       await accDb.into(accDb.journalLines).insert(
         JournalLinesCompanion.insert(
-          uuid: '00000000-0000-4000-8000-000000000100',
-          entryUuid: '00000000-0000-4000-8000-000000000101',
-          accountUuid: accUuid2,
+          id: '00000000-0000-4000-8000-000000000100',
+          entryId: '00000000-0000-4000-8000-000000000101',
+          accountId: accUuid2,
           currencyCode: 'YER',
           debit: const Value(5000),
           baseDebit: const Value(5000),

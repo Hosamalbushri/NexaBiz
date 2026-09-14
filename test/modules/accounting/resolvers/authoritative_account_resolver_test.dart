@@ -64,8 +64,7 @@ void main() {
   final wrongCompanyAccUuid = 'acc-wrong-comp-uuid-004';
 
   final validInventoryAccount = Account(
-    id: 1,
-    uuid: validAccUuid,
+    id: validAccUuid,
     accountCode: '1200',
     name: 'Inventory Assets',
     accountType: AccountType.asset,
@@ -80,8 +79,7 @@ void main() {
   );
 
   final groupAccount = Account(
-    id: 2,
-    uuid: groupAccUuid,
+    id: groupAccUuid,
     accountCode: '1000',
     name: 'Current Assets Group',
     accountType: AccountType.asset,
@@ -96,8 +94,7 @@ void main() {
   );
 
   final inactiveAccount = Account(
-    id: 3,
-    uuid: inactiveAccUuid,
+    id: inactiveAccUuid,
     accountCode: '1201',
     name: 'Inactive Inventory',
     accountType: AccountType.asset,
@@ -112,8 +109,7 @@ void main() {
   );
 
   final wrongCompanyAccount = Account(
-    id: 4,
-    uuid: wrongCompanyAccUuid,
+    id: wrongCompanyAccUuid,
     accountCode: '1202',
     name: 'Other Company Inventory',
     accountType: AccountType.asset,
@@ -155,7 +151,7 @@ void main() {
         role: AccountRole.inventory,
       );
 
-      expect(account.uuid, validAccUuid);
+      expect(account.id, validAccUuid);
       expect(account.name, 'Inventory Assets');
       expect(account.canPost, isTrue);
     });

@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/domain/entities/account_role.dart';
-import '../../../../core/setup/domain/entities/account_binding_mode.dart';
 
 /// Defines a targeted account binding rule for a system role.
 

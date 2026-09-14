@@ -38,15 +38,11 @@ final quickNavItemsProvider = StateNotifierProvider.autoDispose<
 class QuickNavItemsController
     extends StateNotifier<AsyncValue<List<QuickNavDefinition>>> {
   QuickNavItemsController({
-    required SettingsRepository repository,
-    required ModuleRegistry registry,
-    required String companyId,
-    required Set<String> userPermissions,
-  })  : _repository = repository,
-        _registry = registry,
-        _companyId = companyId,
-        _userPermissions = userPermissions,
-        super(const AsyncValue.loading()) {
+    required this._repository,
+    required this._registry,
+    required this._companyId,
+    required this._userPermissions,
+  })  : super(const AsyncValue.loading()) {
     _load();
   }
 

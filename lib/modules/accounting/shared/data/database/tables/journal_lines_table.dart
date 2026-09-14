@@ -42,4 +42,10 @@ class JournalLines extends Table {
   List<Set<Column>> get uniqueKeys => [
         {companyId, id},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, entry_id) REFERENCES journal_entries(company_id, id) ON DELETE CASCADE',
+        'FOREIGN KEY (company_id, account_id) REFERENCES accounts(company_id, id) ON DELETE RESTRICT',
+      ];
 }

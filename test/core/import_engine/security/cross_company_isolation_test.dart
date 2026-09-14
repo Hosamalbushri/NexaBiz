@@ -258,8 +258,7 @@ void main() {
         final now = DateTime.now().toUtc();
         accountRepo.addMockAccount(
           Account(
-            id: 100,
-            uuid: 'UUID-COMP-B-1000',
+            id: 'UUID-COMP-B-1000',
             companyId: companyB,
             accountCode: '1000',
             name: 'Assets B',

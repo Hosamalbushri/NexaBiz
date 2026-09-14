@@ -23,8 +23,7 @@ class FakeAuthoritativeAccountResolver implements AuthoritativeAccountResolverPo
   }) async {
     if (overrideAccountUuid != null && overrideAccountUuid.isNotEmpty) {
       return Account(
-        id: 99,
-        uuid: overrideAccountUuid,
+        id: overrideAccountUuid,
         accountCode: '9999',
         name: 'Custom Account $overrideAccountUuid',
         accountType: AccountType.asset,
@@ -143,10 +142,10 @@ void main() {
       final effect = await engine.deriveAccountingEffect(tx);
       expect(effect, isNotNull);
       expect(effect!.lines.length, 2);
-      expect(effect.lines[0].accountUuid, 'acc-uuid-cash');
+      expect(effect.lines[0].accountId, 'acc-uuid-cash');
       expect(effect.lines[0].debit, 150.0);
       expect(effect.lines[0].credit, 0.0);
-      expect(effect.lines[1].accountUuid, 'acc-uuid-revenue');
+      expect(effect.lines[1].accountId, 'acc-uuid-revenue');
       expect(effect.lines[1].debit, 0.0);
       expect(effect.lines[1].credit, 150.0);
     });
@@ -164,9 +163,9 @@ void main() {
 
       final effect = await engine.deriveAccountingEffect(tx);
       expect(effect, isNotNull);
-      expect(effect!.lines[0].accountUuid, 'acc-uuid-receivable');
+      expect(effect!.lines[0].accountId, 'acc-uuid-receivable');
       expect(effect.lines[0].debit, 250.0);
-      expect(effect.lines[1].accountUuid, 'acc-uuid-revenue');
+      expect(effect.lines[1].accountId, 'acc-uuid-revenue');
       expect(effect.lines[1].credit, 250.0);
     });
 
@@ -183,9 +182,9 @@ void main() {
 
       final effect = await engine.deriveAccountingEffect(tx);
       expect(effect, isNotNull);
-      expect(effect!.lines[0].accountUuid, 'acc-uuid-inventory');
+      expect(effect!.lines[0].accountId, 'acc-uuid-inventory');
       expect(effect.lines[0].debit, 500.0);
-      expect(effect.lines[1].accountUuid, 'acc-uuid-payable');
+      expect(effect.lines[1].accountId, 'acc-uuid-payable');
       expect(effect.lines[1].credit, 500.0);
     });
 
@@ -202,9 +201,9 @@ void main() {
 
       final effect = await engine.deriveAccountingEffect(tx);
       expect(effect, isNotNull);
-      expect(effect!.lines[0].accountUuid, 'acc-uuid-cogs');
+      expect(effect!.lines[0].accountId, 'acc-uuid-cogs');
       expect(effect.lines[0].debit, 80.0);
-      expect(effect.lines[1].accountUuid, 'acc-uuid-inventory');
+      expect(effect.lines[1].accountId, 'acc-uuid-inventory');
       expect(effect.lines[1].credit, 80.0);
     });
 
@@ -221,9 +220,9 @@ void main() {
 
       final effect = await engine.deriveAccountingEffect(tx);
       expect(effect, isNotNull);
-      expect(effect!.lines[0].accountUuid, 'acc-uuid-cash');
+      expect(effect!.lines[0].accountId, 'acc-uuid-cash');
       expect(effect.lines[0].debit, 100.0);
-      expect(effect.lines[1].accountUuid, 'acc-uuid-receivable');
+      expect(effect.lines[1].accountId, 'acc-uuid-receivable');
       expect(effect.lines[1].credit, 100.0);
     });
 
@@ -240,9 +239,9 @@ void main() {
 
       final effect = await engine.deriveAccountingEffect(tx);
       expect(effect, isNotNull);
-      expect(effect!.lines[0].accountUuid, 'acc-uuid-bank');
+      expect(effect!.lines[0].accountId, 'acc-uuid-bank');
       expect(effect.lines[0].debit, 300.0);
-      expect(effect.lines[1].accountUuid, 'acc-uuid-bank');
+      expect(effect.lines[1].accountId, 'acc-uuid-bank');
       expect(effect.lines[1].credit, 300.0);
     });
 

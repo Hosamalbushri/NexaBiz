@@ -18,10 +18,9 @@ import 'authoritative_account_resolver_port.dart';
 /// 8. Strict rejection of hardcoded numeric integer IDs in resolution
 class AuthoritativeAccountResolver implements AuthoritativeAccountResolverPort {
   AuthoritativeAccountResolver({
-    required AccountRepository accountRepository,
-    required CompanyInitializationRepository initRepository,
-  })  : _accountRepository = accountRepository,
-        _initRepository = initRepository;
+    required this._accountRepository,
+    required this._initRepository,
+  });
 
   final AccountRepository _accountRepository;
   final CompanyInitializationRepository _initRepository;

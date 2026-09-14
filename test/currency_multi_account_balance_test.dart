@@ -13,12 +13,12 @@ import 'package:stock_count/modules/accounting/fiscal_years/domain/services/acco
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late CurrencyRepositoryImpl currencyRepo;
   late AccountRepositoryImpl accountRepo;
   late FiscalYearRepositoryImpl fiscalRepo;
@@ -31,7 +31,7 @@ void main() {
   String currentCompanyId = 'company_test_c04';
 
   setUp(() async {
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     currentCompanyId = 'company_test_c04';
 
     currencyRepo = CurrencyRepositoryImpl(db, readCompanyId: () => currentCompanyId);
@@ -89,11 +89,11 @@ void main() {
     required DateTime date,
     required String voucherNo,
     required String currencyCode,
-    required List<({String accountUuid, double debit, double credit})> lines,
+    required List<({String accountId, double debit, double credit})> lines,
   }) async {
     final entryLines = lines
         .map((l) => JournalLineDraft(
-              accountUuid: l.accountUuid,
+              accountUuid: l.accountId,
               debit: l.debit,
               credit: l.credit,
               currencyCode: currencyCode,
@@ -121,12 +121,12 @@ void main() {
         voucherNo: 'V-001',
         currencyCode: 'YER',
         lines: [
-          (accountUuid: customer.uuid, debit: 100000.0, credit: 0.0),
-          (accountUuid: sales.uuid, debit: 0.0, credit: 100000.0),
+          (accountId: customer.id, debit: 100000.0, credit: 0.0),
+          (accountId: sales.uuid, debit: 0.0, credit: 100000.0),
         ],
       );
 
-      final multi = await balanceRepo.getBalancesForAccount(customer.uuid);
+      final multi = await balanceRepo.getBalancesForAccount(customer.id);
       expect(multi.balances.length, equals(1));
       expect(multi.balances.containsKey('YER'), isTrue);
 
@@ -146,8 +146,8 @@ void main() {
         voucherNo: 'V-101',
         currencyCode: 'YER',
         lines: [
-          (accountUuid: customer.uuid, debit: 100000.0, credit: 0.0),
-          (accountUuid: sales.uuid, debit: 0.0, credit: 100000.0),
+          (accountId: customer.id, debit: 100000.0, credit: 0.0),
+          (accountId: sales.uuid, debit: 0.0, credit: 100000.0),
         ],
       );
 
@@ -157,8 +157,8 @@ void main() {
         voucherNo: 'V-102',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: customer.uuid, debit: 500.0, credit: 0.0),
-          (accountUuid: sales.uuid, debit: 0.0, credit: 500.0),
+          (accountId: customer.id, debit: 500.0, credit: 0.0),
+          (accountId: sales.uuid, debit: 0.0, credit: 500.0),
         ],
       );
 
@@ -168,12 +168,12 @@ void main() {
         voucherNo: 'V-103',
         currencyCode: 'USD',
         lines: [
-          (accountUuid: customer.uuid, debit: 250.0, credit: 0.0),
-          (accountUuid: sales.uuid, debit: 0.0, credit: 250.0),
+          (accountId: customer.id, debit: 250.0, credit: 0.0),
+          (accountId: sales.uuid, debit: 0.0, credit: 250.0),
         ],
       );
 
-      final multi = await balanceRepo.getBalancesForAccount(customer.uuid);
+      final multi = await balanceRepo.getBalancesForAccount(customer.id);
       expect(multi.balances.length, equals(3));
 
       expect(multi.getBalance('YER')!.netBalance, equals(100000.0));
@@ -191,8 +191,8 @@ void main() {
         voucherNo: 'V-201',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: bank.uuid, debit: 500.0, credit: 0.0),
-          (accountUuid: capital.uuid, debit: 0.0, credit: 500.0),
+          (accountId: bank.uuid, debit: 500.0, credit: 0.0),
+          (accountId: capital.uuid, debit: 0.0, credit: 500.0),
         ],
       );
 
@@ -202,12 +202,12 @@ void main() {
         voucherNo: 'V-202',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: capital.uuid, debit: 200.0, credit: 0.0),
-          (accountUuid: bank.uuid, debit: 0.0, credit: 200.0),
+          (accountId: capital.uuid, debit: 200.0, credit: 0.0),
+          (accountId: bank.uuid, debit: 0.0, credit: 200.0),
         ],
       );
 
-      final bankBal = await balanceRepo.getBalanceForCurrency(accountUuid: bank.uuid, currencyCode: 'SAR');
+      final bankBal = await balanceRepo.getBalanceForCurrency(accountId: bank.uuid, currencyCode: 'SAR');
       expect(bankBal, isNotNull);
       expect(bankBal!.totalDebit, equals(500.0));
       expect(bankBal.totalCredit, equals(200.0));
@@ -224,8 +224,8 @@ void main() {
         voucherNo: 'V-301',
         currencyCode: 'YER',
         lines: [
-          (accountUuid: acc.uuid, debit: 1000.0, credit: 0.0),
-          (accountUuid: offset.uuid, debit: 0.0, credit: 1000.0),
+          (accountId: acc.uuid, debit: 1000.0, credit: 0.0),
+          (accountId: offset.uuid, debit: 0.0, credit: 1000.0),
         ],
       );
       await postJournal(
@@ -233,8 +233,8 @@ void main() {
         voucherNo: 'V-302',
         currencyCode: 'YER',
         lines: [
-          (accountUuid: offset.uuid, debit: 400.0, credit: 0.0),
-          (accountUuid: acc.uuid, debit: 0.0, credit: 400.0),
+          (accountId: offset.uuid, debit: 400.0, credit: 0.0),
+          (accountId: acc.uuid, debit: 0.0, credit: 400.0),
         ],
       );
 
@@ -244,8 +244,8 @@ void main() {
         voucherNo: 'V-303',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: acc.uuid, debit: 100.0, credit: 0.0),
-          (accountUuid: offset.uuid, debit: 0.0, credit: 100.0),
+          (accountId: acc.uuid, debit: 100.0, credit: 0.0),
+          (accountId: offset.uuid, debit: 0.0, credit: 100.0),
         ],
       );
       await postJournal(
@@ -253,8 +253,8 @@ void main() {
         voucherNo: 'V-304',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: offset.uuid, debit: 20.0, credit: 0.0),
-          (accountUuid: acc.uuid, debit: 0.0, credit: 20.0),
+          (accountId: offset.uuid, debit: 20.0, credit: 0.0),
+          (accountId: acc.uuid, debit: 0.0, credit: 20.0),
         ],
       );
 
@@ -272,8 +272,8 @@ void main() {
         voucherNo: 'V-401',
         currencyCode: 'YER',
         lines: [
-          (accountUuid: acc.uuid, debit: 1000.0, credit: 0.0),
-          (accountUuid: offset.uuid, debit: 0.0, credit: 1000.0),
+          (accountId: acc.uuid, debit: 1000.0, credit: 0.0),
+          (accountId: offset.uuid, debit: 0.0, credit: 1000.0),
         ],
       );
       await postJournal(
@@ -281,8 +281,8 @@ void main() {
         voucherNo: 'V-402',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: acc.uuid, debit: 50.0, credit: 0.0),
-          (accountUuid: offset.uuid, debit: 0.0, credit: 50.0),
+          (accountId: acc.uuid, debit: 50.0, credit: 0.0),
+          (accountId: offset.uuid, debit: 0.0, credit: 50.0),
         ],
       );
 
@@ -307,8 +307,8 @@ void main() {
         voucherNo: 'V-501',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: acc.uuid, debit: 1000.0, credit: 0.0),
-          (accountUuid: offset.uuid, debit: 0.0, credit: 1000.0),
+          (accountId: acc.uuid, debit: 1000.0, credit: 0.0),
+          (accountId: offset.uuid, debit: 0.0, credit: 1000.0),
         ],
       );
       await postJournal(
@@ -316,8 +316,8 @@ void main() {
         voucherNo: 'V-502',
         currencyCode: 'USD',
         lines: [
-          (accountUuid: acc.uuid, debit: 300.0, credit: 0.0),
-          (accountUuid: offset.uuid, debit: 0.0, credit: 300.0),
+          (accountId: acc.uuid, debit: 300.0, credit: 0.0),
+          (accountId: offset.uuid, debit: 0.0, credit: 300.0),
         ],
       );
       await postJournal(
@@ -325,13 +325,13 @@ void main() {
         voucherNo: 'V-503',
         currencyCode: 'SAR',
         lines: [
-          (accountUuid: offset.uuid, debit: 400.0, credit: 0.0),
-          (accountUuid: acc.uuid, debit: 0.0, credit: 400.0),
+          (accountId: offset.uuid, debit: 400.0, credit: 0.0),
+          (accountId: acc.uuid, debit: 0.0, credit: 400.0),
         ],
       );
 
       final sarStmt = await balanceService.getAccountStatementByCurrency(
-        accountUuid: acc.uuid,
+        accountId: acc.uuid,
         currencyCode: 'SAR',
       );
 
@@ -342,7 +342,7 @@ void main() {
       expect(sarStmt.closingBalance, equals(600.0));
 
       final usdStmt = await balanceService.getAccountStatementByCurrency(
-        accountUuid: acc.uuid,
+        accountId: acc.uuid,
         currencyCode: 'USD',
       );
 
@@ -360,8 +360,8 @@ void main() {
         voucherNo: 'V-601',
         currencyCode: 'EUR',
         lines: [
-          (accountUuid: acc.uuid, debit: 500.0, credit: 0.0),
-          (accountUuid: offset.uuid, debit: 0.0, credit: 500.0),
+          (accountId: acc.uuid, debit: 500.0, credit: 0.0),
+          (accountId: offset.uuid, debit: 0.0, credit: 500.0),
         ],
       );
 
@@ -385,7 +385,7 @@ void main() {
       expect(multi.getBalance('EUR')!.netBalance, equals(500.0));
 
       final stmt = await balanceService.getAccountStatementByCurrency(
-        accountUuid: acc.uuid,
+        accountId: acc.uuid,
         currencyCode: 'EUR',
       );
       expect(stmt.closingBalance, equals(500.0));
@@ -407,8 +407,8 @@ void main() {
         voucherNo: 'V-701',
         currencyCode: 'USD',
         lines: [
-          (accountUuid: acc1.uuid, debit: 1000.0, credit: 0.0),
-          (accountUuid: off1.uuid, debit: 0.0, credit: 1000.0),
+          (accountId: acc1.uuid, debit: 1000.0, credit: 0.0),
+          (accountId: off1.uuid, debit: 0.0, credit: 1000.0),
         ],
       );
 
@@ -421,8 +421,8 @@ void main() {
         voucherNo: 'V-702',
         currencyCode: 'USD',
         lines: [
-          (accountUuid: acc2.uuid, debit: 2500.0, credit: 0.0),
-          (accountUuid: off2.uuid, debit: 0.0, credit: 2500.0),
+          (accountId: acc2.uuid, debit: 2500.0, credit: 0.0),
+          (accountId: off2.uuid, debit: 0.0, credit: 2500.0),
         ],
       );
 

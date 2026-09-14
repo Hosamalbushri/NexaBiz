@@ -74,15 +74,20 @@ class SecureTokenStorage implements TokenStore {
         .add(Duration(seconds: expiresInSeconds))
         .toIso8601String();
     if (await _canUseSecure()) {
-      await _secure.write(key: _accessKey, value: accessToken);
-      await _secure.write(key: _refreshKey, value: refreshToken);
-      await _secure.write(key: _expiresAtKey, value: expiresAt);
-      // Clear any legacy Hive copy so tokens are not duplicated.
-      if (await _hiveFallbackExists()) {
-        final box = await _hiveBox();
-        await box.clear();
+      try {
+        await _secure.write(key: _accessKey, value: accessToken);
+        await _secure.write(key: _refreshKey, value: refreshToken);
+        await _secure.write(key: _expiresAtKey, value: expiresAt);
+        // Clear any legacy Hive copy so tokens are not duplicated.
+        if (await _hiveFallbackExists()) {
+          final box = await _hiveBox();
+          await box.clear();
+        }
+        return;
+      } catch (e) {
+        _secureAvailable = false;
+        debugPrint('SecureTokenStorage write failed, falling back to Hive ($e)');
       }
-      return;
     }
     final box = await _hiveBox();
     await box.put(_accessKey, accessToken);

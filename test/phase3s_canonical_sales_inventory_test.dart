@@ -17,14 +17,14 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/po
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart' hide SalesCompanion, SaleItemsCompanion;
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart' hide WarehousesCompanion;
+import 'package:stock_count/core/database/nexabiz_database.dart' hide SalesCompanion, SaleItemsCompanion;
+import 'package:stock_count/core/database/nexabiz_database.dart' hide WarehousesCompanion;
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 
 void main() {
   late NexabizDatabase db;
-  late SalesDatabase legacySalesDb;
-  late InventoryDatabase legacyInventoryDb;
+  late NexabizDatabase legacySalesDb;
+  late NexabizDatabase legacyInventoryDb;
 
   late SaleRepositoryImpl saleRepository;
   late StockMovementsRepositoryImpl stockMovementsRepository;
@@ -36,12 +36,12 @@ void main() {
   late CanonicalTransactionOrchestrator orchestrator;
 
   String currentCompanyId = 'company_test_3s';
-  const warehouseUuid = '11111111-2222-3333-4444-555555555555';
+  const warehouseId = '11111111-2222-3333-4444-555555555555';
 
   setUp(() async {
     db = NexabizDatabase.connect(NativeDatabase.memory());
-    legacySalesDb = SalesDatabase.memory();
-    legacyInventoryDb = InventoryDatabase.memory();
+    legacySalesDb = NexabizDatabase.memory();
+    legacyInventoryDb = NexabizDatabase.memory();
 
     saleRepository = SaleRepositoryImpl(
       db,
@@ -90,7 +90,7 @@ void main() {
     // Setup active warehouse in nexabiz.sqlite
     await db.into(db.warehouses).insert(
           WarehousesCompanion.insert(
-            uuid: const Value(warehouseUuid),
+            id: const Value(warehouseId),
             code: 'WH-MAIN',
             name: 'Main Warehouse',
             companyId: currentCompanyId,
@@ -114,11 +114,11 @@ void main() {
       // Insert sale invoice directly into nexabiz.sqlite canonical database
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: saleUuid,
+              id: saleUuid,
               saleNumber: 'SL-2026-001',
               saleDate: Value(now.millisecondsSinceEpoch),
               settlementType: const Value('cash'),
-              warehouseId: const Value(warehouseUuid),
+              warehouseId: const Value(warehouseId),
               customerName: const Value('Acme Corp'),
               currencyCode: 'USD',
               baseCurrencyCode: 'USD',
@@ -153,7 +153,7 @@ void main() {
       expect(retrieved.items.first.productCode, equals('PROD-A'));
       expect(retrieved.total, equals(500.0));
 
-      // Verify zero records in legacy SalesDatabase
+      // Verify zero records in legacy NexabizDatabase
       final legacyRows = await legacySalesDb.select(legacySalesDb.sales).get();
       expect(legacyRows, isEmpty);
     });
@@ -167,13 +167,13 @@ void main() {
         id: recUuid,
         receiptNumber: 'RC-2026-001',
         supplier: 'Supplier Alpha',
-        warehouse: warehouseUuid,
+        warehouse: warehouseId,
         receiptDate: now,
         companyId: currentCompanyId,
         lines: [
           StockMovementLine(
             id: lineRecUuid,
-            movementUuid: recUuid,
+            movementId: recUuid,
             movementType: 'receipt',
             itemCode: 'PROD-A',
             itemName: 'Product A',
@@ -198,7 +198,7 @@ void main() {
         documentNumber: 'RC-2026-001',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: now,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -206,7 +206,7 @@ void main() {
       expect(postResult, isA<PostSuccess>());
 
       // Verify cost layer created in nexabiz.sqlite
-      final openLayers = await costLayerService.getOpenLayers('PROD-A', warehouseId: warehouseUuid);
+      final openLayers = await costLayerService.getOpenLayers('PROD-A', warehouseId: warehouseId);
       expect(openLayers.length, equals(1));
       expect(openLayers.first.remainingQty, equals(10.0));
       expect(openLayers.first.unitCost, equals(50.0));
@@ -214,11 +214,11 @@ void main() {
       // Verify posted balance in nexabiz.sqlite
       final balance = await validationService.getPostedBalance(
         itemCode: 'PROD-A',
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
       );
       expect(balance, equals(10.0));
 
-      // Verify zero records in legacy InventoryDatabase
+      // Verify zero records in legacy NexabizDatabase
       final legacyReceipts = await legacyInventoryDb.select(legacyInventoryDb.stockReceipts).get();
       expect(legacyReceipts, isEmpty);
     });
@@ -239,13 +239,13 @@ void main() {
         id: rec10Uuid,
         receiptNumber: 'RC-010',
         supplier: 'Supplier 1',
-        warehouse: warehouseUuid,
+        warehouse: warehouseId,
         receiptDate: now.subtract(const Duration(hours: 2)),
         companyId: currentCompanyId,
         lines: [
           StockMovementLine(
             id: lineRec10Uuid,
-            movementUuid: rec10Uuid,
+            movementId: rec10Uuid,
             movementType: 'receipt',
             itemCode: 'PROD-B',
             itemName: 'Product B',
@@ -262,7 +262,7 @@ void main() {
           documentNumber: 'RC-010',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: now.subtract(const Duration(hours: 2)),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
       );
@@ -272,13 +272,13 @@ void main() {
         id: rec11Uuid,
         receiptNumber: 'RC-011',
         supplier: 'Supplier 2',
-        warehouse: warehouseUuid,
+        warehouse: warehouseId,
         receiptDate: now.subtract(const Duration(hours: 1)),
         companyId: currentCompanyId,
         lines: [
           StockMovementLine(
             id: lineRec11Uuid,
-            movementUuid: rec11Uuid,
+            movementId: rec11Uuid,
             movementType: 'receipt',
             itemCode: 'PROD-B',
             itemName: 'Product B',
@@ -295,7 +295,7 @@ void main() {
           documentNumber: 'RC-011',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: now.subtract(const Duration(hours: 1)),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
       );
@@ -305,13 +305,13 @@ void main() {
         id: iss1Uuid,
         issueNumber: 'IS-001',
         destination: 'Client X',
-        warehouse: warehouseUuid,
+        warehouse: warehouseId,
         issueDate: now,
         companyId: currentCompanyId,
         lines: [
           StockMovementLine(
             id: lineIss1Uuid,
-            movementUuid: iss1Uuid,
+            movementId: iss1Uuid,
             movementType: 'issue',
             itemCode: 'PROD-B',
             itemName: 'Product B',
@@ -329,7 +329,7 @@ void main() {
           documentNumber: 'IS-001',
           documentType: InventoryDocumentType.stockIssue,
           documentDate: now,
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
       );
@@ -343,7 +343,7 @@ void main() {
       // Remaining stock balance should be 5 units
       final remainingBalance = await validationService.getPostedBalance(
         itemCode: 'PROD-B',
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
       );
       expect(remainingBalance, equals(5.0));
     });
@@ -361,13 +361,13 @@ void main() {
           id: rec20Uuid,
           receiptNumber: 'RC-020',
           supplier: 'Supplier 3',
-          warehouse: warehouseUuid,
+          warehouse: warehouseId,
           receiptDate: now.subtract(const Duration(hours: 1)),
           companyId: currentCompanyId,
           lines: [
             StockMovementLine(
               id: lineRec20Uuid,
-              movementUuid: rec20Uuid,
+              movementId: rec20Uuid,
               movementType: 'receipt',
               itemCode: 'PROD-C',
               itemName: 'Product C',
@@ -384,7 +384,7 @@ void main() {
           documentNumber: 'RC-020',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: now.subtract(const Duration(hours: 1)),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
       );
@@ -392,11 +392,11 @@ void main() {
       // Insert sale invoice directly into nexabiz.sqlite
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: sale20Uuid,
+              id: sale20Uuid,
               saleNumber: 'SL-020',
               saleDate: Value(now.millisecondsSinceEpoch),
               settlementType: const Value('cash'),
-              warehouseId: const Value(warehouseUuid),
+              warehouseId: const Value(warehouseId),
               customerName: const Value('Client Y'),
               currencyCode: 'USD',
               baseCurrencyCode: 'USD',
@@ -415,7 +415,7 @@ void main() {
         final lines = <StockMovementLine>[
           StockMovementLine(
             id: lineSale20Uuid,
-            movementUuid: sale20Uuid,
+            movementId: sale20Uuid,
             movementType: 'issue',
             itemCode: 'PROD-C',
             itemName: 'Product C',
@@ -426,7 +426,7 @@ void main() {
         ];
 
         await stockMovementsRepository.saveMovementLines(
-          movementUuid: sale20Uuid,
+          movementId: sale20Uuid,
           movementType: 'issue',
           lines: lines,
         );
@@ -437,7 +437,7 @@ void main() {
             documentNumber: 'SL-020',
             documentType: InventoryDocumentType.salesInvoice,
             documentDate: now,
-            warehouseId: warehouseUuid,
+            warehouseId: warehouseId,
             status: InventoryDocumentStatus.draft,
           ),
         );
@@ -452,7 +452,7 @@ void main() {
       // Balance after sale = 12.0
       final balAfter = await validationService.getPostedBalance(
         itemCode: 'PROD-C',
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
       );
       expect(balAfter, equals(12.0));
     });
@@ -464,11 +464,11 @@ void main() {
       // Save sale for Company A directly in nexabiz.sqlite
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: compASaleUuid,
+              id: compASaleUuid,
               saleNumber: 'SL-COMP-A',
               saleDate: Value(now.millisecondsSinceEpoch),
               settlementType: const Value('cash'),
-              warehouseId: const Value(warehouseUuid),
+              warehouseId: const Value(warehouseId),
               customerName: const Value('Customer A'),
               currencyCode: 'USD',
               baseCurrencyCode: 'USD',

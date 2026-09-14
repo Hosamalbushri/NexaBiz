@@ -18,8 +18,7 @@ class _FakeCurrencyRateRepository implements CurrencyRateRepository {
     final r = rates[code.trim().toUpperCase()];
     if (r == null) return null;
     return CurrencyRate(
-      id: 1,
-      uuid: 'rate-$code',
+      id: 'rate-$code',
       currencyCode: code,
       rateToBase: r,
       updatedAt: DateTime.now(),
@@ -52,8 +51,7 @@ class _FakeCurrencyRateRepository implements CurrencyRateRepository {
   Future<CurrencyRate> upsert(CurrencyRateDraft draft) async {
     rates[draft.currencyCode.trim().toUpperCase()] = draft.rateToBase;
     return CurrencyRate(
-      id: 1,
-      uuid: 'rate-${draft.currencyCode}',
+      id: 'rate-${draft.currencyCode}',
       currencyCode: draft.currencyCode,
       rateToBase: draft.rateToBase,
       updatedAt: DateTime.now(),

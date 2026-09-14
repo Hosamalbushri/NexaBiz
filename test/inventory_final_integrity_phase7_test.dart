@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -81,7 +81,7 @@ class MockSyncBox<T> implements Box<T> {
 }
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late StockValidationServiceImpl validationService;
@@ -94,7 +94,7 @@ void main() {
   late String activeCompanyId;
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     activeCompanyId = 'company_A';
     mockBox = MockSyncBox<SyncOperation>([]);
     syncQueue = SyncQueue(
@@ -132,22 +132,19 @@ void main() {
       db: db,
       readCompanyId: () => activeCompanyId,
     );
-    transferRepo = StockTransferRepositoryImpl(db: db);
+    transferRepo = StockTransferRepositoryImpl(db: db, readCompanyId: () => activeCompanyId);
 
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now();
     await db
         .into(db.products)
         .insert(
           ProductsCompanion(
-            id: const Value(1),
-            uuid: const Value('00000000-0000-4000-8000-000000000001'),
+            id: const Value('00000000-0000-4000-8000-000000000001'),
             itemCode: const Value('ITEM-001'),
             name: const Value('Test Item 1'),
             unitCost: const Value(100.0),
             price: const Value(100.0),
             packSize: const Value(1),
-            onHandQty: const Value(0.0),
-            syncStatus: const Value('synced'),
             companyId: const Value('company_A'),
             createdAt: Value(now),
             updatedAt: Value(now),
@@ -157,15 +154,12 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            id: const Value(2),
-            uuid: const Value('00000000-0000-4000-8000-000000000002'),
+            id: const Value('00000000-0000-4000-8000-000000000002'),
             itemCode: const Value('ITEM-002'),
             name: const Value('Test Item 2'),
             unitCost: const Value(200.0),
             price: const Value(200.0),
             packSize: const Value(1),
-            onHandQty: const Value(0.0),
-            syncStatus: const Value('synced'),
             companyId: const Value('company_B'),
             createdAt: Value(now),
             updatedAt: Value(now),
@@ -175,26 +169,52 @@ void main() {
         .into(db.warehouses)
         .insert(
           WarehousesCompanion.insert(
-            uuid: 'WH-001',
+            id: const Value('00000000-0000-4000-8000-000000000001'),
             code: 'WH-001',
             name: 'Main Warehouse',
-            companyId: const Value('company_A'),
+            companyId: 'company_A',
             isActive: const Value(true),
-            createdAt: now,
-            updatedAt: now,
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
     await db
         .into(db.warehouses)
         .insert(
           WarehousesCompanion.insert(
-            uuid: 'WH-002',
+            id: const Value('00000000-0000-4000-8000-000000000002'),
             code: 'WH-002',
             name: 'Secondary Warehouse',
-            companyId: const Value('company_A'),
+            companyId: 'company_A',
             isActive: const Value(true),
-            createdAt: now,
-            updatedAt: now,
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+    await db
+        .into(db.warehouses)
+        .insert(
+          WarehousesCompanion.insert(
+            id: const Value('00000000-0000-4000-8000-00000000000a'),
+            code: 'WH-A',
+            name: 'Warehouse A',
+            companyId: 'company_A',
+            isActive: const Value(true),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+    await db
+        .into(db.warehouses)
+        .insert(
+          WarehousesCompanion.insert(
+            id: const Value('00000000-0000-4000-8000-00000000000b'),
+            code: 'WH-B',
+            name: 'Warehouse B',
+            companyId: 'company_A',
+            isActive: const Value(true),
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
   });
@@ -210,7 +230,7 @@ void main() {
     required double qty,
     required double unitCost,
     String itemCode = 'ITEM-001',
-    String warehouse = 'WH-001',
+    String warehouse = '00000000-0000-4000-8000-000000000001',
     String companyId = 'company_A',
   }) async {
     final receipt = StockReceipt(
@@ -244,7 +264,7 @@ void main() {
     required double qty,
     double unitCost = 100.0,
     String itemCode = 'ITEM-001',
-    String warehouse = 'WH-001',
+    String warehouse = '00000000-0000-4000-8000-000000000001',
     String companyId = 'company_A',
   }) async {
     final issue = StockIssue(
@@ -296,7 +316,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(layers.length, 1);
         expect(layers.first.remainingQty, 10.0);
@@ -332,7 +352,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
       },
@@ -363,7 +383,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
       },
@@ -399,7 +419,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
       },
@@ -797,7 +817,7 @@ void main() {
           docNumber: 'TR-R1',
           qty: 10,
           unitCost: 100,
-          warehouse: 'WH-A',
+          warehouse: '00000000-0000-4000-8000-00000000000a',
         );
         await coordinator.post(
           document: InventoryDocumentRef(
@@ -805,7 +825,7 @@ void main() {
             documentNumber: receipt.receiptNumber,
             documentType: InventoryDocumentType.stockReceipt,
             documentDate: receipt.receiptDate,
-            warehouseId: 'WH-A',
+            warehouseId: '00000000-0000-4000-8000-00000000000a',
           ),
         );
 
@@ -814,8 +834,8 @@ void main() {
           id: trId,
           transferNumber: 'STR-001',
           transferDate: DateTime.now(),
-          fromWarehouseId: 'WH-A',
-          toWarehouseId: 'WH-B',
+          fromWarehouseId: '00000000-0000-4000-8000-00000000000a',
+          toWarehouseId: '00000000-0000-4000-8000-00000000000b',
           notes: 'Transfer WH-A to WH-B',
           status: InventoryDocumentStatus.draft,
           companyId: 'company_A',
@@ -839,7 +859,7 @@ void main() {
             documentNumber: transferDoc.transferNumber,
             documentType: InventoryDocumentType.stockTransfer,
             documentDate: transferDoc.transferDate,
-            warehouseId: 'WH-A',
+            warehouseId: '00000000-0000-4000-8000-00000000000a',
           ),
         );
 
@@ -847,13 +867,13 @@ void main() {
 
         final srcLayers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         );
         expect(srcLayers.first.remainingQty, 6.0);
 
         final destLayers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-B',
+          warehouseId: '00000000-0000-4000-8000-00000000000b',
         );
         expect(destLayers.length, 1);
         expect(destLayers.first.remainingQty, 4.0);
@@ -867,7 +887,7 @@ void main() {
         docNumber: 'TR-R17',
         qty: 10,
         unitCost: 100,
-        warehouse: 'WH-A',
+        warehouse: '00000000-0000-4000-8000-00000000000a',
       );
       await coordinator.post(
         document: InventoryDocumentRef(
@@ -875,7 +895,7 @@ void main() {
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
-          warehouseId: 'WH-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         ),
       );
 
@@ -884,8 +904,8 @@ void main() {
         id: trId,
         transferNumber: 'STR-017',
         transferDate: DateTime.now(),
-        fromWarehouseId: 'WH-A',
-        toWarehouseId: 'WH-B',
+        fromWarehouseId: '00000000-0000-4000-8000-00000000000a',
+        toWarehouseId: '00000000-0000-4000-8000-00000000000b',
         notes: 'Transfer WH-A to WH-B',
         status: InventoryDocumentStatus.draft,
         companyId: 'company_A',
@@ -908,7 +928,7 @@ void main() {
         documentNumber: transferDoc.transferNumber,
         documentType: InventoryDocumentType.stockTransfer,
         documentDate: transferDoc.transferDate,
-        warehouseId: 'WH-A',
+        warehouseId: '00000000-0000-4000-8000-00000000000a',
       );
 
       final res1 = await coordinator.post(document: ref);
@@ -925,7 +945,7 @@ void main() {
           docNumber: 'TR-R18',
           qty: 10,
           unitCost: 100,
-          warehouse: 'WH-A',
+          warehouse: '00000000-0000-4000-8000-00000000000a',
         );
         await coordinator.post(
           document: InventoryDocumentRef(
@@ -933,7 +953,7 @@ void main() {
             documentNumber: receipt.receiptNumber,
             documentType: InventoryDocumentType.stockReceipt,
             documentDate: receipt.receiptDate,
-            warehouseId: 'WH-A',
+            warehouseId: '00000000-0000-4000-8000-00000000000a',
           ),
         );
 
@@ -942,8 +962,8 @@ void main() {
           id: trId,
           transferNumber: 'STR-018',
           transferDate: DateTime.now(),
-          fromWarehouseId: 'WH-A',
-          toWarehouseId: 'WH-B',
+          fromWarehouseId: '00000000-0000-4000-8000-00000000000a',
+          toWarehouseId: '00000000-0000-4000-8000-00000000000b',
           notes: 'Transfer WH-A to WH-B',
           status: InventoryDocumentStatus.draft,
           companyId: 'company_A',
@@ -966,14 +986,14 @@ void main() {
           documentNumber: transferDoc.transferNumber,
           documentType: InventoryDocumentType.stockTransfer,
           documentDate: transferDoc.transferDate,
-          warehouseId: 'WH-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         );
         await coordinator.post(document: ref);
         await coordinator.unpost(document: ref);
 
         final srcLayers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         );
         expect(srcLayers.first.remainingQty, 10.0);
       },
@@ -1017,7 +1037,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(layers.first.remainingQty, 5.0);
       },
@@ -1044,7 +1064,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(layers.any((l) => l.movementUuid == receipt.id), true);
       },
@@ -1069,7 +1089,7 @@ void main() {
 
       final layers = await costLayerService.getOpenLayers(
         'ITEM-001',
-        warehouseId: 'WH-001',
+        warehouseId: '00000000-0000-4000-8000-000000000001',
       );
       expect(layers.any((l) => l.movementUuid == receipt.id), false);
     });
@@ -1275,7 +1295,7 @@ void main() {
         docNumber: 'MWH-A',
         qty: 100,
         unitCost: 10,
-        warehouse: 'WH-A',
+        warehouse: '00000000-0000-4000-8000-00000000000a',
       );
       await coordinator.post(
         document: InventoryDocumentRef(
@@ -1283,17 +1303,17 @@ void main() {
           documentNumber: receiptA.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receiptA.receiptDate,
-          warehouseId: 'WH-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         ),
       );
 
       final layersA = await costLayerService.getOpenLayers(
         'ITEM-001',
-        warehouseId: 'WH-A',
+        warehouseId: '00000000-0000-4000-8000-00000000000a',
       );
       final layersB = await costLayerService.getOpenLayers(
         'ITEM-001',
-        warehouseId: 'WH-B',
+        warehouseId: '00000000-0000-4000-8000-00000000000b',
       );
 
       expect(layersA.fold<double>(0.0, (s, l) => s + l.remainingQty), 100.0);
@@ -1306,7 +1326,7 @@ void main() {
         docNumber: 'MWH-A2',
         qty: 100,
         unitCost: 10,
-        warehouse: 'WH-A',
+        warehouse: '00000000-0000-4000-8000-00000000000a',
       );
       await coordinator.post(
         document: InventoryDocumentRef(
@@ -1314,7 +1334,7 @@ void main() {
           documentNumber: receiptA.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receiptA.receiptDate,
-          warehouseId: 'WH-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         ),
       );
 
@@ -1323,8 +1343,8 @@ void main() {
         id: trId,
         transferNumber: 'MWH-TR-1',
         transferDate: DateTime.now(),
-        fromWarehouseId: 'WH-A',
-        toWarehouseId: 'WH-B',
+        fromWarehouseId: '00000000-0000-4000-8000-00000000000a',
+        toWarehouseId: '00000000-0000-4000-8000-00000000000b',
         notes: 'WH-A to WH-B',
         status: InventoryDocumentStatus.draft,
         companyId: 'company_A',
@@ -1348,17 +1368,17 @@ void main() {
           documentNumber: transferDoc.transferNumber,
           documentType: InventoryDocumentType.stockTransfer,
           documentDate: transferDoc.transferDate,
-          warehouseId: 'WH-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         ),
       );
 
       final layersA = await costLayerService.getOpenLayers(
         'ITEM-001',
-        warehouseId: 'WH-A',
+        warehouseId: '00000000-0000-4000-8000-00000000000a',
       );
       final layersB = await costLayerService.getOpenLayers(
         'ITEM-001',
-        warehouseId: 'WH-B',
+        warehouseId: '00000000-0000-4000-8000-00000000000b',
       );
 
       expect(layersA.fold<double>(0.0, (s, l) => s + l.remainingQty), 70.0);
@@ -1436,7 +1456,7 @@ void main() {
 
       final layers = await costLayerService.getOpenLayers(
         'ITEM-001',
-        warehouseId: 'WH-001',
+        warehouseId: '00000000-0000-4000-8000-000000000001',
       );
       expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
     });
@@ -1577,7 +1597,7 @@ void main() {
           docNumber: 'E2E-R',
           qty: 50,
           unitCost: 100,
-          warehouse: 'WH-E2E-A',
+          warehouse: '00000000-0000-4000-8000-00000000000a',
         );
         await coordinator.post(
           document: InventoryDocumentRef(
@@ -1585,7 +1605,7 @@ void main() {
             documentNumber: receipt.receiptNumber,
             documentType: InventoryDocumentType.stockReceipt,
             documentDate: receipt.receiptDate,
-            warehouseId: 'WH-E2E-A',
+            warehouseId: '00000000-0000-4000-8000-00000000000a',
           ),
         );
         final ops1 = await syncQueue.peekReady();
@@ -1596,7 +1616,7 @@ void main() {
           id: generateUuidV4(),
           docNumber: 'E2E-I',
           qty: 10,
-          warehouse: 'WH-E2E-A',
+          warehouse: '00000000-0000-4000-8000-00000000000a',
         );
         await coordinator.post(
           document: InventoryDocumentRef(
@@ -1604,7 +1624,7 @@ void main() {
             documentNumber: issue.issueNumber,
             documentType: InventoryDocumentType.stockIssue,
             documentDate: issue.issueDate,
-            warehouseId: 'WH-E2E-A',
+            warehouseId: '00000000-0000-4000-8000-00000000000a',
           ),
         );
         final ops2 = await syncQueue.peekReady();
@@ -1616,8 +1636,8 @@ void main() {
           id: trId,
           transferNumber: 'E2E-T',
           transferDate: DateTime.now(),
-          fromWarehouseId: 'WH-E2E-A',
-          toWarehouseId: 'WH-E2E-B',
+          fromWarehouseId: '00000000-0000-4000-8000-00000000000a',
+          toWarehouseId: '00000000-0000-4000-8000-00000000000b',
           notes: 'E2E Transfer',
           status: InventoryDocumentStatus.draft,
           companyId: 'company_A',
@@ -1640,7 +1660,7 @@ void main() {
             documentNumber: transfer.transferNumber,
             documentType: InventoryDocumentType.stockTransfer,
             documentDate: transfer.transferDate,
-            warehouseId: 'WH-E2E-A',
+            warehouseId: '00000000-0000-4000-8000-00000000000a',
           ),
         );
 
@@ -1651,18 +1671,18 @@ void main() {
             documentNumber: issue.issueNumber,
             documentType: InventoryDocumentType.stockIssue,
             documentDate: issue.issueDate,
-            warehouseId: 'WH-E2E-A',
+            warehouseId: '00000000-0000-4000-8000-00000000000a',
           ),
         );
 
-        // Check final stock state: WH-E2E-A = 50 - 15 = 35; WH-E2E-B = 15
+        // Check final stock state: 00000000-0000-4000-8000-00000000000a = 50 - 15 = 35; 00000000-0000-4000-8000-00000000000b = 15
         final layersA = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-E2E-A',
+          warehouseId: '00000000-0000-4000-8000-00000000000a',
         );
         final layersB = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-E2E-B',
+          warehouseId: '00000000-0000-4000-8000-00000000000b',
         );
 
         expect(layersA.fold<double>(0.0, (s, l) => s + l.remainingQty), 35.0);
@@ -1696,7 +1716,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(layers.where((l) => l.movementUuid == receipt.id).length, 1);
       },
@@ -1757,7 +1777,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         final totalRemaining = layers.fold<double>(
           0.0,
@@ -1788,7 +1808,7 @@ void main() {
 
         final layers = await costLayerService.getOpenLayers(
           'ITEM-001',
-          warehouseId: 'WH-001',
+          warehouseId: '00000000-0000-4000-8000-000000000001',
         );
         expect(
           layers.fold<double>(0.0, (s, l) => s + l.remainingQty) >= 0,

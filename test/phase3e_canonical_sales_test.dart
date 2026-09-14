@@ -40,7 +40,7 @@ void main() {
       // Insert Company A Sale
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: saleUuidA,
+              id: saleUuidA,
               saleNumber: 'INV-A-0001',
               subtotal: 1000.0,
               itemDiscountTotal: 0.0,
@@ -59,7 +59,7 @@ void main() {
       // Insert Company B Sale
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: saleUuidB,
+              id: saleUuidB,
               saleNumber: 'INV-B-0001',
               subtotal: 500.0,
               itemDiscountTotal: 0.0,
@@ -102,9 +102,9 @@ void main() {
       final itemUuid = generateUuidV4();
       final paymentUuid = generateUuidV4();
 
-      final customerUuid = generateUuidV4();
-      final warehouseUuid = generateUuidV4();
-      final productUuid = generateUuidV4();
+      final customerId = generateUuidV4();
+      final warehouseId = generateUuidV4();
+      final productId = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
 
       // Atomic sale aggregate creation
@@ -112,12 +112,12 @@ void main() {
         // 1. Insert header
         await db.into(db.sales).insert(
               SalesCompanion.insert(
-                uuid: saleUuid,
+                id: saleUuid,
                 saleNumber: 'INV-2026-001',
                 saleDate: Value(now),
                 settlementType: const Value('cash'),
-                warehouseId: Value(warehouseUuid),
-                customerId: Value(customerUuid),
+                warehouseId: Value(warehouseId),
+                customerId: Value(customerId),
                 customerName: const Value('Test Customer'),
                 currencyCode: 'USD',
                 baseCurrencyCode: 'USD',
@@ -139,7 +139,7 @@ void main() {
               SaleItemsCompanion.insert(
                 uuid: itemUuid,
                 saleUuid: saleUuid,
-                productId: productUuid,
+                productId: productId,
                 productName: 'Widget Alpha',
                 productCode: 'WID-001',
                 quantity: 2.0,
@@ -164,12 +164,12 @@ void main() {
 
       // Verify header
       final sale = await (db.select(db.sales)
-            ..where((tbl) => tbl.uuid.equals(saleUuid)))
+            ..where((tbl) => tbl.id.equals(saleUuid)))
           .getSingle();
 
       expect(sale.total, equals(200.0));
       expect(sale.companyId, equals(companyId));
-      expect(sale.customerId, equals(customerUuid));
+      expect(sale.customerId, equals(customerId));
 
       // Verify lines
       final items = await (db.select(db.saleItems)
@@ -178,7 +178,7 @@ void main() {
 
       expect(items.length, equals(1));
       expect(items.first.uuid, equals(itemUuid));
-      expect(items.first.productId, equals(productUuid));
+      expect(items.first.productId, equals(productId));
       expect(items.first.total, equals(200.0));
 
       // Verify payments
@@ -199,7 +199,7 @@ void main() {
       // 1. Create draft sale
       await db.into(db.sales).insert(
             SalesCompanion.insert(
-              uuid: saleUuid,
+              id: saleUuid,
               saleNumber: 'INV-STATE-01',
               subtotal: 150.0,
               itemDiscountTotal: 0.0,
@@ -214,7 +214,7 @@ void main() {
           );
 
       // 2. Transition to confirmed
-      await (db.update(db.sales)..where((tbl) => tbl.uuid.equals(saleUuid)))
+      await (db.update(db.sales)..where((tbl) => tbl.id.equals(saleUuid)))
           .write(
         SalesCompanion(
           saleStatus: const Value('confirmed'),
@@ -224,12 +224,12 @@ void main() {
       );
 
       var updated = await (db.select(db.sales)
-            ..where((tbl) => tbl.uuid.equals(saleUuid)))
+            ..where((tbl) => tbl.id.equals(saleUuid)))
           .getSingle();
       expect(updated.saleStatus, equals('confirmed'));
 
       // 3. Transition to posted
-      await (db.update(db.sales)..where((tbl) => tbl.uuid.equals(saleUuid)))
+      await (db.update(db.sales)..where((tbl) => tbl.id.equals(saleUuid)))
           .write(
         SalesCompanion(
           saleStatus: const Value('posted'),
@@ -239,7 +239,7 @@ void main() {
       );
 
       updated = await (db.select(db.sales)
-            ..where((tbl) => tbl.uuid.equals(saleUuid)))
+            ..where((tbl) => tbl.id.equals(saleUuid)))
           .getSingle();
       expect(updated.saleStatus, equals('posted'));
     });
@@ -254,7 +254,7 @@ void main() {
           // Insert sale header
           await db.into(db.sales).insert(
                 SalesCompanion.insert(
-                  uuid: saleUuid,
+                  id: saleUuid,
                   saleNumber: 'INV-FAIL-01',
                   subtotal: 50.0,
                   itemDiscountTotal: 0.0,
@@ -273,7 +273,7 @@ void main() {
       } catch (_) {}
 
       final sales = await (db.select(db.sales)
-            ..where((tbl) => tbl.uuid.equals(saleUuid)))
+            ..where((tbl) => tbl.id.equals(saleUuid)))
           .get();
 
       expect(sales, isEmpty);

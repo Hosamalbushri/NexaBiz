@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/core/navigation/app_route_param_parser.dart';
-
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';

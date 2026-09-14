@@ -6,8 +6,6 @@ import '../../../core/modules/module_registry.dart';
 import '../../../core/tenancy/session_company.dart';
 import '../../settings/settings_repository.dart';
 
-import '../../../core/tenancy/tenant_context.dart';
-
 /// Maximum service shortcuts shown on the dashboard grid.
 const int kMaxDashboardServices = 6;
 
@@ -34,12 +32,10 @@ final dashboardServicesProvider =
 class DashboardServicesController
     extends StateNotifier<AsyncValue<List<String>>> {
   DashboardServicesController({
-    required SettingsRepository repository,
+    required this._repository,
     required ModuleRegistry registry,
-    String companyId = '',
-  }) : _repository = repository,
-       _registry = registry,
-       _companyId = companyId,
+    this._companyId = '',
+  }) : _registry = registry,
        super(AsyncValue.data(_defaultIdsForRegistry(registry))) {
     _load();
   }
@@ -59,12 +55,6 @@ class DashboardServicesController
     if (saved != null) {
       state = AsyncValue.data(_sanitize(saved));
     }
-  }
-
-  List<String> _defaultIds() {
-    return [
-      for (final module in _registry.enabledModules) module.id,
-    ].take(kMaxDashboardServices).toList(growable: false);
   }
 
   List<String> _sanitize(List<String> ids) {

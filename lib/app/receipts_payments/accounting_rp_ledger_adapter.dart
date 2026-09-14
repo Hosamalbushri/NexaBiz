@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:stock_count/modules/accounting/domain/foundation/posting_intent.dart';
 import 'package:stock_count/modules/accounting/domain/integration/accounting_integration_port.dart';
 import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
@@ -13,6 +15,7 @@ import 'package:stock_count/modules/receipts_payments/transactions/domain/entiti
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_ledger_posting_port.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 
 /// App adapter: receipt/payment/transfer/exchange → local journal.
 class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
@@ -21,15 +24,18 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
     required AccountRepository accounts,
     AccountingIntegrationPort? integrationService,
     FiscalYearRepository? fiscalYears,
+    String Function()? readCompanyId,
   })  : _posting = posting,
         _accounts = accounts,
         _integrationService = integrationService,
-        _fiscalYears = fiscalYears;
+        _fiscalYears = fiscalYears,
+        _readCompanyId = readCompanyId;
 
   final JournalPostingService _posting;
   final AccountRepository _accounts;
   final AccountingIntegrationPort? _integrationService;
   final FiscalYearRepository? _fiscalYears;
+  final String Function()? _readCompanyId;
 
   static String sourceTypeFor(TransactionType type) => switch (type) {
     TransactionType.receipt => 'receipt',
@@ -363,9 +369,24 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       );
     }
 
-    if (_integrationService != null) {
+    final companyId = _readCompanyId?.call();
+    if (_readCompanyId != null && (companyId == null || companyId.trim().isEmpty)) {
+      throw MissingCompanyContextException(
+        'RP ledger posting blocked: missing active company context.',
+      );
+    }
+
+    final integrationService = _integrationService;
+    if (integrationService != null) {
+      final resolvedCompanyId = companyId?.trim() ?? '';
+      if (resolvedCompanyId.isEmpty) {
+        throw MissingCompanyContextException(
+          'RP ledger posting blocked: missing active company context.',
+        );
+      }
+
       final intent = ExplicitAccountPostingIntent(
-        companyId: 'default',
+        companyId: resolvedCompanyId,
         sourceType: sourceTypeFor(txn.transactionType),
         sourceId: txn.uuid,
 
@@ -387,7 +408,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
         )).toList(),
       );
 
-      final postingResult = await _integrationService!.processPostingIntent(intent);
+      final postingResult = await integrationService.processPostingIntent(intent);
       if (!postingResult.isSuccess) {
         throw Exception(
           postingResult.failureReason ?? 'فشل الترحيل المحاسبي للحركة المالية',

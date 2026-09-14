@@ -9,8 +9,7 @@ void main() {
     final now = DateTime(2026, 1, 1);
     final List<Account> sampleAccounts = [
       Account(
-        id: 1,
-        uuid: 'acc-1',
+        id: 'acc-1',
         accountCode: '101',
         name: 'الصندوق الرئيسي',
         accountType: AccountType.asset,
@@ -23,8 +22,7 @@ void main() {
         updatedAt: now,
       ),
       Account(
-        id: 2,
-        uuid: 'acc-2',
+        id: 'acc-2',
         accountCode: '10',
         name: 'الأصول المتداولة',
         accountType: AccountType.asset,
@@ -37,8 +35,7 @@ void main() {
         updatedAt: now,
       ),
       Account(
-        id: 3,
-        uuid: 'acc-3',
+        id: 'acc-3',
         accountCode: '401',
         name: 'إيرادات المبيعات',
         accountType: AccountType.revenue,
@@ -51,8 +48,7 @@ void main() {
         updatedAt: now,
       ),
       Account(
-        id: 4,
-        uuid: 'acc-4',
+        id: 'acc-4',
         accountCode: '901',
         name: 'حساب ملغي',
         accountType: AccountType.expense,
@@ -66,8 +62,7 @@ void main() {
         deletedAt: now, // Deleted
       ),
       Account(
-        id: 5,
-        uuid: 'acc-5',
+        id: 'acc-5',
         accountCode: '902',
         name: 'حساب غير موقّف',
         accountType: AccountType.expense,

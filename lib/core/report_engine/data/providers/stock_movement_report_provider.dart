@@ -16,9 +16,9 @@ import 'report_data_provider.dart';
 class StockMovementReportDataProvider
     implements ReportDataProvider, PagedReportDataProvider<ReportRowData> {
   StockMovementReportDataProvider({
-    required NexabizDatabase db,
+    required this._db,
     this.companyName = 'شركة نكسا بيز NexaBiz',
-  }) : _db = db;
+  });
 
   final NexabizDatabase _db;
   NexabizDatabase get inventoryDb => _db;

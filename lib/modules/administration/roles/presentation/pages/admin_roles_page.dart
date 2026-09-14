@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/router/app_routes.dart';
-import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/errors/app_failure.dart';

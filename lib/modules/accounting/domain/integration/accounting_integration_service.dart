@@ -12,14 +12,11 @@ import 'accounting_integration_port.dart';
 /// Concrete implementation of [AccountingIntegrationPort].
 class AccountingIntegrationService implements AccountingIntegrationPort {
   AccountingIntegrationService({
-    required AccountingPolicyPort policyPort,
-    required AccountingRulesEnginePort rulesEngine,
-    required AccountingPostingAuthorityPort postingAuthority,
-    CanonicalAccountingValidationBoundary? validationBoundary,
-  })  : _policyPort = policyPort,
-        _rulesEngine = rulesEngine,
-        _postingAuthority = postingAuthority,
-        _validationBoundary = validationBoundary;
+    required this._policyPort,
+    required this._rulesEngine,
+    required this._postingAuthority,
+    this._validationBoundary,
+  });
 
   final AccountingPolicyPort _policyPort;
   final AccountingRulesEnginePort _rulesEngine;
@@ -120,8 +117,9 @@ class AccountingIntegrationService implements AccountingIntegrationPort {
     try {
       if (intent is ExplicitAccountPostingIntent) {
         // Validate explicit intent via CanonicalAccountingValidationBoundary
-        if (_validationBoundary != null) {
-          await _validationBoundary!.validateExplicitPosting(intent: intent);
+        final validationBoundary = _validationBoundary;
+        if (validationBoundary != null) {
+          await validationBoundary.validateExplicitPosting(intent: intent);
         }
 
         final context = AccountingTransactionContext(

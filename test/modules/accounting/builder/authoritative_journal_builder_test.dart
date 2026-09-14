@@ -62,14 +62,14 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: 'acc-cash-001',
+            accountId: 'acc-cash-001',
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
             lineDescription: 'Cash received',
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-rev-001',
+            accountId: 'acc-rev-001',
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',
@@ -81,7 +81,7 @@ void main() {
       final journal = await builder.buildJournal(effect);
 
       expect(journal, isNotNull);
-      expect(journal.uuid, isNotEmpty);
+      expect(journal.id, isNotEmpty);
       expect(journal.context.companyId, companyId);
       expect(journal.context.sourceReference.sourceId, sourceRef.sourceId);
       expect(journal.voucherNumber, 'INV-100');
@@ -89,12 +89,12 @@ void main() {
       expect(journal.isPosted, isFalse); // Journal Builder does NOT post!
       expect(journal.lines.length, 2);
 
-      expect(journal.lines[0].accountUuid, 'acc-cash-001');
+      expect(journal.lines[0].accountId, 'acc-cash-001');
       expect(journal.lines[0].debit, 100.0);
       expect(journal.lines[0].credit, 0.0);
       expect(journal.lines[0].baseDebit, 100.0);
 
-      expect(journal.lines[1].accountUuid, 'acc-rev-001');
+      expect(journal.lines[1].accountId, 'acc-rev-001');
       expect(journal.lines[1].debit, 0.0);
       expect(journal.lines[1].credit, 100.0);
       expect(journal.lines[1].baseCredit, 100.0);
@@ -118,21 +118,21 @@ void main() {
         voucherType: 'Multi-line Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: 'acc-cash-001',
+            accountId: 'acc-cash-001',
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'EUR',
             exchangeRateToBase: 1.10,
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-discount-001',
+            accountId: 'acc-discount-001',
             debit: 10.0,
             credit: 0.0,
             currencyCode: 'EUR',
             exchangeRateToBase: 1.10,
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-rev-001',
+            accountId: 'acc-rev-001',
             debit: 0.0,
             credit: 110.0,
             currencyCode: 'EUR',
@@ -170,13 +170,13 @@ void main() {
         voucherType: 'Sale',
         lines: [
           AccountingEffectLine(
-            accountUuid: 'acc-cash-001',
+            accountId: 'acc-cash-001',
             debit: 100.0,
             credit: 0.0,
             currencyCode: 'USD',
           ),
           AccountingEffectLine(
-            accountUuid: 'acc-rev-001',
+            accountId: 'acc-rev-001',
             debit: 0.0,
             credit: 100.0,
             currencyCode: 'USD',

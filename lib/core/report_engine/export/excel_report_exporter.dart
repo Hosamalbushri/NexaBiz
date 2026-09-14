@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use // Preserving share_plus Share.shareXFiles until plugin API stabilization.
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';

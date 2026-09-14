@@ -84,6 +84,9 @@ String escapeSqlString(String source) {
   return source.replaceAll("'", "''");
 }
 
+/// Resolves the absolute physical file path for a SQLite database name.
+Future<String> resolveDatabasePath(String name) => _databasePath(name);
+
 Future<String> _databasePath(String name) async {
   if (p.isAbsolute(name)) {
     return name.endsWith('.sqlite') ? name : '$name.sqlite';
@@ -159,5 +162,3 @@ Future<bool> _isPlaintextDatabase(String dbPath) async {
     db.close();
   }
 }
-
-

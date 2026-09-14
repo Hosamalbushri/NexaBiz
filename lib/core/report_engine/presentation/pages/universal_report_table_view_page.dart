@@ -70,8 +70,9 @@ class _UniversalReportTableViewPageState
           s == '0' ||
           s == 'unposted' ||
           s == 'draft' ||
-          s == 'غير مرحل')
+          s == 'غير مرحل') {
         return false;
+      }
     }
     final status = row['postingStatus']?.toString().toLowerCase();
     if (status != null) {

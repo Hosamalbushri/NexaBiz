@@ -5,7 +5,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
@@ -14,7 +14,7 @@ import 'package:stock_count/modules/accounting/journals/domain/entities/journal_
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_rate_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/currency_rate.dart';
 
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_engine_impl.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
@@ -35,14 +35,14 @@ import 'helpers/journal_posting_test_helper.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService postingService;
   late CurrencyRateRepositoryImpl rateRepo;
   late Directory tempDir;
 
-  late InventoryDatabase invDb;
+  late NexabizDatabase invDb;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
 
@@ -57,7 +57,7 @@ void main() {
 
     companyId = 'company_fx_test';
 
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     accountRepo = AccountRepositoryImpl(db, readCompanyId: () => companyId);
     rateRepo = CurrencyRateRepositoryImpl(db, readCompanyId: () => companyId);
     journalRepo = JournalRepositoryImpl(
@@ -72,7 +72,7 @@ void main() {
       periodValidator: legacyPeriodValidator(),
     );
 
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    invDb = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(
       db: invDb,
       readCompanyId: () => companyId,
@@ -95,7 +95,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: cashAccountUuid,
+            id: cashAccountUuid,
             companyId: Value(companyId),
             accountCode: '1010',
             name: 'Cash Account',
@@ -113,7 +113,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: arAccountUuid,
+            id: arAccountUuid,
             companyId: Value(companyId),
             accountCode: '1110',
             name: 'AR Customer Account',
@@ -131,7 +131,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: salesAccountUuid,
+            id: salesAccountUuid,
             companyId: Value(companyId),
             accountCode: '4100',
             name: 'Sales Revenue',
@@ -218,14 +218,14 @@ void main() {
         final fetched = await journalRepo.getByUuid(posted.uuid);
         expect(fetched, isNotNull);
         final line1 = fetched!.lines.firstWhere(
-          (l) => l.accountUuid == cashAccountUuid,
+          (l) => l.accountId == cashAccountUuid,
         );
         expect(line1.exchangeRateToBase, equals(historicalRate));
         expect(line1.baseDebit, equals(375.0));
         expect(line1.debit, equals(100.0));
 
         final line2 = fetched.lines.firstWhere(
-          (l) => l.accountUuid == salesAccountUuid,
+          (l) => l.accountId == salesAccountUuid,
         );
         expect(line2.exchangeRateToBase, equals(historicalRate));
         expect(line2.baseCredit, equals(375.0));
@@ -245,8 +245,7 @@ void main() {
         );
 
         final sale = Sale(
-          id: 1,
-          uuid: generateUuidV4(),
+          id: generateUuidV4(),
           saleNumber: 'INV-FX-101',
           saleDate: saleDate,
           settlementType: SaleSettlementType.credit,
@@ -294,13 +293,13 @@ void main() {
         expect(entry!.isPosted, isTrue);
 
         final arLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == arAccountUuid,
+          (l) => l.accountId == arAccountUuid,
         );
         expect(arLine.exchangeRateToBase, equals(historicalRate));
         expect(arLine.baseDebit, equals(750.0)); // 200 * 3.75
 
         final revenueLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == salesAccountUuid,
+          (l) => l.accountId == salesAccountUuid,
         );
         expect(revenueLine.exchangeRateToBase, equals(historicalRate));
         expect(revenueLine.baseCredit, equals(750.0)); // 200 * 3.75
@@ -359,14 +358,14 @@ void main() {
 
         // Check that reversal uses original exchange rate (3.75) and original base amounts (1875)
         final revCashLine = reversal.lines.firstWhere(
-          (l) => l.accountUuid == cashAccountUuid,
+          (l) => l.accountId == cashAccountUuid,
         );
         expect(revCashLine.exchangeRateToBase, equals(originalRate));
         expect(revCashLine.credit, equals(500.0));
         expect(revCashLine.baseCredit, equals(1875.0));
 
         final revSalesLine = reversal.lines.firstWhere(
-          (l) => l.accountUuid == salesAccountUuid,
+          (l) => l.accountId == salesAccountUuid,
         );
         expect(revSalesLine.exchangeRateToBase, equals(originalRate));
         expect(revSalesLine.debit, equals(500.0));

@@ -117,11 +117,11 @@ void main() {
         final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: rpCashAccountRequirement,
-          accountUuid: validCashAccount.uuid,
+          accountId: validCashAccount.uuid,
         );
 
         expect(binding.status, equals(AccountBindingStatus.bound));
-        expect(binding.accountUuid, equals('uuid_cash_1010'));
+        expect(binding.accountId, equals('uuid_cash_1010'));
       },
     );
 
@@ -152,7 +152,7 @@ void main() {
           () async => resolver.bindAccount(
             companyId: companyA,
             requirement: rpCashAccountRequirement,
-            accountUuid: crossCompanyAccount.uuid,
+            accountId: crossCompanyAccount.uuid,
           ),
           throwsA(isA<CrossCompanyAccountBindingException>()),
         );

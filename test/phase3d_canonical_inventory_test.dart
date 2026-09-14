@@ -111,16 +111,16 @@ void main() {
     test('Inventory cost layer creation and consumption tracking in nexabiz.sqlite', () async {
       final companyId = 'comp-cost-layer-3d';
       final layerUuid = generateUuidV4();
-      final movementUuid = generateUuidV4();
+      final movementId = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
 
       // 1. Create cost layer
       await db.into(db.inventoryCostLayers).insert(
             InventoryCostLayersCompanion.insert(
-              uuid: layerUuid,
+              id: layerUuid,
               itemCode: 'ITEM-COST-1',
               warehouseId: const Value('WH-MAIN'),
-              movementUuid: movementUuid,
+              movementId: movementId,
               movementType: 'receipt',
               receivedDate: now,
               receivedQty: const Value(100.0),
@@ -150,7 +150,7 @@ void main() {
       await db.transaction(() async {
         // Decrement cost layer remaining quantity
         await (db.update(db.inventoryCostLayers)
-              ..where((tbl) => tbl.uuid.equals(layerUuid)))
+              ..where((tbl) => tbl.id.equals(layerUuid)))
             .write(
           const InventoryCostLayersCompanion(
             remainingQty: Value(60.0),
@@ -174,7 +174,7 @@ void main() {
       });
 
       final updatedLayer = await (db.select(db.inventoryCostLayers)
-            ..where((tbl) => tbl.uuid.equals(layerUuid)))
+            ..where((tbl) => tbl.id.equals(layerUuid)))
           .getSingle();
 
       expect(updatedLayer.remainingQty, equals(60.0));
@@ -200,7 +200,7 @@ void main() {
               uuid: whStockUuid,
               itemCode: 'ITEM-WH-PROJ',
               warehouseId: 'WH-CENTRAL',
-              onHandQty: const Value(50.0),
+              
               createdAt: now,
               updatedAt: now,
               companyId: Value(companyId),
@@ -208,7 +208,7 @@ void main() {
           );
 
       final stock = await (db.select(db.productWarehouseStocks)
-            ..where((tbl) => tbl.uuid.equals(whStockUuid)))
+            ..where((tbl) => tbl.id.equals(whStockUuid)))
           .getSingle();
 
       expect(stock.onHandQty, equals(50.0));
@@ -221,7 +221,7 @@ void main() {
                 uuid: generateUuidV4(),
                 itemCode: 'ITEM-WH-PROJ',
                 warehouseId: 'WH-CENTRAL',
-                onHandQty: const Value(20.0),
+                
                 createdAt: now,
                 updatedAt: now,
                 companyId: Value(companyId),
@@ -233,7 +233,7 @@ void main() {
 
     test('Transactional rollback on failed inventory movement', () async {
       final companyId = 'comp-rollback-3d';
-      final movementUuid = generateUuidV4();
+      final movementId = generateUuidV4();
       final now = DateTime.now().millisecondsSinceEpoch;
 
       try {
@@ -241,7 +241,7 @@ void main() {
           // 1. Insert movement ledger entry
           await db.into(db.stockMovementLedgers).insert(
                 StockMovementLedgersCompanion.insert(
-                  uuid: movementUuid,
+                  uuid: movementId,
                   companyId: companyId,
                   warehouseId: 'WH-TEST',
                   itemCode: 'ITEM-FAIL',
@@ -268,7 +268,7 @@ void main() {
 
       // Verify movement ledger entry was NOT persisted due to rollback
       final ledgers = await (db.select(db.stockMovementLedgers)
-            ..where((tbl) => tbl.uuid.equals(movementUuid)))
+            ..where((tbl) => tbl.id.equals(movementId)))
           .get();
 
       expect(ledgers, isEmpty);

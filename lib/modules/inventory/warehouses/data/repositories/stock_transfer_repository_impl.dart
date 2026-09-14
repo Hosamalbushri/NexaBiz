@@ -1,12 +1,9 @@
+// ignore_for_file: prefer_initializing_formals
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
-import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/core/sync/sync_core.dart';
 
 import '../../domain/entities/stock_transfer.dart';
@@ -18,21 +15,15 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
   StockTransferRepositoryImpl({
     required NexabizDatabase db,
     SyncQueue? syncQueue,
-    CostLayerService? costLayerService,
-    CostValuationMethod? valuationMethod,
     String Function()? readCompanyId,
     InitializationGuard? initializationGuard,
   })  : _db = db,
         _syncQueue = syncQueue,
-        _costLayerService =
-            costLayerService ??
-            CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
         _readCompanyId = readCompanyId,
         _initializationGuard = initializationGuard;
 
   final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
-  final CostLayerService _costLayerService;
   final String Function()? _readCompanyId;
   final InitializationGuard? _initializationGuard;
 
@@ -120,7 +111,7 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
               .get();
 
       for (final wh in whs) {
-        if (wh.companyId != null && wh.companyId != effectiveCompanyId) {
+        if (wh.companyId.isNotEmpty && wh.companyId != effectiveCompanyId) {
           throw StateError(
             'لا يمكن نقل المخزون بين مستودعات تابعة لشركات مختلفة.',
           );
@@ -211,6 +202,7 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
                 quantity: Value(line.quantity),
                 unitCost: Value(line.unitCost),
                 totalCost: Value(line.totalCost),
+                companyId: Value(effectiveCompanyId),
               ),
             );
       }
@@ -287,54 +279,6 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
           ),
         )
         .toList();
-  }
-
-  Future<void> _adjustWhStock(
-    String itemCode,
-    String warehouseId,
-    double delta,
-  ) async {
-    final existing =
-        await (_db.select(_db.productWarehouseStocks)..where(
-              (tbl) =>
-                  tbl.itemCode.equals(itemCode) &
-                  tbl.warehouseId.equals(warehouseId) &
-                  tbl.companyId.equals(_currentCompanyId),
-            ))
-            .getSingleOrNull();
-
-    final now = DateTime.now().toUtc();
-    if (existing != null) {
-      final newQty = existing.onHandQty + delta;
-      await (_db.update(_db.productWarehouseStocks)..where(
-            (tbl) =>
-                tbl.id.equals(existing.id) &
-                tbl.companyId.equals(_currentCompanyId),
-          ))
-          .write(
-            ProductWarehouseStocksCompanion(
-              onHandQty: Value(newQty),
-              updatedAt: Value(now.millisecondsSinceEpoch),
-              version: Value(existing.version + 1),
-            ),
-          );
-    } else {
-      final newId = generateUuidV7();
-      await _db
-          .into(_db.productWarehouseStocks)
-          .insert(
-            ProductWarehouseStocksCompanion(
-              id: Value(newId),
-              itemCode: Value(itemCode),
-              warehouseId: Value(warehouseId),
-              onHandQty: Value(delta),
-              createdAt: Value(now.millisecondsSinceEpoch),
-              updatedAt: Value(now.millisecondsSinceEpoch),
-              version: const Value(1),
-              companyId: Value(_currentCompanyId),
-            ),
-          );
-    }
   }
 
   StockTransfer _mapRowToTransfer(

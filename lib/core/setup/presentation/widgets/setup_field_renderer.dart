@@ -323,7 +323,7 @@ class SetupFieldRenderer extends StatelessWidget {
                             ? Text(
                                 selectedAccount.code.isNotEmpty
                                     ? '${selectedAccount.code} - ${selectedAccount.name}'
-                                    : selectedUuid!,
+                                    : selectedUuid,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.onSurface,

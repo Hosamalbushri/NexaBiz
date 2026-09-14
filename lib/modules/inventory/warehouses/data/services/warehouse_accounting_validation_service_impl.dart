@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/app/settings/company/functional_currency_service.dart';
 import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
+import 'package:stock_count/modules/currency/domain/services/functional_currency_service.dart';
 
 class WarehouseAccountingValidationServiceImpl
     implements WarehouseAccountingValidationService {
@@ -11,30 +11,9 @@ class WarehouseAccountingValidationServiceImpl
     this._accountingDb, {
     CompanyInitializationRepository? initRepository,
     FunctionalCurrencyService? functionalCurrencyService,
-  })  : _initRepository = initRepository,
-        _functionalCurrencyService = functionalCurrencyService;
+  });
 
   final NexabizDatabase _accountingDb;
-  final CompanyInitializationRepository? _initRepository;
-  final FunctionalCurrencyService? _functionalCurrencyService;
-
-  Future<String?> _resolveValuationCurrencyCode(String companyId) async {
-    final invConfig = await _initRepository?.getInventoryConfig();
-    if (invConfig != null &&
-        invConfig.inventoryBaseCurrencyId.trim().isNotEmpty) {
-      return invConfig.inventoryBaseCurrencyId.trim().toUpperCase();
-    }
-    final funcService = _functionalCurrencyService;
-    if (funcService != null) {
-      try {
-        final func = await funcService.getFunctionalCurrency(companyId);
-        if (func.code.trim().isNotEmpty) {
-          return func.code.trim().toUpperCase();
-        }
-      } catch (_) {}
-    }
-    return null;
-  }
 
   @override
   Future<WarehouseAccountingValidationResult> validateAccount({

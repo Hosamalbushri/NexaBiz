@@ -6,7 +6,7 @@ import 'package:stock_count/app/reports/account_statement_report_data_adapter.da
 import 'package:stock_count/app/sales/accounting_sale_ledger_adapter.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/data/repositories/currency_rate_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
@@ -30,7 +30,7 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.d
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accounts;
   late JournalRepositoryImpl journals;
   late CurrencyRateRepositoryImpl rates;
@@ -47,7 +47,7 @@ void main() {
     }
     syncBox = await Hive.openBox<SyncOperation>('sync_queue');
     queue = SyncQueue(box: syncBox);
-    db = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
     accounts = AccountRepositoryImpl(db, syncQueue: queue);
     journals = JournalRepositoryImpl(
       db,
@@ -260,7 +260,7 @@ void main() {
     test('blocks soft-delete of account used on journal lines', () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
       final revenue = (await accounts.getByAccountCode('4100'))!;
-      final customerUuid = await customerAccountUuid();
+      final customerId = await customerAccountUuid();
 
       await journals.post(
         JournalEntryDraft(
@@ -272,7 +272,7 @@ void main() {
           sourceId: 'sale-in-use',
           lines: [
             JournalLineDraft(
-              accountUuid: customerUuid,
+              accountUuid: customerId,
               debit: 15,
               credit: 0,
               currencyCode: 'YER',
@@ -287,10 +287,10 @@ void main() {
         ),
       );
 
-      expect(await accounts.isUsedInTransactions(customerUuid), isTrue);
+      expect(await accounts.isUsedInTransactions(customerId), isTrue);
       expect(await accounts.isUsedInTransactions(cash.uuid), isFalse);
 
-      final customer = (await accounts.getByUuid(customerUuid))!;
+      final customer = (await accounts.getByUuid(customerId))!;
       await expectLater(
         accounts.softDelete(customer.id),
         throwsA(
@@ -306,7 +306,7 @@ void main() {
       await journalPostingWithLegacyPolicy(
         journals: journals,
       ).voidBySource(sourceType: 'sale', sourceId: 'sale-in-use');
-      expect(await accounts.isUsedInTransactions(customerUuid), isTrue);
+      expect(await accounts.isUsedInTransactions(customerId), isTrue);
       await expectLater(
         accounts.softDelete(customer.id),
         throwsA(
@@ -372,7 +372,7 @@ void main() {
 
         expect(
           await journals.sumNetBefore(
-            accountUuid: cash.uuid,
+            accountId: cash.uuid,
             beforeDate: DateTime.utc(2026, 8, 1),
             currencyCode: 'YER',
           ),
@@ -380,7 +380,7 @@ void main() {
         );
         expect(
           await journals.sumNetBefore(
-            accountUuid: cash.uuid,
+            accountId: cash.uuid,
             beforeDate: DateTime.utc(2026, 8, 1),
             currencyCode: 'USD',
           ),
@@ -388,7 +388,7 @@ void main() {
         );
 
         final codes = await journals.listCurrencyCodesForAccount(
-          accountUuid: cash.uuid,
+          accountId: cash.uuid,
           toDate: DateTime.utc(2026, 8, 5),
         );
         expect(codes, containsAll(<String>['USD', 'YER']));
@@ -425,14 +425,14 @@ void main() {
       }
 
       final page1 = await journals.listMovementsForAccount(
-        accountUuid: cash.uuid,
+        accountId: cash.uuid,
         limit: 2,
       );
       expect(page1, hasLength(2));
       expect(page1.map((m) => m.debit).toList(), [1.0, 2.0]);
 
       final page2 = await journals.listMovementsForAccount(
-        accountUuid: cash.uuid,
+        accountId: cash.uuid,
         limit: 2,
         after: AccountLedgerCursor.fromMovement(page1.last),
       );
@@ -617,11 +617,11 @@ void main() {
         expect(entry.lines, hasLength(2));
         final debit = entry.lines.singleWhere((l) => l.debit > 0);
         final credit = entry.lines.singleWhere((l) => l.credit > 0);
-        expect(debit.accountUuid, customerAccount);
+        expect(debit.accountId, customerAccount);
         expect(debit.debit, 150);
         expect(credit.credit, 150);
         final revenue = await accounts.getByAccountCode('4100');
-        expect(credit.accountUuid, revenue!.uuid);
+        expect(credit.accountId, revenue!.uuid);
       },
     );
 
@@ -645,7 +645,7 @@ void main() {
       expect(entry!.isPosted, isFalse);
 
       final movements = await journals.listMovementsForAccount(
-        accountUuid: customerAccount,
+        accountId: customerAccount,
         isPosted: false,
       );
       expect(movements.where((m) => m.debit == 90), hasLength(1));
@@ -672,9 +672,9 @@ void main() {
         ),
       );
       final movements = await journals.listMovementsForAccount(
-        accountUuid: customerAccount,
+        accountId: customerAccount,
       );
-      expect(movements.where((m) => m.entryUuid.isNotEmpty), hasLength(1));
+      expect(movements.where((m) => m.entryId.isNotEmpty), hasLength(1));
       expect(movements.single.debit, 120);
     });
 
@@ -723,11 +723,11 @@ void main() {
       expect(entry.isPosted, isFalse);
       final debit = entry.lines.singleWhere((l) => l.debit > 0);
       final credit = entry.lines.singleWhere((l) => l.credit > 0);
-      expect(debit.accountUuid, cash.uuid);
+      expect(debit.accountId, cash.uuid);
       expect(debit.debit, 99);
       expect(credit.credit, 99);
       final revenue = await accounts.getByAccountCode('4100');
-      expect(credit.accountUuid, revenue!.uuid);
+      expect(credit.accountId, revenue!.uuid);
     });
 
     test('sale with discounts Dr 5170 and Cr 4100 gross', () async {
@@ -750,17 +750,17 @@ void main() {
       expect(entry, isNotNull);
       expect(entry!.lines, hasLength(3));
       final customerLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == customerAccount,
+        (l) => l.accountId == customerAccount,
       );
       expect(customerLine.debit, 80);
       final discount = await accounts.getByAccountCode('5170');
       final discountLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == discount!.uuid,
+        (l) => l.accountId == discount!.uuid,
       );
       expect(discountLine.debit, 20);
       final revenue = await accounts.getByAccountCode('4100');
       final revenueLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == revenue!.uuid,
+        (l) => l.accountId == revenue!.uuid,
       );
       expect(revenueLine.credit, 100);
     });
@@ -787,20 +787,20 @@ void main() {
         expect(entry!.lines, hasLength(3));
 
         final customerLine = entry.lines.singleWhere(
-          (l) => l.accountUuid == customerAccount,
+          (l) => l.accountId == customerAccount,
         );
         expect(customerLine.debit, 115);
 
         final revenue = await accounts.getByAccountCode('4100');
         final revenueLine = entry.lines.singleWhere(
-          (l) => l.accountUuid == revenue!.uuid,
+          (l) => l.accountId == revenue!.uuid,
         );
         expect(revenueLine.credit, 100);
 
         final vat = await accounts.getByAccountCode('2130');
         expect(vat, isNotNull);
         final vatLine = entry.lines.singleWhere(
-          (l) => l.accountUuid == vat!.uuid,
+          (l) => l.accountId == vat!.uuid,
         );
         expect(vatLine.credit, 15);
       },
@@ -829,26 +829,26 @@ void main() {
 
       // Debits: Customer (105) + Discounts (10) = 115
       final customerLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == customerAccount,
+        (l) => l.accountId == customerAccount,
       );
       expect(customerLine.debit, 105);
 
       final discount = await accounts.getByAccountCode('5170');
       final discountLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == discount!.uuid,
+        (l) => l.accountId == discount!.uuid,
       );
       expect(discountLine.debit, 10);
 
       // Credits: Revenue (100) + VAT Output (15) = 115
       final revenue = await accounts.getByAccountCode('4100');
       final revenueLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == revenue!.uuid,
+        (l) => l.accountId == revenue!.uuid,
       );
       expect(revenueLine.credit, 100);
 
       final vat = await accounts.getByAccountCode('2130');
       final vatLine = entry.lines.singleWhere(
-        (l) => l.accountUuid == vat!.uuid,
+        (l) => l.accountId == vat!.uuid,
       );
       expect(vatLine.credit, 15);
     });
@@ -876,7 +876,7 @@ void main() {
         expect(generalAr, isNotNull);
 
         final debit = entry!.lines.singleWhere((l) => l.debit > 0);
-        expect(debit.accountUuid, generalAr!.uuid);
+        expect(debit.accountId, generalAr!.uuid);
         expect(debit.debit, 200);
       },
     );
@@ -904,7 +904,7 @@ void main() {
       );
 
       final payload = await statement.load(
-        accountUuid: customerAccount,
+        accountId: customerAccount,
         fromDate: DateTime.utc(2026, 8, 1),
         toDate: DateTime.utc(2026, 8, 31),
         statementType: AccountStatementType.cumulativeAccountCurrency,
@@ -1012,7 +1012,7 @@ void main() {
         );
 
         final payload = await statement.load(
-          accountUuid: customerAccount,
+          accountId: customerAccount,
           currencyCode: null, // كل العملات
           fromDate: DateTime.utc(2026, 8, 1),
           toDate: DateTime.utc(2026, 8, 31),
@@ -1092,7 +1092,7 @@ void main() {
           AccountStatementPostingFilter.unposted,
         ]) {
           final payload = await statement.load(
-            accountUuid: customerAccount,
+            accountId: customerAccount,
             fromDate: todayLocal,
             toDate: todayLocal,
             statementType: AccountStatementType.cumulativeAccountCurrency,
@@ -1113,7 +1113,7 @@ void main() {
         }
 
         final postedOnly = await statement.load(
-          accountUuid: customerAccount,
+          accountId: customerAccount,
           fromDate: todayLocal,
           toDate: todayLocal,
           statementType: AccountStatementType.cumulativeAccountCurrency,
@@ -1150,7 +1150,7 @@ void main() {
       );
 
       final payload = await statement.load(
-        accountUuid: customerAccount,
+        accountId: customerAccount,
         fromDate: DateTime.utc(2026, 8, 1),
         toDate: DateTime.utc(2026, 8, 31),
         statementType: AccountStatementType.cumulativeAccountCurrency,
@@ -1188,8 +1188,7 @@ Sale _sale({
   final resolvedSubtotal =
       subtotal ?? (total + itemDiscountTotal + discountAmount - taxAmount);
   return Sale(
-    id: 1,
-    uuid: uuid,
+    id: uuid,
     saleNumber: '42',
     saleDate: saleDate ?? now,
     settlementType: settlement,

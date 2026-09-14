@@ -154,14 +154,14 @@ void main() {
   group('Phase 3J — Canonical Sync & Replication Baseline Tests', () {
     test('Sync operation uses stable 36-character UUID v4 identity', () {
       final entityUuid = generateUuidV4();
-      final companyUuid = generateUuidV4();
+      final companyId = generateUuidV4();
 
       final op = SyncOperation.create(
         entityType: 'product',
         entityId: entityUuid,
         type: SyncOperationType.create,
         payload: {'name': 'Test Product'},
-        companyId: companyUuid,
+        companyId: companyId,
       );
 
       expect(op.id.length, equals(36));

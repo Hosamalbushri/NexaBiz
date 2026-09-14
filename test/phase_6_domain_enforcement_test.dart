@@ -7,12 +7,12 @@ import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -58,8 +58,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Box<dynamic> settingsBox;
-  late InventoryDatabase db;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase db;
+  late NexabizDatabase accountingDb;
   late CompanyInitializationRepositoryImpl initRepo;
   late InitializationGuard initGuard;
   late PostingEngineImpl postingEngine;
@@ -80,8 +80,8 @@ void main() {
 
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({});
-    db = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
 
     if (!Hive.isBoxOpen(HiveBoxes.settings)) {
       settingsBox = await Hive.openBox<dynamic>(HiveBoxes.settings);
@@ -284,7 +284,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: '00000000-0000-4000-8000-000000000044',
-              movementUuid: '00000000-0000-4000-8000-000000000004',
+              movementId: '00000000-0000-4000-8000-000000000004',
               movementType: 'receipt',
               itemCode: 'ITEM-01',
               itemName: 'Item 01',
@@ -378,7 +378,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accInv,
+              id: accInv,
               accountCode: '1201',
               name: 'Inventory Account',
               accountType: 'asset',
@@ -392,7 +392,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accCogs,
+              id: accCogs,
               accountCode: '5001',
               name: 'COGS Account',
               accountType: 'expense',
@@ -406,7 +406,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accAdj,
+              id: accAdj,
               accountCode: '5002',
               name: 'Adjustment Account',
               accountType: 'expense',
@@ -420,7 +420,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accPay,
+              id: accPay,
               accountCode: '2001',
               name: 'Payable Account',
               accountType: 'liability',
@@ -434,7 +434,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accRev,
+              id: accRev,
               accountCode: '4001',
               name: 'Revenue Account',
               accountType: 'revenue',
@@ -448,7 +448,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accRec,
+              id: accRec,
               accountCode: '1101',
               name: 'Receivable Account',
               accountType: 'asset',
@@ -462,7 +462,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accCash,
+              id: accCash,
               accountCode: '1001',
               name: 'Cash Account',
               accountType: 'asset',
@@ -476,7 +476,7 @@ void main() {
           .into(accountingDb.accounts)
           .insert(
             AccountsCompanion.insert(
-              uuid: accFx,
+              id: accFx,
               accountCode: '5009',
               name: 'FX Gain/Loss Account',
               accountType: 'expense',
@@ -505,7 +505,7 @@ void main() {
           .into(db.warehouses)
           .insert(
             WarehousesCompanion(
-              uuid: const Value(whId),
+              id: const Value(whId),
               code: const Value('WH-01'),
               name: const Value('Active Warehouse'),
               companyId: const Value(testCompanyId),
@@ -544,7 +544,7 @@ void main() {
         lines: [
           StockMovementLine(
             id: lineUuid,
-            movementUuid: recUuid,
+            movementId: recUuid,
             movementType: 'receipt',
             itemCode: 'ITEM-01',
             itemName: 'Item 01',

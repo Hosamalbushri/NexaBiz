@@ -3,7 +3,7 @@ import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -12,13 +12,13 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   late PostingEngineImpl postingEngine;
   late String currentTenant;
 
   setUp(() {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     currentTenant = 'company_alpha';
     costLayerService = CostLayerServiceImpl(
       db: db,
@@ -47,12 +47,12 @@ void main() {
         .into(db.products)
         .insert(
           ProductsCompanion(
-            uuid: Value(generateUuidV4()),
+            id: Value(generateUuidV4()),
             itemCode: Value(itemCode),
             name: Value('Test Product $itemCode'),
             packSize: const Value(1),
             price: Value(unitCost),
-            onHandQty: const Value(0.0),
+            
             unitCost: Value(unitCost),
             createdAt: Value(now),
             updatedAt: Value(now),
@@ -74,7 +74,7 @@ void main() {
         .insert(
           StockMovementLinesCompanion(
             uuid: Value(lineUuid),
-            movementUuid: Value(docRef.documentId),
+            movementId: Value(docRef.documentId),
             movementType: const Value('stock_receipt'),
             itemCode: Value(itemCode),
             itemName: Value('Test Item $itemCode'),
@@ -145,7 +145,7 @@ void main() {
             .insert(
               StockMovementLinesCompanion(
                 uuid: Value(lineUuid),
-                movementUuid: Value(issueDocId),
+                movementId: Value(issueDocId),
                 movementType: const Value('stock_issue'),
                 itemCode: Value(itemCode),
                 itemName: Value('Test Item $itemCode'),

@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
 import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
-import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
 import 'package:stock_count/core/database/nexabiz_database.dart';
 import '../../domain/services/stock_validation_service.dart';
 
@@ -117,7 +116,7 @@ class StockValidationServiceImpl implements StockValidationService {
         message:
             'Cross-tenant warehouse access denied for warehouse ($warehouseId). Expected company: $targetCompanyId, actual: ${warehouse.companyId}',
         expectedCompanyId: targetCompanyId,
-        actualCompanyId: warehouse.companyId ?? '',
+        actualCompanyId: warehouse.companyId,
       );
     }
 

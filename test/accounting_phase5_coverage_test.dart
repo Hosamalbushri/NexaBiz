@@ -7,26 +7,26 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/sales/accounting_sale_ledger_adapter.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/async_search_token.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/journal_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/domain/models/account_exception.dart';
-import 'package:stock_count/modules/accounting/domain/models/account_tree_node.dart';
-import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/presentation/widgets/account_tree.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_exception.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_tree_node.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/widgets/account_tree.dart';
 import 'helpers/journal_posting_test_helper.dart';
-import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_data_source.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_method.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_data_source.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -72,8 +72,7 @@ void main() {
         bool isGroup = false,
       }) {
         return Account(
-          id: 1,
-          uuid: uuid,
+          id: uuid,
           parentId: parentId,
           accountCode: code,
           name: code,
@@ -95,10 +94,10 @@ void main() {
       ]);
 
       final collapsed = AccountTreeNode.flatten(roots, expandedIds: const {});
-      expect(collapsed.map((e) => e.account.uuid).toList(), ['a']);
+      expect(collapsed.map((e) => e.account.id).toList(), ['a']);
 
       final expandedRoot = AccountTreeNode.flatten(roots, expandedIds: {'a'});
-      expect(expandedRoot.map((e) => e.account.uuid).toList(), ['a', 'b', 'c']);
+      expect(expandedRoot.map((e) => e.account.id).toList(), ['a', 'b', 'c']);
     });
   });
 
@@ -108,8 +107,7 @@ void main() {
     ) async {
       final now = DateTime.utc(2026, 8, 14);
       final root = Account(
-        id: 1,
-        uuid: 'root',
+        id: 'root',
         accountCode: '1000',
         name: 'Assets',
         accountType: AccountType.asset,
@@ -122,8 +120,7 @@ void main() {
         updatedAt: now,
       );
       final child = Account(
-        id: 2,
-        uuid: 'child',
+        id: 'child',
         parentId: 'root',
         accountCode: '1211',
         name: 'Cash',
@@ -180,7 +177,7 @@ void main() {
   });
 
   group('Journal integrity & scale', () {
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late AccountRepositoryImpl accounts;
     late JournalRepositoryImpl journals;
     late Directory tempDir;
@@ -195,11 +192,16 @@ void main() {
       }
       syncBox = await Hive.openBox<SyncOperation>('sync_queue');
       queue = SyncQueue(box: syncBox);
-      db = AccountingDatabase.memory();
-      accounts = AccountRepositoryImpl(db, syncQueue: queue);
+      db = NexabizDatabase.memory();
+      accounts = AccountRepositoryImpl(
+        db,
+        readCompanyId: () => 'COMP-TEST',
+        syncQueue: queue,
+      );
       journals = JournalRepositoryImpl(
         db,
         accounts: accounts,
+        readCompanyId: () => 'COMP-TEST',
         periodValidator: legacyPeriodValidator(),
         syncQueue: queue,
       );
@@ -515,7 +517,7 @@ void main() {
 
       final closed = postingService(closedThrough: DateTime.utc(2026, 8, 15));
       await expectLater(
-        closed.voidByUuid(entry.uuid),
+        closed.voidByUuid(entry.id),
         throwsA(
           isA<JournalException>().having(
             (e) => e.code,
@@ -524,7 +526,7 @@ void main() {
           ),
         ),
       );
-      expect(await journals.getByUuid(entry.uuid), isNotNull);
+      expect(await journals.getByUuid(entry.id), isNotNull);
     });
 
     test(
@@ -535,6 +537,7 @@ void main() {
         final closedRepo = JournalRepositoryImpl(
           db,
           accounts: accounts,
+          readCompanyId: () => 'COMP-TEST',
           periodValidator: legacyPeriodValidator(
             closedThrough: DateTime.utc(2026, 8, 15),
           ),
@@ -584,6 +587,7 @@ void main() {
           voucherNumber: 'JV-u1',
           voucherType: 'قيود يومية',
           currencyCode: 'YER',
+          isPosted: false,
           lines: [
             JournalLineDraft(
               accountUuid: cash.uuid,
@@ -673,7 +677,7 @@ void main() {
           entryCount.toDouble(),
         );
 
-        final seen = <int>{};
+        final seen = <String>{};
         AccountLedgerCursor? cursor;
         var pages = 0;
         while (true) {
@@ -715,8 +719,8 @@ Sale _sale({
 }) {
   final now = DateTime.utc(2026, 8, 14);
   return Sale(
-    id: 1,
-    uuid: uuid,
+    id: uuid,
+    companyId: 'COMP-TEST',
     saleNumber: '42',
     saleDate: now,
     settlementType: settlement,

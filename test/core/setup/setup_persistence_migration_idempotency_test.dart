@@ -12,8 +12,8 @@ class MockAccountLookupPort implements SetupAccountLookupPort {
   final Map<String, SetupAccountData> accounts = {};
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return accounts[accountId];
   }
 
   @override
@@ -106,7 +106,7 @@ void main() {
           companyId: companyA,
           packageId: 'accounting',
           requirementKey: 'cash_account',
-          accountUuid: 'cash_uuid_101',
+          accountId: 'cash_uuid_101',
           status: AccountBindingStatus.bound,
           boundAt: DateTime.now().toUtc(),
         );
@@ -120,7 +120,7 @@ void main() {
         );
 
         expect(reloaded, isNotNull);
-        expect(reloaded!.accountUuid, equals('cash_uuid_101'));
+        expect(reloaded!.accountId, equals('cash_uuid_101'));
         expect(reloaded.companyId, equals(companyA));
       },
     );
@@ -133,7 +133,7 @@ void main() {
           companyId: companyA,
           packageId: 'inventory',
           requirementKey: 'inventory_account',
-          accountUuid: 'inv_uuid_201',
+          accountId: 'inv_uuid_201',
           status: AccountBindingStatus.bound,
         );
 
@@ -146,7 +146,7 @@ void main() {
         );
 
         expect(loaded, isNotNull);
-        expect(loaded!.accountUuid, equals('inv_uuid_201'));
+        expect(loaded!.accountId, equals('inv_uuid_201'));
       },
     );
 
@@ -157,7 +157,7 @@ void main() {
           companyId: companyA,
           packageId: 'sales',
           requirementKey: 'sales_account',
-          accountUuid: 'sales_uuid_301',
+          accountId: 'sales_uuid_301',
           status: AccountBindingStatus.bound,
         );
 
@@ -171,7 +171,7 @@ void main() {
         );
 
         expect(list.length, equals(1));
-        expect(list.first.accountUuid, equals('sales_uuid_301'));
+        expect(list.first.accountId, equals('sales_uuid_301'));
       },
     );
 
@@ -210,14 +210,14 @@ void main() {
           packageId: 'accounting',
           requirementKey: 'cash_account',
         );
-        expect(cashBinding?.accountUuid, equals('cash_uuid_999'));
+        expect(cashBinding?.accountId, equals('cash_uuid_999'));
 
         final invBinding = await bindingRepo.getBinding(
           companyId: companyA,
           packageId: 'inventory',
           requirementKey: 'inventory_account',
         );
-        expect(invBinding?.accountUuid, equals('inv_uuid_777'));
+        expect(invBinding?.accountId, equals('inv_uuid_777'));
 
         final secondRunCount = await migrationAdapter.migrateIfNeeded(
           companyId: companyA,
@@ -245,7 +245,7 @@ void main() {
             companyId: companyA,
             packageId: 'sales',
             requirementKey: 'sales_account',
-            accountUuid: 'stale_account_uuid',
+            accountId: 'stale_account_uuid',
             status: AccountBindingStatus.bound,
           ),
         );
@@ -309,7 +309,7 @@ void main() {
             companyId: companyA,
             packageId: 'accounting',
             requirementKey: 'bank_account',
-            accountUuid: 'bank_account_comp_A',
+            accountId: 'bank_account_comp_A',
             status: AccountBindingStatus.bound,
           ),
         );
@@ -319,7 +319,7 @@ void main() {
             companyId: companyB,
             packageId: 'accounting',
             requirementKey: 'bank_account',
-            accountUuid: 'bank_account_comp_B',
+            accountId: 'bank_account_comp_B',
             status: AccountBindingStatus.bound,
           ),
         );
@@ -336,8 +336,8 @@ void main() {
           requirementKey: 'bank_account',
         );
 
-        expect(bindingCompA?.accountUuid, equals('bank_account_comp_A'));
-        expect(bindingCompB?.accountUuid, equals('bank_account_comp_B'));
+        expect(bindingCompA?.accountId, equals('bank_account_comp_A'));
+        expect(bindingCompB?.accountId, equals('bank_account_comp_B'));
       },
     );
 

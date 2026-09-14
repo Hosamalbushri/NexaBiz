@@ -27,7 +27,7 @@ class _FakeProductRepository implements ProductRepository {
   @override
   Future<Product?> getByUuid(String uuid) async {
     for (final product in products) {
-      if (product.uuid == uuid) {
+      if (product.id == uuid) {
         return product;
       }
     }
@@ -113,8 +113,7 @@ class _FakeProductRepository implements ProductRepository {
 void main() {
   final now = DateTime.utc(2026, 1, 1);
   final catalogProduct = Product(
-    id: 125,
-    uuid: '00000000-0000-4000-8000-000000000125',
+    id: '00000000-0000-4000-8000-000000000125',
     itemCode: 'AB-001',
     name: 'عباية سوداء',
     barcode: 'AB-001',
@@ -226,8 +225,7 @@ void main() {
         // Product not present in catalog
         final unknownQr = builder.build(
           Product(
-            id: 9999,
-            uuid: '00000000-0000-4000-8000-000000009999',
+            id: '00000000-0000-4000-8000-000000009999',
             itemCode: 'UNKNOWN-999',
             name: 'منتج غير معروف في الكتالوج',
             packSize: 1,

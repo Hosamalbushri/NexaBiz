@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -10,12 +10,12 @@ String makeUuid(int id) =>
 
 void main() {
   group('SA-05 — Sales Inventory Consumption & COGS Integrity Tests', () {
-    late InventoryDatabase db;
+    late NexabizDatabase db;
     late CostLayerServiceImpl costLayerService;
     const companyId = 'comp_test_01';
 
     setUp(() {
-      db = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.memory();
       costLayerService = CostLayerServiceImpl(
         db: db,
         readCompanyId: () => companyId,
@@ -35,7 +35,7 @@ void main() {
             id: makeUuid(1),
             itemCode: 'ITEM_01',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(101),
+            movementId: makeUuid(101),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 2)),
             receivedQty: 10.0,
@@ -63,7 +63,7 @@ void main() {
             id: makeUuid(2),
             itemCode: 'ITEM_01',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(102),
+            movementId: makeUuid(102),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 1)),
             receivedQty: 10.0,
@@ -122,7 +122,7 @@ void main() {
             id: makeUuid(10),
             itemCode: 'ITEM_02',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(110),
+            movementId: makeUuid(110),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 5)),
             receivedQty: 10.0,
@@ -150,7 +150,7 @@ void main() {
             id: makeUuid(11),
             itemCode: 'ITEM_02',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(111),
+            movementId: makeUuid(111),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 1)),
             receivedQty: 10.0,
@@ -199,7 +199,7 @@ void main() {
             id: makeUuid(20),
             itemCode: 'ITEM_03',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(120),
+            movementId: makeUuid(120),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 2)),
             receivedQty: 10.0,
@@ -227,7 +227,7 @@ void main() {
             id: makeUuid(21),
             itemCode: 'ITEM_03',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(121),
+            movementId: makeUuid(121),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 1)),
             receivedQty: 10.0,
@@ -281,7 +281,7 @@ void main() {
             id: makeUuid(30),
             itemCode: 'ITEM_04',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(130),
+            movementId: makeUuid(130),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 2)),
             receivedQty: 5.0,
@@ -309,7 +309,7 @@ void main() {
             id: makeUuid(31),
             itemCode: 'ITEM_04',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(131),
+            movementId: makeUuid(131),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 1)),
             receivedQty: 10.0,
@@ -355,7 +355,7 @@ void main() {
           id: makeUuid(40),
           itemCode: 'ITEM_05',
           warehouseId: 'WH_A',
-          movementUuid: makeUuid(140),
+          movementId: makeUuid(140),
           movementType: 'receipt',
           receivedDate: DateTime.now(),
           receivedQty: 3.0,
@@ -401,7 +401,7 @@ void main() {
             id: makeUuid(50),
             itemCode: 'ITEM_06',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(150),
+            movementId: makeUuid(150),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 10.0,
@@ -456,7 +456,7 @@ void main() {
             id: makeUuid(60),
             itemCode: 'ITEM_07',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(160),
+            movementId: makeUuid(160),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 10.0,
@@ -517,7 +517,7 @@ void main() {
             id: makeUuid(70),
             itemCode: 'ITEM_08',
             warehouseId: 'WH_A',
-            movementUuid: makeUuid(170),
+            movementId: makeUuid(170),
             movementType: 'receipt',
             receivedDate: DateTime.now(),
             receivedQty: 10.0,

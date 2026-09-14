@@ -7,11 +7,10 @@ import 'package:stock_count/core/auth/domain/services/local_access_policy.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_accounting_poster_impl.dart';
@@ -28,15 +27,22 @@ import 'package:stock_count/modules/sync/engine/domain/entities/sync_operation.d
 import 'package:stock_count/modules/sync/engine/domain/entities/sync_status.dart';
 import 'package:stock_count/modules/sync/engine/domain/services/sync_queue.dart';
 import 'package:stock_count/modules/system_setup/data/repositories/company_initialization_repository_impl.dart';
-import 'package:stock_count/modules/system_setup/domain/entities/company_accounting_config.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_initialization_state.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_inventory_config.dart';
-import 'package:stock_count/modules/system_setup/domain/entities/company_warehouse_config.dart';
 import 'package:stock_count/modules/system_setup/domain/services/company_accounting_config_service.dart';
 import 'package:stock_count/modules/system_setup/domain/services/company_initialization_route_guard.dart';
 import 'package:stock_count/modules/system_setup/domain/services/company_setup_service.dart';
 import 'package:stock_count/modules/system_setup/domain/services/company_warehouse_config_service.dart';
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+import 'package:stock_count/app/system_setup/accounting_setup_account_lookup_adapter.dart';
+import 'package:stock_count/app/system_setup/inventory_setup_warehouse_lookup_adapter.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/journals/data/services/journal_builder_impl.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
+
+import 'helpers/journal_posting_test_helper.dart';
 
 class FakeStockValidationService implements StockValidationService {
   @override
@@ -50,6 +56,12 @@ class FakeStockValidationService implements StockValidationService {
     required String itemCode,
     String? warehouseId,
   }) async => 100.0;
+
+  @override
+  Future<void> validateWarehouseAccess({
+    required String? warehouseId,
+    String? companyId,
+  }) async {}
 }
 
 class FakeDependencyDetector implements InventoryDependencyDetector {
@@ -96,6 +108,8 @@ class FakeAccountingPoster implements InventoryAccountingPoster {
     required double totalAmount,
     String? accountId,
     bool isPosted = true,
+    double? valuationAmount,
+    bool useBaseCurrencyForPosting = false,
   }) async {}
 
   @override
@@ -103,6 +117,7 @@ class FakeAccountingPoster implements InventoryAccountingPoster {
     required InventoryDocumentRef document,
   }) async {}
 
+  @override
   Future<void> setAccountingEntryPostingStatus({
     required InventoryDocumentRef document,
     required bool isPosted,
@@ -112,13 +127,6 @@ class FakeAccountingPoster implements InventoryAccountingPoster {
 class FakePermissionGuard implements PermissionGuard {
   @override
   void requireAny(Iterable<String> permissions) {}
-
-  @override
-  void requireAll(Iterable<String> permissions) {}
-
-  bool hasAny(Iterable<String> permissions) => true;
-
-  bool hasAll(Iterable<String> permissions) => true;
 }
 
 class MockWarehouseRepository implements WarehouseRepository {
@@ -181,8 +189,8 @@ class MockWarehouseRepository implements WarehouseRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase inventoryDb;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase inventoryDb;
+  late NexabizDatabase accountingDb;
   late Box<dynamic> settingsBox;
   late Box<SyncOperation> syncQueueBox;
   late SettingsRepository settingsRepo;
@@ -199,8 +207,8 @@ void main() {
   late InitializationGuard initGuardA;
 
   setUp(() async {
-    inventoryDb = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    inventoryDb = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
 
     Hive.init('./test_hive_temp_p7');
     if (!Hive.isBoxOpen(HiveBoxes.settings)) {
@@ -231,7 +239,7 @@ void main() {
     );
 
     accountingConfigServiceA = CompanyAccountingConfigService(
-      accountRepository: accountRepoDb,
+      accountLookupPort: AccountingSetupAccountLookupAdapter(accountRepoDb),
       initRepository: initRepoA,
     );
 
@@ -253,7 +261,9 @@ void main() {
     ]);
 
     warehouseConfigServiceA = CompanyWarehouseConfigService(
-      warehouseRepository: mockWarehouseRepo,
+      warehouseLookupPort: InventorySetupWarehouseLookupAdapter(
+        mockWarehouseRepo,
+      ),
       initRepository: initRepoA,
     );
 
@@ -264,21 +274,17 @@ void main() {
 
     initGuardA = InitializationGuard(initRepository: initRepoA);
 
-    final now = DateTime.now().millisecondsSinceEpoch;
-
     // Seed Accounts for Company A
     await accountingDb
         .into(accountingDb.accounts)
         .insert(
-          AccountsCompanion.insert(
-            uuid: '10000000-0000-4000-8000-0000000000a1',
-            accountCode: '1230-A',
-            name: 'Inventory Acc Company A',
-            accountType: 'asset',
-            normalBalance: 'debit',
+          AccountsCompanion(
+            id: const Value('10000000-0000-4000-8000-0000000000a1'),
+            accountCode: const Value('1230-A'),
+            name: const Value('Inventory Acc Company A'),
+            accountType: const Value('asset'),
+            normalBalance: const Value('debit'),
             companyId: const Value(companyA),
-            createdAt: now,
-            updatedAt: now,
             isGroup: const Value(false),
             isActive: const Value(true),
           ),
@@ -286,15 +292,13 @@ void main() {
     await accountingDb
         .into(accountingDb.accounts)
         .insert(
-          AccountsCompanion.insert(
-            uuid: '10000000-0000-4000-8000-0000000000a2',
-            accountCode: '5100-A',
-            name: 'COGS Acc Company A',
-            accountType: 'expense',
-            normalBalance: 'debit',
+          AccountsCompanion(
+            id: const Value('10000000-0000-4000-8000-0000000000a2'),
+            accountCode: const Value('5100-A'),
+            name: const Value('COGS Acc Company A'),
+            accountType: const Value('expense'),
+            normalBalance: const Value('debit'),
             companyId: const Value(companyA),
-            createdAt: now,
-            updatedAt: now,
             isGroup: const Value(false),
             isActive: const Value(true),
           ),
@@ -302,15 +306,13 @@ void main() {
     await accountingDb
         .into(accountingDb.accounts)
         .insert(
-          AccountsCompanion.insert(
-            uuid: '10000000-0000-4000-8000-0000000000a3',
-            accountCode: '2110-A',
-            name: 'Payable Acc Company A',
-            accountType: 'liability',
-            normalBalance: 'credit',
+          AccountsCompanion(
+            id: const Value('10000000-0000-4000-8000-0000000000a3'),
+            accountCode: const Value('2110-A'),
+            name: const Value('Payable Acc Company A'),
+            accountType: const Value('liability'),
+            normalBalance: const Value('credit'),
             companyId: const Value(companyA),
-            createdAt: now,
-            updatedAt: now,
             isGroup: const Value(false),
             isActive: const Value(true),
           ),
@@ -320,15 +322,13 @@ void main() {
     await accountingDb
         .into(accountingDb.accounts)
         .insert(
-          AccountsCompanion.insert(
-            uuid: '20000000-0000-4000-8000-0000000000b1',
-            accountCode: '1230-B',
-            name: 'Inventory Acc Company B',
-            accountType: 'asset',
-            normalBalance: 'debit',
+          AccountsCompanion(
+            id: const Value('20000000-0000-4000-8000-0000000000b1'),
+            accountCode: const Value('1230-B'),
+            name: const Value('Inventory Acc Company B'),
+            accountType: const Value('asset'),
+            normalBalance: const Value('debit'),
             companyId: const Value(companyB),
-            createdAt: now,
-            updatedAt: now,
             isGroup: const Value(false),
             isActive: const Value(true),
           ),
@@ -463,7 +463,13 @@ void main() {
     test(
       '1.4 Cross-Tenant Currency Attack: Inventory base currency immutability violation rejected',
       () async {
-        await initRepoA.saveInventoryConfig(
+        final activeRepo = CompanyInitializationRepositoryImpl(
+          box: settingsBox,
+          readCompanyId: () => companyA,
+          hasInventoryActivity: () async => true,
+        );
+
+        await activeRepo.saveInventoryConfig(
           const CompanyInventoryConfig(
             companyId: companyA,
             inventoryBaseCurrencyId: 'YER',
@@ -471,7 +477,7 @@ void main() {
         );
 
         expect(
-          () async => await initRepoA.saveInventoryConfig(
+          () async => await activeRepo.saveInventoryConfig(
             const CompanyInventoryConfig(
               companyId: companyA,
               inventoryBaseCurrencyId: 'USD',
@@ -583,10 +589,36 @@ void main() {
     test(
       '4.2 Direct Poster Bypass: InventoryAccountingPoster rejects posting when accounts unconfigured',
       () async {
-        final poster = InventoryAccountingPosterImpl(
+        final periodValidator = legacyPeriodValidator();
+        final accountRepo = AccountRepositoryImpl(
           accountingDb,
           readCompanyId: () => companyA,
+        );
+        final journalRepo = JournalRepositoryImpl(
+          accountingDb,
+          accounts: accountRepo,
+          periodValidator: periodValidator,
+          readCompanyId: () => companyA,
+        );
+        final journalPostingService = JournalPostingService(
+          journals: journalRepo,
+          periodValidator: periodValidator,
+        );
+        final bindingRepo = WarehouseAccountingBindingRepositoryImpl(
+          accountingDb,
+          () => companyA,
+        );
+        final journalBuilder = JournalBuilderImpl(
+          accountRepository: accountRepo,
+          currencyRateRepository: CurrencyRateRepositoryImpl(accountingDb),
+          bindingRepo: bindingRepo,
+          readCompanyId: () => companyA,
           initRepository: initRepoA,
+        );
+        final poster = InventoryAccountingPosterImpl(
+          journalPostingService,
+          journalBuilder: journalBuilder,
+          initializationGuard: initGuardA,
         );
 
         final docRef = InventoryDocumentRef(

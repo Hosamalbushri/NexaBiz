@@ -18,11 +18,9 @@ class CompanyInitializationRepositoryImpl
   CompanyInitializationRepositoryImpl({
     this._box,
     this._readCompanyId,
-    // ignore: prefer_initializing_formals
-    NexabizDatabase? invDb,
+    this._invDb,
     Future<bool> Function()? hasInventoryActivity,
-  }) : _invDb = invDb,
-       _hasInventoryActivityCustom = hasInventoryActivity;
+  }) : _hasInventoryActivityCustom = hasInventoryActivity;
 
   Box<dynamic>? _box;
   final String Function()? _readCompanyId;

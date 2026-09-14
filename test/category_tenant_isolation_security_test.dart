@@ -2,14 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/categories/domain/entities/category.dart';
 import 'package:stock_count/modules/inventory/categories/data/repositories/category_repository_impl.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
 
 void main() {
-  late InventoryDatabase invDb;
+  late NexabizDatabase invDb;
   late CategoryRepositoryImpl categoryRepo;
   late ProductRepositoryImpl productRepo;
 
@@ -18,7 +18,7 @@ void main() {
   late String activeCompanyId;
 
   setUp(() async {
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    invDb = NexabizDatabase.memory();
     companyA = 'company_alpha';
     companyB = 'company_beta';
     activeCompanyId = companyA;

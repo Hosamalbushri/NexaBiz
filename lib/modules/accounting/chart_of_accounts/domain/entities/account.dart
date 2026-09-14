@@ -28,6 +28,9 @@ class Account {
   /// Canonical UUID v7 Primary Key.
   final String id;
 
+  /// Alias for id (canonical UUID).
+  String get uuid => id;
+
   /// Parent account ID (UUID v7); null for root accounts.
   final String? parentId;
 

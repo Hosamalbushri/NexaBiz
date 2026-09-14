@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_ledger_adapter.dart';
-import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction_line.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
-import 'package:stock_count/modules/receipts_payments/domain/models/financial_transaction_exception.dart';
-import 'package:stock_count/modules/receipts_payments/domain/services/financial_transaction_validator.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction_line.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/models/financial_transaction_exception.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/services/financial_transaction_validator.dart';
 import 'helpers/fake_account_repository.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
@@ -19,8 +19,7 @@ class _RecordingJournals implements JournalRepository {
   Future<JournalEntry> post(JournalEntryDraft draft) async {
     lastDraft = draft;
     return JournalEntry(
-      id: 1,
-      uuid: 'entry-1',
+      id: 'entry-1',
       entryDate: draft.entryDate,
       voucherNumber: draft.voucherNumber,
       voucherType: draft.voucherType,
@@ -36,8 +35,8 @@ class _RecordingJournals implements JournalRepository {
           JournalLine(
             id: i + 1,
             uuid: 'line-$i',
-            entryUuid: 'entry-1',
-            accountUuid: draft.lines[i].accountUuid,
+            entryId: 'entry-1',
+            accountId: draft.lines[i].accountId,
             debit: draft.lines[i].debit,
             credit: draft.lines[i].credit,
             currencyCode: draft.lines[i].currencyCode,
@@ -81,7 +80,7 @@ class _RecordingJournals implements JournalRepository {
 
   @override
   Future<List<AccountLedgerMovement>> listMovementsForAccount({
-    required String accountUuid,
+    required String accountId,
     DateTime? fromDate,
     DateTime? toDate,
     String? currencyCode,
@@ -92,7 +91,7 @@ class _RecordingJournals implements JournalRepository {
 
   @override
   Future<List<String>> listCurrencyCodesForAccount({
-    required String accountUuid,
+    required String accountId,
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
@@ -100,7 +99,7 @@ class _RecordingJournals implements JournalRepository {
 
   @override
   Future<double> sumNetBefore({
-    required String accountUuid,
+    required String accountId,
     required DateTime beforeDate,
     String? currencyCode,
     bool? isPosted,
@@ -191,8 +190,7 @@ void main() {
     );
 
     final txn = FinancialTransaction(
-      id: 1,
-      uuid: 'txn-transfer-1',
+      id: 'txn-transfer-1',
       transactionNumber: '161000001',
       transactionType: TransactionType.transfer,
       source: TransactionSource.cashBoxTransfer,
@@ -230,10 +228,10 @@ void main() {
     expect(draft.sourceType, 'transfer');
     expect(draft.voucherType, 'نقل');
     expect(draft.lines, hasLength(2));
-    expect(draft.lines[0].accountUuid, 'to-uuid');
+    expect(draft.lines[0].accountId, 'to-uuid');
     expect(draft.lines[0].debit, 250);
     expect(draft.lines[0].credit, 0);
-    expect(draft.lines[1].accountUuid, 'from-uuid');
+    expect(draft.lines[1].accountId, 'from-uuid');
     expect(draft.lines[1].debit, 0);
     expect(draft.lines[1].credit, 250);
   });

@@ -13,8 +13,7 @@ void main() {
     'AccountSearchField builds without dependOnInheritedWidgetOfExactType assertion',
     (tester) async {
       final account = Account(
-        id: 1,
-        uuid: 'acc-1',
+        id: 'acc-1',
         accountCode: '101000',
         name: 'Cash in Hand',
         accountType: AccountType.asset,
@@ -43,7 +42,7 @@ void main() {
                   return AccountSearchField(
                     label: 'Search Account',
                     accounts: [account],
-                    selectedUuid: account.uuid,
+                    selectedUuid: account.id,
                     onSelected: (acc) => selected = acc,
                   );
                 },

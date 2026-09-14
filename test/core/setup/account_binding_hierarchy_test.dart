@@ -242,7 +242,7 @@ void main() {
           () async => resolver.bindAccount(
             companyId: companyA,
             requirement: exactRequirement,
-            accountUuid: accountA.uuid,
+            accountId: accountA.uuid,
           ),
           throwsA(isA<AccountBindingException>()),
         );
@@ -251,7 +251,7 @@ void main() {
         final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: exactRequirement,
-          accountUuid: accountC.uuid,
+          accountId: accountC.uuid,
         );
 
         expect(binding.status, equals(AccountBindingStatus.bound));
@@ -276,7 +276,7 @@ void main() {
         final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: parentRequirement,
-          accountUuid: accountA.uuid,
+          accountId: accountA.uuid,
         );
 
         expect(binding.status, equals(AccountBindingStatus.bound));
@@ -299,8 +299,7 @@ void main() {
         final now = DateTime.now();
         final domainAccounts = [
           Account(
-            id: 1,
-            uuid: 'uuid_parent_A',
+            id: 'uuid_parent_A',
             accountCode: '1100',
             name: 'حساب العملاء الرئيسي',
             accountType: AccountType.asset,
@@ -314,8 +313,7 @@ void main() {
             updatedAt: now,
           ),
           Account(
-            id: 2,
-            uuid: 'uuid_group_B',
+            id: 'uuid_group_B',
             accountCode: '1110',
             name: 'عملاء التجزئة',
             accountType: AccountType.asset,
@@ -330,8 +328,7 @@ void main() {
             updatedAt: now,
           ),
           Account(
-            id: 3,
-            uuid: 'uuid_leaf_C',
+            id: 'uuid_leaf_C',
             accountCode: '1111',
             name: 'عميل نقدي',
             accountType: AccountType.asset,
@@ -346,8 +343,7 @@ void main() {
             updatedAt: now,
           ),
           Account(
-            id: 4,
-            uuid: 'uuid_leaf_D',
+            id: 'uuid_leaf_D',
             accountCode: '1112',
             name: 'عميل أجل',
             accountType: AccountType.asset,
@@ -362,8 +358,7 @@ void main() {
             updatedAt: now,
           ),
           Account(
-            id: 5,
-            uuid: 'uuid_leaf_E',
+            id: 'uuid_leaf_E',
             accountCode: '1120',
             name: 'عملاء الجملة',
             accountType: AccountType.asset,
@@ -378,8 +373,7 @@ void main() {
             updatedAt: now,
           ),
           Account(
-            id: 6,
-            uuid: 'uuid_leaf_F_compB',
+            id: 'uuid_leaf_F_compB',
             accountCode: '1119',
             name: 'عميل شركة أخرى',
             accountType: AccountType.asset,
@@ -448,7 +442,7 @@ void main() {
         await resolver.bindAccount(
           companyId: companyA,
           requirement: parentRequirement,
-          accountUuid: accountA.uuid,
+          accountId: accountA.uuid,
         );
 
         final result = await resolver.resolveRequirement(
@@ -496,7 +490,7 @@ void main() {
           'companyId': companyA,
           'packageId': 'sales',
           'requirementKey': 'sales_revenue_account',
-          'accountUuid': 'uuid_123',
+          'accountId': 'uuid_123',
           'status': 'bound',
           'boundAt': 1600000000000,
         };

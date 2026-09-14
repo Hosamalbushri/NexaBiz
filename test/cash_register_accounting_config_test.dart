@@ -111,8 +111,7 @@ void main() {
   const companyB = 'company-B';
 
   final validCashAccountA = Account(
-    id: 1,
-    uuid: 'acc-cash-1',
+    id: 'acc-cash-1',
     accountCode: '1111',
     name: 'صندوق النقدية 1',
     accountType: AccountType.asset,
@@ -127,8 +126,7 @@ void main() {
   );
 
   final validCashAccountA2 = Account(
-    id: 2,
-    uuid: 'acc-cash-2',
+    id: 'acc-cash-2',
     accountCode: '1112',
     name: 'صندوق الفرع 2',
     accountType: AccountType.asset,
@@ -143,8 +141,7 @@ void main() {
   );
 
   final inactiveAccount = Account(
-    id: 3,
-    uuid: 'acc-cash-inactive',
+    id: 'acc-cash-inactive',
     accountCode: '1113',
     name: 'حساب معطل',
     accountType: AccountType.asset,
@@ -159,8 +156,7 @@ void main() {
   );
 
   final expenseAccount = Account(
-    id: 4,
-    uuid: 'acc-expense',
+    id: 'acc-expense',
     accountCode: '5111',
     name: 'مصروف إداري',
     accountType: AccountType.expense,
@@ -175,8 +171,7 @@ void main() {
   );
 
   final companyBAccount = Account(
-    id: 5,
-    uuid: 'acc-cash-companyB',
+    id: 'acc-cash-companyB',
     accountCode: '1119',
     name: 'صندوق شركة أخرى',
     accountType: AccountType.asset,

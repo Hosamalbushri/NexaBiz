@@ -8,11 +8,11 @@ import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/currency/domain/entities/currency.dart';
 import 'package:stock_count/modules/currency/domain/services/functional_currency_service.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
@@ -56,8 +56,7 @@ class FakeFunctionalCurrencyServiceForRemediation implements FunctionalCurrencyS
   @override
   Future<Currency> getFunctionalCurrency([String? companyId]) async {
     return Currency(
-      id: 1,
-      uuid: 'yer-uuid',
+      id: 'yer-uuid',
       code: 'YER',
       nameAr: 'ريال يمني',
       nameEn: 'Yemeni Rial',
@@ -77,8 +76,8 @@ class FakeFunctionalCurrencyServiceForRemediation implements FunctionalCurrencyS
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late InventoryDatabase inventoryDb;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase inventoryDb;
+  late NexabizDatabase accountingDb;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService journalPostingService;
@@ -90,8 +89,8 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('remediation_purchase_');
     Hive.init(tempDir.path);
 
-    inventoryDb = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    inventoryDb = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(accountingDb, readCompanyId: () => LocalAuthDefaults.companyId);
     await accountRepo.seedDefaultChart();
@@ -153,7 +152,7 @@ void main() {
 
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -166,7 +165,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: lineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-YER-01',
           itemName: 'Same Currency Item YER',
@@ -231,7 +230,7 @@ void main() {
 
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -244,7 +243,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: lineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-SAR-01',
           itemName: 'Foreign Item SAR',
@@ -311,7 +310,7 @@ void main() {
 
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -324,7 +323,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: lineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-USD-01',
           itemName: 'USD Item',
@@ -388,7 +387,7 @@ void main() {
 
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -401,7 +400,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: lineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-SAR-04',
           itemName: 'Multi Qty Item',
@@ -485,7 +484,7 @@ void main() {
 
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -499,7 +498,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: recLineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-COGS-08',
           itemName: 'COGS Test Item',
@@ -539,7 +538,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: issLineId,
-          movementUuid: issueId,
+          issueId: issueId,
           movementType: 'issue',
           itemCode: 'ITEM-COGS-08',
           itemName: 'COGS Test Item',
@@ -604,7 +603,7 @@ void main() {
 
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -617,7 +616,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: lineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-SAR-11',
           itemName: 'DB Persistence Item',
@@ -659,7 +658,7 @@ void main() {
             ..where((tbl) => tbl.sourceId.equals(receiptId)))
           .getSingle();
       final lineRows = await (accountingDb.select(accountingDb.journalLines)
-            ..where((tbl) => tbl.entryUuid.equals(entryRow.uuid)))
+            ..where((tbl) => tbl.entryId.equals(entryRow.uuid)))
           .get();
 
       final invRow = lineRows.firstWhere((l) => l.debit > 0);
@@ -686,7 +685,7 @@ void main() {
 
       await inventoryDb.into(inventoryDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: warehouseId,
+          id: warehouseId,
           code: 'WH-01',
           name: 'Main Warehouse',
           createdAt: now,
@@ -699,7 +698,7 @@ void main() {
       await inventoryDb.into(inventoryDb.stockMovementLines).insert(
         StockMovementLinesCompanion.insert(
           uuid: lineId,
-          movementUuid: receiptId,
+          receiptId: receiptId,
           movementType: 'receipt',
           itemCode: 'ITEM-SAR-14',
           itemName: 'Regression Assert Item',
@@ -738,7 +737,7 @@ void main() {
 
       // 1. Cost Layer Valuation
       final layers = await (inventoryDb.select(inventoryDb.inventoryCostLayers)
-            ..where((tbl) => tbl.movementUuid.equals(receiptId)))
+            ..where((tbl) => tbl.movementId.equals(receiptId)))
           .get();
       expect(layers.length, equals(1));
       final costLayerValuation = layers.first.totalCost; // 2,800 YER

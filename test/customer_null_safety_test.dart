@@ -7,7 +7,7 @@ import 'package:drift/drift.dart';
 import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer_status.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
@@ -15,7 +15,7 @@ void main() {
 
   group('CU-10 Null Safety & Robust Customer Retrieval Suite', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late CustomerRepositoryImpl repository;
 
@@ -27,7 +27,7 @@ void main() {
       }
       final box = await Hive.openBox<SyncOperation>('sync_queue_cu10');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
 
       repository = CustomerRepositoryImpl(
         db,
@@ -52,7 +52,7 @@ void main() {
             .into(db.customers)
             .insert(
               CustomersCompanion.insert(
-                uuid: 'null-field-uuid-001',
+                id: 'null-field-uuid-001',
                 customerCode: 'CUST-NULL-01',
                 name: 'Customer With Null Fields',
                 companyId: const Value('comp_null_test'),

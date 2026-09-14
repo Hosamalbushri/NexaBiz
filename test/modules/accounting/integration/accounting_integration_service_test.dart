@@ -63,13 +63,13 @@ class FakeRulesEngine implements AccountingRulesEnginePort {
       voucherType: transaction.transactionType.name,
       lines: [
         AccountingEffectLine(
-          accountUuid: 'acc-debit-001',
+          accountId: 'acc-debit-001',
           debit: transaction.amount,
           credit: 0.0,
           currencyCode: transaction.currencyCode,
         ),
         AccountingEffectLine(
-          accountUuid: 'acc-credit-001',
+          accountId: 'acc-credit-001',
           debit: 0.0,
           credit: transaction.amount,
           currencyCode: transaction.currencyCode,

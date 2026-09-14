@@ -7,7 +7,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/normal_balance.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/cash_registers/data/repositories/cash_register_repository_impl.dart';
 import 'package:stock_count/modules/cash_registers/domain/entities/cash_register.dart';
 import 'package:stock_count/modules/cash_registers/domain/services/cash_register_posting_resolver_service.dart';
@@ -125,8 +125,7 @@ class FakePostingService {
     }
 
     final entry = JournalEntry(
-      id: 1,
-      uuid: 'je-$referenceId',
+      id: 'je-$referenceId',
       voucherNumber: 'JE-$referenceId',
       voucherType: 'CASH_VOUCHER',
       currencyCode: 'YER',
@@ -134,10 +133,9 @@ class FakePostingService {
       isPosted: true,
       lines: [
         JournalLine(
-          id: 101,
-          uuid: 'jl-101-$referenceId',
-          entryUuid: 'je-$referenceId',
-          accountUuid: cashAccountId,
+          id: 'jl-101-$referenceId',
+          entryId: 'je-$referenceId',
+          accountId: cashAccountId,
           debit: amount,
           credit: 0.0,
           currencyCode: 'YER',
@@ -145,10 +143,9 @@ class FakePostingService {
           lineDescription: 'Cash Receipt',
         ),
         JournalLine(
-          id: 102,
-          uuid: 'jl-102-$referenceId',
-          entryUuid: 'je-$referenceId',
-          accountUuid: offsetAccountId,
+          id: 'jl-102-$referenceId',
+          entryId: 'je-$referenceId',
+          accountId: offsetAccountId,
           debit: 0.0,
           credit: amount,
           currencyCode: 'YER',
@@ -168,7 +165,7 @@ class FakePostingService {
 void main() {
   group('CR-04 Default Accounts & Voucher Posting Test Matrix', () {
     late FakeAccountRepository accountRepo;
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late CashRegisterRepositoryImpl cashRepo;
     late DefaultCashRegisterResolver defaultResolver;
     late CashRegisterPostingResolverService postingResolver;
@@ -194,12 +191,11 @@ void main() {
       await Hive.openBox<dynamic>(HiveBoxes.settings);
 
       accountRepo = FakeAccountRepository();
-      db = AccountingDatabase.memory();
+      db = NexabizDatabase.memory();
       postingService = FakePostingService();
 
       cashAccountA1 = Account(
-        id: 101,
-        uuid: 'acc-cash-a1-uuid',
+        id: 'acc-cash-a1-uuid',
         accountCode: '1101',
         name: 'الصندوق الرئيسي A1',
         accountType: AccountType.asset,
@@ -214,8 +210,7 @@ void main() {
       );
 
       cashAccountA2 = Account(
-        id: 102,
-        uuid: 'acc-cash-a2-uuid',
+        id: 'acc-cash-a2-uuid',
         accountCode: '1102',
         name: 'صندوق الفرع A2',
         accountType: AccountType.asset,
@@ -230,8 +225,7 @@ void main() {
       );
 
       companyBAccount = Account(
-        id: 201,
-        uuid: 'acc-cash-b1-uuid',
+        id: 'acc-cash-b1-uuid',
         accountCode: '1101-B',
         name: 'صندوق شركة B',
         accountType: AccountType.asset,
@@ -246,8 +240,7 @@ void main() {
       );
 
       inactiveAccount = Account(
-        id: 103,
-        uuid: 'acc-inactive-uuid',
+        id: 'acc-inactive-uuid',
         accountCode: '1109',
         name: 'صندوق معطل',
         accountType: AccountType.asset,
@@ -262,8 +255,7 @@ void main() {
       );
 
       equityAccount = Account(
-        id: 104,
-        uuid: 'acc-equity-uuid',
+        id: 'acc-equity-uuid',
         accountCode: '3101',
         name: 'رأس المال',
         accountType: AccountType.equity,
@@ -278,8 +270,7 @@ void main() {
       );
 
       salesRevenueAccount = Account(
-        id: 105,
-        uuid: 'acc-revenue-uuid',
+        id: 'acc-revenue-uuid',
         accountCode: '4101',
         name: 'إيراد المبيعات',
         accountType: AccountType.revenue,
@@ -479,7 +470,7 @@ void main() {
         );
 
         expect(journal.lines.length, equals(2));
-        expect(journal.lines.first.accountUuid, equals(cashAccountA1.uuid));
+        expect(journal.lines.first.accountId, equals(cashAccountA1.uuid));
         expect(journal.lines.first.debit, equals(500.0));
       },
     );
@@ -595,7 +586,7 @@ void main() {
           offsetAccountId: salesRevenueAccount.uuid,
           amount: 1000.0,
         );
-        expect(journal1.lines.first.accountUuid, equals(cashAccountA1.uuid));
+        expect(journal1.lines.first.accountId, equals(cashAccountA1.uuid));
 
         // Step B: Change register link to cashAccountA2
         await cashRepo.linkAccountingAccount(
@@ -605,7 +596,7 @@ void main() {
         );
 
         // Step C: Verify historical posted journal line was NOT altered
-        expect(journal1.lines.first.accountUuid, equals(cashAccountA1.uuid));
+        expect(journal1.lines.first.accountId, equals(cashAccountA1.uuid));
       },
     );
   });

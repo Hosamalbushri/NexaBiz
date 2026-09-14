@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/modules/administration/shared/presentation/admin_localizations_extension.dart';
-import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
@@ -86,7 +85,7 @@ class _AdminCompaniesPageState extends ConsumerState<AdminCompaniesPage> {
           leading: CircleAvatar(
             backgroundColor: company.isActive
                 ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.surfaceVariant,
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.business_rounded,
               color: company.isActive

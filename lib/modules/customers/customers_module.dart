@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/core/navigation/app_route_param_parser.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../app/presentation/providers/dashboard_services_provider.dart';

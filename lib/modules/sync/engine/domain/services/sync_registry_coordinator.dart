@@ -6,8 +6,8 @@ import 'package:stock_count/modules/sync/sync.dart';
 class SyncRegistryCoordinator {
   const SyncRegistryCoordinator({
     required this.registrars,
-    SessionContextPort? sessionContext,
-  }) : _sessionContext = sessionContext;
+    this._sessionContext,
+  });
 
   /// Registered module registrars.
   final List<SyncModuleRegistrar> registrars;

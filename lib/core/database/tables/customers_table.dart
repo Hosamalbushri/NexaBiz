@@ -27,4 +27,9 @@ class Customers extends Table {
         {companyId, id},
         {companyId, customerCode},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, account_id) REFERENCES accounts(company_id, id) ON DELETE SET NULL',
+      ];
 }

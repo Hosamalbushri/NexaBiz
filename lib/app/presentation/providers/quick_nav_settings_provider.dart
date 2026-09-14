@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/di/app_providers.dart';
 import '../../settings/settings_repository.dart';
 import 'dashboard_services_provider.dart';
 
@@ -38,8 +37,8 @@ class QuickNavSettingsNotifier extends StateNotifier<QuickNavSettingsState> {
 
   Future<void> loadSettings() async {
     try {
-      final enabled = await _repository.loadQuickNavEnabled().catchError((_, __) => true);
-      final position = await _repository.loadQuickNavPosition().catchError((_, __) => null);
+      final enabled = await _repository.loadQuickNavEnabled().catchError((_, _) => true);
+      final position = await _repository.loadQuickNavPosition().catchError((_, _) => null);
       state = QuickNavSettingsState(enabled: enabled, position: position);
     } catch (_) {
       // Safe fallback when running in uninitialized or unit test environments

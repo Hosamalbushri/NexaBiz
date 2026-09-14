@@ -4,14 +4,14 @@ import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/permissions/accounting_permissions.dart';
 
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_engine_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -22,7 +22,7 @@ import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_d
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/permissions/inventory_permission_package.dart';
 
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
@@ -31,7 +31,7 @@ import 'package:stock_count/modules/receipts_payments/transactions/domain/entiti
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
 import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
 
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dart';
@@ -44,13 +44,13 @@ import 'package:stock_count/modules/sales/permissions/sales_permission_package.d
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase accDb;
+  late NexabizDatabase accDb;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
 
-  late InventoryDatabase invDb;
-  late ReceiptsPaymentsDatabase rpDb;
-  late SalesDatabase saleDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase rpDb;
+  late NexabizDatabase saleDb;
 
   late String companyA;
   late String acc1Uuid;
@@ -59,10 +59,10 @@ void main() {
   setUp(() async {
     companyA = 'company_A';
 
-    accDb = AccountingDatabase(executor: NativeDatabase.memory());
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
-    rpDb = ReceiptsPaymentsDatabase(executor: NativeDatabase.memory());
-    saleDb = SalesDatabase(executor: NativeDatabase.memory());
+    accDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    rpDb = NexabizDatabase.memory();
+    saleDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => companyA);
     journalRepo = JournalRepositoryImpl(
@@ -80,7 +80,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc1Uuid,
+            id: acc1Uuid,
             companyId: Value(companyA),
             accountCode: '1010',
             name: 'Cash Box',
@@ -98,7 +98,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc2Uuid,
+            id: acc2Uuid,
             companyId: Value(companyA),
             accountCode: '4010',
             name: 'Sales Revenue',

@@ -307,7 +307,8 @@ class LocalAuthStore {
         return null;
       }
     } else {
-      if (companies.isNotEmpty) {
+      if (companies.length == 1 &&
+          authorizedCompanyIds.contains(companies.first.id)) {
         selectedId = companies.first.id;
       } else {
         selectedId = null;
@@ -331,13 +332,10 @@ class LocalAuthStore {
       );
 
       final stored = matched.permissionsByCompany[selectedId];
-      final isOwnerOrAdmin =
-          matched.isSuperAdmin ||
-          activeMembership.role == 'Owner' ||
-          activeMembership.role == LocalAuthDefaults.adminRole;
+      final isSuperAdmin = matched.isSuperAdmin;
 
       permissions = Set<String>.from(
-        isOwnerOrAdmin
+        isSuperAdmin
             ? {...?stored, ...kAllLocalPermissions}
             : (activeMembership.permissions.isNotEmpty
                   ? activeMembership.permissions
@@ -529,13 +527,10 @@ class LocalAuthStore {
       );
 
       final stored = matched.permissionsByCompany[selectedId];
-      final isOwnerOrAdmin =
-          matched.isSuperAdmin ||
-          activeMembership.role == 'Owner' ||
-          activeMembership.role == LocalAuthDefaults.adminRole;
+      final isSuperAdmin = matched.isSuperAdmin;
 
       permissions = Set<String>.from(
-        isOwnerOrAdmin
+        isSuperAdmin
             ? {...?stored, ...kAllLocalPermissions}
             : (activeMembership.permissions.isNotEmpty
                   ? activeMembership.permissions
@@ -617,11 +612,6 @@ class LocalAuthStore {
       var snapshot = AuthSessionSnapshot.fromJson(
         Map<String, dynamic>.from(map),
       );
-      final isOwnerOrAdmin =
-          snapshot.user.isSuperAdmin ||
-          snapshot.roles.contains('Owner') ||
-          snapshot.roles.contains(LocalAuthDefaults.adminRole) ||
-          snapshot.roles.contains(LocalAuthDefaults.ownerRole);
       final allCompanies = _readCompanies(box);
       bool dirty = false;
       List<AuthCompany> updatedCompanies = _readAuthorizedCompanies(
@@ -633,47 +623,8 @@ class LocalAuthStore {
         dirty = true;
       }
 
-      if ((snapshot.currentCompanyId == null ||
-              snapshot.currentCompanyId!.isEmpty) &&
-          updatedCompanies.isNotEmpty) {
-        final firstCid = updatedCompanies.first.id;
-        final memberships = _readMemberships(box);
-        final m = memberships.firstWhere(
-          (mem) =>
-              mem.userId == snapshot.user.id &&
-              mem.companyId == firstCid &&
-              mem.isActive,
-          orElse: () => UserCompanyMembership(
-            userId: snapshot.user.id,
-            companyId: firstCid,
-            role: snapshot.user.isSuperAdmin ? 'Owner' : 'Member',
-            status: 'active',
-            permissions: snapshot.user.isSuperAdmin
-                ? kAllLocalPermissions.toList()
-                : const [],
-          ),
-        );
-        final activeContext = ActiveCompanyContext.fromMembership(
-          membership: m,
-          authenticatedUserId: snapshot.user.id,
-          companyName: updatedCompanies.first.name,
-          companyCode: updatedCompanies.first.code,
-        );
-        snapshot = snapshot.copyWith(
-          currentCompanyId: firstCid,
-          activeMembership: m,
-          activeCompanyContext: activeContext,
-          roles: [m.role],
-          permissions: Set<String>.from(
-            m.permissions.isNotEmpty
-                ? m.permissions
-                : (snapshot.user.isSuperAdmin
-                      ? kAllLocalPermissions
-                      : const []),
-          ),
-        );
-        dirty = true;
-      } else if (snapshot.currentCompanyId != null) {
+      if (snapshot.currentCompanyId != null &&
+          snapshot.currentCompanyId!.isNotEmpty) {
         final cid = snapshot.currentCompanyId!;
         final identityRepo = _identityRepository;
         final memberships = _readMemberships(box);
@@ -709,7 +660,7 @@ class LocalAuthStore {
       }
 
 
-      if (isOwnerOrAdmin && snapshot.currentCompanyId != null) {
+      if (snapshot.user.isSuperAdmin && snapshot.currentCompanyId != null) {
         final merged = {...snapshot.permissions, ...kAllLocalPermissions};
         if (merged.length != snapshot.permissions.length ||
             !snapshot.permissions.containsAll(kAllLocalPermissions)) {
@@ -765,6 +716,15 @@ class LocalAuthStore {
       return null;
     }
 
+    final identityRepo = _identityRepository;
+    if (identityRepo != null) {
+      final canonicalUser = await identityRepo.getUserByUuid(session.user.id);
+      if (canonicalUser == null || canonicalUser.status != 'active') {
+        await saveSession(null);
+        return null;
+      }
+    }
+
     final box = await _box();
     final users = _readUsers(box);
     final user = users.firstWhere(
@@ -782,7 +742,7 @@ class LocalAuthStore {
         permissionsByCompany: {},
       ),
     );
-    if (user.id.isEmpty) {
+    if (user.id.isEmpty && identityRepo == null) {
       await saveSession(null);
       return null;
     }
@@ -794,12 +754,12 @@ class LocalAuthStore {
     }
 
     final companies = _readCompanies(box);
-    final companyExists = companies.any(
+    var companyExists = companies.any(
       (c) => c.id == session.currentCompanyId,
     );
 
     final memberships = _readMemberships(box);
-    final membership = memberships.firstWhere(
+    var membership = memberships.firstWhere(
       (m) =>
           m.userId == session.user.id &&
           m.companyId == session.currentCompanyId &&
@@ -811,6 +771,27 @@ class LocalAuthStore {
         status: 'inactive',
       ),
     );
+
+    if (identityRepo != null) {
+      final cid = session.currentCompanyId!;
+      final canonicalComp = await identityRepo.getCompanyByUuid(cid);
+      final canonicalMem = await identityRepo.validateMembership(
+        userUuid: session.user.id,
+        companyUuid: cid,
+      );
+      if (canonicalComp != null && canonicalComp.status == 'active') {
+        companyExists = true;
+      }
+      if (canonicalMem != null && canonicalMem.status == 'active') {
+        membership = UserCompanyMembership(
+          userId: canonicalMem.userId,
+          companyId: canonicalMem.companyId,
+          role: canonicalMem.role,
+          status: canonicalMem.status,
+          permissions: session.permissions.toList(),
+        );
+      }
+    }
 
     if (!companyExists || !membership.isActive) {
       final safeSnapshot = session.copyWith(
@@ -923,12 +904,10 @@ class LocalAuthStore {
 
     // 4. Build Target Company permissions
     final stored = user?.permissionsByCompany[companyId];
-    final isOwnerOrAdmin =
-        membership.role == 'Owner' ||
-        membership.role == LocalAuthDefaults.adminRole;
+    final isSuperAdmin = current.user.isSuperAdmin;
 
     final permissions = Set<String>.from(
-      isOwnerOrAdmin
+      isSuperAdmin
           ? {...?stored, ...kAllLocalPermissions}
           : (membership.permissions.isNotEmpty
                 ? membership.permissions

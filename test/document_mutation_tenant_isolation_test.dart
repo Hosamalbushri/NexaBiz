@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' hide isNotNull;
 import 'package:stock_count/core/permissions/permission_guard.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
@@ -37,14 +37,14 @@ class MockAccountingPoster implements InventoryAccountingPoster {
 }
 
 void main() {
-  late InventoryDatabase db;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase db;
+  late NexabizDatabase accountingDb;
   late String activeCompanyId;
   late MockAccountingPoster mockAccountingPoster;
 
   setUp(() async {
-    db = InventoryDatabase.memory();
-    accountingDb = AccountingDatabase.memory();
+    db = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
     activeCompanyId = 'COMPANY_A';
     mockAccountingPoster = MockAccountingPoster();
   });
@@ -82,12 +82,28 @@ void main() {
     );
   }
 
+  Future<void> seedWarehouse(String warehouseId, String compId) async {
+    final nowDate = DateTime.now().toUtc();
+    await db.into(db.warehouses).insertOnConflictUpdate(
+          WarehousesCompanion(
+            id: Value(warehouseId),
+            code: Value('WH-$warehouseId'),
+            name: Value('Warehouse $warehouseId'),
+            companyId: Value(compId),
+            isActive: const Value(true),
+            createdAt: Value(nowDate),
+            updatedAt: Value(nowDate),
+          ),
+        );
+  }
+
   Future<void> seedProduct(
     String itemCode,
     String compId,
     double initialQty,
   ) async {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final nowDate = DateTime.now().toUtc();
+    final now = nowDate.millisecondsSinceEpoch;
     final prodUuid = compId == 'COMPANY_A'
         ? '10000000-0000-4000-8000-000000000001'
         : '20000000-0000-4000-8000-000000000002';
@@ -95,17 +111,16 @@ void main() {
         .into(db.products)
         .insertOnConflictUpdate(
           ProductsCompanion(
-            id: Value(compId == 'COMPANY_A' ? 1 : 2),
-            uuid: Value(prodUuid),
+            id: Value(prodUuid),
             itemCode: Value(itemCode),
             name: Value('Test Item $itemCode'),
             packSize: const Value(1),
             price: const Value(100.0),
-            onHandQty: Value(initialQty),
+            
             unitCost: const Value(50.0),
             companyId: Value(compId),
-            createdAt: Value(now),
-            updatedAt: Value(now),
+            createdAt: Value(nowDate),
+            updatedAt: Value(nowDate),
           ),
         );
   }
@@ -115,8 +130,13 @@ void main() {
     String compId,
     String recNo,
   ) async {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final nowDate = DateTime.now().toUtc();
+    final now = nowDate.millisecondsSinceEpoch;
     final itemCode = 'ITEM-$compId-100';
+    final whId = compId == 'COMPANY_A'
+        ? '99999999-9999-4999-8999-000000000001'
+        : '99999999-9999-4999-8999-000000000002';
+    await seedWarehouse(whId, compId);
     await seedProduct(itemCode, compId, 0.0);
 
     final lineUuid = compId == 'COMPANY_A'
@@ -127,13 +147,15 @@ void main() {
         .into(db.stockReceipts)
         .insert(
           StockReceiptsCompanion.insert(
-            uuid: documentUuid,
+            id: Value(documentUuid),
             receiptNumber: recNo,
             receiptDate: DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
             createdAt: now,
             updatedAt: now,
             status: const Value('draft'),
             companyId: Value(compId),
+            currencyCode: 'YER',
+            warehouseId: Value(whId),
           ),
         );
 
@@ -141,14 +163,15 @@ void main() {
         .into(db.stockMovementLines)
         .insert(
           StockMovementLinesCompanion.insert(
-            uuid: lineUuid,
-            movementUuid: documentUuid,
+            id: Value(lineUuid),
+            receiptId: Value(documentUuid),
             movementType: 'receipt',
             itemCode: itemCode,
             itemName: 'Test Item $itemCode',
             quantity: const Value(10.0),
             unitCost: const Value(50.0),
             totalCost: const Value(500.0),
+            companyId: compId,
           ),
         );
 
@@ -157,6 +180,7 @@ void main() {
       documentNumber: recNo,
       documentType: InventoryDocumentType.stockReceipt,
       documentDate: DateTime.utc(2026, 1, 1),
+      warehouseId: whId,
     );
   }
 
@@ -181,7 +205,7 @@ void main() {
         final recInDb =
             await (db.select(db.stockReceipts)..where(
                   (tbl) =>
-                      tbl.uuid.equals('11111111-1111-4111-8111-111111111111'),
+                      tbl.id.equals('11111111-1111-4111-8111-111111111111'),
                 ))
                 .getSingle();
         expect(recInDb.status, 'posted');
@@ -222,7 +246,7 @@ void main() {
       final recB =
           await (db.select(db.stockReceipts)..where(
                 (tbl) =>
-                    tbl.uuid.equals('22222222-2222-4222-8222-222222222222'),
+                    tbl.id.equals('22222222-2222-4222-8222-222222222222'),
               ))
               .getSingle();
       expect(recB.status, 'draft');
@@ -250,6 +274,7 @@ void main() {
           documentNumber: 'REC-A-333',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.utc(2026, 1, 1),
+          warehouseId: '99999999-9999-4999-8999-000000000001',
         );
 
         final resultA = await coordinatorA.post(
@@ -262,7 +287,7 @@ void main() {
         final recA =
             await (db.select(db.stockReceipts)..where(
                   (tbl) =>
-                      tbl.uuid.equals(docUuidA) &
+                      tbl.id.equals(docUuidA) &
                       tbl.companyId.equals('COMPANY_A'),
                 ))
                 .getSingle();
@@ -272,7 +297,7 @@ void main() {
         final recB =
             await (db.select(db.stockReceipts)..where(
                   (tbl) =>
-                      tbl.uuid.equals(docUuidB) &
+                      tbl.id.equals(docUuidB) &
                       tbl.companyId.equals('COMPANY_B'),
                 ))
                 .getSingle();
@@ -309,7 +334,7 @@ void main() {
       final recB =
           await (db.select(db.stockReceipts)..where(
                 (tbl) =>
-                    tbl.uuid.equals('44444444-4444-4444-8444-444444444444'),
+                    tbl.id.equals('44444444-4444-4444-8444-444444444444'),
               ))
               .getSingle();
       expect(recB.status, 'posted');
@@ -346,7 +371,7 @@ void main() {
         final recA =
             await (db.select(db.stockReceipts)..where(
                   (tbl) =>
-                      tbl.uuid.equals('55555555-5555-4555-8555-555555555555'),
+                      tbl.id.equals('55555555-5555-4555-8555-555555555555'),
                 ))
                 .getSingle();
         expect(recA.status, 'posted');

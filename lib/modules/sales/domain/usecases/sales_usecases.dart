@@ -49,20 +49,14 @@ class PostSaleInvoiceUseCase {
   final SyncQueue? _syncQueue;
 
   PostSaleInvoiceUseCase({
-    required SaleRepository saleRepository,
-    required PostingCoordinatorPort postingCoordinator,
-    required JournalPostingService journalPostingService,
-    required AccountingEntryBuilder entryBuilder,
-    required CanonicalTransactionOrchestrator orchestrator,
-    AuditTrailService? auditTrailService,
-    SyncQueue? syncQueue,
-  })  : _saleRepository = saleRepository,
-        _postingCoordinator = postingCoordinator,
-        _journalPostingService = journalPostingService,
-        _entryBuilder = entryBuilder,
-        _orchestrator = orchestrator,
-        _auditTrailService = auditTrailService,
-        _syncQueue = syncQueue;
+    required this._saleRepository,
+    required this._postingCoordinator,
+    required this._journalPostingService,
+    required this._entryBuilder,
+    required this._orchestrator,
+    this._auditTrailService,
+    this._syncQueue,
+  });
 
   Future<SaleOrchestrationResult> execute({
     required String saleUuid,
@@ -151,8 +145,9 @@ class PostSaleInvoiceUseCase {
           }
 
           // 3. Record Audit Event inside transaction
-          if (_auditTrailService != null) {
-            await _auditTrailService!.recordEvent(
+          final auditTrail = _auditTrailService;
+          if (auditTrail != null) {
+            await auditTrail.recordEvent(
               documentId: sale.id,
               documentType: 'sales_invoice',
               eventType: 'posted',
@@ -163,8 +158,9 @@ class PostSaleInvoiceUseCase {
           }
 
           // 4. Enqueue Sync Operation inside transaction
-          if (_syncQueue != null) {
-            await _syncQueue!.enqueue(
+          final syncQ = _syncQueue;
+          if (syncQ != null) {
+            await syncQ.enqueue(
               SyncOperation.create(
                 entityType: 'sales_invoice',
                 entityId: sale.id,
@@ -209,18 +205,13 @@ class UnpostSaleInvoiceUseCase {
   final SyncQueue? _syncQueue;
 
   UnpostSaleInvoiceUseCase({
-    required SaleRepository saleRepository,
-    required PostingCoordinatorPort postingCoordinator,
-    required JournalPostingService journalPostingService,
-    required CanonicalTransactionOrchestrator orchestrator,
-    AuditTrailService? auditTrailService,
-    SyncQueue? syncQueue,
-  })  : _saleRepository = saleRepository,
-        _postingCoordinator = postingCoordinator,
-        _journalPostingService = journalPostingService,
-        _orchestrator = orchestrator,
-        _auditTrailService = auditTrailService,
-        _syncQueue = syncQueue;
+    required this._saleRepository,
+    required this._postingCoordinator,
+    required this._journalPostingService,
+    required this._orchestrator,
+    this._auditTrailService,
+    this._syncQueue,
+  });
 
   Future<SaleOrchestrationResult> execute({
     required String saleUuid,
@@ -268,8 +259,9 @@ class UnpostSaleInvoiceUseCase {
           );
 
           // Record Audit Event inside transaction
-          if (_auditTrailService != null) {
-            await _auditTrailService!.recordEvent(
+          final auditTrail = _auditTrailService;
+          if (auditTrail != null) {
+            await auditTrail.recordEvent(
               documentId: sale.id,
               documentType: 'sales_invoice',
               eventType: 'unposted',
@@ -280,8 +272,9 @@ class UnpostSaleInvoiceUseCase {
           }
 
           // Enqueue Sync Operation inside transaction
-          if (_syncQueue != null) {
-            await _syncQueue!.enqueue(
+          final syncQ = _syncQueue;
+          if (syncQ != null) {
+            await syncQ.enqueue(
               SyncOperation.create(
                 entityType: 'sales_invoice',
                 entityId: sale.id,

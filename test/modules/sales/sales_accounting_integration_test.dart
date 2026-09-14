@@ -15,23 +15,23 @@ class FakeAccountValidationService implements AccountValidationService {
 
   @override
   Future<AccountValidationResult> validateAccountUuid(
-    String accountUuid,
+    String accountId,
   ) async {
-    if (accountUuid.startsWith('invalid_') ||
-        accountUuid.startsWith('inactive_')) {
+    if (accountId.startsWith('invalid_') ||
+        accountId.startsWith('inactive_')) {
       return AccountValidationResult(
         isValid: false,
-        errorMessage: 'الحساب غير صالح: $accountUuid',
+        errorMessage: 'الحساب غير صالح: $accountId',
       );
     }
     return AccountValidationResult.valid;
   }
 
   @override
-  Future<void> assertCanPost(String accountUuid) async {
-    if (accountUuid.startsWith('invalid_') ||
-        accountUuid.startsWith('inactive_')) {
-      throw StateError('الحساب غير صالح للترحيل: $accountUuid');
+  Future<void> assertCanPost(String accountId) async {
+    if (accountId.startsWith('invalid_') ||
+        accountId.startsWith('inactive_')) {
+      throw StateError('الحساب غير صالح للترحيل: $accountId');
     }
   }
 }
@@ -63,43 +63,43 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
     final Map<AccountRole, AccountRoleRef> roles = {
       AccountRole.cash: AccountRoleRef(
         role: AccountRole.cash,
-        accountUuid: overrides?[AccountRole.cash] ?? cashAccountId,
+        accountId: overrides?[AccountRole.cash] ?? cashAccountId,
         accountCode: '1010',
         accountName: 'Cash',
       ),
       AccountRole.receivable: AccountRoleRef(
         role: AccountRole.receivable,
-        accountUuid: overrides?[AccountRole.receivable] ?? receivableAccountId,
+        accountId: overrides?[AccountRole.receivable] ?? receivableAccountId,
         accountCode: '1100',
         accountName: 'Receivables',
       ),
       AccountRole.revenue: AccountRoleRef(
         role: AccountRole.revenue,
-        accountUuid: overrides?[AccountRole.revenue] ?? revenueAccountId,
+        accountId: overrides?[AccountRole.revenue] ?? revenueAccountId,
         accountCode: '4010',
         accountName: 'Sales Revenue',
       ),
       AccountRole.discount: AccountRoleRef(
         role: AccountRole.discount,
-        accountUuid: overrides?[AccountRole.discount] ?? discountAccountId,
+        accountId: overrides?[AccountRole.discount] ?? discountAccountId,
         accountCode: '4020',
         accountName: 'Sales Discount',
       ),
       AccountRole.tax: AccountRoleRef(
         role: AccountRole.tax,
-        accountUuid: overrides?[AccountRole.tax] ?? taxAccountId,
+        accountId: overrides?[AccountRole.tax] ?? taxAccountId,
         accountCode: '2150',
         accountName: 'Output VAT',
       ),
       AccountRole.cogs: AccountRoleRef(
         role: AccountRole.cogs,
-        accountUuid: overrides?[AccountRole.cogs] ?? cogsAccountId,
+        accountId: overrides?[AccountRole.cogs] ?? cogsAccountId,
         accountCode: '5010',
         accountName: 'COGS',
       ),
       AccountRole.inventory: AccountRoleRef(
         role: AccountRole.inventory,
-        accountUuid: overrides?[AccountRole.inventory] ?? inventoryAccountId,
+        accountId: overrides?[AccountRole.inventory] ?? inventoryAccountId,
         accountCode: '1200',
         accountName: 'Inventory Asset',
       ),
@@ -150,12 +150,12 @@ void main() {
 
         // Debit line: Cash account
         final debitLine = entry.lines.firstWhere((l) => l.debit > 0);
-        expect(debitLine.accountUuid, equals('acc_cash_01'));
+        expect(debitLine.accountId, equals('acc_cash_01'));
         expect(debitLine.debit, equals(100.0));
 
         // Credit line: Revenue account
         final creditLine = entry.lines.firstWhere((l) => l.credit > 0);
-        expect(creditLine.accountUuid, equals('acc_rev_main'));
+        expect(creditLine.accountId, equals('acc_rev_main'));
         expect(creditLine.credit, equals(100.0));
       },
     );
@@ -188,11 +188,11 @@ void main() {
         expect(entry.voucherType, equals('بيع آجل'));
 
         final debitLine = entry.lines.firstWhere((l) => l.debit > 0);
-        expect(debitLine.accountUuid, equals('acc_cust_rec_101'));
+        expect(debitLine.accountId, equals('acc_cust_rec_101'));
         expect(debitLine.debit, equals(250.0));
 
         final creditLine = entry.lines.firstWhere((l) => l.credit > 0);
-        expect(creditLine.accountUuid, equals('acc_rev_main'));
+        expect(creditLine.accountId, equals('acc_rev_main'));
         expect(creditLine.credit, equals(250.0));
       },
     );
@@ -224,17 +224,17 @@ void main() {
         expect(entry.lines.length, equals(3));
 
         final cashLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == 'acc_cash_01',
+          (l) => l.accountId == 'acc_cash_01',
         );
         expect(cashLine.debit, equals(180.0));
 
         final discLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == 'acc_disc_main',
+          (l) => l.accountId == 'acc_disc_main',
         );
         expect(discLine.debit, equals(20.0));
 
         final revLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == 'acc_rev_main',
+          (l) => l.accountId == 'acc_rev_main',
         );
         expect(revLine.credit, equals(200.0)); // Gross revenue = 180 + 20 = 200
       },
@@ -267,17 +267,17 @@ void main() {
         expect(entry.lines.length, equals(3));
 
         final cashLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == 'acc_cash_01',
+          (l) => l.accountId == 'acc_cash_01',
         );
         expect(cashLine.debit, equals(115.0));
 
         final taxLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == 'acc_tax_main',
+          (l) => l.accountId == 'acc_tax_main',
         );
         expect(taxLine.credit, equals(15.0));
 
         final revLine = entry.lines.firstWhere(
-          (l) => l.accountUuid == 'acc_rev_main',
+          (l) => l.accountId == 'acc_rev_main',
         );
         expect(
           revLine.credit,
@@ -316,11 +316,11 @@ void main() {
         expect(cogsEntry.voucherType, equals('تكلفة مبيعات'));
 
         final cogsLine = cogsEntry.lines.firstWhere((l) => l.debit > 0);
-        expect(cogsLine.accountUuid, equals('acc_cogs_main'));
+        expect(cogsLine.accountId, equals('acc_cogs_main'));
         expect(cogsLine.debit, equals(160.0));
 
         final invLine = cogsEntry.lines.firstWhere((l) => l.credit > 0);
-        expect(invLine.accountUuid, equals('acc_inv_main'));
+        expect(invLine.accountId, equals('acc_inv_main'));
         expect(invLine.credit, equals(160.0));
       },
     );

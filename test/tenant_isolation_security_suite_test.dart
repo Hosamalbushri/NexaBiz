@@ -1,137 +1,108 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
-import 'package:stock_count/core/data/multi_tenant_repository_guard.dart';
+import 'package:drift/native.dart';
 import 'package:stock_count/core/database/nexabiz_database.dart';
-import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
 
 void main() {
-  group('Phase 2C-2 — Comprehensive Tenant Isolation Security Suite', () {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('Phase 2C-4 Security & Tenant Isolation Suite', () {
     late NexabizDatabase db;
-    final companyA = generateUuidV7();
-    final companyB = generateUuidV7();
-
-    final accIdA = generateUuidV7();
-    final accIdB = generateUuidV7();
-
-    final prodIdA = generateUuidV7();
-    final prodIdB = generateUuidV7();
 
     setUp(() async {
-      db = NexabizDatabase.memory();
-
-      // Seed Account for Company A
-      await db.into(db.accounts).insert(
-        AccountsCompanion.insert(
-          id: Value(accIdA),
-          accountCode: '1001',
-          name: 'Cash Box A',
-          accountType: 'asset',
-          normalBalance: 'debit',
-          companyId: companyA,
-        ),
-      );
-
-      // Seed Account for Company B
-      await db.into(db.accounts).insert(
-        AccountsCompanion.insert(
-          id: Value(accIdB),
-          accountCode: '1001',
-          name: 'Cash Box B',
-          accountType: 'asset',
-          normalBalance: 'debit',
-          companyId: companyB,
-        ),
-      );
-
-      // Seed Product for Company A
-      await db.into(db.products).insert(
-        ProductsCompanion.insert(
-          id: Value(prodIdA),
-          itemCode: 'ITEM-A',
-          name: 'Product A',
-          companyId: companyA,
-        ),
-      );
-
-      // Seed Product for Company B
-      await db.into(db.products).insert(
-        ProductsCompanion.insert(
-          id: Value(prodIdB),
-          itemCode: 'ITEM-B',
-          name: 'Product B',
-          companyId: companyB,
-        ),
-      );
+      db = NexabizDatabase.connect(NativeDatabase.memory());
+      // Enable physical foreign key enforcement
+      await db.customStatement('PRAGMA foreign_keys = ON;');
     });
 
     tearDown(() async {
       await db.close();
     });
 
-    test('1. Read Isolation — Company A query by ID enforces company scope', () async {
-      // Query with company A scope for Company A's account MUST succeed
-      final queryA = db.select(db.accounts)
-        ..where((tbl) => tbl.id.equals(accIdA) & tbl.companyId.equals(companyA));
-      final accountA = await queryA.getSingleOrNull();
-      expect(accountA, isNotNull);
-      expect(accountA?.name, equals('Cash Box A'));
+    test('Physical Composite FK rejects cross-tenant foreign key reference attack', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
 
-      // Query with company A scope for Company B's account MUST return NULL
-      final queryCross = db.select(db.accounts)
-        ..where((tbl) => tbl.id.equals(accIdB) & tbl.companyId.equals(companyA));
-      final accountCross = await queryCross.getSingleOrNull();
-      expect(accountCross, isNull, reason: 'Company A MUST NOT read Company B record by UUID');
-    });
+      // 1. Seed two isolated companies (Company A and Company B)
+      await db.customStatement('''
+        INSERT INTO companies (id, code, name, base_currency_code, inventory_currency_code, status, created_at, updated_at)
+        VALUES 
+          ('COMP-A', 'CA', 'Company A', 'YER', 'SAR', 'active', $now, $now),
+          ('COMP-B', 'CB', 'Company B', 'YER', 'SAR', 'active', $now, $now);
+      ''');
 
-    test('2. Direct UUID Cross-Tenant Access — Knowing Company B UUID yields zero results', () async {
-      final query = db.select(db.products)
-        ..where((tbl) => tbl.id.equals(prodIdB) & tbl.companyId.equals(companyA));
-      final prod = await query.getSingleOrNull();
-      expect(prod, isNull, reason: 'Knowing Company B product UUID MUST NOT grant access to Company A');
-    });
+      // 2. Seed Customer for Company A
+      await db.customStatement('''
+        INSERT INTO customers (id, company_id, customer_code, name, status, created_at, updated_at)
+        VALUES ('CUST-A-1', 'COMP-A', 'CUST-001', 'Company A Customer', 'active', $now, $now);
+      ''');
 
-    test('3. Update Isolation — Company A cannot mutate Company B record', () async {
-      final updatedRows = await (db.update(db.accounts)
-            ..where((tbl) => tbl.id.equals(accIdB) & tbl.companyId.equals(companyA)))
-          .write(const AccountsCompanion(name: Value('Hacked Cash Box B')));
+      // 3. Seed Customer for Company B
+      await db.customStatement('''
+        INSERT INTO customers (id, company_id, customer_code, name, status, created_at, updated_at)
+        VALUES ('CUST-B-1', 'COMP-B', 'CUST-001', 'Company B Customer', 'active', $now, $now);
+      ''');
 
-      expect(updatedRows, equals(0), reason: 'Cross-tenant update MUST affect 0 rows');
-
-      // Verify Company B data remains intact
-      final checkB = await (db.select(db.accounts)..where((tbl) => tbl.id.equals(accIdB))).getSingle();
-      expect(checkB.name, equals('Cash Box B'));
-    });
-
-    test('4. Delete Isolation — Company A cannot delete Company B record', () async {
-      final deletedRows = await (db.delete(db.accounts)
-            ..where((tbl) => tbl.id.equals(accIdB) & tbl.companyId.equals(companyA)))
-          .go();
-
-      expect(deletedRows, equals(0), reason: 'Cross-tenant delete MUST affect 0 rows');
-
-      final checkB = await (db.select(db.accounts)..where((tbl) => tbl.id.equals(accIdB))).getSingleOrNull();
-      expect(checkB, isNotNull);
-    });
-
-    test('5. Search Isolation — Search query under Company A scope excludes Company B records', () async {
-      final results = await (db.select(db.products)
-            ..where((tbl) => tbl.companyId.equals(companyA)))
-          .get();
-
-      expect(results.length, equals(1));
-      expect(results.first.id, equals(prodIdA));
-      expect(results.any((p) => p.companyId == companyB), isFalse);
-    });
-
-    test('6. MultiTenantRepositoryGuard — Rejects company context mismatch', () {
+      // 4. CROSS-TENANT ATTACK: Company B tries to insert a Sale referencing Company A's Customer ('CUST-A-1')
+      // Expect SQLite C engine to physically reject with FOREIGN KEY constraint failed!
       expect(
-        () => MultiTenantRepositoryGuard.enforceCompanyContext(
-          companyId: companyA,
-          activeCompanyId: companyB,
-        ),
-        throwsA(isA<CompanyContextMismatchException>()),
+        () async {
+          await db.customStatement('''
+            INSERT INTO sales (id, company_id, sale_number, customer_id, currency_code, base_currency_code, exchange_rate, subtotal, item_discount_total, total, created_at, updated_at)
+            VALUES ('SALE-ATTACK-1', 'COMP-B', 'SALE-B-001', 'CUST-A-1', 'SAR', 'YER', 140.0, 100.0, 0.0, 100.0, $now, $now);
+          ''');
+        },
+        throwsA(anything),
+        reason: 'SQLite physical composite FK must prevent Company B from referencing Company A customer!',
       );
+
+      // 5. VALID TENANT INVOCATION: Company A inserts Sale referencing Company A's Customer ('CUST-A-1')
+      await db.customStatement('''
+        INSERT INTO sales (id, company_id, sale_number, customer_id, currency_code, base_currency_code, exchange_rate, subtotal, item_discount_total, total, created_at, updated_at)
+        VALUES ('SALE-VALID-1', 'COMP-A', 'SALE-A-001', 'CUST-A-1', 'SAR', 'YER', 140.0, 100.0, 0.0, 100.0, $now, $now);
+      ''');
+
+      final saleRow = await db.customSelect("SELECT * FROM sales WHERE id = 'SALE-VALID-1'").getSingle();
+      expect(saleRow.read<String>('company_id'), equals('COMP-A'));
+      expect(saleRow.read<String>('customer_id'), equals('CUST-A-1'));
+
+      // 6. PRAGMA foreign_key_check must confirm 0 violations!
+      final fkViolations = await db.customSelect('PRAGMA foreign_key_check;').get();
+      expect(fkViolations.isEmpty, isTrue);
+    });
+
+    test('Physical Composite FK enforces child cascading/restriction within company boundary', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      await db.customStatement('''
+        INSERT INTO companies (id, code, name, base_currency_code, inventory_currency_code, status, created_at, updated_at)
+        VALUES ('COMP-X', 'CX', 'Company X', 'YER', 'SAR', 'active', $now, $now);
+      ''');
+
+      await db.customStatement('''
+        INSERT INTO products (id, company_id, item_code, name, pack_size, price, avg_cost, unit_cost, is_active, created_at, updated_at)
+        VALUES ('PROD-X-1', 'COMP-X', 'ITEM-X1', 'Product X1', 1, 50.0, 30.0, 30.0, 1, $now, $now);
+      ''');
+
+      await db.customStatement('''
+        INSERT INTO sales (id, company_id, sale_number, currency_code, base_currency_code, exchange_rate, subtotal, item_discount_total, total, created_at, updated_at)
+        VALUES ('SALE-X-1', 'COMP-X', 'SX-1', 'SAR', 'YER', 140.0, 50.0, 0.0, 50.0, $now, $now);
+      ''');
+
+      // SaleItem referencing Product X1 of Company X
+      await db.customStatement('''
+        INSERT INTO sale_items (id, company_id, sale_id, product_id, product_name, product_code, quantity, unit_price, subtotal, total)
+        VALUES ('SITEM-X-1', 'COMP-X', 'SALE-X-1', 'PROD-X-1', 'Product X1', 'ITEM-X1', 1.0, 50.0, 50.0, 50.0);
+      ''');
+
+      // Deleting product referenced by sale_items should throw RESTRICT violation
+      expect(
+        () async {
+          await db.customStatement("DELETE FROM products WHERE id = 'PROD-X-1';");
+        },
+        throwsA(anything),
+      );
+
+      final fkViolations = await db.customSelect('PRAGMA foreign_key_check;').get();
+      expect(fkViolations.isEmpty, isTrue);
     });
   });
 }

@@ -12,10 +12,9 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
   AccountingSystemSetupSeedAdapter({
     AccountRepository? accounts,
     VoucherBookRepository? voucherBooks,
-    required SyncManager syncManager,
-    required SettingsRepository settings,
-  }) : _syncManager = syncManager,
-       _settings = settings;
+    required this._syncManager,
+    required this._settings,
+  });
 
   final SyncManager _syncManager;
   final SettingsRepository _settings;

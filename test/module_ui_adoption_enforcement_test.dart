@@ -18,8 +18,7 @@ void main() {
       (WidgetTester tester) async {
         final dummyCurrencies = <Currency>[
           Currency(
-            id: 1,
-            uuid: 'cur-1',
+            id: 'cur-1',
             code: 'USD',
             nameAr: 'دولار أمريكي',
             nameEn: 'US Dollar',
@@ -31,8 +30,7 @@ void main() {
             updatedAt: DateTime.now(),
           ),
           Currency(
-            id: 2,
-            uuid: 'cur-2',
+            id: 'cur-2',
             code: 'EUR',
             nameAr: 'يورو',
             nameEn: 'Euro',

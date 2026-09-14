@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock_transfer_repository_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late StockTransferRepositoryImpl repoCompA;
   late StockTransferRepositoryImpl repoCompB;
 
@@ -18,7 +18,7 @@ void main() {
   const transferUuidCompB = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 
   setUp(() async {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
 
     repoCompA = StockTransferRepositoryImpl(
       db: db,
@@ -187,7 +187,7 @@ void main() {
               uuid: const Value('wh-stock-comp-b'),
               itemCode: const Value('ITEM-001'),
               warehouseId: const Value('wh-main'),
-              onHandQty: const Value(100.0),
+              
               createdAt: Value(now.millisecondsSinceEpoch),
               updatedAt: Value(now.millisecondsSinceEpoch),
               version: const Value(1),
@@ -247,7 +247,7 @@ void main() {
               uuid: const Value('stock-a'),
               itemCode: const Value('SHARED-ITEM-CODE'),
               warehouseId: const Value('WH-SHARED'),
-              onHandQty: const Value(50.0),
+              
               createdAt: Value(now.millisecondsSinceEpoch),
               updatedAt: Value(now.millisecondsSinceEpoch),
               version: const Value(1),
@@ -262,7 +262,7 @@ void main() {
               uuid: const Value('stock-b'),
               itemCode: const Value('SHARED-ITEM-CODE'),
               warehouseId: const Value('WH-SHARED'),
-              onHandQty: const Value(200.0),
+              
               createdAt: Value(now.millisecondsSinceEpoch),
               updatedAt: Value(now.millisecondsSinceEpoch),
               version: const Value(1),

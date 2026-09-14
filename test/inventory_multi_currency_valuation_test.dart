@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late CostLayerServiceImpl costLayerService;
   const String companyId = 'company_a';
   const String warehouseA = 'wh_a';
@@ -15,7 +15,7 @@ void main() {
   const String productX = 'PROD_X';
 
   setUp(() {
-    db = InventoryDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     costLayerService = CostLayerServiceImpl(
       db: db,
       readCompanyId: () => companyId,
@@ -33,7 +33,7 @@ void main() {
         id: '11111111-1111-1111-1111-111111111101',
         itemCode: productX,
         warehouseId: warehouseA,
-        movementUuid: '11111111-1111-1111-1111-111111111102',
+        movementId: '11111111-1111-1111-1111-111111111102',
         movementType: 'receipt',
         receivedDate: DateTime.utc(2026, 9, 1),
         receivedQty: 100,
@@ -55,7 +55,7 @@ void main() {
         id: '11111111-1111-1111-1111-111111111103',
         itemCode: productX,
         warehouseId: warehouseA,
-        movementUuid: '11111111-1111-1111-1111-111111111104',
+        movementId: '11111111-1111-1111-1111-111111111104',
         movementType: 'receipt',
         receivedDate: DateTime.utc(2026, 9, 2),
         receivedQty: 100,
@@ -91,7 +91,7 @@ void main() {
           id: '22222222-2222-2222-2222-222222222201',
           itemCode: productX,
           warehouseId: warehouseA,
-          movementUuid: '22222222-2222-2222-2222-222222222202',
+          movementId: '22222222-2222-2222-2222-222222222202',
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 9, 1),
           receivedQty: 100,
@@ -110,7 +110,7 @@ void main() {
           id: '22222222-2222-2222-2222-222222222203',
           itemCode: productX,
           warehouseId: warehouseA,
-          movementUuid: '22222222-2222-2222-2222-222222222204',
+          movementId: '22222222-2222-2222-2222-222222222204',
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 9, 2),
           receivedQty: 100,
@@ -156,7 +156,7 @@ void main() {
           id: '33333333-3333-3333-3333-333333333301',
           itemCode: productX,
           warehouseId: warehouseA,
-          movementUuid: '33333333-3333-3333-3333-333333333302',
+          movementId: '33333333-3333-3333-3333-333333333302',
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 9, 1),
           receivedQty: 100,
@@ -175,7 +175,7 @@ void main() {
           id: '33333333-3333-3333-3333-333333333303',
           itemCode: productX,
           warehouseId: warehouseA,
-          movementUuid: '33333333-3333-3333-3333-333333333304',
+          movementId: '33333333-3333-3333-3333-333333333304',
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 9, 2),
           receivedQty: 100,
@@ -212,7 +212,7 @@ void main() {
             id: '44444444-4444-4444-4444-444444444401',
             itemCode: productX,
             warehouseId: warehouseA,
-            movementUuid: '44444444-4444-4444-4444-444444444402',
+            movementId: '44444444-4444-4444-4444-444444444402',
             movementType: 'receipt',
             receivedDate: DateTime.utc(2026, 9, 1),
             receivedQty: 100,
@@ -228,7 +228,7 @@ void main() {
             id: '44444444-4444-4444-4444-444444444403',
             itemCode: productX,
             warehouseId: warehouseA,
-            movementUuid: '44444444-4444-4444-4444-444444444404',
+            movementId: '44444444-4444-4444-4444-444444444404',
             movementType: 'receipt',
             receivedDate: DateTime.utc(2026, 9, 2),
             receivedQty: 100,
@@ -272,7 +272,7 @@ void main() {
           id: '55555555-5555-5555-5555-555555555501',
           itemCode: productX,
           warehouseId: warehouseA,
-          movementUuid: '55555555-5555-5555-5555-555555555502',
+          movementId: '55555555-5555-5555-5555-555555555502',
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 9, 1),
           receivedQty: 10,
@@ -357,7 +357,7 @@ void main() {
           id: '66666666-6666-6666-6666-666666666601',
           itemCode: productX,
           warehouseId: warehouseA,
-          movementUuid: '66666666-6666-6666-6666-666666666602',
+          movementId: '66666666-6666-6666-6666-666666666602',
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 9, 1),
           receivedQty: 50,
@@ -374,7 +374,7 @@ void main() {
           id: '77777777-7777-7777-7777-777777777701',
           itemCode: productX,
           warehouseId: warehouseB,
-          movementUuid: '77777777-7777-7777-7777-777777777702',
+          movementId: '77777777-7777-7777-7777-777777777702',
           movementType: 'receipt',
           receivedDate: DateTime.utc(2026, 9, 1),
           receivedQty: 50,

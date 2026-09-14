@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:stock_count/core/database/hive_boxes.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_repository_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 import 'package:stock_count/modules/system_setup/data/repositories/company_initialization_repository_impl.dart';
@@ -15,7 +15,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Box<dynamic> box;
-  late InventoryDatabase db;
+  late NexabizDatabase db;
 
   setUpAll(() async {
     FlutterSecureStorage.setMockInitialValues({});
@@ -24,7 +24,7 @@ void main() {
 
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({});
-    db = InventoryDatabase.memory();
+    db = NexabizDatabase.memory();
 
     if (Hive.isBoxOpen(HiveBoxes.settings)) {
       box = Hive.box<dynamic>(HiveBoxes.settings);

@@ -120,8 +120,7 @@ void main() {
     ) async {
       final items = <SaleItem>[
         const SaleItem(
-          id: 1,
-          uuid: '00000000-0000-0000-0000-000000000001',
+          id: '00000000-0000-0000-0000-000000000001',
           saleUuid: '00000000-0000-0000-0000-000000000010',
           productId: 'p1',
           productName: 'صنف للقراءة فقط',

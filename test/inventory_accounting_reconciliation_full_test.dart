@@ -8,13 +8,13 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositori
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_mapping_resolver_impl.dart';
 import 'package:stock_count/modules/accounting/shared/data/services/account_validation_service_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/accounting_entry_builder.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/inventory_accounting_reconciliation_engine.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
@@ -41,8 +41,8 @@ import 'package:stock_count/modules/inventory/warehouses/data/repositories/wareh
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late InventoryDatabase invDb;
-  late AccountingDatabase accDb;
+  late NexabizDatabase invDb;
+  late NexabizDatabase accDb;
   late StockMovementsRepositoryImpl stockRepo;
   late StockTransferRepositoryImpl transferRepo;
   late PostingCoordinatorImpl coordinator;
@@ -64,8 +64,8 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('recon_fix27_test_');
     Hive.init(tempDir.path);
 
-    invDb = InventoryDatabase.memory();
-    accDb = AccountingDatabase.memory();
+    invDb = NexabizDatabase.memory();
+    accDb = NexabizDatabase.memory();
 
     stockRepo = StockMovementsRepositoryImpl(
       db: invDb,
@@ -167,7 +167,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '11111111-1111-1111-1111-111111111111',
+            id: '11111111-1111-1111-1111-111111111111',
             accountCode: '1230',
             name: 'Inventory Asset',
             accountType: 'asset',
@@ -185,7 +185,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '22222222-2222-2222-2222-222222222222',
+            id: '22222222-2222-2222-2222-222222222222',
             accountCode: '5100',
             name: 'COGS Account',
             accountType: 'expense',
@@ -203,7 +203,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: '33333333-3333-3333-3333-333333333333',
+            id: '33333333-3333-3333-3333-333333333333',
             accountCode: '2100',
             name: 'Payable Account',
             accountType: 'liability',
@@ -221,11 +221,11 @@ void main() {
         .into(invDb.products)
         .insert(
           ProductsCompanion.insert(
-            uuid: generateUuidV4(),
+            id: generateUuidV4(),
             itemCode: itemCode,
             name: 'Reconciliation Test Item',
             companyId: const Value(tenantId),
-            onHandQty: const Value(0.0),
+            
             unitCost: const Value(0.0),
             price: 0.0,
             packSize: 1,
@@ -238,7 +238,7 @@ void main() {
     for (final wh in [warehouseA, warehouseB]) {
       await invDb.into(invDb.warehouses).insert(
         WarehousesCompanion.insert(
-          uuid: wh,
+          id: wh,
           name: 'Warehouse $wh',
           code: wh,
           companyId: Value(tenantId),
@@ -287,7 +287,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'rec-01',
+              movementId: 'rec-01',
               movementType: 'receipt',
               itemCode: itemCode,
               itemName: 'Reconciliation Test Item',
@@ -331,7 +331,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'rec-02',
+              movementId: 'rec-02',
               movementType: 'receipt',
               itemCode: itemCode,
               itemName: 'Reconciliation Test Item',
@@ -357,7 +357,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'iss-01',
+              movementId: 'iss-01',
               movementType: 'issue',
               itemCode: itemCode,
               itemName: 'Reconciliation Test Item',
@@ -400,7 +400,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: recId,
+              movementId: recId,
               movementType: 'receipt',
               itemCode: itemCode,
               itemName: 'Reconciliation Test Item',
@@ -473,7 +473,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: recId,
+              movementId: recId,
               movementType: 'receipt',
               itemCode: itemCode,
               itemName: 'Reconciliation Test Item',
@@ -501,7 +501,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: issueLineId,
-              movementUuid: issueId,
+              movementId: issueId,
               movementType: 'issue',
               itemCode: itemCode,
               itemName: 'Reconciliation Test Item',
@@ -552,7 +552,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: generateUuidV4(),
-              movementUuid: 'rec-tamp',
+              movementId: 'rec-tamp',
               movementType: 'receipt',
               itemCode: itemCode,
               itemName: 'Reconciliation Test Item',
@@ -573,7 +573,7 @@ void main() {
 
         await (accDb.update(
           accDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(targetJe.uuid))).write(
+        )..where((tbl) => tbl.entryId.equals(targetJe.uuid))).write(
           const JournalLinesCompanion(
             debit: Value(400.0),
             baseDebit: Value(400.0),

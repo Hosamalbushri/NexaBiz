@@ -82,7 +82,7 @@ class TestProductRepository implements ProductRepository {
       packSize: draft.packSize,
       price: draft.price,
       unitCost: draft.unitCost,
-      onHandQty: 0.0,
+      
       categoryId: draft.categoryId,
       createdAt: now,
       updatedAt: now,
@@ -149,7 +149,7 @@ class TestProductRepository implements ProductRepository {
   }) async {
     final p = await getByUuid(uuid);
     if (p == null) throw StateError('Not found');
-    final updated = p.copyWith(onHandQty: p.onHandQty + delta);
+    final updated = p.copyWith();
     _productsById[p.id] = updated;
     _productsByCode[p.itemCode] = updated;
     return updated;

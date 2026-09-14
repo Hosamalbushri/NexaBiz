@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/inventory/inventory_accounting_poster_adapter.dart';
 import 'package:stock_count/shared/contracts/errors/account_exception.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_accounting_binding_repository_impl.dart';
@@ -15,16 +15,16 @@ import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehou
 import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
 
 void main() {
-  late InventoryDatabase inventoryDb;
-  late AccountingDatabase accountingDb;
+  late NexabizDatabase inventoryDb;
+  late NexabizDatabase accountingDb;
   late String currentCompanyId;
   late WarehouseAccountingBindingRepositoryImpl bindingRepo;
   late WarehouseAccountingValidationServiceImpl validationService;
   late InventoryAccountingPosterAdapter poster;
 
   setUp(() async {
-    inventoryDb = InventoryDatabase(executor: NativeDatabase.memory());
-    accountingDb = AccountingDatabase(executor: NativeDatabase.memory());
+    inventoryDb = NexabizDatabase.memory();
+    accountingDb = NexabizDatabase.memory();
     currentCompanyId = 'company_in04_test';
 
     bindingRepo = WarehouseAccountingBindingRepositoryImpl(
@@ -64,7 +64,7 @@ void main() {
         .into(accountingDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: uuid,
+            id: uuid,
             accountCode: code,
             name: name,
             accountType: type,
@@ -133,15 +133,15 @@ void main() {
 
         final lines = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entries.first.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entries.first.uuid))).get();
         expect(lines.length, equals(2));
 
         final debitLine = lines.firstWhere((l) => l.debit > 0);
         final creditLine = lines.firstWhere((l) => l.credit > 0);
 
-        expect(debitLine.accountUuid, equals(assetAccUuid));
+        expect(debitLine.accountId, equals(assetAccUuid));
         expect(debitLine.debit, equals(1000.0));
-        expect(creditLine.accountUuid, equals(payableAccUuid));
+        expect(creditLine.accountId, equals(payableAccUuid));
         expect(creditLine.credit, equals(1000.0));
       },
     );
@@ -350,8 +350,8 @@ void main() {
         )..where((tbl) => tbl.sourceId.equals('DOC-HIST-001'))).getSingle();
         final histLines = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(histEntry.uuid))).get();
-        expect(histLines.any((l) => l.accountUuid == oldAssetUuid), isTrue);
+        )..where((tbl) => tbl.entryId.equals(histEntry.uuid))).get();
+        expect(histLines.any((l) => l.accountId == oldAssetUuid), isTrue);
 
         // Verify new entry uses newAssetUuid
         final newEntry = await (accountingDb.select(
@@ -359,8 +359,8 @@ void main() {
         )..where((tbl) => tbl.sourceId.equals('DOC-NEW-001'))).getSingle();
         final newLines = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(newEntry.uuid))).get();
-        expect(newLines.any((l) => l.accountUuid == newAssetUuid), isTrue);
+        )..where((tbl) => tbl.entryId.equals(newEntry.uuid))).get();
+        expect(newLines.any((l) => l.accountId == newAssetUuid), isTrue);
       },
     );
 
@@ -418,14 +418,14 @@ void main() {
 
         final lines = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entry.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entry.id))).get();
 
         // Total debit equals total credit, value neutral
         final totalDebit = lines.fold(0.0, (sum, l) => sum + l.debit);
         final totalCredit = lines.fold(0.0, (sum, l) => sum + l.credit);
         expect(totalDebit, equals(1200.0));
         expect(totalCredit, equals(1200.0));
-        expect(lines.every((l) => l.accountUuid == sharedAssetUuid), isTrue);
+        expect(lines.every((l) => l.accountId == sharedAssetUuid), isTrue);
       },
     );
 
@@ -488,16 +488,16 @@ void main() {
 
         final lines = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entry.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entry.id))).get();
 
         expect(lines.length, equals(2));
         final debitLine = lines.firstWhere((l) => l.debit > 0);
         final creditLine = lines.firstWhere((l) => l.credit > 0);
 
         // Debit Warehouse B asset, Credit Warehouse A asset
-        expect(debitLine.accountUuid, equals(assetB));
+        expect(debitLine.accountId, equals(assetB));
         expect(debitLine.debit, equals(2500.0));
-        expect(creditLine.accountUuid, equals(assetA));
+        expect(creditLine.accountId, equals(assetA));
         expect(creditLine.credit, equals(2500.0));
       },
     );
@@ -552,13 +552,13 @@ void main() {
 
         final lines = await (accountingDb.select(
           accountingDb.journalLines,
-        )..where((tbl) => tbl.entryUuid.equals(entry.uuid))).get();
+        )..where((tbl) => tbl.entryId.equals(entry.id))).get();
 
         final debitLine = lines.firstWhere((l) => l.debit > 0);
         final creditLine = lines.firstWhere((l) => l.credit > 0);
 
-        expect(debitLine.accountUuid, equals(cogsUuid));
-        expect(creditLine.accountUuid, equals(assetUuid));
+        expect(debitLine.accountId, equals(cogsUuid));
+        expect(creditLine.accountId, equals(assetUuid));
       },
     );
   });

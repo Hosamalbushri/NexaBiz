@@ -82,7 +82,7 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
               id: 'cr-${a.id}',
               companyId: companyId.isNotEmpty
                   ? companyId
-                  : (a.companyId ?? 'default'),
+                  : (a.companyId ?? ''),
               name: a.name,
               code: a.accountCode,
               isActive: true,
@@ -116,7 +116,7 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
   @override
   Future<SaleAccountRef?> findDefaultCashBox() async {
     final state = await initRepository?.getState();
-    final companyId = state?.companyId ?? 'default';
+    final companyId = state?.companyId ?? '';
 
     if (cashRegisterRepository != null) {
       final resolver = DefaultCashRegisterResolver(

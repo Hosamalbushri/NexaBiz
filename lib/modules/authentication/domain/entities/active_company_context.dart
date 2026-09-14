@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'user_company_membership.dart';
 
 /// Authoritative immutable value object representing the currently selected company scope.
@@ -113,9 +113,15 @@ class ActiveCompanyContext {
           companyId == other.companyId &&
           membershipId == other.membershipId &&
           companyRole == other.companyRole &&
-          setEquals(companyPermissions, other.companyPermissions) &&
+          _setEquals(companyPermissions, other.companyPermissions) &&
           branchId == other.branchId &&
           warehouseId == other.warehouseId;
+
+  static bool _setEquals<T>(Set<T> a, Set<T> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    return a.containsAll(b);
+  }
 
   @override
   int get hashCode =>

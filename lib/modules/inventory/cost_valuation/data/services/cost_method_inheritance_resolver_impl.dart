@@ -6,12 +6,10 @@ import '../../domain/services/cost_method_inheritance_resolver.dart';
 class CostMethodInheritanceResolverImpl
     implements CostMethodInheritanceResolver {
   CostMethodInheritanceResolverImpl({
-    required NexabizDatabase db,
-    CostValuationMethod systemDefaultMethod = CostValuationMethod.fifo,
+    required this._db,
+    this._systemDefaultMethod = CostValuationMethod.fifo,
     Map<String, CostValuationMethod>? productWarehouseOverrides,
-  }) : _db = db,
-       _systemDefaultMethod = systemDefaultMethod,
-       _productWarehouseOverrides = productWarehouseOverrides ?? {};
+  }) : _productWarehouseOverrides = productWarehouseOverrides ?? {};
 
   final NexabizDatabase _db;
   final CostValuationMethod _systemDefaultMethod;

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
@@ -10,7 +10,7 @@ import 'package:stock_count/modules/accounting/journals/domain/entities/journal_
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase db;
+  late NexabizDatabase db;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
   late JournalPostingService postingService;
@@ -20,7 +20,7 @@ void main() {
   late String acc2Uuid;
 
   setUp(() async {
-    db = AccountingDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     companyId = 'company_alpha';
 
     accountRepo = AccountRepositoryImpl(db, readCompanyId: () => companyId);
@@ -45,7 +45,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc1Uuid,
+            id: acc1Uuid,
             companyId: Value(companyId),
             accountCode: '1010-A',
             name: 'Cash Alpha',
@@ -63,7 +63,7 @@ void main() {
         .into(db.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc2Uuid,
+            id: acc2Uuid,
             companyId: Value(companyId),
             accountCode: '4010-A',
             name: 'Sales Alpha',

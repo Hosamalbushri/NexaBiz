@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/permissions/permission_error_messages.dart';

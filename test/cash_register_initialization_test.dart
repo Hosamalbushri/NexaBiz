@@ -6,7 +6,7 @@ import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/normal_balance.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/cash_registers/data/repositories/cash_register_repository_impl.dart';
 import 'package:stock_count/modules/cash_registers/domain/entities/cash_register.dart';
 import 'package:stock_count/modules/cash_registers/domain/services/cash_register_initializer_service.dart';
@@ -107,7 +107,7 @@ class FakeAccountRepository implements AccountRepository {
 void main() {
   group('CR-03 Register Creation & Initialization Remediation Test Matrix', () {
     late FakeAccountRepository accountRepo;
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late CashRegisterRepositoryImpl cashRepo;
     late DefaultCashRegisterResolver resolver;
     late CashRegisterInitializerService initializer;
@@ -126,11 +126,10 @@ void main() {
       await Hive.openBox<dynamic>(HiveBoxes.settings);
 
       accountRepo = FakeAccountRepository();
-      db = AccountingDatabase.memory();
+      db = NexabizDatabase.memory();
 
       validAccountA = Account(
-        id: 101,
-        uuid: 'acc-cash-a1-uuid',
+        id: 'acc-cash-a1-uuid',
         accountCode: '1101',
         name: 'الصندوق الرئيسي A1',
         accountType: AccountType.asset,
@@ -145,8 +144,7 @@ void main() {
       );
 
       companyBAccount = Account(
-        id: 201,
-        uuid: 'acc-cash-b1-uuid',
+        id: 'acc-cash-b1-uuid',
         accountCode: '1101-B',
         name: 'صندوق شركة B',
         accountType: AccountType.asset,
@@ -161,8 +159,7 @@ void main() {
       );
 
       inactiveAccount = Account(
-        id: 103,
-        uuid: 'acc-inactive-uuid',
+        id: 'acc-inactive-uuid',
         accountCode: '1109',
         name: 'صندوق معطل',
         accountType: AccountType.asset,
@@ -208,7 +205,7 @@ void main() {
       () async {
         final res = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         expect(res.isSuccess, isTrue);
@@ -228,12 +225,12 @@ void main() {
       () async {
         final res1 = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         final res2 = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         expect(res2.isSuccess, isTrue);
@@ -250,7 +247,7 @@ void main() {
       () async {
         await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         final freshRepo = CashRegisterRepositoryImpl(
@@ -275,7 +272,7 @@ void main() {
       () async {
         await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         final resB = await resolver.resolveDefaultCashRegister(companyB);
@@ -328,7 +325,7 @@ void main() {
         final res = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
           registerId: 'cr_def_$companyA',
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         expect(res.isSuccess, isTrue);
@@ -345,7 +342,7 @@ void main() {
         final res = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
           registerId: 'cr_failed_link',
-          accountUuid: inactiveAccount.uuid, // Inactive account
+          accountId: inactiveAccount.uuid, // Inactive account
         );
 
         expect(res.isSuccess, isFalse);
@@ -362,7 +359,7 @@ void main() {
         final res = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
           registerId: 'cr_failed_company',
-          accountUuid: companyBAccount.uuid, // Belongs to company B
+          accountId: companyBAccount.uuid, // Belongs to company B
         );
 
         expect(res.isSuccess, isFalse);
@@ -391,7 +388,7 @@ void main() {
         final res = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
           registerCode: 'DEF_CASH_REG',
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         expect(res.isSuccess, isTrue);
@@ -405,14 +402,14 @@ void main() {
         final res1 = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
           registerId: 'cr-1',
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
         expect(res1.isSuccess, isTrue);
 
         final res2 = await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
           registerId: 'cr-2',
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
         expect(
           res2.isSuccess,
@@ -438,7 +435,7 @@ void main() {
       () async {
         await initializer.initializeDefaultRegisterForCompany(
           companyId: companyA,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         // Simulate offline restart

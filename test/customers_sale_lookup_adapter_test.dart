@@ -7,7 +7,7 @@ import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
 import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
-import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
@@ -15,7 +15,7 @@ void main() {
 
   group('CustomersSaleLookupAdapter Tests', () {
     late Directory tempDir;
-    late CustomersDatabase db;
+    late NexabizDatabase db;
     late SyncQueue queue;
     late CustomerRepositoryImpl repo;
     late CustomersSaleLookupAdapter adapter;
@@ -28,7 +28,7 @@ void main() {
       }
       final box = await Hive.openBox<SyncOperation>('sync_queue_lookup');
       queue = SyncQueue(box: box);
-      db = CustomersDatabase.memory();
+      db = NexabizDatabase.memory();
       repo = CustomerRepositoryImpl(
         db,
         syncQueue: queue,

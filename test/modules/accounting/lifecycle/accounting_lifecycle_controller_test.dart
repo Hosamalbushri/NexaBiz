@@ -10,7 +10,7 @@ class FakeJournalRepository implements JournalRepository {
   final Map<String, JournalEntry> _entries = {};
 
   void addEntry(JournalEntry entry) {
-    _entries[entry.uuid] = entry;
+    _entries[entry.id] = entry;
   }
 
   @override
@@ -71,8 +71,7 @@ void main() {
   final unpostedUuid = 'jnl-unposted-001';
 
   final postedEntry = JournalEntry(
-    id: 1,
-    uuid: postedUuid,
+    id: postedUuid,
     entryDate: validDate,
     voucherNumber: 'INV-100',
     voucherType: 'Sale',
@@ -84,8 +83,7 @@ void main() {
   );
 
   final unpostedEntry = JournalEntry(
-    id: 2,
-    uuid: unpostedUuid,
+    id: unpostedUuid,
     entryDate: validDate,
     voucherNumber: 'DRAFT-100',
     voucherType: 'Sale Draft',
@@ -163,8 +161,7 @@ void main() {
     test('6. Reversal of Reversal Policy: second reversal rejected', () async {
       // Simulate existing reversal entry
       final reverseEntry = JournalEntry(
-        id: 3,
-        uuid: 'jnl-reverse-001',
+        id: 'jnl-reverse-001',
         entryDate: validDate,
         voucherNumber: 'REV-INV-100',
         voucherType: 'Reversal',

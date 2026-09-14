@@ -19,7 +19,7 @@ void main() {
   late InventoryDependencyDetectorImpl dependencyDetector;
 
   const companyId = 'COMPANY_001';
-  final warehouseUuid = generateUuidV4();
+  final warehouseId = generateUuidV4();
 
   setUp(() async {
     db = NexabizDatabase.connect(NativeDatabase.memory());
@@ -41,7 +41,7 @@ void main() {
     // Insert test warehouse
     await db.into(db.warehouses).insert(
           WarehousesCompanion.insert(
-            uuid: Value(warehouseUuid),
+            id: Value(warehouseId),
             code: 'MAIN',
             name: 'Main Warehouse',
             companyId: companyId,
@@ -89,7 +89,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'ITEM_ZERO_COST',
               itemName: 'Zero Cost Item',
@@ -112,7 +112,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              issueId: docId,
               movementType: 'stock_issue',
               itemCode: 'ITEM_NEG_DRAFT',
               itemName: 'Negative Draft Item',
@@ -203,7 +203,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'ITEM_POST_QTY',
               itemName: 'Post Qty Item',
@@ -218,7 +218,7 @@ void main() {
         documentNumber: 'POST-QTY-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -235,12 +235,12 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
       final whStock = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('ITEM_POST_QTY') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('ITEM_POST_QTY') & w.warehouseId.equals(warehouseId)))
           .getSingle();
 
       expect(whStock.onHandQty, equals(25.0));
@@ -253,7 +253,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'ITEM_POST_COST',
               itemName: 'Post Cost Item',
@@ -268,7 +268,7 @@ void main() {
         documentNumber: 'POST-COST-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -285,7 +285,7 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -303,7 +303,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line1,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'MULTI_P1',
               itemName: 'Multi P1',
@@ -316,7 +316,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line2,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'MULTI_P2',
               itemName: 'Multi P2',
@@ -331,7 +331,7 @@ void main() {
         documentNumber: 'MULTI-POST-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -355,15 +355,15 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
       final stock1 = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('MULTI_P1') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('MULTI_P1') & w.warehouseId.equals(warehouseId)))
           .getSingle();
       final stock2 = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('MULTI_P2') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('MULTI_P2') & w.warehouseId.equals(warehouseId)))
           .getSingle();
 
       expect(stock1.onHandQty, equals(10.0));
@@ -378,7 +378,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line1,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'MULTI_U1',
               itemName: 'Multi U1',
@@ -391,7 +391,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line2,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'MULTI_U2',
               itemName: 'Multi U2',
@@ -406,7 +406,7 @@ void main() {
         documentNumber: 'MULTI-UNPOST-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -430,7 +430,7 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -439,17 +439,17 @@ void main() {
         documentNumber: 'MULTI-UNPOST-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.posted,
       );
 
       await postingEngine.reversePosting(document: postedDoc);
 
       final stock1 = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('MULTI_U1') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('MULTI_U1') & w.warehouseId.equals(warehouseId)))
           .getSingle();
       final stock2 = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('MULTI_U2') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('MULTI_U2') & w.warehouseId.equals(warehouseId)))
           .getSingle();
 
       expect(stock1.onHandQty, equals(0.0));
@@ -463,7 +463,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'REM_EFF_ITEM',
               itemName: 'Rem Eff Item',
@@ -478,7 +478,7 @@ void main() {
         documentNumber: 'REM-EFF-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -495,7 +495,7 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -504,14 +504,14 @@ void main() {
         documentNumber: 'REM-EFF-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.posted,
       );
 
       await postingEngine.reversePosting(document: postedDoc);
 
       final activeLayers = await (db.select(db.inventoryCostLayers)
-            ..where((l) => l.movementUuid.equals(docId) & l.deletedAt.isNull()))
+            ..where((l) => l.movementId.equals(docId) & l.deletedAt.isNull()))
           .get();
 
       final ledgers = await (db.select(db.stockMovementLedgers)
@@ -529,7 +529,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line1Id,
-              movementUuid: doc1Id,
+              receiptId: doc1Id,
               movementType: 'stock_receipt',
               itemCode: 'RECALC_QTY_ITEM',
               itemName: 'Recalc Qty Item',
@@ -545,7 +545,7 @@ void main() {
           documentNumber: 'RECALC-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -557,7 +557,7 @@ void main() {
             unitCost: 10.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -567,7 +567,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line2Id,
-              movementUuid: doc2Id,
+              receiptId: doc2Id,
               movementType: 'stock_receipt',
               itemCode: 'RECALC_QTY_ITEM',
               itemName: 'Recalc Qty Item',
@@ -583,7 +583,7 @@ void main() {
           documentNumber: 'RECALC-2',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -595,7 +595,7 @@ void main() {
             unitCost: 20.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -605,13 +605,13 @@ void main() {
           documentNumber: 'RECALC-2',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.posted,
         ),
       );
 
       final stock = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('RECALC_QTY_ITEM') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('RECALC_QTY_ITEM') & w.warehouseId.equals(warehouseId)))
           .getSingle();
 
       expect(stock.onHandQty, equals(100.0));
@@ -624,7 +624,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line1Id,
-              movementUuid: doc1Id,
+              receiptId: doc1Id,
               movementType: 'stock_receipt',
               itemCode: 'RECALC_WAC_ITEM',
               itemName: 'Recalc WAC Item',
@@ -640,7 +640,7 @@ void main() {
           documentNumber: 'WAC-REC-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -652,7 +652,7 @@ void main() {
             unitCost: 10.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -662,7 +662,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line2Id,
-              movementUuid: doc2Id,
+              receiptId: doc2Id,
               movementType: 'stock_receipt',
               itemCode: 'RECALC_WAC_ITEM',
               itemName: 'Recalc WAC Item',
@@ -678,7 +678,7 @@ void main() {
           documentNumber: 'WAC-REC-2',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -690,7 +690,7 @@ void main() {
             unitCost: 30.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -704,7 +704,7 @@ void main() {
           documentNumber: 'WAC-REC-2',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.posted,
         ),
       );
@@ -721,7 +721,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line1Id,
-              movementUuid: doc1Id,
+              receiptId: doc1Id,
               movementType: 'stock_receipt',
               itemCode: 'FIFO_RECALC_ITEM',
               itemName: 'FIFO Recalc Item',
@@ -737,7 +737,7 @@ void main() {
           documentNumber: 'FIFO-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -749,7 +749,7 @@ void main() {
             unitCost: 12.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -764,7 +764,7 @@ void main() {
           documentNumber: 'FIFO-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.posted,
         ),
       );
@@ -782,7 +782,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'NON_INV_DEP_ITEM',
               itemName: 'Non Inv Dep Item',
@@ -797,7 +797,7 @@ void main() {
         documentNumber: 'NON-INV-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -812,7 +812,7 @@ void main() {
             unitCost: 10.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -827,7 +827,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line1Id,
-              movementUuid: doc1Id,
+              receiptId: doc1Id,
               movementType: 'stock_receipt',
               itemCode: 'DEP_DETECT_ITEM',
               itemName: 'Dep Detect Item',
@@ -842,7 +842,7 @@ void main() {
         documentNumber: 'DEP-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now().subtract(const Duration(hours: 2)),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -857,7 +857,7 @@ void main() {
             unitCost: 10.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now().subtract(const Duration(hours: 2)),
       );
 
@@ -868,7 +868,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line2Id,
-              movementUuid: doc2Id,
+              issueId: doc2Id,
               movementType: 'stock_issue',
               itemCode: 'DEP_DETECT_ITEM',
               itemName: 'Dep Detect Item',
@@ -882,7 +882,7 @@ void main() {
             StockMovementLedgersCompanion.insert(
               uuid: generateUuidV4(),
               companyId: companyId,
-              warehouseId: warehouseUuid,
+              warehouseId: warehouseId,
               itemCode: 'DEP_DETECT_ITEM',
               quantity: const Value(10.0),
               direction: 'outbound',
@@ -911,7 +911,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'REPOST_ITEM',
               itemName: 'Repost Item',
@@ -926,7 +926,7 @@ void main() {
         documentNumber: 'REPOST-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -943,7 +943,7 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -952,7 +952,7 @@ void main() {
         documentNumber: 'REPOST-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.posted,
       );
 
@@ -962,12 +962,12 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
       final stock = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('REPOST_ITEM') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('REPOST_ITEM') & w.warehouseId.equals(warehouseId)))
           .getSingle();
 
       expect(stock.onHandQty, equals(40.0));
@@ -980,7 +980,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'STALE_COST_ITEM',
               itemName: 'Stale Cost Item',
@@ -996,7 +996,7 @@ void main() {
           documentNumber: 'STALE-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1008,7 +1008,7 @@ void main() {
             unitCost: 100.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1018,7 +1018,7 @@ void main() {
           documentNumber: 'STALE-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.posted,
         ),
       );
@@ -1030,7 +1030,7 @@ void main() {
           documentNumber: 'STALE-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1042,7 +1042,7 @@ void main() {
             unitCost: 120.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1063,7 +1063,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'WAC_PROD_1',
               itemName: 'WAC Prod 1',
@@ -1079,7 +1079,7 @@ void main() {
           documentNumber: 'WAC-PROD-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1091,7 +1091,7 @@ void main() {
             unitCost: 50.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1106,7 +1106,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'FIFO_PROD_1',
               itemName: 'FIFO Prod 1',
@@ -1122,7 +1122,7 @@ void main() {
           documentNumber: 'FIFO-PROD-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1134,7 +1134,7 @@ void main() {
             unitCost: 30.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1153,7 +1153,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line1,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'DIFF_P1_WAC',
               itemName: 'Diff P1 WAC',
@@ -1166,7 +1166,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: line2,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'DIFF_P2_FIFO',
               itemName: 'Diff P2 FIFO',
@@ -1182,7 +1182,7 @@ void main() {
           documentNumber: 'DIFF-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1201,7 +1201,7 @@ void main() {
             unitCost: 20.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1238,7 +1238,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'SR_ITEM_1',
               itemName: 'SR Item 1',
@@ -1254,7 +1254,7 @@ void main() {
           documentNumber: 'SR-REC-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1266,7 +1266,7 @@ void main() {
             unitCost: 50.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1292,7 +1292,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'NO_REV_JOURNAL_ITEM',
               itemName: 'No Rev Journal Item',
@@ -1308,7 +1308,7 @@ void main() {
           documentNumber: 'NO-REV-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1320,7 +1320,7 @@ void main() {
             unitCost: 25.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1330,7 +1330,7 @@ void main() {
           documentNumber: 'NO-REV-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.posted,
         ),
       );
@@ -1361,7 +1361,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'EDIT_REPOST_ITEM',
               itemName: 'Edit Repost Item',
@@ -1377,7 +1377,7 @@ void main() {
           documentNumber: 'EDIT-REP-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1389,7 +1389,7 @@ void main() {
             unitCost: 10.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1399,7 +1399,7 @@ void main() {
           documentNumber: 'EDIT-REP-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.posted,
         ),
       );
@@ -1411,7 +1411,7 @@ void main() {
           documentNumber: 'EDIT-REP-1',
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: DateTime.now(),
-          warehouseId: warehouseUuid,
+          warehouseId: warehouseId,
           status: InventoryDocumentStatus.draft,
         ),
         lines: [
@@ -1423,12 +1423,12 @@ void main() {
             unitCost: 10.0,
           ),
         ],
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
       final stock = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('EDIT_REPOST_ITEM') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('EDIT_REPOST_ITEM') & w.warehouseId.equals(warehouseId)))
           .getSingle();
 
       expect(stock.onHandQty, equals(20.0));
@@ -1456,7 +1456,7 @@ void main() {
       await db.into(db.stockMovementLines).insert(
             StockMovementLinesCompanion.insert(
               uuid: lineId,
-              movementUuid: docId,
+              receiptId: docId,
               movementType: 'stock_receipt',
               itemCode: 'RETRY_ITEM',
               itemName: 'Retry Item',
@@ -1471,7 +1471,7 @@ void main() {
         documentNumber: 'RETRY-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.draft,
       );
 
@@ -1488,7 +1488,7 @@ void main() {
       await postingEngine.applyInboundPosting(
         document: doc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
@@ -1498,19 +1498,19 @@ void main() {
         documentNumber: 'RETRY-1',
         documentType: InventoryDocumentType.stockReceipt,
         documentDate: DateTime.now(),
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         status: InventoryDocumentStatus.posted,
       );
 
       await postingEngine.applyInboundPosting(
         document: postedDoc,
         lines: lines,
-        warehouseId: warehouseUuid,
+        warehouseId: warehouseId,
         documentDate: DateTime.now(),
       );
 
       final stock = await (db.select(db.productWarehouseStocks)
-            ..where((w) => w.itemCode.equals('RETRY_ITEM') & w.warehouseId.equals(warehouseUuid)))
+            ..where((w) => w.itemCode.equals('RETRY_ITEM') & w.warehouseId.equals(warehouseId)))
           .getSingle();
 
       // Quantity must remain 15.0, not duplicated to 30.0!

@@ -7,7 +7,6 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/modules/administration/shared/presentation/admin_localizations_extension.dart';
 import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
-import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
@@ -23,7 +22,7 @@ class AdministrationHomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final syncOn = ref.watch(syncEnabledProvider);
+    // final syncOn = ref.watch(syncEnabledProvider);
     final auth = ref.watch(authStateProvider);
 
     return Scaffold(

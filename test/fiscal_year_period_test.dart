@@ -3,21 +3,21 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/currency_rate_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/fiscal_year_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/journal_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/accounting_period_status.dart';
-import 'package:stock_count/modules/accounting/domain/entities/fiscal_year.dart';
-import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/domain/models/fiscal_year_exception.dart';
-import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/accounting/domain/services/accounting_period_generator.dart';
-import 'package:stock_count/modules/accounting/domain/services/accounting_period_validator.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/accounting/domain/services/period_closing_service.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/accounting_period_status.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/fiscal_year.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/models/fiscal_year_exception.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_generator.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/period_closing_service.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
@@ -94,7 +94,7 @@ void main() {
   });
 
   group('Fiscal year persistence + enforcement', () {
-    late AccountingDatabase db;
+    late NexabizDatabase db;
     late FiscalYearRepositoryImpl fyRepo;
     late AccountRepositoryImpl accounts;
     late JournalRepositoryImpl journals;
@@ -109,7 +109,7 @@ void main() {
       }
       syncBox = await Hive.openBox<SyncOperation>('sync_queue_fy');
       final queue = SyncQueue(box: syncBox);
-      db = AccountingDatabase.memory();
+      db = NexabizDatabase.memory();
       fyRepo = FiscalYearRepositoryImpl(db);
       accounts = AccountRepositoryImpl(db, syncQueue: queue);
       journals = JournalRepositoryImpl(

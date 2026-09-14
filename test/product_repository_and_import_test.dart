@@ -4,13 +4,13 @@ import 'dart:typed_data';
 import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:stock_count/modules/inventory/data/database/inventory_database.dart';
-import 'package:stock_count/modules/inventory/data/datasources/product_excel_import_datasource.dart';
-import 'package:stock_count/modules/inventory/data/repositories/product_repository_impl.dart';
-import 'package:stock_count/modules/inventory/domain/entities/product.dart';
-import 'package:stock_count/modules/inventory/domain/models/product_barcode_generator.dart';
-import 'package:stock_count/modules/inventory/domain/models/product_exception.dart';
-import 'package:stock_count/modules/inventory/domain/models/product_item_code_generator.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/inventory/products/data/datasources/product_excel_import_datasource.dart';
+import 'package:stock_count/modules/inventory/products/data/repositories/product_repository_impl.dart';
+import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
+import 'package:stock_count/modules/inventory/products/domain/models/product_barcode_generator.dart';
+import 'package:stock_count/modules/inventory/products/domain/models/product_exception.dart';
+import 'package:stock_count/modules/inventory/products/domain/models/product_item_code_generator.dart';
 
 Uint8List _encodeSheet(List<List<String>> rows) {
   final excel = Excel.createExcel();
@@ -31,11 +31,11 @@ void main() {
   _ensureSqlite();
 
   group('ProductRepositoryImpl', () {
-    late InventoryDatabase db;
+    late NexabizDatabase db;
     late ProductRepositoryImpl repository;
 
     setUp(() {
-      db = InventoryDatabase.memory();
+      db = NexabizDatabase.memory();
       repository = ProductRepositoryImpl(db);
     });
 
@@ -213,12 +213,12 @@ void main() {
   });
 
   group('ProductBarcodeGenerator', () {
-    late InventoryDatabase db;
+    late NexabizDatabase db;
     late ProductRepositoryImpl repository;
     late ProductBarcodeGenerator generator;
 
     setUp(() {
-      db = InventoryDatabase.memory();
+      db = NexabizDatabase.memory();
       repository = ProductRepositoryImpl(db);
       generator = ProductBarcodeGenerator(repository);
     });
@@ -273,12 +273,12 @@ void main() {
   });
 
   group('ProductItemCodeGenerator', () {
-    late InventoryDatabase db;
+    late NexabizDatabase db;
     late ProductRepositoryImpl repository;
     late ProductItemCodeGenerator generator;
 
     setUp(() {
-      db = InventoryDatabase.memory();
+      db = NexabizDatabase.memory();
       repository = ProductRepositoryImpl(db);
       generator = ProductItemCodeGenerator(repository);
     });

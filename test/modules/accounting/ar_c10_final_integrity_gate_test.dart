@@ -21,13 +21,13 @@ class MockLookupPort implements SetupAccountLookupPort {
   final Map<String, String> _parentMap = {};
 
   void addAccount(SetupAccountData account, {String? parentUuid}) {
-    _accounts[account.uuid] = account;
-    if (parentUuid != null) _parentMap[account.uuid] = parentUuid;
+    _accounts[account.id] = account;
+    if (parentUuid != null) _parentMap[account.id] = parentUuid;
   }
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return _accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return _accounts[accountId];
   }
 
   @override
@@ -106,7 +106,7 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 class MockAccountRepo implements AccountRepository {
   final Map<String, Account> _store = {};
 
-  void add(Account account) => _store[account.uuid] = account;
+  void add(Account account) => _store[account.id] = account;
 
   @override
   Future<Account?> getByUuid(String uuid) async => _store[uuid];
@@ -128,7 +128,7 @@ class MockAccountRepo implements AccountRepository {
 
   @override
   Future<void> save(Account account) async {
-    _store[account.uuid] = account;
+    _store[account.id] = account;
   }
 
   @override
@@ -141,18 +141,18 @@ class MockAccountRepo implements AccountRepository {
 class MockUsageAnalyzer implements AccountUsageAnalyzer {
   final Map<String, int> _postedCount = {};
 
-  void setPostedCount(String accountUuid, int count) {
-    _postedCount[accountUuid] = count;
+  void setPostedCount(String accountId, int count) {
+    _postedCount[accountId] = count;
   }
 
   @override
   Future<AccountUsageRecord> analyzeAccountUsage({
     required String companyId,
-    required String accountUuid,
+    required String accountId,
   }) async {
-    final count = _postedCount[accountUuid] ?? 0;
+    final count = _postedCount[accountId] ?? 0;
     return AccountUsageRecord(
-      accountUuid: accountUuid,
+      accountId: accountId,
       status: count > 0
           ? AccountUsageStatus.usedInPostedTransactions
           : AccountUsageStatus.neverUsed,
@@ -221,8 +221,7 @@ void main() {
 
       test('1. Valid Single Account Binding & Resolution', () async {
         final cashAcc = Account(
-          id: 1,
-          uuid: 'acc-cash-01',
+          id: 'acc-cash-01',
           accountCode: '101001',
           name: 'الصندوق الرئيسي',
           accountType: AccountType.asset,
@@ -262,7 +261,7 @@ void main() {
         await resolver.bindAccount(
           companyId: companyA,
           requirement: req,
-          accountUuid: 'acc-cash-01',
+          accountId: 'acc-cash-01',
         );
         final fetched = await bindingRepo.getBinding(
           companyId: companyA,
@@ -270,13 +269,12 @@ void main() {
           requirementKey: 'cash_account',
         );
 
-        expect(fetched?.accountUuid, equals('acc-cash-01'));
+        expect(fetched?.accountId, equals('acc-cash-01'));
       });
 
       test('2. Wrong Account Type Rejection', () async {
         final liabilityAcc = Account(
-          id: 2,
-          uuid: 'acc-liab-01',
+          id: 'acc-liab-01',
           accountCode: '201001',
           name: 'دائنون عام',
           accountType: AccountType.liability,
@@ -304,8 +302,7 @@ void main() {
 
       test('3. Valid Parent Scope Resolution', () async {
         final parentGrp = Account(
-          id: 3,
-          uuid: 'grp-cash-01',
+          id: 'grp-cash-01',
           accountCode: '101000',
           name: 'مجموعة الصناديق',
           accountType: AccountType.asset,
@@ -333,8 +330,7 @@ void main() {
 
       test('4. Invalid Descendant Rejection (Non-Group Parent)', () async {
         final nonGroupAcc = Account(
-          id: 4,
-          uuid: 'acc-single-04',
+          id: 'acc-single-04',
           accountCode: '101004',
           name: 'صندوق فرعي غير مجموعة',
           accountType: AccountType.asset,
@@ -362,8 +358,7 @@ void main() {
 
       test('5. Wrong-Type Descendant Rejection', () async {
         final wrongTypeDescendant = Account(
-          id: 5,
-          uuid: 'acc-expense-child',
+          id: 'acc-expense-child',
           accountCode: '501001',
           name: 'مصروف فرعي',
           accountType: AccountType.expense,
@@ -391,8 +386,7 @@ void main() {
 
       test('6. Customer Account Scope & Posting Proof', () async {
         final custAcc = Account(
-          id: 6,
-          uuid: 'acc-cust-101',
+          id: 'acc-cust-101',
           accountCode: '102001',
           name: 'حساب العميل علي',
           accountType: AccountType.asset,
@@ -420,8 +414,7 @@ void main() {
 
       test('7. Supplier Account Scope & Posting Proof', () async {
         final suppAcc = Account(
-          id: 7,
-          uuid: 'acc-supp-201',
+          id: 'acc-supp-201',
           accountCode: '201001',
           name: 'حساب المورد خالد',
           accountType: AccountType.liability,
@@ -449,8 +442,7 @@ void main() {
 
       test('8. Cash Register Account Scope & Posting Proof', () async {
         final cashRegAcc = Account(
-          id: 8,
-          uuid: 'acc-cash-reg-1',
+          id: 'acc-cash-reg-1',
           accountCode: '101002',
           name: 'صندوق كاشير 1',
           accountType: AccountType.asset,
@@ -502,7 +494,7 @@ void main() {
         await resolver.bindAccount(
           companyId: companyA,
           requirement: req,
-          accountUuid: 'acc-rev-01',
+          accountId: 'acc-rev-01',
         );
         final fetched = await bindingRepo.getBinding(
           companyId: companyA,
@@ -511,7 +503,7 @@ void main() {
         );
 
         expect(fetched, isNotNull);
-        expect(fetched?.accountUuid, equals('acc-rev-01'));
+        expect(fetched?.accountId, equals('acc-rev-01'));
       });
 
       test('10. Configuration-to-Posting Integration Proof', () async {
@@ -540,7 +532,7 @@ void main() {
         await resolver.bindAccount(
           companyId: companyA,
           requirement: req,
-          accountUuid: 'acc-inv-asset-01',
+          accountId: 'acc-inv-asset-01',
         );
         final fetched = await bindingRepo.getBinding(
           companyId: companyA,
@@ -548,14 +540,14 @@ void main() {
           requirementKey: 'inventory_asset_account',
         );
 
-        expect(fetched?.accountUuid, equals('acc-inv-asset-01'));
+        expect(fetched?.accountId, equals('acc-inv-asset-01'));
       });
 
       test('11. Historical Journal Line Audit Trail Snapshot', () async {
         usageAnalyzer.setPostedCount('acc-hist-01', 25);
         final usage = await usageAnalyzer.analyzeAccountUsage(
           companyId: companyA,
-          accountUuid: 'acc-hist-01',
+          accountId: 'acc-hist-01',
         );
 
         expect(
@@ -567,8 +559,7 @@ void main() {
 
       test('12. Configuration Change Impact Protection', () async {
         final boundAcc = Account(
-          id: 12,
-          uuid: 'acc-bound-hist',
+          id: 'acc-bound-hist',
           accountCode: '101012',
           name: 'صندوق مستخدم',
           accountType: AccountType.asset,
@@ -597,8 +588,7 @@ void main() {
 
       test('13. Deleted Account Rejection', () async {
         final deletedAcc = Account(
-          id: 13,
-          uuid: 'acc-deleted-01',
+          id: 'acc-deleted-01',
           accountCode: '101013',
           name: 'حساب محذوف',
           accountType: AccountType.asset,
@@ -627,8 +617,7 @@ void main() {
 
       test('14. Inactive Account Rejection', () async {
         final inactiveAcc = Account(
-          id: 14,
-          uuid: 'acc-inactive-01',
+          id: 'acc-inactive-01',
           accountCode: '101014',
           name: 'حساب غير نشط',
           accountType: AccountType.asset,
@@ -656,8 +645,7 @@ void main() {
 
       test('15. Parent Restructuring Guard', () async {
         final nonGroupAcc = Account(
-          id: 15,
-          uuid: 'acc-non-group-15',
+          id: 'acc-non-group-15',
           accountCode: '100015',
           name: 'حساب فردي وليس مجموعة',
           accountType: AccountType.asset,
@@ -685,8 +673,7 @@ void main() {
 
       test('16. Multi-Company Isolation (Company A != Company B)', () async {
         final crossCompanyAcc = Account(
-          id: 16,
-          uuid: 'acc-compB-cash',
+          id: 'acc-compB-cash',
           accountCode: '101099',
           name: 'صندوق شركة B',
           accountType: AccountType.asset,
@@ -714,8 +701,7 @@ void main() {
 
       test('17. Offline Execution & Local Validation', () async {
         final localAcc = Account(
-          id: 17,
-          uuid: 'acc-offline-01',
+          id: 'acc-offline-01',
           accountCode: '101017',
           name: 'صندوق أوفلاين محلي',
           accountType: AccountType.asset,
@@ -767,7 +753,7 @@ void main() {
         await resolver.bindAccount(
           companyId: companyA,
           requirement: req,
-          accountUuid: 'acc-pay-synced',
+          accountId: 'acc-pay-synced',
         );
         final fetched = await bindingRepo.getBinding(
           companyId: companyA,
@@ -775,14 +761,13 @@ void main() {
           requirementKey: 'payable_account',
         );
 
-        expect(fetched?.accountUuid, equals('acc-pay-synced'));
+        expect(fetched?.accountId, equals('acc-pay-synced'));
       });
 
       test('19. Chart of Accounts Import Compatibility', () async {
         final importedCandidate = [
           Account(
-            id: 19,
-            uuid: 'acc-import-19',
+            id: 'acc-import-19',
             accountCode: '101019',
             name: 'صندوق جديد مستورد',
             accountType: AccountType.asset,
@@ -808,8 +793,7 @@ void main() {
       test('20. Transactional Rollback / Error Path', () async {
         final invalidCandidate = [
           Account(
-            id: 20,
-            uuid: 'acc-invalid-20',
+            id: 'acc-invalid-20',
             accountCode: '101020',
             name: 'صندوق ملغى مستورد',
             accountType: AccountType.asset,

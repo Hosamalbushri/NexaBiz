@@ -122,8 +122,7 @@ void main() {
       accountRepo = FakeAccountRepository();
 
       cashAccountA = Account(
-        id: 1,
-        uuid: 'acc-cash-a',
+        id: 'acc-cash-a',
         accountCode: '1101',
         name: 'الصندوق الرئيسي A',
         accountType: AccountType.asset,
@@ -138,8 +137,7 @@ void main() {
       );
 
       cashAccountB = Account(
-        id: 2,
-        uuid: 'acc-cash-b',
+        id: 'acc-cash-b',
         accountCode: '1102',
         name: 'صندوق الفرع B',
         accountType: AccountType.asset,
@@ -154,8 +152,7 @@ void main() {
       );
 
       inactiveAccount = Account(
-        id: 3,
-        uuid: 'acc-inactive',
+        id: 'acc-inactive',
         accountCode: '1109',
         name: 'صندوق معطل',
         accountType: AccountType.asset,
@@ -532,8 +529,7 @@ void main() {
         );
 
         final cashAccountForB = Account(
-          id: 4,
-          uuid: 'acc-cash-comp-b',
+          id: 'acc-cash-comp-b',
           accountCode: '1101-B',
           name: 'Main Cash B',
           accountType: AccountType.asset,

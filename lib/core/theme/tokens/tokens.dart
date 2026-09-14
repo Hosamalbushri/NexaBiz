@@ -1,4 +1,4 @@
-library design_tokens;
+library;
 
 export 'app_borders.dart';
 export 'app_colors.dart';

@@ -18,12 +18,12 @@ class MockLookupPort implements SetupAccountLookupPort {
   final Map<String, SetupAccountData> _accounts = {};
 
   void addAccount(SetupAccountData account) {
-    _accounts[account.uuid] = account;
+    _accounts[account.id] = account;
   }
 
   @override
-  Future<SetupAccountData?> findAccount(String accountUuid) async {
-    return _accounts[accountUuid];
+  Future<SetupAccountData?> findAccount(String accountId) async {
+    return _accounts[accountId];
   }
 
   @override
@@ -96,7 +96,7 @@ class InMemoryBindingRepo implements AccountBindingRepository {
 class MockAccountRepositoryForSafetyGate implements AccountRepository {
   final Map<String, Account> _store = {};
 
-  void add(Account account) => _store[account.uuid] = account;
+  void add(Account account) => _store[account.id] = account;
 
   @override
   Future<Account?> getByUuid(String uuid) async => _store[uuid];
@@ -126,18 +126,18 @@ class MockAccountRepositoryForSafetyGate implements AccountRepository {
 class ConfigurableUsageAnalyzer implements AccountUsageAnalyzer {
   final Map<String, int> _postedCount = {};
 
-  void setPostedCount(String accountUuid, int count) {
-    _postedCount[accountUuid] = count;
+  void setPostedCount(String accountId, int count) {
+    _postedCount[accountId] = count;
   }
 
   @override
   Future<AccountUsageRecord> analyzeAccountUsage({
     required String companyId,
-    required String accountUuid,
+    required String accountId,
   }) async {
-    final count = _postedCount[accountUuid] ?? 0;
+    final count = _postedCount[accountId] ?? 0;
     return AccountUsageRecord(
-      accountUuid: accountUuid,
+      accountId: accountId,
       status: count > 0
           ? AccountUsageStatus.usedInPostedTransactions
           : AccountUsageStatus.neverUsed,
@@ -178,8 +178,7 @@ void main() {
       '1. Safe configuration change (Unused account -> Binding allowed)',
       () async {
         final unusedAccount = Account(
-          id: 1,
-          uuid: 'acc-unused-01',
+          id: 'acc-unused-01',
           accountCode: '101001',
           name: 'صندوق غير مستخدم',
           accountType: AccountType.asset,
@@ -212,8 +211,7 @@ void main() {
       '2. Blocked historical change (Account with posted transactions -> Binding policy block)',
       () async {
         final postedAccount = Account(
-          id: 2,
-          uuid: 'acc-posted-01',
+          id: 'acc-posted-01',
           accountCode: '101002',
           name: 'صندوق مرحل',
           accountType: AccountType.asset,
@@ -241,7 +239,7 @@ void main() {
 
         final usage = await usageAnalyzer.analyzeAccountUsage(
           companyId: 'compA',
-          accountUuid: 'acc-posted-01',
+          accountId: 'acc-posted-01',
         );
         expect(
           usage.status,
@@ -255,8 +253,7 @@ void main() {
       '3. Wrong account type configuration rejection (Asset bound to Liability role)',
       () async {
         final liabilityAcc = Account(
-          id: 3,
-          uuid: 'acc-liability-01',
+          id: 'acc-liability-01',
           accountCode: '201001',
           name: 'حساب دائن',
           accountType: AccountType.liability,
@@ -286,8 +283,7 @@ void main() {
 
     test('4. Parent scope invalidation detection', () async {
       final parentAcc = Account(
-        id: 4,
-        uuid: 'acc-parent-01',
+        id: 'acc-parent-01',
         accountCode: '101000',
         name: 'مجموعة الصناديق',
         accountType: AccountType.asset,
@@ -335,8 +331,7 @@ void main() {
 
     test('6. Account deleted rejection', () async {
       final deletedAcc = Account(
-        id: 6,
-        uuid: 'acc-deleted-99',
+        id: 'acc-deleted-99',
         accountCode: '101099',
         name: 'صندوق محذوف',
         accountType: AccountType.asset,
@@ -366,8 +361,7 @@ void main() {
 
     test('7. Account deactivated rejection', () async {
       final inactiveAcc = Account(
-        id: 7,
-        uuid: 'acc-inactive-99',
+        id: 'acc-inactive-99',
         accountCode: '101098',
         name: 'صندوق معطل',
         accountType: AccountType.asset,
@@ -398,8 +392,7 @@ void main() {
       '8. Account reparented outside expected hierarchy rejection',
       () async {
         final invalidTypeParent = Account(
-          id: 8,
-          uuid: 'acc-wrong-parent',
+          id: 'acc-wrong-parent',
           accountCode: '200000',
           name: 'مجموعة الالتزامات',
           accountType: AccountType.liability,
@@ -431,8 +424,7 @@ void main() {
 
     test('9. Cross-company account binding rejection', () async {
       final compBAcc = Account(
-        id: 9,
-        uuid: 'acc-compB-cash',
+        id: 'acc-compB-cash',
         accountCode: '101005',
         name: 'صندوق شركة B',
         accountType: AccountType.asset,
@@ -461,8 +453,7 @@ void main() {
 
     test('10. Offline configuration change safety validation', () async {
       final validAcc = Account(
-        id: 10,
-        uuid: 'acc-offline-01',
+        id: 'acc-offline-01',
         accountCode: '101010',
         name: 'صندوق أوفلاين',
         accountType: AccountType.asset,

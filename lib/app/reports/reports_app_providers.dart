@@ -8,7 +8,6 @@ import 'package:stock_count/modules/accounting/shared/presentation/providers/cur
 import '../../modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import '../../modules/accounting/journals/presentation/providers/journal_providers.dart';
 import '../../modules/accounting/shared/presentation/providers/currency_rate_providers.dart';
-import '../../modules/inventory/products/presentation/providers/product_providers.dart';
 import '../../modules/receipts_payments/transactions/presentation/providers/rp_providers.dart';
 import '../../modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
 import '../../modules/reports/shared/presentation/providers/reports_providers.dart';

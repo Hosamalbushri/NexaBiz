@@ -51,22 +51,15 @@ class PostPurchaseInvoiceUseCase {
   final SyncQueue? _syncQueue;
 
   PostPurchaseInvoiceUseCase({
-    required PurchaseRepository purchaseRepository,
-    required PostingCoordinatorPort postingCoordinator,
-    JournalPostingService? journalPostingService,
-    AccountingEntryBuilder? entryBuilder,
-    AccountingIntegrationPort? accountingIntegrationService,
-    required CanonicalTransactionOrchestrator orchestrator,
-    AuditTrailService? auditTrailService,
-    SyncQueue? syncQueue,
-  })  : _purchaseRepository = purchaseRepository,
-        _postingCoordinator = postingCoordinator,
-        _journalPostingService = journalPostingService,
-        _entryBuilder = entryBuilder,
-        _accountingIntegrationService = accountingIntegrationService,
-        _orchestrator = orchestrator,
-        _auditTrailService = auditTrailService,
-        _syncQueue = syncQueue;
+    required this._purchaseRepository,
+    required this._postingCoordinator,
+    this._journalPostingService,
+    this._entryBuilder,
+    this._accountingIntegrationService,
+    required this._orchestrator,
+    this._auditTrailService,
+    this._syncQueue,
+  });
 
   Future<PurchaseOrchestrationResult> execute({
     required String invoiceId,
@@ -117,8 +110,12 @@ class PostPurchaseInvoiceUseCase {
 
           // 3. Post Accounting Entry via AccountingIntegrationPort
           String? journalUuid;
-          if (_accountingIntegrationService != null) {
-            final postingResult = await _accountingIntegrationService!.processOperationalTransaction(
+          final accountingIntegrationService = _accountingIntegrationService;
+          final entryBuilder = _entryBuilder;
+          final journalPostingService = _journalPostingService;
+
+          if (accountingIntegrationService != null) {
+            final postingResult = await accountingIntegrationService.processOperationalTransaction(
               OperationalAccountingRequest(
                 companyId: companyId,
                 sourceType: 'purchase',
@@ -140,25 +137,26 @@ class PostPurchaseInvoiceUseCase {
               );
             }
             journalUuid = postingResult.journal?.uuid;
-          } else if (_entryBuilder != null && _journalPostingService != null) {
-            final draft = await _entryBuilder!.buildDraftFromInventoryDocument(
+          } else if (entryBuilder != null && journalPostingService != null) {
+            final draft = await entryBuilder.buildDraftFromInventoryDocument(
               document: docRef,
               totalAmount: invoice.grandTotal,
               isPosted: true,
             );
 
-            await _journalPostingService!.voidBySource(
+            await journalPostingService.voidBySource(
               sourceType: 'purchase',
               sourceId: invoice.id,
             );
 
-            final journalEntry = await _journalPostingService!.post(draft);
+            final journalEntry = await journalPostingService.post(draft);
             journalUuid = journalEntry.uuid;
           }
 
           // 4. Record Audit Event inside transaction
-          if (_auditTrailService != null) {
-            await _auditTrailService!.recordEvent(
+          final auditTrail = _auditTrailService;
+          if (auditTrail != null) {
+            await auditTrail.recordEvent(
               documentId: invoice.id,
               documentType: 'purchase_invoice',
               eventType: 'posted',
@@ -169,8 +167,9 @@ class PostPurchaseInvoiceUseCase {
           }
 
           // 5. Enqueue Sync Operation inside transaction
-          if (_syncQueue != null) {
-            await _syncQueue!.enqueue(
+          final syncQ = _syncQueue;
+          if (syncQ != null) {
+            await syncQ.enqueue(
               SyncOperation.create(
                 entityType: 'purchase_invoice',
                 entityId: invoice.id,

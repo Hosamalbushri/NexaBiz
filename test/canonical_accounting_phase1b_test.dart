@@ -33,7 +33,7 @@ class _FakeAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<Account?> getByUuid(String uuid) async => _byUuid[uuid];
+  Future<Account?> getByUuid(String uuid, {bool includeInactive = false}) async => _byUuid[uuid];
 
   @override
   Future<Account> createAccount(Account account) async => account;
@@ -84,8 +84,7 @@ void main() {
 
       accountRepo.addAccount(
         Account(
-          id: 1,
-          uuid: 'uuid-cash-001',
+          id: 'uuid-cash-001',
           accountCode: '1211',
           name: 'Cash Box',
           accountType: AccountType.asset,
@@ -102,8 +101,7 @@ void main() {
 
       accountRepo.addAccount(
         Account(
-          id: 2,
-          uuid: 'uuid-ar-001',
+          id: 'uuid-ar-001',
           accountCode: '1220',
           name: 'Accounts Receivable',
           accountType: AccountType.asset,
@@ -120,8 +118,7 @@ void main() {
 
       accountRepo.addAccount(
         Account(
-          id: 3,
-          uuid: 'uuid-ap-001',
+          id: 'uuid-ap-001',
           accountCode: '2110',
           name: 'Accounts Payable',
           accountType: AccountType.liability,
@@ -138,8 +135,7 @@ void main() {
 
       accountRepo.addAccount(
         Account(
-          id: 4,
-          uuid: 'uuid-inv-001',
+          id: 'uuid-inv-001',
           accountCode: '1230',
           name: 'Inventory Asset',
           accountType: AccountType.asset,
@@ -156,8 +152,7 @@ void main() {
 
       accountRepo.addAccount(
         Account(
-          id: 5,
-          uuid: 'uuid-rev-001',
+          id: 'uuid-rev-001',
           accountCode: '4100',
           name: 'Sales Revenue',
           accountType: AccountType.revenue,
@@ -174,8 +169,7 @@ void main() {
 
       accountRepo.addAccount(
         Account(
-          id: 6,
-          uuid: 'uuid-cogs-001',
+          id: 'uuid-cogs-001',
           accountCode: '5100',
           name: 'Cost of Goods Sold',
           accountType: AccountType.expense,
@@ -282,8 +276,7 @@ void main() {
     test('Test I — Integrated Mode NoOp RP port throws UnconfiguredIntegrationException', () async {
       const port = NoOpRpLedgerPostingPort(isIntegratedMode: true);
       final dummyTxn = FinancialTransaction(
-        id: 1,
-        uuid: 'txn-1',
+        id: 'txn-1',
         transactionNumber: 'REC-001',
         transactionType: TransactionType.receipt,
         source: TransactionSource.manualReceipt,
@@ -312,8 +305,7 @@ void main() {
     test('Test J — Integrated Mode NoOp Sale port throws UnconfiguredIntegrationException', () async {
       const port = NoOpSaleLedgerPostingPort(isIntegratedMode: true);
       final dummySale = Sale(
-        id: 1,
-        uuid: 'sale-1',
+        id: 'sale-1',
         companyId: companyId,
         saleNumber: 'INV-001',
         saleDate: now,

@@ -4,14 +4,14 @@ import 'package:drift/native.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 
-import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
 
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
@@ -19,7 +19,7 @@ import 'package:stock_count/modules/receipts_payments/transactions/domain/entiti
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
 
-import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dart';
@@ -28,7 +28,7 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/payment_metho
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
 
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_movements_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
@@ -37,17 +37,17 @@ import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_docu
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
-  late AccountingDatabase accDb;
+  late NexabizDatabase accDb;
   late AccountRepositoryImpl accountRepo;
   late JournalRepositoryImpl journalRepo;
 
-  late ReceiptsPaymentsDatabase rpDb;
+  late NexabizDatabase rpDb;
   late FinancialTransactionRepositoryImpl rpRepo;
 
-  late SalesDatabase saleDb;
+  late NexabizDatabase saleDb;
   late SaleRepositoryImpl saleRepo;
 
-  late InventoryDatabase invDb;
+  late NexabizDatabase invDb;
   late StockMovementsRepositoryImpl invRepo;
 
   late String companyA;
@@ -59,10 +59,10 @@ void main() {
     companyA = 'company_A';
     companyB = 'company_B';
 
-    accDb = AccountingDatabase(executor: NativeDatabase.memory());
-    rpDb = ReceiptsPaymentsDatabase(executor: NativeDatabase.memory());
-    saleDb = SalesDatabase(executor: NativeDatabase.memory());
-    invDb = InventoryDatabase(executor: NativeDatabase.memory());
+    accDb = NexabizDatabase.memory();
+    rpDb = NexabizDatabase.memory();
+    saleDb = NexabizDatabase.memory();
+    invDb = NexabizDatabase.memory();
 
     accountRepo = AccountRepositoryImpl(accDb, readCompanyId: () => companyA);
     journalRepo = JournalRepositoryImpl(
@@ -97,7 +97,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc1Uuid,
+            id: acc1Uuid,
             companyId: Value(companyA),
             accountCode: '1010',
             name: 'Cash Box',
@@ -115,7 +115,7 @@ void main() {
         .into(accDb.accounts)
         .insert(
           AccountsCompanion.insert(
-            uuid: acc2Uuid,
+            id: acc2Uuid,
             companyId: Value(companyA),
             accountCode: '4010',
             name: 'Sales Revenue',
@@ -149,7 +149,7 @@ void main() {
             .into(accDb.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: acc1B,
+                id: acc1B,
                 companyId: Value(companyB),
                 accountCode: '1010-B',
                 name: 'Cash Box B',
@@ -166,7 +166,7 @@ void main() {
             .into(accDb.accounts)
             .insert(
               AccountsCompanion.insert(
-                uuid: acc2B,
+                id: acc2B,
                 companyId: Value(companyB),
                 accountCode: '4010-B',
                 name: 'Sales Revenue B',
@@ -336,7 +336,7 @@ void main() {
           lines: [
             StockMovementLine(
               id: lineId,
-              movementUuid: receiptId,
+              movementId: receiptId,
               movementType: 'receipt',
               itemCode: 'ITEM-001',
               itemName: 'Test Item 1',

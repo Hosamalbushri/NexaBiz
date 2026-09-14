@@ -19,7 +19,7 @@ void main() {
   late InventoryDependencyDetectorImpl dependencyDetector;
 
   const testCompanyId = 'COMPANY_001';
-  final warehouseUuid = generateUuidV4();
+  final warehouseId = generateUuidV4();
 
   setUp(() async {
     db = NexabizDatabase.connect(NativeDatabase.memory());
@@ -41,7 +41,7 @@ void main() {
     // Insert test warehouse into in-memory database
     await db.into(db.warehouses).insert(
           WarehousesCompanion.insert(
-            uuid: Value(warehouseUuid),
+            id: Value(warehouseId),
             code: 'MAIN',
             name: 'Main Warehouse',
             companyId: testCompanyId,
@@ -62,7 +62,7 @@ void main() {
     await db.into(db.stockMovementLines).insert(
           StockMovementLinesCompanion.insert(
             uuid: lineId,
-            movementUuid: docId,
+            receiptId: docId,
             movementType: 'stock_receipt',
             itemCode: 'ITEM_A',
             itemName: 'Item A',
@@ -77,7 +77,7 @@ void main() {
       documentNumber: 'REC-001',
       documentType: InventoryDocumentType.stockReceipt,
       documentDate: DateTime.now(),
-      warehouseId: warehouseUuid,
+      warehouseId: warehouseId,
       status: InventoryDocumentStatus.draft,
     );
 
@@ -94,7 +94,7 @@ void main() {
     final totalValue = await postingEngine.applyInboundPosting(
       document: doc,
       lines: lines,
-      warehouseId: warehouseUuid,
+      warehouseId: warehouseId,
       documentDate: DateTime.now(),
     );
 
@@ -120,7 +120,7 @@ void main() {
     await db.into(db.stockMovementLines).insert(
           StockMovementLinesCompanion.insert(
             uuid: lineId,
-            movementUuid: docId,
+            receiptId: docId,
             movementType: 'stock_receipt',
             itemCode: 'ITEM_B',
             itemName: 'Item B',
@@ -135,7 +135,7 @@ void main() {
       documentNumber: 'REC-002',
       documentType: InventoryDocumentType.stockReceipt,
       documentDate: DateTime.now(),
-      warehouseId: warehouseUuid,
+      warehouseId: warehouseId,
       status: InventoryDocumentStatus.draft,
     );
 
@@ -152,7 +152,7 @@ void main() {
     await postingEngine.applyInboundPosting(
       document: doc,
       lines: lines,
-      warehouseId: warehouseUuid,
+      warehouseId: warehouseId,
       documentDate: DateTime.now(),
     );
 
@@ -161,7 +161,7 @@ void main() {
       documentNumber: 'REC-002',
       documentType: InventoryDocumentType.stockReceipt,
       documentDate: DateTime.now(),
-      warehouseId: warehouseUuid,
+      warehouseId: warehouseId,
       status: InventoryDocumentStatus.posted,
     );
 
@@ -183,7 +183,7 @@ void main() {
           ..where(
             (w) =>
                 w.itemCode.equals('ITEM_B') &
-                w.warehouseId.equals(warehouseUuid) &
+                w.warehouseId.equals(warehouseId) &
                 w.companyId.equals(testCompanyId),
           ))
         .getSingleOrNull();

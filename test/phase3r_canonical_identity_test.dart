@@ -101,7 +101,7 @@ void main() {
 
       expect(memberships.length, equals(1));
       expect(memberships.first.userUuid, equals('legacy-user-1'));
-      expect(memberships.first.companyUuid, equals('company-1'));
+      expect(memberships.first.companyId, equals('company-1'));
 
       // Re-run migrator to test idempotency (no duplication)
       await migrator.migrateIfNeeded();
@@ -112,7 +112,7 @@ void main() {
     test('2. User Creation & Password Authentication via Canonical Repository', () async {
       final createdUser = await identityRepo.createUser(
         UsersCompanion.insert(
-          uuid: 'user-uuid-100',
+          id: 'user-uuid-100',
           email: 'admin@nexabiz.com',
           name: 'Admin User',
           passwordHash: const Value('hashed_secret_password'),
@@ -137,12 +137,12 @@ void main() {
         companyName: 'Acme Corp',
         companyCode: 'ACME',
         userUuid: 'owner-uuid-1',
-        companyUuid: 'acme-uuid-1',
+        companyId: 'acme-uuid-1',
         membershipUuid: 'mem-uuid-1',
       );
 
       expect(tenant.user.uuid, equals('owner-uuid-1'));
-      expect(tenant.company.uuid, equals('acme-uuid-1'));
+      expect(tenant.company.id, equals('acme-uuid-1'));
       expect(tenant.company.code, equals('ACME'));
       expect(tenant.membership.role, equals('owner'));
       expect(tenant.membership.status, equals('active'));
@@ -156,19 +156,19 @@ void main() {
         companyName: 'Beta Inc',
         companyCode: 'BETA',
         userUuid: 'user-beta-1',
-        companyUuid: 'comp-beta-1',
+        companyId: 'comp-beta-1',
       );
 
       final valid = await identityRepo.validateMembership(
         userUuid: 'user-beta-1',
-        companyUuid: 'comp-beta-1',
+        companyId: 'comp-beta-1',
       );
       expect(valid, isNotNull);
       expect(valid!.role, equals('owner'));
 
       final invalid = await identityRepo.validateMembership(
         userUuid: 'user-beta-1',
-        companyUuid: 'non-existent-company',
+        companyId: 'non-existent-company',
       );
       expect(invalid, isNull);
     });
@@ -314,20 +314,20 @@ void main() {
         companyName: 'Comp A',
         companyCode: 'CA',
         userUuid: 'multi-user-id',
-        companyUuid: 'comp-a-id',
+        companyId: 'comp-a-id',
       );
       await identityRepo.createCompany(
         CompaniesCompanion.insert(
-          uuid: 'comp-b-id',
+          id: 'comp-b-id',
           code: 'CB',
           name: 'Comp B',
         ),
       );
       await identityRepo.createMembership(
         CompanyMembershipsCompanion.insert(
-          uuid: 'mem-b-id',
+          id: 'mem-b-id',
           userUuid: 'multi-user-id',
-          companyUuid: 'comp-b-id',
+          companyId: 'comp-b-id',
           role: const Value('member'),
         ),
       );
@@ -402,7 +402,7 @@ void main() {
       // Seed user in canonical db
       final user = await identityRepo.createUser(
         UsersCompanion.insert(
-          uuid: 'pwd-user-1',
+          id: 'pwd-user-1',
           email: 'change@nexabiz.com',
           name: 'Change User',
           passwordHash: Value(initialHash),
@@ -461,7 +461,7 @@ void main() {
       // Valid user session with inactive user status
       await identityRepo.createUser(
         UsersCompanion.insert(
-          uuid: 'disabled-user-id',
+          id: 'disabled-user-id',
           email: 'disabled@nexabiz.com',
           name: 'Disabled User',
           passwordHash: const Value('hash'),
@@ -476,7 +476,7 @@ void main() {
       // Validate membership for non-existent membership
       final membership = await identityRepo.validateMembership(
         userUuid: 'disabled-user-id',
-        companyUuid: 'company-x',
+        companyId: 'company-x',
       );
       expect(membership, isNull);
     });

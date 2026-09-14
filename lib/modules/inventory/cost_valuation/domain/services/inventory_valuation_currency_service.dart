@@ -9,14 +9,11 @@ import 'package:stock_count/modules/system_setup/domain/repositories/company_ini
 /// per company / inventory book scope.
 class InventoryValuationCurrencyService {
   InventoryValuationCurrencyService({
-    required FunctionalCurrencyService functionalCurrencyService,
-    CurrencyRepository? currencyRepository,
-    CurrencyRateRepository? currencyRateRepository,
-    CompanyInitializationRepository? initRepository,
-  }) : _functionalCurrencyService = functionalCurrencyService,
-       _currencyRepository = currencyRepository,
-       _currencyRateRepository = currencyRateRepository,
-       _initRepository = initRepository;
+    required this._functionalCurrencyService,
+    this._currencyRepository,
+    this._currencyRateRepository,
+    this._initRepository,
+  });
 
   final FunctionalCurrencyService _functionalCurrencyService;
   final CurrencyRepository? _currencyRepository;

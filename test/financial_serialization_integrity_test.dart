@@ -21,8 +21,7 @@ void main() {
   group('ROOT FIX 39 — Financial Data Serialization Integrity Tests', () {
     test('1. JournalEntry Sync Payload Serialization Round-trip', () {
       final entry = JournalEntry(
-        id: 101,
-        uuid: '00000000-0000-4000-8000-000000000101',
+        id: '00000000-0000-4000-8000-000000000101',
         entryDate: now,
         voucherNumber: 'JV-2026-001',
         voucherType: 'journal',
@@ -36,10 +35,9 @@ void main() {
         version: 5,
         lines: const [
           JournalLine(
-            id: 1,
-            uuid: '00000000-0000-4000-8000-000000000102',
-            entryUuid: '00000000-0000-4000-8000-000000000101',
-            accountUuid: 'acc_depr_exp',
+            id: '00000000-0000-4000-8000-000000000102',
+            entryId: '00000000-0000-4000-8000-000000000101',
+            accountId: 'acc_depr_exp',
             debit: 1500.0,
             credit: 0.0,
             currencyCode: 'USD',
@@ -50,10 +48,9 @@ void main() {
             lineDescription: 'Depreciation line 1',
           ),
           JournalLine(
-            id: 2,
-            uuid: '00000000-0000-4000-8000-000000000103',
-            entryUuid: '00000000-0000-4000-8000-000000000101',
-            accountUuid: 'acc_accum_depr',
+            id: '00000000-0000-4000-8000-000000000103',
+            entryId: '00000000-0000-4000-8000-000000000101',
+            accountId: 'acc_accum_depr',
             debit: 0.0,
             credit: 1500.0,
             currencyCode: 'USD',
@@ -67,7 +64,7 @@ void main() {
       );
 
       final payload = <String, dynamic>{
-        'uuid': entry.uuid,
+        'uuid': entry.id,
         'entryDate': entry.entryDate.millisecondsSinceEpoch,
         'voucherNumber': entry.voucherNumber,
         'voucherType': entry.voucherType,
@@ -83,7 +80,7 @@ void main() {
           for (final line in entry.lines)
             {
               'uuid': line.uuid,
-              'accountUuid': line.accountUuid,
+              'accountId': line.accountId,
               'debit': line.debit,
               'credit': line.credit,
               'exchangeRateToBase': line.exchangeRateToBase,
@@ -97,7 +94,7 @@ void main() {
       };
 
       // Verify all required fields preserved without silent loss
-      expect(payload['uuid'], equals(entry.uuid));
+      expect(payload['uuid'], equals(entry.id));
       expect(payload['voucherNumber'], equals('JV-2026-001'));
       expect(payload['currencyCode'], equals('USD'));
       expect(payload['isPosted'], isTrue);
@@ -114,8 +111,7 @@ void main() {
     test('2. Sale Serialization Round-trip', () {
       final sale = Sale(
         companyId: 'company_1',
-        id: 201,
-        uuid: '00000000-0000-4000-8000-000000000201',
+        id: '00000000-0000-4000-8000-000000000201',
         saleNumber: 'INV-2026-888',
         saleDate: now,
         settlementType: SaleSettlementType.cash,
@@ -148,9 +144,8 @@ void main() {
         dataSource: SaleDataSource.local,
         items: const [
           SaleItem(
-            id: 1,
-            uuid: '00000000-0000-4000-8000-000000000202',
-            saleUuid: '00000000-0000-4000-8000-000000000201',
+            id: '00000000-0000-4000-8000-000000000202',
+            saleId: '00000000-0000-4000-8000-000000000201',
             productId: 'prod_99',
             productName: 'Heavy Industrial Motor',
             productCode: 'MOT-01',
@@ -172,9 +167,8 @@ void main() {
         ],
         payments: [
           SalePayment(
-            id: 1,
-            uuid: '00000000-0000-4000-8000-000000000203',
-            saleUuid: '00000000-0000-4000-8000-000000000201',
+            id: '00000000-0000-4000-8000-000000000203',
+            saleId: '00000000-0000-4000-8000-000000000201',
             amount: 1035.0,
             method: PaymentMethod.cash,
             paidAt: now,

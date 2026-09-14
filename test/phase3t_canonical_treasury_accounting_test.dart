@@ -144,7 +144,7 @@ void main() {
       expect(entryRows.first.voucherNumber, equals('JE-2026-001'));
 
       final lineRows = await (db.select(db.journalLines)
-            ..where((t) => t.entryUuid.equals(postedEntry.uuid)))
+            ..where((t) => t.entryId.equals(postedEntry.uuid)))
           .get();
 
       expect(lineRows.length, equals(2));
@@ -234,7 +234,7 @@ void main() {
       await db.transaction(() async {
         await db.into(db.financialTransactions).insert(
               FinancialTransactionsCompanion.insert(
-                uuid: txUuid,
+                id: txUuid,
                 transactionNumber: 'REC-ATOMIC-001',
                 transactionType: 'receipt',
                 source: 'manualReceipt',
@@ -255,7 +255,7 @@ void main() {
 
         await db.into(db.journalEntries).insert(
               JournalEntriesCompanion.insert(
-                uuid: jeUuid,
+                id: jeUuid,
                 voucherNumber: 'JE-ATOMIC-001',
                 voucherType: 'JV',
                 currencyCode: 'SAR',
@@ -268,9 +268,9 @@ void main() {
 
         await db.into(db.journalLines).insert(
               JournalLinesCompanion.insert(
-                uuid: jlUuid,
-                entryUuid: jeUuid,
-                accountUuid: cashAccUuid,
+                id: jlUuid,
+                entryId: jeUuid,
+                accountId: cashAccUuid,
                 debit: const Value(750.0),
                 credit: const Value(0.0),
                 currencyCode: 'SAR',

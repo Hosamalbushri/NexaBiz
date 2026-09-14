@@ -100,8 +100,7 @@ void main() {
       DateTime? cancelledAt,
     }) {
       return FinancialTransaction(
-        id: 1,
-        uuid: '00000000-0000-4000-8000-000000000001',
+        id: '00000000-0000-4000-8000-000000000001',
         transactionNumber: '1',
         transactionType: TransactionType.receipt,
         source: TransactionSource.manualReceipt,

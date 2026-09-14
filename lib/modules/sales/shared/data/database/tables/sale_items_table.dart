@@ -57,4 +57,10 @@ class SaleItems extends Table {
   List<Set<Column>> get uniqueKeys => [
         {companyId, id},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, sale_id) REFERENCES sales(company_id, id) ON DELETE CASCADE',
+        'FOREIGN KEY (company_id, product_id) REFERENCES products(company_id, id) ON DELETE RESTRICT',
+      ];
 }

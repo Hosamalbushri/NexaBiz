@@ -131,7 +131,7 @@ class ReportsHomePage extends ConsumerWidget {
             ? '$totalReports تقارير متاحة'
             : '$totalReports reports available');
 
-    final onTap = () => context.push(AppRoutes.moduleReports(module.id));
+    Future<Object?> onTap() => context.push(AppRoutes.moduleReports(module.id));
 
     if (isGrid) {
       return AppModuleHubTile(

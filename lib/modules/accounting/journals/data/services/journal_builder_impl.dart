@@ -1,5 +1,4 @@
 import 'package:stock_count/core/domain/entities/document_ref.dart';
-import 'package:stock_count/shared/contracts/errors/currency_exception.dart';
 import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import 'package:stock_count/shared/contracts/errors/account_exception.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
@@ -13,7 +12,6 @@ import 'package:stock_count/modules/inventory/warehouses/domain/repositories/war
 import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_money.dart';
-import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 
 class MissingCompanyContextException implements Exception {
   const MissingCompanyContextException([
@@ -29,20 +27,14 @@ class MissingCompanyContextException implements Exception {
 /// using domain repositories without direct database persistence or Drift access.
 class JournalBuilderImpl implements JournalBuilderService {
   JournalBuilderImpl({
-    required AccountRepository accountRepository,
-    required CurrencyRateRepository currencyRateRepository,
-    String Function()? readCompanyId,
-    CompanyInitializationRepository? initRepository,
-    WarehouseAccountingBindingRepository? bindingRepo,
-    WarehouseAccountingValidationService? validationService,
-    FunctionalCurrencyService? functionalCurrencyService,
-  }) : _accountRepository = accountRepository,
-       _currencyRateRepository = currencyRateRepository,
-       _readCompanyId = readCompanyId,
-       _initRepository = initRepository,
-       _bindingRepo = bindingRepo,
-       _validationService = validationService,
-       _functionalCurrencyService = functionalCurrencyService;
+    required this._accountRepository,
+    required this._currencyRateRepository,
+    this._readCompanyId,
+    this._initRepository,
+    this._bindingRepo,
+    this._validationService,
+    this._functionalCurrencyService,
+  });
 
   final AccountRepository _accountRepository;
   final CurrencyRateRepository _currencyRateRepository;
@@ -157,6 +149,24 @@ class JournalBuilderImpl implements JournalBuilderService {
       }
     }
 
+    final defaultCode = switch (role) {
+      AccountRole.inventory => '1230',
+      AccountRole.cogs => '5100',
+      AccountRole.revenue => '4100',
+      AccountRole.receivable => '1220',
+      AccountRole.payable => '2110',
+      AccountRole.cash => '1211',
+      AccountRole.adjustment => '5150',
+      AccountRole.discount => '4120',
+      _ => null,
+    };
+    if (defaultCode != null) {
+      final acc = await _accountRepository.getByAccountCode(defaultCode);
+      if (acc != null && !acc.isGroup && acc.isActive) {
+        return acc.id;
+      }
+    }
+
     final roleNameAr = switch (role) {
       AccountRole.inventory => 'أصل المخزون',
       AccountRole.payable => 'الموردين / الحسابات الدائنة',
@@ -190,7 +200,7 @@ class JournalBuilderImpl implements JournalBuilderService {
         }
       } catch (_) {}
     }
-    return 'SAR';
+    return 'YER';
   }
 
   Future<String> _resolveInventoryCurrency() async {

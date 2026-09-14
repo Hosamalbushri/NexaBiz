@@ -54,18 +54,22 @@ import '../sync/sync_enabled_provider.dart';
 bool _isPublicRoute(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.login ||
-      path == SystemSetupRoutes.firstRun ||
-      path == CompanySelectionScreen.routePath ||
+      path == AppRoutes.accessDenied;
+}
+
+bool _isSetupRoute(String path) {
+  return path == SystemSetupRoutes.firstRun ||
+      path == SystemSetupRoutes.root ||
       path == AppRoutes.onboarding ||
       path == AppRoutes.setupChoice ||
       path == AppRoutes.serverSetup ||
       path == AppRoutes.serverBootstrapLogin ||
-      path == AppRoutes.serverBootstrapProgress ||
-      path == AppRoutes.accessDenied;
+      path == AppRoutes.serverBootstrapProgress;
 }
 
 bool _isAppLockExempt(String path) {
   return _isPublicRoute(path) ||
+      path == SystemSetupRoutes.firstRun ||
       path == AppRoutes.changePassword ||
       path == SystemSetupRoutes.root ||
       path == AppLockRoutes.root;
@@ -88,6 +92,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     final companyChanged =
         previous?.session?.currentCompanyId != next.session?.currentCompanyId;
     if (statusChanged || companyChanged) {
+      refresh.value++;
+    }
+  });
+  ref.listen(appLockControllerProvider, (previous, next) {
+    if (previous?.gate != next.gate) {
       refresh.value++;
     }
   });
@@ -341,33 +350,24 @@ String? evaluateAppRouteRedirect({
   AsyncValue<Entitlement>? entitlementAsync,
   EntitlementService? entitlementService,
 }) {
-  final isPublic = _isPublicRoute(path);
-
-  // 0. Initializing or Restoring Session Gate -> Hold on splash
-  if (bootstrap.isInitializing || bootstrap.isRestoringSession) {
+  // 0. Initializing, Restoring Session, or Failed Bootstrap Gate -> Hold on /splash
+  if (bootstrap.isInitializing ||
+      bootstrap.isRestoringSession ||
+      bootstrap.isFailed) {
     if (path == AppRoutes.splash) return null;
     return AppRoutes.splash;
   }
 
-  // 1. First-Run Setup Gate -> Force to setup wizard
+  // 1. First-Run Setup Gate -> Force to first-run setup
   if (bootstrap.isFirstRunRequired) {
-    if (path != SystemSetupRoutes.firstRun &&
-        path != AppRoutes.onboarding &&
-        path != AppRoutes.splash) {
-      return SystemSetupRoutes.firstRun;
+    if (path == SystemSetupRoutes.firstRun || path == AppRoutes.onboarding) {
+      return null;
     }
-    return null;
+    return SystemSetupRoutes.firstRun;
   }
 
-  // Block setup routes permanently if setup is already done!
-  if (!bootstrap.isFirstRunRequired &&
-      (path == SystemSetupRoutes.firstRun ||
-          path == SystemSetupRoutes.root ||
-          path == AppRoutes.onboarding ||
-          path == AppRoutes.setupChoice ||
-          path == AppRoutes.serverSetup ||
-          path == AppRoutes.serverBootstrapLogin ||
-          path == AppRoutes.serverBootstrapProgress)) {
+  // Block setup routes permanently if setup is already completed!
+  if (!bootstrap.isFirstRunRequired && _isSetupRoute(path)) {
     if (auth.isAuthenticated) {
       return (auth.hasCompany || bootstrap.isSystemScope)
           ? AppRoutes.dashboard
@@ -379,21 +379,25 @@ String? evaluateAppRouteRedirect({
 
   // 2. Unauthenticated Gate
   if (bootstrap.isUnauthenticated ||
-      auth.status == AuthStatus.unauthenticated) {
-    if (isPublic) return null;
+      auth.status == AuthStatus.unauthenticated ||
+      !auth.isAuthenticated) {
+    if (path == AppRoutes.splash) {
+      return AppRoutes.login;
+    }
+    if (_isPublicRoute(path)) return null;
     return AppRoutes.login;
   }
 
   // 3. Multi-Company Selection Gate:
-  // Authenticated users with multiple companies but NO active company context MUST be sent to Company Selection
+  // Authenticated users with no active company context MUST be sent to Company Selection
   if (auth.isAuthenticated && !auth.hasCompany && !bootstrap.isSystemScope) {
-    if (path == CompanySelectionScreen.routePath || path == AppRoutes.login) {
+    if (path == CompanySelectionScreen.routePath) {
       return null;
     }
     return CompanySelectionScreen.routePath;
   }
 
-  // 4. Authenticated Users on Public Auth Pages: auto-forward to Dashboard or Company Selection
+  // 4. Authenticated Users on Public Auth Pages (/login or /splash): auto-forward to Dashboard or Company Selection
   if (auth.isAuthenticated &&
       (path == AppRoutes.login || path == AppRoutes.splash)) {
     return (auth.hasCompany || bootstrap.isSystemScope)
@@ -401,11 +405,14 @@ String? evaluateAppRouteRedirect({
         : CompanySelectionScreen.routePath;
   }
 
+  // 5. App Lock Gate
   if (lock != null && lock.gate == AppLockGate.locked) {
     if (_isAppLockExempt(path)) {
       return null;
     }
-    if (lockControllerNotifier != null) {
+    if (lockControllerNotifier != null &&
+        path != AppLockRoutes.root &&
+        !_isPublicRoute(path)) {
       lockControllerNotifier.returnToLocation ??= path;
     }
     return AppLockRoutes.root;
@@ -427,6 +434,7 @@ String? evaluateAppRouteRedirect({
     return AppRoutes.dashboard;
   }
 
+  // 6. Permission Gate
   if (!_isPermissionExempt(path)) {
     var required = registry.requiredPermissionsForPath(path);
     if ((required == null || required.isEmpty) &&
@@ -441,7 +449,7 @@ String? evaluateAppRouteRedirect({
     }
   }
 
-  // Subscriptions page is disabled for now — redirect to Data Sync
+  // Subscriptions page is disabled — redirect to Data Sync
   if (path == AppRoutes.settingsSubscription ||
       path.startsWith('${AppRoutes.settingsSubscription}/')) {
     return AppRoutes.settingsDataSync;

@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/presentation/scaffolds/module_form_scaffold.dart';
-import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
+import 'package:stock_count/core/presentation/scaffolds/module_form_scaffold.dart'
+    hide AppErrorState, AppEmptyState, AppLoadingState, AppTextField, AppFormSection;
+import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart'
+    hide AppErrorState, AppEmptyState, AppLoadingState, AppTextField, AppFormSection;
 import 'package:stock_count/core/presentation/widgets/app_form_fields.dart';
 import 'package:stock_count/core/presentation/widgets/app_state_feedback.dart';
 import 'package:stock_count/core/presentation/widgets/search_filter_bar.dart';
+
+Widget wrapTestWidget(Widget child) {
+  return shadcn.ShadcnApp(
+    home: child,
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -92,8 +101,8 @@ void main() {
       bool filterTapped = false;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
+        wrapTestWidget(
+          Scaffold(
             body: SearchFilterBar(
               searchHint: 'ابحث عن منتج...',
               debounceMs: 50,
@@ -110,19 +119,19 @@ void main() {
       );
 
       // Enter search text
-      await tester.enterText(find.byType(TextField), 'حليب');
+      await tester.enterText(find.byType(EditableText), 'حليب');
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(searchResult, equals('حليب'));
-      expect(find.byIcon(Icons.clear_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
 
-      // Tap filter icon
-      await tester.tap(find.byIcon(Icons.filter_list_rounded));
+      // Tap filter button
+      await tester.tap(find.byIcon(Icons.tune_rounded));
       await tester.pump();
       expect(filterTapped, isTrue);
 
       // Tap clear button
-      await tester.tap(find.byIcon(Icons.clear_rounded));
+      await tester.tap(find.byIcon(Icons.close_rounded));
       await tester.pump(const Duration(milliseconds: 100));
       expect(searchResult, equals(''));
     });
@@ -186,8 +195,8 @@ void main() {
       (tester) async {
         // 1. Loading State
         await tester.pumpWidget(
-          MaterialApp(
-            home: ModuleListScaffold<String>(
+          wrapTestWidget(
+            ModuleListScaffold<String>(
               title: 'قائمة المنتجات',
               items: const [],
               isLoading: true,
@@ -195,12 +204,13 @@ void main() {
             ),
           ),
         );
-        expect(find.byType(AppLoadingState), findsOneWidget);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.byType(AppLoading), findsOneWidget);
 
         // 2. Empty State
         await tester.pumpWidget(
-          MaterialApp(
-            home: ModuleListScaffold<String>(
+          wrapTestWidget(
+            ModuleListScaffold<String>(
               title: 'قائمة المنتجات',
               items: const [],
               isLoading: false,
@@ -209,12 +219,13 @@ void main() {
             ),
           ),
         );
+        await tester.pump(const Duration(milliseconds: 300));
         expect(find.text('لا توجد منتجات'), findsOneWidget);
 
         // 3. Populated Items List
         await tester.pumpWidget(
-          MaterialApp(
-            home: ModuleListScaffold<String>(
+          wrapTestWidget(
+            ModuleListScaffold<String>(
               title: 'قائمة المنتجات',
               items: const ['منتج A', 'منتج B'],
               isLoading: false,
@@ -222,6 +233,7 @@ void main() {
             ),
           ),
         );
+        await tester.pump(const Duration(milliseconds: 300));
         expect(find.text('منتج A'), findsOneWidget);
         expect(find.text('منتج B'), findsOneWidget);
       },
@@ -231,8 +243,8 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: ModuleListScaffold<String>(
+        wrapTestWidget(
+          ModuleListScaffold<String>(
             title: 'شبكة المنتجات',
             items: const ['منتج 1', 'منتج 2'],
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -257,8 +269,8 @@ void main() {
       bool saved = false;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: ModuleFormScaffold(
+        wrapTestWidget(
+          ModuleFormScaffold(
             title: 'إضافة منتج',
             formKey: formKey,
             onSave: () async {
@@ -274,6 +286,7 @@ void main() {
       );
 
       // Tap save without filling field -> validation fails
+      await tester.ensureVisible(find.text('حفظ'));
       await tester.tap(find.text('حفظ'));
       await tester.pump();
 

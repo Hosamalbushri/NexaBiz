@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
-import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
@@ -23,7 +22,7 @@ class AdminDevicesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final syncOn = ref.watch(syncEnabledProvider);
+    // final syncOn = ref.watch(syncEnabledProvider);
     final auth = ref.watch(authStateProvider);
     final devicesAsync = ref.watch(adminDevicesProvider);
     final requestsAsync = ref.watch(adminSyncDisableRequestsProvider);

@@ -86,35 +86,35 @@ class AdversarialMockJournalRepo implements JournalRepository {
     // Inventory: CR 600
     return const [
       TrialBalanceRow(
-        accountUuid: 'acc-cash',
+        accountId: 'acc-cash',
         accountCode: '1101',
         accountName: 'Cash Register',
         debit: 1000,
         credit: 0,
       ),
       TrialBalanceRow(
-        accountUuid: 'acc-ar',
+        accountId: 'acc-ar',
         accountCode: '1201',
         accountName: 'Customer AR',
         debit: 1000,
         credit: 1000,
       ),
       TrialBalanceRow(
-        accountUuid: 'acc-sales',
+        accountId: 'acc-sales',
         accountCode: '4101',
         accountName: 'Sales Revenue',
         debit: 0,
         credit: 1000,
       ),
       TrialBalanceRow(
-        accountUuid: 'acc-cogs',
+        accountId: 'acc-cogs',
         accountCode: '5101',
         accountName: 'COGS',
         debit: 600,
         credit: 0,
       ),
       TrialBalanceRow(
-        accountUuid: 'acc-inv',
+        accountId: 'acc-inv',
         accountCode: '1301',
         accountName: 'Inventory Asset',
         debit: 0,
@@ -125,7 +125,7 @@ class AdversarialMockJournalRepo implements JournalRepository {
 
   @override
   Future<List<AccountLedgerMovement>> listMovementsForAccount({
-    required String accountUuid,
+    required String accountId,
     DateTime? fromDate,
     DateTime? toDate,
     String? currencyCode,
@@ -133,7 +133,7 @@ class AdversarialMockJournalRepo implements JournalRepository {
     dynamic after,
     int? limit,
   }) async {
-    if (accountUuid == 'acc-ar') {
+    if (accountId == 'acc-ar') {
       return [
         AccountLedgerMovement(
           entryDate: DateTime(2026, 1, 10),
@@ -144,8 +144,8 @@ class AdversarialMockJournalRepo implements JournalRepository {
           credit: 0,
           currencyCode: 'SAR',
           isPosted: true,
-          accountUuid: 'acc-ar',
-          entryUuid: 'je-sale',
+          accountId: 'acc-ar',
+          entryId: 'je-sale',
           lineUuid: 'line-1',
           lineId: 1,
           sortOrder: 1,
@@ -159,8 +159,8 @@ class AdversarialMockJournalRepo implements JournalRepository {
           credit: 400,
           currencyCode: 'SAR',
           isPosted: true,
-          accountUuid: 'acc-ar',
-          entryUuid: 'je-rec1',
+          accountId: 'acc-ar',
+          entryId: 'je-rec1',
           lineUuid: 'line-2',
           lineId: 2,
           sortOrder: 2,
@@ -174,14 +174,14 @@ class AdversarialMockJournalRepo implements JournalRepository {
           credit: 600,
           currencyCode: 'SAR',
           isPosted: true,
-          accountUuid: 'acc-ar',
-          entryUuid: 'je-rec2',
+          accountId: 'acc-ar',
+          entryId: 'je-rec2',
           lineUuid: 'line-3',
           lineId: 3,
           sortOrder: 3,
         ),
       ];
-    } else if (accountUuid == 'acc-cash') {
+    } else if (accountId == 'acc-cash') {
       return [
         AccountLedgerMovement(
           entryDate: DateTime(2026, 1, 12),
@@ -192,8 +192,8 @@ class AdversarialMockJournalRepo implements JournalRepository {
           credit: 0,
           currencyCode: 'SAR',
           isPosted: true,
-          accountUuid: 'acc-cash',
-          entryUuid: 'je-rec1',
+          accountId: 'acc-cash',
+          entryId: 'je-rec1',
           lineUuid: 'line-4',
           lineId: 4,
           sortOrder: 1,
@@ -207,8 +207,8 @@ class AdversarialMockJournalRepo implements JournalRepository {
           credit: 0,
           currencyCode: 'SAR',
           isPosted: true,
-          accountUuid: 'acc-cash',
-          entryUuid: 'je-rec2',
+          accountId: 'acc-cash',
+          entryId: 'je-rec2',
           lineUuid: 'line-5',
           lineId: 5,
           sortOrder: 2,
@@ -220,7 +220,7 @@ class AdversarialMockJournalRepo implements JournalRepository {
 
   @override
   Future<double> sumNetBefore({
-    required String accountUuid,
+    required String accountId,
     required DateTime beforeDate,
     String? currencyCode,
     bool? isPosted,

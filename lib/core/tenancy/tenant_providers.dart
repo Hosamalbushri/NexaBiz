@@ -50,11 +50,8 @@ final sessionContextPortProvider = Provider<SessionContextPort>((ref) {
 final tenantContextProvider = Provider<TenantContext>((ref) {
   final sessionContext = ref.watch(sessionContextPortProvider);
 
-  final String currentCompanyId = sessionContext.currentCompanyId?.trim() ?? '';
   final String activeCompanyId = sessionContext.activeCompanyId?.trim() ?? '';
-  String companyId = currentCompanyId.isNotEmpty
-      ? currentCompanyId
-      : activeCompanyId;
+  final String companyId = activeCompanyId;
 
   // Rule 4: No silent company fallback.
   // An unassigned context resolves to an empty company ID ('') with SystemScope or ContextualScope.

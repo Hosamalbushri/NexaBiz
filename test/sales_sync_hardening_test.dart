@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/sales/data/database/sales_database.dart';
-import 'package:stock_count/modules/sales/data/repositories/sale_repository_impl.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/sales/invoices/data/repositories/sale_repository_impl.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -104,11 +104,11 @@ void main() {
   });
 
   group('SaleRepository applyRemotePayload', () {
-    late SalesDatabase db;
+    late NexabizDatabase db;
     late SaleRepositoryImpl repository;
 
     setUp(() async {
-      db = SalesDatabase.memory();
+      db = NexabizDatabase.memory();
       repository = SaleRepositoryImpl(db);
     });
 

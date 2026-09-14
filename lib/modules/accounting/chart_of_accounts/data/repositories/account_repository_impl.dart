@@ -19,14 +19,12 @@ class AccountRepositoryImpl implements AccountRepository {
     this._db, {
     this._syncQueue,
     this._validator = const AccountValidator(),
-    this._onUuidRemapped,
     this._readCompanyId,
   });
 
   final NexabizDatabase _db;
   final SyncQueue? _syncQueue;
   final AccountValidator _validator;
-  final Future<void> Function(String oldUuid, String newUuid)? _onUuidRemapped;
   final String Function()? _readCompanyId;
 
   static const entityType = 'account';
@@ -62,10 +60,10 @@ class AccountRepositoryImpl implements AccountRepository {
       isSystemAccount: row.isSystemAccount,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
-      syncStatus: SyncStatus.synced,
+      syncStatus: _syncQueue != null ? SyncStatus.pending : SyncStatus.synced,
       lastSyncedAt: row.updatedAt,
       version: 1,
-      deletedAt: null,
+      deletedAt: row.isActive ? null : row.updatedAt,
     );
   }
 
@@ -267,18 +265,22 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
-  Future<Account?> getById(String id) async {
+  Future<Account?> getById(String id, {bool includeInactive = false}) async {
     final row = await (_db.select(
       _db.accounts,
-    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _activeFilter(t, includeInactive))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
   @override
-  Future<Account?> getByUuid(String uuid) => getById(uuid);
+  Future<Account?> getByUuid(String uuid, {bool includeInactive = false}) =>
+      getById(uuid, includeInactive: includeInactive);
 
   @override
-  Future<List<Account>> getByUuids(Iterable<String> uuids) async {
+  Future<List<Account>> getByUuids(
+    Iterable<String> uuids, {
+    bool includeInactive = false,
+  }) async {
     final ids = [
       for (final uuid in {...uuids})
         if (uuid.trim().isNotEmpty) uuid.trim(),
@@ -288,19 +290,22 @@ class AccountRepositoryImpl implements AccountRepository {
     }
     final rows = await (_db.select(
       _db.accounts,
-    )..where((t) => t.id.isIn(ids) & _scoped(t))).get();
+    )..where((t) => t.id.isIn(ids) & _activeFilter(t, includeInactive))).get();
     return rows.map(_map).toList(growable: false);
   }
 
   @override
-  Future<Account?> getByAccountCode(String accountCode) async {
+  Future<Account?> getByAccountCode(
+    String accountCode, {
+    bool includeInactive = false,
+  }) async {
     final code = _normalizeCode(accountCode);
     if (code.isEmpty) {
       return null;
     }
     final row = await (_db.select(
       _db.accounts,
-    )..where((t) => t.accountCode.equals(code) & _scoped(t))).getSingleOrNull();
+    )..where((t) => t.accountCode.equals(code) & _activeFilter(t, includeInactive))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -563,6 +568,7 @@ class AccountRepositoryImpl implements AccountRepository {
       await _alignSystemAccountParents();
       await _enqueueUnpushedAccounts();
     }
+    await seedDefaultChart();
   }
 
   @override
@@ -574,17 +580,12 @@ class AccountRepositoryImpl implements AccountRepository {
       );
     }
 
-    final existing =
-        await (_db.select(_db.accounts)
-              ..where(_scoped)
-              ..limit(1))
-            .get();
-    if (existing.isNotEmpty) {
-      return;
-    }
-
     final keyToUuid = <String, String>{};
     final keyToLevel = <String, int>{};
+    for (final seed in DefaultChartOfAccounts.seeds()) {
+      keyToUuid[seed.systemKey] = systemAccountUuid('${companyId}_${seed.systemKey}');
+    }
+
     final now = DateTime.now().toUtc();
     final createdUuids = <String>[];
 
@@ -782,7 +783,7 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  Future<void> _insertMissingSystemAccounts() async {
+  /* Future<void> _insertMissingSystemAccounts() async {
     final seeds = DefaultChartOfAccounts.seeds();
     final keyToUuid = <String, String>{};
     final keyToLevel = <String, int>{};
@@ -860,7 +861,7 @@ class AccountRepositoryImpl implements AccountRepository {
         await _enqueue(account, SyncOperationType.create);
       }
     }
-  }
+  } */
 
   Future<void> _enqueueUnpushedAccounts() async {
     if (_syncQueue == null) {

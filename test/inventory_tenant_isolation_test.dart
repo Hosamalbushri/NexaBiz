@@ -1,6 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -13,11 +13,11 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_repository_impl.dart';
 
 void main() {
-  late InventoryDatabase db;
+  late NexabizDatabase db;
   late String activeCompanyId;
 
   setUp(() async {
-    db = InventoryDatabase(NativeDatabase.memory());
+    db = NexabizDatabase(NativeDatabase.memory());
     activeCompanyId = 'company_A';
   });
 
@@ -39,7 +39,7 @@ void main() {
           id: 'layer_comp_a',
           itemCode: 'ITEM-100',
           warehouseId: 'WH-A',
-          movementUuid: 'REC-001',
+          movementId: 'REC-001',
           movementType: 'stock_receipt',
           receivedDate: DateTime.now().toUtc(),
           receivedQty: 100,

@@ -8,14 +8,14 @@ import 'package:hive/hive.dart';
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/currency_rate_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/fiscal_year_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/sync/accounting_sync_handlers.dart';
-import 'package:stock_count/modules/accounting/domain/entities/currency_rate.dart';
-import 'package:stock_count/modules/accounting/domain/entities/fiscal_year.dart';
-import 'package:stock_count/modules/accounting/domain/entities/accounting_period_status.dart';
-import 'package:stock_count/modules/accounting/domain/services/accounting_period_generator.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/currency/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/data/repositories/fiscal_year_repository_impl.dart';
+import 'package:stock_count/modules/accounting/shared/data/sync/accounting_sync_handlers.dart';
+import 'package:stock_count/modules/currency/domain/entities/currency_rate.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/fiscal_year.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/accounting_period_status.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_generator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -55,11 +55,11 @@ void main() {
   test('Device A USD rate pushes and Device B pulls same uuid+rate', () async {
     final remote = InMemoryRemoteSyncApi();
 
-    final dbA = AccountingDatabase.memory();
+    final dbA = NexabizDatabase.memory();
     final queueA = SyncQueue(box: syncBoxA);
     final ratesA = CurrencyRateRepositoryImpl(dbA, syncQueue: queueA);
 
-    final dbB = AccountingDatabase.memory();
+    final dbB = NexabizDatabase.memory();
     final queueB = SyncQueue(box: syncBoxB);
     final ratesB = CurrencyRateRepositoryImpl(dbB, syncQueue: queueB);
 
@@ -124,11 +124,11 @@ void main() {
     () async {
       final remote = InMemoryRemoteSyncApi();
 
-      final dbA = AccountingDatabase.memory();
+      final dbA = NexabizDatabase.memory();
       final queueA = SyncQueue(box: syncBoxA);
       final fyA = FiscalYearRepositoryImpl(dbA, syncQueue: queueA);
 
-      final dbB = AccountingDatabase.memory();
+      final dbB = NexabizDatabase.memory();
       final queueB = SyncQueue(box: syncBoxB);
       final fyB = FiscalYearRepositoryImpl(dbB, syncQueue: queueB);
 

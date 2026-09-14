@@ -596,7 +596,7 @@ class AdminApiRepository implements AdminRepository {
         if (phone != null) 'phone': phone.trim(),
         if (email != null) 'email': email.trim().toLowerCase(),
         if (address != null) 'address': address.trim(),
-        if (status != null) 'status': status,
+        'status': ?status,
       },
     );
     final data = _http.decodeData(response);
@@ -681,8 +681,8 @@ class AdminApiRepository implements AdminRepository {
         if (phone != null) 'phone': phone.trim(),
         if (email != null) 'email': email.trim().toLowerCase(),
         if (address != null) 'address': address.trim(),
-        if (status != null) 'status': status,
-        if (assignedUserIds != null) 'assigned_user_ids': assignedUserIds,
+        'status': ?status,
+        'assigned_user_ids': ?assignedUserIds,
       },
     );
     final data = _http.decodeData(response);

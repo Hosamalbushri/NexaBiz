@@ -72,11 +72,7 @@ class AuthSessionSnapshot {
     if (_effectiveCompanyContext != null) {
       return _effectiveCompanyContext.companyId;
     }
-    if (activeMembership != null) {
-      // Invalid or mismatched membership supplied ➔ Fail closed!
-      return null;
-    }
-    return currentCompanyId;
+    return null;
   }
 
   List<String> get availableCompanyIds => companies.map((c) => c.id).toList();

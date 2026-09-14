@@ -10,20 +10,20 @@ import 'package:stock_count/core/connectivity/connectivity_service.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/journal_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/sync/accounting_sync_handlers.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/shared/data/sync/accounting_sync_handlers.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'helpers/journal_posting_test_helper.dart';
-import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_data_source.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_method.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_data_source.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -65,7 +65,7 @@ void main() {
     () async {
       final remote = InMemoryRemoteSyncApi();
 
-      final dbA = AccountingDatabase.memory();
+      final dbA = NexabizDatabase.memory();
       final queueA = SyncQueue(box: syncBoxA);
       final accountsA = AccountRepositoryImpl(dbA, syncQueue: queueA);
       final journalsA = JournalRepositoryImpl(
@@ -76,7 +76,7 @@ void main() {
       );
       await accountsA.ensureDefaultChartSeeded();
 
-      final dbB = AccountingDatabase.memory();
+      final dbB = NexabizDatabase.memory();
       final queueB = SyncQueue(box: syncBoxB);
       final accountsB = AccountRepositoryImpl(dbB, syncQueue: queueB);
       final journalsB = JournalRepositoryImpl(
@@ -123,8 +123,7 @@ void main() {
 
       final saleUuid = generateUuidV4();
       final sale = Sale(
-        id: 1,
-        uuid: saleUuid,
+        id: saleUuid,
         saleNumber: 'INV-P5-1',
         saleDate: DateTime.utc(2026, 8, 15),
         settlementType: SaleSettlementType.cash,
@@ -213,13 +212,13 @@ void main() {
       expect(remoteJournal.lines.length, localJournal.lines.length);
 
       final revenueLineB = remoteJournal.lines.firstWhere((l) => l.credit > 0);
-      expect(revenueLineB.accountUuid, revenueB!.uuid);
+      expect(revenueLineB.accountId, revenueB!.uuid);
       expect(revenueLineB.credit, 100);
 
       final debitLineB = remoteJournal.lines.firstWhere((l) => l.debit > 0);
       final cashB = await accountsB.getByAccountCode('12210099');
       expect(cashB, isNotNull);
-      expect(debitLineB.accountUuid, cashB!.uuid);
+      expect(debitLineB.accountId, cashB!.uuid);
       expect(debitLineB.debit, 100);
 
       expect(

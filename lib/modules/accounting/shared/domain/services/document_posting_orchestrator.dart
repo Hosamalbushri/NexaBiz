@@ -32,18 +32,13 @@ class OrchestrationFailure extends OrchestrationResult {
 
 class DocumentPostingOrchestrator {
   DocumentPostingOrchestrator({
-    required PostingCoordinatorPort postingCoordinator,
-    AccountingIntegrationPort? integrationService,
-    JournalPostingService? journalPostingService,
-    AccountingEntryBuilder? entryBuilder,
-    DocumentLockChecker lockChecker = const DocumentLockChecker(),
-    CanonicalTransactionOrchestrator? orchestrator,
-  })  : _postingCoordinator = postingCoordinator,
-        _integrationService = integrationService,
-        _journalPostingService = journalPostingService,
-        _entryBuilder = entryBuilder,
-        _lockChecker = lockChecker,
-        _orchestrator = orchestrator;
+    required this._postingCoordinator,
+    this._integrationService,
+    this._journalPostingService,
+    this._entryBuilder,
+    this._lockChecker = const DocumentLockChecker(),
+    this._orchestrator,
+  });
 
   final PostingCoordinatorPort _postingCoordinator;
   final AccountingIntegrationPort? _integrationService;
@@ -57,7 +52,7 @@ class DocumentPostingOrchestrator {
     String? companyId,
     String? userId,
   }) async {
-    final body = () async {
+    Future<OrchestrationResult> body() async {
       _lockChecker.assertCanEdit(
         documentNumber: data.documentNumber,
         status: data.status,
@@ -82,11 +77,12 @@ class DocumentPostingOrchestrator {
         documentId: data.id,
         message: 'تم ترحيل أمر التوريد والقيود المحاسبية بنجاح',
       );
-    };
+    }
 
     try {
-      if (_orchestrator != null && companyId != null) {
-        return await _orchestrator!.runInTransaction(
+      final orchestrator = _orchestrator;
+      if (orchestrator != null && companyId != null) {
+        return await orchestrator.runInTransaction(
           (_) async => await body(),
           companyId: companyId,
           userId: userId,
@@ -106,7 +102,7 @@ class DocumentPostingOrchestrator {
     String? companyId,
     String? userId,
   }) async {
-    final body = () async {
+    Future<OrchestrationResult> body() async {
       _lockChecker.assertCanEdit(
         documentNumber: data.documentNumber,
         status: data.status,
@@ -131,11 +127,12 @@ class DocumentPostingOrchestrator {
         documentId: data.id,
         message: 'تم ترحيل أمر الصرف والقيود المحاسبية بنجاح',
       );
-    };
+    }
 
     try {
-      if (_orchestrator != null && companyId != null) {
-        return await _orchestrator!.runInTransaction(
+      final orchestrator = _orchestrator;
+      if (orchestrator != null && companyId != null) {
+        return await orchestrator.runInTransaction(
           (_) async => await body(),
           companyId: companyId,
           userId: userId,
@@ -153,9 +150,26 @@ class DocumentPostingOrchestrator {
   Future<OrchestrationResult> unpostStockDocumentRef({
     required DocumentRef docRef,
   }) async {
+    final result = await _postingCoordinator.unpost(document: docRef);
+    if (result is UnpostSuccess) {
+      return OrchestrationSuccess(
+        documentId: docRef.documentId,
+        message: 'تم إلغاء ترحيل المستند بنجاح',
+      );
+    } else if (result is UnpostBlockedByDependencies) {
+      return OrchestrationFailure(
+        documentId: docRef.documentId,
+        reason: result.message,
+      );
+    } else if (result is UnpostInvalidStatus) {
+      return OrchestrationFailure(
+        documentId: docRef.documentId,
+        reason: result.reason,
+      );
+    }
     return OrchestrationFailure(
       documentId: docRef.documentId,
-      reason: 'لا يمكن إلغاء ترحيل مستند مرحّل. يلزم التسوية عبر العكس.',
+      reason: 'فشل إلغاء ترحيل المستند',
     );
   }
 
@@ -165,7 +179,7 @@ class DocumentPostingOrchestrator {
     String? companyId,
     String? userId,
   }) async {
-    final body = () async {
+    Future<OrchestrationResult> body() async {
       final inventoryResult = await _postingCoordinator.post(document: docRef);
 
       if (inventoryResult is PostStockShortage) {
@@ -183,9 +197,13 @@ class DocumentPostingOrchestrator {
       final cogsCost = (inventoryResult as PostSuccess).postedValue;
       final activeCompanyId = companyId ?? sale.baseCurrencyCode;
 
-      if (_integrationService != null) {
+      final integrationService = _integrationService;
+      final entryBuilder = _entryBuilder;
+      final journalPostingService = _journalPostingService;
+
+      if (integrationService != null) {
         final isCredit = sale.settlementType == PostingSettlementType.credit;
-        final postingResult = await _integrationService!.processOperationalTransaction(
+        final postingResult = await integrationService.processOperationalTransaction(
           OperationalAccountingRequest(
             companyId: activeCompanyId,
             sourceType: 'sale',
@@ -210,7 +228,7 @@ class DocumentPostingOrchestrator {
         }
 
         if (cogsCost > 0) {
-          final cogsResult = await _integrationService!.processOperationalTransaction(
+          final cogsResult = await integrationService.processOperationalTransaction(
             OperationalAccountingRequest(
               companyId: activeCompanyId,
               sourceType: 'sale_cogs',
@@ -238,25 +256,25 @@ class DocumentPostingOrchestrator {
           message:
               'تم ترحيل فاتورة المبيعات وحركات المخزون والقيود المحاسبية بنجاح',
         );
-      } else if (_entryBuilder != null && _journalPostingService != null) {
-        final drafts = await _entryBuilder!.buildDraftsFromSaleInvoice(
+      } else if (entryBuilder != null && journalPostingService != null) {
+        final drafts = await entryBuilder.buildDraftsFromSaleInvoice(
           sale: sale,
           calculatedCogsCost: cogsCost,
           isPosted: true,
         );
 
-        await _journalPostingService!.voidBySource(
+        await journalPostingService.voidBySource(
           sourceType: 'sale',
           sourceId: sale.uuid,
         );
-        await _journalPostingService!.voidBySource(
+        await journalPostingService.voidBySource(
           sourceType: 'sale_cogs',
           sourceId: sale.uuid,
         );
 
         String? primaryJournalUuid;
         for (final draft in drafts) {
-          final entry = await _journalPostingService!.post(draft);
+          final entry = await journalPostingService.post(draft);
           primaryJournalUuid ??= entry.uuid;
         }
 
@@ -272,11 +290,12 @@ class DocumentPostingOrchestrator {
           message: 'تم ترحيل حركات المخزون بنجاح (بدون ترحيل محاسبي)',
         );
       }
-    };
+    }
 
     try {
-      if (_orchestrator != null && companyId != null) {
-        return await _orchestrator!.runInTransaction(
+      final orchestrator = _orchestrator;
+      if (orchestrator != null && companyId != null) {
+        return await orchestrator.runInTransaction(
           (_) async => await body(),
           companyId: companyId,
           userId: userId,

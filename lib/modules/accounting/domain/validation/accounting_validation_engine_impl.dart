@@ -7,12 +7,10 @@ import 'accounting_validation_report.dart';
 /// Central Implementation of [AccountingValidationEnginePort] validating all 15 accounting rule categories.
 class AccountingValidationEngine implements AccountingValidationEnginePort {
   AccountingValidationEngine({
-    required AccountRepository accountRepository,
-    required AccountingPolicyPort policyPort,
+    required this._accountRepository,
+    required this._policyPort,
     Set<String>? postedSourceTracker,
-  })  : _accountRepository = accountRepository,
-        _policyPort = policyPort,
-        _postedSourceTracker = postedSourceTracker ?? {};
+  })  : _postedSourceTracker = postedSourceTracker ?? {};
 
   final AccountRepository _accountRepository;
   final AccountingPolicyPort _policyPort;

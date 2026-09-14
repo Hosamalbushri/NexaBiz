@@ -11,8 +11,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
   final NexabizDatabase _db;
   final String Function()? _readCompanyId;
 
-  PurchaseRepositoryImpl(this._db, {String Function()? readCompanyId})
-      : _readCompanyId = readCompanyId;
+  PurchaseRepositoryImpl(this._db, {this._readCompanyId});
 
   String get _currentCompanyId {
     final companyId = _readCompanyId?.call();

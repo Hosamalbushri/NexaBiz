@@ -25,4 +25,10 @@ class CashRegisters extends Table {
         {companyId, id},
         {companyId, code},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, account_id) REFERENCES accounts(company_id, id) ON DELETE SET NULL',
+        'FOREIGN KEY (company_id, warehouse_id) REFERENCES warehouses(company_id, id) ON DELETE SET NULL',
+      ];
 }

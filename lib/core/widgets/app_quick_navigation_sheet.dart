@@ -137,7 +137,7 @@ class AppQuickNavigationSheet extends ConsumerWidget {
                 height: 140,
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, __) => Center(
+              error: (_, _) => Center(
                 child: Text(
                   isAr ? 'خطأ في تحميل الاختصارات' : 'Error loading shortcuts',
                   style: theme.textTheme.bodyMedium,

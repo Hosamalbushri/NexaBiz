@@ -109,4 +109,13 @@ class Sales extends Table {
         {companyId, id},
         {companyId, saleNumber},
       ];
+
+  @override
+  List<String> get customConstraints => [
+        'FOREIGN KEY (company_id, customer_id) REFERENCES customers(company_id, id) ON DELETE SET NULL',
+        'FOREIGN KEY (company_id, warehouse_id) REFERENCES warehouses(company_id, id) ON DELETE SET NULL',
+        'FOREIGN KEY (company_id, voucher_book_id) REFERENCES voucher_books(company_id, id) ON DELETE SET NULL',
+        'FOREIGN KEY (company_id, customer_account_id) REFERENCES accounts(company_id, id) ON DELETE SET NULL',
+        'FOREIGN KEY (company_id, cash_account_id) REFERENCES accounts(company_id, id) ON DELETE SET NULL',
+      ];
 }

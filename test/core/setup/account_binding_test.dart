@@ -99,11 +99,11 @@ void main() {
       final binding = await resolver.bindAccount(
         companyId: companyA,
         requirement: inventoryRequirement,
-        accountUuid: validAccountA.uuid,
+        accountId: validAccountA.uuid,
       );
 
       expect(binding.status, equals(AccountBindingStatus.bound));
-      expect(binding.accountUuid, equals('uuid_acc_100'));
+      expect(binding.accountId, equals('uuid_acc_100'));
 
       final result = await resolver.resolveRequirement(
         companyId: companyA,
@@ -164,7 +164,7 @@ void main() {
           () async => resolver.bindAccount(
             companyId: companyA,
             requirement: inventoryRequirement,
-            accountUuid: validAccountB.uuid, // belongs to companyB
+            accountId: validAccountB.uuid, // belongs to companyB
           ),
           throwsA(isA<CrossCompanyAccountBindingException>()),
         );
@@ -177,7 +177,7 @@ void main() {
           companyId: companyA,
           packageId: 'inventory',
           requirementKey: 'inventory_asset_account',
-          accountUuid: 'uuid_acc_300', // deleted account
+          accountId: 'uuid_acc_300', // deleted account
           status: AccountBindingStatus.bound,
         ),
       );
@@ -198,7 +198,7 @@ void main() {
         await resolver.bindAccount(
           companyId: companyA,
           requirement: inventoryRequirement,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
         final bindings = await repository.getBindingsForPackage(
@@ -207,7 +207,7 @@ void main() {
         );
 
         expect(bindings.length, equals(1));
-        expect(bindings.first.accountUuid, equals('uuid_acc_100'));
+        expect(bindings.first.accountId, equals('uuid_acc_100'));
         expect(bindings.first.companyId, equals(companyA));
       },
     );
@@ -218,11 +218,11 @@ void main() {
         final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: inventoryRequirement,
-          accountUuid: validAccountA.uuid,
+          accountId: validAccountA.uuid,
         );
 
-        expect(binding.accountUuid, equals(validAccountA.uuid));
-        expect(binding.accountUuid, isNot(equals(validAccountA.accountCode)));
+        expect(binding.accountId, equals(validAccountA.uuid));
+        expect(binding.accountId, isNot(equals(validAccountA.accountCode)));
       },
     );
   });

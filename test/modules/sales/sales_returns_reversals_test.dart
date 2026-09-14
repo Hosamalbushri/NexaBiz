@@ -4,7 +4,7 @@ import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_validation_service.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/accounting_entry_builder.dart';
-import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -17,13 +17,13 @@ class FakeAccountValidationService implements AccountValidationService {
 
   @override
   Future<AccountValidationResult> validateAccountUuid(
-    String accountUuid,
+    String accountId,
   ) async {
     return AccountValidationResult.valid;
   }
 
   @override
-  Future<void> assertCanPost(String accountUuid) async {}
+  Future<void> assertCanPost(String accountId) async {}
 }
 
 class FakeAccountMappingResolver implements AccountMappingResolver {
@@ -35,31 +35,31 @@ class FakeAccountMappingResolver implements AccountMappingResolver {
     return AccountMapping({
       AccountRole.cash: const AccountRoleRef(
         role: AccountRole.cash,
-        accountUuid: 'acc_cash_101',
+        accountId: 'acc_cash_101',
         accountCode: '1010',
         accountName: 'Cash',
       ),
       AccountRole.receivable: const AccountRoleRef(
         role: AccountRole.receivable,
-        accountUuid: 'acc_rec_201',
+        accountId: 'acc_rec_201',
         accountCode: '1100',
         accountName: 'Customer Receivables',
       ),
       AccountRole.revenue: const AccountRoleRef(
         role: AccountRole.revenue,
-        accountUuid: 'acc_rev_401',
+        accountId: 'acc_rev_401',
         accountCode: '4010',
         accountName: 'Sales Revenue',
       ),
       AccountRole.cogs: const AccountRoleRef(
         role: AccountRole.cogs,
-        accountUuid: 'acc_cogs_501',
+        accountId: 'acc_cogs_501',
         accountCode: '5010',
         accountName: 'COGS',
       ),
       AccountRole.inventory: const AccountRoleRef(
         role: AccountRole.inventory,
-        accountUuid: 'acc_inv_120',
+        accountId: 'acc_inv_120',
         accountCode: '1200',
         accountName: 'Inventory Asset',
       ),
@@ -93,13 +93,13 @@ class SalesReturnTracker {
 
 void main() {
   group('SA-08 — Sales Returns, Cancellation & Reversal Integrity Tests', () {
-    late InventoryDatabase db;
+    late NexabizDatabase db;
     late CostLayerServiceImpl costLayerService;
     late AccountingEntryBuilder entryBuilder;
     const companyId = 'comp_ret_01';
 
     setUp(() {
-      db = InventoryDatabase(executor: NativeDatabase.memory());
+      db = NexabizDatabase.memory();
       costLayerService = CostLayerServiceImpl(
         db: db,
         readCompanyId: () => companyId,
@@ -229,7 +229,7 @@ void main() {
             id: makeUuid(70),
             itemCode: 'ITEM_RET_07',
             warehouseId: 'WH_RET_01',
-            movementUuid: makeUuid(170),
+            movementId: makeUuid(170),
             movementType: 'receipt',
             receivedDate: DateTime.now().subtract(const Duration(days: 5)),
             receivedQty: 10.0,
@@ -289,7 +289,7 @@ void main() {
             id: makeUuid(80),
             itemCode: 'ITEM_RET_08',
             warehouseId: 'WH_BRANCH_02',
-            movementUuid: makeUuid(180),
+            movementId: makeUuid(180),
             movementType: 'return_receipt',
             receivedDate: DateTime.now(),
             receivedQty: 5.0,
@@ -351,7 +351,7 @@ void main() {
           calculatedCogsCost: 0.0,
         );
         final cashLine = cashDrafts.first.lines.firstWhere((l) => l.debit > 0);
-        expect(cashLine.accountUuid, equals('acc_cash_101'));
+        expect(cashLine.accountId, equals('acc_cash_101'));
 
         final creditSale = SaleInvoicePostingData(
           uuid: makeUuid(92),
@@ -375,7 +375,7 @@ void main() {
         final creditLine = creditDrafts.first.lines.firstWhere(
           (l) => l.debit > 0,
         );
-        expect(creditLine.accountUuid, equals('acc_rec_201'));
+        expect(creditLine.accountId, equals('acc_rec_201'));
       },
     );
   });

@@ -83,13 +83,13 @@ class MockRulesEngine implements AccountingRulesEnginePort {
       voucherType: 'Sale',
       lines: [
         AccountingEffectLine(
-          accountUuid: 'acc_cash',
+          accountId: 'acc_cash',
           debit: transaction.amount,
           credit: 0,
           currencyCode: transaction.currencyCode,
         ),
         AccountingEffectLine(
-          accountUuid: 'acc_revenue',
+          accountId: 'acc_revenue',
           debit: 0,
           credit: transaction.amount,
           currencyCode: transaction.currencyCode,

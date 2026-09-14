@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/shared/contracts/errors/journal_exception.dart';
-import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
+import 'package:stock_count/core/database/nexabiz_database.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
@@ -46,7 +46,7 @@ class FailingLedgerPostingPort implements RpLedgerPostingPort {
 }
 
 void main() {
-  late ReceiptsPaymentsDatabase db;
+  late NexabizDatabase db;
   late FinancialTransactionRepositoryImpl repoCompanyA;
   late FinancialTransactionRepositoryImpl repoCompanyB;
   late CreateFinancialTransaction createTxn;
@@ -56,7 +56,7 @@ void main() {
   late TestVoucherBookPort voucherBookPort;
 
   setUp(() {
-    db = ReceiptsPaymentsDatabase(executor: NativeDatabase.memory());
+    db = NexabizDatabase.memory();
     voucherBookPort = TestVoucherBookPort();
 
     repoCompanyA = FinancialTransactionRepositoryImpl(
