@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/company/company_profile.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
@@ -143,13 +144,14 @@ class _CompanySetupPageState extends ConsumerState<CompanySetupPage> {
     final auth = ref.watch(authStateProvider);
 
     if (!auth.isAuthenticated) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('إعداد الشركة')),
+      return AppFormPage(
+        title: 'إعداد الشركة',
+        showBackButton: true,
+        showFormActions: false,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Card(
-              color: Theme.of(context).colorScheme.errorContainer,
+            child: AppCard(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -172,98 +174,89 @@ class _CompanySetupPageState extends ConsumerState<CompanySetupPage> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('إعداد بيانات الشركة')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_errorMessage != null) ...[
-                Card(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text(_errorMessage!),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'اسم الشركة *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) => val == null || val.trim().isEmpty
-                    ? 'يرجى إدخال اسم الشركة'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _legalNameController,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم القانوني / التجاري',
-                  border: OutlineInputBorder(),
+    return AppFormPage(
+      title: 'إعداد بيانات الشركة',
+      showBackButton: true,
+      onSubmit: _isSaving ? null : _saveCompany,
+      submitLabel: 'حفظ واستمرار',
+      isLoading: _isSaving,
+      body: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_errorMessage != null) ...[
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(_errorMessage!),
                 ),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _taxNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'الرقم الضريبي (VAT)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _commercialRegisterController,
-                decoration: const InputDecoration(
-                  labelText: 'السجل التجاري',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _cityController,
-                      decoration: const InputDecoration(
-                        labelText: 'المدينة',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(
-                        labelText: 'الدولة',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveCompany,
-                  child: _isSaving
-                      ? const CircularProgressIndicator()
-                      : const Text('حفظ واستمرار'),
-                ),
-              ),
             ],
-          ),
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'اسم الشركة *',
+                border: OutlineInputBorder(),
+              ),
+              validator: (val) => val == null || val.trim().isEmpty
+                  ? 'يرجى إدخال اسم الشركة'
+                  : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _legalNameController,
+              decoration: const InputDecoration(
+                labelText: 'الاسم القانوني / التجاري',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _taxNumberController,
+              decoration: const InputDecoration(
+                labelText: 'الرقم الضريبي (VAT)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _commercialRegisterController,
+              decoration: const InputDecoration(
+                labelText: 'السجل التجاري',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _cityController,
+                    decoration: const InputDecoration(
+                      labelText: 'المدينة',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    controller: _countryController,
+                    decoration: const InputDecoration(
+                      labelText: 'الدولة',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
   }
 }
+

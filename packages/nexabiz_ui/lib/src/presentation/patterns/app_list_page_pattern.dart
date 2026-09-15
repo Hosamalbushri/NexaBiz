@@ -1,18 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_spacing.dart';
-import '../../widgets/app_empty_state.dart';
-import '../../widgets/app_error_state.dart';
-import '../../widgets/app_loading.dart';
-import '../../widgets/app_page_header.dart';
-import '../../widgets/app_pagination_bar.dart';
-import '../../widgets/app_search_toolbar.dart';
-import 'app_page_shell.dart';
+import '../../layout/app_list_page.dart';
 
-/// Canonical List Page Pattern for NexaBiz ERP screens.
-///
-/// Standardizes Header (Centered Title + Back Button + Top Filter) + Search/Filter Toolbar
-/// + Content (Loading/Error/Empty/Table/Grid) + Pagination Bar + Primary FAB layout.
+/// Legacy compatible List Page pattern delegating to canonical [AppListPage].
 class AppListPagePattern<T> extends StatelessWidget {
   const AppListPagePattern({
     super.key,
@@ -89,74 +79,37 @@ class AppListPagePattern<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppPageShell(
+    return AppListPage<T>(
+      title: title,
+      subtitle: subtitle,
+      breadcrumbs: breadcrumbs,
+      headerActions: headerActions,
+      centerTitle: centerTitle,
+      showBackButton: showBackButton,
+      onBackTap: onBackTap,
+      items: items,
+      contentBuilder: contentBuilder,
+      searchController: searchController,
+      onSearchChanged: onSearchChanged,
+      onSearchClear: onSearchClear,
+      searchHint: searchHint,
+      onFilterTap: onFilterTap,
+      activeFilterCount: activeFilterCount,
+      activeFilterChips: activeFilterChips,
+      showFilterInHeader: showFilterInHeader,
+      isLoading: isLoading,
+      errorText: errorText,
+      onRetry: onRetry,
+      emptyTitle: emptyTitle,
+      emptySubtitle: emptySubtitle,
+      onEmptyAction: onEmptyAction,
+      emptyActionLabel: emptyActionLabel,
+      page: page,
+      totalPages: totalPages,
+      totalCount: totalCount,
+      pageSize: pageSize,
+      onPageChanged: onPageChanged,
       floatingActionButton: floatingActionButton,
-      scrollable: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppPageHeader(
-            title: title,
-            subtitle: subtitle,
-            breadcrumbs: breadcrumbs,
-            actions: headerActions,
-            centerTitle: centerTitle,
-            showBackButton: showBackButton,
-            onBack: onBackTap,
-            onFilterTap: showFilterInHeader ? onFilterTap : null,
-            filterCount: activeFilterCount,
-          ),
-          if (onSearchChanged != null || (!showFilterInHeader && onFilterTap != null))
-            AppSearchToolbar(
-              searchController: searchController,
-              onSearchChanged: onSearchChanged,
-              onSearchClear: onSearchClear,
-              searchHint: searchHint,
-              onFilterTap: showFilterInHeader ? null : onFilterTap,
-              filterCount: activeFilterCount,
-            ),
-          if (activeFilterChips.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(children: activeFilterChips),
-            ),
-          ],
-          Expanded(child: _buildBody(context)),
-          if (onPageChanged != null && totalPages > 1) ...[
-            const SizedBox(height: AppSpacing.md),
-            AppPaginationBar(
-              page: page,
-              totalPages: totalPages,
-              totalCount: totalCount,
-              pageSize: pageSize,
-              onPageChanged: onPageChanged!,
-            ),
-          ],
-        ],
-      ),
     );
-  }
-
-  Widget _buildBody(BuildContext context) {
-    if (isLoading && items.isEmpty) {
-      return const AppLoading();
-    }
-
-    if (errorText != null && items.isEmpty) {
-      return AppErrorState(message: errorText, onRetry: onRetry);
-    }
-
-    if (items.isEmpty) {
-      return AppEmptyState(
-        title: emptyTitle,
-        subtitle: emptySubtitle,
-        onAction: onEmptyAction,
-        actionLabel: emptyActionLabel,
-      );
-    }
-
-    return contentBuilder(context, items);
   }
 }

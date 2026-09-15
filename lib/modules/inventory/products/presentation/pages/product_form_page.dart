@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/notifications/presentation/providers/notifications_provider.dart';
@@ -239,320 +238,311 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: AppResponsiveScaffold(
-        appBar: CustomAppBar(
-          title: widget.isEditing ? l10n.productsEdit : l10n.productsAdd,
-          showBackButton: true,
-        ),
-        body: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(AppConstants.pagePadding),
-            children: [
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'بيانات المنتج الأساسية'
-                    : 'Basic Product Info',
-                icon: Icons.inventory_2_outlined,
-                topSpacing: 0,
-              ),
-              AppResponsiveForm(
-                maxColumns: 2,
-                children: [
-                  AppTextField(
-                    controller: _codeController,
-                    readOnly: true,
-                    label: l10n.codeLabel,
-                    required: true,
-                    helperText: l10n.productsItemCodeAutoHint,
-                    prefixIcon: Icons.qr_code_outlined,
-                    suffixIcon: _generatingCode
-                        ? const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+      child: AppFormPage(
+        title: widget.isEditing ? l10n.productsEdit : l10n.productsAdd,
+        formKey: _formKey,
+        showBackButton: true,
+        isLoading: _saving,
+        submitLabel: l10n.confirm,
+        onSubmit: _saving ? null : () => _save(context),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'بيانات المنتج الأساسية'
+                  : 'Basic Product Info',
+              icon: Icons.inventory_2_outlined,
+              topSpacing: 0,
+            ),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                AppTextField(
+                  controller: _codeController,
+                  readOnly: true,
+                  label: l10n.codeLabel,
+                  required: true,
+                  helperText: l10n.productsItemCodeAutoHint,
+                  prefixIcon: Icons.qr_code_outlined,
+                  suffixIcon: _generatingCode
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
                             ),
-                          )
-                        : Icon(
-                            Icons.lock_outline,
-                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                  ),
-                  AppTextField(
-                    controller: _nameController,
-                    label: l10n.itemName,
-                    required: true,
-                    prefixIcon: Icons.edit_note_outlined,
-                    textInputAction: TextInputAction.next,
-                    onChanged: widget.isEditing ? (_) => setState(() {}) : null,
-                  ),
-                  AppTextField(
-                    controller: _packSizeController,
-                    readOnly: widget.isEditing,
-                    label: l10n.packSize,
-                    required: true,
-                    hint: widget.isEditing
-                        ? null
-                        : l10n.packSizeRequiredHint,
-                    helperText: widget.isEditing
-                        ? l10n.productsFieldLockedHint
-                        : null,
-                    prefixIcon: Icons.numbers_outlined,
-                    suffixIcon: widget.isEditing
-                        ? Icon(
-                            Icons.lock_outline,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          )
-                        : null,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    textInputAction: TextInputAction.next,
-                  ),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final isAr = l10n.localeName == 'ar';
-                      final categoriesAsync = ref.watch(
-                        allCategoriesStreamProvider,
-                      );
-                      return categoriesAsync.when(
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, _) => const SizedBox.shrink(),
-                        data: (categories) {
-                          return AppSelectField<String?>(
-                            value: _categoryId,
-                            label: isAr
-                                ? 'تصنيف المنتج'
-                                : 'Product Category',
-                            prefixIcon: Icons.category_outlined,
-                            items: [
-                              AppSelectItem<String?>(
-                                value: null,
-                                label: isAr
-                                    ? '-- بدون تصنيف --'
-                                    : '-- Uncategorized --',
-                              ),
-                              ...categories.map((cat) {
-                                return AppSelectItem<String?>(
-                                  value: cat.id,
-                                  label: '${cat.name} (${cat.code})',
-                                );
-                              }),
-                            ],
-                            onChanged: (val) =>
-                                setState(() => _categoryId = val),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'التسعير والتكلفة'
-                    : 'Pricing & Unit Cost',
-                icon: Icons.payments_outlined,
-              ),
-              AppResponsiveForm(
-                maxColumns: 2,
-                children: [
-                  AppAmountField(
-                    value: _price,
-                    onChanged: (value) {
-                      setState(() {
-                        _price = value;
-                        _priceError = false;
-                      });
-                    },
-                    decimalPlaces: 2,
-                    emptyWhenZero: false,
-                    trimTrailingZeros: true,
-                    label: l10n.price,
-                    prefixText: null,
-                    hint: widget.isEditing
-                        ? l10n.productsFieldLockedHint
-                        : l10n.priceRequiredHint,
-                    readOnly: widget.isEditing,
-                    errorText: _priceError ? l10n.productsInvalidForm : null,
-                  ),
-                  AppAmountField(
-                    value: _unitCost,
-                    onChanged: (value) {
-                      setState(() {
-                        _unitCost = value;
-                      });
-                    },
-                    decimalPlaces: 2,
-                    emptyWhenZero: false,
-                    trimTrailingZeros: true,
-                    label: l10n.localeName == 'ar'
-                        ? 'تكلفة المنتج (للوحدة)'
-                        : 'Unit Cost',
-                    hint: widget.isEditing
-                        ? l10n.productsFieldLockedHint
-                        : l10n.localeName == 'ar'
-                        ? 'أدخل تكلفة التوريد الافتراضية'
-                        : 'Default unit cost',
-                    readOnly: widget.isEditing,
-                  ),
-                ],
-              ),
-              AppExpandableFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'سياسة احتساب التكلفة المتقدمة'
-                    : 'Advanced Cost Valuation',
-                subtitle: l10n.localeName == 'ar'
-                    ? 'تجاوز طريقة احتساب التكلفة المورثة من التصنيف والمستودع'
-                    : 'Overrides inherited category/warehouse cost method',
-                icon: Icons.calculate_outlined,
-                initiallyExpanded: _costValuationMethod != null,
-                badgeText: _costValuationMethod?.name.toUpperCase(),
-                child: AppSelectField<CostValuationMethod?>(
-                  value: _costValuationMethod,
-                  label: l10n.localeName == 'ar'
-                      ? 'طريقة احتساب التكلفة'
-                      : 'Cost Valuation Method',
-                  prefixIcon: Icons.calculate_outlined,
-                  items: [
-                    AppSelectItem<CostValuationMethod?>(
-                      value: null,
-                      label: l10n.localeName == 'ar'
-                          ? 'افتراضي (وراثة من التصنيف / المستودع)'
-                          : 'Inherit from Category / Warehouse',
-                    ),
-                    AppSelectItem<CostValuationMethod?>(
-                      value: CostValuationMethod.fifo,
-                      label: l10n.localeName == 'ar'
-                          ? 'FIFO - الوارد أولاً يصدر أولاً'
-                          : 'FIFO',
-                    ),
-                    AppSelectItem<CostValuationMethod?>(
-                      value: CostValuationMethod.lifo,
-                      label: l10n.localeName == 'ar'
-                          ? 'LIFO - الوارد أخيراً يصدر أولاً'
-                          : 'LIFO',
-                    ),
-                    AppSelectItem<CostValuationMethod?>(
-                      value: CostValuationMethod.weightedAverage,
-                      label: l10n.localeName == 'ar'
-                          ? 'Weighted Average - المتوسط المرجح'
-                          : 'Weighted Average',
-                    ),
-                  ],
-                  onChanged: (val) =>
-                      setState(() => _costValuationMethod = val),
+                        )
+                      : Icon(
+                          Icons.lock_outline,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                 ),
-              ),
-              if (widget.isEditing) ...[
-                const SizedBox(height: AppSpacing.md),
-                AppExpandableFormSection(
-                  title: l10n.productsCodesSection,
-                  subtitle: l10n.localeName == 'ar'
-                      ? 'طباعة وتوليد رموز الباركوم وQR'
-                      : 'Print & Generate Barcode and QR labels',
-                  icon: Icons.qr_code_2_outlined,
-                  initiallyExpanded: false,
-                  child: DefaultTabController(
-                    length: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Material(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          child: TabBar(
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            dividerColor: Colors.transparent,
-                            indicator: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer
-                                  .withValues(alpha: 0.85),
-                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                AppTextField(
+                  controller: _nameController,
+                  label: l10n.itemName,
+                  required: true,
+                  prefixIcon: Icons.edit_note_outlined,
+                  textInputAction: TextInputAction.next,
+                  onChanged: widget.isEditing ? (_) => setState(() {}) : null,
+                ),
+                AppTextField(
+                  controller: _packSizeController,
+                  readOnly: widget.isEditing,
+                  label: l10n.packSize,
+                  required: true,
+                  hint: widget.isEditing
+                      ? null
+                      : l10n.packSizeRequiredHint,
+                  helperText: widget.isEditing
+                      ? l10n.productsFieldLockedHint
+                      : null,
+                  prefixIcon: Icons.numbers_outlined,
+                  suffixIcon: widget.isEditing
+                      ? Icon(
+                          Icons.lock_outline,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        )
+                      : null,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.next,
+                ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final isAr = l10n.localeName == 'ar';
+                    final categoriesAsync = ref.watch(
+                      allCategoriesStreamProvider,
+                    );
+                    return categoriesAsync.when(
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
+                      data: (categories) {
+                        return AppSelectField<String?>(
+                          value: _categoryId,
+                          label: isAr
+                              ? 'تصنيف المنتج'
+                              : 'Product Category',
+                          prefixIcon: Icons.category_outlined,
+                          items: [
+                            AppSelectItem<String?>(
+                              value: null,
+                              label: isAr
+                                  ? '-- بدون تصنيف --'
+                                  : '-- Uncategorized --',
                             ),
-                            labelColor: theme.colorScheme.onPrimaryContainer,
-                            unselectedLabelColor:
-                                theme.colorScheme.onSurfaceVariant,
-                            tabs: [
-                              Tab(
-                                icon: const Icon(
-                                  Icons.view_week_outlined,
-                                  size: 20,
-                                ),
-                                text: l10n.productsBarcodeFormatBarcode,
-                              ),
-                              Tab(
-                                icon: const Icon(
-                                  Icons.qr_code_2_outlined,
-                                  size: 20,
-                                ),
-                                text: l10n.productsBarcodeFormatQr,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        SizedBox(
-                          height: 380,
-                          child: TabBarView(
-                            children: [
-                              _BarcodeCodeTab(
-                                controller: _barcodeController,
-                                generating: _generatingBarcode,
-                                printLoading:
-                                    _exportBusy == _CodeExportBusy.printBarcode,
-                                shareLoading:
-                                    _exportBusy == _CodeExportBusy.shareBarcode,
-                                disabled: _exporting || _generatingBarcode,
-                                onGenerate: _generateBarcode,
-                                onScan: () => _scanBarcodeIntoField(context),
-                                onPrint: () => _exportCode(
-                                  ProductCodeFormat.barcode,
-                                  share: false,
-                                ),
-                                onShare: () => _exportCode(
-                                  ProductCodeFormat.barcode,
-                                  share: true,
-                                ),
-                              ),
-                              _QrCodeTab(
-                                qrData: qrData,
-                                printLoading:
-                                    _exportBusy == _CodeExportBusy.printQr,
-                                shareLoading:
-                                    _exportBusy == _CodeExportBusy.shareQr,
-                                disabled: _exporting,
-                                onPrint: () => _exportCode(
-                                  ProductCodeFormat.qrCode,
-                                  share: false,
-                                ),
-                                onShare: () => _exportCode(
-                                  ProductCodeFormat.qrCode,
-                                  share: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                            ...categories.map((cat) {
+                              return AppSelectItem<String?>(
+                                value: cat.id,
+                                label: '${cat.name} (${cat.code})',
+                              );
+                            }),
+                          ],
+                          onChanged: (val) =>
+                              setState(() => _categoryId = val),
+                        );
+                      },
+                    );
+                  },
                 ),
               ],
+            ),
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'التسعير والتكلفة'
+                  : 'Pricing & Unit Cost',
+              icon: Icons.payments_outlined,
+            ),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                AppAmountField(
+                  value: _price,
+                  onChanged: (value) {
+                    setState(() {
+                      _price = value;
+                      _priceError = false;
+                    });
+                  },
+                  decimalPlaces: 2,
+                  emptyWhenZero: false,
+                  trimTrailingZeros: true,
+                  label: l10n.price,
+                  prefixText: null,
+                  hint: widget.isEditing
+                      ? l10n.productsFieldLockedHint
+                      : l10n.priceRequiredHint,
+                  readOnly: widget.isEditing,
+                  errorText: _priceError ? l10n.productsInvalidForm : null,
+                ),
+                AppAmountField(
+                  value: _unitCost,
+                  onChanged: (value) {
+                    setState(() {
+                      _unitCost = value;
+                    });
+                  },
+                  decimalPlaces: 2,
+                  emptyWhenZero: false,
+                  trimTrailingZeros: true,
+                  label: l10n.localeName == 'ar'
+                      ? 'تكلفة المنتج (للوحدة)'
+                      : 'Unit Cost',
+                  hint: widget.isEditing
+                      ? l10n.productsFieldLockedHint
+                      : l10n.localeName == 'ar'
+                      ? 'أدخل تكلفة التوريد الافتراضية'
+                      : 'Default unit cost',
+                  readOnly: widget.isEditing,
+                ),
+              ],
+            ),
+            AppExpandableFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'سياسة احتساب التكلفة المتقدمة'
+                  : 'Advanced Cost Valuation',
+              subtitle: l10n.localeName == 'ar'
+                  ? 'تجاوز طريقة احتساب التكلفة المورثة من التصنيف والمستودع'
+                  : 'Overrides inherited category/warehouse cost method',
+              icon: Icons.calculate_outlined,
+              initiallyExpanded: _costValuationMethod != null,
+              badgeText: _costValuationMethod?.name.toUpperCase(),
+              child: AppSelectField<CostValuationMethod?>(
+                value: _costValuationMethod,
+                label: l10n.localeName == 'ar'
+                    ? 'طريقة احتساب التكلفة'
+                    : 'Cost Valuation Method',
+                prefixIcon: Icons.calculate_outlined,
+                items: [
+                  AppSelectItem<CostValuationMethod?>(
+                    value: null,
+                    label: l10n.localeName == 'ar'
+                        ? 'افتراضي (وراثة من التصنيف / المستودع)'
+                        : 'Inherit from Category / Warehouse',
+                  ),
+                  AppSelectItem<CostValuationMethod?>(
+                    value: CostValuationMethod.fifo,
+                    label: l10n.localeName == 'ar'
+                        ? 'FIFO - الوارد أولاً يصدر أولاً'
+                        : 'FIFO',
+                  ),
+                  AppSelectItem<CostValuationMethod?>(
+                    value: CostValuationMethod.lifo,
+                    label: l10n.localeName == 'ar'
+                        ? 'LIFO - الوارد أخيراً يصدر أولاً'
+                        : 'LIFO',
+                  ),
+                  AppSelectItem<CostValuationMethod?>(
+                    value: CostValuationMethod.weightedAverage,
+                    label: l10n.localeName == 'ar'
+                        ? 'Weighted Average - المتوسط المرجح'
+                        : 'Weighted Average',
+                  ),
+                ],
+                onChanged: (val) =>
+                    setState(() => _costValuationMethod = val),
+              ),
+            ),
+            if (widget.isEditing) ...[
+              const SizedBox(height: AppSpacing.md),
+              AppExpandableFormSection(
+                title: l10n.productsCodesSection,
+                subtitle: l10n.localeName == 'ar'
+                    ? 'طباعة وتوليد رموز الباركوم وQR'
+                    : 'Print & Generate Barcode and QR labels',
+                icon: Icons.qr_code_2_outlined,
+                initiallyExpanded: false,
+                child: DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Material(
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        child: TabBar(
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          dividerColor: Colors.transparent,
+                          indicator: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer
+                                .withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                          labelColor: theme.colorScheme.onPrimaryContainer,
+                          unselectedLabelColor:
+                              theme.colorScheme.onSurfaceVariant,
+                          tabs: [
+                            Tab(
+                              icon: const Icon(
+                                Icons.view_week_outlined,
+                                size: 20,
+                              ),
+                              text: l10n.productsBarcodeFormatBarcode,
+                            ),
+                            Tab(
+                              icon: const Icon(
+                                Icons.qr_code_2_outlined,
+                                size: 20,
+                              ),
+                              text: l10n.productsBarcodeFormatQr,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      SizedBox(
+                        height: 380,
+                        child: TabBarView(
+                          children: [
+                            _BarcodeCodeTab(
+                              controller: _barcodeController,
+                              generating: _generatingBarcode,
+                              printLoading:
+                                  _exportBusy == _CodeExportBusy.printBarcode,
+                              shareLoading:
+                                  _exportBusy == _CodeExportBusy.shareBarcode,
+                              disabled: _exporting || _generatingBarcode,
+                              onGenerate: _generateBarcode,
+                              onScan: () => _scanBarcodeIntoField(context),
+                              onPrint: () => _exportCode(
+                                ProductCodeFormat.barcode,
+                                share: false,
+                              ),
+                              onShare: () => _exportCode(
+                                ProductCodeFormat.barcode,
+                                share: true,
+                              ),
+                            ),
+                            _QrCodeTab(
+                              qrData: qrData,
+                              printLoading:
+                                  _exportBusy == _CodeExportBusy.printQr,
+                              shareLoading:
+                                  _exportBusy == _CodeExportBusy.shareQr,
+                              disabled: _exporting,
+                              onPrint: () => _exportCode(
+                                ProductCodeFormat.qrCode,
+                                share: false,
+                              ),
+                              onShare: () => _exportCode(
+                                ProductCodeFormat.qrCode,
+                                share: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
-          ),
-        ),
-        bottomActions: AppBottomActions(
-          child: AppButton(
-            label: l10n.confirm,
-            icon: Icons.save_outlined,
-            expand: true,
-            isLoading: _saving,
-            onPressed: _saving ? null : () => _save(context),
-          ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
         ),
       ),
     );

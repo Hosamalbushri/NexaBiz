@@ -1,16 +1,20 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../theme/tokens/tokens.dart';
+import 'app_icon_button.dart';
 
-/// Canonical page header composite for NexaBiz ERP screens.
-///
-/// Layout structure:
-/// - Right Side (`Alignment.centerRight`): Back Button & Header Actions
-/// - Center (`Alignment.center`): Title & Subtitle (when [centerTitle] is true)
-/// - Left Side (`Alignment.centerLeft`): Filter Button (or custom leading widget)
-///
-/// Both Back and Filter buttons use the exact same [_HeaderActionButton] primitive.
+/// Resolved font size for page header titles based on title length,
+/// matching the exact [CustomAppBarTitleSize] logic of the application.
+double _resolveTitleFontSize(String title) {
+  final length = title.trim().length;
+  if (length <= 14) return 22.0;
+  if (length <= 24) return 18.0;
+  return 16.0;
+}
+
+/// Canonical page header composite for NexaBiz ERP screens built on [shadcn_flutter],
+/// visually matching the application's canonical [CustomAppBar] formatting and scaling.
 class AppPageHeader extends StatelessWidget {
   const AppPageHeader({
     super.key,
@@ -24,6 +28,9 @@ class AppPageHeader extends StatelessWidget {
     this.onBack,
     this.onFilterTap,
     this.filterCount = 0,
+    this.useSurfaceContainer = true,
+    this.onSearchTap,
+    this.isSearching = false,
   });
 
   final String title;
@@ -36,230 +43,230 @@ class AppPageHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final VoidCallback? onFilterTap;
   final int filterCount;
+  final bool useSurfaceContainer;
+
+  // Search parameters
+  final VoidCallback? onSearchTap;
+  final bool isSearching;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final shadcnTheme = shadcn.Theme.of(context);
+    final theme = shadcn.Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final canPop = Navigator.canPop(context);
     final shouldShowBack = showBackButton ?? canPop;
 
     final backButton = shouldShowBack
-        ? _HeaderActionButton(
-            icon: Icons.arrow_back_rounded,
+        ? AppIconButton(
+            variant: AppIconButtonVariant.chip,
+            iconSize: 18.0,
+            icon: isRtl
+                ? shadcn.LucideIcons.arrowRight
+                : shadcn.LucideIcons.arrowLeft,
             tooltip: 'رجوع',
             onPressed: onBack ?? () => Navigator.of(context).maybePop(),
           )
         : null;
 
     final filterButton = onFilterTap != null
-        ? Stack(
-            clipBehavior: Clip.none,
-            children: [
-              _HeaderActionButton(
-                icon: Icons.tune_rounded,
-                tooltip: 'تصفية',
-                onPressed: onFilterTap,
-                isActive: filterCount > 0,
-              ),
-              if (filterCount > 0)
-                Positioned(
-                  top: -2,
-                  left: -2,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '$filterCount',
-                      style: TextStyle(
-                        color: scheme.onPrimary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+        ? AppIconButton(
+            variant: AppIconButtonVariant.chip,
+            iconSize: 18.0,
+            icon: shadcn.LucideIcons.slidersHorizontal,
+            tooltip: 'تصفية',
+            badgeCount: filterCount > 0 ? filterCount : null,
+            onPressed: onFilterTap,
           )
         : null;
 
-    final leftWidget = leading ?? filterButton;
+    final searchButton = onSearchTap != null
+        ? AppIconButton(
+            variant: AppIconButtonVariant.chip,
+            iconSize: 18.0,
+            icon: isSearching ? shadcn.LucideIcons.x : shadcn.LucideIcons.search,
+            tooltip: isSearching ? 'إغلاق البحث' : 'بحث',
+            onPressed: onSearchTap,
+          )
+        : null;
 
-    final rightCluster = <Widget>[
-      if (backButton != null) backButton,
-      if (actions != null) ...actions!,
+    final startCluster = <Widget>[
+      ?backButton,
+      ?leading,
     ];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment:
-            centerTitle ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-        children: [
-          if (breadcrumbs != null && breadcrumbs!.isNotEmpty) ...[
-            Row(
-              mainAxisAlignment:
-                  centerTitle ? MainAxisAlignment.center : MainAxisAlignment.start,
-              children: [
-                for (int i = 0; i < breadcrumbs!.length; i++) ...[
-                  Text(
-                    breadcrumbs![i],
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: i == breadcrumbs!.length - 1
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant,
-                      fontWeight: i == breadcrumbs!.length - 1
-                          ? FontWeight.w700
-                          : FontWeight.w400,
+    final endCluster = <Widget>[
+      ?searchButton,
+      ?filterButton,
+      ...?actions,
+    ];
+
+    final fontSize = _resolveTitleFontSize(title);
+
+    final titleWidget = FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: centerTitle
+          ? Alignment.center
+          : AlignmentDirectional.centerStart,
+      child: Text(
+        title,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.visible,
+        textAlign: centerTitle ? TextAlign.center : TextAlign.start,
+        style: theme.typography.h3.copyWith(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.6,
+          height: 1.05,
+          color: colorScheme.foreground,
+        ),
+      ),
+    );
+
+    final headerContent = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment:
+          centerTitle ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      children: [
+        if (breadcrumbs != null && breadcrumbs!.isNotEmpty) ...[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment:
+                centerTitle ? MainAxisAlignment.center : MainAxisAlignment.start,
+            children: [
+              for (int i = 0; i < breadcrumbs!.length; i++) ...[
+                Text(
+                  breadcrumbs![i],
+                  style: theme.typography.small.copyWith(
+                    color: i == breadcrumbs!.length - 1
+                        ? colorScheme.primary
+                        : colorScheme.mutedForeground,
+                    fontWeight: i == breadcrumbs!.length - 1
+                        ? FontWeight.w700
+                        : FontWeight.w400,
+                  ),
+                ),
+                if (i < breadcrumbs!.length - 1)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xxs,
+                    ),
+                    child: Icon(
+                      shadcn.LucideIcons.chevronRight,
+                      size: 14,
+                      color: colorScheme.mutedForeground,
                     ),
                   ),
-                  if (i < breadcrumbs!.length - 1)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xxs,
-                      ),
-                      child: Icon(
-                        Icons.chevron_right_rounded,
-                        size: 14,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
               ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-          ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
 
-          // Top Header Row with centered title, left-aligned filter, and right-aligned back button
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              if (leftWidget != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: leftWidget,
-                ),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: leftWidget != null || rightCluster.isNotEmpty ? 52.0 : 0.0,
-                ),
-                child: Column(
+        // Top Header Row matching CustomAppBar geometry and layout
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            if (startCluster.isNotEmpty)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: centerTitle
-                      ? CrossAxisAlignment.center
-                      : CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      textAlign: centerTitle ? TextAlign.center : TextAlign.start,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: scheme.onSurface,
-                          ) ??
-                          shadcnTheme.typography.large.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        textAlign:
-                            centerTitle ? TextAlign.center : TextAlign.start,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ) ??
-                            shadcnTheme.typography.small.copyWith(
-                              color: shadcnTheme.colorScheme.mutedForeground,
-                            ),
-                      ),
+                    for (var i = 0; i < startCluster.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 8),
+                      startCluster[i],
                     ],
                   ],
                 ),
               ),
-              if (rightCluster.isNotEmpty)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = 0; i < rightCluster.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        rightCluster[i],
-                      ],
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: startCluster.isNotEmpty || endCluster.isNotEmpty ? 52.0 : 0.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: centerTitle
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
+                children: [
+                  titleWidget,
+                  if (subtitle != null && subtitle!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: centerTitle
+                          ? Alignment.center
+                          : AlignmentDirectional.centerStart,
+                      child: Text(
+                        subtitle!,
+                        textAlign:
+                            centerTitle ? TextAlign.center : TextAlign.start,
+                        maxLines: 1,
+                        style: theme.typography.xSmall.copyWith(
+                          fontSize: 12.0,
+                          color: colorScheme.mutedForeground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (endCluster.isNotEmpty)
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < endCluster.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 8),
+                      endCluster[i],
                     ],
-                  ),
+                  ],
                 ),
-            ],
+              ),
+          ],
+        ),
+      ],
+    );
+
+    if (!useSurfaceContainer) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+        child: headerContent,
+      );
+    }
+
+    final backgroundColor = isDark
+        ? colorScheme.muted
+        : colorScheme.card;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(24.0),
+        border: Border.all(
+          color: colorScheme.border.withValues(alpha: isDark ? 0.6 : 0.4),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withValues(alpha: isDark ? 0.18 : 0.12),
+            blurRadius: 19.2,
+            offset: const Offset(0, 3.6),
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Header action button mirroring the exact [CustomAppBarAction] design.
-class _HeaderActionButton extends StatefulWidget {
-  const _HeaderActionButton({
-    required this.icon,
-    required this.tooltip,
-    this.onPressed,
-    this.isActive = false,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback? onPressed;
-  final bool isActive;
-
-  @override
-  State<_HeaderActionButton> createState() => _HeaderActionButtonState();
-}
-
-class _HeaderActionButtonState extends State<_HeaderActionButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final enabled = widget.onPressed != null;
-    final accent = widget.isActive ? scheme.primary : scheme.primary;
-
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: widget.tooltip,
-      child: Tooltip(
-        message: widget.tooltip,
-        child: AnimatedScale(
-          scale: _pressed ? 0.94 : 1,
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOutCubic,
-          child: Material(
-            color: scheme.primary.withValues(alpha: widget.isActive ? 0.2 : 0.12),
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              onTap: enabled ? widget.onPressed : null,
-              onHighlightChanged: (val) => setState(() => _pressed = val),
-              borderRadius: BorderRadius.circular(14),
-              child: SizedBox(
-                width: 42,
-                height: 42,
-                child: Icon(
-                  widget.icon,
-                  size: 22,
-                  color: accent,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+      child: headerContent,
     );
   }
 }

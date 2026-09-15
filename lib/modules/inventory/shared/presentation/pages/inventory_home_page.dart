@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
@@ -40,66 +39,50 @@ class InventoryHomePage extends ConsumerWidget {
           ),
         ],
       ),
-      body: servicesAsync.when(
-        loading: () => const AppLoading(),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.somethingWentWrong),
-                const SizedBox(height: AppSpacing.md),
-                AppButton(label: l10n.retry, onPressed: controller.reload),
-              ],
-            ),
-          ),
-        ),
-        data: (_) {
-          final services = controller.resolveServices();
-          return AppContentConstraint(
-            child: ListView(
-              padding: AppConstants.pageInsets(context),
-            children: [
-              const AppMissingCurrencyGuardBanner(),
-              AppModuleHubHeader(
-                title: l10n.servicesTitle,
-                subtitle: l10n.moduleInventoryDescription,
-                trailing: AppViewModeToggle<ModuleHubViewMode>(
-                  options: [
-                    AppViewModeOption(
-                      value: ModuleHubViewMode.grid,
-                      icon: Icons.grid_view_rounded,
-                      tooltip: l10n.localeName == 'ar' ? 'عرض شبكي' : 'Grid View',
-                    ),
-                    AppViewModeOption(
-                      value: ModuleHubViewMode.list,
-                      icon: Icons.view_list_rounded,
-                      tooltip: l10n.localeName == 'ar' ? 'عرض قائمة' : 'List View',
-                    ),
-                  ],
-                  selected: ref.watch(moduleHubViewModeProvider),
-                  onChanged: (mode) =>
-                      ref.read(moduleHubViewModeProvider.notifier).setMode(mode),
-                ),
+      body: AppDashboardPage(
+        isLoading: servicesAsync.isLoading && !servicesAsync.hasValue,
+        errorText: servicesAsync.hasError ? l10n.somethingWentWrong : null,
+        onRetry: controller.reload,
+        statsGrid: const AppMissingCurrencyGuardBanner(),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppModuleHubHeader(
+              title: l10n.servicesTitle,
+              subtitle: l10n.moduleInventoryDescription,
+              trailing: AppViewModeToggle<ModuleHubViewMode>(
+                options: [
+                  AppViewModeOption(
+                    value: ModuleHubViewMode.grid,
+                    icon: Icons.grid_view_rounded,
+                    tooltip: l10n.localeName == 'ar' ? 'عرض شبكي' : 'Grid View',
+                  ),
+                  AppViewModeOption(
+                    value: ModuleHubViewMode.list,
+                    icon: Icons.view_list_rounded,
+                    tooltip: l10n.localeName == 'ar' ? 'عرض قائمة' : 'List View',
+                  ),
+                ],
+                selected: ref.watch(moduleHubViewModeProvider),
+                onChanged: (mode) =>
+                    ref.read(moduleHubViewModeProvider.notifier).setMode(mode),
               ),
-              const SizedBox(height: AppSpacing.lg),
-              if (services.isEmpty)
-                _EmptyPinnedServices(
-                  onCustomize: () => _openCustomize(context, ref),
-                )
-              else
-                _InventoryServiceGrid(
-                  services: services,
-                  onOpen: (service) => context.go(service.path),
-                  onReorder: controller.reorder,
-                  onCustomize: () => _openCustomize(context, ref),
-                  customizeLabel: l10n.inventoryCustomizeServices,
-                ),
-            ],
-          ),
-        );
-        },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            if (controller.resolveServices().isEmpty)
+              _EmptyPinnedServices(
+                onCustomize: () => _openCustomize(context, ref),
+              )
+            else
+              _InventoryServiceGrid(
+                services: controller.resolveServices(),
+                onOpen: (service) => context.go(service.path),
+                onReorder: controller.reorder,
+                onCustomize: () => _openCustomize(context, ref),
+                customizeLabel: l10n.inventoryCustomizeServices,
+              ),
+          ],
+        ),
       ),
     );
   }

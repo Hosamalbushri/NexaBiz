@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -44,14 +45,10 @@ class DashboardRecentOperations extends ConsumerWidget {
               ),
             ),
             const Spacer(),
-            TextButton(
+            AppButton(
+              label: l10n.dashboardRecentOperationsViewAll,
+              variant: AppButtonVariant.text,
               onPressed: () => context.push(SalesRoutes.list),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(l10n.dashboardRecentOperationsViewAll),
             ),
           ],
         ),

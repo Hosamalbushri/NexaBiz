@@ -4,16 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 
+import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
 import '../providers/stock_transfer_providers.dart';
 import '../providers/warehouse_providers.dart';
 
 class StockTransfersListPage extends ConsumerWidget {
-  const StockTransfersListPage({super.key, this.embedInTab = false});
-
-  final bool embedInTab;
+  const StockTransfersListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -194,23 +192,20 @@ class StockTransfersListPage extends ConsumerWidget {
       },
     );
 
-    if (embedInTab) {
-      return content;
-    }
-
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.localeName == 'ar'
-            ? 'التحويل بين المستودعات'
-            : 'Stock Transfers',
-        showBackButton: true,
-      ),
+    return AppListPage<StockTransfer>(
+      title: l10n.localeName == 'ar' ? 'التحويل بين المستودعات' : 'Stock Transfers',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => InventoryRoutes.pushStockTransfersNew(context),
         icon: const Icon(Icons.swap_horiz_rounded),
         label: Text(l10n.localeName == 'ar' ? 'تحويل جديد' : 'New Transfer'),
       ),
-      body: content,
+      isLoading: transfersAsync.isLoading && !transfersAsync.hasValue,
+      errorText: transfersAsync.error?.toString(),
+      emptyTitle: l10n.localeName == 'ar' ? 'لا يوجد أمر تحويل مخزني' : 'No Stock Transfers',
+      emptyActionLabel: l10n.localeName == 'ar' ? 'إنشاء أول تحويل مخزني' : 'Create First Transfer',
+      onEmptyAction: () => InventoryRoutes.pushStockTransfersNew(context),
+      items: transfersAsync.valueOrNull ?? const [],
+      contentBuilder: (context, transfers) => content,
     );
   }
 

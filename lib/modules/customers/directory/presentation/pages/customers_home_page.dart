@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
@@ -37,11 +36,11 @@ class CustomersHomePage extends ConsumerWidget {
           ),
         ],
       ),
-      body: AppContentConstraint(
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
+      body: AppDashboardPage(
+        statsGrid: const AppMissingCurrencyGuardBanner(),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const AppMissingCurrencyGuardBanner(),
             AppModuleHubHeader(
               title: l10n.servicesTitle,
               subtitle: l10n.moduleCustomersDescription,
@@ -64,34 +63,30 @@ class CustomersHomePage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            ...[
-              ref
-                  .watch(customersParentAccountProvider)
-                  .when(
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, _) => const SizedBox.shrink(),
-                    data: (parent) {
-                      if (parent == null) {
-                        return Text(
-                          l10n.customersParentAccountNotSet,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.error,
-                          ),
-                        );
-                      }
+            ref.watch(customersParentAccountProvider).when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                  data: (parent) {
+                    if (parent == null) {
                       return Text(
-                        l10n.customersParentAccountCurrent(
-                          parent.code,
-                          parent.name,
-                        ),
+                        l10n.customersParentAccountNotSet,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.35,
+                          color: theme.colorScheme.error,
                         ),
                       );
-                    },
-                  ),
-            ],
+                    }
+                    return Text(
+                      l10n.customersParentAccountCurrent(
+                        parent.code,
+                        parent.name,
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.35,
+                      ),
+                    );
+                  },
+                ),
             const SizedBox(height: AppSpacing.lg),
             AppModuleHubView(
               isGrid: isGrid,

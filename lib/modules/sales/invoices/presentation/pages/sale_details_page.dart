@@ -91,37 +91,21 @@ class _SaleDetailsPageState extends ConsumerState<SaleDetailsPage> {
     _syncLoader(asyncSale.isLoading, l10n.salesLoadingInvoice);
 
     return asyncSale.when(
-      loading: () => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.salesDetailsTitle,
-          showBackButton: true,
-          onBack: () => SalesRoutes.backToList(context),
-        ),
-        body: const SizedBox.expand(),
+      loading: () => AppDetailsPage(
+        title: l10n.salesDetailsTitle,
+        isLoading: true,
       ),
-      error: (error, _) => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.salesDetailsTitle,
-          showBackButton: true,
-          onBack: () => SalesRoutes.backToList(context),
-        ),
-        body: AppErrorState(
-          message: saleErrorMessage(l10n, error),
-          onRetry: () => ref.invalidate(saleByIdProvider(widget.saleId)),
-        ),
+      error: (error, _) => AppDetailsPage(
+        title: l10n.salesDetailsTitle,
+        error: saleErrorMessage(l10n, error),
+        onRetry: () => ref.invalidate(saleByIdProvider(widget.saleId)),
       ),
       data: (sale) {
         if (sale == null) {
-          return Scaffold(
-            appBar: CustomAppBar(
-              title: l10n.salesDetailsTitle,
-              showBackButton: true,
-              onBack: () => SalesRoutes.backToList(context),
-            ),
-            body: AppErrorState(
-              message: l10n.salesNotFound,
-              onRetry: () => ref.invalidate(saleByIdProvider(widget.saleId)),
-            ),
+          return AppDetailsPage(
+            title: l10n.salesDetailsTitle,
+            error: l10n.salesNotFound,
+            onRetry: () => ref.invalidate(saleByIdProvider(widget.saleId)),
           );
         }
         return _SaleDetailsBody(sale: sale);
@@ -241,12 +225,9 @@ class _SaleDetailsBody extends ConsumerWidget {
     final canDuplicate = auth.hasAnyPermission(SalesPermissions.duplicate);
     final canExport = auth.hasAnyPermission(SalesPermissions.export);
 
-    return Scaffold(
-      backgroundColor: scheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: formatSaleNumberPrimary(sale.saleNumber),
-        showBackButton: true,
-        actions: [
+    return AppDetailsPage(
+      title: formatSaleNumberPrimary(sale.saleNumber),
+      actions: [
           if (sale.saleStatus.isEditable && canUpdate)
             CustomAppBarAction(
               icon: Icons.edit_outlined,
@@ -356,7 +337,6 @@ class _SaleDetailsBody extends ConsumerWidget {
               ),
             ),
         ],
-      ),
       bottomNavigationBar: (showPost && canPost)
           ? Material(
               color: scheme.surface,

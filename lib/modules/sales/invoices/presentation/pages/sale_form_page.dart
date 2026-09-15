@@ -355,16 +355,14 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
 
   Widget _shell({required Widget body, List<Widget>? actions}) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: Scaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: _isEdit ? l10n.salesEditTitle : l10n.salesCreateTitle,
-          showBackButton: true,
-          actions: actions,
-        ),
+      child: AppFormPage(
+        title: _isEdit ? l10n.salesEditTitle : l10n.salesCreateTitle,
+        showBackButton: true,
+        actions: actions,
+        showFormActions: false,
+        isPageLoading: _loading,
         body: body,
       ),
     );

@@ -295,9 +295,10 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                       },
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    TextButton(
+                    AppButton(
+                      label: l10n.serverSetupBackToChoice,
+                      variant: AppButtonVariant.text,
                       onPressed: () => context.go(AppRoutes.serverSetup),
-                      child: Text(l10n.serverSetupBackToChoice),
                     ),
                   ],
 
@@ -344,20 +345,20 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                       onPressed: () => coordinator.retry(),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                      ),
+                    AppButton(
+                      label: 'Change Server URL',
+                      variant: AppButtonVariant.outlined,
+                      expand: true,
                       onPressed: () => context.go(AppRoutes.serverSetup),
-                      child: const Text('Change Server URL'),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    TextButton(
+                    AppButton(
+                      label: 'Continue Offline',
+                      variant: AppButtonVariant.text,
                       onPressed: () {
                         coordinator.continueOffline();
                         context.go(AppRoutes.dashboard);
                       },
-                      child: const Text('Continue Offline'),
                     ),
                   ],
                 ],

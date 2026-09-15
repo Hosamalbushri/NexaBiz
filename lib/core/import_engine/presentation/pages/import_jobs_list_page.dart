@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import '../../import_engine.dart';
 
 /// Reusable Import Jobs overview screen displaying active and past import jobs.
@@ -15,55 +16,38 @@ class ImportJobsListPage extends ConsumerWidget {
     final worker = ref.watch(importBackgroundWorkerProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Import Jobs'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(importJobRepositoryProvider);
-            },
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<ImportJob>>(
-        future: repo.getJobsForCompany(companyId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final jobs = snapshot.data ?? [];
-          if (jobs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.inbox_outlined,
-                    size: 64,
-                    color: theme.colorScheme.outline,
-                  ),
-                  const SizedBox(height: 16.0),
-                  Text(
-                    'No import jobs found.',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ],
-              ),
+    return FutureBuilder<List<ImportJob>>(
+      future: repo.getJobsForCompany(companyId),
+      builder: (context, snapshot) {
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+        final jobs = snapshot.data;
+        return AppListPage<ImportJob>(
+          title: 'Import Jobs',
+          headerActions: [
+            AppIconButton(
+              icon: Icons.refresh,
+              onPressed: () {
+                ref.invalidate(importJobRepositoryProvider);
+              },
+            ),
+          ],
+          isLoading: isLoading && (jobs == null),
+          errorText: snapshot.error?.toString(),
+          onRetry: () => ref.invalidate(importJobRepositoryProvider),
+          emptyTitle: 'No import jobs found.',
+          items: jobs ?? const [],
+          contentBuilder: (context, itemList) {
+            return ListView.separated(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: itemList.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12.0),
+              itemBuilder: (context, idx) {
+                return _buildJobCard(context, itemList[idx], worker, theme);
+              },
             );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: jobs.length,
-            itemBuilder: (context, idx) {
-              final job = jobs[idx];
-              return _buildJobCard(context, job, worker, theme);
-            },
-          );
-        },
-      ),
+          },
+        );
+      },
     );
   }
 
@@ -76,8 +60,7 @@ class ImportJobsListPage extends ConsumerWidget {
     final statusColor = _getStatusColor(job.status);
     final profileId = job.profile?.profileId ?? 'generic';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12.0),
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -147,42 +130,47 @@ class ImportJobsListPage extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (job.status == ImportJobStatus.processing)
-                    TextButton.icon(
+                    AppButton(
                       key: Key('job_pause_btn_${job.jobId}'),
-                      icon: const Icon(Icons.pause),
-                      label: const Text('Pause'),
+                      icon: Icons.pause,
+                      label: 'Pause',
+                      variant: AppButtonVariant.text,
                       onPressed: () async =>
                           worker.pause(job.jobId, companyId: job.companyId),
                     ),
                   if (job.status == ImportJobStatus.paused)
-                    TextButton.icon(
+                    AppButton(
                       key: Key('job_resume_btn_${job.jobId}'),
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('Resume'),
+                      icon: Icons.play_arrow,
+                      label: 'Resume',
+                      variant: AppButtonVariant.text,
                       onPressed: () async =>
                           worker.resume(job.jobId, companyId: job.companyId),
                     ),
                   if (job.status == ImportJobStatus.processing ||
                       job.status == ImportJobStatus.queued)
-                    TextButton.icon(
+                    AppButton(
                       key: Key('job_cancel_btn_${job.jobId}'),
-                      icon: const Icon(Icons.cancel_outlined),
-                      label: const Text('Cancel'),
+                      icon: Icons.cancel_outlined,
+                      label: 'Cancel',
+                      variant: AppButtonVariant.text,
                       onPressed: () async =>
                           worker.cancel(job.jobId, companyId: job.companyId),
                     ),
                   if (job.status == ImportJobStatus.failed)
-                    TextButton.icon(
+                    AppButton(
                       key: Key('job_retry_btn_${job.jobId}'),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      icon: Icons.refresh,
+                      label: 'Retry',
+                      variant: AppButtonVariant.text,
                       onPressed: () async =>
                           worker.retry(job.jobId, companyId: job.companyId),
                     ),
-                  TextButton.icon(
+                  AppButton(
                     key: Key('job_details_btn_${job.jobId}'),
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: const Text('Details'),
+                    icon: Icons.visibility_outlined,
+                    label: 'Details',
+                    variant: AppButtonVariant.text,
                     onPressed: () => onJobTap?.call(job),
                   ),
                 ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/tokens/app_icons.dart';
+import 'app_field_shell.dart';
 import 'app_text_field.dart';
 
 /// Canonical search field primitive for NexaBiz ERP.
@@ -17,6 +18,7 @@ class AppSearchField extends StatefulWidget {
     this.onClear,
     this.enabled = true,
     this.autofocus = false,
+    this.density = AppFieldDensity.compact,
   });
 
   final TextEditingController? controller;
@@ -26,6 +28,7 @@ class AppSearchField extends StatefulWidget {
   final VoidCallback? onClear;
   final bool enabled;
   final bool autofocus;
+  final AppFieldDensity density;
 
   @override
   State<AppSearchField> createState() => _AppSearchFieldState();
@@ -73,6 +76,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
       prefixIcon: Icons.search_rounded,
       enabled: widget.enabled,
       autofocus: widget.autofocus,
+      density: widget.density,
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
       suffixIcon: hasText && widget.enabled

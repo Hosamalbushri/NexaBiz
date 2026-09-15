@@ -28,59 +28,29 @@ class FinancialTransactionDetailsPage extends ConsumerWidget {
 
   final String transactionId;
 
-  void _back(BuildContext context, {TransactionType? type}) {
-    if (type != null) {
-      ReceiptsPaymentsRoutes.backToList(context, type: type);
-      return;
-    }
-    // Loading / not-found: prefer stack pop when possible.
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    } else {
-      ReceiptsPaymentsRoutes.goRoot(context);
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final asyncTxn = ref.watch(financialTransactionByIdProvider(transactionId));
 
     return asyncTxn.when(
-      loading: () => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: l10n.rpDetailsTitle,
-          showBackButton: true,
-          onBack: () => _back(context),
-        ),
-        body: AppLoading(message: l10n.rpLoading),
+      loading: () => AppDetailsPage(
+        title: l10n.rpDetailsTitle,
+        isLoading: true,
       ),
-      error: (error, _) => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.rpDetailsTitle,
-          showBackButton: true,
-          onBack: () => _back(context),
-        ),
-        body: AppErrorState(
-          message: rpErrorMessage(l10n, error),
-          onRetry: () =>
-              ref.invalidate(financialTransactionByIdProvider(transactionId)),
-        ),
+      error: (error, _) => AppDetailsPage(
+        title: l10n.rpDetailsTitle,
+        error: rpErrorMessage(l10n, error),
+        onRetry: () =>
+            ref.invalidate(financialTransactionByIdProvider(transactionId)),
       ),
       data: (txn) {
         if (txn == null) {
-          return Scaffold(
-            appBar: CustomAppBar(
-              title: l10n.rpDetailsTitle,
-              showBackButton: true,
-              onBack: () => _back(context),
-            ),
-            body: AppErrorState(
-              message: l10n.rpNotFound,
-              onRetry: () => ref.invalidate(
-                financialTransactionByIdProvider(transactionId),
-              ),
+          return AppDetailsPage(
+            title: l10n.rpDetailsTitle,
+            error: l10n.rpNotFound,
+            onRetry: () => ref.invalidate(
+              financialTransactionByIdProvider(transactionId),
             ),
           );
         }
@@ -193,12 +163,9 @@ class _TransactionDetailsBody extends ConsumerWidget {
       TransactionType.currencyExchange => l10n.rpLineAmountDebit,
     };
 
-    return Scaffold(
-      backgroundColor: scheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: formatSaleNumberPrimary(transaction.transactionNumber),
-        showBackButton: true,
-        actions: [
+    return AppDetailsPage(
+      title: formatSaleNumberPrimary(transaction.transactionNumber),
+      actions: [
           if (transaction.documentStatus.isEditable &&
               canUpdate &&
               !transaction.isCancelled)
@@ -314,7 +281,6 @@ class _TransactionDetailsBody extends ConsumerWidget {
               ),
             ),
         ],
-      ),
       bottomNavigationBar: (showPost && canPost) || (showUnpost && canPost)
           ? Material(
               color: scheme.surface,

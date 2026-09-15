@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
-import '../theme/app_spacing.dart';
-
 /// Heights for standardized form field density.
 enum AppFieldDensity {
   /// Compact density (36px height) — ideal for table cells or dense headers.
@@ -112,6 +110,8 @@ class _AppFieldShellState extends State<AppFieldShell> {
       borderColor = colorScheme.border;
     }
 
+    final effectiveRadius = BorderRadius.circular(theme.radiusSm);
+
     return Focus(
       focusNode: widget.focusNode,
       onFocusChange: (focused) {
@@ -160,7 +160,7 @@ class _AppFieldShellState extends State<AppFieldShell> {
               ],
               InkWell(
                 onTap: widget.enabled && !widget.readOnly ? widget.onTap : null,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: effectiveRadius,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 140),
                   curve: Curves.easeOutCubic,
@@ -168,11 +168,25 @@ class _AppFieldShellState extends State<AppFieldShell> {
                   padding: widget.density.contentPadding,
                   decoration: BoxDecoration(
                     color: fillColor,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: effectiveRadius,
                     border: Border.all(
                       color: borderColor,
                       width: isFocused || hasError ? 1.5 : 1.0,
                     ),
+                    boxShadow: [
+                      if (isFocused && widget.enabled && !hasError)
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.15),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        )
+                      else if (hasError)
+                        BoxShadow(
+                          color: colorScheme.destructive.withValues(alpha: 0.12),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                    ],
                   ),
                   child: Row(
                     children: [

@@ -10,6 +10,9 @@ export 'src/theme/app_breakpoints.dart';
 export 'src/theme/app_shadows.dart';
 export 'src/theme/app_theme.dart';
 
+// Unified Layout System
+export 'src/layout/layout.dart';
+
 export 'src/theme/tokens/app_borders.dart';
 export 'src/theme/tokens/app_colors.dart';
 export 'src/theme/tokens/app_dimensions.dart';

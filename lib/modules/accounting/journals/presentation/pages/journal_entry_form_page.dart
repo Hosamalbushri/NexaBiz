@@ -3,13 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import '../../domain/entities/journal_entry.dart';
 import '../../domain/models/journal_exception.dart';
@@ -119,80 +117,71 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: AppResponsiveScaffold(
-        appBar: CustomAppBar(
-          title: widget.isEditing
-              ? l10n.accountingJournalEdit
-              : l10n.accountingJournalAdd,
-          showBackButton: true,
-        ),
-        body: Form(
-          key: _formKey,
-          child: ListView(
-            padding: AppConstants.pageInsets(context),
-            children: [
-              AppResponsiveForm(
-                maxColumns: 2,
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.accountingJournalFieldDate),
-                    subtitle: Text(
-                      MaterialLocalizations.of(
-                        context,
-                      ).formatMediumDate(_entryDate),
-                    ),
-                    trailing: const Icon(Icons.calendar_today_outlined),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _entryDate,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) {
-                        setState(() => _entryDate = picked);
-                      }
-                    },
+      child: AppFormPage(
+        title: widget.isEditing
+            ? l10n.accountingJournalEdit
+            : l10n.accountingJournalAdd,
+        formKey: _formKey,
+        onSubmit: _saving ? null : _save,
+        submitLabel: l10n.accountingJournalSave,
+        isLoading: _saving,
+        showBackButton: true,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.accountingJournalFieldDate),
+                  subtitle: Text(
+                    MaterialLocalizations.of(
+                      context,
+                    ).formatMediumDate(_entryDate),
                   ),
-                  AppTextField(
-                    controller: _voucherController,
-                    label: l10n.accountingJournalFieldVoucherNumber,
-                    required: true,
-                  ),
-                  AppTextField(
-                    controller: _descriptionController,
-                    label: l10n.accountingJournalFieldDescription,
-                    maxLines: 2,
-                  ),
-                  AppTextField(
-                    controller: _currencyController,
-                    label: l10n.accountingJournalFieldCurrency,
-                    required: true,
-                    onChanged: (value) =>
-                        _currencyCode = value.trim().toUpperCase(),
-                  ),
-                ],
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.accountingJournalPosted),
-                value: _isPosted,
-                onChanged: (value) => setState(() => _isPosted = value),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _JournalLinesSection(lines: _lines),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
-        ),
-        bottomActions: AppBottomActions(
-          child: AppButton(
-            label: l10n.accountingJournalSave,
-            expand: true,
-            isLoading: _saving,
-            onPressed: _saving ? null : _save,
-          ),
+                  trailing: const Icon(Icons.calendar_today_outlined),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _entryDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      setState(() => _entryDate = picked);
+                    }
+                  },
+                ),
+                AppTextField(
+                  controller: _voucherController,
+                  label: l10n.accountingJournalFieldVoucherNumber,
+                  required: true,
+                ),
+                AppTextField(
+                  controller: _descriptionController,
+                  label: l10n.accountingJournalFieldDescription,
+                  maxLines: 2,
+                ),
+                AppTextField(
+                  controller: _currencyController,
+                  label: l10n.accountingJournalFieldCurrency,
+                  required: true,
+                  onChanged: (value) =>
+                      _currencyCode = value.trim().toUpperCase(),
+                ),
+              ],
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.accountingJournalPosted),
+              value: _isPosted,
+              onChanged: (value) => setState(() => _isPosted = value),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _JournalLinesSection(lines: _lines),
+            const SizedBox(height: AppSpacing.lg),
+          ],
         ),
       ),
     );

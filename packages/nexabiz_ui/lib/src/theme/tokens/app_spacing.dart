@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 /// 8-point spacing scale for consistent layout rhythm across NexaBiz.
 class AppSpacing {
@@ -36,4 +37,20 @@ class AppSpacing {
 
   static const EdgeInsets insetPage = EdgeInsets.all(page);
   static const EdgeInsets insetCompact = EdgeInsets.all(compact);
+
+  /// Dynamic context-aware density accessors delegating to shadcn ThemeData
+  static shadcn.Density densityOf(BuildContext context) =>
+      shadcn.Theme.of(context).density;
+
+  static double baseGapOf(BuildContext context) =>
+      shadcn.Theme.of(context).density.baseGap * shadcn.Theme.of(context).scaling;
+
+  static double baseContainerPaddingOf(BuildContext context) =>
+      shadcn.Theme.of(context).density.baseContainerPadding *
+      shadcn.Theme.of(context).scaling;
+
+  static double baseContentPaddingOf(BuildContext context) =>
+      shadcn.Theme.of(context).density.baseContentPadding *
+      shadcn.Theme.of(context).scaling;
 }
+

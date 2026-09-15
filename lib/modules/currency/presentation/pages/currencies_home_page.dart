@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
@@ -31,9 +30,18 @@ class CurrenciesHomePage extends ConsumerWidget {
         title: isArabic ? 'إدارة العملات وسعر الصرف' : 'Currencies & FX Management',
         showBackButton: true,
       ),
-      body: AppContentConstraint(
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
+      body: AppDashboardPage(
+        statsGrid: _BaseCurrencyStatusCard(
+          baseCurrency: baseCurrency,
+          isLoading: functionalCurrencyAsync.isLoading &&
+              !functionalCurrencyAsync.hasValue,
+          isArabic: isArabic,
+        )
+            .animate()
+            .fadeIn(duration: 200.ms)
+            .moveY(begin: 6, end: 0, duration: 220.ms, curve: Curves.easeOutCubic),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Title & Description Section
             Text(
@@ -54,20 +62,6 @@ class CurrenciesHomePage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-
-            // Base Functional Currency Status Banner
-            _BaseCurrencyStatusCard(
-              baseCurrency: baseCurrency,
-              isLoading: functionalCurrencyAsync.isLoading &&
-                  !functionalCurrencyAsync.hasValue,
-              isArabic: isArabic,
-            )
-                .animate()
-                .fadeIn(duration: 200.ms)
-                .moveY(begin: 6, end: 0, duration: 220.ms, curve: Curves.easeOutCubic),
-
-            const SizedBox(height: AppSpacing.lg),
-
             Text(
               isArabic ? 'الخدمات الرئيسية' : 'Primary Services',
               style: theme.textTheme.titleMedium?.copyWith(
@@ -165,8 +159,6 @@ class CurrenciesHomePage extends ConsumerWidget {
                 .animate(delay: 160.ms)
                 .fadeIn(duration: 220.ms)
                 .moveY(begin: 8, end: 0, duration: 240.ms, curve: Curves.easeOutCubic),
-
-            const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),
@@ -238,20 +230,20 @@ class _BaseCurrencyStatusCard extends StatelessWidget {
               )
             : LinearGradient(
                 colors: [
-                  Colors.amber.shade50,
-                  Colors.orange.shade50,
+                  AppColors.warningContainer,
+                  theme.colorScheme.surface,
                 ],
               ),
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
           color: isConfigured
               ? theme.colorScheme.primary.withValues(alpha: 0.3)
-              : Colors.amber.shade400,
+              : AppColors.warning,
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isConfigured ? theme.colorScheme.primary : Colors.amber)
+            color: (isConfigured ? theme.colorScheme.primary : AppColors.warning)
                 .withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 3),
@@ -269,19 +261,19 @@ class _BaseCurrencyStatusCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isConfigured
                     ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                    : Colors.amber.shade100,
+                    : AppColors.warningContainer,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isConfigured
                       ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                      : Colors.amber.shade400,
+                      : AppColors.warning,
                 ),
               ),
               child: Icon(
                 isConfigured ? Icons.verified_rounded : Icons.warning_amber_rounded,
                 color: isConfigured
                     ? theme.colorScheme.primary
-                    : Colors.amber.shade900,
+                    : AppColors.warning,
                 size: 28,
               ),
             ),
@@ -302,7 +294,7 @@ class _BaseCurrencyStatusCard extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: isConfigured
                           ? theme.colorScheme.onSurface
-                          : Colors.amber.shade900,
+                          : AppColors.warning,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -317,7 +309,7 @@ class _BaseCurrencyStatusCard extends StatelessWidget {
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isConfigured
                           ? theme.colorScheme.onSurfaceVariant
-                          : Colors.amber.shade900,
+                          : AppColors.warning,
                       height: 1.35,
                     ),
                   ),
@@ -334,10 +326,13 @@ class _BaseCurrencyStatusCard extends StatelessWidget {
                       icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
                       label: Text(
                         isArabic ? 'إعداد العملة الرئيسية الآن' : 'Set Up Base Currency Now',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade900,
+                        backgroundColor: AppColors.warning,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         minimumSize: Size.zero,

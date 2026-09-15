@@ -5,11 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/entities/account_type.dart';
 import '../../domain/models/account_exception.dart';
@@ -202,174 +200,164 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: AppResponsiveScaffold(
-        appBar: CustomAppBar(
-          title: widget.isEditing
-              ? l10n.accountingEditAccount
-              : l10n.accountingAddAccount,
-          showBackButton: true,
-        ),
-        bottomActions: AppBottomActions(
-          child: AppButton(
-            label: l10n.accountingSaveAccount,
-            icon: Icons.save_outlined,
-            expand: true,
-            isLoading: _saving,
-            onPressed: _saving ? null : _save,
-          ),
-        ),
-        body: Form(
-          key: _formKey,
-          child: ListView(
-            padding: AppConstants.pageInsets(context),
-            children: [
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'البيانات الأساسية'
-                    : 'Basic Details',
-                icon: Icons.account_tree_outlined,
-                topSpacing: 0,
-              ),
-              AppResponsiveForm(
-                maxColumns: 2,
-                children: [
-                  if (systemLocked)
-                    AppTextField(
-                      controller: TextEditingController(
-                        text: AccountLabels.displayName(l10n, _existing!),
-                      ),
-                      label: l10n.accountingFieldName,
-                      enabled: false,
-                      readOnly: true,
-                      helperText: l10n.accountingSystemAccountHint,
-                    )
-                  else
-                    AppTextField(
-                      controller: _nameController,
-                      label: l10n.accountingFieldName,
-                      required: true,
-                      textInputAction: TextInputAction.next,
-                    ),
+      child: AppFormPage(
+        title: widget.isEditing
+            ? l10n.accountingEditAccount
+            : l10n.accountingAddAccount,
+        formKey: _formKey,
+        onSubmit: _saving ? null : _save,
+        submitLabel: l10n.accountingSaveAccount,
+        isLoading: _saving,
+        showBackButton: true,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'البيانات الأساسية'
+                  : 'Basic Details',
+              icon: Icons.account_tree_outlined,
+              topSpacing: 0,
+            ),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                if (systemLocked)
                   AppTextField(
-                    controller: _codeController,
-                    enabled: !systemLocked,
-                    label: l10n.accountingFieldCode,
+                    controller: TextEditingController(
+                      text: AccountLabels.displayName(l10n, _existing!),
+                    ),
+                    label: l10n.accountingFieldName,
+                    enabled: false,
+                    readOnly: true,
+                    helperText: l10n.accountingSystemAccountHint,
+                  )
+                else
+                  AppTextField(
+                    controller: _nameController,
+                    label: l10n.accountingFieldName,
                     required: true,
-                    helperText: systemLocked
-                        ? l10n.accountingSystemAccountHint
-                        : l10n.accountingFieldCodeHelper,
-                    onChanged: (_) => _codeAutoFilled = false,
-                    suffixIcon: widget.isEditing || systemLocked
-                        ? null
-                        : AppIconButton(
-                            icon: _generatingCode
-                                ? Icons.hourglass_empty
-                                : Icons.auto_awesome,
-                            tooltip: l10n.accountingGenerateCode,
-                            onPressed: _generatingCode || _parentId == null
-                                ? null
-                                : () => _assignCodeFromParent(force: true),
-                          ),
                     textInputAction: TextInputAction.next,
                   ),
-                ],
-              ),
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'التسلسل الهيكلي والنوع'
-                    : 'Hierarchy & Type',
-                icon: Icons.account_balance_outlined,
-              ),
-              AppResponsiveForm(
-                maxColumns: 2,
-                children: [
-                  parentsAsync.when(
-                    loading: () => const LinearProgressIndicator(),
-                    error: (_, _) => Text(l10n.somethingWentWrong),
-                    data: (parents) {
-                      final options = [
-                        for (final p in parents)
-                          if (!widget.isEditing || p.id != _existing?.id) p,
-                      ];
-                      return AppSelectField<String?>(
-                        value: _parentId,
-                        label: l10n.accountingFieldParent,
-                        enabled: !systemLocked,
-                        items: [
-                          AppSelectItem<String?>(
-                            value: null,
-                            label: l10n.accountingRootAccount,
-                          ),
-                          for (final parent in options)
-                            AppSelectItem<String?>(
-                              value: parent.id,
-                              label:
-                                  '${parent.accountCode} — ${AccountLabels.displayName(l10n, parent)}',
-                            ),
-                        ],
-                        onChanged: systemLocked
-                            ? null
-                            : (value) => _applyParentSelection(value),
-                      );
-                    },
-                  ),
-                  AppSelectField<AccountType>(
-                    value: _accountType,
-                    label: l10n.accountingFieldType,
-                    helperText: _parentId == null
-                        ? null
-                        : l10n.accountingTypeInheritedHint,
-                    enabled: !systemLocked && _parentId == null,
-                    items: [
-                      for (final type in AccountType.values)
-                        AppSelectItem(
-                          value: type,
-                          label: AccountLabels.typeLabel(l10n, type),
+                AppTextField(
+                  controller: _codeController,
+                  enabled: !systemLocked,
+                  label: l10n.accountingFieldCode,
+                  required: true,
+                  helperText: systemLocked
+                      ? l10n.accountingSystemAccountHint
+                      : l10n.accountingFieldCodeHelper,
+                  onChanged: (_) => _codeAutoFilled = false,
+                  suffixIcon: widget.isEditing || systemLocked
+                      ? null
+                      : AppIconButton(
+                          icon: _generatingCode
+                              ? Icons.hourglass_empty
+                              : Icons.auto_awesome,
+                          tooltip: l10n.accountingGenerateCode,
+                          onPressed: _generatingCode || _parentId == null
+                              ? null
+                              : () => _assignCodeFromParent(force: true),
                         ),
-                    ],
-                    onChanged: systemLocked || _parentId != null
-                        ? null
-                        : (value) {
-                            if (value != null) {
-                              setState(() => _accountType = value);
-                            }
-                          },
-                  ),
-                ],
-              ),
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'الوصف والإعدادات'
-                    : 'Description & Options',
-                icon: Icons.tune_outlined,
-              ),
-              AppTextField(
-                controller: _descriptionController,
-                label: l10n.accountingFieldDescription,
-                maxLines: 3,
-                textInputAction: TextInputAction.newline,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.accountingAccountGroup),
-                subtitle: Text(l10n.accountingAccountGroupHint),
-                value: _isGroup,
-                onChanged: systemLocked
-                    ? null
-                    : (value) => setState(() => _isGroup = value),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.accountingAccountActive),
-                value: _isActive,
-                onChanged: systemLocked
-                    ? null
-                    : (value) => setState(() => _isActive = value),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
+                  textInputAction: TextInputAction.next,
+                ),
+              ],
+            ),
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'التسلسل الهيكلي والنوع'
+                  : 'Hierarchy & Type',
+              icon: Icons.account_balance_outlined,
+            ),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                parentsAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, _) => Text(l10n.somethingWentWrong),
+                  data: (parents) {
+                    final options = [
+                      for (final p in parents)
+                        if (!widget.isEditing || p.id != _existing?.id) p,
+                    ];
+                    return AppSelectField<String?>(
+                      value: _parentId,
+                      label: l10n.accountingFieldParent,
+                      enabled: !systemLocked,
+                      items: [
+                        AppSelectItem<String?>(
+                          value: null,
+                          label: l10n.accountingRootAccount,
+                        ),
+                        for (final parent in options)
+                          AppSelectItem<String?>(
+                            value: parent.id,
+                            label:
+                                '${parent.accountCode} — ${AccountLabels.displayName(l10n, parent)}',
+                          ),
+                      ],
+                      onChanged: systemLocked
+                          ? null
+                          : (value) => _applyParentSelection(value),
+                    );
+                  },
+                ),
+                AppSelectField<AccountType>(
+                  value: _accountType,
+                  label: l10n.accountingFieldType,
+                  helperText: _parentId == null
+                      ? null
+                      : l10n.accountingTypeInheritedHint,
+                  enabled: !systemLocked && _parentId == null,
+                  items: [
+                    for (final type in AccountType.values)
+                      AppSelectItem(
+                        value: type,
+                        label: AccountLabels.typeLabel(l10n, type),
+                      ),
+                  ],
+                  onChanged: systemLocked || _parentId != null
+                      ? null
+                      : (value) {
+                          if (value != null) {
+                            setState(() => _accountType = value);
+                          }
+                        },
+                ),
+              ],
+            ),
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'الوصف والإعدادات'
+                  : 'Description & Options',
+              icon: Icons.tune_outlined,
+            ),
+            AppTextField(
+              controller: _descriptionController,
+              label: l10n.accountingFieldDescription,
+              maxLines: 3,
+              textInputAction: TextInputAction.newline,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.accountingAccountGroup),
+              subtitle: Text(l10n.accountingAccountGroupHint),
+              value: _isGroup,
+              onChanged: systemLocked
+                  ? null
+                  : (value) => setState(() => _isGroup = value),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.accountingAccountActive),
+              value: _isActive,
+              onChanged: systemLocked
+                  ? null
+                  : (value) => setState(() => _isActive = value),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
         ),
       ),
     );

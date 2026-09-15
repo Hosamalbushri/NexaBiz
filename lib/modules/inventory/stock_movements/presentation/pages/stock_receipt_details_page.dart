@@ -150,17 +150,19 @@ class _StockReceiptDetailsPageState
             'لا يمكن تعديل أمر التوريد وهو في حالة (مرحّل).\n\nيرجى إلغاء الترحيل أولاً لتتمكن من التعديل.',
           ),
           actions: [
-            TextButton(
+            AppButton(
+              label: 'حسناً',
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(context),
-              child: const Text('حسناً'),
             ),
-            ElevatedButton.icon(
+            AppButton(
+              label: 'إلغاء الترحيل الآن',
+              icon: Icons.undo,
+              variant: AppButtonVariant.outlined,
               onPressed: () {
                 Navigator.pop(context);
                 _handleUnpost(receipt);
               },
-              icon: const Icon(Icons.undo),
-              label: const Text('إلغاء الترحيل الآن'),
             ),
           ],
         ),
@@ -180,17 +182,15 @@ class _StockReceiptDetailsPageState
           'هل أنت تأكد من حذف أمر التوريد ${receipt.receiptNumber}؟',
         ),
         actions: [
-          TextButton(
+          AppButton(
+            label: 'إلغاء',
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+          AppButton(
+            label: 'حذف',
+            variant: AppButtonVariant.destructive,
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('حذف'),
           ),
         ],
       ),
@@ -213,31 +213,23 @@ class _StockReceiptDetailsPageState
     final scheme = theme.colorScheme;
 
     return receiptAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: 'تفاصيل أمر توريد مخزني',
-          showBackButton: true,
-        ),
-        body: const AppLoading(),
+      loading: () => const AppDetailsPage(
+        title: 'تفاصيل أمر توريد مخزني',
+        isLoading: true,
       ),
-      error: (err, stack) => Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: 'تفاصيل أمر توريد مخزني',
-          showBackButton: true,
-        ),
-        body: Center(child: Text('خطأ: $err')),
+      error: (err, stack) => AppDetailsPage(
+        title: 'تفاصيل أمر توريد مخزني',
+        error: err.toString(),
+        onRetry: () => ref.invalidate(stockReceiptByIdProvider(widget.receiptId)),
       ),
       data: (receipt) {
         if (receipt == null) {
-          return Scaffold(
-            backgroundColor: scheme.surfaceContainerLowest,
-            appBar: CustomAppBar(
-              title: 'تفاصيل أمر توريد مخزني',
-              showBackButton: true,
+          return const AppDetailsPage(
+            title: 'تفاصيل أمر توريد مخزني',
+            emptyState: AppEmptyState(
+              title: 'لم يتم العثور على أمر التوريد',
+              icon: Icons.inventory_2_outlined,
             ),
-            body: const Center(child: Text('لم يتم العثور على أمر التوريد')),
           );
         }
 
@@ -256,12 +248,9 @@ class _StockReceiptDetailsPageState
             ? receipt.warehouse!.trim()
             : 'المستودع الرئيسي';
 
-        return Scaffold(
-          backgroundColor: scheme.surfaceContainerLowest,
-          appBar: CustomAppBar(
-            title: formatSaleNumberPrimary(receipt.receiptNumber),
-            showBackButton: true,
-            actions: [
+        return AppDetailsPage(
+          title: formatSaleNumberPrimary(receipt.receiptNumber),
+          actions: [
               CustomAppBarAction(
                 icon: receipt.isPosted
                     ? Icons.lock_outlined
@@ -344,7 +333,6 @@ class _StockReceiptDetailsPageState
                 ),
               ),
             ],
-          ),
           bottomNavigationBar: Material(
             color: scheme.surface,
             elevation: 8,
@@ -356,29 +344,22 @@ class _StockReceiptDetailsPageState
                   vertical: AppSpacing.sm,
                 ),
                 child: receipt.isDraft
-                    ? FilledButton.icon(
+                    ? AppButton(
+                        label: 'ترحيل أمر التوريد',
+                        icon: Icons.check_circle_outline,
+                        expand: true,
                         onPressed: _isProcessing
                             ? null
                             : () => _handlePost(receipt),
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text('ترحيل أمر التوريد'),
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(48),
-                          backgroundColor: Colors.green.shade700,
-                          foregroundColor: Colors.white,
-                        ),
                       )
-                    : OutlinedButton.icon(
+                    : AppButton(
+                        label: 'إلغاء ترحيل أمر التوريد',
+                        icon: Icons.undo,
+                        variant: AppButtonVariant.outlined,
+                        expand: true,
                         onPressed: _isProcessing
                             ? null
                             : () => _handleUnpost(receipt),
-                        icon: const Icon(Icons.undo),
-                        label: const Text('إلغاء ترحيل أمر التوريد'),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(48),
-                          foregroundColor: Colors.orange.shade800,
-                          side: BorderSide(color: Colors.orange.shade400),
-                        ),
                       ),
               ),
             ),

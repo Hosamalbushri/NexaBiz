@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,9 +69,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 children: [
                   Align(
                     alignment: AlignmentDirectional.centerEnd,
-                    child: TextButton(
+                    child: AppButton(
+                      label: l10n.onboardingSkip,
+                      variant: AppButtonVariant.text,
                       onPressed: _finish,
-                      child: Text(l10n.onboardingSkip),
                     ),
                   ),
                   Expanded(
@@ -165,12 +167,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       AppSpacing.lg,
                       AppSpacing.lg,
                     ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _finish,
-                        child: Text(l10n.onboardingGetStarted),
-                      ),
+                    child: AppButton(
+                      label: l10n.onboardingGetStarted,
+                      expand: true,
+                      onPressed: _finish,
                     ),
                   ),
                 ],

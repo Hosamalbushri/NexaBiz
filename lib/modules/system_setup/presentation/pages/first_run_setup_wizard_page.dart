@@ -210,20 +210,8 @@ class _FirstRunSetupWizardPageState
                           duration: const Duration(milliseconds: 250),
                           switchInCurve: Curves.easeOutCubic,
                           switchOutCurve: Curves.easeInCubic,
-                          child: Card(
+                          child: AppCard(
                             key: ValueKey<int>(_currentStep),
-                            elevation: isDark ? 4 : 2,
-                            shadowColor: colorScheme.shadow.withValues(
-                              alpha: isDark ? 0.3 : 0.06,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: colorScheme.outlineVariant.withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
-                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(AppSpacing.lg),
                               child: _buildCurrentStepContent(

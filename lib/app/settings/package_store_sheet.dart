@@ -225,18 +225,7 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
                   plansAsync.when(
                     data: (plans) => Column(
                       children: plans.map((plan) {
-                        final isSelected = _selectedPlanCode == plan.code;
-                        return Card(
-                          elevation: isSelected ? 2 : 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppSpacing.sm),
-                            side: BorderSide(
-                              color: isSelected
-                                  ? colorScheme.primary
-                                  : colorScheme.outlineVariant,
-                              width: isSelected ? 2 : 1,
-                            ),
-                          ),
+                        return AppCard(
                           child: RadioListTile<String>(
                             title: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -309,26 +298,11 @@ class _PackageStoreSheetState extends ConsumerState<PackageStoreSheet> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _processActivation,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(l10n.activateSubscriptionButton),
-              ),
+            AppButton(
+              label: l10n.activateSubscriptionButton,
+              isLoading: _isSubmitting,
+              expand: true,
+              onPressed: _isSubmitting ? null : _processActivation,
             ),
           ],
         ),

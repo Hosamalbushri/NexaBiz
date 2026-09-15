@@ -36785,6 +36785,10527 @@ class PurchasePaymentsCompanion extends UpdateCompanion<PurchasePaymentRow> {
   }
 }
 
+class $FinancialCurrenciesTable extends FinancialCurrencies
+    with TableInfo<$FinancialCurrenciesTable, FinancialCurrencyData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialCurrenciesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+    'name_ar',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _nameEnMeta = const VerificationMeta('nameEn');
+  @override
+  late final GeneratedColumn<String> nameEn = GeneratedColumn<String>(
+    'name_en',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _symbolMeta = const VerificationMeta('symbol');
+  @override
+  late final GeneratedColumn<String> symbol = GeneratedColumn<String>(
+    'symbol',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _decimalPlacesMeta = const VerificationMeta(
+    'decimalPlaces',
+  );
+  @override
+  late final GeneratedColumn<int> decimalPlaces = GeneratedColumn<int>(
+    'decimal_places',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(2),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    code,
+    nameAr,
+    nameEn,
+    symbol,
+    decimalPlaces,
+    isActive,
+    companyId,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_currencies';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialCurrencyData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(
+        _nameArMeta,
+        nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta),
+      );
+    }
+    if (data.containsKey('name_en')) {
+      context.handle(
+        _nameEnMeta,
+        nameEn.isAcceptableOrUnknown(data['name_en']!, _nameEnMeta),
+      );
+    }
+    if (data.containsKey('symbol')) {
+      context.handle(
+        _symbolMeta,
+        symbol.isAcceptableOrUnknown(data['symbol']!, _symbolMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_symbolMeta);
+    }
+    if (data.containsKey('decimal_places')) {
+      context.handle(
+        _decimalPlacesMeta,
+        decimalPlaces.isAcceptableOrUnknown(
+          data['decimal_places']!,
+          _decimalPlacesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, code},
+  ];
+  @override
+  FinancialCurrencyData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialCurrencyData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      nameAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_ar'],
+      )!,
+      nameEn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_en'],
+      )!,
+      symbol: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}symbol'],
+      )!,
+      decimalPlaces: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}decimal_places'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialCurrenciesTable createAlias(String alias) {
+    return $FinancialCurrenciesTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialCurrencyData extends DataClass
+    implements Insertable<FinancialCurrencyData> {
+  /// Canonical UUID primary key identity.
+  final String id;
+
+  /// Currency ISO/Standard Code (e.g., USD, YER, SAR).
+  final String code;
+
+  /// Arabic display name.
+  final String nameAr;
+
+  /// English display name.
+  final String nameEn;
+
+  /// Display symbol (e.g. $, ر.ي, ر.س).
+  final String symbol;
+
+  /// Minor unit decimal places (typically 2, or 3 for KWD/BHD/OMR, 0 for JPY).
+  final int decimalPlaces;
+
+  /// Whether this currency is active for company transactions.
+  final bool isActive;
+
+  /// Company scope (nullable for system-wide currencies).
+  final String? companyId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const FinancialCurrencyData({
+    required this.id,
+    required this.code,
+    required this.nameAr,
+    required this.nameEn,
+    required this.symbol,
+    required this.decimalPlaces,
+    required this.isActive,
+    this.companyId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['code'] = Variable<String>(code);
+    map['name_ar'] = Variable<String>(nameAr);
+    map['name_en'] = Variable<String>(nameEn);
+    map['symbol'] = Variable<String>(symbol);
+    map['decimal_places'] = Variable<int>(decimalPlaces);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  FinancialCurrenciesCompanion toCompanion(bool nullToAbsent) {
+    return FinancialCurrenciesCompanion(
+      id: Value(id),
+      code: Value(code),
+      nameAr: Value(nameAr),
+      nameEn: Value(nameEn),
+      symbol: Value(symbol),
+      decimalPlaces: Value(decimalPlaces),
+      isActive: Value(isActive),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FinancialCurrencyData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialCurrencyData(
+      id: serializer.fromJson<String>(json['id']),
+      code: serializer.fromJson<String>(json['code']),
+      nameAr: serializer.fromJson<String>(json['nameAr']),
+      nameEn: serializer.fromJson<String>(json['nameEn']),
+      symbol: serializer.fromJson<String>(json['symbol']),
+      decimalPlaces: serializer.fromJson<int>(json['decimalPlaces']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'code': serializer.toJson<String>(code),
+      'nameAr': serializer.toJson<String>(nameAr),
+      'nameEn': serializer.toJson<String>(nameEn),
+      'symbol': serializer.toJson<String>(symbol),
+      'decimalPlaces': serializer.toJson<int>(decimalPlaces),
+      'isActive': serializer.toJson<bool>(isActive),
+      'companyId': serializer.toJson<String?>(companyId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  FinancialCurrencyData copyWith({
+    String? id,
+    String? code,
+    String? nameAr,
+    String? nameEn,
+    String? symbol,
+    int? decimalPlaces,
+    bool? isActive,
+    Value<String?> companyId = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => FinancialCurrencyData(
+    id: id ?? this.id,
+    code: code ?? this.code,
+    nameAr: nameAr ?? this.nameAr,
+    nameEn: nameEn ?? this.nameEn,
+    symbol: symbol ?? this.symbol,
+    decimalPlaces: decimalPlaces ?? this.decimalPlaces,
+    isActive: isActive ?? this.isActive,
+    companyId: companyId.present ? companyId.value : this.companyId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FinancialCurrencyData copyWithCompanion(FinancialCurrenciesCompanion data) {
+    return FinancialCurrencyData(
+      id: data.id.present ? data.id.value : this.id,
+      code: data.code.present ? data.code.value : this.code,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
+      nameEn: data.nameEn.present ? data.nameEn.value : this.nameEn,
+      symbol: data.symbol.present ? data.symbol.value : this.symbol,
+      decimalPlaces: data.decimalPlaces.present
+          ? data.decimalPlaces.value
+          : this.decimalPlaces,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialCurrencyData(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('nameEn: $nameEn, ')
+          ..write('symbol: $symbol, ')
+          ..write('decimalPlaces: $decimalPlaces, ')
+          ..write('isActive: $isActive, ')
+          ..write('companyId: $companyId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    code,
+    nameAr,
+    nameEn,
+    symbol,
+    decimalPlaces,
+    isActive,
+    companyId,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialCurrencyData &&
+          other.id == this.id &&
+          other.code == this.code &&
+          other.nameAr == this.nameAr &&
+          other.nameEn == this.nameEn &&
+          other.symbol == this.symbol &&
+          other.decimalPlaces == this.decimalPlaces &&
+          other.isActive == this.isActive &&
+          other.companyId == this.companyId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FinancialCurrenciesCompanion
+    extends UpdateCompanion<FinancialCurrencyData> {
+  final Value<String> id;
+  final Value<String> code;
+  final Value<String> nameAr;
+  final Value<String> nameEn;
+  final Value<String> symbol;
+  final Value<int> decimalPlaces;
+  final Value<bool> isActive;
+  final Value<String?> companyId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const FinancialCurrenciesCompanion({
+    this.id = const Value.absent(),
+    this.code = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.nameEn = const Value.absent(),
+    this.symbol = const Value.absent(),
+    this.decimalPlaces = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialCurrenciesCompanion.insert({
+    this.id = const Value.absent(),
+    required String code,
+    this.nameAr = const Value.absent(),
+    this.nameEn = const Value.absent(),
+    required String symbol,
+    this.decimalPlaces = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : code = Value(code),
+       symbol = Value(symbol);
+  static Insertable<FinancialCurrencyData> custom({
+    Expression<String>? id,
+    Expression<String>? code,
+    Expression<String>? nameAr,
+    Expression<String>? nameEn,
+    Expression<String>? symbol,
+    Expression<int>? decimalPlaces,
+    Expression<bool>? isActive,
+    Expression<String>? companyId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (code != null) 'code': code,
+      if (nameAr != null) 'name_ar': nameAr,
+      if (nameEn != null) 'name_en': nameEn,
+      if (symbol != null) 'symbol': symbol,
+      if (decimalPlaces != null) 'decimal_places': decimalPlaces,
+      if (isActive != null) 'is_active': isActive,
+      if (companyId != null) 'company_id': companyId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialCurrenciesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? code,
+    Value<String>? nameAr,
+    Value<String>? nameEn,
+    Value<String>? symbol,
+    Value<int>? decimalPlaces,
+    Value<bool>? isActive,
+    Value<String?>? companyId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialCurrenciesCompanion(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      nameAr: nameAr ?? this.nameAr,
+      nameEn: nameEn ?? this.nameEn,
+      symbol: symbol ?? this.symbol,
+      decimalPlaces: decimalPlaces ?? this.decimalPlaces,
+      isActive: isActive ?? this.isActive,
+      companyId: companyId ?? this.companyId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
+    if (nameEn.present) {
+      map['name_en'] = Variable<String>(nameEn.value);
+    }
+    if (symbol.present) {
+      map['symbol'] = Variable<String>(symbol.value);
+    }
+    if (decimalPlaces.present) {
+      map['decimal_places'] = Variable<int>(decimalPlaces.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialCurrenciesCompanion(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('nameEn: $nameEn, ')
+          ..write('symbol: $symbol, ')
+          ..write('decimalPlaces: $decimalPlaces, ')
+          ..write('isActive: $isActive, ')
+          ..write('companyId: $companyId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialExchangeRatesTable extends FinancialExchangeRates
+    with TableInfo<$FinancialExchangeRatesTable, FinancialExchangeRateData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialExchangeRatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fromCurrencyCodeMeta = const VerificationMeta(
+    'fromCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> fromCurrencyCode = GeneratedColumn<String>(
+    'from_currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _toCurrencyCodeMeta = const VerificationMeta(
+    'toCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> toCurrencyCode = GeneratedColumn<String>(
+    'to_currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rateScaledMeta = const VerificationMeta(
+    'rateScaled',
+  );
+  @override
+  late final GeneratedColumn<BigInt> rateScaled = GeneratedColumn<BigInt>(
+    'rate_scaled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bigInt,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _effectiveAtMeta = const VerificationMeta(
+    'effectiveAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> effectiveAt = GeneratedColumn<DateTime>(
+    'effective_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('manual'),
+  );
+  static const VerificationMeta _isImmutableSnapshotMeta =
+      const VerificationMeta('isImmutableSnapshot');
+  @override
+  late final GeneratedColumn<bool> isImmutableSnapshot = GeneratedColumn<bool>(
+    'is_immutable_snapshot',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_immutable_snapshot" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    fromCurrencyCode,
+    toCurrencyCode,
+    rateScaled,
+    effectiveAt,
+    source,
+    isImmutableSnapshot,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_exchange_rates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialExchangeRateData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('from_currency_code')) {
+      context.handle(
+        _fromCurrencyCodeMeta,
+        fromCurrencyCode.isAcceptableOrUnknown(
+          data['from_currency_code']!,
+          _fromCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fromCurrencyCodeMeta);
+    }
+    if (data.containsKey('to_currency_code')) {
+      context.handle(
+        _toCurrencyCodeMeta,
+        toCurrencyCode.isAcceptableOrUnknown(
+          data['to_currency_code']!,
+          _toCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_toCurrencyCodeMeta);
+    }
+    if (data.containsKey('rate_scaled')) {
+      context.handle(
+        _rateScaledMeta,
+        rateScaled.isAcceptableOrUnknown(data['rate_scaled']!, _rateScaledMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rateScaledMeta);
+    }
+    if (data.containsKey('effective_at')) {
+      context.handle(
+        _effectiveAtMeta,
+        effectiveAt.isAcceptableOrUnknown(
+          data['effective_at']!,
+          _effectiveAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_effectiveAtMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('is_immutable_snapshot')) {
+      context.handle(
+        _isImmutableSnapshotMeta,
+        isImmutableSnapshot.isAcceptableOrUnknown(
+          data['is_immutable_snapshot']!,
+          _isImmutableSnapshotMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, fromCurrencyCode, toCurrencyCode, effectiveAt},
+  ];
+  @override
+  FinancialExchangeRateData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialExchangeRateData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      fromCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_currency_code'],
+      )!,
+      toCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_currency_code'],
+      )!,
+      rateScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}rate_scaled'],
+      )!,
+      effectiveAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}effective_at'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      isImmutableSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_immutable_snapshot'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialExchangeRatesTable createAlias(String alias) {
+    return $FinancialExchangeRatesTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialExchangeRateData extends DataClass
+    implements Insertable<FinancialExchangeRateData> {
+  /// Canonical UUID v7 primary key.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Source currency ISO code (e.g. USD).
+  final String fromCurrencyCode;
+
+  /// Destination currency ISO code (e.g. YER).
+  final String toCurrencyCode;
+
+  /// Exchange rate value scaled by 10^8 (INTEGER).
+  /// Example: 1 SAR = 140 YER => rateScaled = 14000000000.
+  final BigInt rateScaled;
+
+  /// Timestamp when this rate became effective.
+  final DateTime effectiveAt;
+
+  /// Rate source/reference (e.g., 'manual', 'central_bank').
+  final String source;
+
+  /// Whether this rate is an immutable transaction snapshot.
+  final bool isImmutableSnapshot;
+  final DateTime createdAt;
+  const FinancialExchangeRateData({
+    required this.id,
+    required this.companyId,
+    required this.fromCurrencyCode,
+    required this.toCurrencyCode,
+    required this.rateScaled,
+    required this.effectiveAt,
+    required this.source,
+    required this.isImmutableSnapshot,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['from_currency_code'] = Variable<String>(fromCurrencyCode);
+    map['to_currency_code'] = Variable<String>(toCurrencyCode);
+    map['rate_scaled'] = Variable<BigInt>(rateScaled);
+    map['effective_at'] = Variable<DateTime>(effectiveAt);
+    map['source'] = Variable<String>(source);
+    map['is_immutable_snapshot'] = Variable<bool>(isImmutableSnapshot);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  FinancialExchangeRatesCompanion toCompanion(bool nullToAbsent) {
+    return FinancialExchangeRatesCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      fromCurrencyCode: Value(fromCurrencyCode),
+      toCurrencyCode: Value(toCurrencyCode),
+      rateScaled: Value(rateScaled),
+      effectiveAt: Value(effectiveAt),
+      source: Value(source),
+      isImmutableSnapshot: Value(isImmutableSnapshot),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FinancialExchangeRateData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialExchangeRateData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      fromCurrencyCode: serializer.fromJson<String>(json['fromCurrencyCode']),
+      toCurrencyCode: serializer.fromJson<String>(json['toCurrencyCode']),
+      rateScaled: serializer.fromJson<BigInt>(json['rateScaled']),
+      effectiveAt: serializer.fromJson<DateTime>(json['effectiveAt']),
+      source: serializer.fromJson<String>(json['source']),
+      isImmutableSnapshot: serializer.fromJson<bool>(
+        json['isImmutableSnapshot'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'fromCurrencyCode': serializer.toJson<String>(fromCurrencyCode),
+      'toCurrencyCode': serializer.toJson<String>(toCurrencyCode),
+      'rateScaled': serializer.toJson<BigInt>(rateScaled),
+      'effectiveAt': serializer.toJson<DateTime>(effectiveAt),
+      'source': serializer.toJson<String>(source),
+      'isImmutableSnapshot': serializer.toJson<bool>(isImmutableSnapshot),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  FinancialExchangeRateData copyWith({
+    String? id,
+    String? companyId,
+    String? fromCurrencyCode,
+    String? toCurrencyCode,
+    BigInt? rateScaled,
+    DateTime? effectiveAt,
+    String? source,
+    bool? isImmutableSnapshot,
+    DateTime? createdAt,
+  }) => FinancialExchangeRateData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    fromCurrencyCode: fromCurrencyCode ?? this.fromCurrencyCode,
+    toCurrencyCode: toCurrencyCode ?? this.toCurrencyCode,
+    rateScaled: rateScaled ?? this.rateScaled,
+    effectiveAt: effectiveAt ?? this.effectiveAt,
+    source: source ?? this.source,
+    isImmutableSnapshot: isImmutableSnapshot ?? this.isImmutableSnapshot,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FinancialExchangeRateData copyWithCompanion(
+    FinancialExchangeRatesCompanion data,
+  ) {
+    return FinancialExchangeRateData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      fromCurrencyCode: data.fromCurrencyCode.present
+          ? data.fromCurrencyCode.value
+          : this.fromCurrencyCode,
+      toCurrencyCode: data.toCurrencyCode.present
+          ? data.toCurrencyCode.value
+          : this.toCurrencyCode,
+      rateScaled: data.rateScaled.present
+          ? data.rateScaled.value
+          : this.rateScaled,
+      effectiveAt: data.effectiveAt.present
+          ? data.effectiveAt.value
+          : this.effectiveAt,
+      source: data.source.present ? data.source.value : this.source,
+      isImmutableSnapshot: data.isImmutableSnapshot.present
+          ? data.isImmutableSnapshot.value
+          : this.isImmutableSnapshot,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialExchangeRateData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fromCurrencyCode: $fromCurrencyCode, ')
+          ..write('toCurrencyCode: $toCurrencyCode, ')
+          ..write('rateScaled: $rateScaled, ')
+          ..write('effectiveAt: $effectiveAt, ')
+          ..write('source: $source, ')
+          ..write('isImmutableSnapshot: $isImmutableSnapshot, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    fromCurrencyCode,
+    toCurrencyCode,
+    rateScaled,
+    effectiveAt,
+    source,
+    isImmutableSnapshot,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialExchangeRateData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.fromCurrencyCode == this.fromCurrencyCode &&
+          other.toCurrencyCode == this.toCurrencyCode &&
+          other.rateScaled == this.rateScaled &&
+          other.effectiveAt == this.effectiveAt &&
+          other.source == this.source &&
+          other.isImmutableSnapshot == this.isImmutableSnapshot &&
+          other.createdAt == this.createdAt);
+}
+
+class FinancialExchangeRatesCompanion
+    extends UpdateCompanion<FinancialExchangeRateData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> fromCurrencyCode;
+  final Value<String> toCurrencyCode;
+  final Value<BigInt> rateScaled;
+  final Value<DateTime> effectiveAt;
+  final Value<String> source;
+  final Value<bool> isImmutableSnapshot;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const FinancialExchangeRatesCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.fromCurrencyCode = const Value.absent(),
+    this.toCurrencyCode = const Value.absent(),
+    this.rateScaled = const Value.absent(),
+    this.effectiveAt = const Value.absent(),
+    this.source = const Value.absent(),
+    this.isImmutableSnapshot = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialExchangeRatesCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String fromCurrencyCode,
+    required String toCurrencyCode,
+    required BigInt rateScaled,
+    required DateTime effectiveAt,
+    this.source = const Value.absent(),
+    this.isImmutableSnapshot = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       fromCurrencyCode = Value(fromCurrencyCode),
+       toCurrencyCode = Value(toCurrencyCode),
+       rateScaled = Value(rateScaled),
+       effectiveAt = Value(effectiveAt);
+  static Insertable<FinancialExchangeRateData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? fromCurrencyCode,
+    Expression<String>? toCurrencyCode,
+    Expression<BigInt>? rateScaled,
+    Expression<DateTime>? effectiveAt,
+    Expression<String>? source,
+    Expression<bool>? isImmutableSnapshot,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (fromCurrencyCode != null) 'from_currency_code': fromCurrencyCode,
+      if (toCurrencyCode != null) 'to_currency_code': toCurrencyCode,
+      if (rateScaled != null) 'rate_scaled': rateScaled,
+      if (effectiveAt != null) 'effective_at': effectiveAt,
+      if (source != null) 'source': source,
+      if (isImmutableSnapshot != null)
+        'is_immutable_snapshot': isImmutableSnapshot,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialExchangeRatesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? fromCurrencyCode,
+    Value<String>? toCurrencyCode,
+    Value<BigInt>? rateScaled,
+    Value<DateTime>? effectiveAt,
+    Value<String>? source,
+    Value<bool>? isImmutableSnapshot,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialExchangeRatesCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      fromCurrencyCode: fromCurrencyCode ?? this.fromCurrencyCode,
+      toCurrencyCode: toCurrencyCode ?? this.toCurrencyCode,
+      rateScaled: rateScaled ?? this.rateScaled,
+      effectiveAt: effectiveAt ?? this.effectiveAt,
+      source: source ?? this.source,
+      isImmutableSnapshot: isImmutableSnapshot ?? this.isImmutableSnapshot,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (fromCurrencyCode.present) {
+      map['from_currency_code'] = Variable<String>(fromCurrencyCode.value);
+    }
+    if (toCurrencyCode.present) {
+      map['to_currency_code'] = Variable<String>(toCurrencyCode.value);
+    }
+    if (rateScaled.present) {
+      map['rate_scaled'] = Variable<BigInt>(rateScaled.value);
+    }
+    if (effectiveAt.present) {
+      map['effective_at'] = Variable<DateTime>(effectiveAt.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (isImmutableSnapshot.present) {
+      map['is_immutable_snapshot'] = Variable<bool>(isImmutableSnapshot.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialExchangeRatesCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fromCurrencyCode: $fromCurrencyCode, ')
+          ..write('toCurrencyCode: $toCurrencyCode, ')
+          ..write('rateScaled: $rateScaled, ')
+          ..write('effectiveAt: $effectiveAt, ')
+          ..write('source: $source, ')
+          ..write('isImmutableSnapshot: $isImmutableSnapshot, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialAccountsTable extends FinancialAccounts
+    with TableInfo<$FinancialAccountsTable, FinancialAccountData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialAccountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+    'name_ar',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _nameEnMeta = const VerificationMeta('nameEn');
+  @override
+  late final GeneratedColumn<String> nameEn = GeneratedColumn<String>(
+    'name_en',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _accountTypeMeta = const VerificationMeta(
+    'accountType',
+  );
+  @override
+  late final GeneratedColumn<String> accountType = GeneratedColumn<String>(
+    'account_type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 32,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyPolicyMeta = const VerificationMeta(
+    'currencyPolicy',
+  );
+  @override
+  late final GeneratedColumn<String> currencyPolicy = GeneratedColumn<String>(
+    'currency_policy',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 32,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fixedCurrencyCodeMeta = const VerificationMeta(
+    'fixedCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> fixedCurrencyCode =
+      GeneratedColumn<String>(
+        'fixed_currency_code',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _parentAccountIdMeta = const VerificationMeta(
+    'parentAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> parentAccountId = GeneratedColumn<String>(
+    'parent_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isGroupMeta = const VerificationMeta(
+    'isGroup',
+  );
+  @override
+  late final GeneratedColumn<bool> isGroup = GeneratedColumn<bool>(
+    'is_group',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_group" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isSystemAccountMeta = const VerificationMeta(
+    'isSystemAccount',
+  );
+  @override
+  late final GeneratedColumn<bool> isSystemAccount = GeneratedColumn<bool>(
+    'is_system_account',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_system_account" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    code,
+    nameAr,
+    nameEn,
+    accountType,
+    currencyPolicy,
+    fixedCurrencyCode,
+    parentAccountId,
+    level,
+    isGroup,
+    isSystemAccount,
+    isActive,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_accounts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialAccountData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(
+        _nameArMeta,
+        nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta),
+      );
+    }
+    if (data.containsKey('name_en')) {
+      context.handle(
+        _nameEnMeta,
+        nameEn.isAcceptableOrUnknown(data['name_en']!, _nameEnMeta),
+      );
+    }
+    if (data.containsKey('account_type')) {
+      context.handle(
+        _accountTypeMeta,
+        accountType.isAcceptableOrUnknown(
+          data['account_type']!,
+          _accountTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_accountTypeMeta);
+    }
+    if (data.containsKey('currency_policy')) {
+      context.handle(
+        _currencyPolicyMeta,
+        currencyPolicy.isAcceptableOrUnknown(
+          data['currency_policy']!,
+          _currencyPolicyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyPolicyMeta);
+    }
+    if (data.containsKey('fixed_currency_code')) {
+      context.handle(
+        _fixedCurrencyCodeMeta,
+        fixedCurrencyCode.isAcceptableOrUnknown(
+          data['fixed_currency_code']!,
+          _fixedCurrencyCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('parent_account_id')) {
+      context.handle(
+        _parentAccountIdMeta,
+        parentAccountId.isAcceptableOrUnknown(
+          data['parent_account_id']!,
+          _parentAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    }
+    if (data.containsKey('is_group')) {
+      context.handle(
+        _isGroupMeta,
+        isGroup.isAcceptableOrUnknown(data['is_group']!, _isGroupMeta),
+      );
+    }
+    if (data.containsKey('is_system_account')) {
+      context.handle(
+        _isSystemAccountMeta,
+        isSystemAccount.isAcceptableOrUnknown(
+          data['is_system_account']!,
+          _isSystemAccountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+    {companyId, code},
+  ];
+  @override
+  FinancialAccountData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialAccountData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      nameAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_ar'],
+      )!,
+      nameEn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_en'],
+      )!,
+      accountType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_type'],
+      )!,
+      currencyPolicy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_policy'],
+      )!,
+      fixedCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fixed_currency_code'],
+      ),
+      parentAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_account_id'],
+      ),
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      isGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_group'],
+      )!,
+      isSystemAccount: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_system_account'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $FinancialAccountsTable createAlias(String alias) {
+    return $FinancialAccountsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialAccountData extends DataClass
+    implements Insertable<FinancialAccountData> {
+  /// Canonical UUID v7 primary key.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Hierarchical account code (e.g., '1101').
+  final String code;
+
+  /// Arabic display name.
+  final String nameAr;
+
+  /// English display name.
+  final String nameEn;
+
+  /// Account type (ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE).
+  final String accountType;
+
+  /// Account currency policy:
+  /// - `MULTI_CURRENCY_BUCKETED`: Customer/Supplier AR/AP accounts.
+  /// - `SINGLE_FIXED_CURRENCY`: Cash, Bank, Card, Wallet accounts.
+  /// - `FUNCTIONAL_ONLY`: Revenue, Expense, Inventory, COGS, FX accounts.
+  final String currencyPolicy;
+
+  /// Fixed currency ISO code (required when policy is SINGLE_FIXED_CURRENCY).
+  final String? fixedCurrencyCode;
+
+  /// Parent account ID for hierarchical Chart of Accounts structure.
+  final String? parentAccountId;
+
+  /// Level in account hierarchy tree.
+  final int level;
+
+  /// Whether this is a header/group account that cannot accept postings.
+  final bool isGroup;
+
+  /// System account flag (e.g. system retained earnings or default AR/AP).
+  final bool isSystemAccount;
+
+  /// Active operational status.
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const FinancialAccountData({
+    required this.id,
+    required this.companyId,
+    required this.code,
+    required this.nameAr,
+    required this.nameEn,
+    required this.accountType,
+    required this.currencyPolicy,
+    this.fixedCurrencyCode,
+    this.parentAccountId,
+    required this.level,
+    required this.isGroup,
+    required this.isSystemAccount,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['code'] = Variable<String>(code);
+    map['name_ar'] = Variable<String>(nameAr);
+    map['name_en'] = Variable<String>(nameEn);
+    map['account_type'] = Variable<String>(accountType);
+    map['currency_policy'] = Variable<String>(currencyPolicy);
+    if (!nullToAbsent || fixedCurrencyCode != null) {
+      map['fixed_currency_code'] = Variable<String>(fixedCurrencyCode);
+    }
+    if (!nullToAbsent || parentAccountId != null) {
+      map['parent_account_id'] = Variable<String>(parentAccountId);
+    }
+    map['level'] = Variable<int>(level);
+    map['is_group'] = Variable<bool>(isGroup);
+    map['is_system_account'] = Variable<bool>(isSystemAccount);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  FinancialAccountsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialAccountsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      code: Value(code),
+      nameAr: Value(nameAr),
+      nameEn: Value(nameEn),
+      accountType: Value(accountType),
+      currencyPolicy: Value(currencyPolicy),
+      fixedCurrencyCode: fixedCurrencyCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fixedCurrencyCode),
+      parentAccountId: parentAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentAccountId),
+      level: Value(level),
+      isGroup: Value(isGroup),
+      isSystemAccount: Value(isSystemAccount),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory FinancialAccountData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialAccountData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      code: serializer.fromJson<String>(json['code']),
+      nameAr: serializer.fromJson<String>(json['nameAr']),
+      nameEn: serializer.fromJson<String>(json['nameEn']),
+      accountType: serializer.fromJson<String>(json['accountType']),
+      currencyPolicy: serializer.fromJson<String>(json['currencyPolicy']),
+      fixedCurrencyCode: serializer.fromJson<String?>(
+        json['fixedCurrencyCode'],
+      ),
+      parentAccountId: serializer.fromJson<String?>(json['parentAccountId']),
+      level: serializer.fromJson<int>(json['level']),
+      isGroup: serializer.fromJson<bool>(json['isGroup']),
+      isSystemAccount: serializer.fromJson<bool>(json['isSystemAccount']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'code': serializer.toJson<String>(code),
+      'nameAr': serializer.toJson<String>(nameAr),
+      'nameEn': serializer.toJson<String>(nameEn),
+      'accountType': serializer.toJson<String>(accountType),
+      'currencyPolicy': serializer.toJson<String>(currencyPolicy),
+      'fixedCurrencyCode': serializer.toJson<String?>(fixedCurrencyCode),
+      'parentAccountId': serializer.toJson<String?>(parentAccountId),
+      'level': serializer.toJson<int>(level),
+      'isGroup': serializer.toJson<bool>(isGroup),
+      'isSystemAccount': serializer.toJson<bool>(isSystemAccount),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  FinancialAccountData copyWith({
+    String? id,
+    String? companyId,
+    String? code,
+    String? nameAr,
+    String? nameEn,
+    String? accountType,
+    String? currencyPolicy,
+    Value<String?> fixedCurrencyCode = const Value.absent(),
+    Value<String?> parentAccountId = const Value.absent(),
+    int? level,
+    bool? isGroup,
+    bool? isSystemAccount,
+    bool? isActive,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => FinancialAccountData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    code: code ?? this.code,
+    nameAr: nameAr ?? this.nameAr,
+    nameEn: nameEn ?? this.nameEn,
+    accountType: accountType ?? this.accountType,
+    currencyPolicy: currencyPolicy ?? this.currencyPolicy,
+    fixedCurrencyCode: fixedCurrencyCode.present
+        ? fixedCurrencyCode.value
+        : this.fixedCurrencyCode,
+    parentAccountId: parentAccountId.present
+        ? parentAccountId.value
+        : this.parentAccountId,
+    level: level ?? this.level,
+    isGroup: isGroup ?? this.isGroup,
+    isSystemAccount: isSystemAccount ?? this.isSystemAccount,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  FinancialAccountData copyWithCompanion(FinancialAccountsCompanion data) {
+    return FinancialAccountData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      code: data.code.present ? data.code.value : this.code,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
+      nameEn: data.nameEn.present ? data.nameEn.value : this.nameEn,
+      accountType: data.accountType.present
+          ? data.accountType.value
+          : this.accountType,
+      currencyPolicy: data.currencyPolicy.present
+          ? data.currencyPolicy.value
+          : this.currencyPolicy,
+      fixedCurrencyCode: data.fixedCurrencyCode.present
+          ? data.fixedCurrencyCode.value
+          : this.fixedCurrencyCode,
+      parentAccountId: data.parentAccountId.present
+          ? data.parentAccountId.value
+          : this.parentAccountId,
+      level: data.level.present ? data.level.value : this.level,
+      isGroup: data.isGroup.present ? data.isGroup.value : this.isGroup,
+      isSystemAccount: data.isSystemAccount.present
+          ? data.isSystemAccount.value
+          : this.isSystemAccount,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialAccountData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('code: $code, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('nameEn: $nameEn, ')
+          ..write('accountType: $accountType, ')
+          ..write('currencyPolicy: $currencyPolicy, ')
+          ..write('fixedCurrencyCode: $fixedCurrencyCode, ')
+          ..write('parentAccountId: $parentAccountId, ')
+          ..write('level: $level, ')
+          ..write('isGroup: $isGroup, ')
+          ..write('isSystemAccount: $isSystemAccount, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    code,
+    nameAr,
+    nameEn,
+    accountType,
+    currencyPolicy,
+    fixedCurrencyCode,
+    parentAccountId,
+    level,
+    isGroup,
+    isSystemAccount,
+    isActive,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialAccountData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.code == this.code &&
+          other.nameAr == this.nameAr &&
+          other.nameEn == this.nameEn &&
+          other.accountType == this.accountType &&
+          other.currencyPolicy == this.currencyPolicy &&
+          other.fixedCurrencyCode == this.fixedCurrencyCode &&
+          other.parentAccountId == this.parentAccountId &&
+          other.level == this.level &&
+          other.isGroup == this.isGroup &&
+          other.isSystemAccount == this.isSystemAccount &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class FinancialAccountsCompanion extends UpdateCompanion<FinancialAccountData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> code;
+  final Value<String> nameAr;
+  final Value<String> nameEn;
+  final Value<String> accountType;
+  final Value<String> currencyPolicy;
+  final Value<String?> fixedCurrencyCode;
+  final Value<String?> parentAccountId;
+  final Value<int> level;
+  final Value<bool> isGroup;
+  final Value<bool> isSystemAccount;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const FinancialAccountsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.code = const Value.absent(),
+    this.nameAr = const Value.absent(),
+    this.nameEn = const Value.absent(),
+    this.accountType = const Value.absent(),
+    this.currencyPolicy = const Value.absent(),
+    this.fixedCurrencyCode = const Value.absent(),
+    this.parentAccountId = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isGroup = const Value.absent(),
+    this.isSystemAccount = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialAccountsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String code,
+    this.nameAr = const Value.absent(),
+    this.nameEn = const Value.absent(),
+    required String accountType,
+    required String currencyPolicy,
+    this.fixedCurrencyCode = const Value.absent(),
+    this.parentAccountId = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isGroup = const Value.absent(),
+    this.isSystemAccount = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       code = Value(code),
+       accountType = Value(accountType),
+       currencyPolicy = Value(currencyPolicy);
+  static Insertable<FinancialAccountData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? code,
+    Expression<String>? nameAr,
+    Expression<String>? nameEn,
+    Expression<String>? accountType,
+    Expression<String>? currencyPolicy,
+    Expression<String>? fixedCurrencyCode,
+    Expression<String>? parentAccountId,
+    Expression<int>? level,
+    Expression<bool>? isGroup,
+    Expression<bool>? isSystemAccount,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (code != null) 'code': code,
+      if (nameAr != null) 'name_ar': nameAr,
+      if (nameEn != null) 'name_en': nameEn,
+      if (accountType != null) 'account_type': accountType,
+      if (currencyPolicy != null) 'currency_policy': currencyPolicy,
+      if (fixedCurrencyCode != null) 'fixed_currency_code': fixedCurrencyCode,
+      if (parentAccountId != null) 'parent_account_id': parentAccountId,
+      if (level != null) 'level': level,
+      if (isGroup != null) 'is_group': isGroup,
+      if (isSystemAccount != null) 'is_system_account': isSystemAccount,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialAccountsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? code,
+    Value<String>? nameAr,
+    Value<String>? nameEn,
+    Value<String>? accountType,
+    Value<String>? currencyPolicy,
+    Value<String?>? fixedCurrencyCode,
+    Value<String?>? parentAccountId,
+    Value<int>? level,
+    Value<bool>? isGroup,
+    Value<bool>? isSystemAccount,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialAccountsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      code: code ?? this.code,
+      nameAr: nameAr ?? this.nameAr,
+      nameEn: nameEn ?? this.nameEn,
+      accountType: accountType ?? this.accountType,
+      currencyPolicy: currencyPolicy ?? this.currencyPolicy,
+      fixedCurrencyCode: fixedCurrencyCode ?? this.fixedCurrencyCode,
+      parentAccountId: parentAccountId ?? this.parentAccountId,
+      level: level ?? this.level,
+      isGroup: isGroup ?? this.isGroup,
+      isSystemAccount: isSystemAccount ?? this.isSystemAccount,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
+    }
+    if (nameEn.present) {
+      map['name_en'] = Variable<String>(nameEn.value);
+    }
+    if (accountType.present) {
+      map['account_type'] = Variable<String>(accountType.value);
+    }
+    if (currencyPolicy.present) {
+      map['currency_policy'] = Variable<String>(currencyPolicy.value);
+    }
+    if (fixedCurrencyCode.present) {
+      map['fixed_currency_code'] = Variable<String>(fixedCurrencyCode.value);
+    }
+    if (parentAccountId.present) {
+      map['parent_account_id'] = Variable<String>(parentAccountId.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (isGroup.present) {
+      map['is_group'] = Variable<bool>(isGroup.value);
+    }
+    if (isSystemAccount.present) {
+      map['is_system_account'] = Variable<bool>(isSystemAccount.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialAccountsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('code: $code, ')
+          ..write('nameAr: $nameAr, ')
+          ..write('nameEn: $nameEn, ')
+          ..write('accountType: $accountType, ')
+          ..write('currencyPolicy: $currencyPolicy, ')
+          ..write('fixedCurrencyCode: $fixedCurrencyCode, ')
+          ..write('parentAccountId: $parentAccountId, ')
+          ..write('level: $level, ')
+          ..write('isGroup: $isGroup, ')
+          ..write('isSystemAccount: $isSystemAccount, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialSubjectsTable extends FinancialSubjects
+    with TableInfo<$FinancialSubjectsTable, FinancialSubjectData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialSubjectsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectTypeMeta = const VerificationMeta(
+    'subjectType',
+  );
+  @override
+  late final GeneratedColumn<String> subjectType = GeneratedColumn<String>(
+    'subject_type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 32,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 256,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _primaryAccountIdMeta = const VerificationMeta(
+    'primaryAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> primaryAccountId = GeneratedColumn<String>(
+    'primary_account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    subjectType,
+    name,
+    code,
+    primaryAccountId,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_subjects';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialSubjectData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('subject_type')) {
+      context.handle(
+        _subjectTypeMeta,
+        subjectType.isAcceptableOrUnknown(
+          data['subject_type']!,
+          _subjectTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectTypeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('primary_account_id')) {
+      context.handle(
+        _primaryAccountIdMeta,
+        primaryAccountId.isAcceptableOrUnknown(
+          data['primary_account_id']!,
+          _primaryAccountIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_primaryAccountIdMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+    {companyId, subjectType, code},
+  ];
+  @override
+  FinancialSubjectData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialSubjectData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      subjectType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_type'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      primaryAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}primary_account_id'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialSubjectsTable createAlias(String alias) {
+    return $FinancialSubjectsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialSubjectData extends DataClass
+    implements Insertable<FinancialSubjectData> {
+  /// Canonical UUID v7 primary key.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Subject type (CUSTOMER, SUPPLIER, OTHER).
+  final String subjectType;
+
+  /// Entity name.
+  final String name;
+
+  /// Entity code/number.
+  final String code;
+
+  /// Primary control account ID in FinancialAccounts (e.g. Accounts Receivable / Payable).
+  final String primaryAccountId;
+
+  /// Active status.
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const FinancialSubjectData({
+    required this.id,
+    required this.companyId,
+    required this.subjectType,
+    required this.name,
+    required this.code,
+    required this.primaryAccountId,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['subject_type'] = Variable<String>(subjectType);
+    map['name'] = Variable<String>(name);
+    map['code'] = Variable<String>(code);
+    map['primary_account_id'] = Variable<String>(primaryAccountId);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  FinancialSubjectsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialSubjectsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      subjectType: Value(subjectType),
+      name: Value(name),
+      code: Value(code),
+      primaryAccountId: Value(primaryAccountId),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FinancialSubjectData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialSubjectData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      subjectType: serializer.fromJson<String>(json['subjectType']),
+      name: serializer.fromJson<String>(json['name']),
+      code: serializer.fromJson<String>(json['code']),
+      primaryAccountId: serializer.fromJson<String>(json['primaryAccountId']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'subjectType': serializer.toJson<String>(subjectType),
+      'name': serializer.toJson<String>(name),
+      'code': serializer.toJson<String>(code),
+      'primaryAccountId': serializer.toJson<String>(primaryAccountId),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  FinancialSubjectData copyWith({
+    String? id,
+    String? companyId,
+    String? subjectType,
+    String? name,
+    String? code,
+    String? primaryAccountId,
+    bool? isActive,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => FinancialSubjectData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    subjectType: subjectType ?? this.subjectType,
+    name: name ?? this.name,
+    code: code ?? this.code,
+    primaryAccountId: primaryAccountId ?? this.primaryAccountId,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FinancialSubjectData copyWithCompanion(FinancialSubjectsCompanion data) {
+    return FinancialSubjectData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      subjectType: data.subjectType.present
+          ? data.subjectType.value
+          : this.subjectType,
+      name: data.name.present ? data.name.value : this.name,
+      code: data.code.present ? data.code.value : this.code,
+      primaryAccountId: data.primaryAccountId.present
+          ? data.primaryAccountId.value
+          : this.primaryAccountId,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialSubjectData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('subjectType: $subjectType, ')
+          ..write('name: $name, ')
+          ..write('code: $code, ')
+          ..write('primaryAccountId: $primaryAccountId, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    subjectType,
+    name,
+    code,
+    primaryAccountId,
+    isActive,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialSubjectData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.subjectType == this.subjectType &&
+          other.name == this.name &&
+          other.code == this.code &&
+          other.primaryAccountId == this.primaryAccountId &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FinancialSubjectsCompanion extends UpdateCompanion<FinancialSubjectData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> subjectType;
+  final Value<String> name;
+  final Value<String> code;
+  final Value<String> primaryAccountId;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const FinancialSubjectsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.subjectType = const Value.absent(),
+    this.name = const Value.absent(),
+    this.code = const Value.absent(),
+    this.primaryAccountId = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialSubjectsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String subjectType,
+    required String name,
+    required String code,
+    required String primaryAccountId,
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       subjectType = Value(subjectType),
+       name = Value(name),
+       code = Value(code),
+       primaryAccountId = Value(primaryAccountId);
+  static Insertable<FinancialSubjectData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? subjectType,
+    Expression<String>? name,
+    Expression<String>? code,
+    Expression<String>? primaryAccountId,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (subjectType != null) 'subject_type': subjectType,
+      if (name != null) 'name': name,
+      if (code != null) 'code': code,
+      if (primaryAccountId != null) 'primary_account_id': primaryAccountId,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialSubjectsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? subjectType,
+    Value<String>? name,
+    Value<String>? code,
+    Value<String>? primaryAccountId,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialSubjectsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      subjectType: subjectType ?? this.subjectType,
+      name: name ?? this.name,
+      code: code ?? this.code,
+      primaryAccountId: primaryAccountId ?? this.primaryAccountId,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (subjectType.present) {
+      map['subject_type'] = Variable<String>(subjectType.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (primaryAccountId.present) {
+      map['primary_account_id'] = Variable<String>(primaryAccountId.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialSubjectsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('subjectType: $subjectType, ')
+          ..write('name: $name, ')
+          ..write('code: $code, ')
+          ..write('primaryAccountId: $primaryAccountId, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialSubjectAccountBucketsTable
+    extends FinancialSubjectAccountBuckets
+    with
+        TableInfo<
+          $FinancialSubjectAccountBucketsTable,
+          FinancialSubjectAccountBucketData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialSubjectAccountBucketsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _balanceScaledMeta = const VerificationMeta(
+    'balanceScaled',
+  );
+  @override
+  late final GeneratedColumn<BigInt> balanceScaled = GeneratedColumn<BigInt>(
+    'balance_scaled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bigInt,
+    requiredDuringInsert: false,
+    defaultValue: Constant(BigInt.zero),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    subjectId,
+    accountId,
+    currencyCode,
+    balanceScaled,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_subject_account_buckets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialSubjectAccountBucketData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('balance_scaled')) {
+      context.handle(
+        _balanceScaledMeta,
+        balanceScaled.isAcceptableOrUnknown(
+          data['balance_scaled']!,
+          _balanceScaledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, subjectId, accountId, currencyCode},
+  ];
+  @override
+  FinancialSubjectAccountBucketData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialSubjectAccountBucketData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      )!,
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      balanceScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}balance_scaled'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialSubjectAccountBucketsTable createAlias(String alias) {
+    return $FinancialSubjectAccountBucketsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialSubjectAccountBucketData extends DataClass
+    implements Insertable<FinancialSubjectAccountBucketData> {
+  /// Canonical UUID v7 primary key.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Subject ID in FinancialSubjects.
+  final String subjectId;
+
+  /// Account ID in FinancialAccounts.
+  final String accountId;
+
+  /// Bucket currency ISO code (e.g. YER, SAR, USD).
+  final String currencyCode;
+
+  /// Accumulated net balance in bucket currency scaled by 10^8.
+  final BigInt balanceScaled;
+  final DateTime updatedAt;
+  const FinancialSubjectAccountBucketData({
+    required this.id,
+    required this.companyId,
+    required this.subjectId,
+    required this.accountId,
+    required this.currencyCode,
+    required this.balanceScaled,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['account_id'] = Variable<String>(accountId);
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['balance_scaled'] = Variable<BigInt>(balanceScaled);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  FinancialSubjectAccountBucketsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialSubjectAccountBucketsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      subjectId: Value(subjectId),
+      accountId: Value(accountId),
+      currencyCode: Value(currencyCode),
+      balanceScaled: Value(balanceScaled),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FinancialSubjectAccountBucketData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialSubjectAccountBucketData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      accountId: serializer.fromJson<String>(json['accountId']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      balanceScaled: serializer.fromJson<BigInt>(json['balanceScaled']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'accountId': serializer.toJson<String>(accountId),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'balanceScaled': serializer.toJson<BigInt>(balanceScaled),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  FinancialSubjectAccountBucketData copyWith({
+    String? id,
+    String? companyId,
+    String? subjectId,
+    String? accountId,
+    String? currencyCode,
+    BigInt? balanceScaled,
+    DateTime? updatedAt,
+  }) => FinancialSubjectAccountBucketData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    subjectId: subjectId ?? this.subjectId,
+    accountId: accountId ?? this.accountId,
+    currencyCode: currencyCode ?? this.currencyCode,
+    balanceScaled: balanceScaled ?? this.balanceScaled,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FinancialSubjectAccountBucketData copyWithCompanion(
+    FinancialSubjectAccountBucketsCompanion data,
+  ) {
+    return FinancialSubjectAccountBucketData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      balanceScaled: data.balanceScaled.present
+          ? data.balanceScaled.value
+          : this.balanceScaled,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialSubjectAccountBucketData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('accountId: $accountId, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('balanceScaled: $balanceScaled, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    subjectId,
+    accountId,
+    currencyCode,
+    balanceScaled,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialSubjectAccountBucketData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.subjectId == this.subjectId &&
+          other.accountId == this.accountId &&
+          other.currencyCode == this.currencyCode &&
+          other.balanceScaled == this.balanceScaled &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FinancialSubjectAccountBucketsCompanion
+    extends UpdateCompanion<FinancialSubjectAccountBucketData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> subjectId;
+  final Value<String> accountId;
+  final Value<String> currencyCode;
+  final Value<BigInt> balanceScaled;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const FinancialSubjectAccountBucketsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.balanceScaled = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialSubjectAccountBucketsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String subjectId,
+    required String accountId,
+    required String currencyCode,
+    this.balanceScaled = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       subjectId = Value(subjectId),
+       accountId = Value(accountId),
+       currencyCode = Value(currencyCode);
+  static Insertable<FinancialSubjectAccountBucketData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? subjectId,
+    Expression<String>? accountId,
+    Expression<String>? currencyCode,
+    Expression<BigInt>? balanceScaled,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (accountId != null) 'account_id': accountId,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (balanceScaled != null) 'balance_scaled': balanceScaled,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialSubjectAccountBucketsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? subjectId,
+    Value<String>? accountId,
+    Value<String>? currencyCode,
+    Value<BigInt>? balanceScaled,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialSubjectAccountBucketsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      subjectId: subjectId ?? this.subjectId,
+      accountId: accountId ?? this.accountId,
+      currencyCode: currencyCode ?? this.currencyCode,
+      balanceScaled: balanceScaled ?? this.balanceScaled,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (balanceScaled.present) {
+      map['balance_scaled'] = Variable<BigInt>(balanceScaled.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialSubjectAccountBucketsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('accountId: $accountId, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('balanceScaled: $balanceScaled, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialAccountBalancesTable extends FinancialAccountBalances
+    with
+        TableInfo<$FinancialAccountBalancesTable, FinancialAccountBalanceData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialAccountBalancesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _balanceScaledMeta = const VerificationMeta(
+    'balanceScaled',
+  );
+  @override
+  late final GeneratedColumn<BigInt> balanceScaled = GeneratedColumn<BigInt>(
+    'balance_scaled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bigInt,
+    requiredDuringInsert: false,
+    defaultValue: Constant(BigInt.zero),
+  );
+  static const VerificationMeta _debitTotalScaledMeta = const VerificationMeta(
+    'debitTotalScaled',
+  );
+  @override
+  late final GeneratedColumn<BigInt> debitTotalScaled = GeneratedColumn<BigInt>(
+    'debit_total_scaled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bigInt,
+    requiredDuringInsert: false,
+    defaultValue: Constant(BigInt.zero),
+  );
+  static const VerificationMeta _creditTotalScaledMeta = const VerificationMeta(
+    'creditTotalScaled',
+  );
+  @override
+  late final GeneratedColumn<BigInt> creditTotalScaled =
+      GeneratedColumn<BigInt>(
+        'credit_total_scaled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: false,
+        defaultValue: Constant(BigInt.zero),
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    accountId,
+    currencyCode,
+    balanceScaled,
+    debitTotalScaled,
+    creditTotalScaled,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_account_balances';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialAccountBalanceData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('balance_scaled')) {
+      context.handle(
+        _balanceScaledMeta,
+        balanceScaled.isAcceptableOrUnknown(
+          data['balance_scaled']!,
+          _balanceScaledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('debit_total_scaled')) {
+      context.handle(
+        _debitTotalScaledMeta,
+        debitTotalScaled.isAcceptableOrUnknown(
+          data['debit_total_scaled']!,
+          _debitTotalScaledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('credit_total_scaled')) {
+      context.handle(
+        _creditTotalScaledMeta,
+        creditTotalScaled.isAcceptableOrUnknown(
+          data['credit_total_scaled']!,
+          _creditTotalScaledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, accountId, currencyCode},
+  ];
+  @override
+  FinancialAccountBalanceData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialAccountBalanceData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      balanceScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}balance_scaled'],
+      )!,
+      debitTotalScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}debit_total_scaled'],
+      )!,
+      creditTotalScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}credit_total_scaled'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialAccountBalancesTable createAlias(String alias) {
+    return $FinancialAccountBalancesTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialAccountBalanceData extends DataClass
+    implements Insertable<FinancialAccountBalanceData> {
+  /// Canonical UUID v7 primary key.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Account ID in FinancialAccounts.
+  final String accountId;
+
+  /// Currency ISO code (functional or account fixed currency).
+  final String currencyCode;
+
+  /// Accumulated net balance scaled by 10^8.
+  final BigInt balanceScaled;
+
+  /// Total cumulative debit postings scaled by 10^8.
+  final BigInt debitTotalScaled;
+
+  /// Total cumulative credit postings scaled by 10^8.
+  final BigInt creditTotalScaled;
+  final DateTime updatedAt;
+  const FinancialAccountBalanceData({
+    required this.id,
+    required this.companyId,
+    required this.accountId,
+    required this.currencyCode,
+    required this.balanceScaled,
+    required this.debitTotalScaled,
+    required this.creditTotalScaled,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['account_id'] = Variable<String>(accountId);
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['balance_scaled'] = Variable<BigInt>(balanceScaled);
+    map['debit_total_scaled'] = Variable<BigInt>(debitTotalScaled);
+    map['credit_total_scaled'] = Variable<BigInt>(creditTotalScaled);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  FinancialAccountBalancesCompanion toCompanion(bool nullToAbsent) {
+    return FinancialAccountBalancesCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      accountId: Value(accountId),
+      currencyCode: Value(currencyCode),
+      balanceScaled: Value(balanceScaled),
+      debitTotalScaled: Value(debitTotalScaled),
+      creditTotalScaled: Value(creditTotalScaled),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FinancialAccountBalanceData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialAccountBalanceData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      accountId: serializer.fromJson<String>(json['accountId']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      balanceScaled: serializer.fromJson<BigInt>(json['balanceScaled']),
+      debitTotalScaled: serializer.fromJson<BigInt>(json['debitTotalScaled']),
+      creditTotalScaled: serializer.fromJson<BigInt>(json['creditTotalScaled']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'accountId': serializer.toJson<String>(accountId),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'balanceScaled': serializer.toJson<BigInt>(balanceScaled),
+      'debitTotalScaled': serializer.toJson<BigInt>(debitTotalScaled),
+      'creditTotalScaled': serializer.toJson<BigInt>(creditTotalScaled),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  FinancialAccountBalanceData copyWith({
+    String? id,
+    String? companyId,
+    String? accountId,
+    String? currencyCode,
+    BigInt? balanceScaled,
+    BigInt? debitTotalScaled,
+    BigInt? creditTotalScaled,
+    DateTime? updatedAt,
+  }) => FinancialAccountBalanceData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    accountId: accountId ?? this.accountId,
+    currencyCode: currencyCode ?? this.currencyCode,
+    balanceScaled: balanceScaled ?? this.balanceScaled,
+    debitTotalScaled: debitTotalScaled ?? this.debitTotalScaled,
+    creditTotalScaled: creditTotalScaled ?? this.creditTotalScaled,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FinancialAccountBalanceData copyWithCompanion(
+    FinancialAccountBalancesCompanion data,
+  ) {
+    return FinancialAccountBalanceData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      balanceScaled: data.balanceScaled.present
+          ? data.balanceScaled.value
+          : this.balanceScaled,
+      debitTotalScaled: data.debitTotalScaled.present
+          ? data.debitTotalScaled.value
+          : this.debitTotalScaled,
+      creditTotalScaled: data.creditTotalScaled.present
+          ? data.creditTotalScaled.value
+          : this.creditTotalScaled,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialAccountBalanceData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('accountId: $accountId, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('balanceScaled: $balanceScaled, ')
+          ..write('debitTotalScaled: $debitTotalScaled, ')
+          ..write('creditTotalScaled: $creditTotalScaled, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    accountId,
+    currencyCode,
+    balanceScaled,
+    debitTotalScaled,
+    creditTotalScaled,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialAccountBalanceData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.accountId == this.accountId &&
+          other.currencyCode == this.currencyCode &&
+          other.balanceScaled == this.balanceScaled &&
+          other.debitTotalScaled == this.debitTotalScaled &&
+          other.creditTotalScaled == this.creditTotalScaled &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FinancialAccountBalancesCompanion
+    extends UpdateCompanion<FinancialAccountBalanceData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> accountId;
+  final Value<String> currencyCode;
+  final Value<BigInt> balanceScaled;
+  final Value<BigInt> debitTotalScaled;
+  final Value<BigInt> creditTotalScaled;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const FinancialAccountBalancesCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.balanceScaled = const Value.absent(),
+    this.debitTotalScaled = const Value.absent(),
+    this.creditTotalScaled = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialAccountBalancesCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String accountId,
+    required String currencyCode,
+    this.balanceScaled = const Value.absent(),
+    this.debitTotalScaled = const Value.absent(),
+    this.creditTotalScaled = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       accountId = Value(accountId),
+       currencyCode = Value(currencyCode);
+  static Insertable<FinancialAccountBalanceData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? accountId,
+    Expression<String>? currencyCode,
+    Expression<BigInt>? balanceScaled,
+    Expression<BigInt>? debitTotalScaled,
+    Expression<BigInt>? creditTotalScaled,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (accountId != null) 'account_id': accountId,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (balanceScaled != null) 'balance_scaled': balanceScaled,
+      if (debitTotalScaled != null) 'debit_total_scaled': debitTotalScaled,
+      if (creditTotalScaled != null) 'credit_total_scaled': creditTotalScaled,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialAccountBalancesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? accountId,
+    Value<String>? currencyCode,
+    Value<BigInt>? balanceScaled,
+    Value<BigInt>? debitTotalScaled,
+    Value<BigInt>? creditTotalScaled,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialAccountBalancesCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      accountId: accountId ?? this.accountId,
+      currencyCode: currencyCode ?? this.currencyCode,
+      balanceScaled: balanceScaled ?? this.balanceScaled,
+      debitTotalScaled: debitTotalScaled ?? this.debitTotalScaled,
+      creditTotalScaled: creditTotalScaled ?? this.creditTotalScaled,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (balanceScaled.present) {
+      map['balance_scaled'] = Variable<BigInt>(balanceScaled.value);
+    }
+    if (debitTotalScaled.present) {
+      map['debit_total_scaled'] = Variable<BigInt>(debitTotalScaled.value);
+    }
+    if (creditTotalScaled.present) {
+      map['credit_total_scaled'] = Variable<BigInt>(creditTotalScaled.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialAccountBalancesCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('accountId: $accountId, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('balanceScaled: $balanceScaled, ')
+          ..write('debitTotalScaled: $debitTotalScaled, ')
+          ..write('creditTotalScaled: $creditTotalScaled, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialJournalEntriesTable extends FinancialJournalEntries
+    with TableInfo<$FinancialJournalEntriesTable, FinancialJournalEntryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialJournalEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entryNumberMeta = const VerificationMeta(
+    'entryNumber',
+  );
+  @override
+  late final GeneratedColumn<String> entryNumber = GeneratedColumn<String>(
+    'entry_number',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseCurrencyCodeMeta = const VerificationMeta(
+    'baseCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> baseCurrencyCode = GeneratedColumn<String>(
+    'base_currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _postingDateMeta = const VerificationMeta(
+    'postingDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> postingDate = GeneratedColumn<DateTime>(
+    'posting_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 32,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('DRAFT'),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceModuleMeta = const VerificationMeta(
+    'sourceModule',
+  );
+  @override
+  late final GeneratedColumn<String> sourceModule = GeneratedColumn<String>(
+    'source_module',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceDocumentIdMeta = const VerificationMeta(
+    'sourceDocumentId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceDocumentId = GeneratedColumn<String>(
+    'source_document_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _postedAtMeta = const VerificationMeta(
+    'postedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> postedAt = GeneratedColumn<DateTime>(
+    'posted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByIdMeta = const VerificationMeta(
+    'createdById',
+  );
+  @override
+  late final GeneratedColumn<String> createdById = GeneratedColumn<String>(
+    'created_by_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    entryNumber,
+    baseCurrencyCode,
+    postingDate,
+    status,
+    description,
+    sourceModule,
+    sourceDocumentId,
+    postedAt,
+    createdById,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_journal_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialJournalEntryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('entry_number')) {
+      context.handle(
+        _entryNumberMeta,
+        entryNumber.isAcceptableOrUnknown(
+          data['entry_number']!,
+          _entryNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_entryNumberMeta);
+    }
+    if (data.containsKey('base_currency_code')) {
+      context.handle(
+        _baseCurrencyCodeMeta,
+        baseCurrencyCode.isAcceptableOrUnknown(
+          data['base_currency_code']!,
+          _baseCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_baseCurrencyCodeMeta);
+    }
+    if (data.containsKey('posting_date')) {
+      context.handle(
+        _postingDateMeta,
+        postingDate.isAcceptableOrUnknown(
+          data['posting_date']!,
+          _postingDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_postingDateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_module')) {
+      context.handle(
+        _sourceModuleMeta,
+        sourceModule.isAcceptableOrUnknown(
+          data['source_module']!,
+          _sourceModuleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_document_id')) {
+      context.handle(
+        _sourceDocumentIdMeta,
+        sourceDocumentId.isAcceptableOrUnknown(
+          data['source_document_id']!,
+          _sourceDocumentIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('posted_at')) {
+      context.handle(
+        _postedAtMeta,
+        postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta),
+      );
+    }
+    if (data.containsKey('created_by_id')) {
+      context.handle(
+        _createdByIdMeta,
+        createdById.isAcceptableOrUnknown(
+          data['created_by_id']!,
+          _createdByIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+    {companyId, entryNumber},
+  ];
+  @override
+  FinancialJournalEntryData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialJournalEntryData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      entryNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_number'],
+      )!,
+      baseCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_currency_code'],
+      )!,
+      postingDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}posting_date'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      sourceModule: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_module'],
+      ),
+      sourceDocumentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_document_id'],
+      ),
+      postedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}posted_at'],
+      ),
+      createdById: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialJournalEntriesTable createAlias(String alias) {
+    return $FinancialJournalEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialJournalEntryData extends DataClass
+    implements Insertable<FinancialJournalEntryData> {
+  /// Canonical UUID v7 primary key identity.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Human-readable sequential entry number within company.
+  final String entryNumber;
+
+  /// Base/functional currency ISO code for this journal entry (invariant: line base amounts match this currency).
+  final String baseCurrencyCode;
+
+  /// Financial posting date.
+  final DateTime postingDate;
+
+  /// Entry status: `DRAFT`, `POSTED`, `REVERSED`.
+  final String status;
+
+  /// Header level description / memo.
+  final String? description;
+
+  /// Originating system module (e.g., 'sales', 'purchases', 'treasury', 'manual').
+  final String? sourceModule;
+
+  /// ID of the source document triggering this journal.
+  final String? sourceDocumentId;
+
+  /// Timestamp when posted (immutable after set).
+  final DateTime? postedAt;
+
+  /// User ID who created this entry.
+  final String? createdById;
+  final DateTime createdAt;
+  const FinancialJournalEntryData({
+    required this.id,
+    required this.companyId,
+    required this.entryNumber,
+    required this.baseCurrencyCode,
+    required this.postingDate,
+    required this.status,
+    this.description,
+    this.sourceModule,
+    this.sourceDocumentId,
+    this.postedAt,
+    this.createdById,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['entry_number'] = Variable<String>(entryNumber);
+    map['base_currency_code'] = Variable<String>(baseCurrencyCode);
+    map['posting_date'] = Variable<DateTime>(postingDate);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || sourceModule != null) {
+      map['source_module'] = Variable<String>(sourceModule);
+    }
+    if (!nullToAbsent || sourceDocumentId != null) {
+      map['source_document_id'] = Variable<String>(sourceDocumentId);
+    }
+    if (!nullToAbsent || postedAt != null) {
+      map['posted_at'] = Variable<DateTime>(postedAt);
+    }
+    if (!nullToAbsent || createdById != null) {
+      map['created_by_id'] = Variable<String>(createdById);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  FinancialJournalEntriesCompanion toCompanion(bool nullToAbsent) {
+    return FinancialJournalEntriesCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      entryNumber: Value(entryNumber),
+      baseCurrencyCode: Value(baseCurrencyCode),
+      postingDate: Value(postingDate),
+      status: Value(status),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      sourceModule: sourceModule == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceModule),
+      sourceDocumentId: sourceDocumentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceDocumentId),
+      postedAt: postedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedAt),
+      createdById: createdById == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdById),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FinancialJournalEntryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialJournalEntryData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      entryNumber: serializer.fromJson<String>(json['entryNumber']),
+      baseCurrencyCode: serializer.fromJson<String>(json['baseCurrencyCode']),
+      postingDate: serializer.fromJson<DateTime>(json['postingDate']),
+      status: serializer.fromJson<String>(json['status']),
+      description: serializer.fromJson<String?>(json['description']),
+      sourceModule: serializer.fromJson<String?>(json['sourceModule']),
+      sourceDocumentId: serializer.fromJson<String?>(json['sourceDocumentId']),
+      postedAt: serializer.fromJson<DateTime?>(json['postedAt']),
+      createdById: serializer.fromJson<String?>(json['createdById']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'entryNumber': serializer.toJson<String>(entryNumber),
+      'baseCurrencyCode': serializer.toJson<String>(baseCurrencyCode),
+      'postingDate': serializer.toJson<DateTime>(postingDate),
+      'status': serializer.toJson<String>(status),
+      'description': serializer.toJson<String?>(description),
+      'sourceModule': serializer.toJson<String?>(sourceModule),
+      'sourceDocumentId': serializer.toJson<String?>(sourceDocumentId),
+      'postedAt': serializer.toJson<DateTime?>(postedAt),
+      'createdById': serializer.toJson<String?>(createdById),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  FinancialJournalEntryData copyWith({
+    String? id,
+    String? companyId,
+    String? entryNumber,
+    String? baseCurrencyCode,
+    DateTime? postingDate,
+    String? status,
+    Value<String?> description = const Value.absent(),
+    Value<String?> sourceModule = const Value.absent(),
+    Value<String?> sourceDocumentId = const Value.absent(),
+    Value<DateTime?> postedAt = const Value.absent(),
+    Value<String?> createdById = const Value.absent(),
+    DateTime? createdAt,
+  }) => FinancialJournalEntryData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    entryNumber: entryNumber ?? this.entryNumber,
+    baseCurrencyCode: baseCurrencyCode ?? this.baseCurrencyCode,
+    postingDate: postingDate ?? this.postingDate,
+    status: status ?? this.status,
+    description: description.present ? description.value : this.description,
+    sourceModule: sourceModule.present ? sourceModule.value : this.sourceModule,
+    sourceDocumentId: sourceDocumentId.present
+        ? sourceDocumentId.value
+        : this.sourceDocumentId,
+    postedAt: postedAt.present ? postedAt.value : this.postedAt,
+    createdById: createdById.present ? createdById.value : this.createdById,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FinancialJournalEntryData copyWithCompanion(
+    FinancialJournalEntriesCompanion data,
+  ) {
+    return FinancialJournalEntryData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      entryNumber: data.entryNumber.present
+          ? data.entryNumber.value
+          : this.entryNumber,
+      baseCurrencyCode: data.baseCurrencyCode.present
+          ? data.baseCurrencyCode.value
+          : this.baseCurrencyCode,
+      postingDate: data.postingDate.present
+          ? data.postingDate.value
+          : this.postingDate,
+      status: data.status.present ? data.status.value : this.status,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      sourceModule: data.sourceModule.present
+          ? data.sourceModule.value
+          : this.sourceModule,
+      sourceDocumentId: data.sourceDocumentId.present
+          ? data.sourceDocumentId.value
+          : this.sourceDocumentId,
+      postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
+      createdById: data.createdById.present
+          ? data.createdById.value
+          : this.createdById,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialJournalEntryData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('entryNumber: $entryNumber, ')
+          ..write('baseCurrencyCode: $baseCurrencyCode, ')
+          ..write('postingDate: $postingDate, ')
+          ..write('status: $status, ')
+          ..write('description: $description, ')
+          ..write('sourceModule: $sourceModule, ')
+          ..write('sourceDocumentId: $sourceDocumentId, ')
+          ..write('postedAt: $postedAt, ')
+          ..write('createdById: $createdById, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    entryNumber,
+    baseCurrencyCode,
+    postingDate,
+    status,
+    description,
+    sourceModule,
+    sourceDocumentId,
+    postedAt,
+    createdById,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialJournalEntryData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.entryNumber == this.entryNumber &&
+          other.baseCurrencyCode == this.baseCurrencyCode &&
+          other.postingDate == this.postingDate &&
+          other.status == this.status &&
+          other.description == this.description &&
+          other.sourceModule == this.sourceModule &&
+          other.sourceDocumentId == this.sourceDocumentId &&
+          other.postedAt == this.postedAt &&
+          other.createdById == this.createdById &&
+          other.createdAt == this.createdAt);
+}
+
+class FinancialJournalEntriesCompanion
+    extends UpdateCompanion<FinancialJournalEntryData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> entryNumber;
+  final Value<String> baseCurrencyCode;
+  final Value<DateTime> postingDate;
+  final Value<String> status;
+  final Value<String?> description;
+  final Value<String?> sourceModule;
+  final Value<String?> sourceDocumentId;
+  final Value<DateTime?> postedAt;
+  final Value<String?> createdById;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const FinancialJournalEntriesCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.entryNumber = const Value.absent(),
+    this.baseCurrencyCode = const Value.absent(),
+    this.postingDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sourceModule = const Value.absent(),
+    this.sourceDocumentId = const Value.absent(),
+    this.postedAt = const Value.absent(),
+    this.createdById = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialJournalEntriesCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String entryNumber,
+    required String baseCurrencyCode,
+    required DateTime postingDate,
+    this.status = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sourceModule = const Value.absent(),
+    this.sourceDocumentId = const Value.absent(),
+    this.postedAt = const Value.absent(),
+    this.createdById = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       entryNumber = Value(entryNumber),
+       baseCurrencyCode = Value(baseCurrencyCode),
+       postingDate = Value(postingDate);
+  static Insertable<FinancialJournalEntryData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? entryNumber,
+    Expression<String>? baseCurrencyCode,
+    Expression<DateTime>? postingDate,
+    Expression<String>? status,
+    Expression<String>? description,
+    Expression<String>? sourceModule,
+    Expression<String>? sourceDocumentId,
+    Expression<DateTime>? postedAt,
+    Expression<String>? createdById,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (entryNumber != null) 'entry_number': entryNumber,
+      if (baseCurrencyCode != null) 'base_currency_code': baseCurrencyCode,
+      if (postingDate != null) 'posting_date': postingDate,
+      if (status != null) 'status': status,
+      if (description != null) 'description': description,
+      if (sourceModule != null) 'source_module': sourceModule,
+      if (sourceDocumentId != null) 'source_document_id': sourceDocumentId,
+      if (postedAt != null) 'posted_at': postedAt,
+      if (createdById != null) 'created_by_id': createdById,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialJournalEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? entryNumber,
+    Value<String>? baseCurrencyCode,
+    Value<DateTime>? postingDate,
+    Value<String>? status,
+    Value<String?>? description,
+    Value<String?>? sourceModule,
+    Value<String?>? sourceDocumentId,
+    Value<DateTime?>? postedAt,
+    Value<String?>? createdById,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialJournalEntriesCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      entryNumber: entryNumber ?? this.entryNumber,
+      baseCurrencyCode: baseCurrencyCode ?? this.baseCurrencyCode,
+      postingDate: postingDate ?? this.postingDate,
+      status: status ?? this.status,
+      description: description ?? this.description,
+      sourceModule: sourceModule ?? this.sourceModule,
+      sourceDocumentId: sourceDocumentId ?? this.sourceDocumentId,
+      postedAt: postedAt ?? this.postedAt,
+      createdById: createdById ?? this.createdById,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (entryNumber.present) {
+      map['entry_number'] = Variable<String>(entryNumber.value);
+    }
+    if (baseCurrencyCode.present) {
+      map['base_currency_code'] = Variable<String>(baseCurrencyCode.value);
+    }
+    if (postingDate.present) {
+      map['posting_date'] = Variable<DateTime>(postingDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (sourceModule.present) {
+      map['source_module'] = Variable<String>(sourceModule.value);
+    }
+    if (sourceDocumentId.present) {
+      map['source_document_id'] = Variable<String>(sourceDocumentId.value);
+    }
+    if (postedAt.present) {
+      map['posted_at'] = Variable<DateTime>(postedAt.value);
+    }
+    if (createdById.present) {
+      map['created_by_id'] = Variable<String>(createdById.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialJournalEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('entryNumber: $entryNumber, ')
+          ..write('baseCurrencyCode: $baseCurrencyCode, ')
+          ..write('postingDate: $postingDate, ')
+          ..write('status: $status, ')
+          ..write('description: $description, ')
+          ..write('sourceModule: $sourceModule, ')
+          ..write('sourceDocumentId: $sourceDocumentId, ')
+          ..write('postedAt: $postedAt, ')
+          ..write('createdById: $createdById, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialJournalLinesTable extends FinancialJournalLines
+    with TableInfo<$FinancialJournalLinesTable, FinancialJournalLineData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialJournalLinesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _journalEntryIdMeta = const VerificationMeta(
+    'journalEntryId',
+  );
+  @override
+  late final GeneratedColumn<String> journalEntryId = GeneratedColumn<String>(
+    'journal_entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lineNumberMeta = const VerificationMeta(
+    'lineNumber',
+  );
+  @override
+  late final GeneratedColumn<int> lineNumber = GeneratedColumn<int>(
+    'line_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sideMeta = const VerificationMeta('side');
+  @override
+  late final GeneratedColumn<String> side = GeneratedColumn<String>(
+    'side',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _transactionCurrencyCodeMeta =
+      const VerificationMeta('transactionCurrencyCode');
+  @override
+  late final GeneratedColumn<String> transactionCurrencyCode =
+      GeneratedColumn<String>(
+        'transaction_currency_code',
+        aliasedName,
+        false,
+        additionalChecks: GeneratedColumn.checkTextLength(
+          minTextLength: 1,
+          maxTextLength: 8,
+        ),
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _transactionAmountScaledMeta =
+      const VerificationMeta('transactionAmountScaled');
+  @override
+  late final GeneratedColumn<BigInt> transactionAmountScaled =
+      GeneratedColumn<BigInt>(
+        'transaction_amount_scaled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _exchangeRateScaledMeta =
+      const VerificationMeta('exchangeRateScaled');
+  @override
+  late final GeneratedColumn<BigInt> exchangeRateScaled =
+      GeneratedColumn<BigInt>(
+        'exchange_rate_scaled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _baseAmountScaledMeta = const VerificationMeta(
+    'baseAmountScaled',
+  );
+  @override
+  late final GeneratedColumn<BigInt> baseAmountScaled = GeneratedColumn<BigInt>(
+    'base_amount_scaled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bigInt,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    journalEntryId,
+    lineNumber,
+    accountId,
+    side,
+    transactionCurrencyCode,
+    transactionAmountScaled,
+    exchangeRateScaled,
+    baseAmountScaled,
+    description,
+    subjectId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_journal_lines';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialJournalLineData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('journal_entry_id')) {
+      context.handle(
+        _journalEntryIdMeta,
+        journalEntryId.isAcceptableOrUnknown(
+          data['journal_entry_id']!,
+          _journalEntryIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_journalEntryIdMeta);
+    }
+    if (data.containsKey('line_number')) {
+      context.handle(
+        _lineNumberMeta,
+        lineNumber.isAcceptableOrUnknown(data['line_number']!, _lineNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lineNumberMeta);
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('side')) {
+      context.handle(
+        _sideMeta,
+        side.isAcceptableOrUnknown(data['side']!, _sideMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sideMeta);
+    }
+    if (data.containsKey('transaction_currency_code')) {
+      context.handle(
+        _transactionCurrencyCodeMeta,
+        transactionCurrencyCode.isAcceptableOrUnknown(
+          data['transaction_currency_code']!,
+          _transactionCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_transactionCurrencyCodeMeta);
+    }
+    if (data.containsKey('transaction_amount_scaled')) {
+      context.handle(
+        _transactionAmountScaledMeta,
+        transactionAmountScaled.isAcceptableOrUnknown(
+          data['transaction_amount_scaled']!,
+          _transactionAmountScaledMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_transactionAmountScaledMeta);
+    }
+    if (data.containsKey('exchange_rate_scaled')) {
+      context.handle(
+        _exchangeRateScaledMeta,
+        exchangeRateScaled.isAcceptableOrUnknown(
+          data['exchange_rate_scaled']!,
+          _exchangeRateScaledMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exchangeRateScaledMeta);
+    }
+    if (data.containsKey('base_amount_scaled')) {
+      context.handle(
+        _baseAmountScaledMeta,
+        baseAmountScaled.isAcceptableOrUnknown(
+          data['base_amount_scaled']!,
+          _baseAmountScaledMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_baseAmountScaledMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, journalEntryId, lineNumber},
+  ];
+  @override
+  FinancialJournalLineData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialJournalLineData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      journalEntryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}journal_entry_id'],
+      )!,
+      lineNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}line_number'],
+      )!,
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      side: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}side'],
+      )!,
+      transactionCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transaction_currency_code'],
+      )!,
+      transactionAmountScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}transaction_amount_scaled'],
+      )!,
+      exchangeRateScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}exchange_rate_scaled'],
+      )!,
+      baseAmountScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}base_amount_scaled'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      ),
+    );
+  }
+
+  @override
+  $FinancialJournalLinesTable createAlias(String alias) {
+    return $FinancialJournalLinesTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialJournalLineData extends DataClass
+    implements Insertable<FinancialJournalLineData> {
+  /// Canonical UUID v7 primary key identity.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Foreign key to FinancialJournalEntries.
+  final String journalEntryId;
+
+  /// Line order sequence within journal entry.
+  final int lineNumber;
+
+  /// Account ID in FinancialAccounts.
+  final String accountId;
+
+  /// Accounting side: `DEBIT` or `CREDIT`. Explicit, NEVER inferred by sign.
+  final String side;
+
+  /// ISO currency code of the transaction amount.
+  final String transactionCurrencyCode;
+
+  /// Transaction currency amount scaled by 10^8 (INTEGER). Always strictly positive.
+  final BigInt transactionAmountScaled;
+
+  /// Snapshot exchange rate applied, scaled by 10^8 (INTEGER).
+  final BigInt exchangeRateScaled;
+
+  /// Functional base currency amount scaled by 10^8 (INTEGER). Always strictly positive.
+  final BigInt baseAmountScaled;
+
+  /// Line item description / note.
+  final String? description;
+
+  /// Subject ID in FinancialSubjects (optional sub-ledger reference).
+  final String? subjectId;
+  const FinancialJournalLineData({
+    required this.id,
+    required this.companyId,
+    required this.journalEntryId,
+    required this.lineNumber,
+    required this.accountId,
+    required this.side,
+    required this.transactionCurrencyCode,
+    required this.transactionAmountScaled,
+    required this.exchangeRateScaled,
+    required this.baseAmountScaled,
+    this.description,
+    this.subjectId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['journal_entry_id'] = Variable<String>(journalEntryId);
+    map['line_number'] = Variable<int>(lineNumber);
+    map['account_id'] = Variable<String>(accountId);
+    map['side'] = Variable<String>(side);
+    map['transaction_currency_code'] = Variable<String>(
+      transactionCurrencyCode,
+    );
+    map['transaction_amount_scaled'] = Variable<BigInt>(
+      transactionAmountScaled,
+    );
+    map['exchange_rate_scaled'] = Variable<BigInt>(exchangeRateScaled);
+    map['base_amount_scaled'] = Variable<BigInt>(baseAmountScaled);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || subjectId != null) {
+      map['subject_id'] = Variable<String>(subjectId);
+    }
+    return map;
+  }
+
+  FinancialJournalLinesCompanion toCompanion(bool nullToAbsent) {
+    return FinancialJournalLinesCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      journalEntryId: Value(journalEntryId),
+      lineNumber: Value(lineNumber),
+      accountId: Value(accountId),
+      side: Value(side),
+      transactionCurrencyCode: Value(transactionCurrencyCode),
+      transactionAmountScaled: Value(transactionAmountScaled),
+      exchangeRateScaled: Value(exchangeRateScaled),
+      baseAmountScaled: Value(baseAmountScaled),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      subjectId: subjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subjectId),
+    );
+  }
+
+  factory FinancialJournalLineData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialJournalLineData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      journalEntryId: serializer.fromJson<String>(json['journalEntryId']),
+      lineNumber: serializer.fromJson<int>(json['lineNumber']),
+      accountId: serializer.fromJson<String>(json['accountId']),
+      side: serializer.fromJson<String>(json['side']),
+      transactionCurrencyCode: serializer.fromJson<String>(
+        json['transactionCurrencyCode'],
+      ),
+      transactionAmountScaled: serializer.fromJson<BigInt>(
+        json['transactionAmountScaled'],
+      ),
+      exchangeRateScaled: serializer.fromJson<BigInt>(
+        json['exchangeRateScaled'],
+      ),
+      baseAmountScaled: serializer.fromJson<BigInt>(json['baseAmountScaled']),
+      description: serializer.fromJson<String?>(json['description']),
+      subjectId: serializer.fromJson<String?>(json['subjectId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'journalEntryId': serializer.toJson<String>(journalEntryId),
+      'lineNumber': serializer.toJson<int>(lineNumber),
+      'accountId': serializer.toJson<String>(accountId),
+      'side': serializer.toJson<String>(side),
+      'transactionCurrencyCode': serializer.toJson<String>(
+        transactionCurrencyCode,
+      ),
+      'transactionAmountScaled': serializer.toJson<BigInt>(
+        transactionAmountScaled,
+      ),
+      'exchangeRateScaled': serializer.toJson<BigInt>(exchangeRateScaled),
+      'baseAmountScaled': serializer.toJson<BigInt>(baseAmountScaled),
+      'description': serializer.toJson<String?>(description),
+      'subjectId': serializer.toJson<String?>(subjectId),
+    };
+  }
+
+  FinancialJournalLineData copyWith({
+    String? id,
+    String? companyId,
+    String? journalEntryId,
+    int? lineNumber,
+    String? accountId,
+    String? side,
+    String? transactionCurrencyCode,
+    BigInt? transactionAmountScaled,
+    BigInt? exchangeRateScaled,
+    BigInt? baseAmountScaled,
+    Value<String?> description = const Value.absent(),
+    Value<String?> subjectId = const Value.absent(),
+  }) => FinancialJournalLineData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    journalEntryId: journalEntryId ?? this.journalEntryId,
+    lineNumber: lineNumber ?? this.lineNumber,
+    accountId: accountId ?? this.accountId,
+    side: side ?? this.side,
+    transactionCurrencyCode:
+        transactionCurrencyCode ?? this.transactionCurrencyCode,
+    transactionAmountScaled:
+        transactionAmountScaled ?? this.transactionAmountScaled,
+    exchangeRateScaled: exchangeRateScaled ?? this.exchangeRateScaled,
+    baseAmountScaled: baseAmountScaled ?? this.baseAmountScaled,
+    description: description.present ? description.value : this.description,
+    subjectId: subjectId.present ? subjectId.value : this.subjectId,
+  );
+  FinancialJournalLineData copyWithCompanion(
+    FinancialJournalLinesCompanion data,
+  ) {
+    return FinancialJournalLineData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      journalEntryId: data.journalEntryId.present
+          ? data.journalEntryId.value
+          : this.journalEntryId,
+      lineNumber: data.lineNumber.present
+          ? data.lineNumber.value
+          : this.lineNumber,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      side: data.side.present ? data.side.value : this.side,
+      transactionCurrencyCode: data.transactionCurrencyCode.present
+          ? data.transactionCurrencyCode.value
+          : this.transactionCurrencyCode,
+      transactionAmountScaled: data.transactionAmountScaled.present
+          ? data.transactionAmountScaled.value
+          : this.transactionAmountScaled,
+      exchangeRateScaled: data.exchangeRateScaled.present
+          ? data.exchangeRateScaled.value
+          : this.exchangeRateScaled,
+      baseAmountScaled: data.baseAmountScaled.present
+          ? data.baseAmountScaled.value
+          : this.baseAmountScaled,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialJournalLineData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('journalEntryId: $journalEntryId, ')
+          ..write('lineNumber: $lineNumber, ')
+          ..write('accountId: $accountId, ')
+          ..write('side: $side, ')
+          ..write('transactionCurrencyCode: $transactionCurrencyCode, ')
+          ..write('transactionAmountScaled: $transactionAmountScaled, ')
+          ..write('exchangeRateScaled: $exchangeRateScaled, ')
+          ..write('baseAmountScaled: $baseAmountScaled, ')
+          ..write('description: $description, ')
+          ..write('subjectId: $subjectId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    journalEntryId,
+    lineNumber,
+    accountId,
+    side,
+    transactionCurrencyCode,
+    transactionAmountScaled,
+    exchangeRateScaled,
+    baseAmountScaled,
+    description,
+    subjectId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialJournalLineData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.journalEntryId == this.journalEntryId &&
+          other.lineNumber == this.lineNumber &&
+          other.accountId == this.accountId &&
+          other.side == this.side &&
+          other.transactionCurrencyCode == this.transactionCurrencyCode &&
+          other.transactionAmountScaled == this.transactionAmountScaled &&
+          other.exchangeRateScaled == this.exchangeRateScaled &&
+          other.baseAmountScaled == this.baseAmountScaled &&
+          other.description == this.description &&
+          other.subjectId == this.subjectId);
+}
+
+class FinancialJournalLinesCompanion
+    extends UpdateCompanion<FinancialJournalLineData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> journalEntryId;
+  final Value<int> lineNumber;
+  final Value<String> accountId;
+  final Value<String> side;
+  final Value<String> transactionCurrencyCode;
+  final Value<BigInt> transactionAmountScaled;
+  final Value<BigInt> exchangeRateScaled;
+  final Value<BigInt> baseAmountScaled;
+  final Value<String?> description;
+  final Value<String?> subjectId;
+  final Value<int> rowid;
+  const FinancialJournalLinesCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.journalEntryId = const Value.absent(),
+    this.lineNumber = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.side = const Value.absent(),
+    this.transactionCurrencyCode = const Value.absent(),
+    this.transactionAmountScaled = const Value.absent(),
+    this.exchangeRateScaled = const Value.absent(),
+    this.baseAmountScaled = const Value.absent(),
+    this.description = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialJournalLinesCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String journalEntryId,
+    required int lineNumber,
+    required String accountId,
+    required String side,
+    required String transactionCurrencyCode,
+    required BigInt transactionAmountScaled,
+    required BigInt exchangeRateScaled,
+    required BigInt baseAmountScaled,
+    this.description = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       journalEntryId = Value(journalEntryId),
+       lineNumber = Value(lineNumber),
+       accountId = Value(accountId),
+       side = Value(side),
+       transactionCurrencyCode = Value(transactionCurrencyCode),
+       transactionAmountScaled = Value(transactionAmountScaled),
+       exchangeRateScaled = Value(exchangeRateScaled),
+       baseAmountScaled = Value(baseAmountScaled);
+  static Insertable<FinancialJournalLineData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? journalEntryId,
+    Expression<int>? lineNumber,
+    Expression<String>? accountId,
+    Expression<String>? side,
+    Expression<String>? transactionCurrencyCode,
+    Expression<BigInt>? transactionAmountScaled,
+    Expression<BigInt>? exchangeRateScaled,
+    Expression<BigInt>? baseAmountScaled,
+    Expression<String>? description,
+    Expression<String>? subjectId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (journalEntryId != null) 'journal_entry_id': journalEntryId,
+      if (lineNumber != null) 'line_number': lineNumber,
+      if (accountId != null) 'account_id': accountId,
+      if (side != null) 'side': side,
+      if (transactionCurrencyCode != null)
+        'transaction_currency_code': transactionCurrencyCode,
+      if (transactionAmountScaled != null)
+        'transaction_amount_scaled': transactionAmountScaled,
+      if (exchangeRateScaled != null)
+        'exchange_rate_scaled': exchangeRateScaled,
+      if (baseAmountScaled != null) 'base_amount_scaled': baseAmountScaled,
+      if (description != null) 'description': description,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialJournalLinesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? journalEntryId,
+    Value<int>? lineNumber,
+    Value<String>? accountId,
+    Value<String>? side,
+    Value<String>? transactionCurrencyCode,
+    Value<BigInt>? transactionAmountScaled,
+    Value<BigInt>? exchangeRateScaled,
+    Value<BigInt>? baseAmountScaled,
+    Value<String?>? description,
+    Value<String?>? subjectId,
+    Value<int>? rowid,
+  }) {
+    return FinancialJournalLinesCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      journalEntryId: journalEntryId ?? this.journalEntryId,
+      lineNumber: lineNumber ?? this.lineNumber,
+      accountId: accountId ?? this.accountId,
+      side: side ?? this.side,
+      transactionCurrencyCode:
+          transactionCurrencyCode ?? this.transactionCurrencyCode,
+      transactionAmountScaled:
+          transactionAmountScaled ?? this.transactionAmountScaled,
+      exchangeRateScaled: exchangeRateScaled ?? this.exchangeRateScaled,
+      baseAmountScaled: baseAmountScaled ?? this.baseAmountScaled,
+      description: description ?? this.description,
+      subjectId: subjectId ?? this.subjectId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (journalEntryId.present) {
+      map['journal_entry_id'] = Variable<String>(journalEntryId.value);
+    }
+    if (lineNumber.present) {
+      map['line_number'] = Variable<int>(lineNumber.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (side.present) {
+      map['side'] = Variable<String>(side.value);
+    }
+    if (transactionCurrencyCode.present) {
+      map['transaction_currency_code'] = Variable<String>(
+        transactionCurrencyCode.value,
+      );
+    }
+    if (transactionAmountScaled.present) {
+      map['transaction_amount_scaled'] = Variable<BigInt>(
+        transactionAmountScaled.value,
+      );
+    }
+    if (exchangeRateScaled.present) {
+      map['exchange_rate_scaled'] = Variable<BigInt>(exchangeRateScaled.value);
+    }
+    if (baseAmountScaled.present) {
+      map['base_amount_scaled'] = Variable<BigInt>(baseAmountScaled.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialJournalLinesCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('journalEntryId: $journalEntryId, ')
+          ..write('lineNumber: $lineNumber, ')
+          ..write('accountId: $accountId, ')
+          ..write('side: $side, ')
+          ..write('transactionCurrencyCode: $transactionCurrencyCode, ')
+          ..write('transactionAmountScaled: $transactionAmountScaled, ')
+          ..write('exchangeRateScaled: $exchangeRateScaled, ')
+          ..write('baseAmountScaled: $baseAmountScaled, ')
+          ..write('description: $description, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialFiscalYearsTable extends FinancialFiscalYears
+    with TableInfo<$FinancialFiscalYearsTable, FinancialFiscalYearData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialFiscalYearsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 32,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 128,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<int> startDate = GeneratedColumn<int>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<int> endDate = GeneratedColumn<int>(
+    'end_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closedAtMeta = const VerificationMeta(
+    'closedAt',
+  );
+  @override
+  late final GeneratedColumn<int> closedAt = GeneratedColumn<int>(
+    'closed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closedByMeta = const VerificationMeta(
+    'closedBy',
+  );
+  @override
+  late final GeneratedColumn<String> closedBy = GeneratedColumn<String>(
+    'closed_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    code,
+    name,
+    startDate,
+    endDate,
+    status,
+    createdAt,
+    updatedAt,
+    closedAt,
+    createdBy,
+    closedBy,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_fiscal_years';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialFiscalYearData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('closed_at')) {
+      context.handle(
+        _closedAtMeta,
+        closedAt.isAcceptableOrUnknown(data['closed_at']!, _closedAtMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('closed_by')) {
+      context.handle(
+        _closedByMeta,
+        closedBy.isAcceptableOrUnknown(data['closed_by']!, _closedByMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+    {companyId, code},
+  ];
+  @override
+  FinancialFiscalYearData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialFiscalYearData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_date'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      closedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closed_at'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      closedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closed_by'],
+      ),
+    );
+  }
+
+  @override
+  $FinancialFiscalYearsTable createAlias(String alias) {
+    return $FinancialFiscalYearsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialFiscalYearData extends DataClass
+    implements Insertable<FinancialFiscalYearData> {
+  /// Primary key UUID v7 identity.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Fiscal year code (e.g. 'FY2026').
+  final String code;
+
+  /// Fiscal year display name.
+  final String name;
+
+  /// UTC day epoch ms start date.
+  final int startDate;
+
+  /// UTC day epoch ms end date.
+  final int endDate;
+
+  /// Status: 'draft', 'open', 'closed', 'locked'.
+  final String status;
+  final int createdAt;
+  final int updatedAt;
+  final int? closedAt;
+  final String? createdBy;
+  final String? closedBy;
+  const FinancialFiscalYearData({
+    required this.id,
+    required this.companyId,
+    required this.code,
+    required this.name,
+    required this.startDate,
+    required this.endDate,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.closedAt,
+    this.createdBy,
+    this.closedBy,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['code'] = Variable<String>(code);
+    map['name'] = Variable<String>(name);
+    map['start_date'] = Variable<int>(startDate);
+    map['end_date'] = Variable<int>(endDate);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || closedAt != null) {
+      map['closed_at'] = Variable<int>(closedAt);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || closedBy != null) {
+      map['closed_by'] = Variable<String>(closedBy);
+    }
+    return map;
+  }
+
+  FinancialFiscalYearsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialFiscalYearsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      code: Value(code),
+      name: Value(name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      closedAt: closedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedAt),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      closedBy: closedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedBy),
+    );
+  }
+
+  factory FinancialFiscalYearData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialFiscalYearData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      code: serializer.fromJson<String>(json['code']),
+      name: serializer.fromJson<String>(json['name']),
+      startDate: serializer.fromJson<int>(json['startDate']),
+      endDate: serializer.fromJson<int>(json['endDate']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      closedAt: serializer.fromJson<int?>(json['closedAt']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      closedBy: serializer.fromJson<String?>(json['closedBy']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'code': serializer.toJson<String>(code),
+      'name': serializer.toJson<String>(name),
+      'startDate': serializer.toJson<int>(startDate),
+      'endDate': serializer.toJson<int>(endDate),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'closedAt': serializer.toJson<int?>(closedAt),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'closedBy': serializer.toJson<String?>(closedBy),
+    };
+  }
+
+  FinancialFiscalYearData copyWith({
+    String? id,
+    String? companyId,
+    String? code,
+    String? name,
+    int? startDate,
+    int? endDate,
+    String? status,
+    int? createdAt,
+    int? updatedAt,
+    Value<int?> closedAt = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    Value<String?> closedBy = const Value.absent(),
+  }) => FinancialFiscalYearData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    code: code ?? this.code,
+    name: name ?? this.name,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    closedAt: closedAt.present ? closedAt.value : this.closedAt,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    closedBy: closedBy.present ? closedBy.value : this.closedBy,
+  );
+  FinancialFiscalYearData copyWithCompanion(
+    FinancialFiscalYearsCompanion data,
+  ) {
+    return FinancialFiscalYearData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      code: data.code.present ? data.code.value : this.code,
+      name: data.name.present ? data.name.value : this.name,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      closedBy: data.closedBy.present ? data.closedBy.value : this.closedBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalYearData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('closedBy: $closedBy')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    code,
+    name,
+    startDate,
+    endDate,
+    status,
+    createdAt,
+    updatedAt,
+    closedAt,
+    createdBy,
+    closedBy,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialFiscalYearData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.code == this.code &&
+          other.name == this.name &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.closedAt == this.closedAt &&
+          other.createdBy == this.createdBy &&
+          other.closedBy == this.closedBy);
+}
+
+class FinancialFiscalYearsCompanion
+    extends UpdateCompanion<FinancialFiscalYearData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> code;
+  final Value<String> name;
+  final Value<int> startDate;
+  final Value<int> endDate;
+  final Value<String> status;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int?> closedAt;
+  final Value<String?> createdBy;
+  final Value<String?> closedBy;
+  final Value<int> rowid;
+  const FinancialFiscalYearsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.code = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialFiscalYearsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String code,
+    required String name,
+    required int startDate,
+    required int endDate,
+    required String status,
+    required int createdAt,
+    required int updatedAt,
+    this.closedAt = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       code = Value(code),
+       name = Value(name),
+       startDate = Value(startDate),
+       endDate = Value(endDate),
+       status = Value(status),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<FinancialFiscalYearData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? code,
+    Expression<String>? name,
+    Expression<int>? startDate,
+    Expression<int>? endDate,
+    Expression<String>? status,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? closedAt,
+    Expression<String>? createdBy,
+    Expression<String>? closedBy,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (code != null) 'code': code,
+      if (name != null) 'name': name,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (closedAt != null) 'closed_at': closedAt,
+      if (createdBy != null) 'created_by': createdBy,
+      if (closedBy != null) 'closed_by': closedBy,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialFiscalYearsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? code,
+    Value<String>? name,
+    Value<int>? startDate,
+    Value<int>? endDate,
+    Value<String>? status,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int?>? closedAt,
+    Value<String?>? createdBy,
+    Value<String?>? closedBy,
+    Value<int>? rowid,
+  }) {
+    return FinancialFiscalYearsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      closedAt: closedAt ?? this.closedAt,
+      createdBy: createdBy ?? this.createdBy,
+      closedBy: closedBy ?? this.closedBy,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<int>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<int>(endDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (closedAt.present) {
+      map['closed_at'] = Variable<int>(closedAt.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (closedBy.present) {
+      map['closed_by'] = Variable<String>(closedBy.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalYearsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialFiscalPeriodsTable extends FinancialFiscalPeriods
+    with TableInfo<$FinancialFiscalPeriodsTable, FinancialFiscalPeriodData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialFiscalPeriodsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fiscalYearIdMeta = const VerificationMeta(
+    'fiscalYearId',
+  );
+  @override
+  late final GeneratedColumn<String> fiscalYearId = GeneratedColumn<String>(
+    'fiscal_year_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodNumberMeta = const VerificationMeta(
+    'periodNumber',
+  );
+  @override
+  late final GeneratedColumn<int> periodNumber = GeneratedColumn<int>(
+    'period_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<int> startDate = GeneratedColumn<int>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<int> endDate = GeneratedColumn<int>(
+    'end_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _openedAtMeta = const VerificationMeta(
+    'openedAt',
+  );
+  @override
+  late final GeneratedColumn<int> openedAt = GeneratedColumn<int>(
+    'opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closedAtMeta = const VerificationMeta(
+    'closedAt',
+  );
+  @override
+  late final GeneratedColumn<int> closedAt = GeneratedColumn<int>(
+    'closed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reopenedAtMeta = const VerificationMeta(
+    'reopenedAt',
+  );
+  @override
+  late final GeneratedColumn<int> reopenedAt = GeneratedColumn<int>(
+    'reopened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reopenReasonMeta = const VerificationMeta(
+    'reopenReason',
+  );
+  @override
+  late final GeneratedColumn<String> reopenReason = GeneratedColumn<String>(
+    'reopen_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    fiscalYearId,
+    periodNumber,
+    name,
+    startDate,
+    endDate,
+    status,
+    openedAt,
+    closedAt,
+    reopenedAt,
+    reopenReason,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_fiscal_periods';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialFiscalPeriodData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('fiscal_year_id')) {
+      context.handle(
+        _fiscalYearIdMeta,
+        fiscalYearId.isAcceptableOrUnknown(
+          data['fiscal_year_id']!,
+          _fiscalYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fiscalYearIdMeta);
+    }
+    if (data.containsKey('period_number')) {
+      context.handle(
+        _periodNumberMeta,
+        periodNumber.isAcceptableOrUnknown(
+          data['period_number']!,
+          _periodNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodNumberMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('opened_at')) {
+      context.handle(
+        _openedAtMeta,
+        openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta),
+      );
+    }
+    if (data.containsKey('closed_at')) {
+      context.handle(
+        _closedAtMeta,
+        closedAt.isAcceptableOrUnknown(data['closed_at']!, _closedAtMeta),
+      );
+    }
+    if (data.containsKey('reopened_at')) {
+      context.handle(
+        _reopenedAtMeta,
+        reopenedAt.isAcceptableOrUnknown(data['reopened_at']!, _reopenedAtMeta),
+      );
+    }
+    if (data.containsKey('reopen_reason')) {
+      context.handle(
+        _reopenReasonMeta,
+        reopenReason.isAcceptableOrUnknown(
+          data['reopen_reason']!,
+          _reopenReasonMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+    {companyId, fiscalYearId, periodNumber},
+  ];
+  @override
+  FinancialFiscalPeriodData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialFiscalPeriodData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      fiscalYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiscal_year_id'],
+      )!,
+      periodNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_number'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_date'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      openedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opened_at'],
+      ),
+      closedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closed_at'],
+      ),
+      reopenedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reopened_at'],
+      ),
+      reopenReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reopen_reason'],
+      ),
+    );
+  }
+
+  @override
+  $FinancialFiscalPeriodsTable createAlias(String alias) {
+    return $FinancialFiscalPeriodsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialFiscalPeriodData extends DataClass
+    implements Insertable<FinancialFiscalPeriodData> {
+  /// Primary key UUID v7 identity.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Owning fiscal year ID.
+  final String fiscalYearId;
+
+  /// Period number (1..N).
+  final int periodNumber;
+
+  /// Period display name (e.g. 'January 2026').
+  final String name;
+
+  /// UTC day epoch ms start date.
+  final int startDate;
+
+  /// UTC day epoch ms end date.
+  final int endDate;
+
+  /// Status: 'draft', 'open', 'closing', 'closed', 'reopened', 'locked'.
+  final String status;
+  final int? openedAt;
+  final int? closedAt;
+  final int? reopenedAt;
+  final String? reopenReason;
+  const FinancialFiscalPeriodData({
+    required this.id,
+    required this.companyId,
+    required this.fiscalYearId,
+    required this.periodNumber,
+    required this.name,
+    required this.startDate,
+    required this.endDate,
+    required this.status,
+    this.openedAt,
+    this.closedAt,
+    this.reopenedAt,
+    this.reopenReason,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['fiscal_year_id'] = Variable<String>(fiscalYearId);
+    map['period_number'] = Variable<int>(periodNumber);
+    map['name'] = Variable<String>(name);
+    map['start_date'] = Variable<int>(startDate);
+    map['end_date'] = Variable<int>(endDate);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || openedAt != null) {
+      map['opened_at'] = Variable<int>(openedAt);
+    }
+    if (!nullToAbsent || closedAt != null) {
+      map['closed_at'] = Variable<int>(closedAt);
+    }
+    if (!nullToAbsent || reopenedAt != null) {
+      map['reopened_at'] = Variable<int>(reopenedAt);
+    }
+    if (!nullToAbsent || reopenReason != null) {
+      map['reopen_reason'] = Variable<String>(reopenReason);
+    }
+    return map;
+  }
+
+  FinancialFiscalPeriodsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialFiscalPeriodsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      fiscalYearId: Value(fiscalYearId),
+      periodNumber: Value(periodNumber),
+      name: Value(name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      status: Value(status),
+      openedAt: openedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openedAt),
+      closedAt: closedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedAt),
+      reopenedAt: reopenedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reopenedAt),
+      reopenReason: reopenReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reopenReason),
+    );
+  }
+
+  factory FinancialFiscalPeriodData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialFiscalPeriodData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      fiscalYearId: serializer.fromJson<String>(json['fiscalYearId']),
+      periodNumber: serializer.fromJson<int>(json['periodNumber']),
+      name: serializer.fromJson<String>(json['name']),
+      startDate: serializer.fromJson<int>(json['startDate']),
+      endDate: serializer.fromJson<int>(json['endDate']),
+      status: serializer.fromJson<String>(json['status']),
+      openedAt: serializer.fromJson<int?>(json['openedAt']),
+      closedAt: serializer.fromJson<int?>(json['closedAt']),
+      reopenedAt: serializer.fromJson<int?>(json['reopenedAt']),
+      reopenReason: serializer.fromJson<String?>(json['reopenReason']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'fiscalYearId': serializer.toJson<String>(fiscalYearId),
+      'periodNumber': serializer.toJson<int>(periodNumber),
+      'name': serializer.toJson<String>(name),
+      'startDate': serializer.toJson<int>(startDate),
+      'endDate': serializer.toJson<int>(endDate),
+      'status': serializer.toJson<String>(status),
+      'openedAt': serializer.toJson<int?>(openedAt),
+      'closedAt': serializer.toJson<int?>(closedAt),
+      'reopenedAt': serializer.toJson<int?>(reopenedAt),
+      'reopenReason': serializer.toJson<String?>(reopenReason),
+    };
+  }
+
+  FinancialFiscalPeriodData copyWith({
+    String? id,
+    String? companyId,
+    String? fiscalYearId,
+    int? periodNumber,
+    String? name,
+    int? startDate,
+    int? endDate,
+    String? status,
+    Value<int?> openedAt = const Value.absent(),
+    Value<int?> closedAt = const Value.absent(),
+    Value<int?> reopenedAt = const Value.absent(),
+    Value<String?> reopenReason = const Value.absent(),
+  }) => FinancialFiscalPeriodData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+    periodNumber: periodNumber ?? this.periodNumber,
+    name: name ?? this.name,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+    status: status ?? this.status,
+    openedAt: openedAt.present ? openedAt.value : this.openedAt,
+    closedAt: closedAt.present ? closedAt.value : this.closedAt,
+    reopenedAt: reopenedAt.present ? reopenedAt.value : this.reopenedAt,
+    reopenReason: reopenReason.present ? reopenReason.value : this.reopenReason,
+  );
+  FinancialFiscalPeriodData copyWithCompanion(
+    FinancialFiscalPeriodsCompanion data,
+  ) {
+    return FinancialFiscalPeriodData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      fiscalYearId: data.fiscalYearId.present
+          ? data.fiscalYearId.value
+          : this.fiscalYearId,
+      periodNumber: data.periodNumber.present
+          ? data.periodNumber.value
+          : this.periodNumber,
+      name: data.name.present ? data.name.value : this.name,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      status: data.status.present ? data.status.value : this.status,
+      openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
+      closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
+      reopenedAt: data.reopenedAt.present
+          ? data.reopenedAt.value
+          : this.reopenedAt,
+      reopenReason: data.reopenReason.present
+          ? data.reopenReason.value
+          : this.reopenReason,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalPeriodData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('periodNumber: $periodNumber, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('reopenedAt: $reopenedAt, ')
+          ..write('reopenReason: $reopenReason')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    fiscalYearId,
+    periodNumber,
+    name,
+    startDate,
+    endDate,
+    status,
+    openedAt,
+    closedAt,
+    reopenedAt,
+    reopenReason,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialFiscalPeriodData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.fiscalYearId == this.fiscalYearId &&
+          other.periodNumber == this.periodNumber &&
+          other.name == this.name &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.status == this.status &&
+          other.openedAt == this.openedAt &&
+          other.closedAt == this.closedAt &&
+          other.reopenedAt == this.reopenedAt &&
+          other.reopenReason == this.reopenReason);
+}
+
+class FinancialFiscalPeriodsCompanion
+    extends UpdateCompanion<FinancialFiscalPeriodData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> fiscalYearId;
+  final Value<int> periodNumber;
+  final Value<String> name;
+  final Value<int> startDate;
+  final Value<int> endDate;
+  final Value<String> status;
+  final Value<int?> openedAt;
+  final Value<int?> closedAt;
+  final Value<int?> reopenedAt;
+  final Value<String?> reopenReason;
+  final Value<int> rowid;
+  const FinancialFiscalPeriodsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.fiscalYearId = const Value.absent(),
+    this.periodNumber = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.openedAt = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.reopenedAt = const Value.absent(),
+    this.reopenReason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialFiscalPeriodsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String fiscalYearId,
+    required int periodNumber,
+    required String name,
+    required int startDate,
+    required int endDate,
+    required String status,
+    this.openedAt = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.reopenedAt = const Value.absent(),
+    this.reopenReason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       fiscalYearId = Value(fiscalYearId),
+       periodNumber = Value(periodNumber),
+       name = Value(name),
+       startDate = Value(startDate),
+       endDate = Value(endDate),
+       status = Value(status);
+  static Insertable<FinancialFiscalPeriodData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? fiscalYearId,
+    Expression<int>? periodNumber,
+    Expression<String>? name,
+    Expression<int>? startDate,
+    Expression<int>? endDate,
+    Expression<String>? status,
+    Expression<int>? openedAt,
+    Expression<int>? closedAt,
+    Expression<int>? reopenedAt,
+    Expression<String>? reopenReason,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (fiscalYearId != null) 'fiscal_year_id': fiscalYearId,
+      if (periodNumber != null) 'period_number': periodNumber,
+      if (name != null) 'name': name,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (status != null) 'status': status,
+      if (openedAt != null) 'opened_at': openedAt,
+      if (closedAt != null) 'closed_at': closedAt,
+      if (reopenedAt != null) 'reopened_at': reopenedAt,
+      if (reopenReason != null) 'reopen_reason': reopenReason,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialFiscalPeriodsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? fiscalYearId,
+    Value<int>? periodNumber,
+    Value<String>? name,
+    Value<int>? startDate,
+    Value<int>? endDate,
+    Value<String>? status,
+    Value<int?>? openedAt,
+    Value<int?>? closedAt,
+    Value<int?>? reopenedAt,
+    Value<String?>? reopenReason,
+    Value<int>? rowid,
+  }) {
+    return FinancialFiscalPeriodsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+      periodNumber: periodNumber ?? this.periodNumber,
+      name: name ?? this.name,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      status: status ?? this.status,
+      openedAt: openedAt ?? this.openedAt,
+      closedAt: closedAt ?? this.closedAt,
+      reopenedAt: reopenedAt ?? this.reopenedAt,
+      reopenReason: reopenReason ?? this.reopenReason,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (fiscalYearId.present) {
+      map['fiscal_year_id'] = Variable<String>(fiscalYearId.value);
+    }
+    if (periodNumber.present) {
+      map['period_number'] = Variable<int>(periodNumber.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<int>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<int>(endDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (openedAt.present) {
+      map['opened_at'] = Variable<int>(openedAt.value);
+    }
+    if (closedAt.present) {
+      map['closed_at'] = Variable<int>(closedAt.value);
+    }
+    if (reopenedAt.present) {
+      map['reopened_at'] = Variable<int>(reopenedAt.value);
+    }
+    if (reopenReason.present) {
+      map['reopen_reason'] = Variable<String>(reopenReason.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalPeriodsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('periodNumber: $periodNumber, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('reopenedAt: $reopenedAt, ')
+          ..write('reopenReason: $reopenReason, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialPeriodClosingOperationsTable
+    extends FinancialPeriodClosingOperations
+    with
+        TableInfo<
+          $FinancialPeriodClosingOperationsTable,
+          FinancialPeriodClosingOperationData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialPeriodClosingOperationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodIdMeta = const VerificationMeta(
+    'periodId',
+  );
+  @override
+  late final GeneratedColumn<String> periodId = GeneratedColumn<String>(
+    'period_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closeWithFxMeta = const VerificationMeta(
+    'closeWithFx',
+  );
+  @override
+  late final GeneratedColumn<bool> closeWithFx = GeneratedColumn<bool>(
+    'close_with_fx',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("close_with_fx" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _initiatedAtMeta = const VerificationMeta(
+    'initiatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> initiatedAt = GeneratedColumn<int>(
+    'initiated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<int> completedAt = GeneratedColumn<int>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _initiatedByMeta = const VerificationMeta(
+    'initiatedBy',
+  );
+  @override
+  late final GeneratedColumn<String> initiatedBy = GeneratedColumn<String>(
+    'initiated_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    periodId,
+    status,
+    closeWithFx,
+    initiatedAt,
+    completedAt,
+    initiatedBy,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_period_closing_operations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialPeriodClosingOperationData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('period_id')) {
+      context.handle(
+        _periodIdMeta,
+        periodId.isAcceptableOrUnknown(data['period_id']!, _periodIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('close_with_fx')) {
+      context.handle(
+        _closeWithFxMeta,
+        closeWithFx.isAcceptableOrUnknown(
+          data['close_with_fx']!,
+          _closeWithFxMeta,
+        ),
+      );
+    }
+    if (data.containsKey('initiated_at')) {
+      context.handle(
+        _initiatedAtMeta,
+        initiatedAt.isAcceptableOrUnknown(
+          data['initiated_at']!,
+          _initiatedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_initiatedAtMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('initiated_by')) {
+      context.handle(
+        _initiatedByMeta,
+        initiatedBy.isAcceptableOrUnknown(
+          data['initiated_by']!,
+          _initiatedByMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+  ];
+  @override
+  FinancialPeriodClosingOperationData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialPeriodClosingOperationData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      periodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      closeWithFx: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}close_with_fx'],
+      )!,
+      initiatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}initiated_at'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completed_at'],
+      ),
+      initiatedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}initiated_by'],
+      ),
+    );
+  }
+
+  @override
+  $FinancialPeriodClosingOperationsTable createAlias(String alias) {
+    return $FinancialPeriodClosingOperationsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialPeriodClosingOperationData extends DataClass
+    implements Insertable<FinancialPeriodClosingOperationData> {
+  /// Primary key UUID v7 execution identity.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Target period ID.
+  final String periodId;
+
+  /// Status: 'initiated', 'in_progress', 'completed', 'failed', 'aborted'.
+  final String status;
+
+  /// Whether FX revaluation was requested (0 = false, 1 = true).
+  final bool closeWithFx;
+  final int initiatedAt;
+  final int? completedAt;
+  final String? initiatedBy;
+  const FinancialPeriodClosingOperationData({
+    required this.id,
+    required this.companyId,
+    required this.periodId,
+    required this.status,
+    required this.closeWithFx,
+    required this.initiatedAt,
+    this.completedAt,
+    this.initiatedBy,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['period_id'] = Variable<String>(periodId);
+    map['status'] = Variable<String>(status);
+    map['close_with_fx'] = Variable<bool>(closeWithFx);
+    map['initiated_at'] = Variable<int>(initiatedAt);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<int>(completedAt);
+    }
+    if (!nullToAbsent || initiatedBy != null) {
+      map['initiated_by'] = Variable<String>(initiatedBy);
+    }
+    return map;
+  }
+
+  FinancialPeriodClosingOperationsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialPeriodClosingOperationsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      periodId: Value(periodId),
+      status: Value(status),
+      closeWithFx: Value(closeWithFx),
+      initiatedAt: Value(initiatedAt),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      initiatedBy: initiatedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(initiatedBy),
+    );
+  }
+
+  factory FinancialPeriodClosingOperationData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialPeriodClosingOperationData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      periodId: serializer.fromJson<String>(json['periodId']),
+      status: serializer.fromJson<String>(json['status']),
+      closeWithFx: serializer.fromJson<bool>(json['closeWithFx']),
+      initiatedAt: serializer.fromJson<int>(json['initiatedAt']),
+      completedAt: serializer.fromJson<int?>(json['completedAt']),
+      initiatedBy: serializer.fromJson<String?>(json['initiatedBy']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'periodId': serializer.toJson<String>(periodId),
+      'status': serializer.toJson<String>(status),
+      'closeWithFx': serializer.toJson<bool>(closeWithFx),
+      'initiatedAt': serializer.toJson<int>(initiatedAt),
+      'completedAt': serializer.toJson<int?>(completedAt),
+      'initiatedBy': serializer.toJson<String?>(initiatedBy),
+    };
+  }
+
+  FinancialPeriodClosingOperationData copyWith({
+    String? id,
+    String? companyId,
+    String? periodId,
+    String? status,
+    bool? closeWithFx,
+    int? initiatedAt,
+    Value<int?> completedAt = const Value.absent(),
+    Value<String?> initiatedBy = const Value.absent(),
+  }) => FinancialPeriodClosingOperationData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    periodId: periodId ?? this.periodId,
+    status: status ?? this.status,
+    closeWithFx: closeWithFx ?? this.closeWithFx,
+    initiatedAt: initiatedAt ?? this.initiatedAt,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    initiatedBy: initiatedBy.present ? initiatedBy.value : this.initiatedBy,
+  );
+  FinancialPeriodClosingOperationData copyWithCompanion(
+    FinancialPeriodClosingOperationsCompanion data,
+  ) {
+    return FinancialPeriodClosingOperationData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      status: data.status.present ? data.status.value : this.status,
+      closeWithFx: data.closeWithFx.present
+          ? data.closeWithFx.value
+          : this.closeWithFx,
+      initiatedAt: data.initiatedAt.present
+          ? data.initiatedAt.value
+          : this.initiatedAt,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      initiatedBy: data.initiatedBy.present
+          ? data.initiatedBy.value
+          : this.initiatedBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingOperationData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('periodId: $periodId, ')
+          ..write('status: $status, ')
+          ..write('closeWithFx: $closeWithFx, ')
+          ..write('initiatedAt: $initiatedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('initiatedBy: $initiatedBy')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    periodId,
+    status,
+    closeWithFx,
+    initiatedAt,
+    completedAt,
+    initiatedBy,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialPeriodClosingOperationData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.periodId == this.periodId &&
+          other.status == this.status &&
+          other.closeWithFx == this.closeWithFx &&
+          other.initiatedAt == this.initiatedAt &&
+          other.completedAt == this.completedAt &&
+          other.initiatedBy == this.initiatedBy);
+}
+
+class FinancialPeriodClosingOperationsCompanion
+    extends UpdateCompanion<FinancialPeriodClosingOperationData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> periodId;
+  final Value<String> status;
+  final Value<bool> closeWithFx;
+  final Value<int> initiatedAt;
+  final Value<int?> completedAt;
+  final Value<String?> initiatedBy;
+  final Value<int> rowid;
+  const FinancialPeriodClosingOperationsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.periodId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.closeWithFx = const Value.absent(),
+    this.initiatedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.initiatedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialPeriodClosingOperationsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String periodId,
+    required String status,
+    this.closeWithFx = const Value.absent(),
+    required int initiatedAt,
+    this.completedAt = const Value.absent(),
+    this.initiatedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       periodId = Value(periodId),
+       status = Value(status),
+       initiatedAt = Value(initiatedAt);
+  static Insertable<FinancialPeriodClosingOperationData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? periodId,
+    Expression<String>? status,
+    Expression<bool>? closeWithFx,
+    Expression<int>? initiatedAt,
+    Expression<int>? completedAt,
+    Expression<String>? initiatedBy,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (periodId != null) 'period_id': periodId,
+      if (status != null) 'status': status,
+      if (closeWithFx != null) 'close_with_fx': closeWithFx,
+      if (initiatedAt != null) 'initiated_at': initiatedAt,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (initiatedBy != null) 'initiated_by': initiatedBy,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialPeriodClosingOperationsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? periodId,
+    Value<String>? status,
+    Value<bool>? closeWithFx,
+    Value<int>? initiatedAt,
+    Value<int?>? completedAt,
+    Value<String?>? initiatedBy,
+    Value<int>? rowid,
+  }) {
+    return FinancialPeriodClosingOperationsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      periodId: periodId ?? this.periodId,
+      status: status ?? this.status,
+      closeWithFx: closeWithFx ?? this.closeWithFx,
+      initiatedAt: initiatedAt ?? this.initiatedAt,
+      completedAt: completedAt ?? this.completedAt,
+      initiatedBy: initiatedBy ?? this.initiatedBy,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (periodId.present) {
+      map['period_id'] = Variable<String>(periodId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (closeWithFx.present) {
+      map['close_with_fx'] = Variable<bool>(closeWithFx.value);
+    }
+    if (initiatedAt.present) {
+      map['initiated_at'] = Variable<int>(initiatedAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<int>(completedAt.value);
+    }
+    if (initiatedBy.present) {
+      map['initiated_by'] = Variable<String>(initiatedBy.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingOperationsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('periodId: $periodId, ')
+          ..write('status: $status, ')
+          ..write('closeWithFx: $closeWithFx, ')
+          ..write('initiatedAt: $initiatedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('initiatedBy: $initiatedBy, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialPeriodClosingRecordsTable extends FinancialPeriodClosingRecords
+    with
+        TableInfo<
+          $FinancialPeriodClosingRecordsTable,
+          FinancialPeriodClosingRecordData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialPeriodClosingRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fiscalYearIdMeta = const VerificationMeta(
+    'fiscalYearId',
+  );
+  @override
+  late final GeneratedColumn<String> fiscalYearId = GeneratedColumn<String>(
+    'fiscal_year_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodIdMeta = const VerificationMeta(
+    'periodId',
+  );
+  @override
+  late final GeneratedColumn<String> periodId = GeneratedColumn<String>(
+    'period_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closingOperationIdMeta =
+      const VerificationMeta('closingOperationId');
+  @override
+  late final GeneratedColumn<String> closingOperationId =
+      GeneratedColumn<String>(
+        'closing_operation_id',
+        aliasedName,
+        false,
+        additionalChecks: GeneratedColumn.checkTextLength(
+          minTextLength: 36,
+          maxTextLength: 36,
+        ),
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _closingDateMeta = const VerificationMeta(
+    'closingDate',
+  );
+  @override
+  late final GeneratedColumn<int> closingDate = GeneratedColumn<int>(
+    'closing_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fxRevaluationExecutedMeta =
+      const VerificationMeta('fxRevaluationExecuted');
+  @override
+  late final GeneratedColumn<bool> fxRevaluationExecuted =
+      GeneratedColumn<bool>(
+        'fx_revaluation_executed',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("fx_revaluation_executed" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _journalEntryIdMeta = const VerificationMeta(
+    'journalEntryId',
+  );
+  @override
+  late final GeneratedColumn<String> journalEntryId = GeneratedColumn<String>(
+    'journal_entry_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    fiscalYearId,
+    periodId,
+    closingOperationId,
+    closingDate,
+    fxRevaluationExecuted,
+    journalEntryId,
+    createdBy,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_period_closing_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialPeriodClosingRecordData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('fiscal_year_id')) {
+      context.handle(
+        _fiscalYearIdMeta,
+        fiscalYearId.isAcceptableOrUnknown(
+          data['fiscal_year_id']!,
+          _fiscalYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fiscalYearIdMeta);
+    }
+    if (data.containsKey('period_id')) {
+      context.handle(
+        _periodIdMeta,
+        periodId.isAcceptableOrUnknown(data['period_id']!, _periodIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('closing_operation_id')) {
+      context.handle(
+        _closingOperationIdMeta,
+        closingOperationId.isAcceptableOrUnknown(
+          data['closing_operation_id']!,
+          _closingOperationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_closingOperationIdMeta);
+    }
+    if (data.containsKey('closing_date')) {
+      context.handle(
+        _closingDateMeta,
+        closingDate.isAcceptableOrUnknown(
+          data['closing_date']!,
+          _closingDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_closingDateMeta);
+    }
+    if (data.containsKey('fx_revaluation_executed')) {
+      context.handle(
+        _fxRevaluationExecutedMeta,
+        fxRevaluationExecuted.isAcceptableOrUnknown(
+          data['fx_revaluation_executed']!,
+          _fxRevaluationExecutedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('journal_entry_id')) {
+      context.handle(
+        _journalEntryIdMeta,
+        journalEntryId.isAcceptableOrUnknown(
+          data['journal_entry_id']!,
+          _journalEntryIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+    {companyId, periodId},
+  ];
+  @override
+  FinancialPeriodClosingRecordData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialPeriodClosingRecordData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      fiscalYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiscal_year_id'],
+      )!,
+      periodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_id'],
+      )!,
+      closingOperationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closing_operation_id'],
+      )!,
+      closingDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closing_date'],
+      )!,
+      fxRevaluationExecuted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}fx_revaluation_executed'],
+      )!,
+      journalEntryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}journal_entry_id'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialPeriodClosingRecordsTable createAlias(String alias) {
+    return $FinancialPeriodClosingRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialPeriodClosingRecordData extends DataClass
+    implements Insertable<FinancialPeriodClosingRecordData> {
+  /// Primary key UUID v7.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Fiscal year ID.
+  final String fiscalYearId;
+
+  /// Period ID.
+  final String periodId;
+
+  /// Reference to execution identity.
+  final String closingOperationId;
+
+  /// UTC day epoch ms closing date.
+  final int closingDate;
+
+  /// Whether FX revaluation was executed (0 = false, 1 = true).
+  final bool fxRevaluationExecuted;
+
+  /// Optional FX revaluation journal entry ID.
+  final String? journalEntryId;
+  final String? createdBy;
+  final int createdAt;
+  const FinancialPeriodClosingRecordData({
+    required this.id,
+    required this.companyId,
+    required this.fiscalYearId,
+    required this.periodId,
+    required this.closingOperationId,
+    required this.closingDate,
+    required this.fxRevaluationExecuted,
+    this.journalEntryId,
+    this.createdBy,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['fiscal_year_id'] = Variable<String>(fiscalYearId);
+    map['period_id'] = Variable<String>(periodId);
+    map['closing_operation_id'] = Variable<String>(closingOperationId);
+    map['closing_date'] = Variable<int>(closingDate);
+    map['fx_revaluation_executed'] = Variable<bool>(fxRevaluationExecuted);
+    if (!nullToAbsent || journalEntryId != null) {
+      map['journal_entry_id'] = Variable<String>(journalEntryId);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  FinancialPeriodClosingRecordsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialPeriodClosingRecordsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      fiscalYearId: Value(fiscalYearId),
+      periodId: Value(periodId),
+      closingOperationId: Value(closingOperationId),
+      closingDate: Value(closingDate),
+      fxRevaluationExecuted: Value(fxRevaluationExecuted),
+      journalEntryId: journalEntryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(journalEntryId),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FinancialPeriodClosingRecordData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialPeriodClosingRecordData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      fiscalYearId: serializer.fromJson<String>(json['fiscalYearId']),
+      periodId: serializer.fromJson<String>(json['periodId']),
+      closingOperationId: serializer.fromJson<String>(
+        json['closingOperationId'],
+      ),
+      closingDate: serializer.fromJson<int>(json['closingDate']),
+      fxRevaluationExecuted: serializer.fromJson<bool>(
+        json['fxRevaluationExecuted'],
+      ),
+      journalEntryId: serializer.fromJson<String?>(json['journalEntryId']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'fiscalYearId': serializer.toJson<String>(fiscalYearId),
+      'periodId': serializer.toJson<String>(periodId),
+      'closingOperationId': serializer.toJson<String>(closingOperationId),
+      'closingDate': serializer.toJson<int>(closingDate),
+      'fxRevaluationExecuted': serializer.toJson<bool>(fxRevaluationExecuted),
+      'journalEntryId': serializer.toJson<String?>(journalEntryId),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  FinancialPeriodClosingRecordData copyWith({
+    String? id,
+    String? companyId,
+    String? fiscalYearId,
+    String? periodId,
+    String? closingOperationId,
+    int? closingDate,
+    bool? fxRevaluationExecuted,
+    Value<String?> journalEntryId = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    int? createdAt,
+  }) => FinancialPeriodClosingRecordData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+    periodId: periodId ?? this.periodId,
+    closingOperationId: closingOperationId ?? this.closingOperationId,
+    closingDate: closingDate ?? this.closingDate,
+    fxRevaluationExecuted: fxRevaluationExecuted ?? this.fxRevaluationExecuted,
+    journalEntryId: journalEntryId.present
+        ? journalEntryId.value
+        : this.journalEntryId,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FinancialPeriodClosingRecordData copyWithCompanion(
+    FinancialPeriodClosingRecordsCompanion data,
+  ) {
+    return FinancialPeriodClosingRecordData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      fiscalYearId: data.fiscalYearId.present
+          ? data.fiscalYearId.value
+          : this.fiscalYearId,
+      periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      closingOperationId: data.closingOperationId.present
+          ? data.closingOperationId.value
+          : this.closingOperationId,
+      closingDate: data.closingDate.present
+          ? data.closingDate.value
+          : this.closingDate,
+      fxRevaluationExecuted: data.fxRevaluationExecuted.present
+          ? data.fxRevaluationExecuted.value
+          : this.fxRevaluationExecuted,
+      journalEntryId: data.journalEntryId.present
+          ? data.journalEntryId.value
+          : this.journalEntryId,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingRecordData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('periodId: $periodId, ')
+          ..write('closingOperationId: $closingOperationId, ')
+          ..write('closingDate: $closingDate, ')
+          ..write('fxRevaluationExecuted: $fxRevaluationExecuted, ')
+          ..write('journalEntryId: $journalEntryId, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    fiscalYearId,
+    periodId,
+    closingOperationId,
+    closingDate,
+    fxRevaluationExecuted,
+    journalEntryId,
+    createdBy,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialPeriodClosingRecordData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.fiscalYearId == this.fiscalYearId &&
+          other.periodId == this.periodId &&
+          other.closingOperationId == this.closingOperationId &&
+          other.closingDate == this.closingDate &&
+          other.fxRevaluationExecuted == this.fxRevaluationExecuted &&
+          other.journalEntryId == this.journalEntryId &&
+          other.createdBy == this.createdBy &&
+          other.createdAt == this.createdAt);
+}
+
+class FinancialPeriodClosingRecordsCompanion
+    extends UpdateCompanion<FinancialPeriodClosingRecordData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> fiscalYearId;
+  final Value<String> periodId;
+  final Value<String> closingOperationId;
+  final Value<int> closingDate;
+  final Value<bool> fxRevaluationExecuted;
+  final Value<String?> journalEntryId;
+  final Value<String?> createdBy;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const FinancialPeriodClosingRecordsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.fiscalYearId = const Value.absent(),
+    this.periodId = const Value.absent(),
+    this.closingOperationId = const Value.absent(),
+    this.closingDate = const Value.absent(),
+    this.fxRevaluationExecuted = const Value.absent(),
+    this.journalEntryId = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialPeriodClosingRecordsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String fiscalYearId,
+    required String periodId,
+    required String closingOperationId,
+    required int closingDate,
+    this.fxRevaluationExecuted = const Value.absent(),
+    this.journalEntryId = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       fiscalYearId = Value(fiscalYearId),
+       periodId = Value(periodId),
+       closingOperationId = Value(closingOperationId),
+       closingDate = Value(closingDate),
+       createdAt = Value(createdAt);
+  static Insertable<FinancialPeriodClosingRecordData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? fiscalYearId,
+    Expression<String>? periodId,
+    Expression<String>? closingOperationId,
+    Expression<int>? closingDate,
+    Expression<bool>? fxRevaluationExecuted,
+    Expression<String>? journalEntryId,
+    Expression<String>? createdBy,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (fiscalYearId != null) 'fiscal_year_id': fiscalYearId,
+      if (periodId != null) 'period_id': periodId,
+      if (closingOperationId != null)
+        'closing_operation_id': closingOperationId,
+      if (closingDate != null) 'closing_date': closingDate,
+      if (fxRevaluationExecuted != null)
+        'fx_revaluation_executed': fxRevaluationExecuted,
+      if (journalEntryId != null) 'journal_entry_id': journalEntryId,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialPeriodClosingRecordsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? fiscalYearId,
+    Value<String>? periodId,
+    Value<String>? closingOperationId,
+    Value<int>? closingDate,
+    Value<bool>? fxRevaluationExecuted,
+    Value<String?>? journalEntryId,
+    Value<String?>? createdBy,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialPeriodClosingRecordsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+      periodId: periodId ?? this.periodId,
+      closingOperationId: closingOperationId ?? this.closingOperationId,
+      closingDate: closingDate ?? this.closingDate,
+      fxRevaluationExecuted:
+          fxRevaluationExecuted ?? this.fxRevaluationExecuted,
+      journalEntryId: journalEntryId ?? this.journalEntryId,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (fiscalYearId.present) {
+      map['fiscal_year_id'] = Variable<String>(fiscalYearId.value);
+    }
+    if (periodId.present) {
+      map['period_id'] = Variable<String>(periodId.value);
+    }
+    if (closingOperationId.present) {
+      map['closing_operation_id'] = Variable<String>(closingOperationId.value);
+    }
+    if (closingDate.present) {
+      map['closing_date'] = Variable<int>(closingDate.value);
+    }
+    if (fxRevaluationExecuted.present) {
+      map['fx_revaluation_executed'] = Variable<bool>(
+        fxRevaluationExecuted.value,
+      );
+    }
+    if (journalEntryId.present) {
+      map['journal_entry_id'] = Variable<String>(journalEntryId.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('periodId: $periodId, ')
+          ..write('closingOperationId: $closingOperationId, ')
+          ..write('closingDate: $closingDate, ')
+          ..write('fxRevaluationExecuted: $fxRevaluationExecuted, ')
+          ..write('journalEntryId: $journalEntryId, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialPeriodClosingAttemptsTable
+    extends FinancialPeriodClosingAttempts
+    with
+        TableInfo<
+          $FinancialPeriodClosingAttemptsTable,
+          FinancialPeriodClosingAttemptData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialPeriodClosingAttemptsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodIdMeta = const VerificationMeta(
+    'periodId',
+  );
+  @override
+  late final GeneratedColumn<String> periodId = GeneratedColumn<String>(
+    'period_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closingOperationIdMeta =
+      const VerificationMeta('closingOperationId');
+  @override
+  late final GeneratedColumn<String> closingOperationId =
+      GeneratedColumn<String>(
+        'closing_operation_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _attemptedAtMeta = const VerificationMeta(
+    'attemptedAt',
+  );
+  @override
+  late final GeneratedColumn<int> attemptedAt = GeneratedColumn<int>(
+    'attempted_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _failureReasonMeta = const VerificationMeta(
+    'failureReason',
+  );
+  @override
+  late final GeneratedColumn<String> failureReason = GeneratedColumn<String>(
+    'failure_reason',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _attemptedByMeta = const VerificationMeta(
+    'attemptedBy',
+  );
+  @override
+  late final GeneratedColumn<String> attemptedBy = GeneratedColumn<String>(
+    'attempted_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    periodId,
+    closingOperationId,
+    attemptedAt,
+    status,
+    failureReason,
+    attemptedBy,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_period_closing_attempts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialPeriodClosingAttemptData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('period_id')) {
+      context.handle(
+        _periodIdMeta,
+        periodId.isAcceptableOrUnknown(data['period_id']!, _periodIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('closing_operation_id')) {
+      context.handle(
+        _closingOperationIdMeta,
+        closingOperationId.isAcceptableOrUnknown(
+          data['closing_operation_id']!,
+          _closingOperationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('attempted_at')) {
+      context.handle(
+        _attemptedAtMeta,
+        attemptedAt.isAcceptableOrUnknown(
+          data['attempted_at']!,
+          _attemptedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_attemptedAtMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('failure_reason')) {
+      context.handle(
+        _failureReasonMeta,
+        failureReason.isAcceptableOrUnknown(
+          data['failure_reason']!,
+          _failureReasonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_failureReasonMeta);
+    }
+    if (data.containsKey('attempted_by')) {
+      context.handle(
+        _attemptedByMeta,
+        attemptedBy.isAcceptableOrUnknown(
+          data['attempted_by']!,
+          _attemptedByMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FinancialPeriodClosingAttemptData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialPeriodClosingAttemptData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      periodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_id'],
+      )!,
+      closingOperationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closing_operation_id'],
+      ),
+      attemptedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempted_at'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      failureReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}failure_reason'],
+      )!,
+      attemptedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attempted_by'],
+      ),
+    );
+  }
+
+  @override
+  $FinancialPeriodClosingAttemptsTable createAlias(String alias) {
+    return $FinancialPeriodClosingAttemptsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialPeriodClosingAttemptData extends DataClass
+    implements Insertable<FinancialPeriodClosingAttemptData> {
+  /// Primary key UUID v7.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Target period ID.
+  final String periodId;
+
+  /// Reference to closing operation ID (if initiated).
+  final String? closingOperationId;
+
+  /// UTC epoch ms timestamp of attempt.
+  final int attemptedAt;
+
+  /// Status: 'failed', 'aborted'.
+  final String status;
+
+  /// Reason for failure/abort.
+  final String failureReason;
+  final String? attemptedBy;
+  const FinancialPeriodClosingAttemptData({
+    required this.id,
+    required this.companyId,
+    required this.periodId,
+    this.closingOperationId,
+    required this.attemptedAt,
+    required this.status,
+    required this.failureReason,
+    this.attemptedBy,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['period_id'] = Variable<String>(periodId);
+    if (!nullToAbsent || closingOperationId != null) {
+      map['closing_operation_id'] = Variable<String>(closingOperationId);
+    }
+    map['attempted_at'] = Variable<int>(attemptedAt);
+    map['status'] = Variable<String>(status);
+    map['failure_reason'] = Variable<String>(failureReason);
+    if (!nullToAbsent || attemptedBy != null) {
+      map['attempted_by'] = Variable<String>(attemptedBy);
+    }
+    return map;
+  }
+
+  FinancialPeriodClosingAttemptsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialPeriodClosingAttemptsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      periodId: Value(periodId),
+      closingOperationId: closingOperationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closingOperationId),
+      attemptedAt: Value(attemptedAt),
+      status: Value(status),
+      failureReason: Value(failureReason),
+      attemptedBy: attemptedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(attemptedBy),
+    );
+  }
+
+  factory FinancialPeriodClosingAttemptData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialPeriodClosingAttemptData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      periodId: serializer.fromJson<String>(json['periodId']),
+      closingOperationId: serializer.fromJson<String?>(
+        json['closingOperationId'],
+      ),
+      attemptedAt: serializer.fromJson<int>(json['attemptedAt']),
+      status: serializer.fromJson<String>(json['status']),
+      failureReason: serializer.fromJson<String>(json['failureReason']),
+      attemptedBy: serializer.fromJson<String?>(json['attemptedBy']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'periodId': serializer.toJson<String>(periodId),
+      'closingOperationId': serializer.toJson<String?>(closingOperationId),
+      'attemptedAt': serializer.toJson<int>(attemptedAt),
+      'status': serializer.toJson<String>(status),
+      'failureReason': serializer.toJson<String>(failureReason),
+      'attemptedBy': serializer.toJson<String?>(attemptedBy),
+    };
+  }
+
+  FinancialPeriodClosingAttemptData copyWith({
+    String? id,
+    String? companyId,
+    String? periodId,
+    Value<String?> closingOperationId = const Value.absent(),
+    int? attemptedAt,
+    String? status,
+    String? failureReason,
+    Value<String?> attemptedBy = const Value.absent(),
+  }) => FinancialPeriodClosingAttemptData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    periodId: periodId ?? this.periodId,
+    closingOperationId: closingOperationId.present
+        ? closingOperationId.value
+        : this.closingOperationId,
+    attemptedAt: attemptedAt ?? this.attemptedAt,
+    status: status ?? this.status,
+    failureReason: failureReason ?? this.failureReason,
+    attemptedBy: attemptedBy.present ? attemptedBy.value : this.attemptedBy,
+  );
+  FinancialPeriodClosingAttemptData copyWithCompanion(
+    FinancialPeriodClosingAttemptsCompanion data,
+  ) {
+    return FinancialPeriodClosingAttemptData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      closingOperationId: data.closingOperationId.present
+          ? data.closingOperationId.value
+          : this.closingOperationId,
+      attemptedAt: data.attemptedAt.present
+          ? data.attemptedAt.value
+          : this.attemptedAt,
+      status: data.status.present ? data.status.value : this.status,
+      failureReason: data.failureReason.present
+          ? data.failureReason.value
+          : this.failureReason,
+      attemptedBy: data.attemptedBy.present
+          ? data.attemptedBy.value
+          : this.attemptedBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingAttemptData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('periodId: $periodId, ')
+          ..write('closingOperationId: $closingOperationId, ')
+          ..write('attemptedAt: $attemptedAt, ')
+          ..write('status: $status, ')
+          ..write('failureReason: $failureReason, ')
+          ..write('attemptedBy: $attemptedBy')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    periodId,
+    closingOperationId,
+    attemptedAt,
+    status,
+    failureReason,
+    attemptedBy,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialPeriodClosingAttemptData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.periodId == this.periodId &&
+          other.closingOperationId == this.closingOperationId &&
+          other.attemptedAt == this.attemptedAt &&
+          other.status == this.status &&
+          other.failureReason == this.failureReason &&
+          other.attemptedBy == this.attemptedBy);
+}
+
+class FinancialPeriodClosingAttemptsCompanion
+    extends UpdateCompanion<FinancialPeriodClosingAttemptData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> periodId;
+  final Value<String?> closingOperationId;
+  final Value<int> attemptedAt;
+  final Value<String> status;
+  final Value<String> failureReason;
+  final Value<String?> attemptedBy;
+  final Value<int> rowid;
+  const FinancialPeriodClosingAttemptsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.periodId = const Value.absent(),
+    this.closingOperationId = const Value.absent(),
+    this.attemptedAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.failureReason = const Value.absent(),
+    this.attemptedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialPeriodClosingAttemptsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String periodId,
+    this.closingOperationId = const Value.absent(),
+    required int attemptedAt,
+    required String status,
+    required String failureReason,
+    this.attemptedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       periodId = Value(periodId),
+       attemptedAt = Value(attemptedAt),
+       status = Value(status),
+       failureReason = Value(failureReason);
+  static Insertable<FinancialPeriodClosingAttemptData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? periodId,
+    Expression<String>? closingOperationId,
+    Expression<int>? attemptedAt,
+    Expression<String>? status,
+    Expression<String>? failureReason,
+    Expression<String>? attemptedBy,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (periodId != null) 'period_id': periodId,
+      if (closingOperationId != null)
+        'closing_operation_id': closingOperationId,
+      if (attemptedAt != null) 'attempted_at': attemptedAt,
+      if (status != null) 'status': status,
+      if (failureReason != null) 'failure_reason': failureReason,
+      if (attemptedBy != null) 'attempted_by': attemptedBy,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialPeriodClosingAttemptsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? periodId,
+    Value<String?>? closingOperationId,
+    Value<int>? attemptedAt,
+    Value<String>? status,
+    Value<String>? failureReason,
+    Value<String?>? attemptedBy,
+    Value<int>? rowid,
+  }) {
+    return FinancialPeriodClosingAttemptsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      periodId: periodId ?? this.periodId,
+      closingOperationId: closingOperationId ?? this.closingOperationId,
+      attemptedAt: attemptedAt ?? this.attemptedAt,
+      status: status ?? this.status,
+      failureReason: failureReason ?? this.failureReason,
+      attemptedBy: attemptedBy ?? this.attemptedBy,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (periodId.present) {
+      map['period_id'] = Variable<String>(periodId.value);
+    }
+    if (closingOperationId.present) {
+      map['closing_operation_id'] = Variable<String>(closingOperationId.value);
+    }
+    if (attemptedAt.present) {
+      map['attempted_at'] = Variable<int>(attemptedAt.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (failureReason.present) {
+      map['failure_reason'] = Variable<String>(failureReason.value);
+    }
+    if (attemptedBy.present) {
+      map['attempted_by'] = Variable<String>(attemptedBy.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingAttemptsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('periodId: $periodId, ')
+          ..write('closingOperationId: $closingOperationId, ')
+          ..write('attemptedAt: $attemptedAt, ')
+          ..write('status: $status, ')
+          ..write('failureReason: $failureReason, ')
+          ..write('attemptedBy: $attemptedBy, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialPeriodClosingRatesTable extends FinancialPeriodClosingRates
+    with
+        TableInfo<
+          $FinancialPeriodClosingRatesTable,
+          FinancialPeriodClosingRateData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialPeriodClosingRatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closingOperationIdMeta =
+      const VerificationMeta('closingOperationId');
+  @override
+  late final GeneratedColumn<String> closingOperationId =
+      GeneratedColumn<String>(
+        'closing_operation_id',
+        aliasedName,
+        false,
+        additionalChecks: GeneratedColumn.checkTextLength(
+          minTextLength: 36,
+          maxTextLength: 36,
+        ),
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _fromCurrencyCodeMeta = const VerificationMeta(
+    'fromCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> fromCurrencyCode = GeneratedColumn<String>(
+    'from_currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _toCurrencyCodeMeta = const VerificationMeta(
+    'toCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> toCurrencyCode = GeneratedColumn<String>(
+    'to_currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _exchangeRateScaledMeta =
+      const VerificationMeta('exchangeRateScaled');
+  @override
+  late final GeneratedColumn<BigInt> exchangeRateScaled =
+      GeneratedColumn<BigInt>(
+        'exchange_rate_scaled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    closingOperationId,
+    fromCurrencyCode,
+    toCurrencyCode,
+    exchangeRateScaled,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_period_closing_rates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialPeriodClosingRateData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('closing_operation_id')) {
+      context.handle(
+        _closingOperationIdMeta,
+        closingOperationId.isAcceptableOrUnknown(
+          data['closing_operation_id']!,
+          _closingOperationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_closingOperationIdMeta);
+    }
+    if (data.containsKey('from_currency_code')) {
+      context.handle(
+        _fromCurrencyCodeMeta,
+        fromCurrencyCode.isAcceptableOrUnknown(
+          data['from_currency_code']!,
+          _fromCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fromCurrencyCodeMeta);
+    }
+    if (data.containsKey('to_currency_code')) {
+      context.handle(
+        _toCurrencyCodeMeta,
+        toCurrencyCode.isAcceptableOrUnknown(
+          data['to_currency_code']!,
+          _toCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_toCurrencyCodeMeta);
+    }
+    if (data.containsKey('exchange_rate_scaled')) {
+      context.handle(
+        _exchangeRateScaledMeta,
+        exchangeRateScaled.isAcceptableOrUnknown(
+          data['exchange_rate_scaled']!,
+          _exchangeRateScaledMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_exchangeRateScaledMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, closingOperationId, fromCurrencyCode, toCurrencyCode},
+  ];
+  @override
+  FinancialPeriodClosingRateData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialPeriodClosingRateData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      closingOperationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closing_operation_id'],
+      )!,
+      fromCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_currency_code'],
+      )!,
+      toCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_currency_code'],
+      )!,
+      exchangeRateScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}exchange_rate_scaled'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialPeriodClosingRatesTable createAlias(String alias) {
+    return $FinancialPeriodClosingRatesTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialPeriodClosingRateData extends DataClass
+    implements Insertable<FinancialPeriodClosingRateData> {
+  /// Primary key UUID v7.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Reference to closing operation ID.
+  final String closingOperationId;
+
+  /// Source currency ISO code.
+  final String fromCurrencyCode;
+
+  /// Target currency ISO code.
+  final String toCurrencyCode;
+
+  /// Scaled exchange rate ($10^8$ integer scale).
+  final BigInt exchangeRateScaled;
+  const FinancialPeriodClosingRateData({
+    required this.id,
+    required this.companyId,
+    required this.closingOperationId,
+    required this.fromCurrencyCode,
+    required this.toCurrencyCode,
+    required this.exchangeRateScaled,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['closing_operation_id'] = Variable<String>(closingOperationId);
+    map['from_currency_code'] = Variable<String>(fromCurrencyCode);
+    map['to_currency_code'] = Variable<String>(toCurrencyCode);
+    map['exchange_rate_scaled'] = Variable<BigInt>(exchangeRateScaled);
+    return map;
+  }
+
+  FinancialPeriodClosingRatesCompanion toCompanion(bool nullToAbsent) {
+    return FinancialPeriodClosingRatesCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      closingOperationId: Value(closingOperationId),
+      fromCurrencyCode: Value(fromCurrencyCode),
+      toCurrencyCode: Value(toCurrencyCode),
+      exchangeRateScaled: Value(exchangeRateScaled),
+    );
+  }
+
+  factory FinancialPeriodClosingRateData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialPeriodClosingRateData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      closingOperationId: serializer.fromJson<String>(
+        json['closingOperationId'],
+      ),
+      fromCurrencyCode: serializer.fromJson<String>(json['fromCurrencyCode']),
+      toCurrencyCode: serializer.fromJson<String>(json['toCurrencyCode']),
+      exchangeRateScaled: serializer.fromJson<BigInt>(
+        json['exchangeRateScaled'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'closingOperationId': serializer.toJson<String>(closingOperationId),
+      'fromCurrencyCode': serializer.toJson<String>(fromCurrencyCode),
+      'toCurrencyCode': serializer.toJson<String>(toCurrencyCode),
+      'exchangeRateScaled': serializer.toJson<BigInt>(exchangeRateScaled),
+    };
+  }
+
+  FinancialPeriodClosingRateData copyWith({
+    String? id,
+    String? companyId,
+    String? closingOperationId,
+    String? fromCurrencyCode,
+    String? toCurrencyCode,
+    BigInt? exchangeRateScaled,
+  }) => FinancialPeriodClosingRateData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    closingOperationId: closingOperationId ?? this.closingOperationId,
+    fromCurrencyCode: fromCurrencyCode ?? this.fromCurrencyCode,
+    toCurrencyCode: toCurrencyCode ?? this.toCurrencyCode,
+    exchangeRateScaled: exchangeRateScaled ?? this.exchangeRateScaled,
+  );
+  FinancialPeriodClosingRateData copyWithCompanion(
+    FinancialPeriodClosingRatesCompanion data,
+  ) {
+    return FinancialPeriodClosingRateData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      closingOperationId: data.closingOperationId.present
+          ? data.closingOperationId.value
+          : this.closingOperationId,
+      fromCurrencyCode: data.fromCurrencyCode.present
+          ? data.fromCurrencyCode.value
+          : this.fromCurrencyCode,
+      toCurrencyCode: data.toCurrencyCode.present
+          ? data.toCurrencyCode.value
+          : this.toCurrencyCode,
+      exchangeRateScaled: data.exchangeRateScaled.present
+          ? data.exchangeRateScaled.value
+          : this.exchangeRateScaled,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingRateData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('closingOperationId: $closingOperationId, ')
+          ..write('fromCurrencyCode: $fromCurrencyCode, ')
+          ..write('toCurrencyCode: $toCurrencyCode, ')
+          ..write('exchangeRateScaled: $exchangeRateScaled')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    closingOperationId,
+    fromCurrencyCode,
+    toCurrencyCode,
+    exchangeRateScaled,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialPeriodClosingRateData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.closingOperationId == this.closingOperationId &&
+          other.fromCurrencyCode == this.fromCurrencyCode &&
+          other.toCurrencyCode == this.toCurrencyCode &&
+          other.exchangeRateScaled == this.exchangeRateScaled);
+}
+
+class FinancialPeriodClosingRatesCompanion
+    extends UpdateCompanion<FinancialPeriodClosingRateData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> closingOperationId;
+  final Value<String> fromCurrencyCode;
+  final Value<String> toCurrencyCode;
+  final Value<BigInt> exchangeRateScaled;
+  final Value<int> rowid;
+  const FinancialPeriodClosingRatesCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.closingOperationId = const Value.absent(),
+    this.fromCurrencyCode = const Value.absent(),
+    this.toCurrencyCode = const Value.absent(),
+    this.exchangeRateScaled = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialPeriodClosingRatesCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String closingOperationId,
+    required String fromCurrencyCode,
+    required String toCurrencyCode,
+    required BigInt exchangeRateScaled,
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       closingOperationId = Value(closingOperationId),
+       fromCurrencyCode = Value(fromCurrencyCode),
+       toCurrencyCode = Value(toCurrencyCode),
+       exchangeRateScaled = Value(exchangeRateScaled);
+  static Insertable<FinancialPeriodClosingRateData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? closingOperationId,
+    Expression<String>? fromCurrencyCode,
+    Expression<String>? toCurrencyCode,
+    Expression<BigInt>? exchangeRateScaled,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (closingOperationId != null)
+        'closing_operation_id': closingOperationId,
+      if (fromCurrencyCode != null) 'from_currency_code': fromCurrencyCode,
+      if (toCurrencyCode != null) 'to_currency_code': toCurrencyCode,
+      if (exchangeRateScaled != null)
+        'exchange_rate_scaled': exchangeRateScaled,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialPeriodClosingRatesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? closingOperationId,
+    Value<String>? fromCurrencyCode,
+    Value<String>? toCurrencyCode,
+    Value<BigInt>? exchangeRateScaled,
+    Value<int>? rowid,
+  }) {
+    return FinancialPeriodClosingRatesCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      closingOperationId: closingOperationId ?? this.closingOperationId,
+      fromCurrencyCode: fromCurrencyCode ?? this.fromCurrencyCode,
+      toCurrencyCode: toCurrencyCode ?? this.toCurrencyCode,
+      exchangeRateScaled: exchangeRateScaled ?? this.exchangeRateScaled,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (closingOperationId.present) {
+      map['closing_operation_id'] = Variable<String>(closingOperationId.value);
+    }
+    if (fromCurrencyCode.present) {
+      map['from_currency_code'] = Variable<String>(fromCurrencyCode.value);
+    }
+    if (toCurrencyCode.present) {
+      map['to_currency_code'] = Variable<String>(toCurrencyCode.value);
+    }
+    if (exchangeRateScaled.present) {
+      map['exchange_rate_scaled'] = Variable<BigInt>(exchangeRateScaled.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialPeriodClosingRatesCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('closingOperationId: $closingOperationId, ')
+          ..write('fromCurrencyCode: $fromCurrencyCode, ')
+          ..write('toCurrencyCode: $toCurrencyCode, ')
+          ..write('exchangeRateScaled: $exchangeRateScaled, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialFiscalYearClosingRecordsTable
+    extends FinancialFiscalYearClosingRecords
+    with
+        TableInfo<
+          $FinancialFiscalYearClosingRecordsTable,
+          FinancialFiscalYearClosingRecordData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialFiscalYearClosingRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fiscalYearIdMeta = const VerificationMeta(
+    'fiscalYearId',
+  );
+  @override
+  late final GeneratedColumn<String> fiscalYearId = GeneratedColumn<String>(
+    'fiscal_year_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _finalPeriodIdMeta = const VerificationMeta(
+    'finalPeriodId',
+  );
+  @override
+  late final GeneratedColumn<String> finalPeriodId = GeneratedColumn<String>(
+    'final_period_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nextFiscalYearIdMeta = const VerificationMeta(
+    'nextFiscalYearId',
+  );
+  @override
+  late final GeneratedColumn<String> nextFiscalYearId = GeneratedColumn<String>(
+    'next_fiscal_year_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _yearEndJournalIdMeta = const VerificationMeta(
+    'yearEndJournalId',
+  );
+  @override
+  late final GeneratedColumn<String> yearEndJournalId = GeneratedColumn<String>(
+    'year_end_journal_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _openingBalanceJournalIdMeta =
+      const VerificationMeta('openingBalanceJournalId');
+  @override
+  late final GeneratedColumn<String> openingBalanceJournalId =
+      GeneratedColumn<String>(
+        'opening_balance_journal_id',
+        aliasedName,
+        false,
+        additionalChecks: GeneratedColumn.checkTextLength(
+          minTextLength: 36,
+          maxTextLength: 36,
+        ),
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _closedAtMeta = const VerificationMeta(
+    'closedAt',
+  );
+  @override
+  late final GeneratedColumn<int> closedAt = GeneratedColumn<int>(
+    'closed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closedByMeta = const VerificationMeta(
+    'closedBy',
+  );
+  @override
+  late final GeneratedColumn<String> closedBy = GeneratedColumn<String>(
+    'closed_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    fiscalYearId,
+    finalPeriodId,
+    nextFiscalYearId,
+    yearEndJournalId,
+    openingBalanceJournalId,
+    closedAt,
+    closedBy,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_fiscal_year_closing_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialFiscalYearClosingRecordData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('fiscal_year_id')) {
+      context.handle(
+        _fiscalYearIdMeta,
+        fiscalYearId.isAcceptableOrUnknown(
+          data['fiscal_year_id']!,
+          _fiscalYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fiscalYearIdMeta);
+    }
+    if (data.containsKey('final_period_id')) {
+      context.handle(
+        _finalPeriodIdMeta,
+        finalPeriodId.isAcceptableOrUnknown(
+          data['final_period_id']!,
+          _finalPeriodIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_finalPeriodIdMeta);
+    }
+    if (data.containsKey('next_fiscal_year_id')) {
+      context.handle(
+        _nextFiscalYearIdMeta,
+        nextFiscalYearId.isAcceptableOrUnknown(
+          data['next_fiscal_year_id']!,
+          _nextFiscalYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_nextFiscalYearIdMeta);
+    }
+    if (data.containsKey('year_end_journal_id')) {
+      context.handle(
+        _yearEndJournalIdMeta,
+        yearEndJournalId.isAcceptableOrUnknown(
+          data['year_end_journal_id']!,
+          _yearEndJournalIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_yearEndJournalIdMeta);
+    }
+    if (data.containsKey('opening_balance_journal_id')) {
+      context.handle(
+        _openingBalanceJournalIdMeta,
+        openingBalanceJournalId.isAcceptableOrUnknown(
+          data['opening_balance_journal_id']!,
+          _openingBalanceJournalIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_openingBalanceJournalIdMeta);
+    }
+    if (data.containsKey('closed_at')) {
+      context.handle(
+        _closedAtMeta,
+        closedAt.isAcceptableOrUnknown(data['closed_at']!, _closedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_closedAtMeta);
+    }
+    if (data.containsKey('closed_by')) {
+      context.handle(
+        _closedByMeta,
+        closedBy.isAcceptableOrUnknown(data['closed_by']!, _closedByMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+    {companyId, fiscalYearId},
+  ];
+  @override
+  FinancialFiscalYearClosingRecordData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialFiscalYearClosingRecordData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      fiscalYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiscal_year_id'],
+      )!,
+      finalPeriodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}final_period_id'],
+      )!,
+      nextFiscalYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_fiscal_year_id'],
+      )!,
+      yearEndJournalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}year_end_journal_id'],
+      )!,
+      openingBalanceJournalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opening_balance_journal_id'],
+      )!,
+      closedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closed_at'],
+      )!,
+      closedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closed_by'],
+      ),
+    );
+  }
+
+  @override
+  $FinancialFiscalYearClosingRecordsTable createAlias(String alias) {
+    return $FinancialFiscalYearClosingRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialFiscalYearClosingRecordData extends DataClass
+    implements Insertable<FinancialFiscalYearClosingRecordData> {
+  /// Primary key UUID v7.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Closed fiscal year ID.
+  final String fiscalYearId;
+
+  /// Final period ID of closed fiscal year.
+  final String finalPeriodId;
+
+  /// Initialized next fiscal year ID.
+  final String nextFiscalYearId;
+
+  /// Reference to P&L Year-End closing journal entry ID.
+  final String yearEndJournalId;
+
+  /// Reference to Opening Balance journal entry ID in next fiscal year.
+  final String openingBalanceJournalId;
+
+  /// UTC epoch ms timestamp of closure.
+  final int closedAt;
+  final String? closedBy;
+  const FinancialFiscalYearClosingRecordData({
+    required this.id,
+    required this.companyId,
+    required this.fiscalYearId,
+    required this.finalPeriodId,
+    required this.nextFiscalYearId,
+    required this.yearEndJournalId,
+    required this.openingBalanceJournalId,
+    required this.closedAt,
+    this.closedBy,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['fiscal_year_id'] = Variable<String>(fiscalYearId);
+    map['final_period_id'] = Variable<String>(finalPeriodId);
+    map['next_fiscal_year_id'] = Variable<String>(nextFiscalYearId);
+    map['year_end_journal_id'] = Variable<String>(yearEndJournalId);
+    map['opening_balance_journal_id'] = Variable<String>(
+      openingBalanceJournalId,
+    );
+    map['closed_at'] = Variable<int>(closedAt);
+    if (!nullToAbsent || closedBy != null) {
+      map['closed_by'] = Variable<String>(closedBy);
+    }
+    return map;
+  }
+
+  FinancialFiscalYearClosingRecordsCompanion toCompanion(bool nullToAbsent) {
+    return FinancialFiscalYearClosingRecordsCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      fiscalYearId: Value(fiscalYearId),
+      finalPeriodId: Value(finalPeriodId),
+      nextFiscalYearId: Value(nextFiscalYearId),
+      yearEndJournalId: Value(yearEndJournalId),
+      openingBalanceJournalId: Value(openingBalanceJournalId),
+      closedAt: Value(closedAt),
+      closedBy: closedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedBy),
+    );
+  }
+
+  factory FinancialFiscalYearClosingRecordData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialFiscalYearClosingRecordData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      fiscalYearId: serializer.fromJson<String>(json['fiscalYearId']),
+      finalPeriodId: serializer.fromJson<String>(json['finalPeriodId']),
+      nextFiscalYearId: serializer.fromJson<String>(json['nextFiscalYearId']),
+      yearEndJournalId: serializer.fromJson<String>(json['yearEndJournalId']),
+      openingBalanceJournalId: serializer.fromJson<String>(
+        json['openingBalanceJournalId'],
+      ),
+      closedAt: serializer.fromJson<int>(json['closedAt']),
+      closedBy: serializer.fromJson<String?>(json['closedBy']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'fiscalYearId': serializer.toJson<String>(fiscalYearId),
+      'finalPeriodId': serializer.toJson<String>(finalPeriodId),
+      'nextFiscalYearId': serializer.toJson<String>(nextFiscalYearId),
+      'yearEndJournalId': serializer.toJson<String>(yearEndJournalId),
+      'openingBalanceJournalId': serializer.toJson<String>(
+        openingBalanceJournalId,
+      ),
+      'closedAt': serializer.toJson<int>(closedAt),
+      'closedBy': serializer.toJson<String?>(closedBy),
+    };
+  }
+
+  FinancialFiscalYearClosingRecordData copyWith({
+    String? id,
+    String? companyId,
+    String? fiscalYearId,
+    String? finalPeriodId,
+    String? nextFiscalYearId,
+    String? yearEndJournalId,
+    String? openingBalanceJournalId,
+    int? closedAt,
+    Value<String?> closedBy = const Value.absent(),
+  }) => FinancialFiscalYearClosingRecordData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+    finalPeriodId: finalPeriodId ?? this.finalPeriodId,
+    nextFiscalYearId: nextFiscalYearId ?? this.nextFiscalYearId,
+    yearEndJournalId: yearEndJournalId ?? this.yearEndJournalId,
+    openingBalanceJournalId:
+        openingBalanceJournalId ?? this.openingBalanceJournalId,
+    closedAt: closedAt ?? this.closedAt,
+    closedBy: closedBy.present ? closedBy.value : this.closedBy,
+  );
+  FinancialFiscalYearClosingRecordData copyWithCompanion(
+    FinancialFiscalYearClosingRecordsCompanion data,
+  ) {
+    return FinancialFiscalYearClosingRecordData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      fiscalYearId: data.fiscalYearId.present
+          ? data.fiscalYearId.value
+          : this.fiscalYearId,
+      finalPeriodId: data.finalPeriodId.present
+          ? data.finalPeriodId.value
+          : this.finalPeriodId,
+      nextFiscalYearId: data.nextFiscalYearId.present
+          ? data.nextFiscalYearId.value
+          : this.nextFiscalYearId,
+      yearEndJournalId: data.yearEndJournalId.present
+          ? data.yearEndJournalId.value
+          : this.yearEndJournalId,
+      openingBalanceJournalId: data.openingBalanceJournalId.present
+          ? data.openingBalanceJournalId.value
+          : this.openingBalanceJournalId,
+      closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
+      closedBy: data.closedBy.present ? data.closedBy.value : this.closedBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalYearClosingRecordData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('finalPeriodId: $finalPeriodId, ')
+          ..write('nextFiscalYearId: $nextFiscalYearId, ')
+          ..write('yearEndJournalId: $yearEndJournalId, ')
+          ..write('openingBalanceJournalId: $openingBalanceJournalId, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('closedBy: $closedBy')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    fiscalYearId,
+    finalPeriodId,
+    nextFiscalYearId,
+    yearEndJournalId,
+    openingBalanceJournalId,
+    closedAt,
+    closedBy,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialFiscalYearClosingRecordData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.fiscalYearId == this.fiscalYearId &&
+          other.finalPeriodId == this.finalPeriodId &&
+          other.nextFiscalYearId == this.nextFiscalYearId &&
+          other.yearEndJournalId == this.yearEndJournalId &&
+          other.openingBalanceJournalId == this.openingBalanceJournalId &&
+          other.closedAt == this.closedAt &&
+          other.closedBy == this.closedBy);
+}
+
+class FinancialFiscalYearClosingRecordsCompanion
+    extends UpdateCompanion<FinancialFiscalYearClosingRecordData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> fiscalYearId;
+  final Value<String> finalPeriodId;
+  final Value<String> nextFiscalYearId;
+  final Value<String> yearEndJournalId;
+  final Value<String> openingBalanceJournalId;
+  final Value<int> closedAt;
+  final Value<String?> closedBy;
+  final Value<int> rowid;
+  const FinancialFiscalYearClosingRecordsCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.fiscalYearId = const Value.absent(),
+    this.finalPeriodId = const Value.absent(),
+    this.nextFiscalYearId = const Value.absent(),
+    this.yearEndJournalId = const Value.absent(),
+    this.openingBalanceJournalId = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialFiscalYearClosingRecordsCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String fiscalYearId,
+    required String finalPeriodId,
+    required String nextFiscalYearId,
+    required String yearEndJournalId,
+    required String openingBalanceJournalId,
+    required int closedAt,
+    this.closedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       fiscalYearId = Value(fiscalYearId),
+       finalPeriodId = Value(finalPeriodId),
+       nextFiscalYearId = Value(nextFiscalYearId),
+       yearEndJournalId = Value(yearEndJournalId),
+       openingBalanceJournalId = Value(openingBalanceJournalId),
+       closedAt = Value(closedAt);
+  static Insertable<FinancialFiscalYearClosingRecordData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? fiscalYearId,
+    Expression<String>? finalPeriodId,
+    Expression<String>? nextFiscalYearId,
+    Expression<String>? yearEndJournalId,
+    Expression<String>? openingBalanceJournalId,
+    Expression<int>? closedAt,
+    Expression<String>? closedBy,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (fiscalYearId != null) 'fiscal_year_id': fiscalYearId,
+      if (finalPeriodId != null) 'final_period_id': finalPeriodId,
+      if (nextFiscalYearId != null) 'next_fiscal_year_id': nextFiscalYearId,
+      if (yearEndJournalId != null) 'year_end_journal_id': yearEndJournalId,
+      if (openingBalanceJournalId != null)
+        'opening_balance_journal_id': openingBalanceJournalId,
+      if (closedAt != null) 'closed_at': closedAt,
+      if (closedBy != null) 'closed_by': closedBy,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialFiscalYearClosingRecordsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? fiscalYearId,
+    Value<String>? finalPeriodId,
+    Value<String>? nextFiscalYearId,
+    Value<String>? yearEndJournalId,
+    Value<String>? openingBalanceJournalId,
+    Value<int>? closedAt,
+    Value<String?>? closedBy,
+    Value<int>? rowid,
+  }) {
+    return FinancialFiscalYearClosingRecordsCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+      finalPeriodId: finalPeriodId ?? this.finalPeriodId,
+      nextFiscalYearId: nextFiscalYearId ?? this.nextFiscalYearId,
+      yearEndJournalId: yearEndJournalId ?? this.yearEndJournalId,
+      openingBalanceJournalId:
+          openingBalanceJournalId ?? this.openingBalanceJournalId,
+      closedAt: closedAt ?? this.closedAt,
+      closedBy: closedBy ?? this.closedBy,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (fiscalYearId.present) {
+      map['fiscal_year_id'] = Variable<String>(fiscalYearId.value);
+    }
+    if (finalPeriodId.present) {
+      map['final_period_id'] = Variable<String>(finalPeriodId.value);
+    }
+    if (nextFiscalYearId.present) {
+      map['next_fiscal_year_id'] = Variable<String>(nextFiscalYearId.value);
+    }
+    if (yearEndJournalId.present) {
+      map['year_end_journal_id'] = Variable<String>(yearEndJournalId.value);
+    }
+    if (openingBalanceJournalId.present) {
+      map['opening_balance_journal_id'] = Variable<String>(
+        openingBalanceJournalId.value,
+      );
+    }
+    if (closedAt.present) {
+      map['closed_at'] = Variable<int>(closedAt.value);
+    }
+    if (closedBy.present) {
+      map['closed_by'] = Variable<String>(closedBy.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalYearClosingRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('finalPeriodId: $finalPeriodId, ')
+          ..write('nextFiscalYearId: $nextFiscalYearId, ')
+          ..write('yearEndJournalId: $yearEndJournalId, ')
+          ..write('openingBalanceJournalId: $openingBalanceJournalId, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialFiscalYearOpeningBoundariesTable
+    extends FinancialFiscalYearOpeningBoundaries
+    with
+        TableInfo<
+          $FinancialFiscalYearOpeningBoundariesTable,
+          FinancialFiscalYearOpeningBoundaryData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialFiscalYearOpeningBoundariesTable(
+    this.attachedDatabase, [
+    this._alias,
+  ]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: generateUuidV7,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fiscalYearIdMeta = const VerificationMeta(
+    'fiscalYearId',
+  );
+  @override
+  late final GeneratedColumn<String> fiscalYearId = GeneratedColumn<String>(
+    'fiscal_year_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _openingBalanceScaledMeta =
+      const VerificationMeta('openingBalanceScaled');
+  @override
+  late final GeneratedColumn<BigInt> openingBalanceScaled =
+      GeneratedColumn<BigInt>(
+        'opening_balance_scaled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    companyId,
+    fiscalYearId,
+    accountId,
+    subjectId,
+    currencyCode,
+    openingBalanceScaled,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_fiscal_year_opening_boundaries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialFiscalYearOpeningBoundaryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('fiscal_year_id')) {
+      context.handle(
+        _fiscalYearIdMeta,
+        fiscalYearId.isAcceptableOrUnknown(
+          data['fiscal_year_id']!,
+          _fiscalYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fiscalYearIdMeta);
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('opening_balance_scaled')) {
+      context.handle(
+        _openingBalanceScaledMeta,
+        openingBalanceScaled.isAcceptableOrUnknown(
+          data['opening_balance_scaled']!,
+          _openingBalanceScaledMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_openingBalanceScaledMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, id},
+  ];
+  @override
+  FinancialFiscalYearOpeningBoundaryData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialFiscalYearOpeningBoundaryData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      fiscalYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiscal_year_id'],
+      )!,
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      ),
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      openingBalanceScaled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}opening_balance_scaled'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinancialFiscalYearOpeningBoundariesTable createAlias(String alias) {
+    return $FinancialFiscalYearOpeningBoundariesTable(attachedDatabase, alias);
+  }
+}
+
+class FinancialFiscalYearOpeningBoundaryData extends DataClass
+    implements Insertable<FinancialFiscalYearOpeningBoundaryData> {
+  /// Primary key UUID v7.
+  final String id;
+
+  /// Tenant company scope.
+  final String companyId;
+
+  /// Target fiscal year ID.
+  final String fiscalYearId;
+
+  /// Permanent account ID.
+  final String accountId;
+
+  /// Optional projection subject ID (validated at domain layer).
+  final String? subjectId;
+
+  /// Currency ISO code.
+  final String currencyCode;
+
+  /// Opening balance scaled by 10^8 ($10^8$ integer scale).
+  final BigInt openingBalanceScaled;
+  final int createdAt;
+  const FinancialFiscalYearOpeningBoundaryData({
+    required this.id,
+    required this.companyId,
+    required this.fiscalYearId,
+    required this.accountId,
+    this.subjectId,
+    required this.currencyCode,
+    required this.openingBalanceScaled,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['company_id'] = Variable<String>(companyId);
+    map['fiscal_year_id'] = Variable<String>(fiscalYearId);
+    map['account_id'] = Variable<String>(accountId);
+    if (!nullToAbsent || subjectId != null) {
+      map['subject_id'] = Variable<String>(subjectId);
+    }
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['opening_balance_scaled'] = Variable<BigInt>(openingBalanceScaled);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  FinancialFiscalYearOpeningBoundariesCompanion toCompanion(bool nullToAbsent) {
+    return FinancialFiscalYearOpeningBoundariesCompanion(
+      id: Value(id),
+      companyId: Value(companyId),
+      fiscalYearId: Value(fiscalYearId),
+      accountId: Value(accountId),
+      subjectId: subjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subjectId),
+      currencyCode: Value(currencyCode),
+      openingBalanceScaled: Value(openingBalanceScaled),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FinancialFiscalYearOpeningBoundaryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialFiscalYearOpeningBoundaryData(
+      id: serializer.fromJson<String>(json['id']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      fiscalYearId: serializer.fromJson<String>(json['fiscalYearId']),
+      accountId: serializer.fromJson<String>(json['accountId']),
+      subjectId: serializer.fromJson<String?>(json['subjectId']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      openingBalanceScaled: serializer.fromJson<BigInt>(
+        json['openingBalanceScaled'],
+      ),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'companyId': serializer.toJson<String>(companyId),
+      'fiscalYearId': serializer.toJson<String>(fiscalYearId),
+      'accountId': serializer.toJson<String>(accountId),
+      'subjectId': serializer.toJson<String?>(subjectId),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'openingBalanceScaled': serializer.toJson<BigInt>(openingBalanceScaled),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  FinancialFiscalYearOpeningBoundaryData copyWith({
+    String? id,
+    String? companyId,
+    String? fiscalYearId,
+    String? accountId,
+    Value<String?> subjectId = const Value.absent(),
+    String? currencyCode,
+    BigInt? openingBalanceScaled,
+    int? createdAt,
+  }) => FinancialFiscalYearOpeningBoundaryData(
+    id: id ?? this.id,
+    companyId: companyId ?? this.companyId,
+    fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+    accountId: accountId ?? this.accountId,
+    subjectId: subjectId.present ? subjectId.value : this.subjectId,
+    currencyCode: currencyCode ?? this.currencyCode,
+    openingBalanceScaled: openingBalanceScaled ?? this.openingBalanceScaled,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FinancialFiscalYearOpeningBoundaryData copyWithCompanion(
+    FinancialFiscalYearOpeningBoundariesCompanion data,
+  ) {
+    return FinancialFiscalYearOpeningBoundaryData(
+      id: data.id.present ? data.id.value : this.id,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      fiscalYearId: data.fiscalYearId.present
+          ? data.fiscalYearId.value
+          : this.fiscalYearId,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      openingBalanceScaled: data.openingBalanceScaled.present
+          ? data.openingBalanceScaled.value
+          : this.openingBalanceScaled,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalYearOpeningBoundaryData(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('accountId: $accountId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('openingBalanceScaled: $openingBalanceScaled, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    companyId,
+    fiscalYearId,
+    accountId,
+    subjectId,
+    currencyCode,
+    openingBalanceScaled,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialFiscalYearOpeningBoundaryData &&
+          other.id == this.id &&
+          other.companyId == this.companyId &&
+          other.fiscalYearId == this.fiscalYearId &&
+          other.accountId == this.accountId &&
+          other.subjectId == this.subjectId &&
+          other.currencyCode == this.currencyCode &&
+          other.openingBalanceScaled == this.openingBalanceScaled &&
+          other.createdAt == this.createdAt);
+}
+
+class FinancialFiscalYearOpeningBoundariesCompanion
+    extends UpdateCompanion<FinancialFiscalYearOpeningBoundaryData> {
+  final Value<String> id;
+  final Value<String> companyId;
+  final Value<String> fiscalYearId;
+  final Value<String> accountId;
+  final Value<String?> subjectId;
+  final Value<String> currencyCode;
+  final Value<BigInt> openingBalanceScaled;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const FinancialFiscalYearOpeningBoundariesCompanion({
+    this.id = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.fiscalYearId = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.openingBalanceScaled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialFiscalYearOpeningBoundariesCompanion.insert({
+    this.id = const Value.absent(),
+    required String companyId,
+    required String fiscalYearId,
+    required String accountId,
+    this.subjectId = const Value.absent(),
+    required String currencyCode,
+    required BigInt openingBalanceScaled,
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : companyId = Value(companyId),
+       fiscalYearId = Value(fiscalYearId),
+       accountId = Value(accountId),
+       currencyCode = Value(currencyCode),
+       openingBalanceScaled = Value(openingBalanceScaled),
+       createdAt = Value(createdAt);
+  static Insertable<FinancialFiscalYearOpeningBoundaryData> custom({
+    Expression<String>? id,
+    Expression<String>? companyId,
+    Expression<String>? fiscalYearId,
+    Expression<String>? accountId,
+    Expression<String>? subjectId,
+    Expression<String>? currencyCode,
+    Expression<BigInt>? openingBalanceScaled,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (companyId != null) 'company_id': companyId,
+      if (fiscalYearId != null) 'fiscal_year_id': fiscalYearId,
+      if (accountId != null) 'account_id': accountId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (openingBalanceScaled != null)
+        'opening_balance_scaled': openingBalanceScaled,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialFiscalYearOpeningBoundariesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? companyId,
+    Value<String>? fiscalYearId,
+    Value<String>? accountId,
+    Value<String?>? subjectId,
+    Value<String>? currencyCode,
+    Value<BigInt>? openingBalanceScaled,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialFiscalYearOpeningBoundariesCompanion(
+      id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
+      fiscalYearId: fiscalYearId ?? this.fiscalYearId,
+      accountId: accountId ?? this.accountId,
+      subjectId: subjectId ?? this.subjectId,
+      currencyCode: currencyCode ?? this.currencyCode,
+      openingBalanceScaled: openingBalanceScaled ?? this.openingBalanceScaled,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (fiscalYearId.present) {
+      map['fiscal_year_id'] = Variable<String>(fiscalYearId.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (openingBalanceScaled.present) {
+      map['opening_balance_scaled'] = Variable<BigInt>(
+        openingBalanceScaled.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialFiscalYearOpeningBoundariesCompanion(')
+          ..write('id: $id, ')
+          ..write('companyId: $companyId, ')
+          ..write('fiscalYearId: $fiscalYearId, ')
+          ..write('accountId: $accountId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('openingBalanceScaled: $openingBalanceScaled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NexabizDatabase extends GeneratedDatabase {
   _$NexabizDatabase(QueryExecutor e) : super(e);
   $NexabizDatabaseManager get managers => $NexabizDatabaseManager(this);
@@ -36844,6 +47365,43 @@ abstract class _$NexabizDatabase extends GeneratedDatabase {
   late final $PurchasePaymentsTable purchasePayments = $PurchasePaymentsTable(
     this,
   );
+  late final $FinancialCurrenciesTable financialCurrencies =
+      $FinancialCurrenciesTable(this);
+  late final $FinancialExchangeRatesTable financialExchangeRates =
+      $FinancialExchangeRatesTable(this);
+  late final $FinancialAccountsTable financialAccounts =
+      $FinancialAccountsTable(this);
+  late final $FinancialSubjectsTable financialSubjects =
+      $FinancialSubjectsTable(this);
+  late final $FinancialSubjectAccountBucketsTable
+  financialSubjectAccountBuckets = $FinancialSubjectAccountBucketsTable(this);
+  late final $FinancialAccountBalancesTable financialAccountBalances =
+      $FinancialAccountBalancesTable(this);
+  late final $FinancialJournalEntriesTable financialJournalEntries =
+      $FinancialJournalEntriesTable(this);
+  late final $FinancialJournalLinesTable financialJournalLines =
+      $FinancialJournalLinesTable(this);
+  late final $FinancialFiscalYearsTable financialFiscalYears =
+      $FinancialFiscalYearsTable(this);
+  late final $FinancialFiscalPeriodsTable financialFiscalPeriods =
+      $FinancialFiscalPeriodsTable(this);
+  late final $FinancialPeriodClosingOperationsTable
+  financialPeriodClosingOperations = $FinancialPeriodClosingOperationsTable(
+    this,
+  );
+  late final $FinancialPeriodClosingRecordsTable financialPeriodClosingRecords =
+      $FinancialPeriodClosingRecordsTable(this);
+  late final $FinancialPeriodClosingAttemptsTable
+  financialPeriodClosingAttempts = $FinancialPeriodClosingAttemptsTable(this);
+  late final $FinancialPeriodClosingRatesTable financialPeriodClosingRates =
+      $FinancialPeriodClosingRatesTable(this);
+  late final $FinancialFiscalYearClosingRecordsTable
+  financialFiscalYearClosingRecords = $FinancialFiscalYearClosingRecordsTable(
+    this,
+  );
+  late final $FinancialFiscalYearOpeningBoundariesTable
+  financialFiscalYearOpeningBoundaries =
+      $FinancialFiscalYearOpeningBoundariesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -36888,6 +47446,22 @@ abstract class _$NexabizDatabase extends GeneratedDatabase {
     purchases,
     purchaseItems,
     purchasePayments,
+    financialCurrencies,
+    financialExchangeRates,
+    financialAccounts,
+    financialSubjects,
+    financialSubjectAccountBuckets,
+    financialAccountBalances,
+    financialJournalEntries,
+    financialJournalLines,
+    financialFiscalYears,
+    financialFiscalPeriods,
+    financialPeriodClosingOperations,
+    financialPeriodClosingRecords,
+    financialPeriodClosingAttempts,
+    financialPeriodClosingRates,
+    financialFiscalYearClosingRecords,
+    financialFiscalYearOpeningBoundaries,
   ];
 }
 
@@ -54337,6 +64911,5267 @@ typedef $$PurchasePaymentsTableProcessedTableManager =
       PurchasePaymentRow,
       PrefetchHooks Function()
     >;
+typedef $$FinancialCurrenciesTableCreateCompanionBuilder =
+    FinancialCurrenciesCompanion Function({
+      Value<String> id,
+      required String code,
+      Value<String> nameAr,
+      Value<String> nameEn,
+      required String symbol,
+      Value<int> decimalPlaces,
+      Value<bool> isActive,
+      Value<String?> companyId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialCurrenciesTableUpdateCompanionBuilder =
+    FinancialCurrenciesCompanion Function({
+      Value<String> id,
+      Value<String> code,
+      Value<String> nameAr,
+      Value<String> nameEn,
+      Value<String> symbol,
+      Value<int> decimalPlaces,
+      Value<bool> isActive,
+      Value<String?> companyId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialCurrenciesTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialCurrenciesTable> {
+  $$FinancialCurrenciesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameEn => $composableBuilder(
+    column: $table.nameEn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get symbol => $composableBuilder(
+    column: $table.symbol,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get decimalPlaces => $composableBuilder(
+    column: $table.decimalPlaces,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialCurrenciesTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialCurrenciesTable> {
+  $$FinancialCurrenciesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameEn => $composableBuilder(
+    column: $table.nameEn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get symbol => $composableBuilder(
+    column: $table.symbol,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get decimalPlaces => $composableBuilder(
+    column: $table.decimalPlaces,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialCurrenciesTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialCurrenciesTable> {
+  $$FinancialCurrenciesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
+
+  GeneratedColumn<String> get nameEn =>
+      $composableBuilder(column: $table.nameEn, builder: (column) => column);
+
+  GeneratedColumn<String> get symbol =>
+      $composableBuilder(column: $table.symbol, builder: (column) => column);
+
+  GeneratedColumn<int> get decimalPlaces => $composableBuilder(
+    column: $table.decimalPlaces,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$FinancialCurrenciesTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialCurrenciesTable,
+          FinancialCurrencyData,
+          $$FinancialCurrenciesTableFilterComposer,
+          $$FinancialCurrenciesTableOrderingComposer,
+          $$FinancialCurrenciesTableAnnotationComposer,
+          $$FinancialCurrenciesTableCreateCompanionBuilder,
+          $$FinancialCurrenciesTableUpdateCompanionBuilder,
+          (
+            FinancialCurrencyData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialCurrenciesTable,
+              FinancialCurrencyData
+            >,
+          ),
+          FinancialCurrencyData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialCurrenciesTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialCurrenciesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialCurrenciesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FinancialCurrenciesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialCurrenciesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> nameAr = const Value.absent(),
+                Value<String> nameEn = const Value.absent(),
+                Value<String> symbol = const Value.absent(),
+                Value<int> decimalPlaces = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialCurrenciesCompanion(
+                id: id,
+                code: code,
+                nameAr: nameAr,
+                nameEn: nameEn,
+                symbol: symbol,
+                decimalPlaces: decimalPlaces,
+                isActive: isActive,
+                companyId: companyId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String code,
+                Value<String> nameAr = const Value.absent(),
+                Value<String> nameEn = const Value.absent(),
+                required String symbol,
+                Value<int> decimalPlaces = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialCurrenciesCompanion.insert(
+                id: id,
+                code: code,
+                nameAr: nameAr,
+                nameEn: nameEn,
+                symbol: symbol,
+                decimalPlaces: decimalPlaces,
+                isActive: isActive,
+                companyId: companyId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FinancialCurrenciesTable, FinancialCurrencyData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialCurrenciesTable,
+                    FinancialCurrencyData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialCurrenciesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialCurrenciesTable,
+      FinancialCurrencyData,
+      $$FinancialCurrenciesTableFilterComposer,
+      $$FinancialCurrenciesTableOrderingComposer,
+      $$FinancialCurrenciesTableAnnotationComposer,
+      $$FinancialCurrenciesTableCreateCompanionBuilder,
+      $$FinancialCurrenciesTableUpdateCompanionBuilder,
+      (
+        FinancialCurrencyData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialCurrenciesTable,
+          FinancialCurrencyData
+        >,
+      ),
+      FinancialCurrencyData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialExchangeRatesTableCreateCompanionBuilder =
+    FinancialExchangeRatesCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String fromCurrencyCode,
+      required String toCurrencyCode,
+      required BigInt rateScaled,
+      required DateTime effectiveAt,
+      Value<String> source,
+      Value<bool> isImmutableSnapshot,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialExchangeRatesTableUpdateCompanionBuilder =
+    FinancialExchangeRatesCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> fromCurrencyCode,
+      Value<String> toCurrencyCode,
+      Value<BigInt> rateScaled,
+      Value<DateTime> effectiveAt,
+      Value<String> source,
+      Value<bool> isImmutableSnapshot,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialExchangeRatesTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialExchangeRatesTable> {
+  $$FinancialExchangeRatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromCurrencyCode => $composableBuilder(
+    column: $table.fromCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toCurrencyCode => $composableBuilder(
+    column: $table.toCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get rateScaled => $composableBuilder(
+    column: $table.rateScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isImmutableSnapshot => $composableBuilder(
+    column: $table.isImmutableSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialExchangeRatesTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialExchangeRatesTable> {
+  $$FinancialExchangeRatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fromCurrencyCode => $composableBuilder(
+    column: $table.fromCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toCurrencyCode => $composableBuilder(
+    column: $table.toCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get rateScaled => $composableBuilder(
+    column: $table.rateScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isImmutableSnapshot => $composableBuilder(
+    column: $table.isImmutableSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialExchangeRatesTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialExchangeRatesTable> {
+  $$FinancialExchangeRatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get fromCurrencyCode => $composableBuilder(
+    column: $table.fromCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get toCurrencyCode => $composableBuilder(
+    column: $table.toCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get rateScaled => $composableBuilder(
+    column: $table.rateScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get effectiveAt => $composableBuilder(
+    column: $table.effectiveAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<bool> get isImmutableSnapshot => $composableBuilder(
+    column: $table.isImmutableSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FinancialExchangeRatesTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialExchangeRatesTable,
+          FinancialExchangeRateData,
+          $$FinancialExchangeRatesTableFilterComposer,
+          $$FinancialExchangeRatesTableOrderingComposer,
+          $$FinancialExchangeRatesTableAnnotationComposer,
+          $$FinancialExchangeRatesTableCreateCompanionBuilder,
+          $$FinancialExchangeRatesTableUpdateCompanionBuilder,
+          (
+            FinancialExchangeRateData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialExchangeRatesTable,
+              FinancialExchangeRateData
+            >,
+          ),
+          FinancialExchangeRateData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialExchangeRatesTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialExchangeRatesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialExchangeRatesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialExchangeRatesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialExchangeRatesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> fromCurrencyCode = const Value.absent(),
+                Value<String> toCurrencyCode = const Value.absent(),
+                Value<BigInt> rateScaled = const Value.absent(),
+                Value<DateTime> effectiveAt = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<bool> isImmutableSnapshot = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialExchangeRatesCompanion(
+                id: id,
+                companyId: companyId,
+                fromCurrencyCode: fromCurrencyCode,
+                toCurrencyCode: toCurrencyCode,
+                rateScaled: rateScaled,
+                effectiveAt: effectiveAt,
+                source: source,
+                isImmutableSnapshot: isImmutableSnapshot,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String fromCurrencyCode,
+                required String toCurrencyCode,
+                required BigInt rateScaled,
+                required DateTime effectiveAt,
+                Value<String> source = const Value.absent(),
+                Value<bool> isImmutableSnapshot = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialExchangeRatesCompanion.insert(
+                id: id,
+                companyId: companyId,
+                fromCurrencyCode: fromCurrencyCode,
+                toCurrencyCode: toCurrencyCode,
+                rateScaled: rateScaled,
+                effectiveAt: effectiveAt,
+                source: source,
+                isImmutableSnapshot: isImmutableSnapshot,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialExchangeRatesTable,
+                    FinancialExchangeRateData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialExchangeRatesTable,
+                    FinancialExchangeRateData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialExchangeRatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialExchangeRatesTable,
+      FinancialExchangeRateData,
+      $$FinancialExchangeRatesTableFilterComposer,
+      $$FinancialExchangeRatesTableOrderingComposer,
+      $$FinancialExchangeRatesTableAnnotationComposer,
+      $$FinancialExchangeRatesTableCreateCompanionBuilder,
+      $$FinancialExchangeRatesTableUpdateCompanionBuilder,
+      (
+        FinancialExchangeRateData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialExchangeRatesTable,
+          FinancialExchangeRateData
+        >,
+      ),
+      FinancialExchangeRateData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialAccountsTableCreateCompanionBuilder =
+    FinancialAccountsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String code,
+      Value<String> nameAr,
+      Value<String> nameEn,
+      required String accountType,
+      required String currencyPolicy,
+      Value<String?> fixedCurrencyCode,
+      Value<String?> parentAccountId,
+      Value<int> level,
+      Value<bool> isGroup,
+      Value<bool> isSystemAccount,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialAccountsTableUpdateCompanionBuilder =
+    FinancialAccountsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> code,
+      Value<String> nameAr,
+      Value<String> nameEn,
+      Value<String> accountType,
+      Value<String> currencyPolicy,
+      Value<String?> fixedCurrencyCode,
+      Value<String?> parentAccountId,
+      Value<int> level,
+      Value<bool> isGroup,
+      Value<bool> isSystemAccount,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialAccountsTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialAccountsTable> {
+  $$FinancialAccountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameEn => $composableBuilder(
+    column: $table.nameEn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountType => $composableBuilder(
+    column: $table.accountType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyPolicy => $composableBuilder(
+    column: $table.currencyPolicy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fixedCurrencyCode => $composableBuilder(
+    column: $table.fixedCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentAccountId => $composableBuilder(
+    column: $table.parentAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isGroup => $composableBuilder(
+    column: $table.isGroup,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSystemAccount => $composableBuilder(
+    column: $table.isSystemAccount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialAccountsTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialAccountsTable> {
+  $$FinancialAccountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameEn => $composableBuilder(
+    column: $table.nameEn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountType => $composableBuilder(
+    column: $table.accountType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyPolicy => $composableBuilder(
+    column: $table.currencyPolicy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fixedCurrencyCode => $composableBuilder(
+    column: $table.fixedCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get parentAccountId => $composableBuilder(
+    column: $table.parentAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isGroup => $composableBuilder(
+    column: $table.isGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSystemAccount => $composableBuilder(
+    column: $table.isSystemAccount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialAccountsTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialAccountsTable> {
+  $$FinancialAccountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
+
+  GeneratedColumn<String> get nameEn =>
+      $composableBuilder(column: $table.nameEn, builder: (column) => column);
+
+  GeneratedColumn<String> get accountType => $composableBuilder(
+    column: $table.accountType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyPolicy => $composableBuilder(
+    column: $table.currencyPolicy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fixedCurrencyCode => $composableBuilder(
+    column: $table.fixedCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get parentAccountId => $composableBuilder(
+    column: $table.parentAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<bool> get isGroup =>
+      $composableBuilder(column: $table.isGroup, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSystemAccount => $composableBuilder(
+    column: $table.isSystemAccount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$FinancialAccountsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialAccountsTable,
+          FinancialAccountData,
+          $$FinancialAccountsTableFilterComposer,
+          $$FinancialAccountsTableOrderingComposer,
+          $$FinancialAccountsTableAnnotationComposer,
+          $$FinancialAccountsTableCreateCompanionBuilder,
+          $$FinancialAccountsTableUpdateCompanionBuilder,
+          (
+            FinancialAccountData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialAccountsTable,
+              FinancialAccountData
+            >,
+          ),
+          FinancialAccountData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialAccountsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialAccountsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialAccountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FinancialAccountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FinancialAccountsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> nameAr = const Value.absent(),
+                Value<String> nameEn = const Value.absent(),
+                Value<String> accountType = const Value.absent(),
+                Value<String> currencyPolicy = const Value.absent(),
+                Value<String?> fixedCurrencyCode = const Value.absent(),
+                Value<String?> parentAccountId = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<bool> isGroup = const Value.absent(),
+                Value<bool> isSystemAccount = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialAccountsCompanion(
+                id: id,
+                companyId: companyId,
+                code: code,
+                nameAr: nameAr,
+                nameEn: nameEn,
+                accountType: accountType,
+                currencyPolicy: currencyPolicy,
+                fixedCurrencyCode: fixedCurrencyCode,
+                parentAccountId: parentAccountId,
+                level: level,
+                isGroup: isGroup,
+                isSystemAccount: isSystemAccount,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String code,
+                Value<String> nameAr = const Value.absent(),
+                Value<String> nameEn = const Value.absent(),
+                required String accountType,
+                required String currencyPolicy,
+                Value<String?> fixedCurrencyCode = const Value.absent(),
+                Value<String?> parentAccountId = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<bool> isGroup = const Value.absent(),
+                Value<bool> isSystemAccount = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialAccountsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                code: code,
+                nameAr: nameAr,
+                nameEn: nameEn,
+                accountType: accountType,
+                currencyPolicy: currencyPolicy,
+                fixedCurrencyCode: fixedCurrencyCode,
+                parentAccountId: parentAccountId,
+                level: level,
+                isGroup: isGroup,
+                isSystemAccount: isSystemAccount,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FinancialAccountsTable, FinancialAccountData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialAccountsTable,
+                    FinancialAccountData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialAccountsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialAccountsTable,
+      FinancialAccountData,
+      $$FinancialAccountsTableFilterComposer,
+      $$FinancialAccountsTableOrderingComposer,
+      $$FinancialAccountsTableAnnotationComposer,
+      $$FinancialAccountsTableCreateCompanionBuilder,
+      $$FinancialAccountsTableUpdateCompanionBuilder,
+      (
+        FinancialAccountData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialAccountsTable,
+          FinancialAccountData
+        >,
+      ),
+      FinancialAccountData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialSubjectsTableCreateCompanionBuilder =
+    FinancialSubjectsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String subjectType,
+      required String name,
+      required String code,
+      required String primaryAccountId,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialSubjectsTableUpdateCompanionBuilder =
+    FinancialSubjectsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> subjectType,
+      Value<String> name,
+      Value<String> code,
+      Value<String> primaryAccountId,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialSubjectsTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialSubjectsTable> {
+  $$FinancialSubjectsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectType => $composableBuilder(
+    column: $table.subjectType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get primaryAccountId => $composableBuilder(
+    column: $table.primaryAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialSubjectsTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialSubjectsTable> {
+  $$FinancialSubjectsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectType => $composableBuilder(
+    column: $table.subjectType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get primaryAccountId => $composableBuilder(
+    column: $table.primaryAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialSubjectsTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialSubjectsTable> {
+  $$FinancialSubjectsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectType => $composableBuilder(
+    column: $table.subjectType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get primaryAccountId => $composableBuilder(
+    column: $table.primaryAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$FinancialSubjectsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialSubjectsTable,
+          FinancialSubjectData,
+          $$FinancialSubjectsTableFilterComposer,
+          $$FinancialSubjectsTableOrderingComposer,
+          $$FinancialSubjectsTableAnnotationComposer,
+          $$FinancialSubjectsTableCreateCompanionBuilder,
+          $$FinancialSubjectsTableUpdateCompanionBuilder,
+          (
+            FinancialSubjectData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialSubjectsTable,
+              FinancialSubjectData
+            >,
+          ),
+          FinancialSubjectData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialSubjectsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialSubjectsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialSubjectsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FinancialSubjectsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FinancialSubjectsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> subjectType = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> primaryAccountId = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialSubjectsCompanion(
+                id: id,
+                companyId: companyId,
+                subjectType: subjectType,
+                name: name,
+                code: code,
+                primaryAccountId: primaryAccountId,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String subjectType,
+                required String name,
+                required String code,
+                required String primaryAccountId,
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialSubjectsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                subjectType: subjectType,
+                name: name,
+                code: code,
+                primaryAccountId: primaryAccountId,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FinancialSubjectsTable, FinancialSubjectData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialSubjectsTable,
+                    FinancialSubjectData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialSubjectsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialSubjectsTable,
+      FinancialSubjectData,
+      $$FinancialSubjectsTableFilterComposer,
+      $$FinancialSubjectsTableOrderingComposer,
+      $$FinancialSubjectsTableAnnotationComposer,
+      $$FinancialSubjectsTableCreateCompanionBuilder,
+      $$FinancialSubjectsTableUpdateCompanionBuilder,
+      (
+        FinancialSubjectData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialSubjectsTable,
+          FinancialSubjectData
+        >,
+      ),
+      FinancialSubjectData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialSubjectAccountBucketsTableCreateCompanionBuilder =
+    FinancialSubjectAccountBucketsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String subjectId,
+      required String accountId,
+      required String currencyCode,
+      Value<BigInt> balanceScaled,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialSubjectAccountBucketsTableUpdateCompanionBuilder =
+    FinancialSubjectAccountBucketsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> subjectId,
+      Value<String> accountId,
+      Value<String> currencyCode,
+      Value<BigInt> balanceScaled,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialSubjectAccountBucketsTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialSubjectAccountBucketsTable> {
+  $$FinancialSubjectAccountBucketsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get balanceScaled => $composableBuilder(
+    column: $table.balanceScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialSubjectAccountBucketsTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialSubjectAccountBucketsTable> {
+  $$FinancialSubjectAccountBucketsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get balanceScaled => $composableBuilder(
+    column: $table.balanceScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialSubjectAccountBucketsTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialSubjectAccountBucketsTable> {
+  $$FinancialSubjectAccountBucketsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get balanceScaled => $composableBuilder(
+    column: $table.balanceScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$FinancialSubjectAccountBucketsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialSubjectAccountBucketsTable,
+          FinancialSubjectAccountBucketData,
+          $$FinancialSubjectAccountBucketsTableFilterComposer,
+          $$FinancialSubjectAccountBucketsTableOrderingComposer,
+          $$FinancialSubjectAccountBucketsTableAnnotationComposer,
+          $$FinancialSubjectAccountBucketsTableCreateCompanionBuilder,
+          $$FinancialSubjectAccountBucketsTableUpdateCompanionBuilder,
+          (
+            FinancialSubjectAccountBucketData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialSubjectAccountBucketsTable,
+              FinancialSubjectAccountBucketData
+            >,
+          ),
+          FinancialSubjectAccountBucketData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialSubjectAccountBucketsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialSubjectAccountBucketsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialSubjectAccountBucketsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialSubjectAccountBucketsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialSubjectAccountBucketsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> subjectId = const Value.absent(),
+                Value<String> accountId = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<BigInt> balanceScaled = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialSubjectAccountBucketsCompanion(
+                id: id,
+                companyId: companyId,
+                subjectId: subjectId,
+                accountId: accountId,
+                currencyCode: currencyCode,
+                balanceScaled: balanceScaled,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String subjectId,
+                required String accountId,
+                required String currencyCode,
+                Value<BigInt> balanceScaled = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialSubjectAccountBucketsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                subjectId: subjectId,
+                accountId: accountId,
+                currencyCode: currencyCode,
+                balanceScaled: balanceScaled,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialSubjectAccountBucketsTable,
+                    FinancialSubjectAccountBucketData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialSubjectAccountBucketsTable,
+                    FinancialSubjectAccountBucketData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialSubjectAccountBucketsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialSubjectAccountBucketsTable,
+      FinancialSubjectAccountBucketData,
+      $$FinancialSubjectAccountBucketsTableFilterComposer,
+      $$FinancialSubjectAccountBucketsTableOrderingComposer,
+      $$FinancialSubjectAccountBucketsTableAnnotationComposer,
+      $$FinancialSubjectAccountBucketsTableCreateCompanionBuilder,
+      $$FinancialSubjectAccountBucketsTableUpdateCompanionBuilder,
+      (
+        FinancialSubjectAccountBucketData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialSubjectAccountBucketsTable,
+          FinancialSubjectAccountBucketData
+        >,
+      ),
+      FinancialSubjectAccountBucketData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialAccountBalancesTableCreateCompanionBuilder =
+    FinancialAccountBalancesCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String accountId,
+      required String currencyCode,
+      Value<BigInt> balanceScaled,
+      Value<BigInt> debitTotalScaled,
+      Value<BigInt> creditTotalScaled,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialAccountBalancesTableUpdateCompanionBuilder =
+    FinancialAccountBalancesCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> accountId,
+      Value<String> currencyCode,
+      Value<BigInt> balanceScaled,
+      Value<BigInt> debitTotalScaled,
+      Value<BigInt> creditTotalScaled,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialAccountBalancesTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialAccountBalancesTable> {
+  $$FinancialAccountBalancesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get balanceScaled => $composableBuilder(
+    column: $table.balanceScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get debitTotalScaled => $composableBuilder(
+    column: $table.debitTotalScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get creditTotalScaled => $composableBuilder(
+    column: $table.creditTotalScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialAccountBalancesTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialAccountBalancesTable> {
+  $$FinancialAccountBalancesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get balanceScaled => $composableBuilder(
+    column: $table.balanceScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get debitTotalScaled => $composableBuilder(
+    column: $table.debitTotalScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get creditTotalScaled => $composableBuilder(
+    column: $table.creditTotalScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialAccountBalancesTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialAccountBalancesTable> {
+  $$FinancialAccountBalancesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get balanceScaled => $composableBuilder(
+    column: $table.balanceScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get debitTotalScaled => $composableBuilder(
+    column: $table.debitTotalScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get creditTotalScaled => $composableBuilder(
+    column: $table.creditTotalScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$FinancialAccountBalancesTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialAccountBalancesTable,
+          FinancialAccountBalanceData,
+          $$FinancialAccountBalancesTableFilterComposer,
+          $$FinancialAccountBalancesTableOrderingComposer,
+          $$FinancialAccountBalancesTableAnnotationComposer,
+          $$FinancialAccountBalancesTableCreateCompanionBuilder,
+          $$FinancialAccountBalancesTableUpdateCompanionBuilder,
+          (
+            FinancialAccountBalanceData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialAccountBalancesTable,
+              FinancialAccountBalanceData
+            >,
+          ),
+          FinancialAccountBalanceData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialAccountBalancesTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialAccountBalancesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialAccountBalancesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialAccountBalancesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialAccountBalancesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> accountId = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<BigInt> balanceScaled = const Value.absent(),
+                Value<BigInt> debitTotalScaled = const Value.absent(),
+                Value<BigInt> creditTotalScaled = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialAccountBalancesCompanion(
+                id: id,
+                companyId: companyId,
+                accountId: accountId,
+                currencyCode: currencyCode,
+                balanceScaled: balanceScaled,
+                debitTotalScaled: debitTotalScaled,
+                creditTotalScaled: creditTotalScaled,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String accountId,
+                required String currencyCode,
+                Value<BigInt> balanceScaled = const Value.absent(),
+                Value<BigInt> debitTotalScaled = const Value.absent(),
+                Value<BigInt> creditTotalScaled = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialAccountBalancesCompanion.insert(
+                id: id,
+                companyId: companyId,
+                accountId: accountId,
+                currencyCode: currencyCode,
+                balanceScaled: balanceScaled,
+                debitTotalScaled: debitTotalScaled,
+                creditTotalScaled: creditTotalScaled,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialAccountBalancesTable,
+                    FinancialAccountBalanceData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialAccountBalancesTable,
+                    FinancialAccountBalanceData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialAccountBalancesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialAccountBalancesTable,
+      FinancialAccountBalanceData,
+      $$FinancialAccountBalancesTableFilterComposer,
+      $$FinancialAccountBalancesTableOrderingComposer,
+      $$FinancialAccountBalancesTableAnnotationComposer,
+      $$FinancialAccountBalancesTableCreateCompanionBuilder,
+      $$FinancialAccountBalancesTableUpdateCompanionBuilder,
+      (
+        FinancialAccountBalanceData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialAccountBalancesTable,
+          FinancialAccountBalanceData
+        >,
+      ),
+      FinancialAccountBalanceData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialJournalEntriesTableCreateCompanionBuilder =
+    FinancialJournalEntriesCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String entryNumber,
+      required String baseCurrencyCode,
+      required DateTime postingDate,
+      Value<String> status,
+      Value<String?> description,
+      Value<String?> sourceModule,
+      Value<String?> sourceDocumentId,
+      Value<DateTime?> postedAt,
+      Value<String?> createdById,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialJournalEntriesTableUpdateCompanionBuilder =
+    FinancialJournalEntriesCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> entryNumber,
+      Value<String> baseCurrencyCode,
+      Value<DateTime> postingDate,
+      Value<String> status,
+      Value<String?> description,
+      Value<String?> sourceModule,
+      Value<String?> sourceDocumentId,
+      Value<DateTime?> postedAt,
+      Value<String?> createdById,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialJournalEntriesTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialJournalEntriesTable> {
+  $$FinancialJournalEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryNumber => $composableBuilder(
+    column: $table.entryNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseCurrencyCode => $composableBuilder(
+    column: $table.baseCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get postingDate => $composableBuilder(
+    column: $table.postingDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceModule => $composableBuilder(
+    column: $table.sourceModule,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceDocumentId => $composableBuilder(
+    column: $table.sourceDocumentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdById => $composableBuilder(
+    column: $table.createdById,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialJournalEntriesTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialJournalEntriesTable> {
+  $$FinancialJournalEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryNumber => $composableBuilder(
+    column: $table.entryNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseCurrencyCode => $composableBuilder(
+    column: $table.baseCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get postingDate => $composableBuilder(
+    column: $table.postingDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceModule => $composableBuilder(
+    column: $table.sourceModule,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceDocumentId => $composableBuilder(
+    column: $table.sourceDocumentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdById => $composableBuilder(
+    column: $table.createdById,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialJournalEntriesTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialJournalEntriesTable> {
+  $$FinancialJournalEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get entryNumber => $composableBuilder(
+    column: $table.entryNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get baseCurrencyCode => $composableBuilder(
+    column: $table.baseCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get postingDate => $composableBuilder(
+    column: $table.postingDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceModule => $composableBuilder(
+    column: $table.sourceModule,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceDocumentId => $composableBuilder(
+    column: $table.sourceDocumentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get postedAt =>
+      $composableBuilder(column: $table.postedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get createdById => $composableBuilder(
+    column: $table.createdById,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FinancialJournalEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialJournalEntriesTable,
+          FinancialJournalEntryData,
+          $$FinancialJournalEntriesTableFilterComposer,
+          $$FinancialJournalEntriesTableOrderingComposer,
+          $$FinancialJournalEntriesTableAnnotationComposer,
+          $$FinancialJournalEntriesTableCreateCompanionBuilder,
+          $$FinancialJournalEntriesTableUpdateCompanionBuilder,
+          (
+            FinancialJournalEntryData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialJournalEntriesTable,
+              FinancialJournalEntryData
+            >,
+          ),
+          FinancialJournalEntryData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialJournalEntriesTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialJournalEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialJournalEntriesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialJournalEntriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialJournalEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> entryNumber = const Value.absent(),
+                Value<String> baseCurrencyCode = const Value.absent(),
+                Value<DateTime> postingDate = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> sourceModule = const Value.absent(),
+                Value<String?> sourceDocumentId = const Value.absent(),
+                Value<DateTime?> postedAt = const Value.absent(),
+                Value<String?> createdById = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialJournalEntriesCompanion(
+                id: id,
+                companyId: companyId,
+                entryNumber: entryNumber,
+                baseCurrencyCode: baseCurrencyCode,
+                postingDate: postingDate,
+                status: status,
+                description: description,
+                sourceModule: sourceModule,
+                sourceDocumentId: sourceDocumentId,
+                postedAt: postedAt,
+                createdById: createdById,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String entryNumber,
+                required String baseCurrencyCode,
+                required DateTime postingDate,
+                Value<String> status = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> sourceModule = const Value.absent(),
+                Value<String?> sourceDocumentId = const Value.absent(),
+                Value<DateTime?> postedAt = const Value.absent(),
+                Value<String?> createdById = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialJournalEntriesCompanion.insert(
+                id: id,
+                companyId: companyId,
+                entryNumber: entryNumber,
+                baseCurrencyCode: baseCurrencyCode,
+                postingDate: postingDate,
+                status: status,
+                description: description,
+                sourceModule: sourceModule,
+                sourceDocumentId: sourceDocumentId,
+                postedAt: postedAt,
+                createdById: createdById,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialJournalEntriesTable,
+                    FinancialJournalEntryData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialJournalEntriesTable,
+                    FinancialJournalEntryData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialJournalEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialJournalEntriesTable,
+      FinancialJournalEntryData,
+      $$FinancialJournalEntriesTableFilterComposer,
+      $$FinancialJournalEntriesTableOrderingComposer,
+      $$FinancialJournalEntriesTableAnnotationComposer,
+      $$FinancialJournalEntriesTableCreateCompanionBuilder,
+      $$FinancialJournalEntriesTableUpdateCompanionBuilder,
+      (
+        FinancialJournalEntryData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialJournalEntriesTable,
+          FinancialJournalEntryData
+        >,
+      ),
+      FinancialJournalEntryData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialJournalLinesTableCreateCompanionBuilder =
+    FinancialJournalLinesCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String journalEntryId,
+      required int lineNumber,
+      required String accountId,
+      required String side,
+      required String transactionCurrencyCode,
+      required BigInt transactionAmountScaled,
+      required BigInt exchangeRateScaled,
+      required BigInt baseAmountScaled,
+      Value<String?> description,
+      Value<String?> subjectId,
+      Value<int> rowid,
+    });
+typedef $$FinancialJournalLinesTableUpdateCompanionBuilder =
+    FinancialJournalLinesCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> journalEntryId,
+      Value<int> lineNumber,
+      Value<String> accountId,
+      Value<String> side,
+      Value<String> transactionCurrencyCode,
+      Value<BigInt> transactionAmountScaled,
+      Value<BigInt> exchangeRateScaled,
+      Value<BigInt> baseAmountScaled,
+      Value<String?> description,
+      Value<String?> subjectId,
+      Value<int> rowid,
+    });
+
+class $$FinancialJournalLinesTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialJournalLinesTable> {
+  $$FinancialJournalLinesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get journalEntryId => $composableBuilder(
+    column: $table.journalEntryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lineNumber => $composableBuilder(
+    column: $table.lineNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get side => $composableBuilder(
+    column: $table.side,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transactionCurrencyCode => $composableBuilder(
+    column: $table.transactionCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get transactionAmountScaled => $composableBuilder(
+    column: $table.transactionAmountScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get exchangeRateScaled => $composableBuilder(
+    column: $table.exchangeRateScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get baseAmountScaled => $composableBuilder(
+    column: $table.baseAmountScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialJournalLinesTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialJournalLinesTable> {
+  $$FinancialJournalLinesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get journalEntryId => $composableBuilder(
+    column: $table.journalEntryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lineNumber => $composableBuilder(
+    column: $table.lineNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get side => $composableBuilder(
+    column: $table.side,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transactionCurrencyCode => $composableBuilder(
+    column: $table.transactionCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get transactionAmountScaled => $composableBuilder(
+    column: $table.transactionAmountScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get exchangeRateScaled => $composableBuilder(
+    column: $table.exchangeRateScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get baseAmountScaled => $composableBuilder(
+    column: $table.baseAmountScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialJournalLinesTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialJournalLinesTable> {
+  $$FinancialJournalLinesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get journalEntryId => $composableBuilder(
+    column: $table.journalEntryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lineNumber => $composableBuilder(
+    column: $table.lineNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get side =>
+      $composableBuilder(column: $table.side, builder: (column) => column);
+
+  GeneratedColumn<String> get transactionCurrencyCode => $composableBuilder(
+    column: $table.transactionCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get transactionAmountScaled => $composableBuilder(
+    column: $table.transactionAmountScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get exchangeRateScaled => $composableBuilder(
+    column: $table.exchangeRateScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get baseAmountScaled => $composableBuilder(
+    column: $table.baseAmountScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+}
+
+class $$FinancialJournalLinesTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialJournalLinesTable,
+          FinancialJournalLineData,
+          $$FinancialJournalLinesTableFilterComposer,
+          $$FinancialJournalLinesTableOrderingComposer,
+          $$FinancialJournalLinesTableAnnotationComposer,
+          $$FinancialJournalLinesTableCreateCompanionBuilder,
+          $$FinancialJournalLinesTableUpdateCompanionBuilder,
+          (
+            FinancialJournalLineData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialJournalLinesTable,
+              FinancialJournalLineData
+            >,
+          ),
+          FinancialJournalLineData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialJournalLinesTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialJournalLinesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialJournalLinesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialJournalLinesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialJournalLinesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> journalEntryId = const Value.absent(),
+                Value<int> lineNumber = const Value.absent(),
+                Value<String> accountId = const Value.absent(),
+                Value<String> side = const Value.absent(),
+                Value<String> transactionCurrencyCode = const Value.absent(),
+                Value<BigInt> transactionAmountScaled = const Value.absent(),
+                Value<BigInt> exchangeRateScaled = const Value.absent(),
+                Value<BigInt> baseAmountScaled = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialJournalLinesCompanion(
+                id: id,
+                companyId: companyId,
+                journalEntryId: journalEntryId,
+                lineNumber: lineNumber,
+                accountId: accountId,
+                side: side,
+                transactionCurrencyCode: transactionCurrencyCode,
+                transactionAmountScaled: transactionAmountScaled,
+                exchangeRateScaled: exchangeRateScaled,
+                baseAmountScaled: baseAmountScaled,
+                description: description,
+                subjectId: subjectId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String journalEntryId,
+                required int lineNumber,
+                required String accountId,
+                required String side,
+                required String transactionCurrencyCode,
+                required BigInt transactionAmountScaled,
+                required BigInt exchangeRateScaled,
+                required BigInt baseAmountScaled,
+                Value<String?> description = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialJournalLinesCompanion.insert(
+                id: id,
+                companyId: companyId,
+                journalEntryId: journalEntryId,
+                lineNumber: lineNumber,
+                accountId: accountId,
+                side: side,
+                transactionCurrencyCode: transactionCurrencyCode,
+                transactionAmountScaled: transactionAmountScaled,
+                exchangeRateScaled: exchangeRateScaled,
+                baseAmountScaled: baseAmountScaled,
+                description: description,
+                subjectId: subjectId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialJournalLinesTable,
+                    FinancialJournalLineData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialJournalLinesTable,
+                    FinancialJournalLineData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialJournalLinesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialJournalLinesTable,
+      FinancialJournalLineData,
+      $$FinancialJournalLinesTableFilterComposer,
+      $$FinancialJournalLinesTableOrderingComposer,
+      $$FinancialJournalLinesTableAnnotationComposer,
+      $$FinancialJournalLinesTableCreateCompanionBuilder,
+      $$FinancialJournalLinesTableUpdateCompanionBuilder,
+      (
+        FinancialJournalLineData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialJournalLinesTable,
+          FinancialJournalLineData
+        >,
+      ),
+      FinancialJournalLineData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialFiscalYearsTableCreateCompanionBuilder =
+    FinancialFiscalYearsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String code,
+      required String name,
+      required int startDate,
+      required int endDate,
+      required String status,
+      required int createdAt,
+      required int updatedAt,
+      Value<int?> closedAt,
+      Value<String?> createdBy,
+      Value<String?> closedBy,
+      Value<int> rowid,
+    });
+typedef $$FinancialFiscalYearsTableUpdateCompanionBuilder =
+    FinancialFiscalYearsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> code,
+      Value<String> name,
+      Value<int> startDate,
+      Value<int> endDate,
+      Value<String> status,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int?> closedAt,
+      Value<String?> createdBy,
+      Value<String?> closedBy,
+      Value<int> rowid,
+    });
+
+class $$FinancialFiscalYearsTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialFiscalYearsTable> {
+  $$FinancialFiscalYearsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialFiscalYearsTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialFiscalYearsTable> {
+  $$FinancialFiscalYearsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialFiscalYearsTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialFiscalYearsTable> {
+  $$FinancialFiscalYearsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<int> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get closedAt =>
+      $composableBuilder(column: $table.closedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get closedBy =>
+      $composableBuilder(column: $table.closedBy, builder: (column) => column);
+}
+
+class $$FinancialFiscalYearsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialFiscalYearsTable,
+          FinancialFiscalYearData,
+          $$FinancialFiscalYearsTableFilterComposer,
+          $$FinancialFiscalYearsTableOrderingComposer,
+          $$FinancialFiscalYearsTableAnnotationComposer,
+          $$FinancialFiscalYearsTableCreateCompanionBuilder,
+          $$FinancialFiscalYearsTableUpdateCompanionBuilder,
+          (
+            FinancialFiscalYearData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialFiscalYearsTable,
+              FinancialFiscalYearData
+            >,
+          ),
+          FinancialFiscalYearData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialFiscalYearsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialFiscalYearsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialFiscalYearsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FinancialFiscalYearsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialFiscalYearsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> startDate = const Value.absent(),
+                Value<int> endDate = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int?> closedAt = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalYearsCompanion(
+                id: id,
+                companyId: companyId,
+                code: code,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                closedAt: closedAt,
+                createdBy: createdBy,
+                closedBy: closedBy,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String code,
+                required String name,
+                required int startDate,
+                required int endDate,
+                required String status,
+                required int createdAt,
+                required int updatedAt,
+                Value<int?> closedAt = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalYearsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                code: code,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                closedAt: closedAt,
+                createdBy: createdBy,
+                closedBy: closedBy,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialFiscalYearsTable,
+                    FinancialFiscalYearData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialFiscalYearsTable,
+                    FinancialFiscalYearData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialFiscalYearsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialFiscalYearsTable,
+      FinancialFiscalYearData,
+      $$FinancialFiscalYearsTableFilterComposer,
+      $$FinancialFiscalYearsTableOrderingComposer,
+      $$FinancialFiscalYearsTableAnnotationComposer,
+      $$FinancialFiscalYearsTableCreateCompanionBuilder,
+      $$FinancialFiscalYearsTableUpdateCompanionBuilder,
+      (
+        FinancialFiscalYearData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialFiscalYearsTable,
+          FinancialFiscalYearData
+        >,
+      ),
+      FinancialFiscalYearData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialFiscalPeriodsTableCreateCompanionBuilder =
+    FinancialFiscalPeriodsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String fiscalYearId,
+      required int periodNumber,
+      required String name,
+      required int startDate,
+      required int endDate,
+      required String status,
+      Value<int?> openedAt,
+      Value<int?> closedAt,
+      Value<int?> reopenedAt,
+      Value<String?> reopenReason,
+      Value<int> rowid,
+    });
+typedef $$FinancialFiscalPeriodsTableUpdateCompanionBuilder =
+    FinancialFiscalPeriodsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> fiscalYearId,
+      Value<int> periodNumber,
+      Value<String> name,
+      Value<int> startDate,
+      Value<int> endDate,
+      Value<String> status,
+      Value<int?> openedAt,
+      Value<int?> closedAt,
+      Value<int?> reopenedAt,
+      Value<String?> reopenReason,
+      Value<int> rowid,
+    });
+
+class $$FinancialFiscalPeriodsTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialFiscalPeriodsTable> {
+  $$FinancialFiscalPeriodsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get periodNumber => $composableBuilder(
+    column: $table.periodNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reopenedAt => $composableBuilder(
+    column: $table.reopenedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reopenReason => $composableBuilder(
+    column: $table.reopenReason,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialFiscalPeriodsTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialFiscalPeriodsTable> {
+  $$FinancialFiscalPeriodsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get periodNumber => $composableBuilder(
+    column: $table.periodNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reopenedAt => $composableBuilder(
+    column: $table.reopenedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reopenReason => $composableBuilder(
+    column: $table.reopenReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialFiscalPeriodsTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialFiscalPeriodsTable> {
+  $$FinancialFiscalPeriodsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get periodNumber => $composableBuilder(
+    column: $table.periodNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<int> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get openedAt =>
+      $composableBuilder(column: $table.openedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get closedAt =>
+      $composableBuilder(column: $table.closedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get reopenedAt => $composableBuilder(
+    column: $table.reopenedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reopenReason => $composableBuilder(
+    column: $table.reopenReason,
+    builder: (column) => column,
+  );
+}
+
+class $$FinancialFiscalPeriodsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialFiscalPeriodsTable,
+          FinancialFiscalPeriodData,
+          $$FinancialFiscalPeriodsTableFilterComposer,
+          $$FinancialFiscalPeriodsTableOrderingComposer,
+          $$FinancialFiscalPeriodsTableAnnotationComposer,
+          $$FinancialFiscalPeriodsTableCreateCompanionBuilder,
+          $$FinancialFiscalPeriodsTableUpdateCompanionBuilder,
+          (
+            FinancialFiscalPeriodData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialFiscalPeriodsTable,
+              FinancialFiscalPeriodData
+            >,
+          ),
+          FinancialFiscalPeriodData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialFiscalPeriodsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialFiscalPeriodsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialFiscalPeriodsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialFiscalPeriodsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialFiscalPeriodsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> fiscalYearId = const Value.absent(),
+                Value<int> periodNumber = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> startDate = const Value.absent(),
+                Value<int> endDate = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> openedAt = const Value.absent(),
+                Value<int?> closedAt = const Value.absent(),
+                Value<int?> reopenedAt = const Value.absent(),
+                Value<String?> reopenReason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalPeriodsCompanion(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                periodNumber: periodNumber,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                openedAt: openedAt,
+                closedAt: closedAt,
+                reopenedAt: reopenedAt,
+                reopenReason: reopenReason,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String fiscalYearId,
+                required int periodNumber,
+                required String name,
+                required int startDate,
+                required int endDate,
+                required String status,
+                Value<int?> openedAt = const Value.absent(),
+                Value<int?> closedAt = const Value.absent(),
+                Value<int?> reopenedAt = const Value.absent(),
+                Value<String?> reopenReason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalPeriodsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                periodNumber: periodNumber,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                openedAt: openedAt,
+                closedAt: closedAt,
+                reopenedAt: reopenedAt,
+                reopenReason: reopenReason,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialFiscalPeriodsTable,
+                    FinancialFiscalPeriodData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialFiscalPeriodsTable,
+                    FinancialFiscalPeriodData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialFiscalPeriodsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialFiscalPeriodsTable,
+      FinancialFiscalPeriodData,
+      $$FinancialFiscalPeriodsTableFilterComposer,
+      $$FinancialFiscalPeriodsTableOrderingComposer,
+      $$FinancialFiscalPeriodsTableAnnotationComposer,
+      $$FinancialFiscalPeriodsTableCreateCompanionBuilder,
+      $$FinancialFiscalPeriodsTableUpdateCompanionBuilder,
+      (
+        FinancialFiscalPeriodData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialFiscalPeriodsTable,
+          FinancialFiscalPeriodData
+        >,
+      ),
+      FinancialFiscalPeriodData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialPeriodClosingOperationsTableCreateCompanionBuilder =
+    FinancialPeriodClosingOperationsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String periodId,
+      required String status,
+      Value<bool> closeWithFx,
+      required int initiatedAt,
+      Value<int?> completedAt,
+      Value<String?> initiatedBy,
+      Value<int> rowid,
+    });
+typedef $$FinancialPeriodClosingOperationsTableUpdateCompanionBuilder =
+    FinancialPeriodClosingOperationsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> periodId,
+      Value<String> status,
+      Value<bool> closeWithFx,
+      Value<int> initiatedAt,
+      Value<int?> completedAt,
+      Value<String?> initiatedBy,
+      Value<int> rowid,
+    });
+
+class $$FinancialPeriodClosingOperationsTableFilterComposer
+    extends
+        Composer<_$NexabizDatabase, $FinancialPeriodClosingOperationsTable> {
+  $$FinancialPeriodClosingOperationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodId => $composableBuilder(
+    column: $table.periodId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get closeWithFx => $composableBuilder(
+    column: $table.closeWithFx,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get initiatedAt => $composableBuilder(
+    column: $table.initiatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get initiatedBy => $composableBuilder(
+    column: $table.initiatedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialPeriodClosingOperationsTableOrderingComposer
+    extends
+        Composer<_$NexabizDatabase, $FinancialPeriodClosingOperationsTable> {
+  $$FinancialPeriodClosingOperationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodId => $composableBuilder(
+    column: $table.periodId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get closeWithFx => $composableBuilder(
+    column: $table.closeWithFx,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get initiatedAt => $composableBuilder(
+    column: $table.initiatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get initiatedBy => $composableBuilder(
+    column: $table.initiatedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialPeriodClosingOperationsTableAnnotationComposer
+    extends
+        Composer<_$NexabizDatabase, $FinancialPeriodClosingOperationsTable> {
+  $$FinancialPeriodClosingOperationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get periodId =>
+      $composableBuilder(column: $table.periodId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<bool> get closeWithFx => $composableBuilder(
+    column: $table.closeWithFx,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get initiatedAt => $composableBuilder(
+    column: $table.initiatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get initiatedBy => $composableBuilder(
+    column: $table.initiatedBy,
+    builder: (column) => column,
+  );
+}
+
+class $$FinancialPeriodClosingOperationsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingOperationsTable,
+          FinancialPeriodClosingOperationData,
+          $$FinancialPeriodClosingOperationsTableFilterComposer,
+          $$FinancialPeriodClosingOperationsTableOrderingComposer,
+          $$FinancialPeriodClosingOperationsTableAnnotationComposer,
+          $$FinancialPeriodClosingOperationsTableCreateCompanionBuilder,
+          $$FinancialPeriodClosingOperationsTableUpdateCompanionBuilder,
+          (
+            FinancialPeriodClosingOperationData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialPeriodClosingOperationsTable,
+              FinancialPeriodClosingOperationData
+            >,
+          ),
+          FinancialPeriodClosingOperationData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialPeriodClosingOperationsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialPeriodClosingOperationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialPeriodClosingOperationsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialPeriodClosingOperationsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialPeriodClosingOperationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> periodId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<bool> closeWithFx = const Value.absent(),
+                Value<int> initiatedAt = const Value.absent(),
+                Value<int?> completedAt = const Value.absent(),
+                Value<String?> initiatedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingOperationsCompanion(
+                id: id,
+                companyId: companyId,
+                periodId: periodId,
+                status: status,
+                closeWithFx: closeWithFx,
+                initiatedAt: initiatedAt,
+                completedAt: completedAt,
+                initiatedBy: initiatedBy,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String periodId,
+                required String status,
+                Value<bool> closeWithFx = const Value.absent(),
+                required int initiatedAt,
+                Value<int?> completedAt = const Value.absent(),
+                Value<String?> initiatedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingOperationsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                periodId: periodId,
+                status: status,
+                closeWithFx: closeWithFx,
+                initiatedAt: initiatedAt,
+                completedAt: completedAt,
+                initiatedBy: initiatedBy,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialPeriodClosingOperationsTable,
+                    FinancialPeriodClosingOperationData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialPeriodClosingOperationsTable,
+                    FinancialPeriodClosingOperationData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialPeriodClosingOperationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialPeriodClosingOperationsTable,
+      FinancialPeriodClosingOperationData,
+      $$FinancialPeriodClosingOperationsTableFilterComposer,
+      $$FinancialPeriodClosingOperationsTableOrderingComposer,
+      $$FinancialPeriodClosingOperationsTableAnnotationComposer,
+      $$FinancialPeriodClosingOperationsTableCreateCompanionBuilder,
+      $$FinancialPeriodClosingOperationsTableUpdateCompanionBuilder,
+      (
+        FinancialPeriodClosingOperationData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingOperationsTable,
+          FinancialPeriodClosingOperationData
+        >,
+      ),
+      FinancialPeriodClosingOperationData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialPeriodClosingRecordsTableCreateCompanionBuilder =
+    FinancialPeriodClosingRecordsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String fiscalYearId,
+      required String periodId,
+      required String closingOperationId,
+      required int closingDate,
+      Value<bool> fxRevaluationExecuted,
+      Value<String?> journalEntryId,
+      Value<String?> createdBy,
+      required int createdAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialPeriodClosingRecordsTableUpdateCompanionBuilder =
+    FinancialPeriodClosingRecordsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> fiscalYearId,
+      Value<String> periodId,
+      Value<String> closingOperationId,
+      Value<int> closingDate,
+      Value<bool> fxRevaluationExecuted,
+      Value<String?> journalEntryId,
+      Value<String?> createdBy,
+      Value<int> createdAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialPeriodClosingRecordsTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingRecordsTable> {
+  $$FinancialPeriodClosingRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodId => $composableBuilder(
+    column: $table.periodId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closingDate => $composableBuilder(
+    column: $table.closingDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get fxRevaluationExecuted => $composableBuilder(
+    column: $table.fxRevaluationExecuted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get journalEntryId => $composableBuilder(
+    column: $table.journalEntryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialPeriodClosingRecordsTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingRecordsTable> {
+  $$FinancialPeriodClosingRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodId => $composableBuilder(
+    column: $table.periodId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closingDate => $composableBuilder(
+    column: $table.closingDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get fxRevaluationExecuted => $composableBuilder(
+    column: $table.fxRevaluationExecuted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get journalEntryId => $composableBuilder(
+    column: $table.journalEntryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialPeriodClosingRecordsTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingRecordsTable> {
+  $$FinancialPeriodClosingRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get periodId =>
+      $composableBuilder(column: $table.periodId, builder: (column) => column);
+
+  GeneratedColumn<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get closingDate => $composableBuilder(
+    column: $table.closingDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get fxRevaluationExecuted => $composableBuilder(
+    column: $table.fxRevaluationExecuted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get journalEntryId => $composableBuilder(
+    column: $table.journalEntryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FinancialPeriodClosingRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingRecordsTable,
+          FinancialPeriodClosingRecordData,
+          $$FinancialPeriodClosingRecordsTableFilterComposer,
+          $$FinancialPeriodClosingRecordsTableOrderingComposer,
+          $$FinancialPeriodClosingRecordsTableAnnotationComposer,
+          $$FinancialPeriodClosingRecordsTableCreateCompanionBuilder,
+          $$FinancialPeriodClosingRecordsTableUpdateCompanionBuilder,
+          (
+            FinancialPeriodClosingRecordData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialPeriodClosingRecordsTable,
+              FinancialPeriodClosingRecordData
+            >,
+          ),
+          FinancialPeriodClosingRecordData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialPeriodClosingRecordsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialPeriodClosingRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialPeriodClosingRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialPeriodClosingRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialPeriodClosingRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> fiscalYearId = const Value.absent(),
+                Value<String> periodId = const Value.absent(),
+                Value<String> closingOperationId = const Value.absent(),
+                Value<int> closingDate = const Value.absent(),
+                Value<bool> fxRevaluationExecuted = const Value.absent(),
+                Value<String?> journalEntryId = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingRecordsCompanion(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                periodId: periodId,
+                closingOperationId: closingOperationId,
+                closingDate: closingDate,
+                fxRevaluationExecuted: fxRevaluationExecuted,
+                journalEntryId: journalEntryId,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String fiscalYearId,
+                required String periodId,
+                required String closingOperationId,
+                required int closingDate,
+                Value<bool> fxRevaluationExecuted = const Value.absent(),
+                Value<String?> journalEntryId = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingRecordsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                periodId: periodId,
+                closingOperationId: closingOperationId,
+                closingDate: closingDate,
+                fxRevaluationExecuted: fxRevaluationExecuted,
+                journalEntryId: journalEntryId,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialPeriodClosingRecordsTable,
+                    FinancialPeriodClosingRecordData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialPeriodClosingRecordsTable,
+                    FinancialPeriodClosingRecordData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialPeriodClosingRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialPeriodClosingRecordsTable,
+      FinancialPeriodClosingRecordData,
+      $$FinancialPeriodClosingRecordsTableFilterComposer,
+      $$FinancialPeriodClosingRecordsTableOrderingComposer,
+      $$FinancialPeriodClosingRecordsTableAnnotationComposer,
+      $$FinancialPeriodClosingRecordsTableCreateCompanionBuilder,
+      $$FinancialPeriodClosingRecordsTableUpdateCompanionBuilder,
+      (
+        FinancialPeriodClosingRecordData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingRecordsTable,
+          FinancialPeriodClosingRecordData
+        >,
+      ),
+      FinancialPeriodClosingRecordData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialPeriodClosingAttemptsTableCreateCompanionBuilder =
+    FinancialPeriodClosingAttemptsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String periodId,
+      Value<String?> closingOperationId,
+      required int attemptedAt,
+      required String status,
+      required String failureReason,
+      Value<String?> attemptedBy,
+      Value<int> rowid,
+    });
+typedef $$FinancialPeriodClosingAttemptsTableUpdateCompanionBuilder =
+    FinancialPeriodClosingAttemptsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> periodId,
+      Value<String?> closingOperationId,
+      Value<int> attemptedAt,
+      Value<String> status,
+      Value<String> failureReason,
+      Value<String?> attemptedBy,
+      Value<int> rowid,
+    });
+
+class $$FinancialPeriodClosingAttemptsTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingAttemptsTable> {
+  $$FinancialPeriodClosingAttemptsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodId => $composableBuilder(
+    column: $table.periodId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attemptedAt => $composableBuilder(
+    column: $table.attemptedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get failureReason => $composableBuilder(
+    column: $table.failureReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attemptedBy => $composableBuilder(
+    column: $table.attemptedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialPeriodClosingAttemptsTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingAttemptsTable> {
+  $$FinancialPeriodClosingAttemptsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodId => $composableBuilder(
+    column: $table.periodId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attemptedAt => $composableBuilder(
+    column: $table.attemptedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get failureReason => $composableBuilder(
+    column: $table.failureReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get attemptedBy => $composableBuilder(
+    column: $table.attemptedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialPeriodClosingAttemptsTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingAttemptsTable> {
+  $$FinancialPeriodClosingAttemptsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get periodId =>
+      $composableBuilder(column: $table.periodId, builder: (column) => column);
+
+  GeneratedColumn<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get attemptedAt => $composableBuilder(
+    column: $table.attemptedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get failureReason => $composableBuilder(
+    column: $table.failureReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get attemptedBy => $composableBuilder(
+    column: $table.attemptedBy,
+    builder: (column) => column,
+  );
+}
+
+class $$FinancialPeriodClosingAttemptsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingAttemptsTable,
+          FinancialPeriodClosingAttemptData,
+          $$FinancialPeriodClosingAttemptsTableFilterComposer,
+          $$FinancialPeriodClosingAttemptsTableOrderingComposer,
+          $$FinancialPeriodClosingAttemptsTableAnnotationComposer,
+          $$FinancialPeriodClosingAttemptsTableCreateCompanionBuilder,
+          $$FinancialPeriodClosingAttemptsTableUpdateCompanionBuilder,
+          (
+            FinancialPeriodClosingAttemptData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialPeriodClosingAttemptsTable,
+              FinancialPeriodClosingAttemptData
+            >,
+          ),
+          FinancialPeriodClosingAttemptData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialPeriodClosingAttemptsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialPeriodClosingAttemptsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialPeriodClosingAttemptsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialPeriodClosingAttemptsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialPeriodClosingAttemptsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> periodId = const Value.absent(),
+                Value<String?> closingOperationId = const Value.absent(),
+                Value<int> attemptedAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> failureReason = const Value.absent(),
+                Value<String?> attemptedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingAttemptsCompanion(
+                id: id,
+                companyId: companyId,
+                periodId: periodId,
+                closingOperationId: closingOperationId,
+                attemptedAt: attemptedAt,
+                status: status,
+                failureReason: failureReason,
+                attemptedBy: attemptedBy,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String periodId,
+                Value<String?> closingOperationId = const Value.absent(),
+                required int attemptedAt,
+                required String status,
+                required String failureReason,
+                Value<String?> attemptedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingAttemptsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                periodId: periodId,
+                closingOperationId: closingOperationId,
+                attemptedAt: attemptedAt,
+                status: status,
+                failureReason: failureReason,
+                attemptedBy: attemptedBy,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialPeriodClosingAttemptsTable,
+                    FinancialPeriodClosingAttemptData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialPeriodClosingAttemptsTable,
+                    FinancialPeriodClosingAttemptData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialPeriodClosingAttemptsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialPeriodClosingAttemptsTable,
+      FinancialPeriodClosingAttemptData,
+      $$FinancialPeriodClosingAttemptsTableFilterComposer,
+      $$FinancialPeriodClosingAttemptsTableOrderingComposer,
+      $$FinancialPeriodClosingAttemptsTableAnnotationComposer,
+      $$FinancialPeriodClosingAttemptsTableCreateCompanionBuilder,
+      $$FinancialPeriodClosingAttemptsTableUpdateCompanionBuilder,
+      (
+        FinancialPeriodClosingAttemptData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingAttemptsTable,
+          FinancialPeriodClosingAttemptData
+        >,
+      ),
+      FinancialPeriodClosingAttemptData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialPeriodClosingRatesTableCreateCompanionBuilder =
+    FinancialPeriodClosingRatesCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String closingOperationId,
+      required String fromCurrencyCode,
+      required String toCurrencyCode,
+      required BigInt exchangeRateScaled,
+      Value<int> rowid,
+    });
+typedef $$FinancialPeriodClosingRatesTableUpdateCompanionBuilder =
+    FinancialPeriodClosingRatesCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> closingOperationId,
+      Value<String> fromCurrencyCode,
+      Value<String> toCurrencyCode,
+      Value<BigInt> exchangeRateScaled,
+      Value<int> rowid,
+    });
+
+class $$FinancialPeriodClosingRatesTableFilterComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingRatesTable> {
+  $$FinancialPeriodClosingRatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromCurrencyCode => $composableBuilder(
+    column: $table.fromCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toCurrencyCode => $composableBuilder(
+    column: $table.toCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get exchangeRateScaled => $composableBuilder(
+    column: $table.exchangeRateScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialPeriodClosingRatesTableOrderingComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingRatesTable> {
+  $$FinancialPeriodClosingRatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fromCurrencyCode => $composableBuilder(
+    column: $table.fromCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toCurrencyCode => $composableBuilder(
+    column: $table.toCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get exchangeRateScaled => $composableBuilder(
+    column: $table.exchangeRateScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialPeriodClosingRatesTableAnnotationComposer
+    extends Composer<_$NexabizDatabase, $FinancialPeriodClosingRatesTable> {
+  $$FinancialPeriodClosingRatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get closingOperationId => $composableBuilder(
+    column: $table.closingOperationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fromCurrencyCode => $composableBuilder(
+    column: $table.fromCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get toCurrencyCode => $composableBuilder(
+    column: $table.toCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get exchangeRateScaled => $composableBuilder(
+    column: $table.exchangeRateScaled,
+    builder: (column) => column,
+  );
+}
+
+class $$FinancialPeriodClosingRatesTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingRatesTable,
+          FinancialPeriodClosingRateData,
+          $$FinancialPeriodClosingRatesTableFilterComposer,
+          $$FinancialPeriodClosingRatesTableOrderingComposer,
+          $$FinancialPeriodClosingRatesTableAnnotationComposer,
+          $$FinancialPeriodClosingRatesTableCreateCompanionBuilder,
+          $$FinancialPeriodClosingRatesTableUpdateCompanionBuilder,
+          (
+            FinancialPeriodClosingRateData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialPeriodClosingRatesTable,
+              FinancialPeriodClosingRateData
+            >,
+          ),
+          FinancialPeriodClosingRateData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialPeriodClosingRatesTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialPeriodClosingRatesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialPeriodClosingRatesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialPeriodClosingRatesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialPeriodClosingRatesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> closingOperationId = const Value.absent(),
+                Value<String> fromCurrencyCode = const Value.absent(),
+                Value<String> toCurrencyCode = const Value.absent(),
+                Value<BigInt> exchangeRateScaled = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingRatesCompanion(
+                id: id,
+                companyId: companyId,
+                closingOperationId: closingOperationId,
+                fromCurrencyCode: fromCurrencyCode,
+                toCurrencyCode: toCurrencyCode,
+                exchangeRateScaled: exchangeRateScaled,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String closingOperationId,
+                required String fromCurrencyCode,
+                required String toCurrencyCode,
+                required BigInt exchangeRateScaled,
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialPeriodClosingRatesCompanion.insert(
+                id: id,
+                companyId: companyId,
+                closingOperationId: closingOperationId,
+                fromCurrencyCode: fromCurrencyCode,
+                toCurrencyCode: toCurrencyCode,
+                exchangeRateScaled: exchangeRateScaled,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialPeriodClosingRatesTable,
+                    FinancialPeriodClosingRateData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialPeriodClosingRatesTable,
+                    FinancialPeriodClosingRateData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialPeriodClosingRatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialPeriodClosingRatesTable,
+      FinancialPeriodClosingRateData,
+      $$FinancialPeriodClosingRatesTableFilterComposer,
+      $$FinancialPeriodClosingRatesTableOrderingComposer,
+      $$FinancialPeriodClosingRatesTableAnnotationComposer,
+      $$FinancialPeriodClosingRatesTableCreateCompanionBuilder,
+      $$FinancialPeriodClosingRatesTableUpdateCompanionBuilder,
+      (
+        FinancialPeriodClosingRateData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialPeriodClosingRatesTable,
+          FinancialPeriodClosingRateData
+        >,
+      ),
+      FinancialPeriodClosingRateData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialFiscalYearClosingRecordsTableCreateCompanionBuilder =
+    FinancialFiscalYearClosingRecordsCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String fiscalYearId,
+      required String finalPeriodId,
+      required String nextFiscalYearId,
+      required String yearEndJournalId,
+      required String openingBalanceJournalId,
+      required int closedAt,
+      Value<String?> closedBy,
+      Value<int> rowid,
+    });
+typedef $$FinancialFiscalYearClosingRecordsTableUpdateCompanionBuilder =
+    FinancialFiscalYearClosingRecordsCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> fiscalYearId,
+      Value<String> finalPeriodId,
+      Value<String> nextFiscalYearId,
+      Value<String> yearEndJournalId,
+      Value<String> openingBalanceJournalId,
+      Value<int> closedAt,
+      Value<String?> closedBy,
+      Value<int> rowid,
+    });
+
+class $$FinancialFiscalYearClosingRecordsTableFilterComposer
+    extends
+        Composer<_$NexabizDatabase, $FinancialFiscalYearClosingRecordsTable> {
+  $$FinancialFiscalYearClosingRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get finalPeriodId => $composableBuilder(
+    column: $table.finalPeriodId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextFiscalYearId => $composableBuilder(
+    column: $table.nextFiscalYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get yearEndJournalId => $composableBuilder(
+    column: $table.yearEndJournalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openingBalanceJournalId => $composableBuilder(
+    column: $table.openingBalanceJournalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialFiscalYearClosingRecordsTableOrderingComposer
+    extends
+        Composer<_$NexabizDatabase, $FinancialFiscalYearClosingRecordsTable> {
+  $$FinancialFiscalYearClosingRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get finalPeriodId => $composableBuilder(
+    column: $table.finalPeriodId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextFiscalYearId => $composableBuilder(
+    column: $table.nextFiscalYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get yearEndJournalId => $composableBuilder(
+    column: $table.yearEndJournalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openingBalanceJournalId => $composableBuilder(
+    column: $table.openingBalanceJournalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialFiscalYearClosingRecordsTableAnnotationComposer
+    extends
+        Composer<_$NexabizDatabase, $FinancialFiscalYearClosingRecordsTable> {
+  $$FinancialFiscalYearClosingRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get finalPeriodId => $composableBuilder(
+    column: $table.finalPeriodId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nextFiscalYearId => $composableBuilder(
+    column: $table.nextFiscalYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get yearEndJournalId => $composableBuilder(
+    column: $table.yearEndJournalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get openingBalanceJournalId => $composableBuilder(
+    column: $table.openingBalanceJournalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get closedAt =>
+      $composableBuilder(column: $table.closedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get closedBy =>
+      $composableBuilder(column: $table.closedBy, builder: (column) => column);
+}
+
+class $$FinancialFiscalYearClosingRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialFiscalYearClosingRecordsTable,
+          FinancialFiscalYearClosingRecordData,
+          $$FinancialFiscalYearClosingRecordsTableFilterComposer,
+          $$FinancialFiscalYearClosingRecordsTableOrderingComposer,
+          $$FinancialFiscalYearClosingRecordsTableAnnotationComposer,
+          $$FinancialFiscalYearClosingRecordsTableCreateCompanionBuilder,
+          $$FinancialFiscalYearClosingRecordsTableUpdateCompanionBuilder,
+          (
+            FinancialFiscalYearClosingRecordData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialFiscalYearClosingRecordsTable,
+              FinancialFiscalYearClosingRecordData
+            >,
+          ),
+          FinancialFiscalYearClosingRecordData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialFiscalYearClosingRecordsTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialFiscalYearClosingRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialFiscalYearClosingRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialFiscalYearClosingRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialFiscalYearClosingRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> fiscalYearId = const Value.absent(),
+                Value<String> finalPeriodId = const Value.absent(),
+                Value<String> nextFiscalYearId = const Value.absent(),
+                Value<String> yearEndJournalId = const Value.absent(),
+                Value<String> openingBalanceJournalId = const Value.absent(),
+                Value<int> closedAt = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalYearClosingRecordsCompanion(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                finalPeriodId: finalPeriodId,
+                nextFiscalYearId: nextFiscalYearId,
+                yearEndJournalId: yearEndJournalId,
+                openingBalanceJournalId: openingBalanceJournalId,
+                closedAt: closedAt,
+                closedBy: closedBy,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String fiscalYearId,
+                required String finalPeriodId,
+                required String nextFiscalYearId,
+                required String yearEndJournalId,
+                required String openingBalanceJournalId,
+                required int closedAt,
+                Value<String?> closedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalYearClosingRecordsCompanion.insert(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                finalPeriodId: finalPeriodId,
+                nextFiscalYearId: nextFiscalYearId,
+                yearEndJournalId: yearEndJournalId,
+                openingBalanceJournalId: openingBalanceJournalId,
+                closedAt: closedAt,
+                closedBy: closedBy,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialFiscalYearClosingRecordsTable,
+                    FinancialFiscalYearClosingRecordData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialFiscalYearClosingRecordsTable,
+                    FinancialFiscalYearClosingRecordData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialFiscalYearClosingRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialFiscalYearClosingRecordsTable,
+      FinancialFiscalYearClosingRecordData,
+      $$FinancialFiscalYearClosingRecordsTableFilterComposer,
+      $$FinancialFiscalYearClosingRecordsTableOrderingComposer,
+      $$FinancialFiscalYearClosingRecordsTableAnnotationComposer,
+      $$FinancialFiscalYearClosingRecordsTableCreateCompanionBuilder,
+      $$FinancialFiscalYearClosingRecordsTableUpdateCompanionBuilder,
+      (
+        FinancialFiscalYearClosingRecordData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialFiscalYearClosingRecordsTable,
+          FinancialFiscalYearClosingRecordData
+        >,
+      ),
+      FinancialFiscalYearClosingRecordData,
+      PrefetchHooks Function()
+    >;
+typedef $$FinancialFiscalYearOpeningBoundariesTableCreateCompanionBuilder =
+    FinancialFiscalYearOpeningBoundariesCompanion Function({
+      Value<String> id,
+      required String companyId,
+      required String fiscalYearId,
+      required String accountId,
+      Value<String?> subjectId,
+      required String currencyCode,
+      required BigInt openingBalanceScaled,
+      required int createdAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialFiscalYearOpeningBoundariesTableUpdateCompanionBuilder =
+    FinancialFiscalYearOpeningBoundariesCompanion Function({
+      Value<String> id,
+      Value<String> companyId,
+      Value<String> fiscalYearId,
+      Value<String> accountId,
+      Value<String?> subjectId,
+      Value<String> currencyCode,
+      Value<BigInt> openingBalanceScaled,
+      Value<int> createdAt,
+      Value<int> rowid,
+    });
+
+class $$FinancialFiscalYearOpeningBoundariesTableFilterComposer
+    extends
+        Composer<
+          _$NexabizDatabase,
+          $FinancialFiscalYearOpeningBoundariesTable
+        > {
+  $$FinancialFiscalYearOpeningBoundariesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get openingBalanceScaled => $composableBuilder(
+    column: $table.openingBalanceScaled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FinancialFiscalYearOpeningBoundariesTableOrderingComposer
+    extends
+        Composer<
+          _$NexabizDatabase,
+          $FinancialFiscalYearOpeningBoundariesTable
+        > {
+  $$FinancialFiscalYearOpeningBoundariesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get openingBalanceScaled => $composableBuilder(
+    column: $table.openingBalanceScaled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FinancialFiscalYearOpeningBoundariesTableAnnotationComposer
+    extends
+        Composer<
+          _$NexabizDatabase,
+          $FinancialFiscalYearOpeningBoundariesTable
+        > {
+  $$FinancialFiscalYearOpeningBoundariesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get fiscalYearId => $composableBuilder(
+    column: $table.fiscalYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get openingBalanceScaled => $composableBuilder(
+    column: $table.openingBalanceScaled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FinancialFiscalYearOpeningBoundariesTableTableManager
+    extends
+        RootTableManager<
+          _$NexabizDatabase,
+          $FinancialFiscalYearOpeningBoundariesTable,
+          FinancialFiscalYearOpeningBoundaryData,
+          $$FinancialFiscalYearOpeningBoundariesTableFilterComposer,
+          $$FinancialFiscalYearOpeningBoundariesTableOrderingComposer,
+          $$FinancialFiscalYearOpeningBoundariesTableAnnotationComposer,
+          $$FinancialFiscalYearOpeningBoundariesTableCreateCompanionBuilder,
+          $$FinancialFiscalYearOpeningBoundariesTableUpdateCompanionBuilder,
+          (
+            FinancialFiscalYearOpeningBoundaryData,
+            BaseReferences<
+              _$NexabizDatabase,
+              $FinancialFiscalYearOpeningBoundariesTable,
+              FinancialFiscalYearOpeningBoundaryData
+            >,
+          ),
+          FinancialFiscalYearOpeningBoundaryData,
+          PrefetchHooks Function()
+        > {
+  $$FinancialFiscalYearOpeningBoundariesTableTableManager(
+    _$NexabizDatabase db,
+    $FinancialFiscalYearOpeningBoundariesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialFiscalYearOpeningBoundariesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialFiscalYearOpeningBoundariesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialFiscalYearOpeningBoundariesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> fiscalYearId = const Value.absent(),
+                Value<String> accountId = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<BigInt> openingBalanceScaled = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalYearOpeningBoundariesCompanion(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                accountId: accountId,
+                subjectId: subjectId,
+                currencyCode: currencyCode,
+                openingBalanceScaled: openingBalanceScaled,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String companyId,
+                required String fiscalYearId,
+                required String accountId,
+                Value<String?> subjectId = const Value.absent(),
+                required String currencyCode,
+                required BigInt openingBalanceScaled,
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialFiscalYearOpeningBoundariesCompanion.insert(
+                id: id,
+                companyId: companyId,
+                fiscalYearId: fiscalYearId,
+                accountId: accountId,
+                subjectId: subjectId,
+                currencyCode: currencyCode,
+                openingBalanceScaled: openingBalanceScaled,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FinancialFiscalYearOpeningBoundariesTable,
+                    FinancialFiscalYearOpeningBoundaryData
+                  >(table),
+                  BaseReferences<
+                    _$NexabizDatabase,
+                    $FinancialFiscalYearOpeningBoundariesTable,
+                    FinancialFiscalYearOpeningBoundaryData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FinancialFiscalYearOpeningBoundariesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NexabizDatabase,
+      $FinancialFiscalYearOpeningBoundariesTable,
+      FinancialFiscalYearOpeningBoundaryData,
+      $$FinancialFiscalYearOpeningBoundariesTableFilterComposer,
+      $$FinancialFiscalYearOpeningBoundariesTableOrderingComposer,
+      $$FinancialFiscalYearOpeningBoundariesTableAnnotationComposer,
+      $$FinancialFiscalYearOpeningBoundariesTableCreateCompanionBuilder,
+      $$FinancialFiscalYearOpeningBoundariesTableUpdateCompanionBuilder,
+      (
+        FinancialFiscalYearOpeningBoundaryData,
+        BaseReferences<
+          _$NexabizDatabase,
+          $FinancialFiscalYearOpeningBoundariesTable,
+          FinancialFiscalYearOpeningBoundaryData
+        >,
+      ),
+      FinancialFiscalYearOpeningBoundaryData,
+      PrefetchHooks Function()
+    >;
 
 class $NexabizDatabaseManager {
   final _$NexabizDatabase _db;
@@ -54432,4 +70267,76 @@ class $NexabizDatabaseManager {
       $$PurchaseItemsTableTableManager(_db, _db.purchaseItems);
   $$PurchasePaymentsTableTableManager get purchasePayments =>
       $$PurchasePaymentsTableTableManager(_db, _db.purchasePayments);
+  $$FinancialCurrenciesTableTableManager get financialCurrencies =>
+      $$FinancialCurrenciesTableTableManager(_db, _db.financialCurrencies);
+  $$FinancialExchangeRatesTableTableManager get financialExchangeRates =>
+      $$FinancialExchangeRatesTableTableManager(
+        _db,
+        _db.financialExchangeRates,
+      );
+  $$FinancialAccountsTableTableManager get financialAccounts =>
+      $$FinancialAccountsTableTableManager(_db, _db.financialAccounts);
+  $$FinancialSubjectsTableTableManager get financialSubjects =>
+      $$FinancialSubjectsTableTableManager(_db, _db.financialSubjects);
+  $$FinancialSubjectAccountBucketsTableTableManager
+  get financialSubjectAccountBuckets =>
+      $$FinancialSubjectAccountBucketsTableTableManager(
+        _db,
+        _db.financialSubjectAccountBuckets,
+      );
+  $$FinancialAccountBalancesTableTableManager get financialAccountBalances =>
+      $$FinancialAccountBalancesTableTableManager(
+        _db,
+        _db.financialAccountBalances,
+      );
+  $$FinancialJournalEntriesTableTableManager get financialJournalEntries =>
+      $$FinancialJournalEntriesTableTableManager(
+        _db,
+        _db.financialJournalEntries,
+      );
+  $$FinancialJournalLinesTableTableManager get financialJournalLines =>
+      $$FinancialJournalLinesTableTableManager(_db, _db.financialJournalLines);
+  $$FinancialFiscalYearsTableTableManager get financialFiscalYears =>
+      $$FinancialFiscalYearsTableTableManager(_db, _db.financialFiscalYears);
+  $$FinancialFiscalPeriodsTableTableManager get financialFiscalPeriods =>
+      $$FinancialFiscalPeriodsTableTableManager(
+        _db,
+        _db.financialFiscalPeriods,
+      );
+  $$FinancialPeriodClosingOperationsTableTableManager
+  get financialPeriodClosingOperations =>
+      $$FinancialPeriodClosingOperationsTableTableManager(
+        _db,
+        _db.financialPeriodClosingOperations,
+      );
+  $$FinancialPeriodClosingRecordsTableTableManager
+  get financialPeriodClosingRecords =>
+      $$FinancialPeriodClosingRecordsTableTableManager(
+        _db,
+        _db.financialPeriodClosingRecords,
+      );
+  $$FinancialPeriodClosingAttemptsTableTableManager
+  get financialPeriodClosingAttempts =>
+      $$FinancialPeriodClosingAttemptsTableTableManager(
+        _db,
+        _db.financialPeriodClosingAttempts,
+      );
+  $$FinancialPeriodClosingRatesTableTableManager
+  get financialPeriodClosingRates =>
+      $$FinancialPeriodClosingRatesTableTableManager(
+        _db,
+        _db.financialPeriodClosingRates,
+      );
+  $$FinancialFiscalYearClosingRecordsTableTableManager
+  get financialFiscalYearClosingRecords =>
+      $$FinancialFiscalYearClosingRecordsTableTableManager(
+        _db,
+        _db.financialFiscalYearClosingRecords,
+      );
+  $$FinancialFiscalYearOpeningBoundariesTableTableManager
+  get financialFiscalYearOpeningBoundaries =>
+      $$FinancialFiscalYearOpeningBoundariesTableTableManager(
+        _db,
+        _db.financialFiscalYearOpeningBoundaries,
+      );
 }

@@ -121,23 +121,22 @@ class InventoryDocumentJournalWidget extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: entry.isPosted
-                            ? Colors.green.shade50
-                            : Colors.orange.shade50,
+                            ? AppColors.successContainer
+                            : AppColors.warningContainer,
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                         border: Border.all(
                           color: entry.isPosted
-                              ? Colors.green.shade300
-                              : Colors.orange.shade300,
+                              ? AppColors.success
+                              : AppColors.warning,
                         ),
                       ),
                       child: Text(
                         entry.isPosted ? 'مرحّل' : 'مسودة',
-                        style: TextStyle(
-                          fontSize: 12,
+                        style: theme.textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: entry.isPosted
-                              ? Colors.green.shade900
-                              : Colors.orange.shade900,
+                              ? AppColors.success
+                              : AppColors.warning,
                         ),
                       ),
                     ),
@@ -327,13 +326,13 @@ class _JournalLineRow extends ConsumerWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: isDebit
-                      ? Colors.blue.shade50
-                      : Colors.amber.shade50,
+                      ? AppColors.debitContainer
+                      : AppColors.creditContainer,
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Icon(
                   isDebit ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                  color: isDebit ? Colors.blue.shade800 : Colors.amber.shade900,
+                  color: isDebit ? AppColors.debit : AppColors.credit,
                   size: 16,
                 ),
               ),
@@ -353,7 +352,7 @@ class _JournalLineRow extends ConsumerWidget {
           if (line.lineDescription != null &&
               line.lineDescription!.trim().isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.only(right: 36),
+              padding: const EdgeInsetsDirectional.only(end: 36),
               child: Text(
                 line.lineDescription!,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -364,7 +363,7 @@ class _JournalLineRow extends ConsumerWidget {
           ],
           // Amount row
           Padding(
-            padding: const EdgeInsets.only(right: 36, top: 2),
+            padding: const EdgeInsetsDirectional.only(end: 36, top: 2),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -372,7 +371,7 @@ class _JournalLineRow extends ConsumerWidget {
                   '${isDebit ? "مدين" : "دائن"}: ${amount.toStringAsFixed(2)} $currencySymbol',
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: isDebit ? Colors.blue.shade900 : Colors.amber.shade900,
+                    color: isDebit ? AppColors.debit : AppColors.credit,
                   ),
                 ),
                 if (line.exchangeRateToBase > 0 && line.exchangeRateToBase != 1.0)

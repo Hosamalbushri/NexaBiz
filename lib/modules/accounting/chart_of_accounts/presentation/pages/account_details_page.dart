@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/models/account_exception.dart';
 import '../../domain/services/account_labels.dart';
@@ -29,31 +28,20 @@ class AccountDetailsPage extends ConsumerWidget {
     final accountAsync = ref.watch(accountByIdProvider(accountId));
 
     return accountAsync.when(
-      loading: () => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.accountingAccountDetails,
-          showBackButton: true,
-        ),
-        body: const AppLoading(),
+      loading: () => AppDetailsPage(
+        title: l10n.accountingAccountDetails,
+        isLoading: true,
       ),
-      error: (error, _) => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.accountingAccountDetails,
-          showBackButton: true,
-        ),
-        body: AppErrorState(
-          message: error.toString(),
-          onRetry: () => ref.invalidate(accountByIdProvider(accountId)),
-        ),
+      error: (error, _) => AppDetailsPage(
+        title: l10n.accountingAccountDetails,
+        error: error.toString(),
+        onRetry: () => ref.invalidate(accountByIdProvider(accountId)),
       ),
       data: (account) {
         if (account == null) {
-          return Scaffold(
-            appBar: CustomAppBar(
-              title: l10n.accountingAccountDetails,
-              showBackButton: true,
-            ),
-            body: AppEmptyState(
+          return AppDetailsPage(
+            title: l10n.accountingAccountDetails,
+            emptyState: AppEmptyState(
               title: l10n.accountingAccountNotFound,
               icon: Icons.account_tree_outlined,
             ),
@@ -65,7 +53,7 @@ class AccountDetailsPage extends ConsumerWidget {
             ? null
             : ref.watch(accountByUuidProvider(account.parentId!));
 
-        return AppDetailPagePattern(
+        return AppDetailsPage(
           title: AccountLabels.displayName(l10n, account),
           actions: [
             if (account.isGroup && account.isActive)
@@ -237,13 +225,15 @@ class AccountDetailsPage extends ConsumerWidget {
         title: Text(l10n.accountingDeactivateConfirmTitle),
         content: Text(l10n.accountingDeactivateConfirmMessage),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
           ),
-          TextButton(
+          AppButton(
+            label: l10n.accountingDeactivate,
+            variant: AppButtonVariant.destructive,
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.accountingDeactivate),
           ),
         ],
       ),
@@ -286,13 +276,15 @@ class AccountDetailsPage extends ConsumerWidget {
         title: Text(l10n.accountingDeleteConfirmTitle),
         content: Text(l10n.accountingDeleteConfirmMessage),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
           ),
-          TextButton(
+          AppButton(
+            label: l10n.accountingSoftDelete,
+            variant: AppButtonVariant.destructive,
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.accountingSoftDelete),
           ),
         ],
       ),

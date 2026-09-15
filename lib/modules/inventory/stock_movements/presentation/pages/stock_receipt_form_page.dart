@@ -273,19 +273,17 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
   }
 
   Widget _shell({required Widget body, List<Widget>? actions}) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: Scaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: _isEdit
-              ? l10n.stockReceiptEditTitle
-              : l10n.stockReceiptNewTitle,
-          showBackButton: true,
-          actions: actions,
-        ),
+      child: AppFormPage(
+        title: _isEdit
+            ? l10n.stockReceiptEditTitle
+            : l10n.stockReceiptNewTitle,
+        showBackButton: true,
+        actions: actions,
+        showFormActions: false,
+        isPageLoading: _loading,
         body: body,
       ),
     );
@@ -716,15 +714,10 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            TextField(
+            AppTextField(
               controller: notesController,
-              decoration: InputDecoration(
-                labelText: l10n.stockIssueNotesLabel,
-                prefixIcon: const Icon(Icons.notes_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-              ),
+              label: l10n.stockIssueNotesLabel,
+              prefixIcon: Icons.notes_outlined,
               maxLines: 2,
               onChanged: onNotesChanged,
             ),

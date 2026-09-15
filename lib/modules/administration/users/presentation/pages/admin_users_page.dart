@@ -303,39 +303,39 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppTextField(
               controller: _name,
-              decoration: InputDecoration(labelText: l10n.adminUserNameLabel),
+              label: l10n.adminUserNameLabel,
             ),
             const SizedBox(height: 8),
-            TextField(
+            AppTextField(
               controller: _email,
               enabled: isCreate,
               keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(labelText: l10n.authEmailLabel),
+              label: l10n.authEmailLabel,
             ),
             const SizedBox(height: 8),
-            TextField(
+            AppTextField(
               controller: _phone,
               keyboardType: TextInputType.phone,
-              decoration: InputDecoration(labelText: l10n.adminUserPhoneLabel),
+              label: l10n.adminUserPhoneLabel,
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _status,
-              decoration: InputDecoration(labelText: l10n.adminUserStatusLabel),
+            AppSelectField<String>(
+              value: _status,
+              label: l10n.adminUserStatusLabel,
               items: [
-                DropdownMenuItem(
+                AppSelectItem(
                   value: 'active',
-                  child: Text(l10n.adminStatusActive),
+                  label: l10n.adminStatusActive,
                 ),
-                DropdownMenuItem(
+                AppSelectItem(
                   value: 'inactive',
-                  child: Text(l10n.adminStatusInactive),
+                  label: l10n.adminStatusInactive,
                 ),
-                DropdownMenuItem(
+                AppSelectItem(
                   value: 'suspended',
-                  child: Text(l10n.adminStatusSuspended),
+                  label: l10n.adminStatusSuspended,
                 ),
               ],
               onChanged: (v) => setState(() => _status = v ?? 'active'),
@@ -345,37 +345,31 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
               rolesAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (_, _) => const SizedBox.shrink(),
-                data: (roles) => DropdownButtonFormField<String>(
-                  initialValue: _roleId,
-                  decoration: InputDecoration(
-                    labelText: l10n.adminUserRoleLabel,
-                  ),
+                data: (roles) => AppSelectField<String?>(
+                  value: _roleId,
+                  label: l10n.adminUserRoleLabel,
                   items: [
                     for (final role in roles)
-                      DropdownMenuItem(value: role.id, child: Text(role.name)),
+                      AppSelectItem(value: role.id, label: role.name),
                   ],
                   onChanged: (v) => setState(() => _roleId = v),
                 ),
               ),
             ],
             const SizedBox(height: 8),
-            TextField(
+            AppTextField(
               controller: _password,
               obscureText: true,
-              decoration: InputDecoration(
-                labelText: isCreate
-                    ? l10n.authPasswordLabel
-                    : l10n.adminNewPasswordOptional,
-              ),
+              label: isCreate
+                  ? l10n.authPasswordLabel
+                  : l10n.adminNewPasswordOptional,
             ),
             if (isCreate) ...[
               const SizedBox(height: 8),
-              TextField(
+              AppTextField(
                 controller: _confirm,
                 obscureText: true,
-                decoration: InputDecoration(
-                  labelText: l10n.adminConfirmPasswordLabel,
-                ),
+                label: l10n.adminConfirmPasswordLabel,
               ),
             ],
             if (_error != null) ...[

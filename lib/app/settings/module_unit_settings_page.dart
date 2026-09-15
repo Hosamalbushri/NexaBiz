@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/modules/module_settings_definition.dart';
-import '../../core/widgets/custom_app_bar.dart';
-import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_radius.dart';
@@ -25,128 +23,76 @@ class ModuleUnitSettingsPage extends StatelessWidget {
     final moduleTitle = category.titleBuilder(l10n);
     final moduleSubtitle = category.subtitleBuilder?.call(l10n);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: moduleTitle, showBackButton: true),
-      body: category.items.isEmpty
-          ? Center(
-              child: AppEmptyState(
-                icon: category.icon,
-                title: moduleTitle,
-                subtitle: l10n.platformReportsServiceComingSoon,
-              ),
-            )
-          : ListView(
-              padding: AppConstants.pageInsets(context),
-              children: [
-                // Module Header Card
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                    boxShadow: AppShadows.card(theme.brightness),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 54,
-                        height: 54,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colorScheme.primaryContainer.withValues(
-                            alpha: 0.7,
-                          ),
-                        ),
-                        child: Icon(
-                          category.icon,
-                          color: colorScheme.primary,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              moduleTitle,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (moduleSubtitle != null &&
-                                moduleSubtitle.isNotEmpty) ...[
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                moduleSubtitle,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Section Title
-                Text(
-                  l10n.localeName == 'ar'
-                      ? 'بطاقات إعدادات الوحدات'
-                      : 'Unit Settings Cards',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-
-                // Sub-Module Unit Cards Grid/List
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide =
-                        AppBreakpoints.isTablet(constraints.maxWidth) ||
-                        AppBreakpoints.isDesktop(constraints.maxWidth);
-
-                    if (isWide) {
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: AppSpacing.md,
-                              mainAxisSpacing: AppSpacing.md,
-                              childAspectRatio: 2.8,
-                            ),
-                        itemCount: category.items.length,
-                        itemBuilder: (context, index) {
-                          return _UnitSettingCard(item: category.items[index]);
-                        },
-                      );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: category.items.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) {
-                        return _UnitSettingCard(item: category.items[index]);
-                      },
-                    );
-                  },
-                ),
-              ],
+    if (category.items.isEmpty) {
+      return AppSettingsPage(
+        title: moduleTitle,
+        subtitle: moduleSubtitle,
+        showBackButton: true,
+        sections: [
+          Center(
+            child: AppEmptyState(
+              icon: category.icon,
+              title: moduleTitle,
+              subtitle: l10n.platformReportsServiceComingSoon,
             ),
+          ),
+        ],
+      );
+    }
+
+    return AppSettingsPage(
+      title: moduleTitle,
+      subtitle: moduleSubtitle,
+      showBackButton: true,
+      sections: [
+        // Section Title
+        Text(
+          l10n.localeName == 'ar'
+              ? 'بطاقات إعدادات الوحدات'
+              : 'Unit Settings Cards',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        // Sub-Module Unit Cards Grid/List
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide =
+                AppBreakpoints.isTablet(constraints.maxWidth) ||
+                AppBreakpoints.isDesktop(constraints.maxWidth);
+
+            if (isWide) {
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
+                  childAspectRatio: 2.8,
+                ),
+                itemCount: category.items.length,
+                itemBuilder: (context, index) {
+                  return _UnitSettingCard(item: category.items[index]);
+                },
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: category.items.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                return _UnitSettingCard(item: category.items[index]);
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 }

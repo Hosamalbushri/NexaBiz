@@ -8,7 +8,6 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/widgets/app_account_search_picker.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -116,548 +115,481 @@ class _WarehouseFormPageState extends ConsumerState<WarehouseFormPage> {
       return uuid;
     }
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: isEditing
-            ? (isAr ? 'تعديل بيانات المستودع' : 'Edit Warehouse Details')
-            : (isAr ? 'إضافة مستودع جديد' : 'New Warehouse Entry'),
-        showBackButton: true,
-      ),
-      body: _isLoadingBinding
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
+    return AppFormPage(
+      title: isEditing
+          ? (isAr ? 'تعديل بيانات المستودع' : 'Edit Warehouse Details')
+          : (isAr ? 'إضافة مستودع جديد' : 'New Warehouse Entry'),
+      showBackButton: true,
+      isPageLoading: _isLoadingBinding,
+      isLoading: _isSaving,
+      onSubmit: _isSaving ? null : _onSave,
+      submitLabel: isAr
+          ? 'حفظ البيانات والربط'
+          : 'Save Warehouse & Bindings',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Executive Hero Header Card
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(
+                  alpha: 0.5,
+                ),
+              ),
+            ),
+            child: Row(
               children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    100, // Space for bottom action bar
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 840),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Executive Hero Header Card
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.lg),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHigh,
-                              borderRadius: BorderRadius.circular(AppRadius.lg),
-                              border: Border.all(
-                                color: colorScheme.outlineVariant.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadius.md,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    isEditing
-                                        ? Icons.warehouse_rounded
-                                        : Icons.add_business_rounded,
-                                    color: colorScheme.onPrimary,
-                                    size: 32,
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        isEditing
-                                            ? (isAr
-                                                  ? 'تعديل بيانات المستودع والربط'
-                                                  : 'Edit Warehouse Configuration')
-                                            : (isAr
-                                                  ? 'تهيئة مستودع جديد'
-                                                  : 'Setup New Warehouse'),
-                                        style: theme.textTheme.titleLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: colorScheme.onSurface,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        isAr
-                                            ? 'قم بتنظيم البيانات الأساسية، سياسة التكلفة المعتمدة، وربط حسابات المخزون بالدليل'
-                                            : 'Configure core details, costing methodology, and chart of accounts mapping',
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color:
-                                                  colorScheme.onSurfaceVariant,
-                                              height: 1.35,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Section 1: Basic Information
-                          _FormSectionCard(
-                            stepNumber: '1',
-                            title: isAr
-                                ? 'البيانات الأساسية'
-                                : 'Basic Information',
-                            subtitle: isAr
-                                ? 'كود المستودع والاسم والمسؤول المباشر'
-                                : 'Warehouse code, name and assigned manager',
-                            icon: Icons.store_rounded,
-                            child: Column(
-                              children: [
-                                AppTextField(
-                                  controller: _codeCtrl,
-                                  label: isAr ? 'كود المستودع' : 'Warehouse Code',
-                                  required: true,
-                                  hint: 'WH-01',
-                                  prefixIcon: Icons.qr_code_rounded,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                AppTextField(
-                                  controller: _nameCtrl,
-                                  label: isAr ? 'اسم المستودع' : 'Warehouse Name',
-                                  required: true,
-                                  hint: isAr ? 'المستودع الرئيسي' : 'Main Warehouse',
-                                  prefixIcon: Icons.storefront_rounded,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                AppTextField(
-                                  controller: _managerCtrl,
-                                  label: isAr ? 'أمين / مدير المستودع' : 'Warehouse Manager',
-                                  hint: isAr ? 'اسم المسؤول عن المستودع' : 'Manager Name',
-                                  prefixIcon: Icons.person_outline_rounded,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Section 2: Contact & Location
-                          _FormSectionCard(
-                            stepNumber: '2',
-                            title: isAr
-                                ? 'التواصل والموقع الجغرافي'
-                                : 'Contact & Location',
-                            subtitle: isAr
-                                ? 'رقم الهاتف وعنوان الموقع الفيزيائي'
-                                : 'Contact numbers and physical address',
-                            icon: Icons.location_on_outlined,
-                            child: Column(
-                              children: [
-                                AppTextField(
-                                  controller: _phoneCtrl,
-                                  keyboardType: TextInputType.phone,
-                                  label: isAr ? 'رقم الهاتف' : 'Phone Number',
-                                  prefixIcon: Icons.phone_outlined,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                AppTextField(
-                                  controller: _addressCtrl,
-                                  label: isAr ? 'العنوان / الموقع' : 'Physical Address',
-                                  prefixIcon: Icons.map_outlined,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Section 3: Cost Valuation Method
-                          _FormSectionCard(
-                            stepNumber: '3',
-                            title: isAr
-                                ? 'سياسة احتساب التكلفة'
-                                : 'Cost Valuation Policy',
-                            subtitle: isAr
-                                ? 'طريقة تتبع واحتساب تكلفة البضاعة في المستودع'
-                                : 'Costing method used for valuation layers',
-                            icon: Icons.calculate_outlined,
-                            child: AppSelectField<CostValuationMethod?>(
-                              value: _costValuationMethod,
-                              label: isAr
-                                  ? 'طريقة احتساب التكلفة'
-                                  : 'Valuation Methodology',
-                              hint: isAr
-                                  ? 'افتراضي النظام (المتوسط المرجح)'
-                                  : 'System Default (Weighted Average)',
-                              helperText: isAr
-                                  ? 'تحدد كيفية احتساب تكلفة البضاعة المباعة والمنصرفة'
-                                  : 'Determines COGS and stock movement issue costs',
-                              prefixIcon: Icons.account_tree_outlined,
-                              items: [
-                                AppSelectItem<CostValuationMethod?>(
-                                  value: null,
-                                  label: isAr
-                                      ? 'افتراضي النظام (المتوسط المرجح - Weighted Average)'
-                                      : 'System Default (Weighted Average)',
-                                ),
-                                AppSelectItem<CostValuationMethod?>(
-                                  value: CostValuationMethod.fifo,
-                                  label: isAr
-                                      ? 'FIFO - الوارد أولاً يصدر أولاً (First-In, First-Out)'
-                                      : 'FIFO (First-In, First-Out)',
-                                ),
-                                AppSelectItem<CostValuationMethod?>(
-                                  value: CostValuationMethod.lifo,
-                                  label: isAr
-                                      ? 'LIFO - الوارد أخيراً يصدر أولاً (Last-In, First-Out)'
-                                      : 'LIFO (Last-In, First-Out)',
-                                ),
-                                AppSelectItem<CostValuationMethod?>(
-                                  value: CostValuationMethod.weightedAverage,
-                                  label: isAr
-                                      ? 'Weighted Average - المتوسط المرجح'
-                                      : 'Weighted Average',
-                                ),
-                              ],
-                              onChanged: (val) =>
-                                  setState(() => _costValuationMethod = val),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Section 4: Chart of Accounts Binding
-                          _FormSectionCard(
-                            stepNumber: '4',
-                            title: isAr
-                                ? 'التهيئة والربط المحاسبي للمخزون والمبيعات'
-                                : 'Inventory & Sales Accounting Binding',
-                            subtitle: isAr
-                                ? 'تحديد وتخصيص الحسابات المحاسبية لأصل المخزون، تكلفة المبيعات، وتسويات هذا المستودع'
-                                : 'Assign explicit accounts for asset, COGS, adjustments, and revenue',
-                            icon: Icons.account_balance_outlined,
-                            child: Column(
-                              children: [
-                                _AccountBindingTile(
-                                  icon: Icons.inventory_2_outlined,
-                                  title: isAr
-                                      ? 'حساب أصل المخزون'
-                                      : 'Inventory Asset Account',
-                                  subtitle: isAr
-                                      ? 'الحساب المحاسبي لقيمة المخزون في هذا المستودع'
-                                      : 'Ledger account for warehouse stock value',
-                                  accountUuid: _inventoryAssetAccountId,
-                                  resolvedName: resolveAccountName(
-                                    _inventoryAssetAccountId,
-                                  ),
-                                  onSelect: () async {
-                                    final acc = await showAppAccountPicker(
-                                      context,
-                                      title: isAr
-                                          ? 'اختر حساب أصل المخزون'
-                                          : 'Select Inventory Asset Account',
-                                      initialTypeFilter: AccountType.asset,
-                                      selectedUuid: _inventoryAssetAccountId,
-                                    );
-                                    if (acc != null) {
-                                      setState(
-                                        () =>
-                                            _inventoryAssetAccountId = acc.id,
-                                      );
-                                    }
-                                  },
-                                  onClear: () => setState(
-                                    () => _inventoryAssetAccountId = null,
-                                  ),
-                                ),
-                                const Divider(height: 24),
-                                _AccountBindingTile(
-                                  icon: Icons.shopping_cart_outlined,
-                                  title: isAr
-                                      ? 'حساب تكلفة البضاعة المباعة (COGS)'
-                                      : 'Cost of Goods Sold Account',
-                                  subtitle: isAr
-                                      ? 'حساب مصروف تكلفة مبيعات هذا المستودع'
-                                      : 'Expense account for warehouse COGS',
-                                  accountUuid: _cogsAccountId,
-                                  resolvedName: resolveAccountName(
-                                    _cogsAccountId,
-                                  ),
-                                  onSelect: () async {
-                                    final acc = await showAppAccountPicker(
-                                      context,
-                                      title: isAr
-                                          ? 'اختر حساب تكلفة المبيعات'
-                                          : 'Select COGS Account',
-                                      initialTypeFilter: AccountType.expense,
-                                      selectedUuid: _cogsAccountId,
-                                    );
-                                    if (acc != null) {
-                                      setState(() => _cogsAccountId = acc.id);
-                                    }
-                                  },
-                                  onClear: () =>
-                                      setState(() => _cogsAccountId = null),
-                                ),
-                                const Divider(height: 24),
-                                _AccountBindingTile(
-                                  icon: Icons.tune_outlined,
-                                  title: isAr
-                                      ? 'حساب تسوية وجرد المخزون'
-                                      : 'Inventory Adjustment Account',
-                                  subtitle: isAr
-                                      ? 'حساب فوارق الجرد والتسويات الاستثنائية'
-                                      : 'Account for stock variances and adjustments',
-                                  accountUuid: _adjustmentAccountId,
-                                  resolvedName: resolveAccountName(
-                                    _adjustmentAccountId,
-                                  ),
-                                  onSelect: () async {
-                                    final acc = await showAppAccountPicker(
-                                      context,
-                                      title: isAr
-                                          ? 'اختر حساب تسوية المخزون'
-                                          : 'Select Adjustment Account',
-                                      selectedUuid: _adjustmentAccountId,
-                                    );
-                                    if (acc != null) {
-                                      setState(
-                                        () => _adjustmentAccountId = acc.id,
-                                      );
-                                    }
-                                  },
-                                  onClear: () => setState(
-                                    () => _adjustmentAccountId = null,
-                                  ),
-                                ),
-                                const Divider(height: 24),
-                                _AccountBindingTile(
-                                  icon: Icons.point_of_sale_outlined,
-                                  title: isAr
-                                      ? 'حساب إيرادات المبيعات'
-                                      : 'Sales Revenue Account',
-                                  subtitle: isAr
-                                      ? 'حساب إيراد مبيعات بضاعة هذا المستودع'
-                                      : 'Revenue account for warehouse sales',
-                                  accountUuid: _salesRevenueAccountId,
-                                  resolvedName: resolveAccountName(
-                                    _salesRevenueAccountId,
-                                  ),
-                                  onSelect: () async {
-                                    final acc = await showAppAccountPicker(
-                                      context,
-                                      title: isAr
-                                          ? 'اختر حساب إيرادات المبيعات'
-                                          : 'Select Sales Revenue Account',
-                                      initialTypeFilter: AccountType.revenue,
-                                      selectedUuid: _salesRevenueAccountId,
-                                    );
-                                    if (acc != null) {
-                                      setState(
-                                        () => _salesRevenueAccountId = acc.id,
-                                      );
-                                    }
-                                  },
-                                  onClear: () => setState(
-                                    () => _salesRevenueAccountId = null,
-                                  ),
-                                ),
-                                const Divider(height: 24),
-                                _AccountBindingTile(
-                                  icon: Icons.assignment_return_outlined,
-                                  title: isAr
-                                      ? 'حساب مردودات المبيعات'
-                                      : 'Sales Return Account',
-                                  subtitle: isAr
-                                      ? 'حساب مردودات مبيعات هذا المستودع'
-                                      : 'Account for warehouse sales returns',
-                                  accountUuid: _salesReturnAccountId,
-                                  resolvedName: resolveAccountName(
-                                    _salesReturnAccountId,
-                                  ),
-                                  onSelect: () async {
-                                    final acc = await showAppAccountPicker(
-                                      context,
-                                      title: isAr
-                                          ? 'اختر حساب مردودات المبيعات'
-                                          : 'Select Sales Return Account',
-                                      selectedUuid: _salesReturnAccountId,
-                                    );
-                                    if (acc != null) {
-                                      setState(
-                                        () => _salesReturnAccountId = acc.id,
-                                      );
-                                    }
-                                  },
-                                  onClear: () => setState(
-                                    () => _salesReturnAccountId = null,
-                                  ),
-                                ),
-                                const Divider(height: 24),
-                                _AccountBindingTile(
-                                  icon: Icons.discount_outlined,
-                                  title: isAr
-                                      ? 'حساب الخصم المسموح به'
-                                      : 'Sales Discount Account',
-                                  subtitle: isAr
-                                      ? 'حساب خصم المبيعات المسموح به لعملاء هذا المستودع'
-                                      : 'Discount account for warehouse sales',
-                                  accountUuid: _salesDiscountAccountId,
-                                  resolvedName: resolveAccountName(
-                                    _salesDiscountAccountId,
-                                  ),
-                                  onSelect: () async {
-                                    final acc = await showAppAccountPicker(
-                                      context,
-                                      title: isAr
-                                          ? 'اختر حساب الخصم المسموح به'
-                                          : 'Select Sales Discount Account',
-                                      selectedUuid: _salesDiscountAccountId,
-                                    );
-                                    if (acc != null) {
-                                      setState(
-                                        () =>
-                                            _salesDiscountAccountId = acc.id,
-                                      );
-                                    }
-                                  },
-                                  onClear: () => setState(
-                                    () => _salesDiscountAccountId = null,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Section 5: Operational Options
-                          _FormSectionCard(
-                            stepNumber: '5',
-                            title: isAr
-                                ? 'خيارات التشغيل'
-                                : 'Operational Options',
-                            subtitle: isAr
-                                ? 'تحديد حالة الاعتماد الافتراضي في حركات النظام'
-                                : 'Default behavior for new system transactions',
-                            icon: Icons.toggle_on_outlined,
-                            child: Material(
-                              color: colorScheme.surfaceContainerLow,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.md,
-                                ),
-                                side: BorderSide(
-                                  color: colorScheme.outlineVariant.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                ),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: ListTile(
-                                leading: Icon(
-                                  Icons.star_rounded,
-                                  color: _isDefault
-                                      ? colorScheme.primary
-                                      : colorScheme.onSurfaceVariant,
-                                ),
-                                title: Text(
-                                  isAr
-                                      ? 'اعتماد كمستودع افتراضي رئيسي'
-                                      : 'Set as Main Default Warehouse',
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  isAr
-                                      ? 'يتم اختياره تلقائياً في فاتورة المبيعات وفواتير الشراء وسندات التوريد والصرف'
-                                      : 'Automatically pre-selected for sales, purchases, and stock slips',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                trailing: AppSwitch(
-                                  value: _isDefault,
-                                  onChanged: (val) =>
-                                      setState(() => _isDefault = val),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(
+                      AppRadius.md,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withValues(
+                          alpha: 0.3,
+                        ),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isEditing
+                        ? Icons.warehouse_rounded
+                        : Icons.add_business_rounded,
+                    color: colorScheme.onPrimary,
+                    size: 32,
                   ),
                 ),
-
-                // Floating Bottom Action Bar
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.shadow.withValues(alpha: 0.12),
-                          blurRadius: 16,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 840),
-                        child: Row(
-                          children: [
-                            AppButton(
-                              label: isAr ? 'إلغاء' : 'Cancel',
-                              onPressed: () => Navigator.of(context).pop(),
-                              variant: AppButtonVariant.outlined,
-                              icon: Icons.arrow_back_rounded,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isEditing
+                            ? (isAr
+                                  ? 'تعديل بيانات المستودع والربط'
+                                  : 'Edit Warehouse Configuration')
+                            : (isAr
+                                  ? 'تهيئة مستودع جديد'
+                                  : 'Setup New Warehouse'),
+                        style: theme.textTheme.titleLarge
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
                             ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: AppButton(
-                                label: isAr
-                                    ? 'حفظ البيانات والربط'
-                                    : 'Save Warehouse & Bindings',
-                                onPressed: _isSaving ? null : _onSave,
-                                variant: AppButtonVariant.filled,
-                                icon: Icons.check_circle_rounded,
-                                isLoading: _isSaving,
-                                expand: true,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isAr
+                            ? 'قم بتنظيم البيانات الأساسية، سياسة التكلفة المعتمدة، وربط حسابات المخزون بالدليل'
+                            : 'Configure core details, costing methodology, and chart of accounts mapping',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(
+                              color:
+                                  colorScheme.onSurfaceVariant,
+                              height: 1.35,
+                            ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Section 1: Basic Information
+          _FormSectionCard(
+            stepNumber: '1',
+            title: isAr
+                ? 'البيانات الأساسية'
+                : 'Basic Information',
+            subtitle: isAr
+                ? 'كود المستودع والاسم والمسؤول المباشر'
+                : 'Warehouse code, name and assigned manager',
+            icon: Icons.store_rounded,
+            child: Column(
+              children: [
+                AppTextField(
+                  controller: _codeCtrl,
+                  label: isAr ? 'كود المستودع' : 'Warehouse Code',
+                  required: true,
+                  hint: 'WH-01',
+                  prefixIcon: Icons.qr_code_rounded,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: _nameCtrl,
+                  label: isAr ? 'اسم المستودع' : 'Warehouse Name',
+                  required: true,
+                  hint: isAr ? 'المستودع الرئيسي' : 'Main Warehouse',
+                  prefixIcon: Icons.storefront_rounded,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: _managerCtrl,
+                  label: isAr ? 'أمين / مدير المستودع' : 'Warehouse Manager',
+                  hint: isAr ? 'اسم المسؤول عن المستودع' : 'Manager Name',
+                  prefixIcon: Icons.person_outline_rounded,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Section 2: Contact & Location
+          _FormSectionCard(
+            stepNumber: '2',
+            title: isAr
+                ? 'التواصل والموقع الجغرافي'
+                : 'Contact & Location',
+            subtitle: isAr
+                ? 'رقم الهاتف وعنوان الموقع الفيزيائي'
+                : 'Contact numbers and physical address',
+            icon: Icons.location_on_outlined,
+            child: Column(
+              children: [
+                AppTextField(
+                  controller: _phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  label: isAr ? 'رقم الهاتف' : 'Phone Number',
+                  prefixIcon: Icons.phone_outlined,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: _addressCtrl,
+                  label: isAr ? 'العنوان / الموقع' : 'Physical Address',
+                  prefixIcon: Icons.map_outlined,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Section 3: Cost Valuation Method
+          _FormSectionCard(
+            stepNumber: '3',
+            title: isAr
+                ? 'سياسة احتساب التكلفة'
+                : 'Cost Valuation Policy',
+            subtitle: isAr
+                ? 'طريقة تتبع واحتساب تكلفة البضاعة في المستودع'
+                : 'Costing method used for valuation layers',
+            icon: Icons.calculate_outlined,
+            child: AppSelectField<CostValuationMethod?>(
+              value: _costValuationMethod,
+              label: isAr
+                  ? 'طريقة احتساب التكلفة'
+                  : 'Valuation Methodology',
+              hint: isAr
+                  ? 'افتراضي النظام (المتوسط المرجح)'
+                  : 'System Default (Weighted Average)',
+              helperText: isAr
+                  ? 'تحدد كيفية احتساب تكلفة البضاعة المباعة والمنصرفة'
+                  : 'Determines COGS and stock movement issue costs',
+              prefixIcon: Icons.account_tree_outlined,
+              items: [
+                AppSelectItem<CostValuationMethod?>(
+                  value: null,
+                  label: isAr
+                      ? 'افتراضي النظام (المتوسط المرجح - Weighted Average)'
+                      : 'System Default (Weighted Average)',
+                ),
+                AppSelectItem<CostValuationMethod?>(
+                  value: CostValuationMethod.fifo,
+                  label: isAr
+                      ? 'FIFO - الوارد أولاً يصدر أولاً (First-In, First-Out)'
+                      : 'FIFO (First-In, First-Out)',
+                ),
+                AppSelectItem<CostValuationMethod?>(
+                  value: CostValuationMethod.lifo,
+                  label: isAr
+                      ? 'LIFO - الوارد أخيراً يصدر أولاً (Last-In, First-Out)'
+                      : 'LIFO (Last-In, First-Out)',
+                ),
+                AppSelectItem<CostValuationMethod?>(
+                  value: CostValuationMethod.weightedAverage,
+                  label: isAr
+                      ? 'Weighted Average - المتوسط المرجح'
+                      : 'Weighted Average',
+                ),
+              ],
+              onChanged: (val) =>
+                  setState(() => _costValuationMethod = val),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Section 4: Chart of Accounts Binding
+          _FormSectionCard(
+            stepNumber: '4',
+            title: isAr
+                ? 'التهيئة والربط المحاسبي للمخزون والمبيعات'
+                : 'Inventory & Sales Accounting Binding',
+            subtitle: isAr
+                ? 'تحديد وتخصيص الحسابات المحاسبية لأصل المخزون، تكلفة المبيعات، وتسويات هذا المستودع'
+                : 'Assign explicit accounts for asset, COGS, adjustments, and revenue',
+            icon: Icons.account_balance_outlined,
+            child: Column(
+              children: [
+                _AccountBindingTile(
+                  icon: Icons.inventory_2_outlined,
+                  title: isAr
+                      ? 'حساب أصل المخزون'
+                      : 'Inventory Asset Account',
+                  subtitle: isAr
+                      ? 'الحساب المحاسبي لقيمة المخزون في هذا المستودع'
+                      : 'Ledger account for warehouse stock value',
+                  accountUuid: _inventoryAssetAccountId,
+                  resolvedName: resolveAccountName(
+                    _inventoryAssetAccountId,
+                  ),
+                  onSelect: () async {
+                    final acc = await showAppAccountPicker(
+                      context,
+                      title: isAr
+                          ? 'اختر حساب أصل المخزون'
+                          : 'Select Inventory Asset Account',
+                      initialTypeFilter: AccountType.asset,
+                      selectedUuid: _inventoryAssetAccountId,
+                    );
+                    if (acc != null) {
+                      setState(
+                        () =>
+                            _inventoryAssetAccountId = acc.id,
+                      );
+                    }
+                  },
+                  onClear: () => setState(
+                    () => _inventoryAssetAccountId = null,
+                  ),
+                ),
+                const Divider(height: 24),
+                _AccountBindingTile(
+                  icon: Icons.shopping_cart_outlined,
+                  title: isAr
+                      ? 'حساب تكلفة البضاعة المباعة (COGS)'
+                      : 'Cost of Goods Sold Account',
+                  subtitle: isAr
+                      ? 'حساب مصروف تكلفة مبيعات هذا المستودع'
+                      : 'Expense account for warehouse COGS',
+                  accountUuid: _cogsAccountId,
+                  resolvedName: resolveAccountName(
+                    _cogsAccountId,
+                  ),
+                  onSelect: () async {
+                    final acc = await showAppAccountPicker(
+                      context,
+                      title: isAr
+                          ? 'اختر حساب تكلفة المبيعات'
+                          : 'Select COGS Account',
+                      initialTypeFilter: AccountType.expense,
+                      selectedUuid: _cogsAccountId,
+                    );
+                    if (acc != null) {
+                      setState(() => _cogsAccountId = acc.id);
+                    }
+                  },
+                  onClear: () =>
+                      setState(() => _cogsAccountId = null),
+                ),
+                const Divider(height: 24),
+                _AccountBindingTile(
+                  icon: Icons.tune_outlined,
+                  title: isAr
+                      ? 'حساب تسوية وجرد المخزون'
+                      : 'Inventory Adjustment Account',
+                  subtitle: isAr
+                      ? 'حساب فوارق الجرد والتسويات الاستثنائية'
+                      : 'Account for stock variances and adjustments',
+                  accountUuid: _adjustmentAccountId,
+                  resolvedName: resolveAccountName(
+                    _adjustmentAccountId,
+                  ),
+                  onSelect: () async {
+                    final acc = await showAppAccountPicker(
+                      context,
+                      title: isAr
+                          ? 'اختر حساب تسوية المخزون'
+                          : 'Select Adjustment Account',
+                      selectedUuid: _adjustmentAccountId,
+                    );
+                    if (acc != null) {
+                      setState(
+                        () => _adjustmentAccountId = acc.id,
+                      );
+                    }
+                  },
+                  onClear: () => setState(
+                    () => _adjustmentAccountId = null,
+                  ),
+                ),
+                const Divider(height: 24),
+                _AccountBindingTile(
+                  icon: Icons.point_of_sale_outlined,
+                  title: isAr
+                      ? 'حساب إيرادات المبيعات'
+                      : 'Sales Revenue Account',
+                  subtitle: isAr
+                      ? 'حساب إيراد مبيعات بضاعة هذا المستودع'
+                      : 'Revenue account for warehouse sales',
+                  accountUuid: _salesRevenueAccountId,
+                  resolvedName: resolveAccountName(
+                    _salesRevenueAccountId,
+                  ),
+                  onSelect: () async {
+                    final acc = await showAppAccountPicker(
+                      context,
+                      title: isAr
+                          ? 'اختر حساب إيرادات المبيعات'
+                          : 'Select Sales Revenue Account',
+                      initialTypeFilter: AccountType.revenue,
+                      selectedUuid: _salesRevenueAccountId,
+                    );
+                    if (acc != null) {
+                      setState(
+                        () => _salesRevenueAccountId = acc.id,
+                      );
+                    }
+                  },
+                  onClear: () => setState(
+                    () => _salesRevenueAccountId = null,
+                  ),
+                ),
+                const Divider(height: 24),
+                _AccountBindingTile(
+                  icon: Icons.assignment_return_outlined,
+                  title: isAr
+                      ? 'حساب مردودات المبيعات'
+                      : 'Sales Return Account',
+                  subtitle: isAr
+                      ? 'حساب مردودات مبيعات هذا المستودع'
+                      : 'Account for warehouse sales returns',
+                  accountUuid: _salesReturnAccountId,
+                  resolvedName: resolveAccountName(
+                    _salesReturnAccountId,
+                  ),
+                  onSelect: () async {
+                    final acc = await showAppAccountPicker(
+                      context,
+                      title: isAr
+                          ? 'اختر حساب مردودات المبيعات'
+                          : 'Select Sales Return Account',
+                      selectedUuid: _salesReturnAccountId,
+                    );
+                    if (acc != null) {
+                      setState(
+                        () => _salesReturnAccountId = acc.id,
+                      );
+                    }
+                  },
+                  onClear: () => setState(
+                    () => _salesReturnAccountId = null,
+                  ),
+                ),
+                const Divider(height: 24),
+                _AccountBindingTile(
+                  icon: Icons.discount_outlined,
+                  title: isAr
+                      ? 'حساب الخصم المسموح به'
+                      : 'Sales Discount Account',
+                  subtitle: isAr
+                      ? 'حساب خصم المبيعات المسموح به لعملاء هذا المستودع'
+                      : 'Discount account for warehouse sales',
+                  accountUuid: _salesDiscountAccountId,
+                  resolvedName: resolveAccountName(
+                    _salesDiscountAccountId,
+                  ),
+                  onSelect: () async {
+                    final acc = await showAppAccountPicker(
+                      context,
+                      title: isAr
+                          ? 'اختر حساب الخصم المسموح به'
+                          : 'Select Sales Discount Account',
+                      selectedUuid: _salesDiscountAccountId,
+                    );
+                    if (acc != null) {
+                      setState(
+                        () =>
+                            _salesDiscountAccountId = acc.id,
+                      );
+                    }
+                  },
+                  onClear: () => setState(
+                    () => _salesDiscountAccountId = null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Section 5: Operational Options
+          _FormSectionCard(
+            stepNumber: '5',
+            title: isAr
+                ? 'خيارات التشغيل'
+                : 'Operational Options',
+            subtitle: isAr
+                ? 'تحديد حالة الاعتماد الافتراضي في حركات النظام'
+                : 'Default behavior for new system transactions',
+            icon: Icons.toggle_on_outlined,
+            child: Material(
+              color: colorScheme.surfaceContainerLow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppRadius.md,
+                ),
+                side: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: 0.4,
+                  ),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                leading: Icon(
+                  Icons.star_rounded,
+                  color: _isDefault
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                title: Text(
+                  isAr
+                      ? 'اعتماد كمستودع افتراضي رئيسي'
+                      : 'Set as Main Default Warehouse',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  isAr
+                      ? 'يتم اختياره تلقائياً في فاتورة المبيعات وفواتير الشراء وسندات التوريد والصرف'
+                      : 'Automatically pre-selected for sales, purchases, and stock slips',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                trailing: AppSwitch(
+                  value: _isDefault,
+                  onChanged: (val) =>
+                      setState(() => _isDefault = val),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

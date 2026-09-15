@@ -103,15 +103,15 @@ class InventoryValuationCurrencyCard extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
+                      color: AppColors.warningContainer,
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: Colors.amber.shade400),
+                      border: Border.all(color: AppColors.warning),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.warning_amber_rounded,
-                          color: Colors.amber.shade900,
+                          color: AppColors.warning,
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
@@ -119,9 +119,8 @@ class InventoryValuationCurrencyCard extends ConsumerWidget {
                             isAr
                                 ? 'لم يتم تحديد عملة تقييم المخزون! يرجى تحديد عملة التقييم عبر دليل العملات (Currency Master).'
                                 : 'Inventory valuation currency is not configured. Please assign a currency in Currency Master.',
-                            style: TextStyle(
-                              color: Colors.amber.shade900,
-                              fontSize: 13,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.warning,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -137,22 +136,21 @@ class InventoryValuationCurrencyCard extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: AppColors.infoContainer,
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: Colors.blue.shade300),
+                      border: Border.all(color: AppColors.info),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.lock_rounded, color: Colors.blue.shade900),
+                        Icon(Icons.lock_rounded, color: AppColors.info),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             isAr
                                 ? 'تغيير عملة التقييم مقفل لوجود حركات مخزنية أو طبقات تكلفة مسجلة سابقاً لحماية نزاهة الدفاتر.'
                                 : 'Valuation currency is locked due to historical inventory transactions.',
-                            style: TextStyle(
-                              color: Colors.blue.shade900,
-                              fontSize: 13,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.info,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -248,24 +246,24 @@ class InventoryValuationCurrencyCard extends ConsumerWidget {
 
     if (info.isLocked) {
       label = 'مقفلة (Locked)';
-      bg = Colors.blue.shade100;
-      fg = Colors.blue.shade900;
+      bg = AppColors.infoContainer;
+      fg = AppColors.info;
     } else if (info.isConfigured) {
       label = 'محددة (Configured)';
-      bg = Colors.green.shade100;
-      fg = Colors.green.shade900;
+      bg = AppColors.successContainer;
+      fg = AppColors.success;
     } else if (info.isNotConfigured) {
       label = 'غير محددة';
-      bg = Colors.amber.shade100;
-      fg = Colors.amber.shade900;
+      bg = AppColors.warningContainer;
+      fg = AppColors.warning;
     } else if (info.isInactive) {
       label = 'غير نشطة';
-      bg = Colors.red.shade100;
-      fg = Colors.red.shade900;
+      bg = AppColors.errorContainer;
+      fg = AppColors.error;
     } else {
       label = 'غير صالحة';
-      bg = Colors.red.shade100;
-      fg = Colors.red.shade900;
+      bg = AppColors.errorContainer;
+      fg = AppColors.error;
     }
 
     return Container(

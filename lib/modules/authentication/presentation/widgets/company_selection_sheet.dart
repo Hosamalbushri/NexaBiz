@@ -10,6 +10,7 @@ import '../../../../app/theme/app_spacing.dart';
 import 'company_details_sheet.dart';
 import 'company_switch_confirmation_dialog.dart';
 import '../providers/auth_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Interactive modal sheet to switch active company context.
 class CompanySelectionSheet extends ConsumerWidget {
@@ -230,40 +231,21 @@ class CompanySelectionSheet extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                  ),
-                  icon: const Icon(Icons.add_business_rounded),
-                  label: const Text(
-                    'إضافة شركة',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                child: AppButton(
+                  label: 'إضافة شركة',
+                  icon: Icons.add_business_rounded,
+                  variant: AppButtonVariant.outlined,
+                  expand: true,
                   onPressed: () => _showAddCompanyDialog(context, ref),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: colorScheme.error,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                  ),
-                  icon: const Icon(Icons.logout_rounded),
-                  label: const Text(
-                    'تسجيل الخروج',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                child: AppButton(
+                  label: 'تسجيل الخروج',
+                  icon: Icons.logout_rounded,
+                  variant: AppButtonVariant.destructive,
+                  expand: true,
                   onPressed: () async {
                     final router = GoRouter.of(context);
                     final nav = Navigator.of(context);
@@ -413,15 +395,13 @@ class CompanySelectionSheet extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(
+          AppButton(
+            label: 'إلغاء',
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('إلغاء'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-            ),
+          AppButton(
+            label: 'إضافة وتأكيد',
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
               final name = nameController.text.trim();
@@ -451,7 +431,6 @@ class CompanySelectionSheet extends ConsumerWidget {
 
               await AppBootstrap.bootstrapSync(ref);
             },
-            child: const Text('إضافة وتأكيد'),
           ),
         ],
       ),

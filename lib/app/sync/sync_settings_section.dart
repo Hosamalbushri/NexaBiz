@@ -188,34 +188,16 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
                   ],
                 ),
                 actions: [
-                  TextButton(
+                  AppButton(
+                    label: l10n.authBiometricPasswordDialogSkip,
+                    variant: AppButtonVariant.text,
                     onPressed: () => Navigator.pop(ctx, null),
-                    child: Text(
-                      l10n.authBiometricPasswordDialogSkip,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colorScheme.outline,
-                        fontSize: 12,
-                      ),
-                    ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                  AppButton(
+                    label: l10n.authBiometricPasswordDialogConfirm,
+                    variant: AppButtonVariant.filled,
                     onPressed: () =>
                         Navigator.pop(ctx, pwdController.text.trim()),
-                    child: Text(
-                      l10n.authBiometricPasswordDialogConfirm,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
                   ),
                 ],
               );
@@ -470,32 +452,15 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             textAlign: TextAlign.center,
           ),
           actions: [
-            TextButton(
+            AppButton(
+              label: l10n.cancel,
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                l10n.cancel,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontSize: 12),
-              ),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-                foregroundColor: Theme.of(context).colorScheme.onError,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+            AppButton(
+              label: l10n.syncDisableConfirmAction,
+              variant: AppButtonVariant.destructive,
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(
-                l10n.syncDisableConfirmAction,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onError,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
             ),
           ],
         ),

@@ -527,6 +527,7 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     AppCurrency? selectedAppCurrency;
     int decimalDigits = 2;
+    final decimalCtrl = TextEditingController(text: decimalDigits.toString());
     bool isDefault = false;
     bool isInventoryValuation = false;
 
@@ -558,6 +559,7 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                         setDialogState(() {
                           selectedAppCurrency = appCurrency;
                           decimalDigits = appCurrency.decimalDigits;
+                          decimalCtrl.text = decimalDigits.toString();
                         });
                       },
                     ),
@@ -565,13 +567,11 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                     AppTextField(
                       label: isArabic ? 'الخانات العشرية' : 'Decimals',
                       keyboardType: TextInputType.number,
-                      controller: TextEditingController(text: decimalDigits.toString()),
+                      controller: decimalCtrl,
                       onChanged: (val) {
                         final parsed = int.tryParse(val);
                         if (parsed != null && parsed >= 0 && parsed <= 6) {
-                          setDialogState(() {
-                            decimalDigits = parsed;
-                          });
+                          decimalDigits = parsed;
                         }
                       },
                     ),
@@ -638,11 +638,13 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                 ),
               ),
               actions: [
-                TextButton(
+                AppButton(
+                  label: isArabic ? 'إلغاء' : 'Cancel',
+                  variant: AppButtonVariant.text,
                   onPressed: () => Navigator.of(dialogCtx).pop(),
-                  child: Text(isArabic ? 'إلغاء' : 'Cancel'),
                 ),
-                ElevatedButton(
+                AppButton(
+                  label: isArabic ? 'حفظ' : 'Save',
                   onPressed: selectedAppCurrency == null
                       ? null
                       : () async {
@@ -717,7 +719,6 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                             }
                           }
                         },
-                  child: Text(isArabic ? 'حفظ' : 'Save'),
                 ),
               ],
             );
@@ -736,6 +737,7 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
     final nameEnCtrl = TextEditingController(text: currency.nameEn);
     final symbolCtrl = TextEditingController(text: currency.symbol);
     int decimalDigits = currency.decimalDigits;
+    final decimalCtrl = TextEditingController(text: decimalDigits.toString());
 
     final funcInfo = ref.read(functionalCurrencyStateInfoProvider).valueOrNull;
     final valInfo = ref.read(inventoryValuationCurrencyStateProvider).valueOrNull;
@@ -784,13 +786,11 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                     AppTextField(
                       label: isArabic ? 'الخانات العشرية' : 'Decimals',
                       keyboardType: TextInputType.number,
-                      controller: TextEditingController(text: decimalDigits.toString()),
+                      controller: decimalCtrl,
                       onChanged: (val) {
                         final parsed = int.tryParse(val);
                         if (parsed != null && parsed >= 0 && parsed <= 6) {
-                          setDialogState(() {
-                            decimalDigits = parsed;
-                          });
+                          decimalDigits = parsed;
                         }
                       },
                     ),
@@ -857,11 +857,13 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                 ),
               ),
               actions: [
-                TextButton(
+                AppButton(
+                  label: isArabic ? 'إلغاء' : 'Cancel',
+                  variant: AppButtonVariant.text,
                   onPressed: () => Navigator.of(dialogCtx).pop(),
-                  child: Text(isArabic ? 'إلغاء' : 'Cancel'),
                 ),
-                ElevatedButton(
+                AppButton(
+                  label: isArabic ? 'حفظ' : 'Save',
                   onPressed: () async {
                     final draft = CurrencyDraft(
                       uuid: currency.uuid,
@@ -953,7 +955,6 @@ class _CurrenciesManagePageState extends ConsumerState<CurrenciesManagePage> {
                       }
                     }
                   },
-                  child: Text(isArabic ? 'حفظ' : 'Save'),
                 ),
               ],
             );

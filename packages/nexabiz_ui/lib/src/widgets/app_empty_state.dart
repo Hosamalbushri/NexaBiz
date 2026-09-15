@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../theme/app_spacing.dart';
 import 'app_button.dart';
@@ -38,55 +37,52 @@ class AppEmptyState extends StatelessWidget {
         final gapAfterIcon = compact ? AppSpacing.xs : AppSpacing.md;
 
         return Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(padding),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      icon,
-                      size: iconSize,
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.5,
-                      ),
-                    ),
-                    SizedBox(height: gapAfterIcon),
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: compact ? 14 : null,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      subtitle,
-                      textAlign: TextAlign.center,
-                      maxLines: compact ? 3 : null,
-                      overflow: compact ? TextOverflow.ellipsis : null,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: compact ? 12 : null,
-                      ),
-                    ),
-                    if (actionLabel != null && onAction != null) ...[
-                      SizedBox(height: compact ? AppSpacing.sm : AppSpacing.lg),
-                      AppButton(
-                        label: actionLabel!,
-                        onPressed: onAction,
-                        icon: actionIcon,
-                        variant: actionVariant,
-                      ),
-                    ],
-                  ],
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(padding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: iconSize,
+                  color: colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
-              ),
-            )
-            .animate()
-            .fadeIn(duration: 220.ms)
-            .moveY(begin: 10, end: 0, duration: 220.ms);
+                SizedBox(height: gapAfterIcon),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: compact ? 14 : null,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  maxLines: compact ? 3 : null,
+                  overflow: compact ? TextOverflow.ellipsis : null,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: compact ? 12 : null,
+                  ),
+                ),
+                if (actionLabel != null && onAction != null) ...[
+                  SizedBox(height: compact ? AppSpacing.sm : AppSpacing.lg),
+                  AppButton(
+                    label: actionLabel!,
+                    onPressed: onAction,
+                    icon: actionIcon,
+                    variant: actionVariant,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
       },
     );
   }

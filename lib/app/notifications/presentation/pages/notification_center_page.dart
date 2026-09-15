@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/app_notification.dart';
-import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/notification_tile.dart';
 import '../../../constants/app_constants.dart';
 import '../../../localization/app_localizations.dart';
@@ -23,80 +22,55 @@ class NotificationCenterPage extends ConsumerWidget {
     final unread = ref.watch(unreadNotificationsCountProvider);
     final service = ref.read(notificationServiceProvider);
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.notificationsTitle,
-        showBackButton: true,
-        actions: [
-          if (unread > 0)
-            CustomAppBarAction(
-              icon: Icons.done_all_rounded,
-              tooltip: l10n.notificationsMarkAllRead,
-              onPressed: () => service.markAllAsRead(),
-            ),
-        ],
-      ),
-      body: async.when(
-        loading: () => const AppLoading(),
-        error: (error, _) => AppEmptyState(
-          title: l10n.somethingWentWrong,
-          subtitle: error.toString(),
-          icon: Icons.error_outline_rounded,
-          actionLabel: l10n.retry,
-          onAction: () => ref.invalidate(notificationsProvider),
-        ),
-        data: (items) {
-          if (items.isEmpty) {
-            return AppEmptyState(
-              title: l10n.notificationsEmptyTitle,
-              subtitle: l10n.notificationsEmptyMessage,
-              icon: Icons.notifications_none_rounded,
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                ),
+    return AppListPage<AppNotification>(
+      title: l10n.notificationsTitle,
+      headerActions: [
+        if (unread > 0)
+          AppIconButton(
+            icon: Icons.done_all_rounded,
+            tooltip: l10n.notificationsMarkAllRead,
+            onPressed: () => service.markAllAsRead(),
+          ),
+      ],
+      isLoading: async.isLoading && !async.hasValue,
+      errorText: async.error?.toString(),
+      onRetry: () => ref.invalidate(notificationsProvider),
+      emptyTitle: l10n.notificationsEmptyTitle,
+      emptySubtitle: l10n.notificationsEmptyMessage,
+      activeFilterChips: async.valueOrNull != null && async.valueOrNull!.isNotEmpty
+          ? [
+              Expanded(
                 child: _NotificationsSummaryBar(
-                  totalCount: items.length,
+                  totalCount: async.valueOrNull!.length,
                   unreadCount: unread,
                   onMarkAllRead: unread > 0
                       ? () => service.markAllAsRead()
                       : null,
                 ),
               ),
-              Expanded(
-                child: ListView.separated(
-                  padding: AppConstants.pageInsets(
-                    context,
-                  ).copyWith(top: AppSpacing.sm),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return NotificationTile(
-                      notification: item,
-                      onTap: () => service.markAsRead(item.id),
-                      onDismiss: () => service.remove(item.id),
-                      onAction: item.actionLabel == null
-                          ? null
-                          : () => _onAction(context, ref, item),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+            ]
+          : const [],
+      items: async.valueOrNull ?? const [],
+      contentBuilder: (context, itemList) {
+        return ListView.separated(
+          padding: AppConstants.pageInsets(
+            context,
+          ).copyWith(top: AppSpacing.sm),
+          itemCount: itemList.length,
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+          itemBuilder: (context, index) {
+            final item = itemList[index];
+            return NotificationTile(
+              notification: item,
+              onTap: () => service.markAsRead(item.id),
+              onDismiss: () => service.remove(item.id),
+              onAction: item.actionLabel == null
+                  ? null
+                  : () => _onAction(context, ref, item),
+            );
+          },
+        );
+      },
     );
   }
 

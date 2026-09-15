@@ -168,9 +168,10 @@ class _ServerSetupPageState extends ConsumerState<ServerSetupPage> {
                   onPressed: _continueToSignIn,
                 ),
               const SizedBox(height: AppSpacing.md),
-              TextButton(
+              AppButton(
+                label: l10n.serverSetupBackToChoice,
+                variant: AppButtonVariant.text,
                 onPressed: () => context.go(AppRoutes.setupChoice),
-                child: Text(l10n.serverSetupBackToChoice),
               ),
             ],
           ),

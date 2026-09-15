@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_spacing.dart';
-import '../../widgets/app_page_header.dart';
-import 'app_page_shell.dart';
+import '../../layout/app_details_page.dart';
 
-/// Canonical Detail Page Pattern for NexaBiz ERP screens.
-///
-/// Standardizes Header + Summary/KPI Banner + Tabbed/Sectioned Detail cards layout.
+/// Legacy compatible Detail Page pattern delegating to canonical [AppDetailsPage].
 class AppDetailPagePattern extends StatelessWidget {
   const AppDetailPagePattern({
     super.key,
@@ -32,57 +28,15 @@ class AppDetailPagePattern extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasTabs =
-        tabs != null && tabViews != null && tabs!.length == tabViews!.length;
-
-    Widget mainContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppPageHeader(
-          title: title,
-          subtitle: subtitle,
-          breadcrumbs: breadcrumbs,
-          actions: actions,
-        ),
-        if (summaryBanner != null) ...[
-          summaryBanner!,
-          const SizedBox(height: AppSpacing.lg),
-        ],
-        body,
-      ],
+    return AppDetailsPage(
+      title: title,
+      subtitle: subtitle,
+      breadcrumbs: breadcrumbs,
+      summaryBanner: summaryBanner,
+      actions: actions,
+      body: body,
+      tabs: tabs,
+      tabViews: tabViews,
     );
-
-    if (hasTabs) {
-      return DefaultTabController(
-        length: tabs!.length,
-        child: AppPageShell(
-          scrollable: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppPageHeader(
-                title: title,
-                subtitle: subtitle,
-                breadcrumbs: breadcrumbs,
-                actions: actions,
-              ),
-              if (summaryBanner != null) ...[
-                summaryBanner!,
-                const SizedBox(height: AppSpacing.md),
-              ],
-              TabBar(
-                tabs: tabs!,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Expanded(child: TabBarView(children: tabViews!)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return AppPageShell(scrollable: true, child: mainContent);
   }
 }

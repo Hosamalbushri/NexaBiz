@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Captures a barcode / QR string for sale line entry.
 ///
@@ -23,13 +24,14 @@ Future<String?> defaultSaleBarcodeCapture(BuildContext context) async {
           onSubmitted: (value) => Navigator.of(ctx).pop(value.trim()),
         ),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.cancel),
           ),
-          FilledButton(
+          AppButton(
+            label: l10n.confirm,
             onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: Text(l10n.confirm),
           ),
         ],
       );

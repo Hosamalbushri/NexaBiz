@@ -3,14 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction_line.dart';
@@ -404,10 +402,11 @@ class _CashBoxTransferFormPageState
     final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
 
     if (_loading || isCurrencyLoading) {
-      return Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
-        appBar: CustomAppBar(title: title, showBackButton: true),
-        body: AppLoading(message: l10n.rpLoading),
+      return AppFormPage(
+        title: title,
+        showBackButton: true,
+        isPageLoading: true,
+        body: const SizedBox.expand(),
       );
     }
     if (_loadError != null || baseCurrency == null) {
@@ -416,59 +415,42 @@ class _CashBoxTransferFormPageState
           (_loadError?.contains('currency') ?? false) ||
           (_loadError?.contains('Currency') ?? false);
 
-      return Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
-        appBar: CustomAppBar(title: title, showBackButton: true),
-        body: AppErrorState(
-          message: isMissingCurrency
-              ? (isArabic
-                  ? 'لم يتم إعداد العملة الرئيسية للنظام بعد. يرجى إضافة وتعيين العملة الرئيسية من دليل العملات لتشغيل التحويلات بين الصناديق.'
-                  : 'System base currency is not configured. Please set up the base currency from the currency catalog to enable cash box transfers.')
-              : (_loadError ?? l10n.somethingWentWrong),
-          retryLabel: isMissingCurrency
-              ? (isArabic ? 'إعداد العملة الرئيسية' : 'Set Up Base Currency')
-              : (isArabic ? 'إعادة المحاولة' : 'Retry'),
-          onRetry: () {
-            if (isMissingCurrency) {
-              showMissingCurrencyDialog(context);
-            } else {
-              setState(() {
-                _loading = true;
-                _loadError = null;
-              });
-              _loadPage();
-            }
-          },
-        ),
+      return AppFormPage(
+        title: title,
+        showBackButton: true,
+        errorText: isMissingCurrency
+            ? (isArabic
+                ? 'لم يتم إعداد العملة الرئيسية للنظام بعد. يرجى إضافة وتعيين العملة الرئيسية من دليل العملات لتشغيل التحويلات بين الصناديق.'
+                : 'System base currency is not configured. Please set up the base currency from the currency catalog to enable cash box transfers.')
+            : (_loadError ?? l10n.somethingWentWrong),
+        retryLabel: isMissingCurrency
+            ? (isArabic ? 'إعداد العملة الرئيسية' : 'Set Up Base Currency')
+            : (isArabic ? 'إعادة المحاولة' : 'Retry'),
+        onRetry: () {
+          if (isMissingCurrency) {
+            showMissingCurrencyDialog(context);
+          } else {
+            setState(() {
+              _loading = true;
+              _loadError = null;
+            });
+            _loadPage();
+          }
+        },
+        body: const SizedBox.expand(),
       );
     }
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
-        appBar: CustomAppBar(title: title, showBackButton: true),
-        bottomNavigationBar: Material(
-          color: scheme.surface,
-          elevation: 8,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                AppSpacing.sm,
-              ),
-              child: AppButton(
-                label: l10n.rpSave,
-                onPressed: _canSave ? _save : null,
-                isLoading: _saving,
-              ),
-            ),
-          ),
-        ),
-        body: ListView(
-          padding: AppConstants.pageInsets(context),
+      child: AppFormPage(
+        title: title,
+        showBackButton: true,
+        onSubmit: _canSave ? _save : null,
+        submitLabel: l10n.rpSave,
+        isLoading: _saving,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Material(
                   color: scheme.surface,

@@ -8,7 +8,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/di/app_providers.dart';
 import '../../core/modules/module_providers.dart';
 import '../../core/widgets/app_dialog.dart';
-import '../../core/widgets/custom_app_bar.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../notifications/presentation/providers/notifications_provider.dart';
@@ -17,7 +16,6 @@ import '../presentation/providers/dashboard_services_provider.dart';
 import '../presentation/providers/quick_nav_items_provider.dart';
 import '../presentation/providers/quick_nav_settings_provider.dart';
 import '../router/app_routes.dart';
-import '../sync/app_bar_sync_actions.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/presentation/widgets/company_selection_sheet.dart';
 import 'company/company_profile.dart';
@@ -39,17 +37,39 @@ class PlatformSettingsPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final unread = ref.watch(unreadNotificationsCountProvider);
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.settingsTitle,
-        centerTitle: true,
-        showBackButton: true,
-        leading: const AppBarSyncActions(),
-        showNotifications: true,
-        notificationCount: unread,
-        onNotifications: () => context.push(AppRoutes.notifications),
-      ),
-      body: const _PlatformSettingsBody(),
+    return AppSettingsPage(
+      title: l10n.settingsTitle,
+      showBackButton: true,
+      headerActions: [
+        IconButton(
+          icon: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(Icons.notifications_outlined),
+              if (unread > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 12,
+                      minHeight: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          onPressed: () => context.push(AppRoutes.notifications),
+        ),
+      ],
+      sections: const [
+        _PlatformSettingsBody(),
+      ],
     );
   }
 }
@@ -68,32 +88,15 @@ class _PlatformSettingsBody extends ConsumerWidget {
     final companyAsync = ref.watch(companyProfileProvider);
     final repository = ref.read(settingsRepositoryProvider);
     final quickNavSettings = ref.watch(quickNavSettingsProvider);
-    final pageInsets = AppConstants.pageInsets(context);
 
-    return AppContentConstraint(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(
-              left: pageInsets.left,
-              right: pageInsets.right,
-              top: pageInsets.top,
-              bottom: AppSpacing.sm,
-            ),
-            child: _CompanyHeaderCard(
-              profile: companyAsync.asData?.value,
-              onTap: () => context.push(AppRoutes.settingsSetup),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.only(
-                left: pageInsets.left,
-                right: pageInsets.right,
-                bottom: pageInsets.bottom,
-              ),
-              children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _CompanyHeaderCard(
+          profile: companyAsync.asData?.value,
+          onTap: () => context.push(AppRoutes.settingsSetup),
+        ),
+        const SizedBox(height: AppSpacing.sm),
                 SettingsExpandableSection(
                   icon: Icons.tune_rounded,
                   title: l10n.settingsGeneralSection,
@@ -388,11 +391,7 @@ class _PlatformSettingsBody extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xxl),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
+            );
   }
 
   Future<void> _saveTheme(

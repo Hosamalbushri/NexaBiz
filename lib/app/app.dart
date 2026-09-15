@@ -186,12 +186,12 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
       theme: AppTheme.shadcnLight(),
       darkTheme: AppTheme.shadcnDark(),
       materialTheme: switch (themeMode) {
-        ThemeMode.dark => AppTheme.dark(),
-        ThemeMode.light => AppTheme.light(),
+        ThemeMode.dark => AppTheme.materialDark(),
+        ThemeMode.light => AppTheme.materialLight(),
         ThemeMode.system =>
           MediaQuery.platformBrightnessOf(context) == Brightness.dark
-              ? AppTheme.dark()
-              : AppTheme.light(),
+              ? AppTheme.materialDark()
+              : AppTheme.materialLight(),
       },
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

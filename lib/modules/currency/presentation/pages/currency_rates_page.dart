@@ -379,13 +379,15 @@ class CurrencyRatesPage extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(
+            AppButton(
+              label: l10n.cancel,
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.cancel),
             ),
-            FilledButton(
+            AppButton(
+              label: l10n.accountingCurrencyRatesRemove,
+              variant: AppButtonVariant.destructive,
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.accountingCurrencyRatesRemove),
             ),
           ],
         );
@@ -553,16 +555,15 @@ class _CurrencyRateAddDialogState extends State<_CurrencyRateAddDialog> {
             children: [
               Text(widget.hint, style: theme.textTheme.bodySmall),
               const SizedBox(height: AppSpacing.md),
-              DropdownButtonFormField<AppCurrency>(
-                initialValue: _selected,
-                decoration: InputDecoration(labelText: widget.currencyLabel),
+              AppSelectField<AppCurrency>(
+                value: _selected,
+                label: widget.currencyLabel,
                 items: [
                   for (final currency in widget.currencies)
-                    DropdownMenuItem(
+                    AppSelectItem(
                       value: currency,
-                      child: Text(
-                        '${currency.code} — ${currency.localizedName(widget.isArabic)}',
-                      ),
+                      label:
+                          '${currency.code} — ${currency.localizedName(widget.isArabic)}',
                     ),
                 ],
                 onChanged: (value) {
@@ -590,11 +591,12 @@ class _CurrencyRateAddDialogState extends State<_CurrencyRateAddDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        AppButton(
+          label: widget.cancelLabel,
+          variant: AppButtonVariant.text,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(widget.cancelLabel),
         ),
-        FilledButton(onPressed: _submit, child: Text(widget.confirmLabel)),
+        AppButton(label: widget.confirmLabel, onPressed: _submit),
       ],
     );
   }
@@ -670,11 +672,12 @@ class _CurrencyRateEditDialogState extends State<_CurrencyRateEditDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        AppButton(
+          label: widget.cancelLabel,
+          variant: AppButtonVariant.text,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(widget.cancelLabel),
         ),
-        FilledButton(onPressed: _submit, child: Text(widget.confirmLabel)),
+        AppButton(label: widget.confirmLabel, onPressed: _submit),
       ],
     );
   }

@@ -564,34 +564,22 @@ class _ChangePinAccordionState extends ConsumerState<_ChangePinAccordion> {
                       Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                minimumSize: const Size.fromHeight(40),
-                              ),
+                            child: AppButton(
+                              label: l10n.cancel,
+                              variant: AppButtonVariant.outlined,
+                              expand: true,
                               onPressed: _busy ? null : _collapse,
-                              child: Text(l10n.cancel),
                             ),
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Expanded(
-                            child: FilledButton.icon(
-                              style: FilledButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                minimumSize: const Size.fromHeight(40),
-                              ),
+                            child: AppButton(
+                              label: l10n.confirm,
+                              icon: Icons.check_rounded,
+                              variant: AppButtonVariant.filled,
+                              expand: true,
+                              isLoading: _busy,
                               onPressed: _busy || !_expanded ? null : _submit,
-                              icon: _busy
-                                  ? SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: colorScheme.onPrimary,
-                                      ),
-                                    )
-                                  : const Icon(Icons.check_rounded, size: 18),
-                              label: Text(l10n.confirm),
                             ),
                           ),
                         ],
@@ -860,22 +848,14 @@ class _AppLockPinDialogScaffold extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: isDestructive
-                      ? FilledButton(
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            backgroundColor: colorScheme.error,
-                            foregroundColor: colorScheme.onError,
-                          ),
-                          onPressed: onConfirm,
-                          child: Text(confirmLabel),
-                        )
-                      : AppButton(
-                          label: confirmLabel,
-                          variant: AppButtonVariant.filled,
-                          expand: true,
-                          onPressed: onConfirm,
-                        ),
+                  child: AppButton(
+                    label: confirmLabel,
+                    variant: isDestructive
+                        ? AppButtonVariant.destructive
+                        : AppButtonVariant.filled,
+                    expand: true,
+                    onPressed: onConfirm,
+                  ),
                 ),
               ],
             ),

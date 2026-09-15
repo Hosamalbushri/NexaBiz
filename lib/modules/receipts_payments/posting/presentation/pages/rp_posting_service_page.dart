@@ -1471,54 +1471,19 @@ class _ActionDock extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: 5,
-                    child: FilledButton(
+                    child: AppButton(
+                      label: selectedLabel,
                       onPressed: canApplySelected ? onApplySelected : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: scheme.onSurface.withValues(
-                          alpha: 0.12,
-                        ),
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppRadius.control,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        selectedLabel,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
+                      variant: AppButtonVariant.filled,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     flex: 4,
-                    child: OutlinedButton(
+                    child: AppButton(
+                      label: allLabel,
                       onPressed: canApplyAll ? onApplyAll : null,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: accent,
-                        side: BorderSide(color: accent.withValues(alpha: 0.55)),
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppRadius.control,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        allLabel,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: accent,
-                        ),
-                      ),
+                      variant: AppButtonVariant.outlined,
                     ),
                   ),
                 ],

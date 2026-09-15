@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/setup/setup_core.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
@@ -20,38 +18,31 @@ class PurchasesMasterSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isAr = l10n.localeName == 'ar';
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: isAr
-            ? 'إعدادات وتهيئة المشتريات والموردين'
-            : 'Purchases Module Master Settings',
-        showBackButton: true,
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: [
-          // Hero Banner
-          _buildHeroHeader(theme, isAr),
-          const SizedBox(height: AppSpacing.md),
+    return AppSettingsPage(
+      title: isAr
+          ? 'إعدادات وتهيئة المشتريات والموردين'
+          : 'Purchases Module Master Settings',
+      showBackButton: true,
+      sections: [
+        // Hero Banner
+        _buildHeroHeader(theme, isAr),
+        const SizedBox(height: AppSpacing.md),
 
-          // Section 1: Package Setup & Account Bindings List Menu
-          SettingsGroupLabel(
-            isAr
-                ? 'التهيئة والربط المحاسبي للمشتريات'
-                : 'Purchases Account Bindings',
-          ),
-          const SettingsGroup(
-            children: [
-              PackageInitializationSettingsHub(packageId: 'purchases'),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+        // Section 1: Package Setup & Account Bindings List Menu
+        SettingsGroupLabel(
+          isAr
+              ? 'التهيئة والربط المحاسبي للمشتريات'
+              : 'Purchases Account Bindings',
+        ),
+        const SettingsGroup(
+          children: [
+            PackageInitializationSettingsHub(packageId: 'purchases'),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xl),
+      ],
     );
   }
 

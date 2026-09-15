@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Standardized text input field with minimum 48dp touch target and semantic labels.
 class AppTextField extends StatelessWidget {
@@ -117,29 +118,26 @@ class AppDropdownField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: label ?? hint,
-      enabled: enabled,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6.0),
-        child: DropdownButtonFormField<T>(
-          initialValue: value,
-          onChanged: enabled ? onChanged : null,
-          validator: validator,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hint,
-            errorText: errorText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 14.0,
-            ),
-          ),
-          items: items.map(itemBuilder).toList(),
-        ),
+    final dropdownItems = items.map((item) {
+      final menu = itemBuilder(item);
+      final childWidget = menu.child;
+      final labelStr = childWidget is Text ? (childWidget.data ?? '') : item.toString();
+      return AppSelectItem<T>(
+        value: item,
+        label: labelStr,
+      );
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: AppSelectField<T>(
+        value: value,
+        label: label,
+        helperText: hint,
+        errorText: errorText,
+        enabled: enabled,
+        items: dropdownItems,
+        onChanged: enabled ? onChanged : null,
       ),
     );
   }
@@ -165,15 +163,7 @@ class AppFormSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      elevation: 0,
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

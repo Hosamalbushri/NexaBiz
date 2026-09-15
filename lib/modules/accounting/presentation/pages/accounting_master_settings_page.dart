@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/currencies_manage_page.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/widgets/accounting_settings_panel.dart';
 import 'package:stock_count/core/setup/setup_core.dart';
@@ -31,19 +29,16 @@ class _AccountingMasterSettingsPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isAr = l10n.localeName == 'ar';
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: isAr
-            ? 'إعدادات وتهيئة النظام المحاسبي'
-            : 'Accounting Module Master Settings',
-        showBackButton: true,
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
+    return AppFormPage(
+      title: isAr
+          ? 'إعدادات وتهيئة النظام المحاسبي'
+          : 'Accounting Module Master Settings',
+      showBackButton: true,
+      showFormActions: false,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Hero Banner
           _buildHeroHeader(theme, isAr),

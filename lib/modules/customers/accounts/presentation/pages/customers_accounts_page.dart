@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/services/customer_account_link_port.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
 import 'package:stock_count/modules/customers/shared/presentation/pages/customers_routes.dart';
-import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Lists Chart of Accounts children under the customers parent group.
 ///
@@ -20,97 +18,40 @@ class CustomersAccountsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final parentAsync = ref.watch(customersParentAccountProvider);
     final accountsAsync = ref.watch(customerAccountsUnderParentProvider);
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.customersAccountsTitle,
-        showBackButton: true,
-        actions: [
-          IconButton(
-            tooltip: l10n.customersSettingsTitle,
-            onPressed: () => CustomersRoutes.pushParentAccountSettings(context),
-            icon: const Icon(Icons.account_tree_outlined),
-          ),
-        ],
-      ),
-      body: AppContentConstraint(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.pagePadding,
-                AppSpacing.md,
-                AppConstants.pagePadding,
-                AppSpacing.sm,
-              ),
-              child: parentAsync.when(
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => Text(
-                  l10n.customersParentAccountNotSet,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.error,
-                  ),
-                ),
-                data: (parent) {
-                  if (parent == null) {
-                    return Text(
-                      l10n.customersParentAccountNotSet,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
-                    );
-                  }
-                  return Text(
-                    l10n.customersAccountsUnderParent(parent.code, parent.name),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.35,
-                    ),
-                  );
-                },
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppConstants.pagePadding,
-                  0,
-                  AppConstants.pagePadding,
-                  AppConstants.pagePadding,
-                ),
-                child: accountsAsync.when(
-                  loading: () => const AppLoading(),
-                  error: (error, _) => AppErrorState(message: error.toString()),
-                  data: (accounts) {
-                    if (accounts.isEmpty) {
-                      return AppEmptyState(
-                        title: l10n.customersAccountsEmptyTitle,
-                        subtitle: l10n.customersAccountsEmptyMessage,
-                        icon: Icons.account_balance_outlined,
-                        actionLabel: l10n.customersListTitle,
-                        actionIcon: Icons.people_outline,
-                        onAction: () => CustomersRoutes.goList(context),
-                      );
-                    }
-                    return ListView.separated(
-                      itemCount: accounts.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) {
-                        return _AccountRow(account: accounts[index]);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
+    final accounts = accountsAsync.valueOrNull ?? const [];
+
+    return AppListPage<LinkedAccountRef>(
+      title: l10n.customersAccountsTitle,
+      headerActions: [
+        IconButton(
+          tooltip: l10n.customersSettingsTitle,
+          onPressed: () => CustomersRoutes.pushParentAccountSettings(context),
+          icon: const Icon(Icons.account_tree_outlined),
         ),
-      ),
+      ],
+      isLoading: accountsAsync.isLoading && !accountsAsync.hasValue,
+      errorText: accountsAsync.error?.toString(),
+      onRetry: () {
+        ref.invalidate(customersParentAccountProvider);
+        ref.invalidate(customerAccountsUnderParentProvider);
+      },
+      emptyTitle: l10n.customersAccountsEmptyTitle,
+      emptySubtitle: l10n.customersAccountsEmptyMessage,
+      emptyActionLabel: l10n.customersListTitle,
+      onEmptyAction: () => CustomersRoutes.goList(context),
+      items: accounts,
+      contentBuilder: (context, itemList) {
+        return ListView.separated(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: itemList.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 8.0),
+          itemBuilder: (context, index) {
+            return _AccountRow(account: itemList[index]);
+          },
+        );
+      },
     );
   }
 }

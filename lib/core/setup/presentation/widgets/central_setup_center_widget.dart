@@ -573,7 +573,7 @@ class _CentralSetupCenterWidgetState
         // Sidebar Navigation
         SizedBox(
           width: 260,
-          child: Card(
+          child: AppCard(
             margin: const EdgeInsets.all(AppSpacing.sm),
             child: ListView.separated(
               itemCount: setups.length,

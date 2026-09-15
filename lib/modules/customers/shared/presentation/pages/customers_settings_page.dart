@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
 import 'customers_routes.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
@@ -21,64 +19,58 @@ class CustomersSettingsPage extends ConsumerWidget {
     final parentAsync = ref.watch(customersParentAccountProvider);
     final autoLinkAsync = ref.watch(customersAutoLinkAccountProvider);
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.customersSettingsTitle,
-        showBackButton: true,
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: [
-          Text(
-            l10n.customersSettingsSubtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
+    return AppSettingsPage(
+      title: l10n.customersSettingsTitle,
+      showBackButton: true,
+      sections: [
+        Text(
+          l10n.customersSettingsSubtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.4,
           ),
-          const SizedBox(height: AppSpacing.lg),
-          _SettingsNavTile(
-            icon: Icons.account_tree_outlined,
-            title: l10n.customersParentAccountSectionTitle,
-            subtitle: parentAsync.when(
-              loading: () => l10n.loading,
-              error: (_, _) => l10n.customersParentAccountNotSet,
-              data: (parent) {
-                if (parent == null) {
-                  return l10n.customersParentAccountNotSet;
-                }
-                return l10n.customersParentAccountCurrent(
-                  parent.code,
-                  parent.name,
-                );
-              },
-            ),
-            onTap: () => CustomersRoutes.pushParentAccountSettings(context),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _SettingsSwitchTile(
-            icon: Icons.link_outlined,
-            title: l10n.customersAutoLinkSectionTitle,
-            subtitle: l10n.customersAutoLinkSectionSubtitle,
-            value: autoLinkAsync.valueOrNull ?? true,
-            enabled: !autoLinkAsync.isLoading,
-            onChanged: (value) {
-              ref
-                  .read(customersAutoLinkAccountProvider.notifier)
-                  .setEnabled(value);
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _SettingsNavTile(
+          icon: Icons.account_tree_outlined,
+          title: l10n.customersParentAccountSectionTitle,
+          subtitle: parentAsync.when(
+            loading: () => l10n.loading,
+            error: (_, _) => l10n.customersParentAccountNotSet,
+            data: (parent) {
+              if (parent == null) {
+                return l10n.customersParentAccountNotSet;
+              }
+              return l10n.customersParentAccountCurrent(
+                parent.code,
+                parent.name,
+              );
             },
           ),
-          const SizedBox(height: AppSpacing.md),
-          _SettingsActionTile(
-            icon: Icons.sync_alt_outlined,
-            title: l10n.customersLinkMissingAccountsTitle,
-            subtitle: l10n.customersLinkMissingAccountsSubtitle,
-            actionLabel: l10n.customersLinkMissingAccountsAction,
-            onPressed: () => _linkMissingAccounts(context, ref),
-          ),
-        ],
-      ),
+          onTap: () => CustomersRoutes.pushParentAccountSettings(context),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SettingsSwitchTile(
+          icon: Icons.link_outlined,
+          title: l10n.customersAutoLinkSectionTitle,
+          subtitle: l10n.customersAutoLinkSectionSubtitle,
+          value: autoLinkAsync.valueOrNull ?? true,
+          enabled: !autoLinkAsync.isLoading,
+          onChanged: (value) {
+            ref
+                .read(customersAutoLinkAccountProvider.notifier)
+                .setEnabled(value);
+          },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _SettingsActionTile(
+          icon: Icons.sync_alt_outlined,
+          title: l10n.customersLinkMissingAccountsTitle,
+          subtitle: l10n.customersLinkMissingAccountsSubtitle,
+          actionLabel: l10n.customersLinkMissingAccountsAction,
+          onPressed: () => _linkMissingAccounts(context, ref),
+        ),
+      ],
     );
   }
 
@@ -337,15 +329,12 @@ class CustomersParentAccountSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.customersParentAccountSectionTitle,
-        showBackButton: true,
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: const [CustomersParentAccountSettingsBody()],
-      ),
+    return AppSettingsPage(
+      title: l10n.customersParentAccountSectionTitle,
+      showBackButton: true,
+      sections: const [
+        CustomersParentAccountSettingsBody(),
+      ],
     );
   }
 }
@@ -484,26 +473,24 @@ class _CustomersParentAccountSettingsBodyState
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
+              child: AppButton(
+                label: l10n.customersParentAccountUseDefault,
                 onPressed: _saving ? null : _useDefault,
-                child: Text(l10n.customersParentAccountUseDefault),
+                variant: AppButtonVariant.outlined,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: FilledButton(
+              child: AppButton(
+                label: l10n.confirm,
                 onPressed: _saving ? null : _save,
-                child: _saving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.confirm),
+                isLoading: _saving,
+                variant: AppButtonVariant.filled,
               ),
             ),
           ],
         ),
+
       ],
     );
   }

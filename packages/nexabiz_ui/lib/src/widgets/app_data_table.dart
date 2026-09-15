@@ -178,6 +178,14 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                           : widget.minWidth,
                     ),
                     child: DataTable(
+                      headingRowHeight: 44.0,
+                      dataRowMinHeight: 40.0,
+                      dataRowMaxHeight: 52.0,
+                      columnSpacing: AppSpacing.lg,
+                      horizontalMargin: AppSpacing.md,
+                      headingRowColor: WidgetStateProperty.all(
+                        Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                      ),
                       columns: widget.columns,
                       rows: widget.items.map((item) {
                         final row = widget.rowBuilder(item);

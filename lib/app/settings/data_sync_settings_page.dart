@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
-import '../../core/widgets/custom_app_bar.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
-import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../sync/sync_enabled_provider.dart';
 import '../sync/sync_session_state.dart';
@@ -37,64 +36,48 @@ class DataSyncSettingsPage extends ConsumerWidget {
         (syncSession.phase == SyncSessionPhase.enabledAuthenticated ||
             auth.isRemoteSession);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.settingsDataSection,
-        centerTitle: true,
-        showBackButton: true,
-        actions: [
-          if (isServerAuthenticated)
-            IconButton(
-              icon: const Icon(Icons.manage_search_outlined),
-              tooltip: l10n.syncOutboxInspectorTooltip,
-              onPressed: () => SyncInspectorSheet.show(context),
-            ),
-        ],
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(
-          context,
-        ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
-        children: [
-          Text(
-            l10n.settingsDataSectionSubtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              height: 1.35,
-            ),
+    return AppSettingsPage(
+      title: l10n.settingsDataSection,
+      subtitle: l10n.settingsDataSectionSubtitle,
+      showBackButton: true,
+      headerActions: [
+        if (isServerAuthenticated)
+          IconButton(
+            icon: const Icon(Icons.manage_search_outlined),
+            tooltip: l10n.syncOutboxInspectorTooltip,
+            onPressed: () => SyncInspectorSheet.show(context),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          CapabilityGate(
-            capability: EntitlementCapability.sync,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (isServerAuthenticated)
-                  SettingsGroup(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    children: [
-                      SettingsTile(
-                        icon: syncOverview.isOnline
-                            ? Icons.wifi_rounded
-                            : Icons.wifi_off_rounded,
-                        iconColor: syncOverview.isOnline
-                            ? colorScheme.primary
-                            : colorScheme.outline,
-                        title: l10n.syncConnectionLabel,
-                        subtitle: syncOverview.isOnline
-                            ? l10n.syncConnectionOnline
-                            : l10n.syncConnectionOffline,
-                        trailing: _SyncPhaseChip(overview: syncOverview),
-                      ),
-                    ],
-                  ),
-                const SyncSettingsSection(embedded: true, compactHeader: true),
-              ],
-            ),
+      ],
+      sections: [
+        CapabilityGate(
+          capability: EntitlementCapability.sync,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isServerAuthenticated)
+                SettingsGroup(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  children: [
+                    SettingsTile(
+                      icon: syncOverview.isOnline
+                          ? Icons.wifi_rounded
+                          : Icons.wifi_off_rounded,
+                      iconColor: syncOverview.isOnline
+                          ? colorScheme.primary
+                          : colorScheme.outline,
+                      title: l10n.syncConnectionLabel,
+                      subtitle: syncOverview.isOnline
+                          ? l10n.syncConnectionOnline
+                          : l10n.syncConnectionOffline,
+                      trailing: _SyncPhaseChip(overview: syncOverview),
+                    ),
+                  ],
+                ),
+              const SyncSettingsSection(embedded: true, compactHeader: true),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

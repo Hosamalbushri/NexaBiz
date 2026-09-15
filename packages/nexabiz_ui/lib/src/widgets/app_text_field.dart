@@ -3,13 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import 'app_field_shell.dart';
 
-/// Design-system text field primitive for NexaBiz ERP.
-///
-/// Mirroring the exact visual styling of [AppSelectField] (Warehouse Cost Valuation Field):
-/// - Primary-tinted 20px prefix icons
-/// - `FontWeight.w600` input text styling
-/// - Matching hint text color & typography
-/// - Seamless [AppFieldShell] surface container integration
+/// Design-system text field primitive for NexaBiz ERP built natively on [shadcn.TextField].
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
@@ -43,7 +37,7 @@ class AppTextField extends StatelessWidget {
   final bool required;
   final String? errorText;
   final String? helperText;
-  final IconData? prefixIcon;
+  final dynamic prefixIcon;
   final Widget? suffixIcon;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
@@ -60,91 +54,58 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = shadcn.Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final hasShadcnTheme =
-        context.findAncestorWidgetOfExactType<shadcn.ComponentTheme>() != null ||
-            context.findAncestorWidgetOfExactType<shadcn.Theme>() != null;
+    final hintTextStyle = theme.typography.small.copyWith(
+      color: colorScheme.mutedForeground,
+    );
 
-    final bodyMediumStyle = theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: enabled
-              ? colorScheme.onSurface
-              : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-        ) ??
-        TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: enabled
-              ? colorScheme.onSurface
-              : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-        );
+    final childInput = shadcn.TextField(
+      controller: controller,
+      focusNode: focusNode,
+      enabled: enabled,
+      readOnly: readOnly,
+      autofocus: autofocus,
+      obscureText: obscureText,
+      maxLines: maxLines,
+      minLines: minLines,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      inputFormatters: inputFormatters,
+      onChanged: onChanged != null
+          ? (value) {
+              final binding = WidgetsBinding.instance;
+              if (binding.buildOwner?.debugBuilding ?? false) {
+                binding.addPostFrameCallback((_) => onChanged!(value));
+              } else {
+                onChanged!(value);
+              }
+            }
+          : null,
+      onSubmitted: onSubmitted != null
+          ? (value) {
+              final binding = WidgetsBinding.instance;
+              if (binding.buildOwner?.debugBuilding ?? false) {
+                binding.addPostFrameCallback((_) => onSubmitted!(value));
+              } else {
+                onSubmitted!(value);
+              }
+            }
+          : null,
+      placeholder: hint != null ? Text(hint!, style: hintTextStyle) : null,
+      border: const Border(),
+    );
 
-    final hintTextStyle = theme.textTheme.bodyMedium?.copyWith(
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-        ) ??
-        TextStyle(
-          fontSize: 14,
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-        );
-
-    final childInput = hasShadcnTheme
-        ? shadcn.TextField(
-            controller: controller,
-            focusNode: focusNode,
-            enabled: enabled,
-            readOnly: readOnly,
-            autofocus: autofocus,
-            obscureText: obscureText,
-            maxLines: maxLines,
-            minLines: minLines,
-            keyboardType: keyboardType,
-            textInputAction: textInputAction,
-            inputFormatters: inputFormatters,
-            onChanged: onChanged != null ? (value) => onChanged!(value) : null,
-            onSubmitted:
-                onSubmitted != null ? (value) => onSubmitted!(value) : null,
-            placeholder: hint != null ? Text(hint!, style: hintTextStyle) : null,
-            border: const Border(),
-          )
-        : TextField(
-            controller: controller,
-            focusNode: focusNode,
-            enabled: enabled,
-            readOnly: readOnly,
-            autofocus: autofocus,
-            obscureText: obscureText,
-            maxLines: maxLines,
-            minLines: minLines,
-            keyboardType: keyboardType,
-            textInputAction: textInputAction,
-            inputFormatters: inputFormatters,
-            onChanged: onChanged,
-            onSubmitted: onSubmitted,
-            style: bodyMediumStyle,
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              disabledBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              hintText: hint,
-              hintStyle: hintTextStyle,
-            ),
-          );
-
-    final prefixWidget = prefixIcon == null
-        ? null
-        : Icon(
-            prefixIcon,
-            size: 20,
+    final prefixWidget = prefixIcon is IconData
+        ? Icon(
+            prefixIcon as IconData,
+            size: 18,
             color: enabled
                 ? colorScheme.primary
-                : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          );
+                : colorScheme.mutedForeground,
+          )
+        : prefixIcon as Widget?;
 
     return AppFieldShell(
       label: label,

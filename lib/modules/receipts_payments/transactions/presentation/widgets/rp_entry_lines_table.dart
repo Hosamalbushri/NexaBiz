@@ -474,7 +474,7 @@ class _FilledLineRowState extends State<_FilledLineRow> {
               SizedBox(
                 width: _Cols.account,
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 12, right: 2),
+                  padding: const EdgeInsetsDirectional.only(top: 12, end: 2),
                   child: Text(
                     account.name,
                     maxLines: 2,

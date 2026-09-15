@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'customers_settings_page.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
@@ -27,55 +25,48 @@ class _CustomersMasterSettingsPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isAr = l10n.localeName == 'ar';
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: isAr
-            ? 'إعدادات وتهيئة موديول العملاء'
-            : 'Customers Module Master Settings',
-        showBackButton: true,
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: [
-          // Hero Banner
-          _buildHeroHeader(theme, isAr),
-          const SizedBox(height: AppSpacing.md),
+    return AppSettingsPage(
+      title: isAr
+          ? 'إعدادات وتهيئة موديول العملاء'
+          : 'Customers Module Master Settings',
+      showBackButton: true,
+      sections: [
+        // Hero Banner
+        _buildHeroHeader(theme, isAr),
+        const SizedBox(height: AppSpacing.md),
 
-          // Section 1: Account Linking & Bulk Actions Menu List
-          SettingsGroupLabel(
-            isAr ? 'ربط وتوجيه الحسابات وتصحيحها' : 'Account Linking & Repair',
-          ),
-          const SettingsGroup(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.xs),
-                child: CustomersSettingsPageBody(),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
+        // Section 1: Account Linking & Bulk Actions Menu List
+        SettingsGroupLabel(
+          isAr ? 'ربط وتوجيه الحسابات وتصحيحها' : 'Account Linking & Repair',
+        ),
+        const SettingsGroup(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.xs),
+              child: CustomersSettingsPageBody(),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
 
-          // Section 2: Parent CoA Group Settings Menu List
-          SettingsGroupLabel(
-            isAr
-                ? 'دليل الحساب الأب وسياسات الائتمان'
-                : 'Parent CoA Account Group',
-          ),
-          const SettingsGroup(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.sm),
-                child: CustomersParentAccountSettingsBody(),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+        // Section 2: Parent CoA Group Settings Menu List
+        SettingsGroupLabel(
+          isAr
+              ? 'دليل الحساب الأب وسياسات الائتمان'
+              : 'Parent CoA Account Group',
+        ),
+        const SettingsGroup(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.sm),
+              child: CustomersParentAccountSettingsBody(),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xl),
+      ],
     );
   }
 

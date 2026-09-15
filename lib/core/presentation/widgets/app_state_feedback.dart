@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Standardized loading state indicator.
 class AppLoadingState extends StatelessWidget {
@@ -112,10 +113,10 @@ class AppErrorState extends StatelessWidget {
                     minHeight: 48,
                     minWidth: 120,
                   ),
-                  child: ElevatedButton.icon(
+                  child: AppButton(
+                    label: retryLabel,
+                    icon: Icons.refresh_rounded,
                     onPressed: onRetry,
-                    icon: const Icon(Icons.refresh_rounded, size: 20),
-                    label: Text(retryLabel),
                   ),
                 ),
               ],
@@ -193,9 +194,9 @@ class AppEmptyState extends StatelessWidget {
                     minHeight: 48,
                     minWidth: 140,
                   ),
-                  child: ElevatedButton(
+                  child: AppButton(
+                    label: actionLabel!,
                     onPressed: onAction,
-                    child: Text(actionLabel!),
                   ),
                 ),
               ],

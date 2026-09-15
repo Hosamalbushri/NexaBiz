@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
@@ -44,16 +43,16 @@ class ReportsHomePage extends ConsumerWidget {
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(title: l10n.moduleReports, showBackButton: true),
       body: (!isReportsModuleActive || modulesWithReports.isEmpty)
-          ? Center(
-              child: AppEmptyState(
+          ? AppDashboardPage(
+              content: AppEmptyState(
                 icon: Icons.assessment_outlined,
                 title: l10n.moduleReports,
                 subtitle: l10n.platformReportsServiceComingSoon,
               ),
             )
-          : AppContentConstraint(
-              child: ListView(
-                padding: AppConstants.pageInsets(context),
+          : AppDashboardPage(
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AppModuleHubHeader(
                     title: l10n.servicesTitle,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Data class representing a saved filter preset for a report.
 class ReportFilterPreset {
@@ -164,17 +165,18 @@ class _AppReportPresetBarState extends State<AppReportPresetBar> {
           ),
         ),
         actions: [
-          TextButton(
+          AppButton(
+            label: 'إلغاء',
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('إلغاء'),
           ),
-          FilledButton(
+          AppButton(
+            label: 'حفظ',
             onPressed: () {
               final name = textController.text;
               Navigator.of(ctx).pop();
               _saveCurrentAsPreset(name);
             },
-            child: const Text('حفظ'),
           ),
         ],
       ),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/auth/presentation/widgets/permission_gate_core.dart';
@@ -37,11 +36,11 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
           ),
         ],
       ),
-      body: AppContentConstraint(
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
+      body: AppDashboardPage(
+        statsGrid: const AppMissingCurrencyGuardBanner(),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const AppMissingCurrencyGuardBanner(),
             AppModuleHubHeader(
               title: l10n.servicesTitle,
               subtitle: l10n.moduleReceiptsPaymentsDescription,

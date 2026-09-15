@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
@@ -35,20 +34,17 @@ class ServiceLauncherPage extends ConsumerWidget {
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
       ),
-      body: SingleChildScrollView(
-        padding: AppConstants.pageInsets(context),
-        child: AppContentConstraint(
-          child: ServiceLauncher(
-            title: l10n.servicesTitle,
-            subtitle: l10n.servicesSubtitle,
-            modules: modules,
-            onModuleSelected: (module) {
-              if (!module.isEnabled) {
-                return;
-              }
-              context.push(module.rootRoute);
-            },
-          ),
+      body: AppDashboardPage(
+        content: ServiceLauncher(
+          title: l10n.servicesTitle,
+          subtitle: l10n.servicesSubtitle,
+          modules: modules,
+          onModuleSelected: (module) {
+            if (!module.isEnabled) {
+              return;
+            }
+            context.push(module.rootRoute);
+          },
         ),
       ),
     );

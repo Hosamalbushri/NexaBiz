@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import '../providers/auth_providers.dart';
 import '../widgets/company_details_sheet.dart';
@@ -26,9 +27,9 @@ class CompanySelectionScreen extends ConsumerWidget {
             children: [
               const Text('جلسة غير صالحة'),
               const SizedBox(height: 16),
-              ElevatedButton(
+              AppButton(
+                label: 'تسجيل الدخول',
                 onPressed: () => context.go(AppRoutes.login),
-                child: const Text('تسجيل الدخول'),
               ),
             ],
           ),
@@ -79,17 +80,7 @@ class CompanySelectionScreen extends ConsumerWidget {
                           final company = companies[index];
                           final isSelected =
                               company.id == session.currentCompanyId;
-                          return Card(
-                            elevation: isSelected ? 4 : 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: isSelected
-                                  ? BorderSide(
-                                      color: Theme.of(context).primaryColor,
-                                      width: 2,
-                                    )
-                                  : BorderSide.none,
-                            ),
+                          return AppCard(
                             child: ListTile(
                               leading: CircleAvatar(
                                 child: Text(
@@ -121,7 +112,8 @@ class CompanySelectionScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  ElevatedButton(
+                                  AppButton(
+                                    label: isSelected ? 'دخول' : 'تغيير وتأكيد',
                                     onPressed: () async {
                                       if (isSelected) {
                                         if (context.mounted &&
@@ -144,9 +136,6 @@ class CompanySelectionScreen extends ConsumerWidget {
                                         context.pop();
                                       }
                                     },
-                                    child: Text(
-                                      isSelected ? 'دخول' : 'تغيير وتأكيد',
-                                    ),
                                   ),
                                 ],
                               ),
@@ -162,3 +151,4 @@ class CompanySelectionScreen extends ConsumerWidget {
     );
   }
 }
+

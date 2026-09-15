@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/app_routes.dart';
-import '../../core/widgets/custom_app_bar.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/app_lock/presentation/widgets/app_lock_settings_section.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
-import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_spacing.dart';
 import 'widgets/settings_chrome.dart';
@@ -174,34 +172,16 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                   ],
                 ),
                 actions: [
-                  TextButton(
+                  AppButton(
+                    label: l10n.authBiometricPasswordDialogSkip,
+                    variant: AppButtonVariant.text,
                     onPressed: () => Navigator.pop(ctx, null),
-                    child: Text(
-                      l10n.authBiometricPasswordDialogSkip,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                        fontSize: 12,
-                      ),
-                    ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                  AppButton(
+                    label: l10n.authBiometricPasswordDialogConfirm,
+                    variant: AppButtonVariant.filled,
                     onPressed: () =>
                         Navigator.pop(ctx, pwdController.text.trim()),
-                    child: Text(
-                      l10n.authBiometricPasswordDialogConfirm,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
                   ),
                 ],
               );
@@ -263,74 +243,65 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
     final colorScheme = theme.colorScheme;
     final lock = ref.watch(appLockControllerProvider);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.authSecuritySectionTitle,
-        centerTitle: false,
-        showBackButton: true,
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(
-          context,
-        ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
-        children: [
-          // Section 1: Authentication & Password Security
-          SettingsGroupLabel(l10n.authSecuritySectionTitle),
-          const SizedBox(height: AppSpacing.xs),
-          SettingsGroup(
-            children: [
-              SettingsTile(
-                icon: Icons.lock_reset_rounded,
-                title: l10n.authChangePasswordTileTitle,
-                subtitle: l10n.authChangePasswordTileSubtitle,
-                showChevron: true,
-                onTap: () => context.push(AppRoutes.changePassword),
-              ),
-              if (lock.biometricAvailable) ...[
-                SettingsTile(
-                  icon: Icons.fingerprint_rounded,
-                  title: l10n.authBiometricsSettingsTitle,
-                  subtitle: l10n.authBiometricsSettingsSubtitle,
-                  trailing: Switch.adaptive(
-                    value: _localBiometricsEnabled,
-                    onChanged: (val) =>
-                        _toggleBiometrics(val, AuthenticationMode.local),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // Section 2: App Lock / PIN Security
-          SettingsGroupLabel(l10n.appLockSettingsSection),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            lock.enabled
-                ? l10n.appLockSettingsEnabledHint
-                : l10n.appLockSettingsDisabledHint,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              height: 1.35,
+    return AppSettingsPage(
+      title: l10n.authSecuritySectionTitle,
+      showBackButton: true,
+      sections: [
+        // Section 1: Authentication & Password Security
+        SettingsGroupLabel(l10n.authSecuritySectionTitle),
+        const SizedBox(height: AppSpacing.xs),
+        SettingsGroup(
+          children: [
+            SettingsTile(
+              icon: Icons.lock_reset_rounded,
+              title: l10n.authChangePasswordTileTitle,
+              subtitle: l10n.authChangePasswordTileSubtitle,
+              showChevron: true,
+              onTap: () => context.push(AppRoutes.changePassword),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          SettingsGroup(
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.sm,
-                  AppSpacing.xs,
-                  AppSpacing.sm,
-                  AppSpacing.sm,
+            if (lock.biometricAvailable) ...[
+              SettingsTile(
+                icon: Icons.fingerprint_rounded,
+                title: l10n.authBiometricsSettingsTitle,
+                subtitle: l10n.authBiometricsSettingsSubtitle,
+                trailing: Switch.adaptive(
+                  value: _localBiometricsEnabled,
+                  onChanged: (val) =>
+                      _toggleBiometrics(val, AuthenticationMode.local),
                 ),
-                child: AppLockSettingsSection(embedded: true),
               ),
             ],
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+
+        // Section 2: App Lock / PIN Security
+        SettingsGroupLabel(l10n.appLockSettingsSection),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          lock.enabled
+              ? l10n.appLockSettingsEnabledHint
+              : l10n.appLockSettingsDisabledHint,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.35,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        SettingsGroup(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.sm,
+                AppSpacing.xs,
+                AppSpacing.sm,
+                AppSpacing.sm,
+              ),
+              child: AppLockSettingsSection(embedded: true),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import '../../import_engine.dart';
 
@@ -13,12 +14,12 @@ class ImportJobDetailsPage extends StatelessWidget {
     final theme = Theme.of(context);
     final profileId = job.profile?.profileId ?? 'generic';
 
-    return Scaffold(
-      appBar: AppBar(title: Text('Job Details: ${job.jobId}')),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
+    return AppDetailsPage(
+      title: 'Job Details: ${job.jobId}',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Card(
+          AppCard(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -42,7 +43,7 @@ class ImportJobDetailsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16.0),
-          Card(
+          AppCard(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -68,8 +69,7 @@ class ImportJobDetailsPage extends StatelessWidget {
           ),
           if (job.errorSummary.isNotEmpty) ...[
             const SizedBox(height: 16.0),
-            Card(
-              color: theme.colorScheme.errorContainer,
+            AppCard(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(

@@ -120,49 +120,32 @@ class _PageSizeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final safeValue = options.contains(pageSize) ? pageSize : options.first;
 
-    return Tooltip(
-      message: tooltip,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<int>(
-            value: safeValue,
-            isDense: true,
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.sm,
-              end: AppSpacing.xs,
-            ),
-            icon: Icon(
-              Icons.unfold_more_rounded,
-              size: 18,
-              color: colorScheme.onSurfaceVariant,
-            ),
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-            items: [
-              for (final size in options)
-                DropdownMenuItem<int>(value: size, child: Text('$size')),
-            ],
-            onChanged: (value) {
-              if (value == null || value == pageSize) {
-                return;
-              }
+    return shadcn.Tooltip(
+      tooltip: (context) => Text(tooltip),
+      child: SizedBox(
+        height: 32,
+        child: shadcn.Select<int>(
+          value: safeValue,
+          onChanged: (value) {
+            if (value != null && value != pageSize) {
               onChanged(value);
+            }
+          },
+          itemBuilder: (context, item) => Text('$item'),
+          popup: shadcn.SelectPopup.builder(
+            builder: (context, searchQuery) {
+              return shadcn.SelectItemList(
+                children: options.map((size) {
+                  return shadcn.SelectItemButton<int>(
+                    value: size,
+                    child: Text('$size'),
+                  );
+                }).toList(),
+              );
             },
-          ),
+          ).asBuilder,
         ),
       ),
     );

@@ -7,6 +7,7 @@ import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../domain/entities/auth_user.dart';
 import '../providers/auth_providers.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Modal bottom sheet to view detailed company profile and ownership data.
 class CompanyDetailsSheet extends ConsumerStatefulWidget {
@@ -346,15 +347,9 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-            ),
+          AppButton(
+            label: 'إغلاق التفاصيل',
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('إغلاق التفاصيل'),
           ),
         ],
       ),

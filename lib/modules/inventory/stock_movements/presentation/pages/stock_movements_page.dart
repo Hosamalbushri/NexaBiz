@@ -95,9 +95,9 @@ class _StockMovementsPageState extends ConsumerState<StockMovementsPage>
         body: TabBarView(
           controller: _tabController,
           children: const [
-            StockReceiptsListPage(embedInTab: true),
-            StockIssuesListPage(embedInTab: true),
-            StockTransfersListPage(embedInTab: true),
+            StockReceiptsListPage(),
+            StockIssuesListPage(),
+            StockTransfersListPage(),
           ],
         ),
       );

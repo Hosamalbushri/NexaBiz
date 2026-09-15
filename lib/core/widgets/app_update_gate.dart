@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Data model representing remote app version policies.
 class AppUpdateInfo {
@@ -178,10 +179,10 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
                   ),
                 ],
                 const SizedBox(height: 32),
-                ElevatedButton.icon(
+                AppButton(
+                  label: 'Update Now',
+                  icon: Icons.download,
                   onPressed: () => _triggerOpenStore(info.storeUrl),
-                  icon: const Icon(Icons.download),
-                  label: const Text('Update Now'),
                 ),
               ],
             ),
@@ -234,21 +235,15 @@ class _AppUpdateGateState extends State<AppUpdateGate> {
                         ],
                       ),
                     ),
-                    TextButton(
+                    AppButton(
+                      label: 'Later',
+                      variant: AppButtonVariant.text,
                       onPressed: () =>
                           setState(() => _dismissedOptional = true),
-                      child: Text(
-                        'Later',
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onInverseSurface.withValues(alpha: 0.7),
-                        ),
-                      ),
                     ),
-                    FilledButton(
+                    AppButton(
+                      label: 'Update',
                       onPressed: () => _triggerOpenStore(info.storeUrl),
-                      child: const Text('Update'),
                     ),
                   ],
                 ),

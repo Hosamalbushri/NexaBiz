@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import 'app_field_shell.dart';
 
 /// Item definition for [AppSelectField].
@@ -7,10 +8,10 @@ class AppSelectItem<T> {
 
   final T value;
   final String label;
-  final IconData? icon;
+  final Widget? icon;
 }
 
-/// Canonical dropdown selection field primitive for NexaBiz ERP.
+/// Canonical dropdown selection field primitive for NexaBiz ERP built natively on [shadcn.Select].
 class AppSelectField<T> extends StatelessWidget {
   const AppSelectField({
     super.key,
@@ -38,13 +39,63 @@ class AppSelectField<T> extends StatelessWidget {
   final bool readOnly;
   final String? errorText;
   final String? helperText;
-  final IconData? prefixIcon;
+  final dynamic prefixIcon;
   final AppFieldDensity density;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final theme = shadcn.Theme.of(context);
+
+    final prefixWidget = prefixIcon is IconData
+        ? Icon(
+            prefixIcon as IconData,
+            size: 18,
+            color: enabled
+                ? theme.colorScheme.primary
+                : theme.colorScheme.mutedForeground,
+          )
+        : prefixIcon as Widget?;
+
+    final childSelect = shadcn.Select<T>(
+      value: value,
+      enabled: enabled && !readOnly,
+      onChanged: (val) => onChanged?.call(val),
+      placeholder: Text(
+        hint,
+        style: theme.typography.small.copyWith(
+          color: theme.colorScheme.mutedForeground,
+        ),
+      ),
+      itemBuilder: (context, item) {
+        for (final element in items) {
+          if (element.value == item) {
+            return Text(element.label);
+          }
+        }
+        return Text(item.toString());
+      },
+      popup: shadcn.SelectPopup.builder(
+        builder: (context, searchQuery) {
+          return shadcn.SelectItemList(
+            children: items.map((item) {
+              return shadcn.SelectItemButton<T>(
+                value: item.value,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (item.icon != null) ...[
+                      item.icon!,
+                      const SizedBox(width: 8),
+                    ],
+                    Text(item.label),
+                  ],
+                ),
+              );
+            }).toList(),
+          );
+        },
+      ).asBuilder,
+    );
 
     return AppFieldShell(
       label: label,
@@ -54,49 +105,8 @@ class AppSelectField<T> extends StatelessWidget {
       density: density,
       enabled: enabled,
       readOnly: readOnly,
-      prefix: prefixIcon == null
-          ? null
-          : Icon(prefixIcon, size: 20, color: scheme.primary),
-      suffix: Icon(
-        Icons.keyboard_arrow_down_rounded,
-        size: 22,
-        color: scheme.onSurfaceVariant,
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          hint: Text(
-            hint,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-          ),
-          isExpanded: true,
-          isDense: true,
-          icon: const SizedBox.shrink(),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: scheme.onSurface,
-          ),
-          onChanged: enabled && !readOnly ? onChanged : null,
-          items: items.map((item) {
-            return DropdownMenuItem<T>(
-              value: item.value,
-              child: Row(
-                children: [
-                  if (item.icon != null) ...[
-                    Icon(item.icon, size: 18, color: scheme.primary),
-                    const SizedBox(width: 8),
-                  ],
-                  Expanded(
-                    child: Text(item.label, overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+      prefix: prefixWidget,
+      child: childSelect,
     );
   }
 }

@@ -22,28 +22,20 @@ class CustomerDetailsPage extends ConsumerWidget {
     final async = ref.watch(customerByIdProvider(customerId));
 
     return async.when(
-      loading: () => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.customersDetailsTitle,
-          showBackButton: true,
-        ),
-        body: const AppLoading(),
+      loading: () => AppDetailsPage(
+        title: l10n.customersDetailsTitle,
+        isLoading: true,
       ),
-      error: (error, _) => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.customersDetailsTitle,
-          showBackButton: true,
-        ),
-        body: AppErrorState(message: error.toString()),
+      error: (error, _) => AppDetailsPage(
+        title: l10n.customersDetailsTitle,
+        error: error.toString(),
+        onRetry: () => ref.invalidate(customerByIdProvider(customerId)),
       ),
       data: (customer) {
         if (customer == null) {
-          return Scaffold(
-            appBar: CustomAppBar(
-              title: l10n.customersDetailsTitle,
-              showBackButton: true,
-            ),
-            body: AppEmptyState(
+          return AppDetailsPage(
+            title: l10n.customersDetailsTitle,
+            emptyState: AppEmptyState(
               title: l10n.emptyStateTitle,
               icon: Icons.person_outline,
             ),
@@ -52,7 +44,7 @@ class CustomerDetailsPage extends ConsumerWidget {
 
         final accountId = customer.accountId;
 
-        return AppDetailPagePattern(
+        return AppDetailsPage(
           title: customer.name,
           actions: [
             PermissionGate(

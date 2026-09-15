@@ -4,10 +4,11 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 /// Semantic color tokens for NexaBiz ERP System.
 ///
 /// Supports Light and Dark modes with semantic role names rather than color values.
+/// Fully integrated with the canonical shadcn_flutter theme system.
 class AppColors {
   const AppColors._();
 
-  // Brand Palette
+  // Brand Palette Tokens
   static const Color primaryBlue = Color(0xFF1565C0);
   static const Color secondaryTeal = Color(0xFF00897B);
   static const Color tertiaryIndigo = Color(0xFF5C6BC0);
@@ -26,7 +27,7 @@ class AppColors {
   static const Color mutedTextLight = Color(0xFF64748B);
   static const Color mutedTextDark = Color(0xFF94A3B8);
 
-  // Semantic Status Color Tokens
+  // General Semantic Status Color Tokens
   static const Color success = Color(0xFF2E7D32);
   static const Color warning = Color(0xFFE65100);
   static const Color error = Color(0xFFC62828);
@@ -39,6 +40,24 @@ class AppColors {
   static const Color errorContainer = Color(0x1AC62828);
   static const Color infoContainer = Color(0x1A1565C0);
   static const Color neutralContainer = Color(0x1A616161);
+
+  // Financial & Accounting Visual Semantics
+  static const Color debit = Color(0xFF1565C0);
+  static const Color credit = Color(0xFF2E7D32);
+  static const Color profit = Color(0xFF2E7D32);
+  static const Color loss = Color(0xFFC62828);
+  static const Color positiveBalance = Color(0xFF2E7D32);
+  static const Color negativeBalance = Color(0xFFC62828);
+  static const Color inventory = Color(0xFF00897B);
+  static const Color receivable = Color(0xFF0288D1);
+  static const Color payable = Color(0xFFE65100);
+
+  // Soft Container Overlays for Accounting States
+  static const Color debitContainer = Color(0x1A1565C0);
+  static const Color creditContainer = Color(0x1A2E7D32);
+  static const Color inventoryContainer = Color(0x1A00897B);
+  static const Color receivableContainer = Color(0x1A0288D1);
+  static const Color payableContainer = Color(0x1AE65100);
 
   /// Dynamic helper to resolve border color by brightness.
   static Color border(Brightness brightness) =>

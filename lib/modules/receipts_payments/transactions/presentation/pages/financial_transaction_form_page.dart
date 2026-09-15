@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../../domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_currency_port.dart';
@@ -180,17 +178,8 @@ class _FinancialTransactionFormPageState
     _descriptionController.text = state.description ?? '';
   }
 
-  Future<void> _pickDate() async {
+  void _onDateChanged(DateTime picked) {
     final current = ref.read(transactionComposerProvider).transactionDate;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked == null) {
-      return;
-    }
     final notifier = ref.read(transactionComposerProvider.notifier);
     notifier.setDate(picked);
     setState(() => _dirty = true);
@@ -332,7 +321,6 @@ class _FinancialTransactionFormPageState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final isCurrencyLoading = ref.watch(isBaseCurrencyLoadingProvider);
     final baseCurrency = ref.watch(accountingBaseCurrencyProvider);
@@ -343,10 +331,11 @@ class _FinancialTransactionFormPageState
         : (type.isReceipt ? l10n.rpFormTitleReceipt : l10n.rpFormTitlePayment);
 
     if (_loading || isCurrencyLoading) {
-      return AppResponsiveScaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(title: title, showBackButton: true),
-        body: AppLoading(message: l10n.rpLoading),
+      return AppFormPage(
+        title: title,
+        showBackButton: true,
+        isPageLoading: true,
+        body: const SizedBox.expand(),
       );
     }
 
@@ -356,46 +345,45 @@ class _FinancialTransactionFormPageState
           (_loadError?.contains('currency') ?? false) ||
           (_loadError?.contains('Currency') ?? false);
 
-      return AppResponsiveScaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(title: title, showBackButton: true),
-        body: AppErrorState(
-          message: isMissingCurrency
-              ? (isArabic
-                  ? 'لم يتم إعداد العملة الرئيسية للنظام بعد. يرجى إضافة وتعيين العملة الرئيسية من دليل العملات لتشغيل المقبوضات والمدفوعات.'
-                  : 'System base currency is not configured. Please set up the base currency from the currency catalog to enable receipts and payments.')
-              : (_loadError ?? l10n.somethingWentWrong),
-          retryLabel: isMissingCurrency
-              ? (isArabic ? 'إعداد العملة الرئيسية' : 'Set Up Base Currency')
-              : (isArabic ? 'إعادة المحاولة' : 'Retry'),
-          onRetry: isMissingCurrency
-              ? () => showMissingCurrencyDialog(context)
-              : _loadPage,
-        ),
+      return AppFormPage(
+        title: title,
+        showBackButton: true,
+        errorText: isMissingCurrency
+            ? (isArabic
+                ? 'لم يتم إعداد العملة الرئيسية للنظام بعد. يرجى إضافة وتعيين العملة الرئيسية من دليل العملات لتشغيل المقبوضات والمدفوعات.'
+                : 'System base currency is not configured. Please set up the base currency from the currency catalog to enable receipts and payments.')
+            : (_loadError ?? l10n.somethingWentWrong),
+        retryLabel: isMissingCurrency
+            ? (isArabic ? 'إعداد العملة الرئيسية' : 'Set Up Base Currency')
+            : (isArabic ? 'إعادة المحاولة' : 'Retry'),
+        onRetry: isMissingCurrency
+            ? () => showMissingCurrencyDialog(context)
+            : _loadPage,
+        body: const SizedBox.expand(),
       );
     }
 
     final number = formatSaleNumberPrimary(
       state.previewTransactionNumber ?? state.voucherBook?.previewNumber ?? '—',
     );
-    final dateLabel = DateFormat(
-      'd/M/yyyy',
-    ).format(state.transactionDate.toLocal());
     final equivalentLabel =
         '${state.baseEquivalent.toStringAsFixed(2)} ${state.baseCurrencyCode}';
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: AppResponsiveScaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(title: title, showBackButton: true),
-        body: ListView(
-          padding: AppConstants.pageInsets(context),
+      child: AppFormPage(
+        title: title,
+        showBackButton: true,
+        onSubmit: (_saving || !state.isBalanced) ? null : _save,
+        submitLabel: l10n.rpSave,
+        isLoading: _saving,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _HeaderCard(
               numberLabel: number,
-              dateLabel: dateLabel,
-              onPickDate: _pickDate,
+              transactionDate: state.transactionDate,
+              onDateChanged: _onDateChanged,
               voucherBooks: _voucherBooks,
               selectedBook: state.voucherBook,
               canChangeBook: !_isEdit,
@@ -491,14 +479,6 @@ class _FinancialTransactionFormPageState
             const SizedBox(height: AppSpacing.md),
           ],
         ),
-        bottomActions: AppBottomActions(
-          child: AppButton(
-            label: l10n.rpSave,
-            onPressed: (_saving || !state.isBalanced) ? null : _save,
-            isLoading: _saving,
-            expand: true,
-          ),
-        ),
       ),
     );
   }
@@ -578,8 +558,8 @@ class _BalanceSummaryCard extends StatelessWidget {
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
     required this.numberLabel,
-    required this.dateLabel,
-    required this.onPickDate,
+    required this.transactionDate,
+    required this.onDateChanged,
     required this.voucherBooks,
     required this.selectedBook,
     required this.canChangeBook,
@@ -597,8 +577,8 @@ class _HeaderCard extends StatelessWidget {
   });
 
   final String numberLabel;
-  final String dateLabel;
-  final VoidCallback onPickDate;
+  final DateTime transactionDate;
+  final ValueChanged<DateTime> onDateChanged;
   final List<RpVoucherBookRef> voucherBooks;
   final RpVoucherBookRef? selectedBook;
   final bool canChangeBook;
@@ -656,11 +636,16 @@ class _HeaderCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _MetaTile(
-                    icon: Icons.calendar_month_outlined,
+                  child: AppDateField(
                     label: l10n.rpDate,
-                    value: dateLabel,
-                    onTap: onPickDate,
+                    value: transactionDate,
+                    onChanged: (picked) {
+                      if (picked != null) {
+                        onDateChanged(picked);
+                      }
+                    },
+                    dateFormat: 'd/M/yyyy',
+                    density: AppFieldDensity.compact,
                   ),
                 ),
               ],

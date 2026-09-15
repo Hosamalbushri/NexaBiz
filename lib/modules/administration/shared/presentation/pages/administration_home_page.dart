@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/modules/administration/shared/presentation/admin_localizations_extension.dart';
 import 'package:stock_count/app/router/app_routes.dart';
@@ -40,124 +39,126 @@ class AdministrationHomePage extends ConsumerWidget {
         ],
       ),
       body: auth.needsSessionRenewal
-          ? AppEmptyState(
-              icon: Icons.cloud_off_outlined,
-              title: l10n.syncSessionExpired,
-              subtitle: l10n.syncSessionExpired,
+          ? AppDashboardPage(
+              content: AppEmptyState(
+                icon: Icons.cloud_off_outlined,
+                title: l10n.syncSessionExpired,
+                subtitle: l10n.syncSessionExpired,
+              ),
             )
-          : ListView(
-              padding: AppConstants.pageInsets(
-                context,
-              ).copyWith(top: AppSpacing.sm, bottom: AppSpacing.lg),
-              children: [
-                Text(
-                  l10n.adminAccessControlIntro,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
+          : AppDashboardPage(
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.adminAccessControlIntro,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SettingsGroupLabel(l10n.adminAccessControlSection),
-                SettingsGroup(
-                  children: [
-                    SettingsTile(
-                      icon: Icons.tune_outlined,
-                      title: l10n.localeName == 'ar'
-                          ? 'إعدادات الإدارة العامة'
-                          : 'Administration Master Settings',
-                      subtitle: l10n.localeName == 'ar'
-                          ? 'صفحة الإعدادات الشاملة للإدارة'
-                          : 'Master administration settings hub',
-                      showChevron: true,
-                      onTap: () => context.push('/administration/settings'),
-                    ),
-                    PermissionGate(
-                      anyOf: const [
-                        'users.view',
-                        'users.manage',
-                        'platform.users.manage',
-                      ],
-                      child: SettingsTile(
-                        icon: Icons.people_outline,
-                        title: l10n.adminUsersTitle,
-                        subtitle: l10n.adminUsersSubtitle,
+                  const SizedBox(height: AppSpacing.md),
+                  SettingsGroupLabel(l10n.adminAccessControlSection),
+                  SettingsGroup(
+                    children: [
+                      SettingsTile(
+                        icon: Icons.tune_outlined,
+                        title: l10n.localeName == 'ar'
+                            ? 'إعدادات الإدارة العامة'
+                            : 'Administration Master Settings',
+                        subtitle: l10n.localeName == 'ar'
+                            ? 'صفحة الإعدادات الشاملة للإدارة'
+                            : 'Master administration settings hub',
                         showChevron: true,
-                        onTap: () =>
-                            context.push(AppRoutes.administrationUsers),
+                        onTap: () => context.push('/administration/settings'),
                       ),
-                    ),
-                    PermissionGate(
-                      anyOf: const ['roles.view', 'roles.manage'],
-                      child: SettingsTile(
-                        icon: Icons.badge_outlined,
-                        title: l10n.adminRolesTitle,
-                        subtitle: l10n.adminRolesHubSubtitle,
-                        showChevron: true,
-                        onTap: () =>
-                            context.push(AppRoutes.administrationRoles),
+                      PermissionGate(
+                        anyOf: const [
+                          'users.view',
+                          'users.manage',
+                          'platform.users.manage',
+                        ],
+                        child: SettingsTile(
+                          icon: Icons.people_outline,
+                          title: l10n.adminUsersTitle,
+                          subtitle: l10n.adminUsersSubtitle,
+                          showChevron: true,
+                          onTap: () =>
+                              context.push(AppRoutes.administrationUsers),
+                        ),
                       ),
-                    ),
-                    PermissionGate(
-                      anyOf: const [
-                        'roles.view',
-                        'permissions.manage',
-                        'roles.manage',
-                      ],
-                      child: SettingsTile(
-                        icon: Icons.checklist_rtl_outlined,
-                        title: l10n.adminPermissionsCatalogTitle,
-                        subtitle: l10n.adminPermissionsCatalogSubtitle,
-                        showChevron: true,
-                        onTap: () =>
-                            context.push(AppRoutes.administrationPermissions),
+                      PermissionGate(
+                        anyOf: const ['roles.view', 'roles.manage'],
+                        child: SettingsTile(
+                          icon: Icons.badge_outlined,
+                          title: l10n.adminRolesTitle,
+                          subtitle: l10n.adminRolesHubSubtitle,
+                          showChevron: true,
+                          onTap: () =>
+                              context.push(AppRoutes.administrationRoles),
+                        ),
                       ),
-                    ),
-                    PermissionGate(
-                      anyOf: const [
-                        'companies.view',
-                        'companies.manage',
-                        'platform.companies.manage',
-                      ],
-                      child: SettingsTile(
-                        icon: Icons.business_outlined,
-                        title: l10n.adminCompaniesTitle,
-                        subtitle: 'إدارة الشركات للمؤسسة',
-                        showChevron: true,
-                        onTap: () =>
-                            context.push(AppRoutes.administrationCompanies),
+                      PermissionGate(
+                        anyOf: const [
+                          'roles.view',
+                          'permissions.manage',
+                          'roles.manage',
+                        ],
+                        child: SettingsTile(
+                          icon: Icons.checklist_rtl_outlined,
+                          title: l10n.adminPermissionsCatalogTitle,
+                          subtitle: l10n.adminPermissionsCatalogSubtitle,
+                          showChevron: true,
+                          onTap: () =>
+                              context.push(AppRoutes.administrationPermissions),
+                        ),
                       ),
-                    ),
-                    PermissionGate(
-                      anyOf: const [
-                        'branches.view',
-                        'branches.manage',
-                        'platform.companies.manage',
-                      ],
-                      child: SettingsTile(
-                        icon: Icons.account_tree_outlined,
-                        title: l10n.adminBranchesTitle,
-                        subtitle: 'إدارة الفروع والهيكل التنظيمي الإداري',
-                        showChevron: true,
-                        onTap: () =>
-                            context.push(AppRoutes.administrationBranches),
+                      PermissionGate(
+                        anyOf: const [
+                          'companies.view',
+                          'companies.manage',
+                          'platform.companies.manage',
+                        ],
+                        child: SettingsTile(
+                          icon: Icons.business_outlined,
+                          title: l10n.adminCompaniesTitle,
+                          subtitle: 'إدارة الشركات للمؤسسة',
+                          showChevron: true,
+                          onTap: () =>
+                              context.push(AppRoutes.administrationCompanies),
+                        ),
                       ),
-                    ),
-                    PermissionGate(
-                      anyOf: const ['devices.view', 'devices.revoke'],
-                      child: const _DevicesTile(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  l10n.adminAccessControlTip,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.35,
+                      PermissionGate(
+                        anyOf: const [
+                          'branches.view',
+                          'branches.manage',
+                          'platform.companies.manage',
+                        ],
+                        child: SettingsTile(
+                          icon: Icons.account_tree_outlined,
+                          title: l10n.adminBranchesTitle,
+                          subtitle: 'إدارة الفروع والهيكل التنظيمي الإداري',
+                          showChevron: true,
+                          onTap: () =>
+                              context.push(AppRoutes.administrationBranches),
+                        ),
+                      ),
+                      PermissionGate(
+                        anyOf: const ['devices.view', 'devices.revoke'],
+                        child: const _DevicesTile(),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    l10n.adminAccessControlTip,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }

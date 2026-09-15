@@ -147,16 +147,19 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
         title: Text(l10n.adminDeleteRole),
         content: Text(l10n.adminDeleteRoleConfirm(role.name)),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.cancel,
             onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
+            variant: AppButtonVariant.text,
           ),
-          FilledButton(
+          AppButton(
+            label: l10n.adminDeleteRole,
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.adminDeleteRole),
+            variant: AppButtonVariant.destructive,
           ),
         ],
       ),
+
     );
     if (ok != true || !context.mounted) return;
     try {

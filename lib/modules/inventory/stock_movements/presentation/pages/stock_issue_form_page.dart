@@ -277,17 +277,15 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
   }
 
   Widget _shell({required Widget body, List<Widget>? actions}) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: Scaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: _isEdit ? l10n.stockIssueEditTitle : l10n.stockIssueNewTitle,
-          showBackButton: true,
-          actions: actions,
-        ),
+      child: AppFormPage(
+        title: _isEdit ? l10n.stockIssueEditTitle : l10n.stockIssueNewTitle,
+        showBackButton: true,
+        actions: actions,
+        showFormActions: false,
+        isPageLoading: _loading,
         body: body,
       ),
     );
@@ -663,19 +661,13 @@ class _StockIssueHeaderCard extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
 
             // Notes / Statement Field (Separate Full Row)
-            TextField(
+            AppTextField(
               controller: notesController,
-              onChanged: onNotesChanged,
+              label: l10n.stockIssueNotesLabel,
+              hint: l10n.stockIssueNotesLabel,
+              prefixIcon: Icons.notes_outlined,
               maxLines: 2,
-              decoration: InputDecoration(
-                labelText: l10n.stockIssueNotesLabel,
-                hintText: l10n.stockIssueNotesLabel,
-                prefixIcon: const Icon(Icons.notes_outlined),
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-              ),
+              onChanged: onNotesChanged,
             ),
           ],
         ),

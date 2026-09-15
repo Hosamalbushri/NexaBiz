@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../theme/app_spacing.dart';
 
-/// Themed surface card used across modules.
+/// Canonical card primitive for NexaBiz ERP built natively on [shadcn.Card].
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -12,7 +12,7 @@ class AppCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.color,
-    this.animate = true,
+    this.animate = false,
   });
 
   final Widget child;
@@ -29,20 +29,22 @@ class AppCard extends StatelessWidget {
       child: child,
     );
 
-    final card = Card(
-      margin: margin ?? EdgeInsets.zero,
-      color: color,
-      clipBehavior: Clip.antiAlias,
-      child: onTap == null ? content : InkWell(onTap: onTap, child: content),
+    final card = shadcn.Card(
+      child: onTap == null
+          ? content
+          : GestureDetector(
+              onTap: onTap,
+              child: content,
+            ),
     );
 
-    if (!animate) {
-      return card;
+    if (margin != null) {
+      return Padding(
+        padding: margin!,
+        child: card,
+      );
     }
 
-    return card
-        .animate()
-        .fadeIn(duration: 220.ms, curve: Curves.easeOutCubic)
-        .moveY(begin: 8, end: 0, duration: 220.ms, curve: Curves.easeOutCubic);
+    return card;
   }
 }

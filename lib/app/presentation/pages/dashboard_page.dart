@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/custom_app_bar.dart';
-import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
@@ -30,6 +29,9 @@ class DashboardPage extends ConsumerWidget {
     final controller = ref.read(dashboardServicesProvider.notifier);
     final unread = ref.watch(unreadNotificationsCountProvider);
 
+    final permissions = ref.watch(currentPermissionsProvider);
+    final modules = controller.resolveModules(permissions: permissions);
+
     return Scaffold(
       appBar: CustomAppBar(
         title: l10n.dashboardTitle,
@@ -39,51 +41,22 @@ class DashboardPage extends ConsumerWidget {
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
       ),
-      body: servicesAsync.when(
-        loading: () => const AppLoading(),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.somethingWentWrong),
-                const SizedBox(height: AppSpacing.md),
-                AppButton(label: l10n.retry, onPressed: controller.reload),
-              ],
-            ),
-          ),
+      body: AppDashboardPage(
+        isLoading: servicesAsync.isLoading && !servicesAsync.hasValue,
+        errorText: servicesAsync.hasError ? l10n.somethingWentWrong : null,
+        onRetry: controller.reload,
+        content: DashboardServicesPanel(
+          modules: modules,
+          customizeLabel: l10n.dashboardCustomizeServices,
+          onCustomize: () => _openCustomize(context, ref),
+          onModuleSelected: (module) {
+            if (!module.isEnabled) {
+              return;
+            }
+            context.push(module.rootRoute);
+          },
         ),
-        data: (_) {
-          final permissions = ref.watch(currentPermissionsProvider);
-          final modules = controller.resolveModules(permissions: permissions);
-          return SingleChildScrollView(
-            padding: AppConstants.pageInsets(context),
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            child: AppContentConstraint(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  DashboardServicesPanel(
-                    modules: modules,
-                    customizeLabel: l10n.dashboardCustomizeServices,
-                    onCustomize: () => _openCustomize(context, ref),
-                    onModuleSelected: (module) {
-                      if (!module.isEnabled) {
-                        return;
-                      }
-                      context.push(module.rootRoute);
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  const DashboardRecentOperations(),
-                ],
-              ),
-            ),
-          );
-        },
+        recentActivity: const DashboardRecentOperations(),
       ),
     );
   }

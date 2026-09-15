@@ -47,6 +47,25 @@ import 'package:stock_count/modules/purchases/shared/data/database/tables/purcha
 import 'package:stock_count/modules/purchases/shared/data/database/tables/purchase_payments_table.dart';
 import 'package:stock_count/core/database/migration/legacy_database_migrator.dart';
 
+// Standalone Financial Package Tables (Phase 2A)
+import 'package:stock_count/packages/financial/database/tables/financial_currencies_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_exchange_rates_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_accounts_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_subjects_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_subject_account_buckets_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_account_balances_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_journal_entries_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_journal_lines_table.dart';
+// GATE-08 V4 Financial Package Tables
+import 'package:stock_count/packages/financial/database/tables/financial_fiscal_years_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_fiscal_periods_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_period_closing_operations_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_period_closing_records_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_period_closing_attempts_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_period_closing_rates_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_fiscal_year_closing_records_table.dart';
+import 'package:stock_count/packages/financial/database/tables/financial_fiscal_year_opening_boundaries_table.dart';
+
 import 'package:drift/native.dart';
 
 part 'nexabiz_database.g.dart';
@@ -98,6 +117,24 @@ part 'nexabiz_database.g.dart';
     Purchases,
     PurchaseItems,
     PurchasePayments,
+    // Phase 2A Financial Package Tables:
+    FinancialCurrencies,
+    FinancialExchangeRates,
+    FinancialAccounts,
+    FinancialSubjects,
+    FinancialSubjectAccountBuckets,
+    FinancialAccountBalances,
+    FinancialJournalEntries,
+    FinancialJournalLines,
+    // GATE-08 V4 Tables:
+    FinancialFiscalYears,
+    FinancialFiscalPeriods,
+    FinancialPeriodClosingOperations,
+    FinancialPeriodClosingRecords,
+    FinancialPeriodClosingAttempts,
+    FinancialPeriodClosingRates,
+    FinancialFiscalYearClosingRecords,
+    FinancialFiscalYearOpeningBoundaries,
   ],
 )
 class NexabizDatabase extends _$NexabizDatabase {
@@ -114,7 +151,7 @@ class NexabizDatabase extends _$NexabizDatabase {
   NexabizDatabase.connect(super.connection);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -206,6 +243,26 @@ class NexabizDatabase extends _$NexabizDatabase {
       if (from < 13) {
         await _safeCreateTable(m, accountCurrencyBalances);
       }
+      if (from < 14) {
+        await _safeCreateTable(m, financialCurrencies);
+        await _safeCreateTable(m, financialExchangeRates);
+        await _safeCreateTable(m, financialAccounts);
+        await _safeCreateTable(m, financialSubjects);
+        await _safeCreateTable(m, financialSubjectAccountBuckets);
+        await _safeCreateTable(m, financialAccountBalances);
+        await _safeCreateTable(m, financialJournalEntries);
+        await _safeCreateTable(m, financialJournalLines);
+      }
+      if (from < 15) {
+        await _safeCreateTable(m, financialFiscalYears);
+        await _safeCreateTable(m, financialFiscalPeriods);
+        await _safeCreateTable(m, financialPeriodClosingOperations);
+        await _safeCreateTable(m, financialPeriodClosingRecords);
+        await _safeCreateTable(m, financialPeriodClosingAttempts);
+        await _safeCreateTable(m, financialPeriodClosingRates);
+        await _safeCreateTable(m, financialFiscalYearClosingRecords);
+        await _safeCreateTable(m, financialFiscalYearOpeningBoundaries);
+      }
     },
     beforeOpen: (details) async {
       // Enable foreign keys
@@ -218,6 +275,22 @@ class NexabizDatabase extends _$NexabizDatabase {
       await _safeCreateTable(m, currencyRates);
       await _safeCreateTable(m, currencyRateHistory);
       await _safeCreateTable(m, accountCurrencyBalances);
+      await _safeCreateTable(m, financialCurrencies);
+      await _safeCreateTable(m, financialExchangeRates);
+      await _safeCreateTable(m, financialAccounts);
+      await _safeCreateTable(m, financialSubjects);
+      await _safeCreateTable(m, financialSubjectAccountBuckets);
+      await _safeCreateTable(m, financialAccountBalances);
+      await _safeCreateTable(m, financialJournalEntries);
+      await _safeCreateTable(m, financialJournalLines);
+      await _safeCreateTable(m, financialFiscalYears);
+      await _safeCreateTable(m, financialFiscalPeriods);
+      await _safeCreateTable(m, financialPeriodClosingOperations);
+      await _safeCreateTable(m, financialPeriodClosingRecords);
+      await _safeCreateTable(m, financialPeriodClosingAttempts);
+      await _safeCreateTable(m, financialPeriodClosingRates);
+      await _safeCreateTable(m, financialFiscalYearClosingRecords);
+      await _safeCreateTable(m, financialFiscalYearOpeningBoundaries);
     },
   );
 

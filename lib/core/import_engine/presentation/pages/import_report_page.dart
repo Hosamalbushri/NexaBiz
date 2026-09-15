@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import '../../import_engine.dart';
 
 /// Reusable Import Report UI screen displaying reproducible audit records and row error breakdown.
@@ -18,7 +19,7 @@ class ImportReportPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          Card(
+          AppCard(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -75,7 +76,7 @@ class ImportReportPage extends StatelessWidget {
           ),
           const SizedBox(height: 8.0),
           if (errors.isEmpty)
-            const Card(
+            const AppCard(
               child: Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
@@ -85,9 +86,7 @@ class ImportReportPage extends StatelessWidget {
             )
           else
             ...errors.map((err) {
-              return Card(
-                color: theme.colorScheme.errorContainer,
-                margin: const EdgeInsets.only(bottom: 8.0),
+              return AppCard(
                 child: ListTile(
                   title: Text(
                     'Row ${err.rowIndex}: ${err.fieldKey ?? "Row"} (${err.errorCode})',

@@ -7,7 +7,6 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/journal_entry.dart';
 import '../../domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
@@ -30,31 +29,20 @@ class JournalEntryDetailsPage extends ConsumerWidget {
     final dateFormat = DateFormat.yMMMd();
 
     return async.when(
-      loading: () => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.accountingJournalDetails,
-          showBackButton: true,
-        ),
-        body: const AppLoading(),
+      loading: () => AppDetailsPage(
+        title: l10n.accountingJournalDetails,
+        isLoading: true,
       ),
-      error: (e, _) => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.accountingJournalDetails,
-          showBackButton: true,
-        ),
-        body: AppErrorState(
-          message: e.toString(),
-          onRetry: () => ref.invalidate(journalEntryByUuidProvider(entryUuid)),
-        ),
+      error: (e, _) => AppDetailsPage(
+        title: l10n.accountingJournalDetails,
+        error: e.toString(),
+        onRetry: () => ref.invalidate(journalEntryByUuidProvider(entryUuid)),
       ),
       data: (entry) {
         if (entry == null) {
-          return Scaffold(
-            appBar: CustomAppBar(
-              title: l10n.accountingJournalDetails,
-              showBackButton: true,
-            ),
-            body: AppEmptyState(
+          return AppDetailsPage(
+            title: l10n.accountingJournalDetails,
+            emptyState: AppEmptyState(
               title: l10n.accountingJournalNotFound,
               icon: Icons.search_off_rounded,
             ),
@@ -80,7 +68,7 @@ class JournalEntryDetailsPage extends ConsumerWidget {
           (s, l) => s + l.baseCredit,
         );
 
-        return AppDetailPagePattern(
+        return AppDetailsPage(
           title: entry.voucherNumber,
           actions: [
             if (!linked)
@@ -159,13 +147,15 @@ class JournalEntryDetailsPage extends ConsumerWidget {
         title: Text(l10n.accountingJournalVoidConfirmTitle),
         content: Text(l10n.accountingJournalVoidConfirmMessage),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
           ),
-          TextButton(
+          AppButton(
+            label: l10n.accountingJournalVoid,
+            variant: AppButtonVariant.destructive,
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.accountingJournalVoid),
           ),
         ],
       ),
@@ -356,14 +346,14 @@ class _CurrencyGroupCard extends StatelessWidget {
                       'مدين: ${groupDebit.toStringAsFixed(2)} ${currency.symbol}',
                       style: theme.textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: Colors.blue.shade800,
+                        color: AppColors.debit,
                       ),
                     ),
                     Text(
                       'دائن: ${groupCredit.toStringAsFixed(2)} ${currency.symbol}',
                       style: theme.textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: Colors.amber.shade900,
+                        color: AppColors.credit,
                       ),
                     ),
                   ],
@@ -432,13 +422,13 @@ class _JournalLineRow extends ConsumerWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: isDebit
-                      ? Colors.blue.shade50
-                      : Colors.amber.shade50,
+                      ? AppColors.debitContainer
+                      : AppColors.creditContainer,
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Icon(
                   isDebit ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                  color: isDebit ? Colors.blue.shade800 : Colors.amber.shade900,
+                  color: isDebit ? AppColors.debit : AppColors.credit,
                   size: 16,
                 ),
               ),
@@ -458,7 +448,7 @@ class _JournalLineRow extends ConsumerWidget {
           if (line.lineDescription != null &&
               line.lineDescription!.trim().isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.only(right: 36),
+              padding: const EdgeInsetsDirectional.only(end: 36),
               child: Text(
                 line.lineDescription!,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -469,7 +459,7 @@ class _JournalLineRow extends ConsumerWidget {
           ],
           // Amount row
           Padding(
-            padding: const EdgeInsets.only(right: 36, top: 2),
+            padding: const EdgeInsetsDirectional.only(end: 36, top: 2),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -477,7 +467,7 @@ class _JournalLineRow extends ConsumerWidget {
                   '${isDebit ? "مدين" : "دائن"}: ${amount.toStringAsFixed(2)} $currencySymbol',
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: isDebit ? Colors.blue.shade900 : Colors.amber.shade900,
+                    color: isDebit ? AppColors.debit : AppColors.credit,
                   ),
                 ),
                 if (line.exchangeRateToBase > 0 && line.exchangeRateToBase != 1.0)
@@ -526,8 +516,8 @@ class _BaseTotalsFooter extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: isBalanced
-              ? Colors.green.shade300
-              : Colors.red.shade300,
+              ? AppColors.successContainer
+              : AppColors.errorContainer,
         ),
       ),
       child: Row(
@@ -543,8 +533,8 @@ class _BaseTotalsFooter extends StatelessWidget {
                       : Icons.warning_amber_rounded,
                   size: 18,
                   color: isBalanced
-                      ? Colors.green.shade700
-                      : Colors.red.shade700,
+                      ? AppColors.success
+                      : AppColors.error,
                 ),
                 const SizedBox(width: 6),
                 Flexible(
@@ -553,8 +543,8 @@ class _BaseTotalsFooter extends StatelessWidget {
                     style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isBalanced
-                          ? Colors.green.shade800
-                          : Colors.red.shade800,
+                          ? AppColors.success
+                          : AppColors.error,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

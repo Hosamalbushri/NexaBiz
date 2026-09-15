@@ -6,7 +6,6 @@ import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 
 import '../../domain/entities/warehouse.dart';
@@ -26,60 +25,23 @@ class WarehousesSettingsPage extends ConsumerWidget {
     final isAr = l10n.localeName == 'ar';
     final warehousesAsync = ref.watch(warehousesListStreamProvider);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: isAr ? 'إدارة التهيئة والمستودعات' : 'Warehouse Management',
-        showBackButton: true,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openWarehouseFormPage(context, ref),
-        icon: const Icon(Icons.add_location_alt_rounded),
-        label: Text(
-          isAr ? 'إضافة مستودع جديد' : 'New Warehouse',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+    return AppSettingsPage(
+      title: isAr ? 'إدارة التهيئة والمستودعات' : 'Warehouse Management',
+      showBackButton: true,
+      isLoading: warehousesAsync.isLoading,
+      errorText: warehousesAsync.hasError ? warehousesAsync.error.toString() : null,
+      onRetry: () => ref.invalidate(warehousesListStreamProvider),
+      actions: [
+        AppButton(
+          label: isAr ? 'إضافة مستودع جديد' : 'New Warehouse',
+          icon: Icons.add_location_alt_rounded,
+          onPressed: () => _openWarehouseFormPage(context, ref),
         ),
-      ),
-      body: warehousesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  size: 48,
-                  color: colorScheme.error,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  isAr
-                      ? 'حدث خطأ أثناء تحميل بيانات المستودعات'
-                      : 'Error loading warehouse data',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: colorScheme.error,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  err.toString(),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        data: (warehouses) {
-          final defaultWh = warehouses.where((w) => w.isDefault).firstOrNull;
-
-          if (warehouses.isEmpty) {
-            return Center(
+      ],
+      sections: [
+        if (warehousesAsync.hasValue) ...[
+          if (warehousesAsync.value!.isEmpty)
+            Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
@@ -118,165 +80,141 @@ class WarehousesSettingsPage extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    FilledButton.icon(
+                    AppButton(
+                      label: isAr ? 'إضافة المستودع الأول' : 'Add First Warehouse',
+                      icon: Icons.add_rounded,
                       onPressed: () => _openWarehouseFormPage(context, ref),
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(
-                        isAr ? 'إضافة المستودع الأول' : 'Add First Warehouse',
-                      ),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                      ),
                     ),
                   ],
                 ),
               ),
-            );
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-              100, // Space for FAB
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 900),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Overview Banner
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.5,
+            )
+          else ...[
+            // Header Overview Banner
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(
+                            AppRadius.md,
                           ),
                         ),
+                        child: Icon(
+                          Icons.warehouse_rounded,
+                          color: colorScheme.primary,
+                          size: 26,
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.md,
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isAr
+                                  ? 'تهيئة المستودعات والمراكز'
+                                  : 'Warehouses & Locations Setup',
+                              style: theme.textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ),
-                                child: Icon(
-                                  Icons.warehouse_rounded,
-                                  color: colorScheme.primary,
-                                  size: 26,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      isAr
-                                          ? 'تهيئة المستودعات والمراكز'
-                                          : 'Warehouses & Locations Setup',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      isAr
-                                          ? 'إدارة فروع ومراكز المخزون، سياسات التكلفة، والربط بالدليل المحاسبي'
-                                          : 'Manage stock locations, valuation policies, and GL account mapping',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          const Divider(height: 1),
-                          const SizedBox(height: AppSpacing.md),
-
-                          // Quick Summary KPIs
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _KpiChip(
-                                  icon: Icons.store_rounded,
-                                  label: isAr
-                                      ? 'إجمالي المستودعات'
-                                      : 'Total Warehouses',
-                                  value: '${warehouses.length}',
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: _KpiChip(
-                                  icon: Icons.star_rounded,
-                                  label: isAr
-                                      ? 'المستودع الافتراضي'
-                                      : 'Default Warehouse',
-                                  value:
-                                      defaultWh?.name ??
-                                      (isAr ? 'غير محدد' : 'None'),
-                                  isAccent: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Section Title
-                    SettingsGroupLabel(
-                      isAr ? 'المستودعات المسجلة' : 'Registered Warehouses',
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-
-                    // Warehouse Cards List
-                    ...warehouses.map((wh) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: _WarehouseCard(
-                          warehouse: wh,
-                          onEdit: () => _openWarehouseFormPage(
-                            context,
-                            ref,
-                            warehouse: wh,
-                          ),
-                          onSetDefault: () =>
-                              _setDefaultWarehouse(context, ref, wh),
-                          onDelete: () =>
-                              _confirmDeleteWarehouse(context, ref, wh),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isAr
+                                  ? 'إدارة فروع ومراكز المخزون، سياسات التكلفة، والربط بالدليل المحاسبي'
+                                  : 'Manage stock locations, valuation policies, and GL account mapping',
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
                         ),
-                      );
-                    }),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  const Divider(height: 1),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Quick Summary KPIs
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _KpiChip(
+                          icon: Icons.store_rounded,
+                          label: isAr
+                              ? 'إجمالي المستودعات'
+                              : 'Total Warehouses',
+                          value: '${warehousesAsync.value!.length}',
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: _KpiChip(
+                          icon: Icons.star_rounded,
+                          label: isAr
+                              ? 'المستودع الافتراضي'
+                              : 'Default Warehouse',
+                          value: warehousesAsync.value!
+                                  .where((w) => w.isDefault)
+                                  .firstOrNull
+                                  ?.name ??
+                              (isAr ? 'غير محدد' : 'None'),
+                          isAccent: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Section Title
+            SettingsGroupLabel(
+              isAr ? 'المستودعات المسجلة' : 'Registered Warehouses',
+            ),
+            const SizedBox(height: AppSpacing.xs),
+
+            // Warehouse Cards List
+            ...warehousesAsync.value!.map((wh) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: _WarehouseCard(
+                  warehouse: wh,
+                  onEdit: () => _openWarehouseFormPage(
+                    context,
+                    ref,
+                    warehouse: wh,
+                  ),
+                  onSetDefault: () =>
+                      _setDefaultWarehouse(context, ref, wh),
+                  onDelete: () =>
+                      _confirmDeleteWarehouse(context, ref, wh),
+                ),
+              );
+            }),
+          ],
+        ],
+      ],
     );
   }
 
@@ -330,14 +268,14 @@ class WarehousesSettingsPage extends ConsumerWidget {
               : 'Are you sure you want to delete warehouse "${wh.name}"?',
         ),
         actions: [
-          TextButton(
+          AppButton(
+            label: isAr ? 'إلغاء' : 'Cancel',
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(isAr ? 'إلغاء' : 'Cancel'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+          AppButton(
+            label: isAr ? 'حذف' : 'Delete',
+            variant: AppButtonVariant.destructive,
             onPressed: () async {
               Navigator.of(ctx).pop();
               final success = await ref
@@ -353,10 +291,6 @@ class WarehousesSettingsPage extends ConsumerWidget {
                 );
               }
             },
-            child: Text(
-              isAr ? 'حذف' : 'Delete',
-              style: const TextStyle(color: Colors.white),
-            ),
           ),
         ],
       ),
@@ -690,30 +624,21 @@ class _WarehouseCard extends ConsumerWidget {
               spacing: 4,
               runSpacing: 4,
               children: [
-                TextButton.icon(
+                AppButton(
+                  label: isAr ? 'تعديل والربط' : 'Edit & Bindings',
+                  icon: Icons.edit_outlined,
+                  variant: AppButtonVariant.text,
                   onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: Text(
-                    isAr ? 'تعديل والربط' : 'Edit & Bindings',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (!warehouse.isDefault)
-                      TextButton.icon(
+                      AppButton(
+                        label: isAr ? 'تعيين كافتراضي' : 'Set Default',
+                        icon: Icons.star_outline_rounded,
+                        variant: AppButtonVariant.text,
                         onPressed: onSetDefault,
-                        icon: const Icon(Icons.star_outline_rounded, size: 16),
-                        label: Text(isAr ? 'تعيين كافتراضي' : 'Set Default'),
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                        ),
                       ),
                     IconButton(
                       onPressed: onDelete,

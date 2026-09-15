@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
 
@@ -52,83 +50,75 @@ class _CategoriesSettingsPageState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isAr = l10n.localeName == 'ar';
 
     final warehousesAsync = ref.watch(warehousesListStreamProvider);
     final categoriesAsync = ref.watch(allCategoriesStreamProvider);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: isAr ? 'شجرة تصنيفات المخزون' : 'Inventory Category Tree',
-        showBackButton: true,
-        actions: [
-          categoriesAsync.maybeWhen(
-            data: (cats) => IconButton(
-              icon: const Icon(Icons.unfold_more_rounded),
-              tooltip: isAr ? 'توسيع الكل' : 'Expand All',
-              onPressed: () => _expandAll(cats),
-            ),
-            orElse: () => const SizedBox.shrink(),
+    return AppSettingsPage(
+      title: isAr ? 'شجرة تصنيفات المخزون' : 'Inventory Category Tree',
+      showBackButton: true,
+      headerActions: [
+        categoriesAsync.maybeWhen(
+          data: (cats) => IconButton(
+            icon: const Icon(Icons.unfold_more_rounded),
+            tooltip: isAr ? 'توسيع الكل' : 'Expand All',
+            onPressed: () => _expandAll(cats),
           ),
-          categoriesAsync.maybeWhen(
-            data: (cats) => IconButton(
-              icon: const Icon(Icons.unfold_less_rounded),
-              tooltip: isAr ? 'طي الكل' : 'Collapse All',
-              onPressed: _collapseAll,
-            ),
-            orElse: () => const SizedBox.shrink(),
+          orElse: () => const SizedBox.shrink(),
+        ),
+        categoriesAsync.maybeWhen(
+          data: (cats) => IconButton(
+            icon: const Icon(Icons.unfold_less_rounded),
+            tooltip: isAr ? 'طي الكل' : 'Collapse All',
+            onPressed: _collapseAll,
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => CategoryFormDialog.show(context),
-        elevation: 3,
-        icon: const Icon(Icons.add_rounded),
-        label: Text(
-          isAr ? 'تصنيف جديد' : 'New Category',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          orElse: () => const SizedBox.shrink(),
         ),
-      ),
-      body: warehousesAsync.when(
-        loading: () => const AppLoading(),
-        error: (err, stack) => AppEmptyState(
-          title: isAr ? 'خطأ في تحميل المستودعات' : 'Error loading warehouses',
-          subtitle: err.toString(),
-          icon: Icons.error_outline_rounded,
-          actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
-          onAction: () => ref.invalidate(warehousesListStreamProvider),
+      ],
+      actions: [
+        AppButton(
+          label: isAr ? 'تصنيف جديد' : 'New Category',
+          icon: Icons.add_rounded,
+          onPressed: () => CategoryFormDialog.show(context),
         ),
-        data: (warehouses) {
-          if (warehouses.isEmpty) {
-            return AppEmptyState(
-              title: isAr
-                  ? 'يرجى إضافة مستودع أولاً'
-                  : 'Please add a warehouse first',
-              subtitle: isAr
-                  ? 'المستودع يمثل الجذر الأعلى لشجرة تصنيفات المخزون'
-                  : 'Warehouses serve as the root for inventory category trees',
-              icon: Icons.store_mall_directory_outlined,
-            );
-          }
+      ],
+      sections: [
+        warehousesAsync.when(
+          loading: () => const AppLoading(),
+          error: (err, stack) => AppEmptyState(
+            title: isAr ? 'خطأ في تحميل المستودعات' : 'Error loading warehouses',
+            subtitle: err.toString(),
+            icon: Icons.error_outline_rounded,
+            actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
+            onAction: () => ref.invalidate(warehousesListStreamProvider),
+          ),
+          data: (warehouses) {
+            if (warehouses.isEmpty) {
+              return AppEmptyState(
+                title: isAr
+                    ? 'يرجى إضافة مستودع أولاً'
+                    : 'Please add a warehouse first',
+                subtitle: isAr
+                    ? 'المستودع يمثل الجذر الأعلى لشجرة تصنيفات المخزون'
+                    : 'Warehouses serve as the root for inventory category trees',
+                icon: Icons.store_mall_directory_outlined,
+              );
+            }
 
-          return categoriesAsync.when(
-            loading: () => const AppLoading(),
-            error: (err, stack) => AppEmptyState(
-              title: isAr
-                  ? 'خطأ في تحميل التصنيفات'
-                  : 'Error loading categories',
-              subtitle: err.toString(),
-              icon: Icons.error_outline_rounded,
-              actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
-              onAction: () => ref.invalidate(allCategoriesStreamProvider),
-            ),
-            data: (allCategories) {
-              return AppContentConstraint(
-                child: ListView(
-                  padding: AppConstants.pageInsets(context),
+            return categoriesAsync.when(
+              loading: () => const AppLoading(),
+              error: (err, stack) => AppEmptyState(
+                title: isAr
+                    ? 'خطأ في تحميل التصنيفات'
+                    : 'Error loading categories',
+                subtitle: err.toString(),
+                icon: Icons.error_outline_rounded,
+                actionLabel: isAr ? 'إعادة المحاولة' : 'Retry',
+                onAction: () => ref.invalidate(allCategoriesStreamProvider),
+              ),
+              data: (allCategories) {
+                return Column(
                   children: [
                     // Header Banner Card
                     _CategoriesHeaderCard(
@@ -172,12 +162,12 @@ class _CategoriesSettingsPageState
                         );
                       }),
                   ],
-                ),
-              );
-            },
-          );
-        },
-      ),
+                );
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 

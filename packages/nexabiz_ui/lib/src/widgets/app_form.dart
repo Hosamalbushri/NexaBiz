@@ -34,19 +34,6 @@ class AppFormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasShadcnTheme =
-        context.dependOnInheritedWidgetOfExactType<shadcn.Theme>() != null;
-    if (!hasShadcnTheme) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      return shadcn.Theme(
-        data: isDark
-            ? const shadcn.ThemeData.dark()
-            : const shadcn.ThemeData(),
-        child: Builder(
-          builder: (context) => _buildSection(context),
-        ),
-      );
-    }
     return _buildSection(context);
   }
 
@@ -56,99 +43,83 @@ class AppFormSection extends StatelessWidget {
 
     final hasHeader = title != null || description != null || icon != null;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.card,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: colorScheme.border.withValues(alpha: 0.6),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.foreground.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: padding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (hasHeader) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (icon != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 18,
-                      color: colorScheme.primary,
-                    ),
+    final column = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasHeader) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.xxs),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(theme.radiusSm),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                ] else ...[
-                  Container(
-                    width: 4,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (title != null)
-                        Text(
-                          title!,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
-                            color: colorScheme.foreground,
-                          ),
-                        ),
-                      if (description != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          description!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colorScheme.mutedForeground,
-                          ),
-                        ),
-                      ],
-                    ],
+                  child: Icon(
+                    icon,
+                    size: 18,
+                    color: colorScheme.primary,
                   ),
                 ),
+                const SizedBox(width: AppSpacing.sm),
+              ] else ...[
+                Container(
+                  width: 4,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(theme.radiusSm),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
               ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Divider(
-              height: 1,
-              thickness: 1,
-              color: colorScheme.border.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
-          for (int i = 0; i < children.length; i++) ...[
-            children[i],
-            if (i < children.length - 1) SizedBox(height: spacing),
-          ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (title != null)
+                      Text(
+                        title!,
+                        style: theme.typography.p.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.foreground,
+                        ),
+                      ),
+                    if (description != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        description!,
+                        style: theme.typography.small.copyWith(
+                          color: colorScheme.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: colorScheme.border.withValues(alpha: 0.4),
+          ),
+          const SizedBox(height: AppSpacing.md),
         ],
-      ),
+        for (int i = 0; i < children.length; i++) ...[
+          children[i],
+          if (i < children.length - 1) SizedBox(height: spacing),
+        ],
+      ],
+    );
+
+    return shadcn.Card(
+      padding: padding,
+      child: column,
     );
   }
 }

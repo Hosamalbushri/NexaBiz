@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 
 import 'package:stock_count/core/widgets/app_expandable_form_section.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/customer_data_source.dart';
 import '../../domain/models/customer_exception.dart';
@@ -387,28 +385,25 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     if (widget.isEditing) {
       final asyncCustomer = ref.watch(customerByIdProvider(widget.customerId!));
       return asyncCustomer.when(
-        loading: () => Scaffold(
-          appBar: CustomAppBar(
-            title: l10n.customersEditTitle,
-            showBackButton: true,
-          ),
-          body: const Center(child: CircularProgressIndicator()),
+        loading: () => AppFormPage(
+          title: l10n.customersEditTitle,
+          showBackButton: true,
+          isPageLoading: true,
+          body: const SizedBox.expand(),
         ),
-        error: (_, _) => Scaffold(
-          appBar: CustomAppBar(
-            title: l10n.customersEditTitle,
-            showBackButton: true,
-          ),
-          body: Center(child: Text(l10n.somethingWentWrong)),
+        error: (_, _) => AppFormPage(
+          title: l10n.customersEditTitle,
+          showBackButton: true,
+          errorText: l10n.somethingWentWrong,
+          body: const SizedBox.expand(),
         ),
         data: (customer) {
           if (customer == null) {
-            return Scaffold(
-              appBar: CustomAppBar(
-                title: l10n.customersEditTitle,
-                showBackButton: true,
-              ),
-              body: Center(child: Text(l10n.emptyStateTitle)),
+            return AppFormPage(
+              title: l10n.customersEditTitle,
+              showBackButton: true,
+              errorText: l10n.emptyStateTitle,
+              body: const SizedBox.expand(),
             );
           }
           unawaited(_hydrate(customer));
@@ -423,288 +418,271 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
   Widget _buildForm(BuildContext context, AppLocalizations l10n) {
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: AppResponsiveScaffold(
-        appBar: CustomAppBar(
-          title: widget.isEditing
-              ? l10n.customersEditTitle
-              : l10n.customersCreateTitle,
-          showBackButton: true,
-        ),
-        bottomActions: AppBottomActions(
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _saving ? null : _save,
-              icon: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_outlined),
-              label: Text(l10n.confirm),
+      child: AppFormPage(
+        title: widget.isEditing
+            ? l10n.customersEditTitle
+            : l10n.customersCreateTitle,
+        showBackButton: true,
+        formKey: _formKey,
+        onSubmit: _save,
+        submitLabel: l10n.confirm,
+        isLoading: _saving,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'البيانات الأساسية'
+                  : 'Basic Details',
+              icon: Icons.person_outline,
+              topSpacing: 0,
             ),
-          ),
-        ),
-        body: Form(
-          key: _formKey,
-          child: ListView(
-            padding: AppConstants.pageInsets(context),
-            children: [
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'البيانات الأساسية'
-                    : 'Basic Details',
-                icon: Icons.person_outline,
-                topSpacing: 0,
-              ),
-              AppResponsiveForm(
-                maxColumns: 2,
-                children: [
-                  TextFormField(
-                    controller: _codeController,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: InputDecoration(
-                      labelText: l10n.customersFieldCode,
-                      helperText: l10n.customersFieldCodeHelper,
-                      prefixIcon: const Icon(Icons.badge_outlined),
-                      suffixIcon: widget.isEditing
-                          ? null
-                          : IconButton(
-                              tooltip: l10n.customersGenerateCode,
-                              onPressed: _generatingCode
-                                  ? null
-                                  : () async {
-                                      setState(() => _generatingCode = true);
-                                      try {
-                                        final code =
-                                            await _generateCodeFromParent();
-                                        if (!mounted || code == null) {
-                                          return;
-                                        }
-                                        _codeController.text = code;
-                                      } finally {
-                                        if (mounted) {
-                                          setState(
-                                            () => _generatingCode = false,
-                                          );
-                                        }
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                TextFormField(
+                  controller: _codeController,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    labelText: l10n.customersFieldCode,
+                    helperText: l10n.customersFieldCodeHelper,
+                    prefixIcon: const Icon(Icons.badge_outlined),
+                    suffixIcon: widget.isEditing
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.customersGenerateCode,
+                            onPressed: _generatingCode
+                                ? null
+                                : () async {
+                                    setState(() => _generatingCode = true);
+                                    try {
+                                      final code =
+                                          await _generateCodeFromParent();
+                                      if (!mounted || code == null) {
+                                        return;
                                       }
-                                    },
-                              icon: _generatingCode
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.auto_awesome),
-                            ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.customersErrorInvalidCode;
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _nameController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: l10n.customersFieldName,
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.customersErrorInvalidName;
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'معلومات التواصل والعنوان'
-                    : 'Contact & Address',
-                icon: Icons.contact_phone_outlined,
-              ),
-              AppResponsiveForm(
-                maxColumns: 2,
-                children: [
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: l10n.customersFieldPhone,
-                      prefixIcon: const Icon(Icons.phone_outlined),
-                    ),
-                  ),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: l10n.customersFieldEmail,
-                      prefixIcon: const Icon(Icons.email_outlined),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _addressController,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: l10n.customersFieldAddress,
-                  prefixIcon: const Icon(Icons.location_on_outlined),
-                  alignLabelWithHint: true,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: l10n.customersFieldNotes,
-                  prefixIcon: const Icon(Icons.notes_outlined),
-                  alignLabelWithHint: true,
-                ),
-              ),
-              AppFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'الربط المحاسبي'
-                    : 'Accounting Link',
-                icon: Icons.account_balance_outlined,
-              ),
-              TextFormField(
-                controller: _accountController,
-                onEditingComplete: () => unawaited(_resolveAccountField()),
-                onChanged: (_) {
-                  if (_linkedAccount != null) {
-                    setState(() => _linkedAccount = null);
-                  }
-                },
-                decoration: InputDecoration(
-                  labelText: l10n.customersFieldAccount,
-                  prefixIcon: const Icon(Icons.link_outlined),
-                  helperText: _linkedAccount == null
-                      ? l10n.customersFieldAccountHelperAuto
-                      : l10n.customersAccountLinked(
-                          _linkedAccount!.code,
-                          _linkedAccount!.name,
-                        ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppExpandableFormSection(
-                title: l10n.localeName == 'ar'
-                    ? 'الإعدادات ومصدر البيانات'
-                    : 'Settings & Data Source',
-                icon: Icons.tune_outlined,
-                initiallyExpanded: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Material(
-                      color: Colors.transparent,
-                      child: SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          l10n.customersFieldActive,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        value: _isActive,
-                        onChanged: (value) => setState(() => _isActive = value),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Material(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          border: Border.all(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+                                      _codeController.text = code;
+                                    } finally {
+                                      if (mounted) {
+                                        setState(
+                                          () => _generatingCode = false,
+                                        );
+                                      }
+                                    }
+                                  },
+                            icon: _generatingCode
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.auto_awesome),
                           ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.customersErrorInvalidCode;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: l10n.customersFieldName,
+                    prefixIcon: const Icon(Icons.person_outline),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.customersErrorInvalidName;
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'معلومات التواصل والعنوان'
+                  : 'Contact & Address',
+              icon: Icons.contact_phone_outlined,
+            ),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: l10n.customersFieldPhone,
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                  ),
+                ),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: l10n.customersFieldEmail,
+                    prefixIcon: const Icon(Icons.email_outlined),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _addressController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: l10n.customersFieldAddress,
+                prefixIcon: const Icon(Icons.location_on_outlined),
+                alignLabelWithHint: true,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _notesController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: l10n.customersFieldNotes,
+                prefixIcon: const Icon(Icons.notes_outlined),
+                alignLabelWithHint: true,
+              ),
+            ),
+            AppFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'الربط المحاسبي'
+                  : 'Accounting Link',
+              icon: Icons.account_balance_outlined,
+            ),
+            TextFormField(
+              controller: _accountController,
+              onEditingComplete: () => unawaited(_resolveAccountField()),
+              onChanged: (_) {
+                if (_linkedAccount != null) {
+                  setState(() => _linkedAccount = null);
+                }
+              },
+              decoration: InputDecoration(
+                labelText: l10n.customersFieldAccount,
+                prefixIcon: const Icon(Icons.link_outlined),
+                helperText: _linkedAccount == null
+                    ? l10n.customersFieldAccountHelperAuto
+                    : l10n.customersAccountLinked(
+                        _linkedAccount!.code,
+                        _linkedAccount!.name,
+                      ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppExpandableFormSection(
+              title: l10n.localeName == 'ar'
+                  ? 'الإعدادات ومصدر البيانات'
+                  : 'Settings & Data Source',
+              icon: Icons.tune_outlined,
+              initiallyExpanded: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        l10n.customersFieldActive,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      value: _isActive,
+                      onChanged: (value) => setState(() => _isActive = value),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Material(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outlineVariant.withValues(alpha: 0.4),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: AppSpacing.md,
-                                right: AppSpacing.md,
-                                top: AppSpacing.md,
-                                bottom: AppSpacing.xs,
-                              ),
-                              child: Text(
-                                l10n.customersFieldDataSource,
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: AppSpacing.md,
+                              right: AppSpacing.md,
+                              top: AppSpacing.md,
+                              bottom: AppSpacing.xs,
                             ),
-                            RadioListTile<CustomerDataSource>(
-                              title: Text(l10n.customersDataSourceLocal),
-                              subtitle: Text(l10n.customersDataSourceLocalHint),
-                              value: CustomerDataSource.local,
-                              groupValue: _dataSource,
-                              onChanged: (value) {
-                                if (value == null) {
-                                  return;
-                                }
-                                setState(() => _dataSource = value);
-                              },
+                            child: Text(
+                              l10n.customersFieldDataSource,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
                             ),
-                            RadioListTile<CustomerDataSource>(
-                              title: Text(l10n.customersDataSourceExternal),
-                              subtitle: Text(
-                                l10n.customersDataSourceExternalHint,
-                              ),
-                              value: CustomerDataSource.external,
-                              groupValue: _dataSource,
-                              onChanged: (value) {
-                                if (value == null) {
-                                  return;
-                                }
-                                setState(() => _dataSource = value);
-                              },
+                          ),
+                          RadioListTile<CustomerDataSource>(
+                            title: Text(l10n.customersDataSourceLocal),
+                            subtitle: Text(l10n.customersDataSourceLocalHint),
+                            value: CustomerDataSource.local,
+                            groupValue: _dataSource,
+                            onChanged: (value) {
+                              if (value == null) {
+                                return;
+                              }
+                              setState(() => _dataSource = value);
+                            },
+                          ),
+                          RadioListTile<CustomerDataSource>(
+                            title: Text(l10n.customersDataSourceExternal),
+                            subtitle: Text(
+                              l10n.customersDataSourceExternalHint,
                             ),
-                          ],
-                        ),
+                            value: CustomerDataSource.external,
+                            groupValue: _dataSource,
+                            onChanged: (value) {
+                              if (value == null) {
+                                return;
+                              }
+                              setState(() => _dataSource = value);
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    if (_dataSource == CustomerDataSource.external) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _externalIdController,
-                        decoration: InputDecoration(
-                          labelText: l10n.customersFieldExternalId,
-                          helperText: l10n.customersFieldExternalIdHelper,
-                          prefixIcon: const Icon(Icons.hub_outlined),
-                        ),
-                        validator: (value) {
-                          if (_dataSource == CustomerDataSource.external &&
-                              (value == null || value.trim().isEmpty)) {
-                            return l10n.customersErrorExternalIdRequired;
-                          }
-                          return null;
-                        },
+                  ),
+                  if (_dataSource == CustomerDataSource.external) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _externalIdController,
+                      decoration: InputDecoration(
+                        labelText: l10n.customersFieldExternalId,
+                        helperText: l10n.customersFieldExternalIdHelper,
+                        prefixIcon: const Icon(Icons.hub_outlined),
                       ),
-                    ],
+                      validator: (value) {
+                        if (_dataSource == CustomerDataSource.external &&
+                            (value == null || value.trim().isEmpty)) {
+                          return l10n.customersErrorExternalIdRequired;
+                        }
+                        return null;
+                      },
+                    ),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
         ),
       ),
     );

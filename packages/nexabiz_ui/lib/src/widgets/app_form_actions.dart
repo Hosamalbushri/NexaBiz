@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../theme/tokens/tokens.dart';
 import 'app_button.dart';
@@ -33,7 +34,8 @@ class AppFormActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = shadcn.Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     final content = Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -64,14 +66,21 @@ class AppFormActions extends StatelessWidget {
     if (!isSticky) return content;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: colorScheme.card,
         border: Border(
-          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+          top: BorderSide(
+            color: colorScheme.border.withValues(alpha: 0.6),
+            width: 1,
+          ),
         ),
       ),
       child: content,
     );
   }
 }
+

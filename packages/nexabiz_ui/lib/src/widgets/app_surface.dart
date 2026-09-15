@@ -1,16 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../theme/app_radius.dart';
-import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 
 enum AppSurfaceVariant { flat, outlined, raised }
 
-/// Canonical surface/container primitive for NexaBiz ERP screens.
-///
-/// Supports ERP content panels, forms, tables, filters, summaries, and cards
-/// with token-driven padding, margin, radius, elevation, and variant options.
+/// Canonical surface/container primitive for NexaBiz ERP screens built on [shadcn_flutter].
 class AppSurface extends StatelessWidget {
   const AppSurface({
     super.key,
@@ -37,25 +33,32 @@ class AppSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final brightness = theme.brightness;
+    final theme = shadcn.Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     final effectiveRadius = borderRadius ?? BorderRadius.circular(AppRadius.lg);
 
     final Color effectiveBackground = backgroundColor ??
         (variant == AppSurfaceVariant.flat
-            ? scheme.surfaceContainerLow
-            : scheme.surface);
+            ? colorScheme.muted
+            : colorScheme.card);
 
     final Border? effectiveBorder = variant == AppSurfaceVariant.outlined
         ? Border.all(
-            color: borderColor ?? scheme.outlineVariant.withValues(alpha: 0.55),
+            color: borderColor ?? colorScheme.border,
           )
         : null;
 
     final List<BoxShadow>? effectiveShadow = variant == AppSurfaceVariant.raised
-        ? AppShadows.card(brightness)
+        ? [
+            BoxShadow(
+              color: colorScheme.foreground.withValues(
+                alpha: theme.brightness == Brightness.dark ? 0.18 : 0.04,
+              ),
+              blurRadius: 12.0,
+              offset: const Offset(0, 3),
+            ),
+          ]
         : null;
 
     Widget container = Container(
@@ -69,20 +72,12 @@ class AppSurface extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: onTap == null
           ? Padding(padding: padding, child: child)
-          : InkWell(
+          : GestureDetector(
               onTap: onTap,
-              borderRadius: effectiveRadius as BorderRadius?,
               child: Padding(padding: padding, child: child),
             ),
     );
 
-    if (!animate) {
-      return container;
-    }
-
-    return container
-        .animate()
-        .fadeIn(duration: 200.ms, curve: Curves.easeOutCubic)
-        .moveY(begin: 6, end: 0, duration: 200.ms, curve: Curves.easeOutCubic);
+    return container;
   }
 }

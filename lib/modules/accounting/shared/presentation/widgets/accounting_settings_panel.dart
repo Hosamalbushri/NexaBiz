@@ -40,7 +40,11 @@ class AccountingSettingsPanel extends ConsumerWidget {
                       ? l10n.accountingChartCurrentlyEmpty
                       : l10n.accountingChartCreatedCount(accounts.length),
                 ),
-                trailing: ElevatedButton.icon(
+                trailing: AppButton(
+                  label: isEmpty
+                      ? l10n.accountingGenerateChartAction
+                      : l10n.accountingRealignChartAction,
+                  icon: Icons.account_tree_outlined,
                   onPressed: accountsAsync.isLoading
                       ? null
                       : () async {
@@ -57,12 +61,6 @@ class AccountingSettingsPanel extends ConsumerWidget {
                             );
                           }
                         },
-                  icon: const Icon(Icons.account_tree_outlined),
-                  label: Text(
-                    isEmpty
-                        ? l10n.accountingGenerateChartAction
-                        : l10n.accountingRealignChartAction,
-                  ),
                 ),
               );
             },
@@ -90,7 +88,11 @@ class AccountingSettingsPanel extends ConsumerWidget {
                       ? l10n.accountingVoucherBooksCurrentlyEmpty
                       : l10n.accountingVoucherBooksCreatedCount(totalLeafBooks),
                 ),
-                trailing: ElevatedButton.icon(
+                trailing: AppButton(
+                  label: isEmpty
+                      ? l10n.accountingGenerateVoucherBooksAction
+                      : l10n.accountingRealignVoucherBooksAction,
+                  icon: Icons.menu_book_outlined,
                   onPressed: sectionsAsync.isLoading
                       ? null
                       : () async {
@@ -107,12 +109,6 @@ class AccountingSettingsPanel extends ConsumerWidget {
                             );
                           }
                         },
-                  icon: const Icon(Icons.menu_book_outlined),
-                  label: Text(
-                    isEmpty
-                        ? l10n.accountingGenerateVoucherBooksAction
-                        : l10n.accountingRealignVoucherBooksAction,
-                  ),
                 ),
               );
             },
@@ -142,9 +138,10 @@ class AccountingSettingsPanel extends ConsumerWidget {
               if (closed != null)
                 Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: TextButton(
+                  child: AppButton(
+                    label: l10n.accountingFiscalClosedClear,
+                    variant: AppButtonVariant.text,
                     onPressed: () => _saveClosedThrough(context, ref, null),
-                    child: Text(l10n.accountingFiscalClosedClear),
                   ),
                 ),
             ],

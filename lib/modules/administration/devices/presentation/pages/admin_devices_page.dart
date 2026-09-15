@@ -271,15 +271,18 @@ class _DeviceCardState extends ConsumerState<_DeviceCard> {
         title: Text(l10n.adminDevicesRevokeConfirmTitle),
         content: Text(l10n.adminDevicesRevokeConfirmMessage),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.adminDevicesRevokeCancel,
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.adminDevicesRevokeCancel),
+            variant: AppButtonVariant.text,
           ),
-          FilledButton(
+          AppButton(
+            label: l10n.adminDevicesRevokeAction,
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.adminDevicesRevokeAction),
+            variant: AppButtonVariant.destructive,
           ),
         ],
+
       ),
     );
     if (confirmed != true || !mounted) return;
@@ -422,16 +425,12 @@ class _DeviceCardState extends ConsumerState<_DeviceCard> {
               const SizedBox(height: AppSpacing.sm),
               Align(
                 alignment: AlignmentDirectional.centerEnd,
-                child: OutlinedButton.icon(
+                child: AppButton(
                   onPressed: _busy ? null : _revoke,
-                  icon: _busy
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.block_outlined, size: 18),
-                  label: Text(l10n.adminDevicesRevokeAction),
+                  icon: Icons.block_outlined,
+                  label: l10n.adminDevicesRevokeAction,
+                  variant: AppButtonVariant.outlined,
+                  isLoading: _busy,
                 ),
               ),
             ],
@@ -567,22 +566,19 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: AppButton(
+                      label: l10n.adminDevicesRejectAction,
                       onPressed: _busy ? null : _reject,
-                      child: Text(l10n.adminDevicesRejectAction),
+                      variant: AppButtonVariant.outlined,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: FilledButton(
+                    child: AppButton(
+                      label: l10n.adminDevicesApproveAction,
                       onPressed: _busy ? null : _approve,
-                      child: _busy
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(l10n.adminDevicesApproveAction),
+                      isLoading: _busy,
+                      variant: AppButtonVariant.filled,
                     ),
                   ),
                 ],

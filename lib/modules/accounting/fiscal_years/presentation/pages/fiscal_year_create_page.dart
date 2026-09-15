@@ -3,13 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/functional_currency_providers.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/permissions/permission_error_messages.dart';
 import 'package:stock_count/core/utils/business_date.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../domain/entities/accounting_period_status.dart';
 import '../../domain/entities/fiscal_year.dart';
@@ -183,61 +181,12 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
       l10n.accountingFiscalWizardStepPreview,
     ];
 
-    return AppResponsiveScaffold(
-      appBar: CustomAppBar(
-        title: l10n.accountingFiscalYearCreateTitle,
-        showBackButton: true,
-      ),
-      bottomActions: AppBottomActions(
-        child: Row(
-          children: [
-            if (_step > 0) ...[
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _saving ? null : () => setState(() => _step -= 1),
-                  icon: const Icon(Icons.arrow_back),
-                  label: Text(l10n.accountingFiscalWizardBack),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-            ],
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _saving
-                    ? null
-                    : () {
-                        if (_step < 3) {
-                          setState(() => _step += 1);
-                          if (_step == 3) {
-                            _rebuildPreview();
-                          }
-                        } else {
-                          _create();
-                        }
-                      },
-                icon: _saving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        _step == 3
-                            ? Icons.check_circle_outlined
-                            : Icons.arrow_forward,
-                      ),
-                label: Text(
-                  _step == 3
-                      ? l10n.accountingFiscalWizardCreate
-                      : l10n.accountingFiscalWizardNext,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
+    return AppFormPage(
+      title: l10n.accountingFiscalYearCreateTitle,
+      showBackButton: true,
+      showFormActions: false,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AppFormSection(
             title: stepTitles[_step],
@@ -396,6 +345,53 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                 ),
           ],
           const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              if (_step > 0) ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _saving ? null : () => setState(() => _step -= 1),
+                    icon: const Icon(Icons.arrow_back),
+                    label: Text(l10n.accountingFiscalWizardBack),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+              ],
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : () {
+                          if (_step < 3) {
+                            setState(() => _step += 1);
+                            if (_step == 3) {
+                              _rebuildPreview();
+                            }
+                          } else {
+                            _create();
+                          }
+                        },
+                  icon: _saving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          _step == 3
+                              ? Icons.check_circle_outlined
+                              : Icons.arrow_forward,
+                        ),
+                  label: Text(
+                    _step == 3
+                        ? l10n.accountingFiscalWizardCreate
+                        : l10n.accountingFiscalWizardNext,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
         ],
       ),
     );

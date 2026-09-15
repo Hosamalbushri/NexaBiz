@@ -236,8 +236,7 @@ class _OperationTile extends StatelessWidget {
       SyncStatus.quarantined => ('Quarantined', colorScheme.error),
     };
 
-    return Card(
-      margin: EdgeInsets.zero,
+    return AppCard(
       child: ListTile(
         onTap: onTap,
         title: Row(
@@ -380,10 +379,10 @@ class _OperationDetailDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton.icon(
-          icon: const Icon(Icons.delete_outline_rounded),
-          label: Text(l10n.syncOutboxPurge),
-          style: TextButton.styleFrom(foregroundColor: colorScheme.error),
+        AppButton(
+          label: l10n.syncOutboxPurge,
+          icon: Icons.delete_outline_rounded,
+          variant: AppButtonVariant.destructive,
           onPressed: onPurge,
         ),
         AppButton(

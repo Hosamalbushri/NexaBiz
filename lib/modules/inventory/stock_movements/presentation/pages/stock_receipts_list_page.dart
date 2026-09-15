@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
@@ -16,82 +15,80 @@ import '../providers/stock_movements_providers.dart';
 import '../widgets/stock_posting_error_dialog.dart';
 
 class StockReceiptsListPage extends ConsumerWidget {
-  const StockReceiptsListPage({super.key, this.embedInTab = false});
-
-  final bool embedInTab;
+  const StockReceiptsListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final receiptsAsync = ref.watch(stockReceiptsStreamProvider);
     final l10n = AppLocalizations.of(context);
 
-    final content = AppContentConstraint(
-      child: receiptsAsync.when(
-        loading: () => const AppLoading(),
-        error: (err, stack) => Center(child: Text('خطأ: $err')),
-        data: (receipts) {
-          return ListView(
-            padding: AppConstants.pageInsets(context),
-            children: [
-              _MovementCategoryActionHeader(
-                title: l10n.localeName == 'ar'
-                    ? 'أوامر التوريد'
-                    : 'Stock Receipts',
-                subtitle: l10n.localeName == 'ar'
-                    ? 'استلام البضائع وتحديث رصيد وأصل المخزون'
-                    : 'Receive items & update inventory asset',
-                icon: Icons.move_to_inbox_rounded,
-                count: receipts.length,
-                onNewPressed: () =>
-                    InventoryRoutes.pushStockReceiptsNew(context),
-              ),
-              if (receipts.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+    final content = receiptsAsync.when(
+      loading: () => const AppLoading(),
+      error: (err, stack) => Center(child: Text('خطأ: $err')),
+      data: (receipts) {
+        return ListView(
+          padding: AppConstants.pageInsets(context),
+          children: [
+            _MovementCategoryActionHeader(
+              title: l10n.localeName == 'ar'
+                  ? 'أوامر التوريد'
+                  : 'Stock Receipts',
+              subtitle: l10n.localeName == 'ar'
+                  ? 'إضافة بضائع وتغذية المستودعات'
+                  : 'Receive items & increase warehouse stock',
+              icon: Icons.move_to_inbox_rounded,
+              count: receipts.length,
+              onNewPressed: () =>
+                  InventoryRoutes.pushStockReceiptsNew(context),
+            ),
+            if (receipts.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.xl,
+                  ),
                   child: AppEmptyState(
                     title: l10n.stockReceiptsEmptyTitle,
-                    subtitle: l10n.stockReceiptsEmptyAction,
-                    icon: Icons.move_to_inbox_outlined,
+                    icon: Icons.inbox_outlined,
                     actionLabel: l10n.stockReceiptsEmptyAction,
                     onAction: () =>
                         InventoryRoutes.pushStockReceiptsNew(context),
                   ),
-                )
-              else
-                ...receipts.map(
-                  (receipt) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _StockReceiptCard(receipt: receipt),
-                  ),
                 ),
-            ],
-          );
-        },
-      ),
+              )
+            else
+              ...receipts.map(
+                (receipt) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _StockReceiptCard(receipt: receipt),
+                ),
+              ),
+          ],
+        );
+      },
     );
 
-    if (embedInTab) {
-      return content;
-    }
-
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.stockReceiptsTitle,
-        showBackButton: true,
-        actions: [
-          AppIconButton(
-            icon: Icons.add_rounded,
-            tooltip: l10n.stockReceiptsNewTooltip,
-            onPressed: () => InventoryRoutes.pushStockReceiptsNew(context),
-          ),
-        ],
-      ),
+    return AppListPage<StockReceipt>(
+      title: l10n.stockReceiptsTitle,
+      headerActions: [
+        AppIconButton(
+          icon: Icons.add_rounded,
+          tooltip: l10n.stockReceiptsNewTooltip,
+          onPressed: () => InventoryRoutes.pushStockReceiptsNew(context),
+        ),
+      ],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => InventoryRoutes.pushStockReceiptsNew(context),
         icon: const Icon(Icons.add),
         label: Text(l10n.stockReceiptsNewButton),
       ),
-      body: content,
+      isLoading: receiptsAsync.isLoading && !receiptsAsync.hasValue,
+      errorText: receiptsAsync.error?.toString(),
+      emptyTitle: l10n.stockReceiptsEmptyTitle,
+      emptyActionLabel: l10n.stockReceiptsEmptyAction,
+      onEmptyAction: () => InventoryRoutes.pushStockReceiptsNew(context),
+      items: receiptsAsync.valueOrNull ?? const [],
+      contentBuilder: (context, receipts) => content,
     );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/import_profile.dart';
 import '../../registry/import_profile_registry.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
@@ -17,22 +16,20 @@ class ImportProfilesOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final profiles = ImportProfileRegistry.allProfiles;
 
-    return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'ملفات الاستيراد المسجلة | Import Profiles',
-        showBackButton: true,
-      ),
-      body: profiles.isEmpty
-          ? const Center(child: Text('لا توجد ملفات استيراد مسجلة حالياً.'))
-          : ListView.separated(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              itemCount: profiles.length,
-              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-              itemBuilder: (context, index) {
-                final profile = profiles[index];
-                return _ProfileDetailCard(profile: profile);
-              },
-            ),
+    return AppListPage<ImportProfile>(
+      title: 'ملفات الاستيراد المسجلة | Import Profiles',
+      emptyTitle: 'لا توجد ملفات استيراد مسجلة حالياً.',
+      items: profiles,
+      contentBuilder: (context, itemList) {
+        return ListView.separated(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          itemCount: itemList.length,
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+          itemBuilder: (context, index) {
+            return _ProfileDetailCard(profile: itemList[index]);
+          },
+        );
+      },
     );
   }
 }

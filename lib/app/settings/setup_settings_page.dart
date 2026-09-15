@@ -6,8 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:nexabiz_ui/nexabiz_ui.dart';
-import '../../core/widgets/custom_app_bar.dart';
-import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -189,34 +187,32 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     final theme = Theme.of(context);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final asyncProfile = ref.watch(companyProfileProvider);
+    final pageTitle =
+        isArabic ? 'بيانات وإعدادات الشركة' : 'Company Profile & Identity';
 
     return asyncProfile.when(
-      loading: () => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.setupSettingsTitle,
-          showBackButton: true,
-        ),
-        body: const Center(child: CircularProgressIndicator()),
+      loading: () => AppSettingsPage(
+        title: pageTitle,
+        showBackButton: true,
+        isLoading: true,
+        sections: const [],
       ),
-      error: (_, _) => Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.setupSettingsTitle,
-          showBackButton: true,
-        ),
-        body: Center(child: Text(l10n.somethingWentWrong)),
+      error: (err, _) => AppSettingsPage(
+        title: pageTitle,
+        showBackButton: true,
+        errorText: l10n.somethingWentWrong,
+        sections: const [],
       ),
       data: (profile) {
         _hydrate(profile);
 
-        return Scaffold(
-          backgroundColor: theme.colorScheme.surfaceContainerLowest,
-          appBar: CustomAppBar(
-            title: isArabic
-                ? 'بيانات وإعدادات الشركة'
-                : 'Company Profile & Identity',
-            showBackButton: true,
-          ),
-          body: _buildCompanyForm(context, theme, l10n),
+        return AppSettingsPage(
+          title: pageTitle,
+          subtitle: l10n.setupSettingsSubtitle,
+          showBackButton: true,
+          sections: [
+            _buildCompanyForm(context, theme, l10n),
+          ],
         );
       },
     );
@@ -230,8 +226,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     return Form(
       key: _formKey,
-      child: ListView(
-        padding: AppConstants.pageInsets(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             l10n.setupSettingsSubtitle,
@@ -443,21 +439,17 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                DropdownButtonFormField<int>(
-                  initialValue: _fiscalMonth,
-                  decoration: InputDecoration(
-                    labelText: l10n.setupFiscalYearStart,
-                    helperText: l10n.setupFiscalYearStartHelper,
-                  ),
+                AppSelectField<int>(
+                  value: _fiscalMonth,
+                  label: l10n.setupFiscalYearStart,
+                  helperText: l10n.setupFiscalYearStartHelper,
                   items: [
                     for (var month = 1; month <= 12; month++)
-                      DropdownMenuItem(
+                      AppSelectItem(
                         value: month,
-                        child: Text(
-                          DateFormat.MMMM(
-                            Localizations.localeOf(context).toString(),
-                          ).format(DateTime(2024, month)),
-                        ),
+                        label: DateFormat.MMMM(
+                          Localizations.localeOf(context).toString(),
+                        ).format(DateTime(2024, month)),
                       ),
                   ],
                   onChanged: (value) {

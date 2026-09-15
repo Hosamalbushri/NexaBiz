@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/auth/presentation/providers/auth_state_core.dart';
 import '../../domain/entities/accounting_period_status.dart';
 import '../../domain/models/fiscal_year_exception.dart';
@@ -30,37 +28,30 @@ class FiscalYearDetailsPage extends ConsumerWidget {
     final auth = ref.watch(authStateProvider);
     final dateFmt = DateFormat.yMMMd();
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
+    return fyAsync.when(
+      loading: () => AppDetailsPage(
         title: l10n.accountingFiscalYearDetails,
-        showBackButton: true,
+        isLoading: true,
       ),
-      body: fyAsync.when(
-        loading: () => const AppLoading(),
-        error: (e, _) => AppErrorState(message: e.toString()),
-        data: (fy) {
-          if (fy == null) {
-            return AppErrorState(message: l10n.somethingWentWrong);
-          }
-          return ListView(
-            padding: AppConstants.pageInsets(context),
+      error: (e, _) => AppDetailsPage(
+        title: l10n.accountingFiscalYearDetails,
+        error: e.toString(),
+        onRetry: () => ref.invalidate(fiscalYearByUuidProvider(fiscalYearUuid)),
+      ),
+      data: (fy) {
+        if (fy == null) {
+          return AppDetailsPage(
+            title: l10n.accountingFiscalYearDetails,
+            error: l10n.somethingWentWrong,
+          );
+        }
+        return AppDetailsPage(
+          title: fy.name,
+          subtitle: '${fy.code} · ${dateFmt.format(fy.startDate.toLocal())}'
+              ' – ${dateFmt.format(fy.endDate.toLocal())}',
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                fy.name,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${fy.code} · ${dateFmt.format(fy.startDate.toLocal())}'
-                ' – ${dateFmt.format(fy.endDate.toLocal())}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
               Text(
                 l10n.accountingFiscalYearFxSummary,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -148,9 +139,9 @@ class FiscalYearDetailsPage extends ConsumerWidget {
                 },
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -184,13 +175,14 @@ class FiscalYearDetailsPage extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(
+            AppButton(
+              label: l10n.cancel,
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.cancel),
             ),
-            FilledButton(
+            AppButton(
+              label: l10n.confirm,
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l10n.confirm),
             ),
           ],
         );
@@ -277,15 +269,16 @@ class FiscalYearDetailsPage extends ConsumerWidget {
             ],
           ),
           actions: [
-            TextButton(
+            AppButton(
+              label: l10n.cancel,
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.cancel),
             ),
-            FilledButton(
+            AppButton(
+              label: l10n.accountingPeriodClose,
               onPressed: preflight.canClose
                   ? () => Navigator.pop(dialogContext, true)
                   : null,
-              child: Text(l10n.accountingPeriodClose),
             ),
           ],
         );
@@ -338,13 +331,14 @@ class FiscalYearDetailsPage extends ConsumerWidget {
             maxLines: 3,
           ),
           actions: [
-            TextButton(
+            AppButton(
+              label: l10n.cancel,
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.cancel),
             ),
-            FilledButton(
+            AppButton(
+              label: l10n.confirm,
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l10n.confirm),
             ),
           ],
         );

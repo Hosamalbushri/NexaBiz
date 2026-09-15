@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../app/localization/app_localizations.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import '../notifications/app_notification.dart';
 import 'notification_banner.dart';
 
@@ -184,18 +185,10 @@ class NotificationTile extends StatelessWidget {
                                         ),
                                       const Spacer(),
                                       if (hasAction)
-                                        TextButton(
+                                        AppButton(
+                                          label: notification.actionLabel!,
+                                          variant: AppButtonVariant.text,
                                           onPressed: onAction,
-                                          style: TextButton.styleFrom(
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            notification.actionLabel!,
-                                          ),
                                         ),
                                     ],
                                   ),

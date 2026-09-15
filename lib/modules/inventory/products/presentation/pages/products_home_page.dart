@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
@@ -60,16 +59,20 @@ class ProductsHomePage extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: CustomAppBar(title: l10n.productsHubTitle, showBackButton: true),
-      body: AppContentConstraint(
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      appBar: CustomAppBar(
+        title: l10n.productsHubTitle,
+        showBackButton: true,
+      ),
+      body: AppDashboardPage(
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               l10n.productsHubDescription,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
-                height: 1.35,
+                height: 1.4,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

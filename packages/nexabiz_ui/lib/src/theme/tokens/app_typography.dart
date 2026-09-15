@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 /// Typography tokens for NexaBiz ERP System built on Cairo font family.
 class AppTypography {
@@ -7,6 +8,53 @@ class AppTypography {
   static const String fontFamilyName = 'Cairo';
 
   static String? get fontFamily => fontFamilyName;
+
+  /// Canonical native shadcn Typography instance configured with Cairo font family.
+  static shadcn.Typography shadcnTypography() {
+    return const shadcn.Typography(
+      sans: TextStyle(fontFamily: fontFamilyName),
+      mono: TextStyle(fontFamily: fontFamilyName),
+      xSmall: TextStyle(fontFamily: fontFamilyName, fontSize: 12),
+      small: TextStyle(fontFamily: fontFamilyName, fontSize: 14),
+      base: TextStyle(fontFamily: fontFamilyName, fontSize: 16),
+      large: TextStyle(fontFamily: fontFamilyName, fontSize: 18),
+      xLarge: TextStyle(fontFamily: fontFamilyName, fontSize: 20),
+      x2Large: TextStyle(fontFamily: fontFamilyName, fontSize: 24),
+      x3Large: TextStyle(fontFamily: fontFamilyName, fontSize: 30),
+      x4Large: TextStyle(fontFamily: fontFamilyName, fontSize: 36),
+      x5Large: TextStyle(fontFamily: fontFamilyName, fontSize: 48),
+      x6Large: TextStyle(fontFamily: fontFamilyName, fontSize: 60),
+      x7Large: TextStyle(fontFamily: fontFamilyName, fontSize: 72),
+      x8Large: TextStyle(fontFamily: fontFamilyName, fontSize: 96),
+      x9Large: TextStyle(fontFamily: fontFamilyName, fontSize: 144),
+      thin: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w100),
+      light: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w300),
+      extraLight: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w200),
+      normal: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w400),
+      medium: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w500),
+      semiBold: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w600),
+      bold: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w700),
+      extraBold: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w800),
+      black: TextStyle(fontFamily: fontFamilyName, fontWeight: FontWeight.w900),
+      italic: TextStyle(fontFamily: fontFamilyName, fontStyle: FontStyle.italic),
+      h1: TextStyle(fontFamily: fontFamilyName, fontSize: 36, fontWeight: FontWeight.w800),
+      h2: TextStyle(fontFamily: fontFamilyName, fontSize: 30, fontWeight: FontWeight.w600),
+      h3: TextStyle(fontFamily: fontFamilyName, fontSize: 24, fontWeight: FontWeight.w600),
+      h4: TextStyle(fontFamily: fontFamilyName, fontSize: 18, fontWeight: FontWeight.w600),
+      p: TextStyle(fontFamily: fontFamilyName, fontSize: 16, fontWeight: FontWeight.w400),
+      blockQuote: TextStyle(fontFamily: fontFamilyName, fontSize: 16, fontWeight: FontWeight.w400, fontStyle: FontStyle.italic),
+      inlineCode: TextStyle(fontFamily: fontFamilyName, fontSize: 14, fontWeight: FontWeight.w600),
+      lead: TextStyle(fontFamily: fontFamilyName, fontSize: 20),
+      textLarge: TextStyle(fontFamily: fontFamilyName, fontSize: 20, fontWeight: FontWeight.w600),
+      textSmall: TextStyle(fontFamily: fontFamilyName, fontSize: 14, fontWeight: FontWeight.w500),
+      textMuted: TextStyle(fontFamily: fontFamilyName, fontSize: 14, fontWeight: FontWeight.w400),
+    );
+  }
+
+  /// Dynamic context-aware shadcn typography accessor.
+  static shadcn.Typography typographyOf(BuildContext context) {
+    return shadcn.Theme.of(context).typography;
+  }
 
   static TextTheme textTheme(Brightness brightness) {
     final base = brightness == Brightness.dark
@@ -121,3 +169,4 @@ class AppTypography {
     );
   }
 }
+

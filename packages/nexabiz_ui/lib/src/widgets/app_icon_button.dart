@@ -4,12 +4,9 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 import '../theme/app_dimensions.dart';
 import '../theme/tokens/app_icons.dart';
 
-enum AppIconButtonVariant { standard, primary, destructive, outline, ghost }
+enum AppIconButtonVariant { standard, primary, destructive, outline, ghost, chip }
 
-/// Canonical icon button primitive for NexaBiz ERP.
-///
-/// Modernized with interactive hover micro-animations, touch target enforcement,
-/// tooltip support, badge counter, and variant styling.
+/// Canonical icon button primitive for NexaBiz ERP built natively on [shadcn_flutter].
 class AppIconButton extends StatefulWidget {
   const AppIconButton({
     super.key,
@@ -37,11 +34,14 @@ class AppIconButton extends StatefulWidget {
 }
 
 class _AppIconButtonState extends State<AppIconButton> {
-  bool _isHovered = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null && !widget.isLoading;
+    final shadcnTheme = shadcn.Theme.of(context);
+    final colorScheme = shadcnTheme.colorScheme;
+    final accent = widget.color ?? colorScheme.primary;
 
     final childWidget = widget.isLoading
         ? SizedBox(
@@ -49,7 +49,13 @@ class _AppIconButtonState extends State<AppIconButton> {
             height: widget.iconSize,
             child: const shadcn.CircularProgressIndicator(strokeWidth: 2.0),
           )
-        : Icon(widget.icon, size: widget.iconSize, color: widget.color);
+        : Icon(
+            widget.icon,
+            size: widget.iconSize,
+            color: widget.variant == AppIconButtonVariant.chip
+                ? (enabled ? accent : colorScheme.mutedForeground.withValues(alpha: 0.38))
+                : widget.color,
+          );
 
     final Widget badgedChild = widget.badgeCount != null && widget.badgeCount! > 0
         ? Stack(
@@ -69,8 +75,39 @@ class _AppIconButtonState extends State<AppIconButton> {
 
     final VoidCallback? handler = enabled ? widget.onPressed : null;
 
+    if (widget.variant == AppIconButtonVariant.chip) {
+      Widget chipBtn = AnimatedScale(
+        scale: _pressed ? 0.94 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        child: Material(
+          color: accent.withValues(alpha: enabled ? 0.12 : 0.05),
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: handler,
+            onHighlightChanged: (value) => setState(() => _pressed = value),
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(
+              width: AppDimensions.minTouchTarget,
+              height: AppDimensions.minTouchTarget,
+              child: Center(child: badgedChild),
+            ),
+          ),
+        ),
+      );
+
+      if (widget.tooltip != null && widget.tooltip!.isNotEmpty) {
+        chipBtn = shadcn.Tooltip(
+          tooltip: (context) => Text(widget.tooltip!),
+          child: chipBtn,
+        );
+      }
+
+      return chipBtn;
+    }
+
     Widget button = switch (widget.variant) {
-      AppIconButtonVariant.standard => shadcn.GhostButton(
+      AppIconButtonVariant.standard || AppIconButtonVariant.ghost => shadcn.GhostButton(
           onPressed: handler,
           density: shadcn.ButtonDensity.icon,
           shape: shadcn.ButtonShape.circle,
@@ -94,29 +131,15 @@ class _AppIconButtonState extends State<AppIconButton> {
           shape: shadcn.ButtonShape.circle,
           child: badgedChild,
         ),
-      AppIconButtonVariant.ghost => shadcn.GhostButton(
-          onPressed: handler,
-          density: shadcn.ButtonDensity.icon,
-          shape: shadcn.ButtonShape.circle,
-          child: badgedChild,
-        ),
+      AppIconButtonVariant.chip => const SizedBox.shrink(),
     };
 
-    button = MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedScale(
-        scale: _isHovered && enabled ? 1.08 : 1.0,
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.easeOutCubic,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minWidth: AppDimensions.minTouchTarget,
-            minHeight: AppDimensions.minTouchTarget,
-          ),
-          child: button,
-        ),
+    button = ConstrainedBox(
+      constraints: const BoxConstraints(
+        minWidth: AppDimensions.minTouchTarget,
+        minHeight: AppDimensions.minTouchTarget,
       ),
+      child: button,
     );
 
     if (widget.tooltip != null && widget.tooltip!.isNotEmpty) {

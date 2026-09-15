@@ -270,19 +270,6 @@ class AppDialog<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasShadcnTheme =
-        context.dependOnInheritedWidgetOfExactType<shadcn.Theme>() != null;
-    if (!hasShadcnTheme) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      return shadcn.Theme(
-        data: isDark
-            ? const shadcn.ThemeData.dark()
-            : const shadcn.ThemeData(),
-        child: Builder(
-          builder: (context) => _buildDialog(context),
-        ),
-      );
-    }
     return _buildDialog(context);
   }
 
@@ -296,10 +283,9 @@ class AppDialog<T> extends StatelessWidget {
     final hasHeader = title != null || description != null || icon != null || leading != null || trailing != null || showCloseButton;
     final renderActions = showActions && (actions == null || actions!.isNotEmpty);
 
-    // Sleek Vercel/Linear dark slate container in Dark Mode, crisp white in Light Mode
-    final dialogBgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFFFFFFF);
-    final borderColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFE5E7EB);
-    final footerBgColor = isDark ? const Color(0xFF090D16) : const Color(0xFFF9FAFB);
+    final dialogBgColor = colorScheme.popover;
+    final borderColor = colorScheme.border;
+    final footerBgColor = colorScheme.muted.withValues(alpha: 0.3);
 
     final rawAvatar = leading ?? (icon != null
         ? AppIconAvatar(
@@ -423,7 +409,7 @@ class AppDialog<T> extends StatelessWidget {
             ),
 
             // Slot 3: Close Control / Trailing Action
-            if (rightSlotWidget is! SizedBox || (rightSlotWidget as SizedBox).width != 0)
+            if (rightSlotWidget is! SizedBox || rightSlotWidget.width != 0)
               const SizedBox(width: 12),
             rightSlotWidget,
           ],

@@ -8,6 +8,7 @@ import '../theme/app_spacing.dart';
 import 'company/company_cloud_providers.dart';
 import 'company/company_cloud_state.dart';
 import 'package:stock_count/app/settings/package_store_sheet.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'widgets/cloud_provisioning_flow_dialog.dart';
 
 class SubscriptionPackagesPage extends ConsumerWidget {
@@ -20,26 +21,27 @@ class SubscriptionPackagesPage extends ConsumerWidget {
     final cloudState = ref.watch(companyCloudStateProvider);
     final entitlementAsync = ref.watch(currentEntitlementProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.subscriptionAndPackagesTitle)),
-      body: cloudState.isLocalOnly
-          ? _buildLocalCompanyOnboardingView(context, ref, cloudState)
-          : cloudState.cloudStatus == CompanyCloudStatus.provisioningFailed
-          ? _buildProvisioningFailedView(context, ref, cloudState)
-          : cloudState.cloudStatus == CompanyCloudStatus.provisioning ||
-                cloudState.cloudStatus == CompanyCloudStatus.initialSyncing
-          ? _buildMigrationProgressView(context, ref, cloudState)
-          : entitlementAsync.when(
-              data: (entitlement) => _buildCloudReadySubscriptionView(
-                context,
-                ref,
-                cloudState,
-                entitlement,
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) =>
-                  Center(child: Text('Error loading subscription: $err')),
-            ),
+    return AppSettingsPage(
+      title: l10n.subscriptionAndPackagesTitle,
+      showBackButton: true,
+      isLoading: entitlementAsync.isLoading,
+      errorText: entitlementAsync.hasError ? 'Error loading subscription: ${entitlementAsync.error}' : null,
+      sections: [
+        if (cloudState.isLocalOnly)
+          _buildLocalCompanyOnboardingView(context, ref, cloudState)
+        else if (cloudState.cloudStatus == CompanyCloudStatus.provisioningFailed)
+          _buildProvisioningFailedView(context, ref, cloudState)
+        else if (cloudState.cloudStatus == CompanyCloudStatus.provisioning ||
+            cloudState.cloudStatus == CompanyCloudStatus.initialSyncing)
+          _buildMigrationProgressView(context, ref, cloudState)
+        else if (entitlementAsync.hasValue)
+          _buildCloudReadySubscriptionView(
+            context,
+            ref,
+            cloudState,
+            entitlementAsync.value!,
+          ),
+      ],
     );
   }
 
@@ -52,15 +54,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.md),
-            side: BorderSide(color: colorScheme.primary, width: 1.5),
-          ),
+        AppCard(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -126,29 +123,22 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ElevatedButton.icon(
+                    AppButton(
+                      label: 'Link Existing Cloud Account',
+                      icon: Icons.link,
                       onPressed: () => CloudProvisioningFlowDialog.show(
                         context,
                         initialMode: ProvisioningMode.linkExisting,
                       ),
-                      icon: const Icon(Icons.link),
-                      label: const Text('Link Existing Cloud Account'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    OutlinedButton.icon(
+                    AppButton(
+                      label: 'Create New Cloud Company',
+                      icon: Icons.cloud_upload_outlined,
+                      variant: AppButtonVariant.outlined,
                       onPressed: () => CloudProvisioningFlowDialog.show(
                         context,
                         initialMode: ProvisioningMode.createNew,
-                      ),
-                      icon: const Icon(Icons.cloud_upload_outlined),
-                      label: const Text('Create New Cloud Company'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ],
@@ -166,7 +156,7 @@ class SubscriptionPackagesPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Card(
+        AppCard(
           child: Column(
             children: [
               ListTile(
@@ -258,11 +248,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
         .watch(companyProvisioningControllerProvider)
         .value;
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Card(
-          elevation: 2,
+        AppCard(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -341,10 +330,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Card(
+        AppCard(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -372,18 +361,19 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                   runSpacing: AppSpacing.sm,
                   alignment: WrapAlignment.center,
                   children: [
-                    OutlinedButton(
+                    AppButton(
+                      label: 'Continue Offline',
+                      variant: AppButtonVariant.outlined,
                       onPressed: () {
                         ref
                             .read(companyCloudStateProvider.notifier)
                             .setStatus(CompanyCloudStatus.localOnly);
                       },
-                      child: const Text('Continue Offline'),
                     ),
-                    ElevatedButton(
+                    AppButton(
+                      label: 'Retry Setup',
                       onPressed: () =>
                           CloudProvisioningFlowDialog.show(context),
-                      child: const Text('Retry Setup'),
                     ),
                   ],
                 ),
@@ -406,15 +396,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.md),
-            side: BorderSide(color: colorScheme.primary, width: 2),
-          ),
+        AppCard(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -475,14 +460,10 @@ class SubscriptionPackagesPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ElevatedButton.icon(
+                AppButton(
+                  label: l10n.manageSubscriptionButton,
+                  icon: Icons.shopping_bag_outlined,
                   onPressed: () => PackageStoreSheet.show(context),
-                  icon: const Icon(Icons.shopping_bag_outlined),
-                  label: Text(l10n.manageSubscriptionButton),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                  ),
                 ),
               ],
             ),
@@ -497,7 +478,7 @@ class SubscriptionPackagesPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Card(
+        AppCard(
           child: Column(
             children: [
               ListTile(
@@ -543,7 +524,7 @@ class SubscriptionPackagesPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Card(
+        AppCard(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(

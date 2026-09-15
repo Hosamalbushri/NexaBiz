@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import '../../../core/modules/app_module.dart';
 import '../../../shared/widgets/service_grid.dart';
@@ -51,14 +52,10 @@ class DashboardServicesPanel extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            TextButton(
+            AppButton(
+              label: customizeLabel,
+              variant: AppButtonVariant.text,
               onPressed: onCustomize,
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(customizeLabel),
             ),
           ],
         ),

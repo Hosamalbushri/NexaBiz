@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use // Preserving standard Flutter RadioListTile parameters (groupValue/onChanged) to avoid UI tree refactoring risks.
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../company/company_cloud_providers.dart';
@@ -236,18 +237,16 @@ class _CloudProvisioningFlowDialogState
               alignment: WrapAlignment.end,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                TextButton(
+                AppButton(
+                  label: 'Cancel',
+                  variant: AppButtonVariant.text,
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
                 ),
-                ElevatedButton.icon(
+                AppButton(
+                  label: 'Link Account & Sync',
+                  icon: Icons.link,
+                  isLoading: _isConfirming,
                   onPressed: _isConfirming ? null : _submitLinkExisting,
-                  icon: const Icon(Icons.link),
-                  label: const Text('Link Account & Sync'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                  ),
                 ),
               ],
             ),
@@ -258,9 +257,6 @@ class _CloudProvisioningFlowDialogState
   }
 
   Widget _buildPlanSelectionView(BuildContext context, String companyName) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Column(
       children: [
         Expanded(
@@ -314,18 +310,16 @@ class _CloudProvisioningFlowDialogState
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            TextButton(
+            AppButton(
+              label: 'Cancel',
+              variant: AppButtonVariant.text,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
             ),
-            ElevatedButton.icon(
+            AppButton(
+              label: 'Confirm & Provision Cloud',
+              icon: Icons.arrow_forward,
+              isLoading: _isConfirming,
               onPressed: _isConfirming ? null : _submitProvisioning,
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('Confirm & Provision Cloud'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-              ),
             ),
           ],
         ),
@@ -508,9 +502,9 @@ class _CloudProvisioningFlowDialogState
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.xl),
-        ElevatedButton(
+        AppButton(
+          label: 'Done',
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Done'),
         ),
       ],
     );
@@ -546,15 +540,16 @@ class _CloudProvisioningFlowDialogState
           runSpacing: AppSpacing.sm,
           alignment: WrapAlignment.center,
           children: [
-            OutlinedButton(
+            AppButton(
+              label: 'Continue Offline',
+              variant: AppButtonVariant.outlined,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Continue Offline'),
             ),
-            ElevatedButton(
+            AppButton(
+              label: 'Retry',
               onPressed: _mode == ProvisioningMode.linkExisting
                   ? _submitLinkExisting
                   : _submitProvisioning,
-              child: const Text('Retry'),
             ),
           ],
         ),

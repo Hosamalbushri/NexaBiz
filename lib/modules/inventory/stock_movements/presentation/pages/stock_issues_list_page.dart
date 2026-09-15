@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
@@ -15,82 +14,77 @@ import '../../domain/entities/stock_issue.dart';
 import '../providers/stock_movements_providers.dart';
 
 class StockIssuesListPage extends ConsumerWidget {
-  const StockIssuesListPage({super.key, this.embedInTab = false});
-
-  final bool embedInTab;
+  const StockIssuesListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final issuesAsync = ref.watch(stockIssuesStreamProvider);
     final l10n = AppLocalizations.of(context);
 
-    final content = AppContentConstraint(
-      child: issuesAsync.when(
-        loading: () => const AppLoading(),
-        error: (err, stack) => Center(child: Text('خطأ: $err')),
-        data: (issues) {
-          return ListView(
-            padding: AppConstants.pageInsets(context),
-            children: [
-              _MovementCategoryActionHeader(
-                title: l10n.localeName == 'ar' ? 'أوامر الصرف' : 'Stock Issues',
-                subtitle: l10n.localeName == 'ar'
-                    ? 'صرف البضائع وتغذية التكلفة والمصروفات'
-                    : 'Issue items & assign cost expenses',
-                icon: Icons.outbox_rounded,
-                count: issues.length,
-                onNewPressed: () => InventoryRoutes.pushStockIssuesNew(context),
-              ),
-              if (issues.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.xl,
-                    ),
-                    child: AppEmptyState(
-                      title: l10n.stockIssuesEmptyTitle,
-                      icon: Icons.outbox_outlined,
-                      actionLabel: l10n.stockIssuesEmptyAction,
-                      onAction: () =>
-                          InventoryRoutes.pushStockIssuesNew(context),
-                    ),
+    final content = issuesAsync.when(
+      loading: () => const AppLoading(),
+      error: (err, stack) => Center(child: Text('خطأ: $err')),
+      data: (issues) {
+        return ListView(
+          padding: AppConstants.pageInsets(context),
+          children: [
+            _MovementCategoryActionHeader(
+              title: l10n.localeName == 'ar' ? 'أوامر الصرف' : 'Stock Issues',
+              subtitle: l10n.localeName == 'ar'
+                  ? 'صرف البضائع وتغذية التكلفة والمصروفات'
+                  : 'Issue items & assign cost expenses',
+              icon: Icons.outbox_rounded,
+              count: issues.length,
+              onNewPressed: () => InventoryRoutes.pushStockIssuesNew(context),
+            ),
+            if (issues.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.xl,
                   ),
-                )
-              else
-                ...issues.map(
-                  (issue) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _StockIssueCard(issue: issue),
+                  child: AppEmptyState(
+                    title: l10n.stockIssuesEmptyTitle,
+                    icon: Icons.outbox_outlined,
+                    actionLabel: l10n.stockIssuesEmptyAction,
+                    onAction: () =>
+                        InventoryRoutes.pushStockIssuesNew(context),
                   ),
                 ),
-            ],
-          );
-        },
-      ),
+              )
+            else
+              ...issues.map(
+                (issue) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _StockIssueCard(issue: issue),
+                ),
+              ),
+          ],
+        );
+      },
     );
 
-    if (embedInTab) {
-      return content;
-    }
-
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.stockIssuesTitle,
-        showBackButton: true,
-        actions: [
-          AppIconButton(
-            icon: Icons.add_rounded,
-            tooltip: l10n.stockIssuesNewTooltip,
-            onPressed: () => InventoryRoutes.pushStockIssuesNew(context),
-          ),
-        ],
-      ),
+    return AppListPage<StockIssue>(
+      title: l10n.stockIssuesTitle,
+      headerActions: [
+        AppIconButton(
+          icon: Icons.add_rounded,
+          tooltip: l10n.stockIssuesNewTooltip,
+          onPressed: () => InventoryRoutes.pushStockIssuesNew(context),
+        ),
+      ],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => InventoryRoutes.pushStockIssuesNew(context),
         icon: const Icon(Icons.add),
         label: Text(l10n.stockIssuesNewButton),
       ),
-      body: content,
+      isLoading: issuesAsync.isLoading && !issuesAsync.hasValue,
+      errorText: issuesAsync.error?.toString(),
+      emptyTitle: l10n.stockIssuesEmptyTitle,
+      emptyActionLabel: l10n.stockIssuesEmptyAction,
+      onEmptyAction: () => InventoryRoutes.pushStockIssuesNew(context),
+      items: issuesAsync.valueOrNull ?? const [],
+      contentBuilder: (context, issues) => content,
     );
   }
 }

@@ -117,19 +117,13 @@ class AppFilterSheet extends StatelessWidget {
                       ),
                     ),
                     if (onReset != null)
-                      TextButton(
+                      AppButton(
+                        label: resetLabel,
+                        variant: AppButtonVariant.text,
                         onPressed: () {
                           onReset!();
                           Navigator.of(context).pop();
                         },
-                        child: Text(
-                          resetLabel,
-                          style: TextStyle(
-                            color: scheme.error,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
                       ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded),

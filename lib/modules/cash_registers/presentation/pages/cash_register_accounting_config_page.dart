@@ -76,13 +76,14 @@ class _CashRegisterAccountingConfigPageState
           ],
         ),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
           ),
-          ElevatedButton(
+          AppButton(
+            label: l10n.confirm,
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.confirm),
           ),
         ],
       ),
@@ -203,14 +204,15 @@ class _CashRegisterAccountingConfigPageState
         title: Text(l10n.cashRegisterUnlinkTitle),
         content: Text(l10n.cashRegisterUnlinkConfirm(register.name)),
         actions: [
-          TextButton(
+          AppButton(
+            label: l10n.cancel,
+            variant: AppButtonVariant.text,
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          AppButton(
+            label: l10n.cashRegisterUnlinkConfirmAction,
+            variant: AppButtonVariant.destructive,
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.cashRegisterUnlinkConfirmAction),
           ),
         ],
       ),
@@ -703,14 +705,12 @@ class _CashRegisterAccountingConfigPageState
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       if (reg != null) ...[
-                        TextButton(
+                        AppButton(
+                          label: isAr ? 'مسح' : 'Clear',
+                          variant: AppButtonVariant.destructive,
                           onPressed: _busy
                               ? null
                               : () => _clearDefaultRegister(companyId, l10n),
-                          child: Text(
-                            isAr ? 'مسح' : 'Clear',
-                            style: const TextStyle(color: Colors.red),
-                          ),
                         ),
                         const SizedBox(width: AppSpacing.xs),
                       ],
@@ -882,15 +882,13 @@ class _CashRegisterAccountingConfigPageState
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               if (reg.isLinked) ...[
-                TextButton.icon(
+                AppButton(
+                  label: isAr ? 'إلغاء الربط' : 'Unlink',
+                  icon: Icons.link_off,
+                  variant: AppButtonVariant.destructive,
                   onPressed: _busy
                       ? null
                       : () => _unlinkAccount(reg, companyId, l10n),
-                  icon: const Icon(Icons.link_off, size: 16, color: Colors.red),
-                  label: Text(
-                    isAr ? 'إلغاء الربط' : 'Unlink',
-                    style: const TextStyle(color: Colors.red, fontSize: 13),
-                  ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 AppButton(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
 import '../theme/app_spacing.dart';
+import 'app_card.dart';
+
 
 enum AppLoadingStyle { circular, linear, skeletonList }
 
@@ -56,14 +58,26 @@ class AppLoading extends StatelessWidget {
             itemCount: skeletonItemCount,
             separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, index) {
-              return const Card(
-                child: ListTile(
-                  leading: CircleAvatar(child: Text('A')),
-                  title: Text('Loading item title placeholder'),
-                  subtitle: Text('Secondary loading line placeholder'),
+              return AppCard(
+                child: Row(
+                  children: [
+                    const CircleAvatar(child: Text('A')),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('Loading item title placeholder'),
+                          SizedBox(height: AppSpacing.xxs),
+                          Text('Secondary loading line placeholder'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
+
           ),
         ).asSkeleton();
     }

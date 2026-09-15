@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nexabiz_ui/nexabiz_ui.dart';
 
-import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/auth/presentation/widgets/permission_gate_core.dart';
@@ -38,11 +37,23 @@ class PurchasesHomePage extends ConsumerWidget {
           ),
         ],
       ),
-      body: AppContentConstraint(
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
+      floatingActionButton: PermissionGate(
+        anyOf: PurchasesPermissions.create,
+        child: FloatingActionButton.extended(
+          onPressed: () => PurchasesRoutes.pushCreateInvoice(context),
+          icon: const Icon(Icons.add),
+          label: Text(
+            l10n.localeName == 'ar'
+                ? 'فاتورة مشتريات جديدة'
+                : 'New Purchase Invoice',
+          ),
+        ),
+      ),
+      body: AppDashboardPage(
+        statsGrid: const AppMissingCurrencyGuardBanner(),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const AppMissingCurrencyGuardBanner(),
             AppModuleHubHeader(
               title: l10n.servicesTitle,
               subtitle: l10n.localeName == 'ar'
@@ -166,18 +177,6 @@ class PurchasesHomePage extends ConsumerWidget {
               ],
             ),
           ],
-        ),
-      ),
-      floatingActionButton: PermissionGate(
-        anyOf: PurchasesPermissions.create,
-        child: FloatingActionButton.extended(
-          onPressed: () => PurchasesRoutes.pushCreateInvoice(context),
-          icon: const Icon(Icons.add),
-          label: Text(
-            l10n.localeName == 'ar'
-                ? 'فاتورة مشتريات جديدة'
-                : 'New Purchase Invoice',
-          ),
         ),
       ),
     );

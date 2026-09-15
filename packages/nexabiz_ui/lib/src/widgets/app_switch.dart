@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shadcn;
 
-/// Canonical Switch control for NexaBiz ERP backed by shadcn_flutter.
+/// Canonical Switch control for NexaBiz ERP backed natively by `shadcn_flutter`.
 class AppSwitch extends StatelessWidget {
   const AppSwitch({
     super.key,
@@ -18,32 +18,10 @@ class AppSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasShadcnTheme =
-        context.findAncestorWidgetOfExactType<shadcn.ComponentTheme>() != null ||
-            context.findAncestorWidgetOfExactType<shadcn.Theme>() != null;
-
-    if (hasShadcnTheme) {
-      return shadcn.Switch(
-        value: value,
-        onChanged: enabled && onChanged != null ? onChanged : null,
-        trailing: label != null ? Text(label!) : null,
-      );
-    }
-
-    final sw = Switch(
+    return shadcn.Switch(
       value: value,
       onChanged: enabled && onChanged != null ? onChanged : null,
-    );
-
-    if (label == null) return sw;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        sw,
-        const SizedBox(width: 8),
-        Text(label!),
-      ],
+      trailing: label != null ? Text(label!) : null,
     );
   }
 }

@@ -239,11 +239,12 @@ class _ServerBootstrapLoginPageState
                 ),
 
                 const SizedBox(height: AppSpacing.md),
-                TextButton(
+                AppButton(
+                  label: 'Change Server Address',
+                  variant: AppButtonVariant.text,
                   onPressed: _isLoading
                       ? null
                       : () => context.go(AppRoutes.serverSetup),
-                  child: const Text('Change Server Address'),
                 ),
               ],
             ),

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_spacing.dart';
+import '../../layout/app_page.dart';
 
-/// Canonical responsive page shell pattern for NexaBiz ERP screens.
-///
-/// Handles screen constraints, safe areas, padding, background color,
-/// and bi-directional RTL/LTR alignment.
+/// Legacy compatible responsive page shell pattern delegating to canonical [AppPage].
 class AppPageShell extends StatelessWidget {
   const AppPageShell({
     super.key,
@@ -30,47 +27,15 @@ class AppPageShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    Widget content = Padding(
-      padding: padding ?? const EdgeInsets.all(AppSpacing.md),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (scrollable) {
-            return Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxWidth),
-                child: child,
-              ),
-            );
-          }
-          return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: maxWidth,
-                minHeight: constraints.maxHeight,
-                maxHeight: constraints.maxHeight,
-              ),
-              child: child,
-            ),
-          );
-        },
-      ),
-    );
-
-    if (scrollable) {
-      content = SingleChildScrollView(child: content);
-    }
-
-    return Scaffold(
-      backgroundColor:
-          backgroundColor ?? theme.colorScheme.surfaceContainerLowest,
+    return AppPage(
       appBar: appBar,
-      body: SafeArea(child: content),
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: floatingActionButton,
+      maxWidth: maxWidth,
+      padding: padding,
+      backgroundColor: backgroundColor,
+      scrollable: scrollable,
+      child: child,
     );
   }
 }

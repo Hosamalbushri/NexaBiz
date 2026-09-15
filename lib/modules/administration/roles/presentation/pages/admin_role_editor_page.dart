@@ -311,7 +311,8 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                           child: Wrap(
                             spacing: 4,
                             children: [
-                              TextButton(
+                              AppButton(
+                                label: l10n.adminSelectAllPermissions,
                                 onPressed: _saving
                                     ? null
                                     : () => setState(() {
@@ -323,14 +324,18 @@ class _AdminRoleEditorPageState extends ConsumerState<AdminRoleEditorPage> {
                                           }
                                         }
                                       }),
-                                child: Text(l10n.adminSelectAllPermissions),
+                                variant: AppButtonVariant.text,
+                                isCompact: true,
                               ),
-                              TextButton(
+                              AppButton(
+                                label: l10n.adminClearPermissions,
                                 onPressed: _saving
                                     ? null
                                     : () => setState(_selected.clear),
-                                child: Text(l10n.adminClearPermissions),
+                                variant: AppButtonVariant.text,
+                                isCompact: true,
                               ),
+
                             ],
                           ),
                         ),

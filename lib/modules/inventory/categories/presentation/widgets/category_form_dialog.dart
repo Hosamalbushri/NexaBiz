@@ -214,23 +214,17 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                         ? _selectedWarehouseId
                         : (uniqueWarehouses.firstWhere((w) => w.isDefault, orElse: () => uniqueWarehouses.first).id);
 
-                    return DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      initialValue: validWarehouseId,
-                      decoration: InputDecoration(
-                        labelText: isAr ? 'المستودع الرئيسي (الجذر)' : 'Root Warehouse',
-                        prefixIcon: const Icon(Icons.warehouse_outlined),
-                      ),
+                    return AppSelectField<String>(
+                      value: validWarehouseId,
+                      label: isAr ? 'المستودع الرئيسي (الجذر)' : 'Root Warehouse',
                       items: uniqueWarehouses.map((wh) {
-                        return DropdownMenuItem(
+                        return AppSelectItem<String>(
                           value: wh.id,
-                          child: Text(
-                            wh.name,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          label: wh.name,
                         );
                       }).toList(),
                       onChanged: (val) {
+                        if (val == null) return;
                         setState(() {
                           _selectedWarehouseId = val;
                           _selectedParentId = null;
@@ -238,9 +232,6 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                         });
                         _autoGenerateCode();
                       },
-                      validator: (val) => val == null
-                          ? (isAr ? 'يرجى اختيار المستودع' : 'Select warehouse')
-                          : null,
                     );
                   },
                 ),
@@ -264,32 +255,21 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                         ? _selectedParentId
                         : null;
 
-                    return DropdownButtonFormField<String?>(
-                      isExpanded: true,
-                      initialValue: validParentId,
-                      decoration: InputDecoration(
-                        labelText: isAr ? 'التصنيف الأب (اختياري)' : 'Parent Category (Optional)',
-                        prefixIcon: const Icon(Icons.account_tree_outlined),
-                        helperText: isAr
-                            ? 'اتركه فارغاً ليصبح تصنيفاً رئيسياً تحت المستودع'
-                            : 'Leave empty for root warehouse category',
-                      ),
+                    return AppSelectField<String?>(
+                      value: validParentId,
+                      label: isAr ? 'التصنيف الأب (اختياري)' : 'Parent Category (Optional)',
+                      helperText: isAr
+                          ? 'اتركه فارغاً ليصبح تصنيفاً رئيسياً تحت المستودع'
+                          : 'Leave empty for root warehouse category',
                       items: [
-                        DropdownMenuItem<String?>(
+                        AppSelectItem<String?>(
                           value: null,
-                          child: Text(
-                            isAr ? '-- بدون (تصنيف رئيسي) --' : '-- None (Root Category) --',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: colorScheme.onSurfaceVariant),
-                          ),
+                          label: isAr ? '-- بدون (تصنيف رئيسي) --' : '-- None (Root Category) --',
                         ),
                         ...availableParents.map((cat) {
-                          return DropdownMenuItem<String?>(
+                          return AppSelectItem<String?>(
                             value: cat.id,
-                            child: Text(
-                              '${cat.code} - ${cat.name}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            label: '${cat.code} - ${cat.name}',
                           );
                         }),
                       ],
@@ -309,35 +289,27 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
               title: isAr ? 'البيانات الأساسية' : 'Basic Identification',
               icon: Icons.info_outline,
               children: [
-                TextFormField(
+                AppTextField(
                   controller: _codeCtrl,
-                  decoration: InputDecoration(
-                    labelText: isAr ? 'كود التصنيف' : 'Category Code',
-                    hintText: 'e.g. 1000, 1001',
-                    prefixIcon: const Icon(Icons.qr_code_outlined),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.auto_awesome_rounded),
-                      tooltip: isAr ? 'توليد كود تلقائي' : 'Auto Generate Code',
-                      onPressed: () {
-                        _codeCtrl.clear();
-                        _autoGenerateCode();
-                      },
-                    ),
+                  label: isAr ? 'كود التصنيف' : 'Category Code',
+                  hint: 'e.g. 1000, 1001',
+                  prefixIcon: const Icon(Icons.qr_code_outlined),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.auto_awesome_rounded),
+                    tooltip: isAr ? 'توليد كود تلقائي' : 'Auto Generate Code',
+                    onPressed: () {
+                      _codeCtrl.clear();
+                      _autoGenerateCode();
+                    },
                   ),
-                  validator: (val) => (val == null || val.trim().isEmpty)
-                      ? (isAr ? 'يرجى إدخال كود التصنيف' : 'Enter code')
-                      : null,
+                  required: true,
                 ),
-                TextFormField(
+                AppTextField(
                   controller: _nameCtrl,
-                  decoration: InputDecoration(
-                    labelText: isAr ? 'اسم التصنيف' : 'Category Name',
-                    hintText: 'e.g. عصائر, مشروبات',
-                    prefixIcon: const Icon(Icons.category_outlined),
-                  ),
-                  validator: (val) => (val == null || val.trim().isEmpty)
-                      ? (isAr ? 'يرجى إدخال اسم التصنيف' : 'Enter name')
-                      : null,
+                  label: isAr ? 'اسم التصنيف' : 'Category Name',
+                  hint: 'e.g. عصائر, مشروبات',
+                  prefixIcon: const Icon(Icons.category_outlined),
+                  required: true,
                 ),
               ],
             ),
@@ -347,45 +319,28 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
               title: isAr ? 'طريقة التكلفة والتقييم' : 'Cost Valuation',
               icon: Icons.calculate_outlined,
               children: [
-                DropdownButtonFormField<CostValuationMethod?>(
-                  isExpanded: true,
-                  initialValue: _costValuationMethod,
-                  decoration: InputDecoration(
-                    labelText: isAr ? 'طريقة احتساب التكلفة (تجاوز)' : 'Cost Valuation Method',
-                    prefixIcon: const Icon(Icons.calculate_outlined),
-                    helperText: isAr
-                        ? 'وراثة الإعداد تلقائياً من التصنيف الأب أو المستودع عند اختيار افتراضي'
-                        : 'Inherits setting from Parent Category or Warehouse',
-                  ),
+                AppSelectField<CostValuationMethod?>(
+                  value: _costValuationMethod,
+                  label: isAr ? 'طريقة احتساب التكلفة (تجاوز)' : 'Cost Valuation Method',
+                  helperText: isAr
+                      ? 'وراثة الإعداد تلقائياً من التصنيف الأب أو المستودع عند اختيار افتراضي'
+                      : 'Inherits setting from Parent Category or Warehouse',
                   items: [
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: null,
-                      child: Text(
-                        isAr ? 'افتراضي (وراثة من الأب / المستودع)' : 'Inherit from Parent / Warehouse',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: colorScheme.onSurfaceVariant),
-                      ),
+                      label: isAr ? 'افتراضي (وراثة من الأب / المستودع)' : 'Inherit from Parent / Warehouse',
                     ),
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: CostValuationMethod.fifo,
-                      child: Text(
-                        isAr ? 'FIFO - الوارد أولاً يصدر أولاً' : 'FIFO (First-In, First-Out)',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: isAr ? 'FIFO - الوارد أولاً يصدر أولاً' : 'FIFO (First-In, First-Out)',
                     ),
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: CostValuationMethod.lifo,
-                      child: Text(
-                        isAr ? 'LIFO - الوارد أخيراً يصدر أولاً' : 'LIFO (Last-In, First-Out)',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: isAr ? 'LIFO - الوارد أخيراً يصدر أولاً' : 'LIFO (Last-In, First-Out)',
                     ),
-                    DropdownMenuItem<CostValuationMethod?>(
+                    AppSelectItem<CostValuationMethod?>(
                       value: CostValuationMethod.weightedAverage,
-                      child: Text(
-                        isAr ? 'Weighted Average - المتوسط المرجح' : 'Weighted Average',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: isAr ? 'Weighted Average - المتوسط المرجح' : 'Weighted Average',
                     ),
                   ],
                   onChanged: (val) => setState(() => _costValuationMethod = val),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
 import '../providers/functional_currency_providers.dart';
 import 'currencies_manage_page.dart';
@@ -35,36 +34,15 @@ class _FunctionalCurrencyConfigPageState
     final stateInfoAsync = ref.watch(functionalCurrencyStateInfoProvider);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
+    final pageTitle = isArabic
+        ? 'تكوين العملة الوظيفية (الدفترية)'
+        : 'Functional Currency Configuration';
+
     final body = stateInfoAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AppCard(
-            color: Theme.of(context).colorScheme.errorContainer,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  isArabic
-                      ? 'حدث خطأ أثناء تحميل تكوين العملة الوظيفية'
-                      : 'Error loading functional currency configuration',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(err.toString(), textAlign: TextAlign.center),
-                const SizedBox(height: AppSpacing.md),
-                AppButton(
-                  label: isArabic ? 'إعادة المحاولة' : 'Retry',
-                  onPressed: () =>
-                      ref.refresh(functionalCurrencyStateInfoProvider),
-                ),
-              ],
-            ),
-          ),
-        ),
+      loading: () => const Center(child: AppLoading()),
+      error: (err, stack) => AppErrorState(
+        message: err.toString(),
+        onRetry: () => ref.refresh(functionalCurrencyStateInfoProvider),
       ),
       data: (info) => _buildContent(context, info),
     );
@@ -73,13 +51,17 @@ class _FunctionalCurrencyConfigPageState
       return body;
     }
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: isArabic
-            ? 'تكوين العملة الوظيفية (الدفترية)'
-            : 'Functional Currency Configuration',
-      ),
-      body: body,
+    return AppSettingsPage(
+      title: pageTitle,
+      showBackButton: true,
+      isLoading: stateInfoAsync.isLoading,
+      errorText: stateInfoAsync.hasError
+          ? stateInfoAsync.error.toString()
+          : null,
+      onRetry: () => ref.refresh(functionalCurrencyStateInfoProvider),
+      sections: [
+        if (stateInfoAsync.hasValue) _buildContent(context, stateInfoAsync.value!),
+      ],
     );
   }
 

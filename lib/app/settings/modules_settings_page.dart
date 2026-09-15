@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 import '../../core/modules/module_settings_definition.dart';
-import '../../core/widgets/custom_app_bar.dart';
-import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import 'module_unit_settings_page.dart';
-import 'package:nexabiz_ui/nexabiz_ui.dart';
 
 /// Screen displaying the list/grid of registered module cards.
 class ModulesSettingsPage extends StatelessWidget {
@@ -20,71 +18,65 @@ class ModulesSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final pageTitle = l10n.moduleUnitsSettingsTitle;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: pageTitle, showBackButton: true),
-      body: categories.isEmpty
-          ? Center(
-              child: AppEmptyState(
-                icon: Icons.grid_view_rounded,
-                title: pageTitle,
-                subtitle: l10n.platformReportsServiceComingSoon,
-              ),
-            )
-          : ListView(
-              padding: AppConstants.pageInsets(context),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: Text(
-                    l10n.selectModulePrompt,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide =
-                        AppBreakpoints.isTablet(constraints.maxWidth) ||
-                        AppBreakpoints.isDesktop(constraints.maxWidth);
-
-                    if (isWide) {
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: AppSpacing.md,
-                              mainAxisSpacing: AppSpacing.md,
-                              childAspectRatio: 2.6,
-                            ),
-                        itemCount: categories.length,
-                        itemBuilder: (context, index) {
-                          return _ModuleCard(category: categories[index]);
-                        },
-                      );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: categories.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) {
-                        return _ModuleCard(category: categories[index]);
-                      },
-                    );
-                  },
-                ),
-              ],
+    if (categories.isEmpty) {
+      return AppSettingsPage(
+        title: pageTitle,
+        showBackButton: true,
+        sections: [
+          Center(
+            child: AppEmptyState(
+              icon: Icons.grid_view_rounded,
+              title: pageTitle,
+              subtitle: l10n.platformReportsServiceComingSoon,
             ),
+          ),
+        ],
+      );
+    }
+
+    return AppSettingsPage(
+      title: pageTitle,
+      subtitle: l10n.selectModulePrompt,
+      showBackButton: true,
+      sections: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide =
+                AppBreakpoints.isTablet(constraints.maxWidth) ||
+                AppBreakpoints.isDesktop(constraints.maxWidth);
+
+            if (isWide) {
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
+                  childAspectRatio: 2.6,
+                ),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  return _ModuleCard(category: categories[index]);
+                },
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: categories.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                return _ModuleCard(category: categories[index]);
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 }
