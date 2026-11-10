@@ -17,7 +17,6 @@ dependencies:
   skeletonizer: ^2.1.0+1
   lottie: ^3.3.0
   shadcn_flutter: ^0.0.53
-  genui: ^0.10.2
 
 dev_dependencies:
   flutter_test:
